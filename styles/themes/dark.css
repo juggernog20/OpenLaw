@@ -1,0 +1,72 @@
+/* OpenLaw — Dark theme.
+ *
+ * Anchored on the GitHub Primer dark palette. Uses 4 surface tiers:
+ *   --bg-canvas         #0D1117  page
+ *   --bg-raised         #161B22  cards
+ *   --bg-section-header #1C2128  section strip inside a card
+ *   --bg-control        #21262D  buttons, inputs, kbd chips
+ *
+ * The header (--bg-inverted = #010409) is a hair darker than canvas
+ * to keep the inverted-header pattern legible across all three themes.
+ *
+ * Avatar accent in the mock dashboard uses lavender (#BC8CFF) instead
+ * of orange — this surfaces in the deterministic avatar palette in
+ * globals.css (theme-invariant), not as a per-theme override.
+ *
+ * Values verified against designs/final-themes.pen "Theme 3 — Dark".
+ */
+
+[data-theme="dark"] {
+  /* Surfaces */
+  --bg-canvas:           #0D1117;
+  --bg-raised:           #161B22;
+  --bg-section-header:   #1C2128;
+  --bg-control:          #21262D;
+  --bg-inverted:         #010409;
+
+  /* Borders */
+  --border-default:      #30363D;
+  --border-muted:        #21262D;
+  --border-on-inverted:  #30363D;
+
+  /* Text */
+  --text-primary:        #E6EDF3;
+  --text-muted:          #7D8590;
+  --text-subtle:         #6E7681;
+  --text-on-inverted:    #F0F6FC;
+  --text-on-accent:      #FFFFFF;
+  --text-on-cta:         #FFFFFF;
+  --text-link:           #2F81F7;
+  --text-danger:         #FF7B72;
+
+  /* Brand */
+  --accent:              #F78166;
+  --cta-primary:         #238636;
+
+  /* Status — paired bg + fg */
+  --status-success-bg:   #0F2D17;
+  --status-success-fg:   #3FB950;
+
+  --status-warning-bg:   #3A2F0F;
+  --status-warning-fg:   #D4A72C;
+
+  --status-info-bg:      #0E2C49;
+  --status-info-fg:      #79C0FF;
+
+  --status-danger-bg:    #3D1418;
+  --status-danger-fg:    #F85149;
+
+  --status-assigned-bg:  #2C2138;
+  --status-assigned-fg:  #BC8CFF;
+
+  --status-onhold-bg:    #30363D;
+  --status-onhold-fg:    #C9D1D9;
+
+  /* Counter badge */
+  --badge-count-bg:      #21262D;
+  --badge-count-fg:      #7D8590;
+
+  /* Confidentiality (per DES-009 — see DECISIONS-DESIGN.md) */
+  --confidential-fg:     #C8B5FF;
+  --confidential-bg:     #241B30;
+}

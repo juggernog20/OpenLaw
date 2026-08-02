@@ -1,0 +1,73 @@
+/* OpenLaw — Warm theme.
+ *
+ * Brand-character theme per DES-001. Cream-and-terracotta palette that
+ * differentiates OpenLaw from clinical SaaS competitors. Same geometry,
+ * spacing, and typography as Light/Dark per DES-001's theme-invariant
+ * geometry contract.
+ *
+ * Notable substitutions from the standard Light/Dark vocabulary:
+ *   - Confidentiality marker uses terracotta-brown (--confidential-fg
+ *     = #9B6B3A), not purple. Warm's palette has no purple hue and
+ *     forcing one in would clash. Per DES-005 this is intentional.
+ *   - Link color (--text-link) is terracotta-brown, not blue. Warm
+ *     does not use Primer's blue at all.
+ *
+ * Values verified against designs/final-themes.pen "Theme 2 — Warm".
+ */
+
+[data-theme="warm"] {
+  /* Surfaces */
+  --bg-canvas:           #FBFAF7;
+  --bg-raised:           #FFFFFF;
+  --bg-section-header:   #F4F1EB;
+  --bg-control:          #FBFAF7;
+  --bg-inverted:         #E8E0D0;
+
+  /* Borders */
+  --border-default:      #EAE5DC;
+  --border-muted:        #EFE9DD;
+  --border-on-inverted:  #D8D0C0;
+
+  /* Text */
+  --text-primary:        #2D2A24;
+  --text-muted:          #7A7264;
+  --text-subtle:         #A8A294;
+  --text-on-inverted:    #2D2A24;   /* dark text on cream-deep header */
+  --text-on-accent:      #FFFFFF;
+  --text-on-cta:         #FFFFFF;
+  --text-link:           #9B6B3A;
+  --text-danger:         #8C3A2C;
+
+  /* Brand */
+  --accent:              #C97B5C;
+  --cta-primary:         #5C7A4A;
+
+  /* Status — paired bg + fg */
+  --status-success-bg:   #E5EDDC;
+  --status-success-fg:   #5C7A4A;
+
+  --status-warning-bg:   #F4EBC9;
+  --status-warning-fg:   #8A6B1F;
+
+  --status-info-bg:      #DDE8F0;
+  --status-info-fg:      #3A6E94;
+
+  --status-danger-bg:    #F0DCD4;
+  --status-danger-fg:    #A05540;
+
+  --status-assigned-bg:  #EFE3F0;
+  --status-assigned-fg:  #7A4A8A;
+
+  --status-onhold-bg:    #5C5448;
+  --status-onhold-fg:    #FBFAF7;
+
+  /* Counter badge */
+  --badge-count-bg:      #EAE5DC;
+  --badge-count-fg:      #5A5448;
+
+  /* Confidentiality — terracotta-brown, not purple. See file header.
+   * Banner background is soft tan (per DES-009), not soft purple — Warm
+   * deliberately diverges from the Light/Dark purple semantics. */
+  --confidential-fg:     #9B6B3A;
+  --confidential-bg:     #EFE3D0;
+}

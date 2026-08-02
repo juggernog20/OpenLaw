@@ -1,0 +1,65 @@
+/* OpenLaw — Light theme.
+ *
+ * Default theme per DES-002. Lives in :root so it applies whenever no
+ * data-theme attribute is set, including on the pre-login screens.
+ *
+ * Anchored on the GitHub Primer light palette. Inverted dark-on-light
+ * header (--bg-inverted = #0D1117 on a white body) is the signature move.
+ *
+ * Values verified against designs/final-themes.pen "Theme 1 — Light".
+ */
+
+:root {
+  /* Surfaces */
+  --bg-canvas:           #FFFFFF;
+  --bg-raised:           #FFFFFF;   /* cards on white body collapse to same hex */
+  --bg-section-header:   #F6F8FA;
+  --bg-control:          #F6F8FA;
+  --bg-inverted:         #0D1117;
+
+  /* Borders */
+  --border-default:      #D0D7DE;
+  --border-muted:        #D8DEE4;
+  --border-on-inverted:  #30363D;
+
+  /* Text */
+  --text-primary:        #1F2328;
+  --text-muted:          #656D76;
+  --text-subtle:         #7D8590;
+  --text-on-inverted:    #F0F6FC;
+  --text-on-accent:      #FFFFFF;
+  --text-on-cta:         #FFFFFF;
+  --text-link:           #0969DA;
+  --text-danger:         #82071E;
+
+  /* Brand */
+  --accent:              #F78166;
+  --cta-primary:         #1F883D;
+
+  /* Status — paired bg + fg */
+  --status-success-bg:   #DAFBE1;
+  --status-success-fg:   #1F883D;
+
+  --status-warning-bg:   #FFF8C5;
+  --status-warning-fg:   #9A6700;
+
+  --status-info-bg:      #DDF4FF;
+  --status-info-fg:      #0969DA;
+
+  --status-danger-bg:    #FFEBE9;
+  --status-danger-fg:    #CF222E;
+
+  --status-assigned-bg:  #FBEFFF;
+  --status-assigned-fg:  #8250DF;
+
+  --status-onhold-bg:    #4D5560;
+  --status-onhold-fg:    #F0F6FC;
+
+  /* Counter badge */
+  --badge-count-bg:      #EAEEF2;
+  --badge-count-fg:      #656D76;
+
+  /* Confidentiality (per DES-009 — see DECISIONS-DESIGN.md) */
+  --confidential-fg:     #5B2B8C;
+  --confidential-bg:     #F5E6FA;
+}
