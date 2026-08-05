@@ -47,6 +47,22 @@ Decisions are numbered `SET-###`.
 | Source | Surface | Permission | Notes |
 |---|---|---|---|
 | **MTR-001** | Matters Settings → Types | Admin | List view; add / rename / reorder / archive; system-default + `other` row protected |
+| **MTR-002** | Matters Settings → Statuses | Admin | List view; add / rename / reorder / archive; category (open/closed) picked at creation, immutable after; seed `open` + `closed` rows protected |
+| **MTR-011** | Matters Settings → Fields | Admin | Custom-field catalog view scoped to `matter` + `global` fields per **CTR-016**: add / rename / describe / archive; field type immutable (9 types incl. `entity`); DD-015 business\|legal tag; options editor for selects |
+| **NOT-004** | Settings → Notifications | Admin | Global reminder-offset list (seeded 7/1/0 days) for all tracked dates |
+| **NOT-001** | Account Settings → Notifications (staff) / Portal Settings (business users) | Per-user | Channel toggles per event group (bell always on; email defaults per NOT-002) |
+| **INT-004** | Intake Settings → Deflection Links | Admin | "Before you submit…" links panel: label + URL, global or per request type, ordered |
+| **INT-002** | Intake Settings → Request Types | Admin | List + per-type form editor: target matter/contract type; attach catalog fields (target-module or global scope); required flags; display order |
+| **CTR-016** | Contracts Settings → Fields | Admin | Catalog view scoped to `contract` + `global` fields; per-field `ai_prompt` editor (CTR-008); same machinery as the matters view |
+| **CTR-016** | Contracts Settings → Types → [type] | Admin | Attach / detach `contract`/`global` fields; per-type display order; `is_required` toggle (hard-enforced per MTR-014 rule) |
+| **MTR-011** | Matters Settings → Types → [type] | Admin | Attach / detach `matter`/`global`-scoped fields to the type; per-type display order |
+| **MTR-013** | Matters Settings → Templates | Admin | Named templates per type: pre-fill values (priority, risk, custom fields, title prefix) + task rows (relative due dates, role targeting) |
+| **CTR-002** | Contracts Settings → Types | Admin | List view; add / rename / reorder / archive; `other` row protected; attachment point for per-type fields / templates / approval scoping |
+| **CTR-013** | Contracts Settings → E-signature | Admin | Provider connector credentials (DocuSign v1); adapter-keyed for future providers |
+| **CTR-012** | Contracts Settings → Approver Groups | Admin | Named groups (name + member list); applying a group snapshots members into approval requests |
+| **CTR-008** | Contracts Settings → AI Analysis | Admin | BYO API key; per-field default prompts (editable); custom fields carry their own prompts |
+| **CTR-001** | Contracts Settings → Statuses | Admin | List view; add / rename / reorder / archive; stage (draft/review/approval/signature/active/ended) picked at creation, immutable after; seed `draft`, `active`, `expired` rows protected |
+| **CTR-002** | Contracts Settings → Types | Admin | List view; add / rename / reorder / archive; `other` row protected; type is the policy carrier (fields / templates / approval targeting) |
 
 ---
 

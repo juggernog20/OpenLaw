@@ -31,10 +31,10 @@ All 122 rows were swept against `DECISIONS.md` (DD-001–017), `DECISIONS-DESIGN
 
 Dependency picture (biggest first):
 
-1. **Contracts module grill (CTR-###)** gates 14 rows — lifecycle/status (C.5, D.8, H.C4), renewal/term model (G.R3, G.R5–R7, I.B2–B5, I.B7), e-signature (E.5), clauses/redlines (F.3). This is the single largest unblocking move.
-2. **Documents module grill (DOC-###)** gates the doc panel — versioning (K.H3), redline strategy (K.H4), preview rendering (K.B1–17).
-3. **Notifications feature DD** (never opened) gates A.4 and E.1.
-4. **Comment-surface feature DD** (tiers exist per DD-016; UI never designed) gates K.B9 and shapes E.6 / F.7 / J.2.
+1. **Contracts module grill (CTR-###)** — **DONE 2026-08-04** (CTR-001–019). All 14 gated rows resolved: lifecycle/status (C.5, D.8, H.C4), renewal/term model (G.R3, G.R5–R7, I.B2–B5, I.B7), e-signature (E.5), clauses/redlines (F.3), plus D.1/D.2/D.6/D.7/C.3/G.R2 along the way.
+2. **Documents module grill (DOC-###)** — **DONE 2026-08-04** (DOC-001–011). Doc-panel gates resolved: versioning (K.H3), redline strategy (K.H4), preview rendering (K.B1–17).
+3. **Notifications feature DD** — **DONE 2026-08-05** (`DECISIONS-NOTIFICATIONS.md`, NOT-001–005). A.4 resolved; E.1 narrowed.
+4. **Comment-surface feature DD** — **DONE 2026-08-05** (`DECISIONS-COMMENTS.md`, CMT-001–005). K.B9/J.2 resolved; E.6/F.7 removed.
 5. **Settings grill (SET-###)** gates J.9.
 
 Two mock-vs-decision **conflicts** found: B.6 (Reports nav item vs DD-005's deferral of reporting-as-destination) and the V13 right column (48px bar + 392px panel vs DES-007's single 320px `--width-rail`) — see B.6 and J.X. Also: the V13 doc panel is the screen DES-006 was waiting for to pick the secondary legal-document typeface — that deferred question is now unblocked.
@@ -54,7 +54,7 @@ The grill flows top-of-screen down so each decision feeds the next. Suggested ba
 9. **Batch 9 — Doc panel (K.*).** Header chrome, toolbar density, comment-marker UX.
 10. **Batch 10 — Cross-cutting (X.*).** Sweep up the divergences between V12 and V13.
 
-Post-sweep note: the Contracts module grill (lifecycle, renewals, approvals, e-signature, redlines — queued in `DECISIONS-CONTRACTS.md`) is a prerequisite for most of Batches 5–7 and parts of 1–2. Consider running it before or interleaved with the screen batches.
+Post-sweep note: the Contracts, Documents, Intake (+DD-018), Notifications, and Comments grills are all complete as of 2026-08-05. The only remaining gate is the Settings grill (J.9); everything else is pending-by-choice in the screen batches.
 
 ---
 
@@ -65,14 +65,14 @@ Post-sweep note: the Contracts module grill (lifecycle, renewals, approvals, e-s
 | A.1 | App logo | Both | pending | | Name "OpenLaw" locked by DD-012 (rename trigger documented). Open: wordmark-only vs glyph mark. |
 | A.2 | Global search | Both | pending | | Scope is global cross-module per DD-005; `/` affordance locked by DES-010; copy register per DES-015. Open: placeholder scope list. |
 | A.3 | Create button | Both | pending | | Menu candidates follow the module set (DD-005/006). Business Users create via intake channels (DD-010), so this is a Member+ affordance. Open: exact menu. |
-| A.4 | Notifications bell + badge | Both | blocked | | Blocked on the notifications-surface feature DD (flagged as unopened in DECISIONS-DESIGN "feature-level questions"). Badge cap decided there. |
+| A.4 | Notifications bell + badge | Both | done | keep — staff notification center per NOT-001; unread count badge capped 9+, read-on-open per NOT-005 | |
 | A.5 | User avatar | Both | pending | | Menu must reach account settings: theme (DES-001/002), timezone (DES-014), locale (DES-013). Open: full menu contents. |
 
 ## B. Primary nav
 
 | ID | Element | Where | Status | Decision | Notes |
 | --- | --- | --- | --- | --- | --- |
-| B.1 | First slot: Inbox vs Dashboard | Diverges | pending | | Existing decisions lean **Inbox**: DD-005 rejects dashboards-as-destination; DD-010's Request triage queue needs a home. Confirm in grill. |
+| B.1 | First slot: Inbox vs Dashboard | Diverges | done | keep **Inbox** — the single triage queue per INT-006/DD-018 (nav slot 1) | |
 | B.2 | Matters | Both | done | keep — mirrors the module set per DD-005 | |
 | B.3 | Contracts (active) | Both | done | keep — module per DD-005; active underline uses `--accent` per DES-005 | |
 | B.4 | Documents | Both | done | keep — Documents is a first-class destination per DD-007 | Tension with the Documents module-chip is handled in E.4. |
@@ -85,9 +85,9 @@ Post-sweep note: the Contracts module grill (lifecycle, renewals, approvals, e-s
 | --- | --- | --- | --- | --- | --- |
 | C.1 | Back/up arrow | Both | pending | | Standard vs. breadcrumb-only — pick one navigation pattern. |
 | C.2a–c | Module switcher icons (3) | Both | pending | | **Purpose unclear** — define what these three icons do or remove them. |
-| C.3 | Title pill | Both | pending | | Editable inline? Click → rename modal? Contract naming/numbering is an unopened CTR question. |
+| C.3 | Title pill | Both | done | keep — free-text title per CTR-003, editable (interaction pattern — inline vs modal — is a screen-batch call) | |
 | C.4 | Inline action icon | Both | pending | | Single mystery icon next to title — define or remove. |
-| C.5 | Status pill | Both | blocked | | Blocked on the contract lifecycle state machine (queued in DECISIONS-CONTRACTS). Overlaps D.8 — resolve stage-vs-status duplication there. |
+| C.5 | Status pill | Both | done | keep — shows the configurable **status** label per CTR-001; single stored field (`status_id`), stage derived | Pill family mapping (DES-005) still to pick in X.2. |
 | C.6 | Cancel button | Both | pending | | See X.5. If kept, label rules per DES-015. |
 | C.7 | Save button | Both | pending | | See X.5 — autosave vs explicit save is undecided anywhere in the docs. |
 | C.8 | Overflow / more | Both | pending | | Define the menu items. Known candidate: confidential-flag toggle (Admin/creator only per DD-014). |
@@ -96,26 +96,26 @@ Post-sweep note: the Contracts module grill (lifecycle, renewals, approvals, e-s
 
 | ID | Field | Where | Status | Decision | Notes |
 | --- | --- | --- | --- | --- | --- |
-| D.1 | Reference | Both | pending | | Format/auto-generation is an unopened CTR decision (mirror of the queued MTR naming/numbering question). |
-| D.2 | Contract type | Both | pending | | Make configurable `contract_types` per the MTR-001 pattern (`feedback_configurable_over_fixed`) — needs its own CTR decision. |
+| D.1 | Reference | Both | done | keep — renders `C-###` global sequence number per CTR-003; read-only | |
+| D.2 | Contract type | Both | done | keep — configurable `contract_types` per CTR-002 (MTR-001 mirror; type = policy carrier) | |
 | D.3 | Effective date | Both | done | keep — UTC storage + `formatShortDate` display per DES-014 | |
 | D.4 | Subject matter | Both | pending | | Free text vs. linked matter? (Matter↔Contract link semantics exist per DD-007.) |
 | D.5 | Counterparty | Both | done | keep — backed by `counterparties` table per DD-008; value links to the counterparty record (both frames get the link affordance) | |
-| D.6 | Contract value | Both | pending | | Formatting locked by DES-014 (integer cents, ISO 4217, no compact notation). Open: cadence modeling ("/year") — CTR question. |
-| D.7 | Owner field shape | Diverges | pending | | "Sarah Chen — General Counsel" (V12) vs. "Sarah Chen" (V13). Pick one; contract assignment model is an unopened CTR question. |
-| D.8 | Stage | Both | blocked | | Blocked on contract lifecycle CTR (same gate as C.5); confirm relationship to status pill there. |
+| D.6 | Contract value | Both | done | keep — `value_amount` + `value_currency` + `value_cadence` per CTR-010; "/year" suffix renders the cadence | Formatting per DES-014. |
+| D.7 | Owner field shape | Diverges | done | keep — name only (V13) backed by `contracts.manager_id` per CTR-004; label "Owner" | |
+| D.8 | Stage | Both | done | keep — renders the derived **stage** (6-step pipeline per CTR-001), same datum as C.5 at coarser zoom; not a separate stored field | |
 
 ## E. Module chip row
 
 | ID | Chip | Where | Status | Decision | Notes |
 | --- | --- | --- | --- | --- | --- |
 | E.0 | Should the chip row exist at all | Both | pending | | The activity bar (J) covers similar functions. Risk of duplication — see X.8. |
-| E.1 | Notifications chip | Both | blocked | | Blocked on the notifications-surface feature DD (same gate as A.4). Also overlaps the header bell. |
+| E.1 | Notifications chip | Both | pending | | Unblocked by NOT-001, which makes it likely redundant with the global bell (per-record notifications aren't a NOT-002 concept). Recommend remove — confirm in the screen batch. |
 | E.2 | Workflows chip | Both | pending | | "Workflow" is undefined in v1; approval rules are a queued CTR question. |
 | E.3 | Linked files chip | Both | pending | | Distinct from Documents chip (E.4)? DD-007 gives documents/attachments semantics to check against. |
 | E.4 | Documents chip | Both | pending | | If kept, this is the active surface (V13). |
-| E.5 | Signature elements chip | V12 | blocked | | Blocked on the e-signature integration model (queued CTR question). |
-| E.6 | Conversation chip | V12 | pending | | Comment tiers are decided (DD-016) but the comment surface UI is an unopened feature DD. Overlaps J.2. |
+| E.5 | Signature elements chip | V12 | done | keep (conditional) — renders envelope status per CTR-013 when an envelope exists; hidden for manual hand-off contracts | |
+| E.6 | Conversation chip | V12 | done | remove — redundant with the activity-bar comment panel per CMT-004 | |
 | E.7 | "+ 2 more" overflow | V13 | pending | | If E.0 stays, decide: always-show vs. collapse. |
 
 ## F. Section tab strip
@@ -125,11 +125,11 @@ Post-sweep note: the Contracts module grill (lifecycle, renewals, approvals, e-s
 | F.0 | Tab strip vs. anchored sections | Both | pending | | Should this be tabs at all, or anchor-scroll headings inside one long page? |
 | F.1 | Description (active) | Both | pending | | — |
 | F.2 | Key dates | Both | pending | | Could be a panel inside Description instead of a tab — see X.7. |
-| F.3 | Key clauses | Both | blocked | | Blocked on the clause/redline model (queued CTR question). |
+| F.3 | Key clauses | Both | done | keep — renders AI-extracted clause fields per CTR-008/CTR-014 (no clause-parsing model) | Unverified-badge treatment per CTR-008. |
 | F.4 | Signatories (label) | Diverges | pending | | "Signatories & contacts" (V12) vs. "Signatories" (V13) — pick one. Sentence case per DES-015 either way. |
 | F.5 | Considerations | Both | pending | | Define what this contains. |
 | F.6 | Memo | Both | pending | | Free-form notes vs. structured memo? |
-| F.7 | Communications | Both | pending | | Comment tiers decided per DD-016; request-thread relationship per DD-010. Open: whether this earns a tab. |
+| F.7 | Communications | Both | done | remove — comments live in the rail panel per CMT-004, not a tab | |
 | F.8 | Risks & issues | Both | pending | | Risk management is deferred per DD-005 — define a narrow contract-level scope or park the tab. |
 | F.9 | Deliverables | Both | pending | | Confirm distinct from Key dates / Workflows. |
 | F.10 | History | Both | pending | | Per-entity activity feed is committed (DD-017); open whether it surfaces as this tab. Lifecycle visualization part blocked on CTR lifecycle. |
@@ -156,12 +156,12 @@ All G field rows are contract-schema decisions — the `contracts` schema is TBD
 | ID | Field | Where | Status | Decision | Notes |
 | --- | --- | --- | --- | --- | --- |
 | G.R1 | Our position | Both | pending | | "Customer" / "Provider" — derive from counterparty side? |
-| G.R2 | Risk level | Both | pending | | Visualization: converge on status-pill convention per DES-005 (see X.2). Existence: risk mgmt deferred per DD-005 — keep as a simple field or park. |
-| G.R3 | Auto-renew | Both | blocked | | Blocked on renewal logic (queued CTR question). |
+| G.R2 | Risk level | Both | done | keep — first-class `contracts.risk` per CTR-005 (nullable = not yet assessed) | Visualization still X.2 (DES-005 pill family). |
+| G.R3 | Auto-renew | Both | done | keep — renders `term_type` per CTR-006 (auto-renew / fixed / evergreen) | |
 | G.R4 | Notice period | Both | pending | | — |
-| G.R5 | Last renewal | V12 | blocked | | Blocked on renewal logic (CTR); also see X.6 empty-state rule. |
-| G.R6 | Renewal cap | Both | blocked | | Blocked on renewal logic (CTR). |
-| G.R7 | Days remaining | Both | blocked | | Derived field — depends on the renewal/term model (CTR). |
+| G.R5 | Last renewal | V12 | done | keep — last *confirmed* renewal event from activity_log per CTR-006/007 | X.6 empty-state rule still applies when no renewal yet. |
+| G.R6 | Renewal cap | Both | done | remove — no renewal-cap field in the CTR-006 model (term-ledger option rejected) | |
+| G.R7 | Days remaining | Both | done | keep — derived `expiry_date − today` per CTR-006; blank for evergreen | |
 
 ### G.header
 
@@ -182,7 +182,7 @@ All G field rows are contract-schema decisions — the `contracts` schema is TBD
 | H.C1 | Date column | Both | pending | | — |
 | H.C2 | Event name column | Both | pending | | Free text vs. linked entry? |
 | H.C3 | Type column label | Diverges | pending | | "Event type" (V12) vs. "Type" (V13). |
-| H.C4 | Decision column | Both | blocked | | Blocked on lifecycle + approval rules (queued CTR questions). |
+| H.C4 | Decision column | Both | done | keep — renders `contract_approvals` outcomes (approved / rejected / pending + note) per CTR-012 | Pill vs text is H.X1 (pills favored). |
 | H.C5 | Comment column | Both | pending | | Editorial pattern — required? optional? |
 | H.C6 | Attachments/Files label | Diverges | pending | | Pick one. |
 | H.R1–7 | Mock data sanity | Diverges | pending | | V12 and V13 use different dates/comments — decide canonical sample (X.9). |
@@ -197,12 +197,12 @@ All G field rows are contract-schema decisions — the `contracts` schema is TBD
 | I.H3 | Zoom switcher (Year/Quarter/Month) | Both | pending | | Three zooms or just one default view? |
 | I.X1 | Label placement: on-bar vs. gutter | Diverges | pending | | V12 inline; V13 gutter. Pick one. |
 | I.B1 | Effective date marker | Both | pending | | — |
-| I.B2 | Term 1 bar | Both | blocked | | Term modeling blocked on renewal logic (CTR). |
-| I.B3 | Term 2 bar | Both | blocked | | Term modeling blocked on renewal logic (CTR). |
-| I.B4 | Term 3 bar | Both | blocked | | How many terms to render depends on the renewal model (CTR). |
-| I.B5 | Last renewal marker | V12 | blocked | | Same gate as G.R5 (CTR renewal logic). |
+| I.B2 | Term 1 bar | Both | done | keep — initial term: `effective_date → expiry_date` (as of first term) per CTR-006 | |
+| I.B3 | Term 2 bar | Both | done | keep — one bar per confirmed renewal event (activity_log per CTR-006) | |
+| I.B4 | Term 3 bar | Both | done | keep — bar count = confirmed renewals + 1; renewals routed to amendment/child/new contracts (CTR-007) render on those records, not extra bars here | |
+| I.B5 | Last renewal marker | V12 | done | keep — same datum as G.R5 | |
 | I.B6 | End of contract | Both | pending | | — |
-| I.B7 | Renewal cap | Both | blocked | | Same gate as G.R6 (CTR renewal logic). |
+| I.B7 | Renewal cap | Both | done | remove — same call as G.R6 (no cap field) | |
 | I.B8 | Risk threshold marker | Both | pending | | **Define the concept** — undefined anywhere; risk mgmt deferred per DD-005. Define narrowly or remove. |
 | I.X2 | Today line + pill | Both | pending | | — |
 | I.X3 | Legend (3 swatches) | Both | pending | | Reasonable; confirm copy. |
@@ -214,7 +214,7 @@ All G field rows are contract-schema decisions — the `contracts` schema is TBD
 | J.0 | Active indicator strip | V13 | pending | | If we keep the bar, both screens should use this. |
 | J.X | **Should the bar exist** | Both | pending | | Likely opens a new DD. Tradeoff vs. module chips (E). **Conflict:** DES-007 specs a single 320px `--width-rail`; a 48px icon bar + 392px panel is a new chrome pattern needing a DES amendment if kept. |
 | J.1 | description | Both | pending | | Overlaps the Description tab (F.1). |
-| J.2 | chat (badge "3") | Both | pending | | Comment tiers decided (DD-016); badge semantics and which tiers count are open. Overlaps F.7 / E.6. |
+| J.2 | chat (badge "3") | Both | done | keep — the comment panel's home per CMT-004; badge = viewer's unread, tier-filtered (no hidden-tier leaks) | |
 | J.3 | history (badge "v7") | Both | pending | | Overlaps History tab (F.10). |
 | J.4 | draw / redline | Both | pending | | Define the tool. |
 | J.5 | bolt / automation | Both | pending | | Define the tool; tied to Workflows (E.2). |
@@ -231,13 +231,13 @@ All G field rows are contract-schema decisions — the `contracts` schema is TBD
 | K.0 | Should V12 also have a doc panel | V12 closed | pending | | V12 currently closed — confirm intentional. X.4 resolution makes V12/V13 the same screen at different container widths. |
 | K.H1 | File icon | V13 | pending | | File-type icon pattern (colored square) per DES-008. |
 | K.H2 | Filename | V13 | pending | | Editable? |
-| K.H3 | Version pill | V13 | blocked | | Blocked on the document versioning model (queued DOC question). |
-| K.H4 | Redlines pill | V13 | blocked | | Blocked on the redline diff strategy (queued DOC question). |
+| K.H3 | Version pill | V13 | done | keep — renders `version_number` of the viewed version per DOC-001 (linear immutable chain) | |
+| K.H4 | Redlines pill | V13 | done | keep — opens the DOC-003 compare view (Workshare-style); Word track-changes export is an action within | |
 | K.H5 | Open-in-full icon | V13 | pending | | Confirm intent. |
 | K.H6 | Close icon | V13 | pending | | Closes the panel; reopen via activity bar. |
 | K.T1–T9 | Toolbar density | V13 | pending | | Nine controls is a lot — collapse some behind more-vert. |
-| K.B1–17 | Doc body content | V13 | blocked | | Blocked on file preview rendering (queued DOC question). Note: this screen unblocks DES-006's deferred secondary-typeface decision. |
-| K.B9 | Inline comment marker | V13 | blocked | | Tiers exist per DD-016; the comment-tier UI is an unopened feature DD (flagged in DECISIONS-DESIGN). |
+| K.B1–17 | Doc body content | V13 | done | keep — panel renders the DOC-004 set (PDF, DOCX, images, PPTX, MSG/EML); rest download-only | DES-006 secondary-typeface pick now actionable on this surface. |
+| K.B9 | Inline comment marker | V13 | done | keep — anchored comment margin marker per CMT-001; tier treatments per CMT-003 | |
 
 ## X. Cross-cutting
 

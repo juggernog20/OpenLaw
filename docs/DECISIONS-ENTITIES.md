@@ -31,6 +31,7 @@ Decisions are numbered `ENT-###`.
 - Entity → Matter / Contract roll-up reporting (how many active contracts per entity, etc.)
 - Entity-level access control (does a Member need to be granted per-entity access, or is it global?)
 
+- Organization structure for statutory documents (articles, resolutions, share registers/certificates) — folder-like structure flagged from **DOC-006**; documents will own an `entity_id` FK per **DOC-008**
 ---
 
 _No decisions recorded yet. Run `/grill-me` and ask to design the Entities module._

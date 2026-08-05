@@ -266,7 +266,7 @@ The four modules need a clear ownership and reference model. Without it, screens
 
 - Matter has many Contracts; Matter has many Documents.
 - Contract has many Documents (versions / artifacts).
-- Document can stand alone, be owned by a Contract, or be attached to a Matter.
+- Document can stand alone, be owned by a Contract, or be attached to a Matter. *(Revised by **DOC-008**, 2026-08-04: documents never stand alone — every document has exactly one owning record: matter, contract, entity, or knowledge item.)*
 - Contract has many parties (Entities + Counterparties — see **DD-008**).
 - Matter has many Entities (subjects, optional).
 
@@ -363,7 +363,7 @@ We had to choose between single-tenant (one install = one organization) and mult
 
 ## DD-010: Layered intake strategy — ChatOps + magic-link form + email parser
 
-- **Status:** Accepted
+- **Status:** Accepted — **revised by INT-001 (2026-08-04)**: capture narrows to structured forms in a lightweight portal (JSM-style); email becomes outbound-notification-only (inbound parsing dropped from v1); ChatOps shrinks from capture+bridge to at most notifications/deep-links. The magic-link + domain-allowlist mechanics survive as the portal's auth.
 - **Date:** 2026-05-03
 
 ### Context
@@ -761,6 +761,39 @@ Two layers, both append-only, both inherit the visibility model defined in **DD-
 
 ---
 
+## DD-018: Work-model doctrine — dual workspaces with the deliverable rule
+
+- **Status:** Accepted
+- **Date:** 2026-08-05
+
+### Context
+
+The Intake grill surfaced the foundational question of where work happens: are contracts full workspaces, or child records inside matters (LawVu-style was the assumed reference)? Five models were compared (matter-only / dual / silos / universal work item / matter-first-with-hatch), and a three-stream competitive research pass was run: matter-first products (LawVu, Xakia, Dazychain), contract-first CLMs (Ironclad, SpotDraft, Juro, LinkSquares), and intake-first platforms (Streamline AI, Checkbox, Tonkean) plus JSM as reference architecture.
+
+Research verdicts: contract-as-workspace is unanimously validated in the CLM category (and its absence — thin contract records — is the signature complaint against matter-first products); every contract-first leader failed to build a real second workspace for non-contract work (faked tickets, exiled second apps, "coming soon" bridges, or punting to competitors); LawVu (actually dual-workspace, not matter-first) ships the dual model successfully; JSM's rules: bind the routing target at request-type configuration, and make re-typing non-lossy.
+
+### Decision
+
+**Matters and contracts are peer, first-class workspaces** with deliberately identical collaboration machinery (team model, tasks, comments, activity — built as siblings across the MTR/CTR grills). Doctrine:
+
+1. **The deliverable rule**: if the deliverable is a signed document, the work is a **contract** (the draft→review→approval→signature→active→renewal pipeline IS the work tracking). Everything else — advice, disputes, projects — is a **matter**.
+2. **Routing is bound at request-type configuration** (INT-002), never chosen at triage: the admin decides once whether "NDA request" targets a contract type or "Legal question" targets a matter type. Triage confirms; it does not classify.
+3. **Work that outgrows a contract spawns a linked matter** (MTR-007 link) — a contract never re-classifies into a matter or vice versa.
+4. **Umbrella matters** group multi-contract efforts (M&A deal linking its contracts) — the gap none of the researched CLM leaders closed.
+5. **Re-typing is lossless**: a mis-routed request re-converts to the other target; the request survives as the requester-facing portal shell either way (INT-001) — no JSM-"Move" orphaning.
+
+### Rationale
+
+Every direction of the market's experiment points here: matter-only products drift toward fattening contract records into workspaces (Xakia); contract-only products fake or exile non-contract work (all four leaders); the successful dual product (LawVu) pays a parity tax OpenLaw pre-paid by building the two workspaces on shared machinery. The "matter or contract?" ambiguity that makes dual models feel arbitrary is eliminated by rule 2 — no human answers it per-request.
+
+### Alternatives considered
+
+Matter-only with auto-created wrapper matters (Dazychain): documented ceiling — "you cannot build good contract workflows." Universal work item (Jira-style): 35 recorded module decisions re-mapped onto a polymorphic object; CLM depth becomes conditional bolt-ons. Matter-first with a standalone-contract escape hatch: builds everything dual builds plus a per-triage policy question.
+
+### Consequences
+
+Confirms DD-007's layered model, MTR-007's standalone-contracts-with-optional-link, and the CTR grill's contract-workspace investment — no rework. INT-006 implements the triage mechanics. Navigation/IA must make the two-workspace split legible (the LawVu complaint to avoid); the Inbox is the single queue over both. Reporting reads work across both workspace kinds (cross-cutting dashboards per DD-005).
+
 ## Index of decisions
 
 | # | Decision | Status |
@@ -782,3 +815,4 @@ Two layers, both append-only, both inherit the visibility model defined in **DD-
 | DD-015 | Contributor permission grid — read, comment, upload, edit business fields | Accepted |
 | DD-016 | Comment visibility — three audience tiers (Legal Only / Working Team / Full Thread) | Accepted |
 | DD-017 | Activity tracking — two-layer model (per-entity activity feed + system-wide audit log) | Accepted |
+| DD-018 | Work-model doctrine — dual workspaces with the deliverable rule | Accepted |

@@ -32,12 +32,20 @@ Decisions are numbered `TECH-###`.
 - Background job runner (in-process worker / Sidekiq-style / Postgres-based queue / Temporal)
 - Search (Postgres FTS / SQLite FTS5 / dedicated like Tantivy / Meilisearch)
 - Email sending (SMTP / Postmark / SES / Resend abstracted via adapter)
-- Email receiving (referenced in `DECISIONS-INTAKE.md`; same adapter shape question)
+- ~~Email receiving~~ — dropped from v1 per **INT-001** (intake is form-only; email is outbound notifications). Revives only with the parked email-capture future feature.
 - Authentication (cookie session / JWT / Passkeys; magic-link library; OAuth providers as v2)
 - Real-time updates (polling / SSE / WebSockets; required for v1 or not)
 - Deployment shape (Docker Compose for self-host / single binary / k8s helm chart / managed cloud option)
 - Migration story (built-in CLI / per-framework conventions)
 - Testing stack (unit / integration / E2E — frameworks and conventions; frontend testing per TECH-001)
+
+Queued from the Contracts + Documents grills (2026-08-04):
+
+- Document compare engine — must yield BOTH a renderable change model (Workshare-style in-app view) and a track-changes .docx export (**DOC-003**/CTR-014); candidates: headless LibreOffice compare, OOXML diff libraries, commercial SDKs
+- Render/conversion pipeline for the DOC-004 set: DOCX + PPTX display conversion (tracked changes + comments visible), MSG/EML parsing
+- OCR engine for image-only PDFs (**DOC-005**) — open-source (e.g. Tesseract/OCRmyPDF class); runs on the background job runner
+- AI provider integration for CTR-008 contract analysis (BYO key; Anthropic-first vs provider adapter)
+- DocuSign connector auth (OAuth/JWT grant) for **CTR-013**
 - Monorepo vs polyrepo (likely monorepo; tooling — Nx / Turborepo / pnpm workspaces / cargo workspace)
 - CI / release process (GitHub Actions; release cadence; semver discipline)
 - Telemetry / opt-in usage analytics (PostHog self-host / Plausible / nothing)

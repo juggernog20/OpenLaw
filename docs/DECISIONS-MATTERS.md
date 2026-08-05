@@ -18,16 +18,7 @@ Decisions are numbered `MTR-###`.
 
 ## Open questions queued for the next grill-me session
 
-- Matter lifecycle states (Open / In Progress / On Hold / Closed? configurable? per-type or global?)
-- Matter assignment model (single primary assignee vs team; lead vs supporting roles)
-- Deadlines and SLA tracking (are deadlines first-class? statute-of-limitations tracking?)
-- Tasks / sub-items inside a matter (checklist vs full task entity)
-- External counsel and outside-fee tracking (in scope at all? deferred to e-billing?)
-- Matter / Contract relationship UX (when does a contract live "inside" a matter vs standalone)
-- Closing / archiving a matter (what's preserved, what's redacted, retention rules)
-- Matter naming / numbering scheme (free text only, or templated/auto-numbered?)
-- Tags — separate concept from type, admin-curated and/or user-creatable?
-- Field templates — per-type custom field definitions (e.g., Employment matters always have a "Separation date" field)?
+_None — queue cleared 2026-08-02 (MTR-002 through MTR-011)._
 
 ---
 
@@ -105,8 +96,625 @@ Behavior:
 
 ---
 
+## MTR-002: Matter lifecycle — fixed open/closed system dimension + configurable status labels
+
+- **Status:** Accepted
+- **Date:** 2026-08-02
+
+### Context
+
+Matters need a lifecycle state for filtering ("active matters"), workload views, SLA behavior, and archive eligibility. The tension: the project's configurable-over-fixed default (per **MTR-001** and the platform pattern) pulls toward admin-defined states, but lifecycle genuinely drives code branches — default list filters, deadline clocks, close/archive affordances — which is exactly the documented carve-out where fixed enums are allowed.
+
+### Decision
+
+**Two-layer model** (Jira status-category shape):
+
+1. **Fixed system dimension: `open` | `closed`.** This is the only value application code branches on: default matter-list filter (open), "active matters" counts, SLA/deadline stop-clock, archive eligibility, close affordances.
+2. **Configurable status labels** layered on top. Each label maps to exactly one system category. Stored in a `matter_statuses` table with the MTR-001 machinery (slug, display name, display order, archive, system-default protection). Seeded at install:
+
+| Slug | Display name | Category |
+|---|---|---|
+| `open` | Open | open |
+| `in_progress` | In Progress | open |
+| `on_hold` | On Hold | open |
+| `closed` | Closed | closed |
+
+3. **Global status set in v1**, not per-type. Per-type state machines are explicitly rejected.
+
+Behavior:
+
+- Admins add / rename / reorder / archive statuses via Matters Settings; each new status must pick a category at creation. Category is immutable after creation (changing it would silently rewrite history semantics for existing matters).
+- At least one status per category must remain unarchived; the seed `open` and `closed` rows are system-protected (same protection pattern as the `other` matter type).
+- New matters default to the first `open`-category status by display order.
+- Status changes are Member+ (Contributors cannot, consistent with re-typing per **MTR-001**) and audit-logged per **DD-017**.
+- Moving a matter to any `closed`-category status is "closing" it; what closing preserves/redacts is a separate queued decision (closing/archiving).
+
+### Rationale
+
+1. **Code branches on two values, not N.** Every downstream feature ("show my active matters", stop the SLA clock, allow archive) needs a reliable binary; admin-editable labels can't provide that.
+2. **Teams disagree on stages, not on open-vs-closed.** One team wants "Awaiting Business Input", another "With Outside Counsel" — all map cleanly onto open/closed.
+3. **Consistent with MTR-001** — same table machinery, same settings surface, same slug/display-name split, same protections. One pattern to learn.
+4. **Per-type machines rejected** as a Jira-complexity trap for a 2–10 person team: heavy admin surface, migration pain when types change, near-zero payoff at this scale.
+
+### Alternatives considered
+
+- **Fixed enum only** — simplest, but forfeits the real demand for custom stage labels and contradicts the configurability pattern for what is (beyond the binary) just metadata.
+- **Fully configurable states, no system dimension** — code can't reliably determine "is this matter active/closed"; every feature would need per-deployment status mapping.
+- **Per-type state machines** — rejected per rationale 4.
+
+### Consequences
+
+- New `matter_statuses` table + install-time seed migration; `matters.status_id` non-null FK. Schema captured in `SCHEMA.md`.
+- Second concrete configurability surface: **Matters Settings → Statuses** (sibling of → Types per MTR-001).
+- Status pills on screens render the configurable display name; pill color family maps from the **category** (per **DES-005** paired status-pill families), so admin-created statuses get sane colors for free.
+- The closing/archiving decision (queued) defines what happens when a matter enters a `closed`-category status.
+- Reporting groups by `matter_statuses.slug` and/or category, never display name.
+
+### Settings touchpoints
+
+- **Matters Settings → Statuses** — list view with add / rename / reorder / archive; category picker (open/closed) at creation, immutable after; seed `open` and `closed` rows show the lock icon.
+
+---
+
+## MTR-003: Matter assignment — one Matter Manager, plus legal team members added as needed
+
+- **Status:** Accepted
+- **Date:** 2026-08-02
+
+### Context
+
+Every matter needs an ownership answer: single primary owner vs multiple assignees vs a formal lead/supporting staffing model. `matter_team` (per **DD-014**/**DD-015**) already existed with an `assignee` role whose compound key technically permitted multiple assignees.
+
+### Decision
+
+**One Matter Manager per matter**, who can add other legal team members to the matter as needed.
+
+- **Matter Manager** is the product term for the single owner. Stored as `matters.manager_id` — a single nullable FK → `users.id`.
+- `manager_id` is **nullable**: null = unassigned, a real state — intake per **DD-010** creates work before anyone picks it up; the triage queue surfaces unassigned matters.
+- Other legal team members are added via `matter_team` with role `member`. The `assignee` role is **removed** from the `matter_team` enum (promoted to the column); `member` replaces it for supporting legal staff. `watcher` / `creator` / `contributor` are unchanged.
+- "My matters" = `manager_id = me`; a separate "matters I'm on" view unions `matter_team` membership.
+- Changing the Matter Manager is Member+ and audit-logged per **DD-017**.
+- The Matter Manager and all `matter_team` rows count as team membership for **DD-014** confidential-matter access.
+
+### Rationale
+
+1. **Single-owner accountability is the point at 2–10 people.** "Whose desk is this on" must have exactly one answer; workload views and "My matters" become trivially correct.
+2. **Co-working is membership, not shared ownership.** A second attorney helping out joins as `member` — full participation without blurring accountability.
+3. **Nullable beats fake ownership.** Forcing an owner at creation makes intake lie (auto-assigning whoever triages); explicit "unassigned" keeps the triage queue honest.
+
+### Alternatives considered
+
+- **Multiple assignees** (`matter_team` role, several allowed) — rejected; blurs accountability, ambiguates "my matters".
+- **Formal lead + supporting-attorney roles** — rejected; law-firm staffing machinery a small in-house team doesn't need. `member` covers supporting staff without ceremony.
+
+### Consequences
+
+- `matters.manager_id` nullable FK added; `matter_team` role enum becomes `member | watcher | creator | contributor`. Schema updated in `SCHEMA.md`.
+- The same shape is the working assumption for Contracts (`contracts.manager_id` + `contract_team`) — to be confirmed in the Contracts grill.
+- UI: matter header shows the Matter Manager avatar/name; unassigned matters show an explicit "Unassigned" affordance, not an empty gap.
+- Intake handoff (per **DD-010**) sets the Matter Manager at triage, not at submission.
+
+---
+
+## MTR-004: Deadlines — first-class named key dates; SLA engine deferred to future
+
+- **Status:** Accepted
+- **Date:** 2026-08-02
+
+### Context
+
+"Don't miss the date" is core to legal work, and matters routinely carry several hard dates at once (filing deadline, hearing, statute of limitations). The question was how much deadline machinery v1 gets: nothing, a single due date, named key dates, or a full SLA engine.
+
+### Decision
+
+**First-class named key dates; no SLA engine in v1.** The SLA engine is explicitly wanted for the future and is recorded in `FUTURE-FEATURES.md`.
+
+- New `matter_key_dates` table: a matter has zero-to-many entries of `date` + `label` + optional `note` (e.g., "Response to demand letter due", "SOL expires", "Preliminary hearing").
+- The earliest upcoming key date surfaces in matter lists and dashboards as **"next deadline"**; overdue dates render via the **DES-005** status-pill families; dates format per **DES-014**.
+- Statute-of-limitations tracking gets no special machinery — it is a key date with an appropriate label.
+- Approaching-date notifications plug into the cross-cutting notifications capability (**DD-005**) when that surface is designed — no bespoke reminder system here.
+- Key-date CRUD is Member+ (Contributor writes per **DD-015** field-tag rules TBD in that grill) and audit-logged per **DD-017**.
+
+### Rationale
+
+1. **Multiple hard dates are the norm**, so a single `due_date` column loses exactly what a legal tool must not lose.
+2. **SLA engines measure throughput; small teams need to not miss dates.** Response-time targets, breach clocks, and business-hours calendars are big-team ops tooling — deferred, not rejected.
+3. **The shape is SLA-forward-compatible**: a future SLA layer computes against key dates and MTR-002 status categories (On Hold pause semantics) without remodeling.
+
+### Alternatives considered
+
+- **Single optional `due_date`** — rejected; collapses concurrent hard dates.
+- **Key dates + SLA engine now** — deferred to `FUTURE-FEATURES.md`; heavy for the 2–10 person persona in v1.
+- **No deadline fields** — rejected; core to the domain.
+
+### Consequences
+
+- New `matter_key_dates` table in `SCHEMA.md`.
+- New `docs/FUTURE-FEATURES.md` parking lot created (first entries: SLA engine, plus pre-existing deferrals DD-005 reporting destination and DES-010 Cmd-K).
+- Matter list/detail screens need a "next deadline" affordance; the events-card pattern in the contract mock (region H) is the likely shared component.
+- Contracts grill should confirm whether contract date events (renewal, expiry, notice windows) reuse this table shape or get their own (likely their own, since renewal logic is richer).
+
+---
+
+## MTR-005: Tasks — lightweight checklist, not a task entity
+
+- **Status:** Accepted
+- **Date:** 2026-08-02
+
+### Context
+
+Matters need some way to track "who's doing which piece of this, and is it done". The spectrum runs from nothing, through a checklist, to a full task entity with its own lifecycle, comments, and activity.
+
+### Decision
+
+**Lightweight checklist**, GitHub-task-list weight. New `matter_tasks` table: `title`, `is_done`, optional `assignee_id`, optional `due_date`. That is the whole model.
+
+- No task-level comments, no statuses beyond done/not-done, no sub-tasks, no task detail page. A task is a row in a list on the matter; discussion about it happens in the matter's comment thread per **DD-016**.
+- Task due dates are deliberately **separate from MTR-004 key dates**: key dates are external/legal deadlines and surface in lists and dashboards; task dates are internal to-dos and stay inside the matter.
+- Task CRUD and toggling are audit-logged per **DD-017** at feed (not admin) visibility.
+
+### Rationale
+
+1. **Highest-value, lowest-cost coordination primitive** for a 2–10 person team.
+2. **A full task entity duplicates matter machinery one level down** — that's project-management software. If a piece of work is big enough to need its own thread and lifecycle, it should be its own matter.
+3. **Keeping task dates out of deadline surfaces** protects the "next deadline" signal (MTR-004) from being diluted by internal to-dos.
+
+### Alternatives considered
+
+- **Full task entity** (own status, comments, activity) — rejected per rationale 2.
+- **No tasks in v1** — rejected; the checklist is cheap and the coordination need is real.
+
+### Consequences
+
+- New `matter_tasks` table in `SCHEMA.md`.
+- Matter detail screen needs a tasks section (checklist affordance); counts (e.g., "3/7 done") can use `--badge-count-*` per **DES-005**.
+- Whether Contracts gets the same checklist is a Contracts-grill question (likely yes via the same table shape).
+- If richer tasking demand emerges post-v1, it graduates via `FUTURE-FEATURES.md` — do not grow this table into a task entity ad hoc.
+
+---
+
+## MTR-006: External counsel — collaboration via Contributor role; fee tracking deferred
+
+- **Status:** Accepted
+- **Date:** 2026-08-02
+
+### Context
+
+Outside counsel touch matters in two distinct ways: participating in the work (documents, comments, status) and costing money (budgets, invoices, e-billing). The question was which of these v1 supports.
+
+### Decision
+
+**Collaboration yes, money no (for now).**
+
+- External counsel who need to participate join as ordinary users with the **Contributor** role per **DD-013** — scoped to matters they're added to (via `matter_team` per **MTR-003**), subject to **DD-016** comment tiers and **DD-014** confidentiality. No new roles, tables, or machinery.
+- All outside-spend functionality — budgets, accruals, invoice review, UTBMS/LEDES e-billing — is **out of scope for v1** and recorded in `FUTURE-FEATURES.md`.
+
+### Rationale
+
+1. **The Contributor role already fits** external counsel exactly: matter-scoped access, no browse rights. Zero-cost win.
+2. **E-billing is an entire product category** (SimpleLegal, Brightflag) — it would dominate the roadmap and drags in AP-system integrations.
+3. **Manually-maintained money fields mislead** — a half-measure (budget + spend-to-date columns) goes stale and gives false confidence; better to have nothing than wrong numbers.
+4. Nothing in the current model blocks a future spend module; it would attach to matters and (likely) a law-firm flavored counterparty record.
+
+### Alternatives considered
+
+- **Basic fee fields on matters** — rejected per rationale 3.
+- **Full e-billing** — deferred per rationale 2.
+- **External counsel fully out of scope** — rejected; forfeits the free win from the existing role model.
+
+### Consequences
+
+- No schema changes.
+- `FUTURE-FEATURES.md` gains an outside-counsel spend / e-billing entry.
+- Onboarding docs should note the pattern: invite outside counsel as Contributors, add them to their matters.
+- A future spend module may want a way to mark a user or counterparty as a law firm — noted in the future-features entry, not modeled now.
+
+---
+
+## MTR-007: Matter ↔ Contract — contracts standalone by default, linked to a matter when part of broader work
+
+- **Status:** Accepted
+- **Date:** 2026-08-02
+
+### Context
+
+**DD-007** fixed the data model (`contracts.matter_id` nullable FK — contracts can stand alone). This decision fixes the working rule and UX for when a contract lives inside a matter.
+
+### Decision
+
+Contracts can be **both**: standalone where no matter work is needed (e.g., an autodoc NDA), or **linked to a matter** when the contract is part of a broader effort.
+
+- **Standalone by default.** Routine paper (NDAs, standard MSAs, order forms) flows through the Contracts module alone — no wrapper matter.
+- **Link when the work outgrows the document.** Rule of thumb: *if the work is the contract, it's standalone; if the contract is part of the work, link it* (e.g., a `commercial` matter carrying negotiation strategy plus several related agreements).
+- Linking is set/unset of `matter_id`: Member+, at creation or any time after, audit-logged per **DD-017**.
+- **One matter max per contract** (single FK per DD-007; no many-to-many).
+- Matter detail lists its linked contracts; contract header shows a parent-matter chip (region-E chips in the contract-details mock).
+
+### Rationale
+
+1. **Forcing a shell matter around every NDA doubles the objects** and clutters the matter list with empty containers.
+2. **The link is cheap and reversible**, so the team never has to predict up front whether work will grow — start standalone, link later.
+3. **Many-to-many rejected**: complicates "where does this live", and the rare cross-matter agreement can be referenced from other matters via comments/description.
+
+### Consequences
+
+- No schema changes (DD-007 already provides the FK).
+- Contract creation flow offers an optional matter picker; matter detail needs a Contracts section.
+- Confidentiality interaction to resolve in the Contracts grill: whether a confidential matter (**DD-014**) implies anything about its linked contracts' visibility, or the flags stay independent.
+- The rule-of-thumb wording above goes into user-facing docs.
+
+---
+
+## MTR-008: Closing is a signal, not a lock; archiving is separate; no retention engine in v1
+
+- **Status:** Accepted
+- **Date:** 2026-08-02
+
+### Context
+
+**MTR-002** defines *when* a matter is closed (any `closed`-category status). This decision defines what closing *does* — locking, preservation, redaction, retention — and how it relates to archiving.
+
+### Decision
+
+1. **Closing changes visibility, not writability** (GitHub-issue model). A closed matter stays fully readable and writable: comment, edit fields, attach late-arriving documents. Reopening is simply moving it back to an `open`-category status. What changes on close:
+   - Drops out of default list filters and "active matters" counts (per **MTR-002** category branching).
+   - Its key dates stop feeding "next deadline" surfaces (per **MTR-004**).
+2. **Archiving is a separate, orthogonal action** — the `archived_at` soft-delete (existing schema convention) for matters that shouldn't exist (created in error, spam intake). Archived matters are hidden from lists and search by default; Admin can restore. Closing is normal end-of-life; archiving is "this shouldn't exist".
+3. **No retention/redaction engine in v1.** Hard delete remains an explicit Admin action (compliance redaction, logged per **DD-017**). Automatic retention policies are parked in `FUTURE-FEATURES.md`.
+
+### Rationale
+
+1. **Late stragglers are the routine case** — the final signed doc or closing comment often arrives after close; read-only-on-close punishes it with reopen/re-close ceremony.
+2. **DD-017 already provides record integrity** — every post-close mutation is in the append-only activity log; freezing adds no audit value.
+3. **Conflating close with archive** would make normal end-of-life matters unfindable; closed matters are the team's institutional memory.
+
+### Alternatives considered
+
+- **Read-only on close** (comments allowed, edits require reopen) — rejected per rationale 1–2.
+- **Close = archive** (one hidden end state) — rejected per rationale 3.
+- **Retention engine now** — deferred; genuinely useful for privacy-conscious deployments but a policy surface too big for v1.
+
+### Consequences
+
+- No schema changes (`archived_at` and status categories already exist).
+- Matter list needs an archived-excluded default plus an Admin-visible archived filter; closed matters need a visible closed pill (category-mapped per **DES-005**) so post-close edits are made knowingly.
+- Search treats closed matters as normal results; archived matters excluded by default.
+- `FUTURE-FEATURES.md` gains a retention-policies entry.
+
+---
+
+## MTR-009: Naming — free-text title plus immutable global sequence number (M-42)
+
+- **Status:** Accepted
+- **Date:** 2026-08-02
+
+### Context
+
+Matters need human identification (what is this?) and stable citation (which one, exactly, in an email to outside counsel?). The question was free text only, auto-numbering, or firm-style templated schemes.
+
+### Decision
+
+- **Title**: required free text, user-written, editable anytime by Member+ (edits audit-logged per **DD-017**).
+- **Number**: auto-assigned **global integer sequence**, displayed as **M-42** (GitHub-issue style). Immutable, never reused — gaps from hard-deleted matters stay gaps. URLs use it: `/matters/42`.
+- **No templated/configurable numbering in v1** (no `EMP-2026-003` per-type-per-year schemes).
+
+### Rationale
+
+1. **Short stable citation is real workflow** — matters get referenced in email, Slack, and outside-counsel correspondence; "M-42" is unambiguous where titles get renamed and paraphrased.
+2. **Templated schemes break on re-typing** — MTR-001 allows changing a matter's type; a type-encoded number would then lie or need renumbering (worse).
+3. **Configurable numbering is a settings surface with real edge cases** (collisions, sequence resets, migrations) for marginal value at 2–10 people.
+4. **Numeric URLs beat UUID URLs** for a tool people paste links from all day.
+
+### Alternatives considered
+
+- **Title only** — rejected; nothing short and stable to cite.
+- **Templated numbering** — rejected per rationale 2–3; can graduate via `FUTURE-FEATURES.md` if OSS adopters demand it.
+
+### Consequences
+
+- `matters` gains `number` (unique integer, DB sequence) and `title` (text, not null). Schema updated in `SCHEMA.md`.
+- The `M-` prefix is a display convention, not stored. Contracts grill should adopt the sibling pattern (`C-###`) for consistency.
+- Search should match on number ("M-42" and "42") as well as title.
+- UI: number renders beside the title in headers and list rows (muted, per **DES-005** token conventions).
+
+---
+
+## MTR-010: Tags — deferred out of v1
+
+- **Status:** Accepted
+- **Date:** 2026-08-02
+
+### Context
+
+**MTR-001** carved tags out as a separate concept from matter type (finer, cross-type slicing: deals like "project-berlin", themes like "gdpr", occasions like "board-meeting"). The question was whether they ship in v1 and who controls the vocabulary.
+
+### Decision
+
+**No tags in v1.** Parked in `FUTURE-FEATURES.md`. Until then, cross-type grouping relies on search and title conventions.
+
+### Rationale
+
+1. **At 2–10 people, teams mostly remember what belongs together**; unused tag systems rot into vocabulary noise.
+2. **Cheap to add later** — two small tables (`tags`, `matter_tags`), nothing else depends on them.
+3. Deferring beats shipping a curation surface (rename/merge/archive) nobody asked for yet.
+
+### Alternatives considered
+
+- **Inline-create + Admin curation** (the recommended model if/when tags graduate) — flat org-wide tags, Member+ creates at point of use, Admin merges/renames.
+- **Admin-curated only** — tidier but ceremony-heavy.
+
+### Consequences
+
+- No schema changes; the tags entry in `SCHEMA.md`'s outstanding questions is resolved as deferred.
+- Matter list filtering in v1 is type + status + manager (+ search) only.
+- If tags graduate, the inline-create + Admin-curation model above is the starting recommendation.
+
+---
+
+## MTR-011: Custom fields — global field catalog with per-type attachment (Jira model)
+
+- **Status:** Accepted (storage revised by **CTR-016**: `matter_fields` renamed to `fields` with a `module_scope` of `matter | contract | global`, an `ai_prompt` column, and a new `entity` field type; the decision itself stands)
+- **Date:** 2026-08-02
+
+### Context
+
+The queued question was per-type field *templates*. The actual requirement (per user): templates aren't necessarily needed, but a **full custom fields capability** is. The shape settled on is the global-Jira model: fields are defined once globally, and each matter type's settings control which fields are attached to it.
+
+### Decision
+
+**Global custom-field catalog + per-type attachment.**
+
+1. **Global catalog** — Admins define fields once in **Matters Settings → Fields** (MTR-001 machinery: slug, display name, description, archive). A field's definition (name, type, options) lives in exactly one place.
+2. **Field types (8)**: text, long text, number, date, boolean, single-select, multi-select, user reference. Currency/money deliberately excluded until the spend module (per **MTR-006**).
+3. **Per-type attachment** — each matter type's settings add/remove fields from that type and order them. A field appears on a matter iff it's attached to the matter's type. Creating a field offers an "attach to all current types" convenience action (one-time, not a live flag).
+4. **DD-015 interplay** — every custom field carries the `business | legal` tag, exactly like built-in fields, so Contributor visibility rules apply uniformly.
+5. **Filterable** — select, date, number, boolean, and user fields work as matter-list filters; text/long-text are search-only.
+6. **Storage** — `matter_fields` (definitions) + `matter_type_fields` (attachment join) + a `custom_fields` jsonb column on `matters`, keyed by field slug. Values for fields detached from a type are retained (historical fidelity), just no longer rendered/editable.
+7. **Scope** — matters only in v1. The pattern is deliberately platform-shaped; Contracts/Entities adopt or decline it in their own grills.
+
+Behavior details:
+
+- Re-typing a matter (**MTR-001**) re-renders the form per the new type's attachments; values for now-unattached fields are retained but hidden (visible in activity history per **DD-017**).
+- Field CRUD, attachment changes, and value edits are audit-logged per **DD-017**.
+- Archiving a field hides it everywhere but retains stored values.
+- Changing a field's *type* after creation is not supported (archive and recreate) — avoids silent value coercion.
+
+### Rationale
+
+1. **Define-once beats per-type duplicates** — "Separation date" defined globally means one slug for reporting even if attached to three types; Jira's global-field model is battle-tested.
+2. **Attachment lives in type settings** because that's where an admin thinks "what does an Employment matter look like?" — the template use case falls out for free without templates as a concept.
+3. **jsonb over EAV** — Postgres jsonb with a GIN index handles filtering at this scale; EAV's join sprawl isn't warranted.
+4. **No type-change on fields** — silent coercion of existing values is a data-integrity trap.
+
+### Alternatives considered
+
+- **Per-type field templates** (fields defined inside a type) — rejected; duplicates definitions across types, fragments reporting.
+- **Global fields with no per-type attachment** — rejected; Employment-only fields would clutter every matter's form.
+- **Defer custom fields entirely** (the original recommendation) — overridden by the user: the capability is needed in v1.
+- **EAV value table** — rejected per rationale 3.
+
+### Consequences
+
+- New tables `matter_fields`, `matter_type_fields`; new `matters.custom_fields` jsonb column. Schema in `SCHEMA.md`.
+- Two settings surfaces: **Matters Settings → Fields** (catalog) and field add/remove/order inside each type's settings row.
+- Matter detail/form rendering is now type-driven; the form component must render from the attachment list, not a static field set.
+- List filtering must support custom-field predicates (select/date/number/boolean/user).
+- Contracts grill should decide whether contracts adopt the same capability (likely yes, sibling tables).
+- This substantially raises the v1 build surface — accepted knowingly.
+
+### Settings touchpoints
+
+- **Matters Settings → Fields** — global catalog: add / rename / describe / archive; type picker at creation (immutable); DD-015 tag picker; options editor for selects.
+- **Matters Settings → Types → [type]** — attach/detach fields, per-type display order.
+
+---
+
+## MTR-012: Priority and risk — both first-class default fields on every matter
+
+- **Status:** Accepted
+- **Date:** 2026-08-02
+
+### Context
+
+Competitive research (2026-08-02, Xakia/LawVu/Dazychain + enterprise ELM + intake-first generation) showed priority/urgency and a separate risk rating as first-class matter fields in effectively every product: Xakia's legal-risk dial (low→critical) and priority, LawVu's urgent flag + 1–5 risk slider, Dazychain's risk-assigned-at-triage, Tonkean's triage on urgency/impact/risk. OpenLaw had neither. The choice was first-class columns vs seeded MTR-011 custom fields.
+
+### Decision
+
+**Both are built-in default fields** (first-class columns on `matters`):
+
+- `priority` — text enum `low | normal | high | urgent`, **not null, default `normal`**.
+- `risk` — text enum `low | medium | high | critical`, **nullable** — null means "not yet assessed", which is honest until legal triages (the Dazychain pattern: risk set at triage, not by the requester).
+
+Behavior:
+
+- Priority drives triage-queue and list sort order and renders as a pill/flag; risk renders as a pill; both map to the **DES-005** paired status-pill families.
+- Both are filterable and dashboard-segmentable (risk mix and urgent share were standard dashboard cuts in every product researched).
+- Intake (**DD-010**) may collect urgency from the requester (informing `priority`); `risk` is set by legal at triage, never by the requester.
+- Both editable by Member+ (Contributors cannot), audit-logged per **DD-017**.
+
+### Rationale
+
+1. **Universal in the market** — their absence would read as a gap in the first demo.
+2. **They drive code behavior** (triage sort, routing signals, dashboard cuts), which is the documented carve-out (per project memory) where fixed enums beat configurability.
+3. **Priority ≠ risk**: priority is "how fast", risk is "how bad if it goes wrong" — a routine filing can be urgent+low-risk; a dormant dispute can be low-priority+critical-risk. Collapsing them loses triage information.
+4. Teams wanting additional axes (complexity, strategic value à la Xakia) can add them via the **MTR-011** catalog — the built-ins set the floor, not the ceiling.
+
+### Alternatives considered
+
+- **Priority first-class, risk as seeded custom field** (the original recommendation) — overridden by the user: both should be default fields.
+- **Both as seeded custom fields** — rejected; code can't reliably sort/route on archivable fields.
+- **Neither** — rejected per rationale 1.
+
+### Consequences
+
+- Two new columns on `matters` in `SCHEMA.md`.
+- The triage queue (DD-010 surfaces) sorts by priority; dashboards get risk-mix and urgent-share cuts.
+- Screen mocks need priority/risk affordances on matter lists, headers, and the intake triage view.
+
+---
+
+## MTR-013: Matter templates — named template entity, pre-fills the matter and instantiates its checklist
+
+- **Status:** Accepted
+- **Date:** 2026-08-02
+
+### Context
+
+Competitive research showed template-driven matter creation as the market's most-loved matters feature (Clio Matter Templates pre-fill fields, status, custom fields, and attach task lists with relative due dates; LawVu/Xakia/Dazychain auto-apply task templates by matter type). The choice was between hanging a single default checklist off each matter type versus a separate named template entity. The user chose the **separate template entity** — its key advantage: multiple templates per type (e.g., "Employment – Termination" and "Employment – Investigation" both on the Employment type).
+
+### Decision
+
+New **`matter_templates`** entity, Admin-managed:
+
+- A template belongs to exactly one **matter type** and has a name + description.
+- A template can pre-fill: **priority**, **risk**, **custom-field values** (for fields attached to its type per **MTR-011**), and a **title prefix/pattern** (optional).
+- A template carries **template tasks**: title, **relative due date** (offset in days from matter creation, optional), **role target** (`matter_manager` or unassigned — roles, not named users, per Clio's retrofit lesson), display order. Instantiated as **MTR-005** checklist items on creation.
+- **Creation flow**: pick type → optionally pick one of its templates (types with one template can offer it as default; templates are always optional — blank matters remain first-class).
+- Template CRUD is Admin (Matters Settings); applying a template at creation is anyone who can create matters. Template changes never retroactively alter existing matters.
+- Document folder structures as template content: **deferred to the Documents grill** (flagged there).
+
+### Rationale
+
+1. **Multiple named templates per type** is the real-world shape — one type, several recurring playbooks.
+2. **Relative due dates + role targeting** make templates survive personnel changes and start the deadline clock correctly.
+3. **Templates compose with, not duplicate, existing decisions**: fields come from the type (MTR-011), statuses are global (MTR-002) — the template only supplies *values* and *tasks*.
+4. Restraint kept: no workflow triggers, no stage-change automation (Clio gates that behind top tiers; our equivalent would be a future automation surface).
+
+### Alternatives considered
+
+- **Per-type default checklist only** (the original recommendation) — overridden by the user; one checklist per type is too coarse for types with several recurring playbooks.
+- **No templates in v1** — rejected; the most-loved market feature, cheap relative to MTR-011 machinery already being built.
+
+### Consequences
+
+- New tables `matter_templates`, `matter_template_tasks` in `SCHEMA.md`.
+- New settings surface: **Matters Settings → Templates** (list per type; editor covers pre-fill values + task rows).
+- Matter creation UI gains an optional template picker (filtered by chosen type).
+- Intake triage (**DD-010**) can apply a template at handoff.
+- If a template's type detaches a custom field the template pre-fills, the template editor flags it (stale value warning).
+
+## MTR-014: Custom fields — hard-required per type, enforced at creation; conditional logic deferred
+
+- **Status:** Accepted
+- **Date:** 2026-08-02
+
+### Context
+
+Enterprise research flagged required-ness as the first thing users ask of a custom-field catalog (Legal Tracker's soft-required "Profile Incomplete" flags; its conditional "smart matters"). The choice: soft-required (never blocks saving, incomplete badge) vs hard-required at creation vs nothing.
+
+### Decision
+
+1. **`is_required` lives on the per-type attachment** (`matter_type_fields.is_required`) — a field can be required for Employment matters and optional elsewhere.
+2. **Hard enforcement at creation**: a matter cannot be created (or re-typed, per **MTR-001**) while a required field for its type is empty. Also enforced when a required field is cleared on edit.
+3. **Conditional show/hide logic** ("show field B only if field A = X") is **deferred** to `FUTURE-FEATURES.md`.
+
+### Rationale
+
+1. **Data quality by construction** — required fields that can be skipped drift empty; hard enforcement guarantees dashboards and filters over those fields are trustworthy.
+2. **The quick-capture tension resolves through DD-010**: rushed inbound work lives as a *Request* until triage; required matter fields are filled by the triager at conversion. The Request entity absorbs the "capture in 10 seconds" role, so the matter record can afford to be strict.
+3. **Templates soften the cost** — MTR-013 templates pre-fill values, so required fields on templated flows are mostly pre-satisfied.
+4. **Conditional logic deferred** — a dependency-graph engine (cycles, hidden-but-required, stale hidden values) that none of the small-team competitors ship; only the enterprise ceiling has it.
+
+### Alternatives considered
+
+- **Soft-required with "incomplete" badge** (the original recommendation, Tracker/Xakia pattern) — overridden by the user in favor of guaranteed data quality.
+- **No required-ness** — rejected; catalogs without it drift empty.
+
+### Consequences
+
+- `matter_type_fields` gains `is_required` (boolean, not null, default false). Schema updated.
+- Attaching a field as required to a type with existing matters does **not** retro-block those matters; they surface in an "incomplete" filter instead (only creation/re-type/edit paths enforce).
+- Re-typing a matter (**MTR-001**) may now prompt for newly-required fields before completing.
+- Intake conversion UI (**DD-010**) must render required fields for the chosen type at triage.
+- Warning inherited from research: deactivating/archiving a field must **never** delete data (contrast Legal Tracker, where field deactivation destroys values) — MTR-011's retention semantics already guarantee this.
+
+## MTR-015: Matter relationships — parent/child hierarchy plus flat related links; no cascade semantics
+
+- **Status:** Accepted
+- **Date:** 2026-08-02
+
+### Context
+
+Matters had no way to reference each other. Research: TeamConnect supports full matter hierarchies (parent objects, sub-objects); LawVu has flat linked matters. Real cases: one dispute spawning multiple proceedings; a project matter with sub-workstreams; loosely connected matters worth cross-referencing.
+
+### Decision
+
+**Both structures, kept deliberately dumb:**
+
+1. **Parent/child**: `matters.parent_id` — nullable self-referencing FK. Single parent per matter, arbitrary depth, cycles rejected at the application layer.
+2. **Related**: `matter_relations` join table — undirected matter↔matter links (A related to B shows on both).
+3. **No cascade or inheritance semantics, explicitly:**
+   - Closing a parent does **not** close children (closing a parent with open children shows an informational prompt listing them — never blocks).
+   - Team membership, Matter Manager, and confidentiality (**DD-014**) do **not** flow between parent and child.
+   - No rollups (no aggregated deadlines/tasks/spend on the parent) in v1.
+   - Hierarchy is navigational structure only: children listed on the parent's detail; parent breadcrumb on the child; related list shows number + title per **MTR-009**.
+4. Link/unlink and re-parenting are Member+, audit-logged per **DD-017**.
+
+### Rationale
+
+1. **Parent/child expresses real structure** (dispute → proceedings; program → workstreams) that flat links flatten away.
+2. **Cascade semantics are the trap** — auto-closing children, inherited teams, and flowing confidentiality each create surprise behavior and permission leaks; declining them keeps the hierarchy safe and cheap.
+3. Rollups can be added later without schema change if demand appears.
+
+### Alternatives considered
+
+- **Flat related links only** (the original recommendation) — overridden by the user; hierarchy is wanted too.
+- **Typed relations** ("spawned from", "consolidated into") — not chosen; label vocabulary with little behavior. Revisit only with demand.
+
+### Consequences
+
+- `matters.parent_id` column + new `matter_relations` table in `SCHEMA.md`.
+- Matter detail gains a hierarchy section (parent breadcrumb, children list) and a Related list; matter lists may indicate child matters (indent or badge — screen grill decides).
+- Confidentiality note for the screen grills: a user may see a child but lack access to its confidential parent (or vice versa) — render inaccessible relatives as "restricted matter", never leak titles (**DD-014**/**DES-009**).
+- Cycle prevention is an application-layer invariant.
+
+## MTR-016: Lifecycle timestamps — `opened_at` / `closed_at` maintained on category transitions
+
+- **Status:** Accepted
+- **Date:** 2026-08-02
+
+### Context
+
+Cycle-time reporting ("avg days to close, by type") is a named metric in every product researched, and the deferred SLA engine (**MTR-004** / `FUTURE-FEATURES.md`) will need status-transition timing. The enterprise research's cheapest lesson (via TeamConnect's phase-linked Opened On/Closed On): capture the timestamps now and reporting falls out for free.
+
+### Decision
+
+- `matters.opened_at` — set at creation (equals `created_at` initially; reset if a closed matter is reopened? **No** — `opened_at` is set once at creation and never changes; reopen history lives in the activity log).
+- `matters.closed_at` — set when the matter transitions into a `closed`-category status (**MTR-002**); **cleared on reopen**. Null = open.
+- Maintained by the application on status change; the full transition history (including repeated close/reopen cycles) remains in `activity_log` per **DD-017** — these columns are a reporting convenience, not the source of truth.
+- Cycle time = `closed_at - opened_at` for closed matters; a canned "avg days to close by type" report becomes trivially possible.
+
+### Rationale
+
+1. Two columns now vs a log-scan in every report later.
+2. Future SLA/step-timing work reads DD-017 transition history; these columns just make the headline metric cheap.
+
+### Alternatives considered
+
+- **Derive from activity log only** — rejected; every dashboard query pays a log-scan.
+
+### Consequences
+
+- Two columns on `matters` in `SCHEMA.md`; status-change code path must maintain `closed_at`.
+- Dashboards can ship a cycle-time report in v1 with zero additional data work.
+
 ## Index of decisions
 
 | # | Decision | Status |
 |---|---|---|
 | MTR-001 | Matter type taxonomy — configurable enum, seeded with 9 default types, Admin-managed | Accepted |
+| MTR-002 | Matter lifecycle — fixed open/closed system dimension + configurable status labels | Accepted |
+| MTR-003 | Matter assignment — one Matter Manager, plus legal team members added as needed | Accepted |
+| MTR-004 | Deadlines — first-class named key dates; SLA engine deferred to future | Accepted |
+| MTR-005 | Tasks — lightweight checklist, not a task entity | Accepted |
+| MTR-006 | External counsel — collaboration via Contributor role; fee tracking deferred | Accepted |
+| MTR-007 | Matter ↔ Contract — standalone by default, linked when part of broader work | Accepted |
+| MTR-008 | Closing is a signal, not a lock; archiving separate; no retention engine in v1 | Accepted |
+| MTR-009 | Naming — free-text title plus immutable global sequence number (M-42) | Accepted |
+| MTR-010 | Tags — deferred out of v1 | Accepted |
+| MTR-011 | Custom fields — global field catalog with per-type attachment (Jira model) | Accepted |
+| MTR-012 | Priority and risk — both first-class default fields on every matter | Accepted |
+| MTR-013 | Matter templates — named template entity per type, pre-fills fields and instantiates task checklist | Accepted |
+| MTR-014 | Custom fields — hard-required per type at creation; conditional logic deferred | Accepted |
+| MTR-015 | Matter relationships — parent/child hierarchy plus flat related links; no cascade semantics | Accepted |
+| MTR-016 | Lifecycle timestamps — opened_at/closed_at maintained on category transitions | Accepted |

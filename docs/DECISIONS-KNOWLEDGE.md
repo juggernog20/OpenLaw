@@ -31,6 +31,7 @@ Decisions are numbered `KNW-###`.
 - Access control granularity (org-wide vs role-restricted vs per-entry ACL — and how it composes with the platform role model)
 - External-source ingestion (clause libraries from third-party providers, statute snippets, regulator guidance — adapter model? out of scope?)
 
+- Organization structure for knowledge items (templates, precedents, legislation) — folder-like structure flagged from **DOC-006**; documents will own a knowledge-item FK per **DOC-008**; precedent/template library explicitly routed here by **DOC-002**
 ---
 
 _No decisions recorded yet. Run `/grill-me` and ask to design the Knowledge module._
