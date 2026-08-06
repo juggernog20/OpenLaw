@@ -18,25 +18,54 @@ Decisions are numbered `KNW-###`.
 
 ## Open questions queued for the next grill-me session
 
-- Knowledge entry types (precedent clauses / playbooks / templates / how-to articles / FAQ — single entity with `type` discriminator, or distinct entities per kind?)
-- Relationship to Documents (is a precedent a Document with a flag, or a separate Knowledge record that *references* a Document version, or fully independent?)
-- Authoring workflow (who can publish — any lawyer, or curator-gated? draft → review → publish lifecycle, or trust-the-author?)
-- Versioning and supersession (does a clause have versions like a contract draft, and how do we surface "this superseded KNW-042"?)
-- Search architecture for knowledge (reuse Documents FTS, or layer a separate semantic / vector search? cross-module unified search vs module-scoped)
-- Tagging / taxonomy (controlled vocabulary curated by admins vs freeform tags vs both — and how this interacts with the document-tags decision in DOC)
-- Surfacing knowledge in workflows (suggested clauses inside the contract redline UI? template picker at matter-open time? passive vs active recommendation)
-- Usage tracking (do we record "this precedent was inserted into contract X" — for popularity ranking, audit, or both?)
-- Stale-content handling (review-by date / owner / auto-archive rules — or rely on manual curation)
-- AI-assisted authoring and retrieval (in scope for v1, or strictly post-v1 once a corpus exists?)
-- Access control granularity (org-wide vs role-restricted vs per-entry ACL — and how it composes with the platform role model)
-- External-source ingestion (clause libraries from third-party providers, statute snippets, regulator guidance — adapter model? out of scope?)
-
-- Organization structure for knowledge items (templates, precedents, legislation) — folder-like structure flagged from **DOC-006**; documents will own a knowledge-item FK per **DOC-008**; precedent/template library explicitly routed here by **DOC-002**
+_None — queue cleared 2026-08-06 (KNW-001 through KNW-005)._
 ---
 
-_No decisions recorded yet. Run `/grill-me` and ask to design the Knowledge module._
+## KNW-001 — Entry model: one typed entity, text body + owned documents
+
+- **Status** — Accepted
+- **Date** — 2026-08-06
+- **Decision** — `knowledge_items` with a **configurable type list** (`knowledge_types`, MTR-001 machinery; seeds: template, precedent, playbook, article). Every item has a rich-text `body` (article/playbook content, or usage guidance for a template) and can **own documents** — `documents.knowledge_item_id` joins the DOC-008 owner set; a template's .docx is a normal document with DOC-001 version chains, previewable and downloadable like any file.
+- **Rationale** — One machinery for search, browse, and publishing; playbooks/FAQs aren't files and files aren't articles — the body+documents combination covers both.
+- **Alternatives considered** — Distinct entities per kind (4× machinery); documents-with-a-flag (no home for non-file knowledge; DOC-002 routed the library here).
+- **Consequences** — `knowledge_items`, `knowledge_types` in SCHEMA.md; DOC-008 owner set complete (matter | contract | entity | knowledge item).
+
+## KNW-002 — Publishing: Member+ authors, draft/published, edit-in-place
+
+- **Status** — Accepted
+- **Date** — 2026-08-06
+- **Decision** — Any legal staff member creates and publishes — no curator gate (trust-the-author; DD-017 audit is the accountability). States: `draft | published` (drafts staff-visible, excluded from portal/deflection). **Edit-in-place** with audit history — no item-version model; file versions come free via owned documents' chains. Supersession = archive + optional `replaced_by_id` link.
+- **Rationale** — At 2–10 people a review queue between the team and its own know-how mostly guarantees an empty library.
+- **Consequences** — `state`, `replaced_by_id` columns. Curator workflow, if ever needed, layers on later.
+
+## KNW-003 — Organization: nested folders, blank-start
+
+- **Status** — Accepted
+- **Date** — 2026-08-06
+- **Decision** — `knowledge_folders` (nested, DOC-006/011 pattern at knowledge scope — organizing *items*, not documents) + `knowledge_items.folder_id`. **Blank-start**, consistent with ENT-005/006: the organization builds its own structure. Type is a filter, not the hierarchy.
+- **Consequences** — Two light tables; list + search across everything with type/folder/author filters.
+
+## KNW-004 — Audience: legal-only default + portal-readable flag; v1 surfacing = browse/search/deflection
+
+- **Status** — Accepted
+- **Date** — 2026-08-06
+- **Decision** — `audience`: `legal_only` (default) | `everyone` — published `everyone` items render read-only in the portal (magic-link, no login), which lets INT-004 deflection links point at real knowledge articles. v1 surfacing is the Knowledge destination + deflection links only; in-workflow surfacing (template picker at contract creation, clause suggestions in review) goes to FUTURE-FEATURES.
+- **Rationale** — The deflection layer needs a home for the FAQ content it links; in-workflow surfacing needs a populated corpus before it's more than an empty dropdown.
+- **Consequences** — Portal gains a read-only knowledge-article view. INT-004's links can be internal (knowledge item) or external (URL).
+
+## KNW-005 — Deferred set: search intelligence, usage tracking, staleness, AI, external ingestion
+
+- **Status** — Accepted
+- **Date** — 2026-08-06
+- **Decision** — Deferred without individual grills: semantic/vector search (DOC-009 FTS covers v1), usage tracking ("inserted into contract X"), stale-content rules (review-by dates), AI-assisted authoring/retrieval, and external clause-library ingestion. One FUTURE-FEATURES entry covers the set.
+- **Rationale** — All presuppose a corpus and usage patterns that don't exist yet.
 
 ## Index of decisions
 
 | # | Decision | Status |
 |---|---|---|
+| KNW-001 | Entry model: one typed entity, text body + owned documents | Accepted |
+| KNW-002 | Publishing: Member+ authors, draft/published, edit-in-place | Accepted |
+| KNW-003 | Organization: nested folders, blank-start | Accepted |
+| KNW-004 | Audience: legal-only default + portal-readable flag | Accepted |
+| KNW-005 | Deferred set: search intelligence, usage, staleness, AI, ingestion | Accepted |

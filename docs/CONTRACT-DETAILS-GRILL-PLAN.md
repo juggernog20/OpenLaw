@@ -35,7 +35,7 @@ Dependency picture (biggest first):
 2. **Documents module grill (DOC-###)** — **DONE 2026-08-04** (DOC-001–011). Doc-panel gates resolved: versioning (K.H3), redline strategy (K.H4), preview rendering (K.B1–17).
 3. **Notifications feature DD** — **DONE 2026-08-05** (`DECISIONS-NOTIFICATIONS.md`, NOT-001–005). A.4 resolved; E.1 narrowed.
 4. **Comment-surface feature DD** — **DONE 2026-08-05** (`DECISIONS-COMMENTS.md`, CMT-001–005). K.B9/J.2 resolved; E.6/F.7 removed.
-5. **Settings grill (SET-###)** gates J.9.
+5. **Settings grill** — **DONE 2026-08-05** (SET-001–004). J.9 resolved.
 
 Two mock-vs-decision **conflicts** found: B.6 (Reports nav item vs DD-005's deferral of reporting-as-destination) and the V13 right column (48px bar + 392px panel vs DES-007's single 320px `--width-rail`) — see B.6 and J.X. Also: the V13 doc panel is the screen DES-006 was waiting for to pick the secondary legal-document typeface — that deferred question is now unblocked.
 
@@ -54,7 +54,7 @@ The grill flows top-of-screen down so each decision feeds the next. Suggested ba
 9. **Batch 9 — Doc panel (K.*).** Header chrome, toolbar density, comment-marker UX.
 10. **Batch 10 — Cross-cutting (X.*).** Sweep up the divergences between V12 and V13.
 
-Post-sweep note: the Contracts, Documents, Intake (+DD-018), Notifications, and Comments grills are all complete as of 2026-08-05. The only remaining gate is the Settings grill (J.9); everything else is pending-by-choice in the screen batches.
+Post-sweep note: ALL gates are cleared as of 2026-08-05 — Contracts, Documents, Intake (+DD-018), Notifications, Comments, and Settings grills complete. Every remaining row is pending-by-choice; the screen batches (1–10) can run start to finish.
 
 ---
 
@@ -221,7 +221,7 @@ All G field rows are contract-schema decisions — the `contracts` schema is TBD
 | J.6 | track_changes (badge "42") | Both | pending | | Same redlines from doc panel — clarify relationship. |
 | J.7 | attach_file | V12 | pending | | Confirm whether V13 keeps it. |
 | J.8 | divider | Both | pending | | Group break — confirm the grouping is meaningful. |
-| J.9 | settings | Both | blocked | | Settings IA (top-level vs per-module gear) is a queued SET question — blocked on the Settings grill. |
+| J.9 | settings | Both | done | keep — deep-link into /settings at the relevant section per SET-001 (Admin sees org sections; Members land on Personal) | |
 | J.X2 | Badge rules | Both | pending | | "3 / v7 / 42" — define what counts and when. |
 
 ## K. Document panel (V13 only)

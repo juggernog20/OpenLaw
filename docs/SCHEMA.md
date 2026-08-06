@@ -45,11 +45,35 @@ Open: authentication-related columns (password hash vs OIDC sub vs magic-link on
 ---
 
 ### `entities` (own corporate entities)
-Source: **DD-008**, project memory `project_entities_module_scope.md`
+Source: **DD-008**, **ENT-001–004**
 
-Internal corporate entities — your subsidiaries, holdings, and related corporate persons. Rich schema (officers, share capital, registered agent, EIN, registered address, statutory documents, license registry, renewal calendar).
+Internal corporate entities — your subsidiaries, holdings, and related corporate persons. Visible to all Member+ (no per-entity grants); `is_confidential` covers the rare sensitive case (ENT-004).
 
-Schema **TBD** — to be detailed in the Entities module grill (`DECISIONS-ENTITIES.md`, `ENT-###`).
+| Column | Type | Notes |
+|---|---|---|
+| `id` | UUID | PK |
+| `legal_name` | text | not null |
+| `entity_type_id` | UUID | FK → `entity_types.id` (configurable list; seeds: corporation, llc, partnership, branch, other) per **ENT-001** |
+| `jurisdiction` | text | formation jurisdiction |
+| `formed_on` | date | nullable |
+| `registration_number` | text | nullable |
+| `tax_id` | text | nullable |
+| `registered_agent` | text | nullable |
+| `registered_address` | text | nullable |
+| `status` | text (enum) | `active` \| `dormant` \| `dissolved` \| `divested` — fixed per **ENT-001** |
+| `shares_authorized`, `shares_issued` | bigint | nullable; simple share capital per **ENT-001** |
+| `par_value` | bigint | nullable, integer cents |
+| `custom_fields` | jsonb | keyed by slug; `entity`-scoped catalog fields per **ENT-001**/CTR-016 |
+| `is_confidential` | boolean | per **DD-014**/ENT-004 |
+| `created_at`, `updated_at`, `archived_at` | timestamptz | |
+
+Support tables per **ENT-001/002/003/006**:
+
+- `entity_types` — MTR-001 machinery (slug, display_name, display_order, is_system_default, archived_at); `other` protected. Officer roles likewise: `officer_roles` (seeds: director, ceo, cfo, secretary, other).
+- `entity_officers` — `entity_id`, `name` text, `officer_role_id` FK, `appointed_on`, `resigned_on` (null = current), `user_id` nullable FK, timestamps.
+- `entity_registrations` — `entity_id`, `jurisdiction`, `registration_number`, `registered_agent`, `status` (`active|lapsed|withdrawn`), timestamps.
+- `entity_holdings` — (`owner_entity_id`, `owned_entity_id`, `ownership_percent`, timestamps), compound PK on the pair; no cycles (application-enforced); soft ≤100% validation per owned entity. Backs the v1 org chart (ENT-003).
+- `entity_obligations` — `entity_id`, `label` text (no kind taxonomy), `registration_id` nullable FK, `recurrence_months` integer (null = one-off), `next_due_on` date, `assignee_id` nullable FK, `note`, timestamps. Blank-start; "Mark filed" logs the cycle and rolls `next_due_on` forward, human-confirmed (ENT-006). Feeds NOT-002 group 3.
 
 ---
 
@@ -170,7 +194,7 @@ Custom-field catalog (Jira model), shared across modules with a scope. A field i
 | `slug` | text | unique, not null, immutable; key used in the per-module `custom_fields` jsonb |
 | `display_name` | text | not null, user-editable |
 | `description` | text | nullable; shown as help text on forms |
-| `module_scope` | text (enum) | `matter` \| `contract` \| `global` per **CTR-016**; global attaches to both modules. Promotion to `global` allowed; narrowing blocked while cross-module attachments exist |
+| `module_scope` | text (enum) | `matter` \| `contract` \| `entity` (**ENT-001**) \| `global` per **CTR-016**; global attaches across modules. Promotion to `global` allowed; narrowing blocked while cross-module attachments exist |
 | `field_type` | text (enum) | `text` \| `long_text` \| `number` \| `date` \| `boolean` \| `single_select` \| `multi_select` \| `user` \| `entity` (**CTR-016** adds `entity`) — **immutable** |
 | `options` | jsonb | nullable; option list for select types |
 | `field_tag` | text (enum) | `business` \| `legal` per **DD-015**; drives Contributor visibility |
@@ -570,7 +594,18 @@ Logical document record. No workflow. **Every document has exactly one owning re
 | `created_at`, `updated_at` | timestamptz | |
 | `archived_at` | timestamptz | soft delete |
 
-Exactly-one-owner rule (**DOC-008**): application enforces exactly one of the owner FKs set; `entity_id` and a knowledge-item FK join the set when those modules are grilled. Repository destination is Member+; Contributors/Business Users reach documents only through records they're on.
+Exactly-one-owner rule (**DOC-008**): application enforces exactly one of the owner FKs set — `matter_id` | `contract_id` | `entity_id` (**ENT-005**) | `knowledge_item_id` (**KNW-001**). The owner set is now complete. Repository destination is Member+; Contributors/Business Users reach documents only through records they're on (portal-readable knowledge items render their docs read-only per KNW-004).
+
+---
+
+### `knowledge_items` / `knowledge_types` / `knowledge_folders`
+Source: **KNW-001–004**
+
+The curated know-how home (DOC-002 routing): templates, precedents, playbooks, articles.
+
+`knowledge_items`: `id`, `title` (not null), `knowledge_type_id` FK (configurable list — seeds: template, precedent, playbook, article; MTR-001 machinery), `body` (rich text), `folder_id` nullable FK, `state` (`draft | published`), `audience` (`legal_only | everyone` — published `everyone` items render read-only in the portal), `replaced_by_id` nullable self-FK (supersession on archive), `created_by`, timestamps, `archived_at`. Edit-in-place, audit-logged (no item versioning — owned documents carry DOC-001 version chains).
+
+`knowledge_folders`: nested (`parent_id`), blank-start, organizing knowledge *items* (distinct from `document_folders`, which organize documents within a record): `id`, `parent_id`, `name`, `display_order`, timestamps.
 
 CTR-014 contract-side requirements (primary-document designation per contract; ordered version chain; kinds; executed pin; generated-redline provenance) are satisfied by **DOC-001**. Primary-document designation mechanism (flag here vs FK on `contracts`) — settle when the contract-side UI lands.
 
@@ -579,7 +614,7 @@ CTR-014 contract-side requirements (primary-document designation per contract; o
 ### `document_folders`
 Source: **DOC-006**, **DOC-011**
 
-Optional lightweight folders scoped within one owning matter or contract. **Nested** per DOC-011 (folder-drop imports retain structure). The global repository view stays flat — folder is a filter facet there.
+Optional lightweight folders scoped within one owning matter, contract, or entity (**ENT-005** adds `entity_id` to the owner set; blank-start, nothing seeded). **Nested** per DOC-011 (folder-drop imports retain structure). The global repository view stays flat — folder is a filter facet there.
 
 | Column | Type | Notes |
 |---|---|---|

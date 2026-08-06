@@ -33,14 +33,7 @@ Decisions are numbered `SET-###`.
 
 ## Open questions queued for the next grill-me session
 
-- **IA placement** — top-level "Settings" destination, per-module gear icon, or both?
-- **Permission model** — Admin-only across the board (default per **DD-013**), or delegated for specific surfaces (e.g., a Member can manage contract templates without Admin escalation)?
-- **Audit-log treatment** — every settings change written to `activity_log` per **DD-017**, or only Admin-classified ones? Read-after-write display semantics (the change shows in the system audit log immediately).
-- **Preview / draft / rollback semantics** — does a settings change apply immediately on save, or after explicit "Publish"? Soft-rollback affordance for high-blast-radius changes (e.g., archiving a matter type that has live matters)?
-- **Install-time vs runtime seeding** — what's seeded by the installer (the 9 matter types per **MTR-001**, the role enum per **DD-013**), and what's pulled in via post-install onboarding?
-- **Per-user vs per-org settings** — theme preference (per **DES-001**) is per-user; matter types are per-org. Does the IA expose them on the same surface ("Settings" with personal / org tabs) or separate destinations?
-- **Bulk reassign / migration UX** — when archiving a configurable value that's in use (matter type, lifecycle state, tag), how does the bulk-reassign step look across modules?
-- **Configurability surface inventory** — pulled from each module's "Settings touchpoints" subsection as those modules get grilled.
+_None — queue cleared 2026-08-05 (SET-001 through SET-004). Audit treatment needed no grill: DD-017 already mandates every settings mutation to the activity log, applied immediately (SET-003). Entities/Knowledge settings sections queue here when those module grills run._
 
 ## Configurability surface inventory (live, populated as module grills land)
 
@@ -61,14 +54,54 @@ Decisions are numbered `SET-###`.
 | **CTR-013** | Contracts Settings → E-signature | Admin | Provider connector credentials (DocuSign v1); adapter-keyed for future providers |
 | **CTR-012** | Contracts Settings → Approver Groups | Admin | Named groups (name + member list); applying a group snapshots members into approval requests |
 | **CTR-008** | Contracts Settings → AI Analysis | Admin | BYO API key; per-field default prompts (editable); custom fields carry their own prompts |
+| **KNW-001** | Knowledge Settings → Types | Admin | List view; seeds: template, precedent, playbook, article; MTR-001 machinery |
+| **ENT-001** | Entities Settings → Types | Admin | List view; add / rename / reorder / archive; `other` row protected |
+| **ENT-001** | Entities Settings → Officer Roles | Admin | List view; seeds: director, ceo, cfo, secretary, other |
 | **CTR-001** | Contracts Settings → Statuses | Admin | List view; add / rename / reorder / archive; stage (draft/review/approval/signature/active/ended) picked at creation, immutable after; seed `draft`, `active`, `expired` rows protected |
-| **CTR-002** | Contracts Settings → Types | Admin | List view; add / rename / reorder / archive; `other` row protected; type is the policy carrier (fields / templates / approval targeting) |
 
 ---
 
-_No decisions recorded yet. Grill after the per-module grills (Matters, Contracts, Intake, Documents, Entities, Knowledge) wrap._
+## SET-001 — IA: one /settings destination with Personal + Organization rails
+
+- **Status** — Accepted
+- **Date** — 2026-08-05
+- **Context** — Where the 17-surface inventory lives. (Grilled after five of seven module grills; Entities/Knowledge sections slot in when theirs land.)
+- **Decision** — A single `/settings` destination, reached via the avatar menu and gear affordances. Left rail in two groups: **Personal** (Profile, Appearance per DES-001/002, Notification preferences per NOT-001) and **Organization** (General, Users, Matters, Contracts, Intake, Notifications, Integrations) — Organization sections hidden from non-Admins. **Contextual deep-links** from module UIs jump to the relevant section (Admin-only affordances, e.g. "Manage types…" under a type picker). Grill-plan J.9 becomes a deep-link, not a separate surface.
+- **Rationale** — Cross-cutting surfaces (the shared fields catalog, notifications, users) have no module home; a single destination with module sections keeps one IA pattern and one component substrate.
+- **Alternatives considered** — Per-module gear pages: orphans/duplicates cross-cutting surfaces.
+- **Consequences** — Two net-new Organization sections implied beyond the module inventory: **General** (org identity: name, logo, locale/timezone defaults) and **Users** (invite, role assignment per DD-013, archive). Integrations hosts E-signature (CTR-013) + AI (CTR-008) credentials. Settings screens become one design family (list-editor pattern per DES).
+
+## SET-002 — Permissions: Admin-only Organization settings; no delegation in v1
+
+- **Status** — Accepted
+- **Date** — 2026-08-05
+- **Decision** — Every Organization section is Administrator-only per DD-013. Members see Personal only (module UIs may render read-only labels of org config where contextual). No per-surface delegation grants in v1 — parked in FUTURE-FEATURES.
+- **Rationale** — At 2–10 people the Admin is a message away; a grants model is a fifth permission concept bolted onto DD-013's clean scheme.
+- **Consequences** — FUTURE-FEATURES entry (settings delegation). Permission check is a single role gate, not per-surface.
+
+## SET-003 — Apply semantics: immediate on save; guarded archive with reassignment
+
+- **Status** — Accepted
+- **Date** — 2026-08-05
+- **Decision** — Settings changes apply immediately on save, activity-logged per DD-017 (the audit log + unarchive are the recovery story; no draft/publish/rollback engine). One cross-module guard: **archiving a value in use** (matter/contract type, request type, template, field option) shows the live-usage count and requires a reassignment target before archiving; surfaces with structural minimums (statuses: ≥1 per category/stage per MTR-002/CTR-001) block instead. Field archival keeps stored values per MTR-011 — no reassignment needed.
+- **Rationale** — Publish ceremony on every rename is big-org machinery; the guard pattern addresses the only genuinely dangerous operation.
+- **Consequences** — Bulk-reassign flow is a shared component across all list-editor surfaces. Archive guards need usage-count queries per surface.
+
+## SET-004 — First-run onboarding wizard + seeded defaults
+
+- **Status** — Accepted
+- **Date** — 2026-08-05
+- **Context** — Installer seeding vs post-install setup. Recommended seeds + a passive checklist; Blair chose the **first-run onboarding wizard**.
+- **Decision** — Install-time migrations still seed every system default already specified per-table (9 matter types, matter/contract statuses, 8 contract types, notification offsets, starter request types: NDA request → contract, Contract review → contract, Legal question → no target). On first Admin login, a **guided onboarding wizard** runs: org identity (name, logo) → allowed email domains (DD-010 allowlist) → email/SMTP → invite users + roles → optional integrations (DocuSign, AI key) → review seeded types. Steps are skippable and everything remains editable in Settings afterward; the wizard is first-run only, not a recurring surface.
+- **Rationale** — (User preference for a guided first-run.) The wizard makes the under-an-hour install goal *feel* finished — a fresh system that asks for exactly the config seeds can't know.
+- **Alternatives considered** — Seeds + passive "Finish setup" checklist card (recommended, declined).
+- **Consequences** — The wizard is a real v1 build surface (one flow, ~6 steps). Wizard completion state stored per-org; skipped steps resurface as a Settings checklist card until done.
 
 ## Index of decisions
 
 | # | Decision | Status |
 |---|---|---|
+| SET-001 | IA: one /settings destination with Personal + Organization rails | Accepted |
+| SET-002 | Permissions: Admin-only Organization settings; no delegation in v1 | Accepted |
+| SET-003 | Apply semantics: immediate on save; guarded archive with reassignment | Accepted |
+| SET-004 | First-run onboarding wizard + seeded defaults | Accepted |
