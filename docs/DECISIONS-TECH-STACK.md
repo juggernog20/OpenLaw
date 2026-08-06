@@ -24,33 +24,7 @@ Decisions are numbered `TECH-###`.
 
 ## Open questions queued for the next grill-me session
 
-- Backend language / runtime (Node/TypeScript / Python / Go / Ruby / Elixir / Rust — adoption ceiling vs ecosystem fit vs single-binary deployability)
-- Backend framework (full-stack like Rails/Django/Phoenix/Laravel, or split with API + frontend like NestJS/FastAPI + React)
-- Database (Postgres only? SQLite for tiny deployments? both via abstraction)
-- ORM / data access layer (Prisma / Drizzle / SQLAlchemy / Ecto / raw SQL)
-- File storage abstraction (local filesystem, S3, S3-compatible — single adapter interface)
-- Background job runner (in-process worker / Sidekiq-style / Postgres-based queue / Temporal)
-- Search (Postgres FTS / SQLite FTS5 / dedicated like Tantivy / Meilisearch)
-- Email sending (SMTP / Postmark / SES / Resend abstracted via adapter)
-- ~~Email receiving~~ — dropped from v1 per **INT-001** (intake is form-only; email is outbound notifications). Revives only with the parked email-capture future feature.
-- Authentication (cookie session / JWT / Passkeys; magic-link library; OAuth providers as v2)
-- Real-time updates (polling / SSE / WebSockets; required for v1 or not)
-- Deployment shape (Docker Compose for self-host / single binary / k8s helm chart / managed cloud option)
-- Migration story (built-in CLI / per-framework conventions)
-- Testing stack (unit / integration / E2E — frameworks and conventions; frontend testing per TECH-001)
-
-Queued from the Contracts + Documents grills (2026-08-04):
-
-- Document compare engine — must yield BOTH a renderable change model (Workshare-style in-app view) and a track-changes .docx export (**DOC-003**/CTR-014); candidates: headless LibreOffice compare, OOXML diff libraries, commercial SDKs
-- Render/conversion pipeline for the DOC-004 set: DOCX + PPTX display conversion (tracked changes + comments visible), MSG/EML parsing
-- OCR engine for image-only PDFs (**DOC-005**) — open-source (e.g. Tesseract/OCRmyPDF class); runs on the background job runner
-- AI provider integration for CTR-008 contract analysis (BYO key; Anthropic-first vs provider adapter)
-- DocuSign connector auth (OAuth/JWT grant) for **CTR-013**
-- Monorepo vs polyrepo (likely monorepo; tooling — Nx / Turborepo / pnpm workspaces / cargo workspace)
-- CI / release process (GitHub Actions; release cadence; semver discipline)
-- Telemetry / opt-in usage analytics (PostHog self-host / Plausible / nothing)
-- Observability for self-hosters (structured logs format, metrics endpoint, OpenTelemetry support)
-- React meta-framework choice (Next.js / Remix / Vite + React Router / TanStack Start / plain Vite SPA — gated by the backend choice; if Next.js, server-side concerns blur with backend)
+_None — queue cleared 2026-08-06 (TECH-001 through TECH-014). Every routed engine/integration question from the module grills is resolved. Emergent questions during the build queue here._
 
 ---
 
@@ -103,8 +77,228 @@ Initial geometry overrides applied to shadcn defaults (border radius 8px → 6px
 
 ---
 
+## TECH-002: Backend — TypeScript on Node LTS
+
+- **Status:** Accepted
+- **Date:** 2026-08-06
+
+### Context
+The keystone pick; everything downstream (framework, ORM, jobs, contributor experience) cascades from it.
+
+### Decision
+The backend is **TypeScript on Node LTS**. One language end-to-end with the locked React frontend; shared types between API and UI. Bun noted as a possible later runtime optimization, not a v1 bet.
+
+### Rationale
+TECH-001's adoption-ceiling argument applies squarely: the largest OSS contributor pool, first-party SDKs for every routed integration (DocuSign, Anthropic, S3), mature Postgres tooling. The document pipeline runs as external processes under any language, so Go's single-binary advantage evaporates in practice.
+
+### Alternatives considered
+Go (best deploy story, but sidecars force Docker anyway; contributor context-split); Rails/Django (batteries included, but two ecosystems against a React SPA).
+
+### Consequences
+Monorepo is single-language. Node LTS version pinned per release. All engine integrations (Round 3) are child processes or sidecar services, not in-process libraries.
+
+## TECH-003: Application shape — Fastify API + Vite React SPA (REST/OpenAPI)
+
+- **Status:** Accepted
+- **Date:** 2026-08-06
+
+### Context
+Full-stack framework vs API+SPA; also closes TECH-001's deferred React meta-framework question.
+
+### Decision
+A **Fastify** API server exposing **REST with an OpenAPI schema** (typed client generated for the SPA), serving the statically-built **Vite + React Router** SPA. The portal (INT-001) is part of the same SPA (separate route tree, magic-link session). No SSR.
+
+### Rationale
+One long-running process plus worker is the simplest thing a self-hoster can reason about; the API doubles as the third-party integration surface; self-hosted Next/App-Router churn is a maintenance surface an OSS project shouldn't carry for one SSR-worthy page.
+
+### Alternatives considered
+Next.js full-stack; Remix/TanStack Start (same SSR/self-host complexity, smaller pools).
+
+### Consequences
+TECH-001's meta-framework question closed: **Vite + React Router**. OpenAPI schema is a first-class artifact (client generation, docs). SEO-irrelevant app (auth-walled) so no-SSR costs nothing.
+
+## TECH-004: Database — PostgreSQL only
+
+- **Status:** Accepted
+- **Date:** 2026-08-06
+
+### Decision
+**PostgreSQL 16+** is the only supported database. No SQLite tier. SCHEMA.md's Postgres-flavored assumptions (jsonb, timestamptz, FTS per DOC-009, Postgres-based job queue) become commitments. UUID v7 primary keys confirmed.
+
+### Rationale
+One migration path, one backup story (`pg_dump`), one FTS implementation; dual-dialect support taxes every jsonb/FTS/queue feature for a persona that can run the Compose file either way.
+
+### Alternatives considered
+Postgres + SQLite eval tier: doubles the test matrix, forbids or shims the features the schema leans on.
+
+### Consequences
+The Compose file ships a Postgres container (external/managed Postgres equally supported via `DATABASE_URL`).
+
+## TECH-005: Deployment — Docker Compose as the blessed path
+
+- **Status:** Accepted
+- **Date:** 2026-08-06
+
+### Decision
+One documented **`docker compose up`** path: `app` (API+SPA), `worker` (background jobs), `postgres`, and the document-engine sidecar(s) (TECH Round 3). Versioned images on ghcr per release (semver); `.env` config; migrations run on start; first boot lands in the SET-004 onboarding wizard. Helm chart and bare-metal guides are community/future; no managed cloud in v1.
+
+### Rationale
+The under-an-hour promise (PRODUCT.md) for a non-specialist sysadmin is a Compose file, not a binary plus a system-deps install guide.
+
+### Alternatives considered
+Single binary (Postgres/LibreOffice/Tesseract can't be absorbed into it); managed-cloud alongside v1 (a business, not a feature).
+
+### Consequences
+Release artifact = images + compose.yml + .env.example. Upgrade story = pull new tag, `compose up` re-runs migrations.
+
+## TECH-006: ORM — Drizzle (+ drizzle-kit migrations)
+
+- **Status:** Accepted
+- **Date:** 2026-08-06
+
+### Decision
+**Drizzle ORM**: schema-as-TypeScript mirroring SCHEMA.md ~1:1, SQL-shaped queries, first-class Postgres surfaces (jsonb, FTS, `parties_view`), `sql`-tag escape hatch as a normal tool. **Migrations via drizzle-kit** — generated SQL files, reviewable in PRs, run on container start per TECH-005. (This also answers the queued migration-story question.)
+
+### Alternatives considered
+Prisma (codegen layer; Postgres-specific surfaces fight the abstraction); Kysely/raw SQL (hand-rolled conventions, higher onboarding cost).
+
+## TECH-007: Background jobs — pg-boss on Postgres
+
+- **Status:** Accepted
+- **Date:** 2026-08-06
+
+### Decision
+**pg-boss**: queue, retries, and cron-style scheduling on Postgres — no Redis. Carries the committed workload: OCR (DOC-005), conversion/compare (DOC-003/004), AI analysis (CTR-008), search indexing (DOC-009), notification digest + reminder offsets (NOT-003/004), obligation reminders (ENT-006). The `worker` container is the same image with a worker entrypoint.
+
+### Alternatives considered
+BullMQ+Redis (an extra service for load a 10-person team never generates); in-process timers (lost jobs on restart; conversion blocking the API).
+
+## TECH-008: Authentication — onboarding-selectable: built-in basic or bring-your-own IdP (OIDC)
+
+- **Status:** Accepted
+- **Date:** 2026-08-06
+
+### Context
+Recommended built-in sessions+passwords+magic-links. Blair widened it for the legal-function audience: "as part of the onboarding flow we can provide auth options like basic (auth.js) or their own (workos, okta, etc)."
+
+### Decision
+- **Auth mode is chosen in the SET-004 onboarding wizard** (new wizard step; switchable later in Settings → Organization):
+  1. **Built-in (basic)** — email + password (Argon2id) for staff, optional TOTP 2FA.
+  2. **Bring-your-own IdP** — generic **OIDC** configuration (issuer, client ID/secret): works with Okta, Entra, Google Workspace, Keycloak, Authentik. Staff sign in via SSO; business users may also use SSO when the IdP covers them.
+- **Magic-link portal access remains the floor in both modes** (DD-010/INT-001) — requesters never need IdP membership; host can disable it if SSO-only is policy.
+- **Sessions are ours in both modes**: server-side session table, httpOnly cookies, revocable — the IdP only authenticates; it never becomes the session model.
+- SAML and aggregators (WorkOS) are future adapters behind the same auth-mode interface. Working implementation default: **better-auth** (framework-agnostic, email/password + OIDC + magic-link + TOTP) — an implementation detail behind our session model, swappable.
+
+### Rationale
+Legal departments at Series A–C companies increasingly sit behind Okta/Entra; SSO-at-setup removes a real adoption blocker. Generic OIDC (not per-vendor connectors) keeps the OSS surface small.
+
+### Consequences
+SET-004 wizard gains an auth step (annotated there). `users` gains credential/OIDC-subject columns per mode. Settings → Organization → Authentication surface added to the inventory.
+
+## TECH-009: Real-time — SSE on live surfaces
+
+- **Status:** Accepted
+- **Date:** 2026-08-06
+
+### Decision
+Server-Sent Events (`/api/events`) push to the live surfaces: notification bell (NOT-005), open comment threads (CMT-004), Inbox counts (INT-006). All writes remain normal requests; everything else refetches on navigation. No WebSockets in v1 (no duplex feature exists).
+
+### Alternatives considered
+Polling (dead-feeling chat/bell); WebSockets (infra without a consumer).
+
+## TECH-010: Document engines — one LibreOffice + OCR sidecar
+
+- **Status:** Accepted
+- **Date:** 2026-08-06
+
+### Decision
+A single **doc-engine sidecar container** in the Compose file: headless **LibreOffice** for DOCX/PPTX → PDF display conversion (tracked changes and comments rendered per DOC-004) and for **compare** (emits the track-changes .docx per DOC-003; the in-app Workshare-style view renders the compared output); **OCRmyPDF/Tesseract** for image-only PDFs (DOC-005). MSG/EML parsing is an in-process Node library. All jobs run through pg-boss (TECH-007).
+
+### Rationale
+All AGPL-compatible OSS; one sidecar keeps the Compose file at four services.
+
+### Consequences
+**Known risk, flagged for early build validation:** LibreOffice compare fidelity on complex Word documents. The engine sits behind an interface; a commercial SDK (Aspose-class) is the documented swap-in if fidelity fails — as an optional licensed add-on, never a required dependency (AGPL install path stays free).
+
+## TECH-011: Email sending — SMTP first + provider adapter
+
+- **Status:** Accepted
+- **Date:** 2026-08-06
+
+### Decision
+SMTP (Nodemailer-class) as the universal default — every org's existing relay works — behind a thin sender interface with optional API-provider adapters (Postmark / SES / Resend). Configured in the SET-004 wizard. Notification/digest templates (NOT-002/003) in a maintainable email-template layer, copy per DES-015.
+
+### Alternatives considered
+API providers only: forces a SaaS mail account on regulated self-hosters.
+
+## TECH-012: AI providers — three protocol adapters, provider presets, custom option
+
+- **Status:** Accepted
+- **Date:** 2026-08-06
+
+### Context
+Recommended Anthropic-first + OpenAI-compatible second. Blair widened: "a list of providers, including aggregators, Anthropic, OpenAI, Gemini, OpenRouter, others? Allow them to add custom provider?"
+
+### Decision
+- **Three protocol adapters** implement the CTR-008 extraction interface (`extract(doc, fields[]) → {slug, value, evidence}[]`):
+  1. **Anthropic Messages API**
+  2. **OpenAI-compatible chat completions** — one adapter covering OpenAI, Azure OpenAI, **OpenRouter**, Ollama/vLLM (local models), Groq, Mistral, Together, and any compatible endpoint
+  3. **Google Gemini API**
+- **Provider presets** in Settings → Contracts → AI Analysis: Anthropic, OpenAI, Azure OpenAI, Gemini, OpenRouter, Ollama (local) — each preset pins protocol + base URL and asks only for key + model.
+- **Custom provider**: protocol picker + base URL + API key + model string — any current or future endpoint without a code change.
+- BYO key per CTR-008; no provider configured → AI surfaces hidden. Default model strings maintained per preset (e.g. `claude-sonnet-5` for Anthropic); always user-editable.
+
+### Rationale
+The provider universe collapses to three wire protocols; presets give the named list, custom gives the long tail (including corporate proxies and local models — the self-host crowd's first ask) with zero adapter sprawl.
+
+### Consequences
+A "Test connection" affordance in settings. Extraction prompt/schema behavior must tolerate model variance — evidence-snippet validation guards against weak models hallucinating fields (values without matching document text get flagged, not written).
+
+## TECH-013: DocuSign auth — JWT grant (service integration)
+
+- **Status:** Accepted
+- **Date:** 2026-08-06
+
+### Decision
+DocuSign **JWT grant**: org admin creates the DocuSign app, one-time consent; OpenLaw signs JWT assertions with the configured RSA key and mints tokens server-to-server. Envelopes send under the org's integration user; **DocuSign Connect** webhook delivers envelope status (CTR-013). Settings surface: integration key, user ID, RSA key, environment, test button.
+
+### Alternatives considered
+Per-user OAuth: every sender needs a seat + connection flow; background sends have no user context.
+
+## TECH-014: Developer-experience housekeeping — repo, CI, testing, observability, telemetry, storage/search confirmations
+
+- **Status:** Accepted
+- **Date:** 2026-08-06
+
+### Decision
+Recorded as working defaults without a grill (all convention, no open design content):
+
+- **Monorepo** — pnpm workspaces + Turborepo: `apps/api`, `apps/web` (SPA incl. portal routes), `apps/worker`, `packages/` (shared types, OpenAPI client, config).
+- **CI/release** — GitHub Actions: lint + typecheck + test on PR; release = semver tag → ghcr images + compose.yml + .env.example artifacts (TECH-005). Conventional commits; CHANGELOG generated.
+- **Testing** — confirms TECH-001's deferred default: **Vitest** (unit), **React Testing Library** (component), **Playwright** (E2E incl. the portal magic-link flow); API integration tests against a real Postgres container (testcontainers-class).
+- **Observability** — structured JSON logs (pino) with request IDs; `/healthz` (liveness) + `/readyz` (DB/queue checks); metrics/OpenTelemetry deferred until someone asks.
+- **Telemetry** — **none in v1.** No phone-home of any kind — the right default for a self-hosted legal tool; any future opt-in usage stats would be a separate, explicit decision.
+- **File storage** — confirms DOC-009: storage adapter with **local-filesystem driver default** (a Compose volume) and **S3-compatible driver**; `file_ref` = driver-prefixed key.
+- **Search** — confirms DOC-009: **Postgres FTS** (tsvector columns + GIN, indexing jobs on pg-boss); dedicated engine only if relevance/scale ever demands it.
+
+### Consequences
+Repo scaffold order: monorepo shell → drizzle schema from SCHEMA.md → Fastify + OpenAPI → auth → Compose. The build phasing itself (which module first — CLM per PRODUCT.md) is unchanged.
+
 ## Index of decisions
 
 | # | Decision | Status |
 |---|---|---|
 | TECH-001 | Frontend stack — React + Tailwind CSS + shadcn/ui (copied) + Radix primitives | Accepted |
+| TECH-002 | Backend — TypeScript on Node LTS | Accepted |
+| TECH-003 | Application shape — Fastify API + Vite React SPA (REST/OpenAPI) | Accepted |
+| TECH-004 | Database — PostgreSQL only | Accepted |
+| TECH-005 | Deployment — Docker Compose as the blessed path | Accepted |
+| TECH-006 | ORM — Drizzle (+ drizzle-kit migrations) | Accepted |
+| TECH-007 | Background jobs — pg-boss on Postgres | Accepted |
+| TECH-008 | Authentication — onboarding-selectable: built-in basic or BYO IdP (OIDC) | Accepted |
+| TECH-009 | Real-time — SSE on live surfaces | Accepted |
+| TECH-010 | Document engines — one LibreOffice + OCR sidecar | Accepted |
+| TECH-011 | Email sending — SMTP first + provider adapter | Accepted |
+| TECH-012 | AI providers — three protocol adapters, presets, custom option | Accepted |
+| TECH-013 | DocuSign auth — JWT grant (service integration) | Accepted |
+| TECH-014 | DX housekeeping — repo, CI, testing, observability, telemetry, storage/search | Accepted |

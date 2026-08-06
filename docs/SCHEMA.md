@@ -355,6 +355,7 @@ Known columns so far:
 - `value_amount` — bigint (integer cents per DES-014), nullable per **CTR-010**
 - `value_currency` — char(3) ISO 4217, nullable (required when amount set) per **CTR-010**
 - `value_cadence` — text enum `one_time|monthly|annually`, nullable per **CTR-010**; total value (annual × term) derived, never stored
+- `description` — text, nullable (long-form context rendered in the Description section; added in the 2026-08-06 screen sweep, replacing the mock's Memo tab)
 - `custom_fields` — jsonb keyed by field slug per **CTR-016** (fields attached via `contract_type_fields`; values retained on detach)
 - `ai_unverified` — jsonb, nullable per **CTR-008**: map of field slug → extraction meta (evidence snippet, run info) for AI-written values not yet human-confirmed; entry removed on confirmation.
 - `entity_id` FK → `entities.id`, nullable until known per **CTR-011** — which of our entities signed
@@ -550,6 +551,8 @@ Configurable taxonomy of contract types. Same machinery as `matter_types` (MTR-0
 | `created_at`, `updated_at` | timestamptz | |
 
 **Seed rows** (install-time migration): `nda`, `msa`, `sow`, `sales`, `vendor`, `employment`, `license`, `other`. The `other` row is system-protected (no archive/delete).
+
+**Seeded contract-scoped catalog fields** (per **CTR-008**'s core-field commitment, confirmed in the 2026-08-06 screen sweep): `governing_law` (text), `jurisdiction` (text — forum/venue), `our_position` (single_select: customer | provider | other) — each with a default, editable `ai_prompt`.
 
 ---
 

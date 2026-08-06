@@ -1036,6 +1036,60 @@ The voice register for all component-default and system-generated copy is **ters
 
 ---
 
+## DES-016: Record-page right side — VS Code-style activity bar with page-scoped applets (amends DES-007's rail)
+
+- **Status:** Accepted
+- **Date:** 2026-08-06
+
+### Context
+
+The contract-details mocks carried two competing right-side systems: a module chip row (E) and a V13 icon bar + panel (J) — flagged as duplication (X.8) and as a conflict with DES-007's single 320px `--width-rail`. The screen-batch grill resolved it; Blair named the reference model: "VS code activity bar style where it's a single activity bar with vertical icons available 'applets' for that page as icons when you expand the side bar."
+
+### Decision
+
+- **One right-side system: the activity bar** — a persistent 48px vertical icon strip on record pages, VS Code-style. Each icon is an **applet available on that page**; clicking expands the side panel hosting that applet (one applet visible at a time; clicking the active icon collapses).
+- **Applet set is page-scoped.** Contract details: chat (CMT-004 comment panel), history (DD-017 activity feed), settings deep-link (SET-001, below a divider). The document panel (K) opens as a wider sibling layer per the doc-panel spec, not inside the applet panel.
+- **The module chip row is removed** from record pages (E.0 remove — chips duplicated applet/section jobs).
+- **DES-007 amendment:** the record-page right side is `--width-activitybar: 48px` + `--width-panel: 320px` (the panel reuses the old rail width; `--width-rail` is renamed/retired in favor of these two tokens). Container-query behavior carries over: below the width threshold the panel overlays instead of docking; the bar remains.
+- Active applet gets the V13 indicator strip (J.0); only chat carries a badge (CMT-004; J.X2).
+
+### Rationale
+
+One expandable surface resolves the chip/rail duplication, matches a pattern every developer-adjacent user already knows, and preserves CMT-004's conversation-beside-content requirement. The 48px bar cost is small and always predictable.
+
+### Alternatives considered
+
+Chips only (no side-by-side panels — breaks CMT-004); both trimmed (the X.8 duplication); DES-007's plain 320px rail with no bar (no affordance to switch applets).
+
+### Consequences
+
+Layout-shell change: `--width-activitybar` + `--width-panel` tokens replace `--width-rail`. The pattern generalizes to matter/entity/knowledge record pages (same bar, page-appropriate applets). Mocks: delete chip row, add bar to V12.
+
+## DES-017: Editing model — per-field inline commit, no page edit mode
+
+- **Status:** Accepted
+- **Date:** 2026-08-06
+
+### Context
+
+Autosave vs explicit save (grill-plan X.5, C.6/C.7) was undecided anywhere in the docs.
+
+### Decision
+
+Record fields edit **inline and commit individually** on blur/Enter; Esc reverts the in-progress edit. Each write is activity-logged per DD-017. **No page-level edit mode, no dirty state, no Cancel/Save chrome** (C.6/C.7 removed from the sub-bar). Multi-field compound edits (e.g. the CTR-006 renewal confirmation, conversion flows) use purpose-built dialogs with their own explicit confirm — the inline rule governs ordinary field editing.
+
+### Rationale
+
+Per-field commits give finer audit granularity than page saves; one editing model across records and settings (SET-003 immediate-apply) keeps the product coherent; a mode toggle taxes every small correction.
+
+### Alternatives considered
+
+Explicit edit mode + atomic save: batches log entries, but mode-juggling on every typo fix.
+
+### Consequences
+
+Field components need saving/saved/error micro-states (design-system addition). C.6/C.7 deleted from mocks. Bulk edits, if ever needed, are a list-surface feature, not a record-page mode.
+
 ## Index of decisions
 
 | # | Decision | Status |
@@ -1055,3 +1109,5 @@ The voice register for all component-default and system-generated copy is **ters
 | DES-013 | Internationalization architecture — every string wrapped in ICU MessageFormat from day one; `Intl.*` for formatting; en-US the only v1 locale | Accepted |
 | DES-014 | Date / time / currency display conventions — relative-then-short-absolute; UTC-stored / browser-detected display; ISO 4217 currency; no compact-number abbreviations | Accepted |
 | DES-015 | Content tone register — terse, direct, second-person imperative ("GitHub voice, not Mailchimp voice") | Accepted |
+| DES-016 | Record-page right side — VS Code-style activity bar with page-scoped applets | Accepted |
+| DES-017 | Editing model — per-field inline commit, no page edit mode | Accepted |
