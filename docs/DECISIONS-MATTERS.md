@@ -18,7 +18,14 @@ Decisions are numbered `MTR-###`.
 
 ## Open questions queued for the next grill-me session
 
-_None — queue cleared 2026-08-02 (MTR-002 through MTR-011)._
+Queued 2026-08-07 from the matters.pen ↔ decision-record audit — mock drift that needs a decision rather than a silent strip:
+
+1. **Key-date reminders and owner** — M5 mocks per-date reminder offsets ("7d · 1d · same day"), daily-digest copy, and an Owner column; **MTR-004** modeled key dates as `date + label + note` and explicitly deferred reminders to the DD-005 notifications surface ("no bespoke reminder system here"). Decide: extend MTR-004 (reminder offsets + owner per key date) or strip the mock back.
+2. **Close dialog "Resolution" and closing note** — M10 mocks a Resolution select ("Completed") plus an optional closing note; **MTR-002**/**MTR-008** define closing as moving to a closed-category status, with no resolution concept. Decide: is Resolution the closed-status picker (relabel it), a new first-class field, or out?
+3. **Template key dates** — M8 mocks "Template adds 4 tasks and 2 key dates"; **MTR-013** template content is pre-fill values + tasks only. Decide: do templates also carry relative key dates (offset-from-creation, like template tasks)?
+4. **"My matters" / "matters I'm on" affordance** — **MTR-003** defines both views; M1 offers only a Manager filter chip and Saved views. Decide: first-class views, saved-view presets, or filter-chip-only.
+
+_(The M18 Time tab surfaced in the same audit is deliberately not queued here per direction 2026-08-07.)_
 
 ---
 

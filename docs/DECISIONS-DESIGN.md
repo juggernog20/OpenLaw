@@ -1090,6 +1090,33 @@ Explicit edit mode + atomic save: batches log entries, but mode-juggling on ever
 
 Field components need saving/saved/error micro-states (design-system addition). C.6/C.7 deleted from mocks. Bulk edits, if ever needed, are a list-surface feature, not a record-page mode.
 
+## DES-018: Chromatic discipline — status families kept, one severity ramp for ordinal scales, uniform avatars
+
+- **Status:** Accepted
+- **Date:** 2026-08-06
+
+### Context
+
+The first full mock suite (matters.pen) surfaced "birthday sprinkles": a single list row could carry five unrelated hues — status, priority, and risk each pulled freely from the five status families, and avatars used arbitrary per-person colors. DES-005 defines the tokens but never constrained when each may appear.
+
+### Decision
+
+1. **Status pills keep their per-family colors** (Open = success, In progress = info, On hold = warning, etc.) — the current scheme stands.
+2. **Ordinal severity scales (priority, risk, and any future low→critical enum) share one fixed ramp:** `low` = neutral grey, `medium` = warning yellow, `high` = severe orange, `critical` = danger red. This adds a **severe** family to the token set: `--status-severe-bg: #FFF1E5`, `--status-severe-fg: #BC4C00` (Primer orange), themed like the other four families. Priority's canonical seed levels are renamed to `low / medium / high / critical` (previously urgent/high/normal/low), aligning with risk.
+3. **Avatars are uniform:** default is initials on the light-blue avatar accent (`--avatar-bg: #51B3D6`, `--avatar-fg: #0D1117`); a user with an uploaded photo shows the photo. No per-person hue hashing (the parked globals.css idea is now rejected, not just deferred).
+
+### Rationale
+
+Color should be information, not decoration: statuses are nominal categories (families help recognition), severity is ordinal (one ramp makes "how bad" legible at a glance across columns), and people are neither (uniform treatment keeps rows calm; photos carry identity better than hue ever did).
+
+### Alternatives considered
+
+Linear-style dot+text for statuses (rejected — tinted status pills are established and liked); hash-based avatar colors (rejected — reintroduces multi-hue rows).
+
+### Consequences
+
+`status-severe-*` and `avatar-*` tokens added to the registry and every theme file. Pill components consume the ramp by value, not per-callsite choice. matters.pen and openlaw.lib.pen updated; future module mocks inherit via the library.
+
 ## Index of decisions
 
 | # | Decision | Status |
@@ -1111,3 +1138,4 @@ Field components need saving/saved/error micro-states (design-system addition). 
 | DES-015 | Content tone register — terse, direct, second-person imperative ("GitHub voice, not Mailchimp voice") | Accepted |
 | DES-016 | Record-page right side — VS Code-style activity bar with page-scoped applets | Accepted |
 | DES-017 | Editing model — per-field inline commit, no page edit mode | Accepted |
+| DES-018 | Chromatic discipline — status families kept, one severity ramp (grey/yellow/orange/red), uniform light-blue avatars with photo override | Accepted |
