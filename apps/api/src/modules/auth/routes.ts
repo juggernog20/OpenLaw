@@ -15,11 +15,12 @@ import {
   ADVISORY_LOCK,
   and,
   eq,
+  ssoProviders,
   tryWithAdvisoryLock,
   users,
   USER_ROLES,
 } from "@openlaw/db";
-import { provisionUser } from "../../auth/instance.js";
+import { provisionUser, withTrustedIssuerOrigin } from "../../auth/instance.js";
 import { requireAuth, requireRole, userColumns } from "../../auth/guards.js";
 import { getOrgSettings, isEmailDomainAllowed } from "../../lib/org-settings.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -222,6 +223,92 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         .limit(1);
       if (!user) throw httpError(500, "The invited user could not be read back.");
       return reply.status(201).send({ user });
+    },
+  );
+
+  app.post(
+    "/auth/sso-providers",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "registerSsoProvider",
+        summary:
+          "Register a bring-your-own OIDC identity provider (TECH-008); " +
+          "endpoint discovery runs from the issuer, and the response carries " +
+          "the callback URL to paste into the IdP console",
+        tags: ["auth"],
+        body: z.object({
+          /** Stable slug; identifies the provider in sign-in flows. */
+          providerId: z
+            .string()
+            .regex(
+              /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/,
+              "Lowercase letters, digits and inner hyphens only.",
+            ),
+          issuer: z.url(),
+          /** Email domain(s) the IdP serves; comma-separated for several. */
+          domain: z.string().min(1),
+          clientId: z.string().min(1),
+          clientSecret: z.string().min(1),
+        }),
+        response: {
+          201: z.object({
+            provider: z.object({
+              id: z.string(),
+              providerId: z.string(),
+              issuer: z.string(),
+              domain: z.string(),
+            }),
+            /** The stable redirect URL to paste into the IdP console. */
+            callbackUrl: z.string(),
+          }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request, reply) => {
+      const { providerId, issuer, clientId, clientSecret } = request.body;
+      const domain = request.body.domain.toLowerCase();
+
+      // The plugin's register endpoint does the real work — issuer
+      // validation, discovery, persistence — under the admin's forwarded
+      // session. Its SSRF guard only fetches discovery documents from
+      // trusted origins, so the runtime-supplied issuer is trusted for
+      // exactly this call.
+      let registered: { redirectURI: string };
+      try {
+        registered = await withTrustedIssuerOrigin(app.auth, issuer, () =>
+          app.auth.api.registerSSOProvider({
+            body: { providerId, issuer, domain, oidcConfig: { clientId, clientSecret } },
+            headers: fromNodeHeaders(request.headers),
+          }),
+        );
+      } catch (error) {
+        relayAuthError(error);
+      }
+
+      // An Administrator registering the provider is OpenLaw's domain
+      // -trust decision (single tenant — there is no other tenant to
+      // protect from a false domain claim), so the row is marked verified
+      // immediately; the plugin will not link sign-ins to pre-existing
+      // users through an unverified provider, and the DNS-TXT
+      // verification flow is never exposed.
+      const [provider] = await app.db
+        .update(ssoProviders)
+        .set({ domainVerified: true, updatedAt: new Date() })
+        .where(eq(ssoProviders.providerId, providerId))
+        .returning({
+          id: ssoProviders.id,
+          providerId: ssoProviders.providerId,
+          issuer: ssoProviders.issuer,
+          domain: ssoProviders.domain,
+        });
+      if (!provider) throw httpError(500, "The registered provider could not be read back.");
+
+      return reply.status(201).send({
+        provider,
+        callbackUrl: registered.redirectURI,
+      });
     },
   );
 

@@ -93,6 +93,43 @@ export const accounts = pgTable(
   ],
 );
 
+/**
+ * Runtime-registered BYO IdPs (TECH-008). One row per identity provider,
+ * created through the admin-only registration route; the OIDC config JSON
+ * carries the client secret (DB-at-rest storage accepted for v1 — flagged
+ * for a future secrets-encryption pass in the auth spec).
+ *
+ * `domain_verified` is the sso plugin's provider-trust flag: only a
+ * trusted provider may link a sign-in to a pre-existing user by email.
+ * OpenLaw sets it at registration — an Administrator registering the
+ * provider IS the domain-trust decision in a single-tenant install; the
+ * plugin's DNS-TXT verification flow is never exposed. `saml_config` and
+ * `organization_id` are demanded by the plugin's model but carry no
+ * product semantics (SAML and the organization plugin are out of scope).
+ */
+export const ssoProviders = pgTable(
+  "sso_providers",
+  {
+    id: uuidPk(),
+    /** Stable slug identifying the provider in sign-in and callback flows. */
+    providerId: text("provider_id").notNull(),
+    issuer: text("issuer").notNull(),
+    /** Email domain(s) served by this IdP; comma-separated for multi-domain. */
+    domain: text("domain").notNull(),
+    oidcConfig: text("oidc_config"),
+    samlConfig: text("saml_config"),
+    organizationId: text("organization_id"),
+    domainVerified: boolean("domain_verified").notNull().default(false),
+    /** The registering Administrator (no cascade: the IdP outlives them). */
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex("sso_providers_provider_id_unique").on(table.providerId)],
+);
+
 /** Short-lived tokens (magic links, set-password); values stored hashed. */
 export const verifications = pgTable("verifications", {
   id: uuidPk(),

@@ -12,11 +12,12 @@
 import { betterAuth } from "better-auth";
 import { admin, magicLink } from "better-auth/plugins";
 import { userAc } from "better-auth/plugins/admin/access";
-import { APIError, createAuthMiddleware } from "better-auth/api";
+import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
+import { sso } from "@better-auth/sso";
 import { hash, verify } from "@node-rs/argon2";
 import { uuidv7 } from "uuidv7";
-import { eq, schema, users, type Db } from "@openlaw/db";
+import { eq, schema, ssoProviders, users, type Db } from "@openlaw/db";
 import type { Mailer } from "../lib/mailer.js";
 import { getOrgSettings, isEmailDomainAllowed } from "../lib/org-settings.js";
 
@@ -28,11 +29,69 @@ export interface AuthConfig {
 /** OWASP-recommended Argon2id parameters (19 MiB, t=2, p=1). */
 const ARGON2 = { memoryCost: 19456, timeCost: 2, parallelism: 1 };
 
+/**
+ * Runs `fn` with the issuer's origin temporarily added to better-auth's
+ * trusted origins, so registration-time endpoint discovery from a
+ * runtime-supplied issuer passes the sso plugin's SSRF guard — TECH-008
+ * configures IdPs at runtime, so there is no boot-time list to put an
+ * issuer on. Direct `auth.api` calls run against the boot context (the
+ * per-request `trustedOrigins` function below is only re-evaluated on
+ * the HTTP handler path), so the boot context's live array is what must
+ * gain the origin; it is removed again even when `fn` throws. After
+ * registration the provider row itself carries the trust.
+ */
+export async function withTrustedIssuerOrigin<T>(
+  auth: Auth,
+  issuer: string,
+  fn: () => Promise<T>,
+): Promise<T> {
+  const origin = new URL(issuer).origin;
+  const ctx = await auth.$context;
+  ctx.trustedOrigins.push(origin);
+  try {
+    return await fn();
+  } finally {
+    const index = ctx.trustedOrigins.lastIndexOf(origin);
+    if (index >= 0) ctx.trustedOrigins.splice(index, 1);
+  }
+}
+
 export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
   return betterAuth({
     baseURL: config.baseUrl,
     secret: config.secret,
     database: drizzleAdapter(db, { provider: "pg", usePlural: true, schema }),
+    // Registered providers' issuer origins stay trusted so the plugin can
+    // re-run endpoint discovery after registration if it ever needs to;
+    // the table is only consulted on SSO paths to keep the extra query
+    // off every other auth request. Registration-time trust is separate —
+    // see `withTrustedIssuerOrigin` (the row does not exist yet).
+    trustedOrigins: async (request) => {
+      const origins: string[] = [];
+      // Matches /sign-in/sso as well as every /sso/* route.
+      if (request && new URL(request.url).pathname.includes("/sso")) {
+        const rows = await db.select({ issuer: ssoProviders.issuer }).from(ssoProviders);
+        for (const row of rows) {
+          try {
+            origins.push(new URL(row.issuer).origin);
+          } catch {
+            // A malformed issuer trusts nothing.
+          }
+        }
+      }
+      return origins;
+    },
+    account: {
+      accountLinking: {
+        // An SSO identity may link to a pre-existing user row that never
+        // proved its inbox: in SSO-mode installs invited staff sign in
+        // through the IdP without ever activating a password. Safe here
+        // because OpenLaw has no public sign-up — every local row is
+        // admin-created or inbox-proven, so the squatted-unverified-
+        // account risk this default guards against cannot arise.
+        requireLocalEmailVerified: false,
+      },
+    },
     user: {
       fields: { name: "displayName" },
     },
@@ -125,18 +184,60 @@ export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
           });
         },
       }),
+      // TECH-008's bring-your-own IdP: generic OIDC, registered at
+      // runtime through our admin-guarded route (endpoint discovery from
+      // the issuer happens inside the plugin's register endpoint). 2FA
+      // deliberately does not gate SSO — the IdP owns MFA there.
+      sso({
+        // One stable callback URL shared by every provider — this is what
+        // an Administrator pastes into the IdP console (resolved under
+        // the /api/auth prefix; the provider travels in the OAuth state).
+        redirectURI: "/sso/callback",
+        // Staff SSO is invite-only: a sign-in only creates a user when
+        // the login flow explicitly requests it (requestSignUp), and even
+        // then the databaseHook below applies DD-010's matrix.
+        disableImplicitSignUp: true,
+        // The plugin links a provider identity to a pre-existing user by
+        // email only when the provider is domain-verified. OpenLaw marks
+        // the row verified at registration: in a single-tenant install,
+        // an Administrator registering the provider IS the domain-trust
+        // decision. The DNS-TXT endpoints this feature carries stay
+        // admin-gated (hook below) and unused.
+        domainVerification: { enabled: true },
+      }),
     ],
     hooks: {
-      // Policy holds on better-auth's own magic-link paths, not just our
-      // typed route — direct calls meet the same rules. Guarding verify
-      // as well as issuance means flipping the toggle off takes effect
-      // immediately, including for links already in flight; domains are
-      // not re-checked at verify because a redeemable token can only have
-      // been issued through the allowlist, moments earlier (5-min TTL) —
-      // JIT creation re-checks in the databaseHook below regardless. The
-      // denied branch mirrors the endpoint's success shape so responses
-      // never reveal whether a domain is allowlisted.
       before: createAuthMiddleware(async (ctx) => {
+        // SSO provider management is an Administrator-only surface. The
+        // plugin's own /sso/register only demands *a* session, which in
+        // OpenLaw would let any Business User stand up an IdP for a
+        // domain — provider registration is authorization, not just
+        // authentication. Gating here covers the raw HTTP path and our
+        // typed route alike (the route forwards the admin's headers).
+        if (
+          ctx.path === "/sso/register" ||
+          ctx.path === "/sso/request-domain-verification" ||
+          ctx.path === "/sso/verify-domain"
+        ) {
+          const session = await getSessionFromCtx(ctx);
+          const role = (session?.user as { role?: string } | undefined)?.role;
+          if (role !== "administrator") {
+            throw new APIError("FORBIDDEN", {
+              message: "Only Administrators can manage SSO providers.",
+            });
+          }
+          return;
+        }
+
+        // Policy holds on better-auth's own magic-link paths, not just our
+        // typed route — direct calls meet the same rules. Guarding verify
+        // as well as issuance means flipping the toggle off takes effect
+        // immediately, including for links already in flight; domains are
+        // not re-checked at verify because a redeemable token can only have
+        // been issued through the allowlist, moments earlier (5-min TTL) —
+        // JIT creation re-checks in the databaseHook below regardless. The
+        // denied branch mirrors the endpoint's success shape so responses
+        // never reveal whether a domain is allowlisted.
         if (ctx.path !== "/sign-in/magic-link" && ctx.path !== "/magic-link/verify") return;
         const settings = await getOrgSettings(db);
         if (!settings.magicLinkEnabled) {
@@ -152,22 +253,54 @@ export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
     databaseHooks: {
       user: {
         create: {
-          // JIT provisioning (DD-010): a user born from magic-link
-          // redemption is a Business User on an allowed domain — checked
-          // again here because policy may have changed since issuance.
+          // The DD-010 provisioning matrix for users born from a sign-in
+          // rather than setup or an invite. Both JIT paths — magic-link
+          // redemption and SSO callback — admit unknown identities only
+          // as Business Users on an allowed domain, checked here because
+          // policy may have changed since issuance / provider setup.
           // Other creation paths (setup, invites) are untouched.
           before: async (user, ctx) => {
-            if (ctx?.path !== "/magic-link/verify") return;
-            const settings = await getOrgSettings(db);
-            if (
-              !settings.magicLinkEnabled ||
-              !isEmailDomainAllowed(user.email, settings.allowedEmailDomains)
-            ) {
-              throw new APIError("FORBIDDEN", {
-                message: "This email address is not eligible for portal access.",
-              });
+            const path = ctx?.path ?? "";
+
+            if (path === "/magic-link/verify") {
+              const settings = await getOrgSettings(db);
+              if (
+                !settings.magicLinkEnabled ||
+                !isEmailDomainAllowed(user.email, settings.allowedEmailDomains)
+              ) {
+                throw new APIError("FORBIDDEN", {
+                  message: "This email address is not eligible for portal access.",
+                });
+              }
+              return { data: { ...user, name: user.name || user.email, role: "business_user" } };
             }
-            return { data: { ...user, name: user.name || user.email, role: "business_user" } };
+
+            // SSO half of the matrix: unknown + allowlisted domain → JIT
+            // Business User; unknown + non-allowlisted → rejected (IdP
+            // membership alone grants nothing). Staff never pass through
+            // here — their rows pre-exist, so the plugin links and signs
+            // in without a create. Born verified: the IdP authenticated
+            // control of the mailbox-owning account.
+            if (path.startsWith("/sso/callback")) {
+              const settings = await getOrgSettings(db);
+              if (!isEmailDomainAllowed(user.email, settings.allowedEmailDomains)) {
+                // The `code` matters: the SSO callback redirects coded
+                // APIErrors back to the app's error page; an uncoded one
+                // would surface as a bare JSON response mid-browser-flow.
+                throw new APIError("FORBIDDEN", {
+                  message: "This email address is not eligible for portal access.",
+                  code: "EMAIL_DOMAIN_NOT_ALLOWED",
+                });
+              }
+              return {
+                data: {
+                  ...user,
+                  name: user.name || user.email,
+                  role: "business_user",
+                  emailVerified: true,
+                },
+              };
+            }
           },
         },
       },
