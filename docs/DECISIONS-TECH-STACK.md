@@ -282,7 +282,7 @@ Recorded as working defaults without a grill (all convention, no open design con
 - **Search** — confirms DOC-009: **Postgres FTS** (tsvector columns + GIN, indexing jobs on pg-boss); dedicated engine only if relevance/scale ever demands it.
 
 ### Consequences
-Repo scaffold order: monorepo shell → drizzle schema from SCHEMA.md → Fastify + OpenAPI → auth → Compose. The build phasing itself (which module first — CLM per PRODUCT.md) is unchanged.
+Repo scaffold order: monorepo shell → Fastify + OpenAPI → auth (brings `packages/db` and its first tables) → Compose. _Revised 2026-08-08: there is no up-front "drizzle schema from SCHEMA.md" phase — the schema grows incrementally; tables land in the same change as the feature that reads and writes them, each with its own drizzle-kit migration, with SCHEMA.md as the naming/relationship reference._ The build phasing itself (which module first — CLM per PRODUCT.md) is unchanged.
 
 ## TECH-015: TypeScript 7 native compiler + TS 6 API shim for typescript-eslint
 
@@ -322,6 +322,27 @@ Tracked as [OpenLaw#1](https://github.com/juggernog20/OpenLaw/issues/1). **When 
 - Contributors' editors that resolve the workspace `typescript` get the 6.0 tsserver — semantically identical to 7.0, just slower; pointing the editor at `@typescript/native` is an optional local tweak.
 - Renovate/dependabot-style updates of typescript-eslint will not auto-remove the shim; the sunset is manual and owned by this record.
 
+## TECH-016: API validation vocabulary — Zod as the single schema source
+
+- **Status:** Accepted
+- **Date:** 2026-08-08
+
+### Context
+
+TECH-003 makes the OpenAPI document a first-class artifact. Fastify needs a schema layer that yields runtime validation, static types, and OpenAPI generation from one definition, chosen once before the first route lands.
+
+### Decision
+
+**Zod (v4)** via `fastify-type-provider-zod`: every route declares request/response schemas in Zod; the same definitions drive validation, inference, and the OpenAPI 3.1 document (`@fastify/swagger`). Schemas shared with the SPA (form validation, shared types) live in `packages/shared`.
+
+### Alternatives considered
+
+**TypeBox** (`@fastify/type-provider-typebox`) — Fastify's native JSON-schema flavor, marginally faster validation, but its schemas are not reusable in the web app the way Zod's are, and Zod is the broader ecosystem lingua franca (better-auth, drizzle-zod, react-hook-form resolvers).
+
+### Consequences
+
+Zod is the validation vocabulary everywhere — API routes, shared package, frontend forms. No hand-written OpenAPI YAML, ever; the document is generated. The typed SPA client is generated from the emitted document (`openapi-typescript` + `openapi-fetch`), committed, and CI-checked for staleness.
+
 ## Index of decisions
 
 | # | Decision | Status |
@@ -341,3 +362,4 @@ Tracked as [OpenLaw#1](https://github.com/juggernog20/OpenLaw/issues/1). **When 
 | TECH-013 | DocuSign auth — JWT grant (service integration) | Accepted |
 | TECH-014 | DX housekeeping — repo, CI, testing, observability, telemetry, storage/search | Accepted |
 | TECH-015 | TypeScript 7 native compiler + TS 6 API shim for typescript-eslint | Accepted (temporary) |
+| TECH-016 | API validation vocabulary — Zod as the single schema source | Accepted |

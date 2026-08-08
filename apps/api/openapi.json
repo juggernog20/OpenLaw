@@ -1,0 +1,170 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OpenLaw API",
+    "description": "REST API for OpenLaw. Also the third-party integration surface (TECH-003).",
+    "version": "0.0.1",
+    "license": {
+      "name": "AGPL-3.0-only",
+      "identifier": "AGPL-3.0-only"
+    }
+  },
+  "components": {
+    "schemas": {
+      "ProblemInput": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "default": "about:blank",
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "detail": {
+            "type": "string"
+          },
+          "instance": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path",
+                "message"
+              ]
+            }
+          }
+        },
+        "required": [
+          "title",
+          "status"
+        ]
+      },
+      "MetaInput": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "const": "OpenLaw"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "version"
+        ]
+      },
+      "Problem": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "default": "about:blank",
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "detail": {
+            "type": "string"
+          },
+          "instance": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path",
+                "message"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "Meta": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "const": "OpenLaw"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "version"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "paths": {
+    "/api/v1/meta": {
+      "get": {
+        "operationId": "getMeta",
+        "summary": "Instance metadata",
+        "tags": [
+          "meta"
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Meta"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "@openlaw/api-client",
+  "version": "0.0.1",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "openapi-typescript ../../apps/api/openapi.json -o src/schema.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.17.0"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.13.0",
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
+  }
+}

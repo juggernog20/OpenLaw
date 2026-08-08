@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * OpenLaw API server (TECH-003: Fastify + REST/OpenAPI).
- * Placeholder entry — routes, OpenAPI schema, and auth arrive in later steps.
+ * OpenLaw API server entry — builds the app (see app.ts) and listens.
  */
 
-import Fastify from "fastify";
+import { buildApp } from "./app.js";
 
-const app = Fastify({ logger: true });
-
-app.get("/healthz", async () => ({ status: "ok" }));
+const app = await buildApp({ logger: true });
 
 const port = Number(process.env.PORT ?? 3000);
 const host = process.env.HOST ?? "0.0.0.0";

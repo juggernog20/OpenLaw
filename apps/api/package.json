@@ -9,13 +9,20 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src"
+    "lint": "eslint src scripts",
+    "test": "vitest run",
+    "openapi:emit": "tsx scripts/emit-openapi.ts"
   },
   "dependencies": {
+    "@fastify/swagger": "^9.8.1",
     "@openlaw/shared": "workspace:*",
-    "fastify": "^5.11.2"
+    "@scalar/fastify-api-reference": "^1.64.1",
+    "fastify": "^5.11.2",
+    "fastify-type-provider-zod": "^7.0.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "tsx": "^4.23.11"
+    "tsx": "^4.23.11",
+    "vitest": "^4.1.10"
   }
 }

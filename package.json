@@ -14,6 +14,7 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "openapi": "pnpm --filter @openlaw/api openapi:emit && pnpm --filter @openlaw/api-client generate",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
