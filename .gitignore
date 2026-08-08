@@ -6,6 +6,10 @@ coverage/
 .env
 .env.*
 !.env.example
+*.tsbuildinfo
 .DS_Store
+.vscode/
+.idea/
+.cursor/
 .claude/
 .markdownlint.json
