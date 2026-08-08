@@ -3,12 +3,19 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { z } from "zod";
 import { OPENLAW_VERSION } from "@openlaw/shared";
+import { createDb } from "@openlaw/db";
 import { buildApp } from "./app.js";
+import { TEST_AUTH_CONFIG } from "./testing/harness.js";
 
 let app: Awaited<ReturnType<typeof buildApp>>;
 
 beforeAll(async () => {
-  app = await buildApp();
+  // These suites never touch the database; pg pools connect lazily, so a
+  // placeholder URL keeps them container-free.
+  app = await buildApp({
+    db: createDb("postgresql://unused:unused@localhost:5432/unused"),
+    config: TEST_AUTH_CONFIG,
+  });
   // Test-only route exercising the validation → problem+json path.
   app.get(
     "/api/v1/echo",
