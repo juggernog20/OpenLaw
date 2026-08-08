@@ -12,18 +12,30 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
+    "lint:fix": "turbo run lint -- --fix",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "openapi": "pnpm --filter @openlaw/api openapi:emit && pnpm --filter @openlaw/api-client generate",
+    "secretlint": "secretlint \"**/*\"",
+    "openapi": "pnpm --filter @openlaw/api openapi:emit && pnpm --filter @openlaw/api-client generate && prettier --write apps/api/openapi.json packages/api-client/src/schema.ts",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "fix": "pnpm lint:fix && pnpm format && pnpm secretlint && turbo run typecheck --continue",
+    "check": "pnpm format:check && pnpm secretlint && turbo run lint typecheck test --continue",
+    "check:security": "pnpm audit --audit-level=high && pnpm licenses list"
+  },
+  "pnpm": {
+    "overrides": {
+      "js-yaml@>=4.0.0 <4.3.1": "^4.3.1"
+    }
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@secretlint/secretlint-rule-preset-recommend": "^13.0.4",
     "@types/node": "^26.2.0",
     "@typescript/native": "npm:typescript@^7.0.2",
     "eslint": "^10.8.0",
     "prettier": "^3.9.6",
+    "secretlint": "^13.0.4",
     "turbo": "^2.10.8",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-eslint": "^8.66.0"
