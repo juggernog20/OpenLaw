@@ -125,9 +125,9 @@ describe("invites (POST /api/v1/auth/invites)", () => {
     const token = tokenFrom(harness.mailer.messagesTo(third.email)[0]!.text);
     const rows = await harness.db.select().from(verifications);
     expect(rows.length).toBeGreaterThan(0);
-    expect(
-      rows.some((row) => row.identifier.includes(token) || row.value.includes(token)),
-    ).toBe(false);
+    expect(rows.some((row) => row.identifier.includes(token) || row.value.includes(token))).toBe(
+      false,
+    );
   });
 
   it("rejects a replay of an already-used set-password token", async () => {
