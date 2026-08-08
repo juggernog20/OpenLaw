@@ -91,7 +91,9 @@ The reference persona is a **2–10 person in-house legal team at a 50–500 per
 
 ## DD-003: v1 build queue starts with Contract Lifecycle Management
 
-- **Status:** Accepted
+- **Status:** Accepted — build order now maintained in `docs/IMPLEMENTATION-PLAN.md` (2026-08-09). The
+  contracts-first rationale below still holds and the plan follows it, but the plan sequences _all_ designed
+  modules, not contracts alone. Where this record and the plan disagree on scope or ordering, the plan wins.
 - **Date:** 2026-05-02
 
 ### Context

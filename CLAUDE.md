@@ -2,7 +2,8 @@
 
 Guidance for coding agents working in this repository.
 
-Start with `docs/decision-records/PRODUCT.md` for what OpenLaw is and who it's for.
+Start with `docs/decision-records/PRODUCT.md` for what OpenLaw is and who it's for, then
+`docs/IMPLEMENTATION-PLAN.md` for the build order and where we currently are in it.
 
 ## Attribution
 
