@@ -11,7 +11,7 @@
 
 import { betterAuth } from "better-auth";
 import { admin } from "better-auth/plugins";
-import { adminAc, userAc } from "better-auth/plugins/admin/access";
+import { userAc } from "better-auth/plugins/admin/access";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { hash, verify } from "@node-rs/argon2";
 import { uuidv7 } from "uuidv7";
@@ -73,12 +73,15 @@ export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
       // Owns the users.role column plus ban/impersonation columns. Bans
       // carry no product semantics yet; adminRoles shields administrators
       // from ban/impersonation targeting. The roles map exists to teach
-      // the plugin DD-013's vocabulary — its statements are better-auth's
-      // admin-surface permissions, not OpenLaw's authorization model,
-      // which lives in our guards.
+      // the plugin DD-013's vocabulary; every role gets zero admin-surface
+      // permissions, keeping better-auth's /api/auth/admin/* endpoints
+      // closed until the Settings management surface ships. Invites are
+      // unaffected: the server-side createUser call carries no session, so
+      // these permissions are never consulted — authorization is our
+      // requireRole guard.
       admin({
         roles: {
-          administrator: adminAc,
+          administrator: userAc,
           legal_team_member: userAc,
           contributor: userAc,
           business_user: userAc,

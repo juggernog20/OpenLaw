@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { sql, verifications } from "@openlaw/db";
+import { eq, sql, users, verifications } from "@openlaw/db";
 import {
   signIn,
   signInCookies,
@@ -125,7 +125,9 @@ describe("invites (POST /api/v1/auth/invites)", () => {
     const token = tokenFrom(harness.mailer.messagesTo(third.email)[0]!.text);
     const rows = await harness.db.select().from(verifications);
     expect(rows.length).toBeGreaterThan(0);
-    expect(rows.some((row) => row.identifier.includes(token))).toBe(false);
+    expect(
+      rows.some((row) => row.identifier.includes(token) || row.value.includes(token)),
+    ).toBe(false);
   });
 
   it("rejects a replay of an already-used set-password token", async () => {
@@ -146,5 +148,42 @@ describe("invites (POST /api/v1/auth/invites)", () => {
     expect(res.statusCode).toBeGreaterThanOrEqual(400);
     const signInRes = await signIn(harness.app, "noa@example.com", "too-late-password-1");
     expect(signInRes.statusCode).toBe(401);
+  });
+
+  it("rejects a re-invite that tries to change the role", async () => {
+    // Noa is still unactivated (her token expired above) with role
+    // contributor; a re-send is fine, a role edit is not an invite.
+    const res = await invite(adminCookies, {
+      email: "noa@example.com",
+      displayName: "Noa Lund",
+      role: "legal_team_member",
+    });
+    expect(res.statusCode).toBe(409);
+    expect(res.json()).toMatchObject({ status: 409 });
+  });
+
+  it("keeps better-auth's admin management endpoints closed ahead of their surface", async () => {
+    // The plugin ships /api/auth/admin/* routes; no role carries the
+    // permissions they check until the Settings management surface ships.
+    const res = await harness.app.inject({
+      method: "POST",
+      url: "/api/auth/admin/create-user",
+      cookies: adminCookies,
+      payload: {
+        email: "direct@example.com",
+        name: "Direct Creation",
+        password: "should-not-work-1",
+        role: "administrator",
+      },
+    });
+    // Denial must be a client error (401/403), never a server fault.
+    expect(res.statusCode).toBeGreaterThanOrEqual(400);
+    expect(res.statusCode).toBeLessThan(500);
+
+    const rows = await harness.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, "direct@example.com"));
+    expect(rows).toHaveLength(0);
   });
 });

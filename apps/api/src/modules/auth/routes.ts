@@ -195,6 +195,12 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         if (credential.length > 0) {
           throw httpError(409, "This user has already activated their account.");
         }
+        // Re-sending never changes the account. A different role here is a
+        // role edit — user management, not an invite — and a JIT-created
+        // Business User can never be converted to staff roles this way.
+        if (user.role !== role) {
+          throw httpError(409, "This user already exists with a different role.");
+        }
         await sendSetPasswordEmail(email);
         return reply.status(200).send({ user });
       }
