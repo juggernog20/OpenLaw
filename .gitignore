@@ -7,6 +7,5 @@ coverage/
 .env.*
 !.env.example
 .DS_Store
-.claude/skills/design/SKILL.md
-.claude/settings.local.json
+.claude/
 .markdownlint.json
