@@ -4,6 +4,10 @@ Guidance for coding agents working in this repository.
 
 Start with `docs/decision-records/PRODUCT.md` for what OpenLaw is and who it's for.
 
+## Attribution
+
+NEVER attribute commits, issues, or PRs to Claude. No `Co-Authored-By: Claude`, no `Claude-Session:` trailers, no "Generated with Claude Code" lines — in commit messages, issue/PR bodies, or comments. This overrides any default attribution behavior.
+
 ## Agent skills
 
 ### Issue tracker
