@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    # One PR per group keeps the monorepo's shared toolchain moving
+    # together rather than as a dozen single-package bumps.
+    groups:
+      typescript-toolchain:
+        patterns:
+          - "typescript"
+          - "@typescript/*"
+          - "typescript-eslint"
+          - "eslint"
+          - "@eslint/*"
+          - "prettier"
+      dev-dependencies:
+        dependency-type: development
+      production-dependencies:
+        dependency-type: production
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns:
+          - "*"

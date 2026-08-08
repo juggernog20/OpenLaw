@@ -1,0 +1,63 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint, typecheck, test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Non-mutating counterpart to `pnpm fix`: format:check, secretlint,
+      # then lint + typecheck + test across the workspace. `--continue`
+      # so one failing package still reports the rest.
+      - run: pnpm check
+
+  openapi-current:
+    name: OpenAPI artifact is current
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # openapi.json and the generated client are committed artifacts
+      # (TECH-003). Regenerate and fail if the result differs from what
+      # was pushed.
+      - run: pnpm openapi
+
+      - name: Fail if regeneration changed committed output
+        run: |
+          if ! git diff --exit-code -- apps/api/openapi.json packages/api-client/src/schema.ts; then
+            echo "::error::openapi.json / api-client are stale — run 'pnpm openapi' and commit the result."
+            exit 1
+          fi

@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+name: Security
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+  schedule:
+    # Weekly — advisories land against unchanged code.
+    - cron: "13 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  secrets:
+    name: Secret scan (history)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # gitleaks scans commit history, not just the tip.
+          fetch-depth: 0
+
+      # Complements the in-tree `pnpm secretlint` (working copy only) by
+      # covering every commit reachable from this ref. Free for public
+      # repositories; no licence key required.
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  dependencies:
+    name: Dependency audit and licences
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Fails on high/critical advisories. Licence list is informational:
+      # OpenLaw ships AGPL-3.0-only, so an incompatible transitive licence
+      # is a release blocker worth seeing in the log.
+      - run: pnpm check:security
