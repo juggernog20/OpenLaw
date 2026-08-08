@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.6.26",
+    "@better-auth/sso": "1.6.26",
     "@fastify/swagger": "^9.8.1",
     "@node-rs/argon2": "^2.0.2",
     "@openlaw/db": "workspace:*",
@@ -30,6 +31,7 @@
   "devDependencies": {
     "@testcontainers/postgresql": "^12.1.0",
     "@types/nodemailer": "^8.0.1",
+    "oauth2-mock-server": "^9.1.0",
     "tsx": "^4.23.11",
     "vitest": "^4.1.10"
   }
