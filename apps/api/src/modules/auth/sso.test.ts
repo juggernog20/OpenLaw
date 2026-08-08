@@ -325,5 +325,14 @@ describe("runtime BYO-OIDC (POST /api/v1/auth/sso-providers + sso sign-in)", () 
       .from(ssoProviders)
       .where(eq(ssoProviders.providerId, "rogue-idp"));
     expect(rows).toHaveLength(0);
+
+    // Reads are closed too — the provider config carries the client secret.
+    const list = await harness.app.inject({
+      method: "GET",
+      url: "/api/auth/sso/providers",
+      cookies: staffCookies,
+    });
+    expect(list.statusCode).toBe(403);
+    expect(list.body).not.toContain(PROVIDER.clientSecret);
   });
 });

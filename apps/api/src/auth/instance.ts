@@ -37,8 +37,11 @@ const ARGON2 = { memoryCost: 19456, timeCost: 2, parallelism: 1 };
  * issuer on. Direct `auth.api` calls run against the boot context (the
  * per-request `trustedOrigins` function below is only re-evaluated on
  * the HTTP handler path), so the boot context's live array is what must
- * gain the origin; it is removed again even when `fn` throws. After
- * registration the provider row itself carries the trust.
+ * gain the origin; it is removed again even when `fn` throws. Concurrent
+ * requests during the window can observe the origin — accepted: it is an
+ * origin an Administrator is in the act of asserting as the org's IdP,
+ * and no isolated per-call context is reachable through the public API.
+ * After registration the provider row itself carries the trust.
  */
 export async function withTrustedIssuerOrigin<T>(
   auth: Auth,
@@ -209,16 +212,23 @@ export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
         // SSO provider management is an Administrator-only surface. The
-        // plugin's own /sso/register only demands *a* session, which in
+        // plugin's own endpoints only demand *a* session, which in
         // OpenLaw would let any Business User stand up an IdP for a
-        // domain — provider registration is authorization, not just
-        // authentication. Gating here covers the raw HTTP path and our
-        // typed route alike (the route forwards the admin's headers).
-        if (
-          ctx.path === "/sso/register" ||
-          ctx.path === "/sso/request-domain-verification" ||
-          ctx.path === "/sso/verify-domain"
-        ) {
+        // domain or read provider configs (client secret included) —
+        // provider management is authorization, not just authentication.
+        // Gating here covers the raw HTTP path and our typed route alike
+        // (the route forwards the admin's headers). Sign-in and callback
+        // paths stay open — they are the login flow itself.
+        const SSO_MANAGEMENT_PATHS = [
+          "/sso/register",
+          "/sso/update-provider",
+          "/sso/delete-provider",
+          "/sso/get-provider",
+          "/sso/providers",
+          "/sso/request-domain-verification",
+          "/sso/verify-domain",
+        ];
+        if (SSO_MANAGEMENT_PATHS.includes(ctx.path)) {
           const session = await getSessionFromCtx(ctx);
           const role = (session?.user as { role?: string } | undefined)?.role;
           if (role !== "administrator") {
@@ -272,7 +282,14 @@ export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
                   message: "This email address is not eligible for portal access.",
                 });
               }
-              return { data: { ...user, name: user.name || user.email, role: "business_user" } };
+              return {
+                data: {
+                  ...user,
+                  email: user.email.toLowerCase(),
+                  name: user.name || user.email,
+                  role: "business_user",
+                },
+              };
             }
 
             // SSO half of the matrix: unknown + allowlisted domain → JIT
@@ -295,6 +312,7 @@ export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
               return {
                 data: {
                   ...user,
+                  email: user.email.toLowerCase(),
                   name: user.name || user.email,
                   role: "business_user",
                   emailVerified: true,
