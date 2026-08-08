@@ -27,36 +27,36 @@
   /* ------------------------------------------------------------------ *
    * Surfaces — 4 tiers, escalating elevation                           *
    * ------------------------------------------------------------------ */
-  --color-canvas:           var(--bg-canvas);
-  --color-raised:           var(--bg-raised);
-  --color-section-header:   var(--bg-section-header);
-  --color-control:          var(--bg-control);
-  --color-inverted:         var(--bg-inverted);
+  --color-canvas: var(--bg-canvas);
+  --color-raised: var(--bg-raised);
+  --color-section-header: var(--bg-section-header);
+  --color-control: var(--bg-control);
+  --color-inverted: var(--bg-inverted);
 
   /* ------------------------------------------------------------------ *
    * Borders                                                            *
    * ------------------------------------------------------------------ */
-  --color-border-default:       var(--border-default);
-  --color-border-muted:         var(--border-muted);
-  --color-border-on-inverted:   var(--border-on-inverted);
+  --color-border-default: var(--border-default);
+  --color-border-muted: var(--border-muted);
+  --color-border-on-inverted: var(--border-on-inverted);
 
   /* ------------------------------------------------------------------ *
    * Text                                                               *
    * ------------------------------------------------------------------ */
-  --color-primary:        var(--text-primary);
-  --color-muted:          var(--text-muted);
-  --color-subtle:         var(--text-subtle);
-  --color-on-inverted:    var(--text-on-inverted);
-  --color-on-accent:      var(--text-on-accent);
-  --color-on-cta:         var(--text-on-cta);
-  --color-link:           var(--text-link);
-  --color-danger-inline:  var(--text-danger);
+  --color-primary: var(--text-primary);
+  --color-muted: var(--text-muted);
+  --color-subtle: var(--text-subtle);
+  --color-on-inverted: var(--text-on-inverted);
+  --color-on-accent: var(--text-on-accent);
+  --color-on-cta: var(--text-on-cta);
+  --color-link: var(--text-link);
+  --color-danger-inline: var(--text-danger);
 
   /* ------------------------------------------------------------------ *
    * Brand                                                              *
    * ------------------------------------------------------------------ */
-  --color-accent:         var(--accent);
-  --color-cta-primary:    var(--cta-primary);
+  --color-accent: var(--accent);
+  --color-cta-primary: var(--cta-primary);
 
   /* ------------------------------------------------------------------ *
    * Status — paired bg + fg, 8 families.                               *
@@ -65,35 +65,35 @@
    *   low = neutral · medium = warning · high = severe ·               *
    *   critical = danger                                                *
    * ------------------------------------------------------------------ */
-  --color-status-success-bg:    var(--status-success-bg);
-  --color-status-success-fg:    var(--status-success-fg);
+  --color-status-success-bg: var(--status-success-bg);
+  --color-status-success-fg: var(--status-success-fg);
 
-  --color-status-warning-bg:    var(--status-warning-bg);
-  --color-status-warning-fg:    var(--status-warning-fg);
+  --color-status-warning-bg: var(--status-warning-bg);
+  --color-status-warning-fg: var(--status-warning-fg);
 
-  --color-status-info-bg:       var(--status-info-bg);
-  --color-status-info-fg:       var(--status-info-fg);
+  --color-status-info-bg: var(--status-info-bg);
+  --color-status-info-fg: var(--status-info-fg);
 
-  --color-status-danger-bg:     var(--status-danger-bg);
-  --color-status-danger-fg:     var(--status-danger-fg);
+  --color-status-danger-bg: var(--status-danger-bg);
+  --color-status-danger-fg: var(--status-danger-fg);
 
-  --color-status-severe-bg:     var(--status-severe-bg);
-  --color-status-severe-fg:     var(--status-severe-fg);
+  --color-status-severe-bg: var(--status-severe-bg);
+  --color-status-severe-fg: var(--status-severe-fg);
 
-  --color-status-assigned-bg:   var(--status-assigned-bg);
-  --color-status-assigned-fg:   var(--status-assigned-fg);
+  --color-status-assigned-bg: var(--status-assigned-bg);
+  --color-status-assigned-fg: var(--status-assigned-fg);
 
-  --color-status-onhold-bg:     var(--status-onhold-bg);
-  --color-status-onhold-fg:     var(--status-onhold-fg);
+  --color-status-onhold-bg: var(--status-onhold-bg);
+  --color-status-onhold-fg: var(--status-onhold-fg);
 
-  --color-status-neutral-bg:    var(--status-neutral-bg);
-  --color-status-neutral-fg:    var(--status-neutral-fg);
+  --color-status-neutral-bg: var(--status-neutral-bg);
+  --color-status-neutral-fg: var(--status-neutral-fg);
 
   /* ------------------------------------------------------------------ *
    * Counter badge (neutral count)                                      *
    * ------------------------------------------------------------------ */
-  --color-badge-count-bg:   var(--badge-count-bg);
-  --color-badge-count-fg:   var(--badge-count-fg);
+  --color-badge-count-bg: var(--badge-count-bg);
+  --color-badge-count-fg: var(--badge-count-fg);
 
   /* ------------------------------------------------------------------ *
    * Confidentiality (per DECISIONS.md DD-014, DES-009)                 *
@@ -101,16 +101,16 @@
    * `confidential-bg` is the banner background, with theme-divergent   *
    * semantics (purple in Light/Dark, tan in Warm — see DES-009).       *
    * ------------------------------------------------------------------ */
-  --color-confidential:     var(--confidential-fg);
-  --color-confidential-bg:  var(--confidential-bg);
+  --color-confidential: var(--confidential-fg);
+  --color-confidential-bg: var(--confidential-bg);
 
   /* ------------------------------------------------------------------ *
    * File-type icons — theme-invariant brand colors                     *
    * ------------------------------------------------------------------ */
-  --color-file-word:    #2B6CB0;
-  --color-file-excel:   #1A7F37;
-  --color-file-pdf:     #CF222E;
-  --color-file-default: #656D76;
+  --color-file-word: #2b6cb0;
+  --color-file-excel: #1a7f37;
+  --color-file-pdf: #cf222e;
+  --color-file-default: #656d76;
 
   /* ------------------------------------------------------------------ *
    * Avatar — uniform per DES-018: initials on the light-blue accent;   *
@@ -122,10 +122,10 @@
   /* ------------------------------------------------------------------ *
    * Geometry — radii locked per DES-003 (GitHub-Primer-shaped)         *
    * ------------------------------------------------------------------ */
-  --radius-chip:   4px;
-  --radius-card:   6px;
+  --radius-chip: 4px;
+  --radius-card: 6px;
   --radius-button: 6px;
-  --radius-pill:   10px;
+  --radius-pill: 10px;
   --radius-avatar: 9999px;
 
   /* ------------------------------------------------------------------ *
@@ -133,11 +133,11 @@
    * Registered as --spacing-* so Tailwind v4 generates utilities like  *
    * px-page-x, gap-section-gap, p-card-x.                              *
    * ------------------------------------------------------------------ */
-  --spacing-page-x:        32px;
-  --spacing-page-y:        24px;
-  --spacing-section-gap:   24px;
-  --spacing-card-x:        16px;
-  --spacing-card-y:        10px;
+  --spacing-page-x: 32px;
+  --spacing-page-y: 24px;
+  --spacing-section-gap: 24px;
+  --spacing-card-x: 16px;
+  --spacing-card-y: 10px;
 
   /* ------------------------------------------------------------------ *
    * Chrome dimensions — fixed sizes for the application shell.         *
@@ -145,48 +145,49 @@
    * Reference from layout components via var() or arbitrary value      *
    * (e.g. h-[--height-nav]).                                           *
    * ------------------------------------------------------------------ */
-  --height-header:                62px;
-  --height-nav:                   48px;
-  --height-subbar:                64px;
-  --width-activitybar:            48px;   /* record-page icon strip per DES-016 */
-  --width-panel:                  320px;  /* expanded applet panel per DES-016 */
-  --height-confidential-banner:   36px;  /* per DES-009 */
+  --height-header: 62px;
+  --height-nav: 48px;
+  --height-subbar: 64px;
+  --width-activitybar: 48px; /* record-page icon strip per DES-016 */
+  --width-panel: 320px; /* expanded applet panel per DES-016 */
+  --height-confidential-banner: 36px; /* per DES-009 */
 
   /* ------------------------------------------------------------------ *
    * Typography — per DES-006                                           *
    * Inter as the only typeface; mono stack reserved for future use.    *
    * Self-hosted woff2 (no Google Fonts) per DECISIONS.md DD-001.       *
    * ------------------------------------------------------------------ */
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system,
-               "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, "JetBrains Mono", "Fira Mono",
-               "SFMono-Regular", Menlo, Consolas, monospace;
+  --font-sans:
+    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+  --font-mono:
+    ui-monospace, "JetBrains Mono", "Fira Mono", "SFMono-Regular", Menlo, Consolas, monospace;
 
   /* Size ramp — 8 named sizes, line-heights baked in.
    * Tailwind v4 reads --text-<name> as the size and
    * --text-<name>--line-height as the matching line-height ratio. */
-  --text-xs:                11px;
-  --text-xs--line-height:   1.45;
-  --text-sm:                12px;
-  --text-sm--line-height:   1.5;
-  --text-base:              13px;
+  --text-xs: 11px;
+  --text-xs--line-height: 1.45;
+  --text-sm: 12px;
+  --text-sm--line-height: 1.5;
+  --text-base: 13px;
   --text-base--line-height: 1.5;
-  --text-md:                14px;
-  --text-md--line-height:   1.5;
-  --text-lg:                18px;
-  --text-lg--line-height:   1.4;
-  --text-xl:                20px;
-  --text-xl--line-height:   1.3;
-  --text-2xl:               24px;
-  --text-2xl--line-height:  1.25;
-  --text-3xl:               32px;
-  --text-3xl--line-height:  1.2;
+  --text-md: 14px;
+  --text-md--line-height: 1.5;
+  --text-lg: 18px;
+  --text-lg--line-height: 1.4;
+  --text-xl: 20px;
+  --text-xl--line-height: 1.3;
+  --text-2xl: 24px;
+  --text-2xl--line-height: 1.25;
+  --text-3xl: 32px;
+  --text-3xl--line-height: 1.2;
 
   /* Weight ramp — 3 weights only.
    * Tailwind exposes these as font-normal / font-medium / font-semibold. */
-  --font-weight-normal:     400;
-  --font-weight-medium:     500;
-  --font-weight-semibold:   600;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
 }
 
 /* Base layer — minimal defaults from DES-003 / DES-005 / DES-006.
@@ -194,7 +195,7 @@
 @layer base {
   html {
     font-family: var(--font-sans);
-    font-size: var(--text-md);          /* 14px base per DES-006 */
+    font-size: var(--text-md); /* 14px base per DES-006 */
     line-height: var(--text-md--line-height);
     color: var(--text-primary);
     background-color: var(--bg-canvas);

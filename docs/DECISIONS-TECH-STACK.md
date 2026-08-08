@@ -386,21 +386,21 @@ Zod is the validation vocabulary everywhere — API routes, shared package, fron
 
 ## Index of decisions
 
-| # | Decision | Status |
-| --- | --- | --- |
-| TECH-001 | Frontend stack — React + Tailwind CSS + shadcn/ui (copied) + Radix primitives | Accepted |
-| TECH-002 | Backend — TypeScript on Node LTS | Accepted |
-| TECH-003 | Application shape — Fastify API + Vite React SPA (REST/OpenAPI) | Accepted |
-| TECH-004 | Database — PostgreSQL only | Accepted |
-| TECH-005 | Deployment — Docker Compose as the blessed path | Accepted |
-| TECH-006 | ORM — Drizzle (+ drizzle-kit migrations) | Accepted |
-| TECH-007 | Background jobs — pg-boss on Postgres | Accepted |
-| TECH-008 | Authentication — onboarding-selectable: built-in basic or BYO IdP (OIDC) | Accepted |
-| TECH-009 | Real-time — SSE on live surfaces | Accepted |
-| TECH-010 | Document engines — one LibreOffice + OCR sidecar | Accepted |
-| TECH-011 | Email sending — SMTP first + provider adapter | Accepted |
-| TECH-012 | AI providers — three protocol adapters, presets, custom option | Accepted |
-| TECH-013 | DocuSign auth — JWT grant (service integration) | Accepted |
-| TECH-014 | DX housekeeping — repo, CI, testing, observability, telemetry, storage/search | Accepted |
-| TECH-015 | TypeScript 7 native compiler + TS 6 API shim for typescript-eslint | Accepted (temporary) |
-| TECH-016 | API validation vocabulary — Zod as the single schema source | Accepted |
+| #        | Decision                                                                      | Status               |
+| -------- | ----------------------------------------------------------------------------- | -------------------- |
+| TECH-001 | Frontend stack — React + Tailwind CSS + shadcn/ui (copied) + Radix primitives | Accepted             |
+| TECH-002 | Backend — TypeScript on Node LTS                                              | Accepted             |
+| TECH-003 | Application shape — Fastify API + Vite React SPA (REST/OpenAPI)               | Accepted             |
+| TECH-004 | Database — PostgreSQL only                                                    | Accepted             |
+| TECH-005 | Deployment — Docker Compose as the blessed path                               | Accepted             |
+| TECH-006 | ORM — Drizzle (+ drizzle-kit migrations)                                      | Accepted             |
+| TECH-007 | Background jobs — pg-boss on Postgres                                         | Accepted             |
+| TECH-008 | Authentication — onboarding-selectable: built-in basic or BYO IdP (OIDC)      | Accepted             |
+| TECH-009 | Real-time — SSE on live surfaces                                              | Accepted             |
+| TECH-010 | Document engines — one LibreOffice + OCR sidecar                              | Accepted             |
+| TECH-011 | Email sending — SMTP first + provider adapter                                 | Accepted             |
+| TECH-012 | AI providers — three protocol adapters, presets, custom option                | Accepted             |
+| TECH-013 | DocuSign auth — JWT grant (service integration)                               | Accepted             |
+| TECH-014 | DX housekeeping — repo, CI, testing, observability, telemetry, storage/search | Accepted             |
+| TECH-015 | TypeScript 7 native compiler + TS 6 API shim for typescript-eslint            | Accepted (temporary) |
+| TECH-016 | API validation vocabulary — Zod as the single schema source                   | Accepted             |

@@ -180,7 +180,7 @@ Split the scope into:
 - Contracts (CLM)
 - Entities (added per **DD-006**)
 
-**Cross-cutting capabilities** (designed *into* every module, not destinations):
+**Cross-cutting capabilities** (designed _into_ every module, not destinations):
 
 - Search
 - Comments / @mentions / activity feed (this is "collaboration")
@@ -266,7 +266,7 @@ The four modules need a clear ownership and reference model. Without it, screens
 
 - Matter has many Contracts; Matter has many Documents.
 - Contract has many Documents (versions / artifacts).
-- Document can stand alone, be owned by a Contract, or be attached to a Matter. *(Revised by **DOC-008**, 2026-08-04: documents never stand alone — every document has exactly one owning record: matter, contract, entity, or knowledge item.)*
+- Document can stand alone, be owned by a Contract, or be attached to a Matter. _(Revised by **DOC-008**, 2026-08-04: documents never stand alone — every document has exactly one owning record: matter, contract, entity, or knowledge item.)_
 - Contract has many parties (Entities + Counterparties — see **DD-008**).
 - Matter has many Entities (subjects, optional).
 
@@ -377,18 +377,21 @@ The success of the platform hinges on whether non-legal business users actually 
 Three intake surfaces, all feeding a single `Request` entity that is triaged into a `Contract`, a `Matter`, or resolved-in-thread:
 
 **1. ChatOps via adapter pattern** — primary surface
+
 - A `ChatAdapter` interface defines the platform-agnostic intake contract (auth, modal/form rendering, message threading, status updates).
 - **Slack adapter** is built in for v1.
 - **Teams adapter** is a fast-follow (~v1.5).
 - Google Chat / Mattermost / Discord / others are community-contributable via the documented adapter interface.
 
 **2. Web form with magic-link authentication and domain allowlist** — secondary surface
+
 - The form URL is shareable.
 - To submit, the user enters their corporate email; the system checks against a configured allowed-domains list.
 - If allowed: the user receives a one-time signed magic link, which opens the form with identity bound to that email.
 - No account or password is required.
 
 **3. Email-to-intake on a dedicated address** — tertiary / always-on floor
+
 - Convention: `intake@yourcompany.com` (configurable; not `legal@`).
 - Inbound supported via three configurable transports: IMAP polling, webhook (SES Inbound / Postmark / Mailgun / Resend), or SMTP forwarding from an existing mailbox.
 
@@ -505,12 +508,12 @@ Every UI mock and every authorization check must answer "who can see / do what?"
 
 Four fixed roles. Custom RBAC is explicitly deferred (see Alternatives).
 
-| Role | Audience | Default access |
-|---|---|---|
-| **Administrator** | General Counsel, Legal Ops | Full access. Can configure modules, manage users, set up intake channels, change system settings, see all matters/contracts/entities including sensitive ones. |
-| **Legal Team Member** | In-house counsels, paralegals | Full functional access to legal work — read/write across Matters, Contracts, Documents, Entities — *except* (a) cannot change system settings, (b) cannot see information flagged as sensitive unless explicitly added to that matter. Mechanism for the sensitivity gate is defined in **DD-014** (TBD). |
-| **Contributor** | Procurement, compliance, finance, others embedded in legal-adjacent work | Enhanced access beyond Business User but less than Legal Team Member. Sees only matters/contracts they are explicitly added to. Within those, can read and contribute (comment, upload docs, edit specific fields) per **DD-015** (TBD). Cannot browse the system more broadly. |
-| **Business User** | All other employees (sales, HR, engineering, marketing, etc.) submitting legal requests | Sees only requests they personally submitted, plus comments addressed to them. Cannot browse matters, contracts, documents, or other users' submissions. Activity is tracked for the audit log. |
+| Role                  | Audience                                                                                | Default access                                                                                                                                                                                                                                                                                            |
+| --------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Administrator**     | General Counsel, Legal Ops                                                              | Full access. Can configure modules, manage users, set up intake channels, change system settings, see all matters/contracts/entities including sensitive ones.                                                                                                                                            |
+| **Legal Team Member** | In-house counsels, paralegals                                                           | Full functional access to legal work — read/write across Matters, Contracts, Documents, Entities — _except_ (a) cannot change system settings, (b) cannot see information flagged as sensitive unless explicitly added to that matter. Mechanism for the sensitivity gate is defined in **DD-014** (TBD). |
+| **Contributor**       | Procurement, compliance, finance, others embedded in legal-adjacent work                | Enhanced access beyond Business User but less than Legal Team Member. Sees only matters/contracts they are explicitly added to. Within those, can read and contribute (comment, upload docs, edit specific fields) per **DD-015** (TBD). Cannot browse the system more broadly.                           |
+| **Business User**     | All other employees (sales, HR, engineering, marketing, etc.) submitting legal requests | Sees only requests they personally submitted, plus comments addressed to them. Cannot browse matters, contracts, documents, or other users' submissions. Activity is tracked for the audit log.                                                                                                           |
 
 ### Rationale
 
@@ -619,7 +622,7 @@ All Contributor edits and uploads carry the user's name and role tag in the acti
 
 ### Rationale
 
-1. The role's actual purpose is *contribution to specific matters*, not browsing — read access is intentionally narrow.
+1. The role's actual purpose is _contribution to specific matters_, not browsing — read access is intentionally narrow.
 2. The `business` / `legal` field split mirrors how procurement and counsel actually divide work on a contract: business term inputs vs. legal term ownership.
 3. Workflow status is the legal team's promise to the business, not a shared field — letting Contributors flip status undermines the core CLM purpose.
 4. Privileged comment threads must remain Member-only; the whole reason for a separate role is to enable legal-only conversation alongside business collaboration.
@@ -660,11 +663,11 @@ Without a tiered visibility model, every comment ends up either too public (leak
 
 Three audience-tiered visibility levels on every comment, named after their actual audience:
 
-| Tier | Label | Audience |
-|---|---|---|
-| 1 | **Legal Only** | Administrators + Legal Team Members |
-| 2 | **Working Team** | Administrators + Legal Team Members + Contributors on the matter |
-| 3 | **Full Thread** | Administrators + Legal Team Members + Contributors + the originating Business User |
+| Tier | Label            | Audience                                                                           |
+| ---- | ---------------- | ---------------------------------------------------------------------------------- |
+| 1    | **Legal Only**   | Administrators + Legal Team Members                                                |
+| 2    | **Working Team** | Administrators + Legal Team Members + Contributors on the matter                   |
+| 3    | **Full Thread**  | Administrators + Legal Team Members + Contributors + the originating Business User |
 
 **Default selection rules:**
 
@@ -727,7 +730,7 @@ Two layers, both append-only, both inherit the visibility model defined in **DD-
 - Visibility is filtered at query time. Users do not see placeholders or counts of hidden entries — that itself would leak metadata.
 - Confidential entities (per **DD-014**) hide the entire activity feed from non-team Members.
 
-**Layer 2 — System-wide audit log.** Visible to Administrators only. Includes everything in the activity feed *plus* security-sensitive admin actions: user CRUD, role changes, intake-channel config changes, exports, login/logout events, permission grants.
+**Layer 2 — System-wide audit log.** Visible to Administrators only. Includes everything in the activity feed _plus_ security-sensitive admin actions: user CRUD, role changes, intake-channel config changes, exports, login/logout events, permission grants.
 
 - Append-only and immutable. Corrections are made by appending a correction entry, never by mutation.
 - No automatic deletion. Records persist for the life of the entity. Soft-deleted entities retain their audit history, marked as orphaned.
@@ -798,23 +801,23 @@ Confirms DD-007's layered model, MTR-007's standalone-contracts-with-optional-li
 
 ## Index of decisions
 
-| # | Decision | Status |
-|---|---|---|
-| DD-001 | Internal-tool-first development model with portable architecture | Accepted |
-| DD-002 | Reference persona — small in-house legal team (2–10 people) | Accepted |
-| DD-003 | v1 build queue starts with Contract Lifecycle Management | Accepted |
-| DD-004 | Front-end-driven design pass; full mocks for all modules up front | Accepted |
-| DD-005 | Restructure scope into functional modules + cross-cutting capabilities | Accepted |
-| DD-006 | Add Entity Management as a functional module | Accepted |
-| DD-007 | Layered data model — Documents → Contracts → Matters; Entities orthogonal | Accepted |
-| DD-008 | Separate `entities` and `counterparties` tables, with `parties_view` abstraction | Accepted |
-| DD-009 | Single-tenant per deployment | Accepted |
-| DD-010 | Layered intake strategy — ChatOps + magic-link form + email parser | Accepted |
-| DD-011 | License — AGPL v3 | Accepted |
-| DD-012 | Project name — keep "OpenLaw" with documented rename trigger | Accepted |
+| #      | Decision                                                                                  | Status   |
+| ------ | ----------------------------------------------------------------------------------------- | -------- |
+| DD-001 | Internal-tool-first development model with portable architecture                          | Accepted |
+| DD-002 | Reference persona — small in-house legal team (2–10 people)                               | Accepted |
+| DD-003 | v1 build queue starts with Contract Lifecycle Management                                  | Accepted |
+| DD-004 | Front-end-driven design pass; full mocks for all modules up front                         | Accepted |
+| DD-005 | Restructure scope into functional modules + cross-cutting capabilities                    | Accepted |
+| DD-006 | Add Entity Management as a functional module                                              | Accepted |
+| DD-007 | Layered data model — Documents → Contracts → Matters; Entities orthogonal                 | Accepted |
+| DD-008 | Separate `entities` and `counterparties` tables, with `parties_view` abstraction          | Accepted |
+| DD-009 | Single-tenant per deployment                                                              | Accepted |
+| DD-010 | Layered intake strategy — ChatOps + magic-link form + email parser                        | Accepted |
+| DD-011 | License — AGPL v3                                                                         | Accepted |
+| DD-012 | Project name — keep "OpenLaw" with documented rename trigger                              | Accepted |
 | DD-013 | Four-role permission model — Administrator, Legal Team Member, Contributor, Business User | Accepted |
-| DD-014 | Sensitive matter gating — confidential flag, opt-in restriction | Accepted |
-| DD-015 | Contributor permission grid — read, comment, upload, edit business fields | Accepted |
-| DD-016 | Comment visibility — three audience tiers (Legal Only / Working Team / Full Thread) | Accepted |
-| DD-017 | Activity tracking — two-layer model (per-entity activity feed + system-wide audit log) | Accepted |
-| DD-018 | Work-model doctrine — dual workspaces with the deliverable rule | Accepted |
+| DD-014 | Sensitive matter gating — confidential flag, opt-in restriction                           | Accepted |
+| DD-015 | Contributor permission grid — read, comment, upload, edit business fields                 | Accepted |
+| DD-016 | Comment visibility — three audience tiers (Legal Only / Working Team / Full Thread)       | Accepted |
+| DD-017 | Activity tracking — two-layer model (per-entity activity feed + system-wide audit log)    | Accepted |
+| DD-018 | Work-model doctrine — dual workspaces with the deliverable rule                           | Accepted |

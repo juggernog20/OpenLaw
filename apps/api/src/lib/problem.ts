@@ -14,9 +14,7 @@ export const ProblemSchema = z
     status: z.int(),
     detail: z.string().optional(),
     instance: z.string().optional(),
-    errors: z
-      .array(z.object({ path: z.string(), message: z.string() }))
-      .optional(),
+    errors: z.array(z.object({ path: z.string(), message: z.string() })).optional(),
   })
   .describe("RFC 9457 problem details");
 

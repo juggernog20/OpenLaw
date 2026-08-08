@@ -42,7 +42,7 @@ _None — queue cleared 2026-08-06 (KNW-001 through KNW-005)._
 
 - **Status** — Accepted
 - **Date** — 2026-08-06
-- **Decision** — `knowledge_folders` (nested, DOC-006/011 pattern at knowledge scope — organizing *items*, not documents) + `knowledge_items.folder_id`. **Blank-start**, consistent with ENT-005/006: the organization builds its own structure. Type is a filter, not the hierarchy.
+- **Decision** — `knowledge_folders` (nested, DOC-006/011 pattern at knowledge scope — organizing _items_, not documents) + `knowledge_items.folder_id`. **Blank-start**, consistent with ENT-005/006: the organization builds its own structure. Type is a filter, not the hierarchy.
 - **Consequences** — Two light tables; list + search across everything with type/folder/author filters.
 
 ## KNW-004 — Audience: legal-only default + portal-readable flag; v1 surfacing = browse/search/deflection
@@ -62,10 +62,10 @@ _None — queue cleared 2026-08-06 (KNW-001 through KNW-005)._
 
 ## Index of decisions
 
-| # | Decision | Status |
-|---|---|---|
-| KNW-001 | Entry model: one typed entity, text body + owned documents | Accepted |
-| KNW-002 | Publishing: Member+ authors, draft/published, edit-in-place | Accepted |
-| KNW-003 | Organization: nested folders, blank-start | Accepted |
-| KNW-004 | Audience: legal-only default + portal-readable flag | Accepted |
+| #       | Decision                                                           | Status   |
+| ------- | ------------------------------------------------------------------ | -------- |
+| KNW-001 | Entry model: one typed entity, text body + owned documents         | Accepted |
+| KNW-002 | Publishing: Member+ authors, draft/published, edit-in-place        | Accepted |
+| KNW-003 | Organization: nested folders, blank-start                          | Accepted |
+| KNW-004 | Audience: legal-only default + portal-readable flag                | Accepted |
 | KNW-005 | Deferred set: search intelligence, usage, staleness, AI, ingestion | Accepted |

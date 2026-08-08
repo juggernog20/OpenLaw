@@ -17,67 +17,67 @@
 
 [data-theme="warm"] {
   /* Surfaces */
-  --bg-canvas:           #FBFAF7;
-  --bg-raised:           #FFFFFF;
-  --bg-section-header:   #F4F1EB;
-  --bg-control:          #FBFAF7;
-  --bg-inverted:         #E8E0D0;
+  --bg-canvas: #fbfaf7;
+  --bg-raised: #ffffff;
+  --bg-section-header: #f4f1eb;
+  --bg-control: #fbfaf7;
+  --bg-inverted: #e8e0d0;
 
   /* Borders */
-  --border-default:      #EAE5DC;
-  --border-muted:        #EFE9DD;
-  --border-on-inverted:  #D8D0C0;
+  --border-default: #eae5dc;
+  --border-muted: #efe9dd;
+  --border-on-inverted: #d8d0c0;
 
   /* Text */
-  --text-primary:        #2D2A24;
-  --text-muted:          #7A7264;
-  --text-subtle:         #A8A294;
-  --text-on-inverted:    #2D2A24;   /* dark text on cream-deep header */
-  --text-on-accent:      #FFFFFF;
-  --text-on-cta:         #FFFFFF;
-  --text-link:           #9B6B3A;
-  --text-danger:         #8C3A2C;
+  --text-primary: #2d2a24;
+  --text-muted: #7a7264;
+  --text-subtle: #a8a294;
+  --text-on-inverted: #2d2a24; /* dark text on cream-deep header */
+  --text-on-accent: #ffffff;
+  --text-on-cta: #ffffff;
+  --text-link: #9b6b3a;
+  --text-danger: #8c3a2c;
 
   /* Brand */
-  --accent:              #C97B5C;
-  --cta-primary:         #5C7A4A;
+  --accent: #c97b5c;
+  --cta-primary: #5c7a4a;
 
   /* Status — paired bg + fg */
-  --status-success-bg:   #E5EDDC;
-  --status-success-fg:   #5C7A4A;
+  --status-success-bg: #e5eddc;
+  --status-success-fg: #5c7a4a;
 
-  --status-warning-bg:   #F4EBC9;
-  --status-warning-fg:   #8A6B1F;
+  --status-warning-bg: #f4ebc9;
+  --status-warning-fg: #8a6b1f;
 
-  --status-info-bg:      #DDE8F0;
-  --status-info-fg:      #3A6E94;
+  --status-info-bg: #dde8f0;
+  --status-info-fg: #3a6e94;
 
-  --status-danger-bg:    #F0DCD4;
-  --status-danger-fg:    #A05540;
+  --status-danger-bg: #f0dcd4;
+  --status-danger-fg: #a05540;
 
-  --status-severe-bg:    #F3E2CC;
-  --status-severe-fg:    #935425;
+  --status-severe-bg: #f3e2cc;
+  --status-severe-fg: #935425;
 
-  --status-assigned-bg:  #EFE3F0;
-  --status-assigned-fg:  #7A4A8A;
+  --status-assigned-bg: #efe3f0;
+  --status-assigned-fg: #7a4a8a;
 
-  --status-onhold-bg:    #5C5448;
-  --status-onhold-fg:    #FBFAF7;
+  --status-onhold-bg: #5c5448;
+  --status-onhold-fg: #fbfaf7;
 
-  --status-neutral-bg:   #EDE8DF;
-  --status-neutral-fg:   #6E675A;
+  --status-neutral-bg: #ede8df;
+  --status-neutral-fg: #6e675a;
 
   /* Counter badge */
-  --badge-count-bg:      #EAE5DC;
-  --badge-count-fg:      #5A5448;
+  --badge-count-bg: #eae5dc;
+  --badge-count-fg: #5a5448;
 
   /* Confidentiality — terracotta-brown, not purple. See file header.
    * Banner background is soft tan (per DES-009), not soft purple — Warm
    * deliberately diverges from the Light/Dark purple semantics. */
-  --confidential-fg:     #9B6B3A;
-  --confidential-bg:     #EFE3D0;
+  --confidential-fg: #9b6b3a;
+  --confidential-bg: #efe3d0;
 
   /* Avatar — uniform initials treatment per DES-018 */
-  --avatar-bg:           #51B3D6;
-  --avatar-fg:           #0D1117;
+  --avatar-bg: #51b3d6;
+  --avatar-fg: #0d1117;
 }

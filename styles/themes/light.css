@@ -11,65 +11,65 @@
 
 :root {
   /* Surfaces */
-  --bg-canvas:           #FFFFFF;
-  --bg-raised:           #FFFFFF;   /* cards on white body collapse to same hex */
-  --bg-section-header:   #F6F8FA;
-  --bg-control:          #F6F8FA;
-  --bg-inverted:         #0D1117;
+  --bg-canvas: #ffffff;
+  --bg-raised: #ffffff; /* cards on white body collapse to same hex */
+  --bg-section-header: #f6f8fa;
+  --bg-control: #f6f8fa;
+  --bg-inverted: #0d1117;
 
   /* Borders */
-  --border-default:      #D0D7DE;
-  --border-muted:        #D8DEE4;
-  --border-on-inverted:  #30363D;
+  --border-default: #d0d7de;
+  --border-muted: #d8dee4;
+  --border-on-inverted: #30363d;
 
   /* Text */
-  --text-primary:        #1F2328;
-  --text-muted:          #656D76;
-  --text-subtle:         #7D8590;
-  --text-on-inverted:    #F0F6FC;
-  --text-on-accent:      #FFFFFF;
-  --text-on-cta:         #FFFFFF;
-  --text-link:           #0969DA;
-  --text-danger:         #82071E;
+  --text-primary: #1f2328;
+  --text-muted: #656d76;
+  --text-subtle: #7d8590;
+  --text-on-inverted: #f0f6fc;
+  --text-on-accent: #ffffff;
+  --text-on-cta: #ffffff;
+  --text-link: #0969da;
+  --text-danger: #82071e;
 
   /* Brand */
-  --accent:              #F78166;
-  --cta-primary:         #1F883D;
+  --accent: #f78166;
+  --cta-primary: #1f883d;
 
   /* Status — paired bg + fg */
-  --status-success-bg:   #DAFBE1;
-  --status-success-fg:   #1F883D;
+  --status-success-bg: #dafbe1;
+  --status-success-fg: #1f883d;
 
-  --status-warning-bg:   #FFF8C5;
-  --status-warning-fg:   #9A6700;
+  --status-warning-bg: #fff8c5;
+  --status-warning-fg: #9a6700;
 
-  --status-info-bg:      #DDF4FF;
-  --status-info-fg:      #0969DA;
+  --status-info-bg: #ddf4ff;
+  --status-info-fg: #0969da;
 
-  --status-danger-bg:    #FFEBE9;
-  --status-danger-fg:    #CF222E;
+  --status-danger-bg: #ffebe9;
+  --status-danger-fg: #cf222e;
 
-  --status-severe-bg:    #FFF1E5;
-  --status-severe-fg:    #BC4C00;
+  --status-severe-bg: #fff1e5;
+  --status-severe-fg: #bc4c00;
 
-  --status-assigned-bg:  #FBEFFF;
-  --status-assigned-fg:  #8250DF;
+  --status-assigned-bg: #fbefff;
+  --status-assigned-fg: #8250df;
 
-  --status-onhold-bg:    #4D5560;
-  --status-onhold-fg:    #F0F6FC;
+  --status-onhold-bg: #4d5560;
+  --status-onhold-fg: #f0f6fc;
 
-  --status-neutral-bg:   #EFF1F3;
-  --status-neutral-fg:   #57606A;
+  --status-neutral-bg: #eff1f3;
+  --status-neutral-fg: #57606a;
 
   /* Counter badge */
-  --badge-count-bg:      #EAEEF2;
-  --badge-count-fg:      #656D76;
+  --badge-count-bg: #eaeef2;
+  --badge-count-fg: #656d76;
 
   /* Confidentiality (per DES-009 — see DECISIONS-DESIGN.md) */
-  --confidential-fg:     #5B2B8C;
-  --confidential-bg:     #F5E6FA;
+  --confidential-fg: #5b2b8c;
+  --confidential-bg: #f5e6fa;
 
   /* Avatar — uniform initials treatment per DES-018 */
-  --avatar-bg:           #51B3D6;
-  --avatar-fg:           #0D1117;
+  --avatar-bg: #51b3d6;
+  --avatar-fg: #0d1117;
 }

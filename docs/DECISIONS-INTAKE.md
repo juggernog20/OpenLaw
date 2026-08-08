@@ -125,12 +125,12 @@ Disposition of the former technical queue, per **INT-001**'s form-first revision
 
 ## Index of decisions
 
-| # | Decision | Status |
-| --- | --- | --- |
-| INT-001 | Intake model: JSM-style structured forms + portal; email notifications only | Accepted; lifecycle revised by INT-007 |
-| INT-002 | Request types mapped to target types; forms reuse the fields catalog | Accepted |
-| INT-003 | Requester updates: email notifications only; no status-poke button | Accepted |
-| INT-004 | Deflection links panel in v1; conditional form logic stays deferred | Accepted |
-| INT-005 | No auto-classification: the form is the classification | Accepted |
-| INT-006 | Triage: one Inbox, pickup assignment, four actions, lossless re-convert | Accepted; revised by INT-007 |
-| INT-007 | Disposition-at-pickup: triage decides the outcome; no parked in-review state | Accepted |
+| #       | Decision                                                                     | Status                                 |
+| ------- | ---------------------------------------------------------------------------- | -------------------------------------- |
+| INT-001 | Intake model: JSM-style structured forms + portal; email notifications only  | Accepted; lifecycle revised by INT-007 |
+| INT-002 | Request types mapped to target types; forms reuse the fields catalog         | Accepted                               |
+| INT-003 | Requester updates: email notifications only; no status-poke button           | Accepted                               |
+| INT-004 | Deflection links panel in v1; conditional form logic stays deferred          | Accepted                               |
+| INT-005 | No auto-classification: the form is the classification                       | Accepted                               |
+| INT-006 | Triage: one Inbox, pickup assignment, four actions, lossless re-convert      | Accepted; revised by INT-007           |
+| INT-007 | Disposition-at-pickup: triage decides the outcome; no parked in-review state | Accepted                               |

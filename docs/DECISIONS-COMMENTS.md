@@ -65,10 +65,10 @@ _None — queue cleared 2026-08-05 (CMT-001 through CMT-005)._
 
 ## Index of decisions
 
-| # | Decision | Status |
-|---|---|---|
-| CMT-001 | One comment system; anchored doc comments; thread follows the work | Accepted |
-| CMT-002 | Thread shape: flat chronological, mentions, no nesting | Accepted |
+| #       | Decision                                                                | Status   |
+| ------- | ----------------------------------------------------------------------- | -------- |
+| CMT-001 | One comment system; anchored doc comments; thread follows the work      | Accepted |
+| CMT-002 | Thread shape: flat chronological, mentions, no nesting                  | Accepted |
 | CMT-003 | Tier rendering: badge + strong Legal-Only treatment; segmented composer | Accepted |
-| CMT-004 | Home: activity-bar panel; badge = your unread, tier-filtered | Accepted |
-| CMT-005 | Post-publish: edit with marker, soft delete, tier immutable | Accepted |
+| CMT-004 | Home: activity-bar panel; badge = your unread, tier-filtered            | Accepted |
+| CMT-005 | Post-publish: edit with marker, soft delete, tier immutable             | Accepted |

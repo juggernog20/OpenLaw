@@ -44,17 +44,11 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "path",
-                "message"
-              ]
+              "required": ["path", "message"]
             }
           }
         },
-        "required": [
-          "title",
-          "status"
-        ]
+        "required": ["title", "status"]
       },
       "MetaInput": {
         "type": "object",
@@ -67,10 +61,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "name",
-          "version"
-        ]
+        "required": ["name", "version"]
       },
       "Problem": {
         "type": "object",
@@ -105,19 +96,12 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "path",
-                "message"
-              ],
+              "required": ["path", "message"],
               "additionalProperties": false
             }
           }
         },
-        "required": [
-          "type",
-          "title",
-          "status"
-        ],
+        "required": ["type", "title", "status"],
         "additionalProperties": false
       },
       "Meta": {
@@ -131,10 +115,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "name",
-          "version"
-        ],
+        "required": ["name", "version"],
         "additionalProperties": false
       }
     }
@@ -144,9 +125,7 @@
       "get": {
         "operationId": "getMeta",
         "summary": "Instance metadata",
-        "tags": [
-          "meta"
-        ],
+        "tags": ["meta"],
         "responses": {
           "200": {
             "description": "Default Response",

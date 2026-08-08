@@ -27,45 +27,47 @@ These apply unless a specific table overrides them.
 ## Tables
 
 ### `users`
+
 Source: **DD-013**
 
 Application user. Single role per user (no multi-role membership in v1).
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | PK |
-| `email` | text | unique, not null |
-| `display_name` | text | not null |
-| `role` | text (enum) | `administrator` \| `legal_team_member` \| `contributor` \| `business_user` per **DD-013** |
-| `created_at`, `updated_at` | timestamptz | |
-| `archived_at` | timestamptz | soft-delete affordance |
+| Column                     | Type        | Notes                                                                                     |
+| -------------------------- | ----------- | ----------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                        |
+| `email`                    | text        | unique, not null                                                                          |
+| `display_name`             | text        | not null                                                                                  |
+| `role`                     | text (enum) | `administrator` \| `legal_team_member` \| `contributor` \| `business_user` per **DD-013** |
+| `created_at`, `updated_at` | timestamptz |                                                                                           |
+| `archived_at`              | timestamptz | soft-delete affordance                                                                    |
 
 Open: authentication-related columns (password hash vs OIDC sub vs magic-link only) deferred to the Intake / tech-stack grills. **DD-010** establishes that non-legal users authenticate via magic-link / ChatOps, not password.
 
 ---
 
 ### `entities` (own corporate entities)
+
 Source: **DD-008**, **ENT-001–004**
 
 Internal corporate entities — your subsidiaries, holdings, and related corporate persons. Visible to all Member+ (no per-entity grants); `is_confidential` covers the rare sensitive case (ENT-004).
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | PK |
-| `legal_name` | text | not null |
-| `entity_type_id` | UUID | FK → `entity_types.id` (configurable list; seeds: corporation, llc, partnership, branch, other) per **ENT-001** |
-| `jurisdiction` | text | formation jurisdiction |
-| `formed_on` | date | nullable |
-| `registration_number` | text | nullable |
-| `tax_id` | text | nullable |
-| `registered_agent` | text | nullable |
-| `registered_address` | text | nullable |
-| `status` | text (enum) | `active` \| `dormant` \| `dissolved` \| `divested` — fixed per **ENT-001** |
-| `shares_authorized`, `shares_issued` | bigint | nullable; simple share capital per **ENT-001** |
-| `par_value` | bigint | nullable, integer cents |
-| `custom_fields` | jsonb | keyed by slug; `entity`-scoped catalog fields per **ENT-001**/CTR-016 |
-| `is_confidential` | boolean | per **DD-014**/ENT-004 |
-| `created_at`, `updated_at`, `archived_at` | timestamptz | |
+| Column                                    | Type        | Notes                                                                                                           |
+| ----------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------- |
+| `id`                                      | UUID        | PK                                                                                                              |
+| `legal_name`                              | text        | not null                                                                                                        |
+| `entity_type_id`                          | UUID        | FK → `entity_types.id` (configurable list; seeds: corporation, llc, partnership, branch, other) per **ENT-001** |
+| `jurisdiction`                            | text        | formation jurisdiction                                                                                          |
+| `formed_on`                               | date        | nullable                                                                                                        |
+| `registration_number`                     | text        | nullable                                                                                                        |
+| `tax_id`                                  | text        | nullable                                                                                                        |
+| `registered_agent`                        | text        | nullable                                                                                                        |
+| `registered_address`                      | text        | nullable                                                                                                        |
+| `status`                                  | text (enum) | `active` \| `dormant` \| `dissolved` \| `divested` — fixed per **ENT-001**                                      |
+| `shares_authorized`, `shares_issued`      | bigint      | nullable; simple share capital per **ENT-001**                                                                  |
+| `par_value`                               | bigint      | nullable, integer cents                                                                                         |
+| `custom_fields`                           | jsonb       | keyed by slug; `entity`-scoped catalog fields per **ENT-001**/CTR-016                                           |
+| `is_confidential`                         | boolean     | per **DD-014**/ENT-004                                                                                          |
+| `created_at`, `updated_at`, `archived_at` | timestamptz |                                                                                                                 |
 
 Support tables per **ENT-001/002/003/006**:
 
@@ -78,62 +80,65 @@ Support tables per **ENT-001/002/003/006**:
 ---
 
 ### `counterparties` (external parties)
+
 Source: **DD-008**
 
 External organizations on the other side of contracts/matters. Light schema per **DD-008**; resolved in **CTR-011**. Created on the fly (name only) during contract intake; enrichment later and optional.
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | PK |
-| `name` | text | not null — the only required field |
-| `jurisdiction` | text | nullable |
-| `primary_contact_name` | text | nullable |
-| `primary_contact_email` | text | nullable |
-| `address` | text | nullable |
-| `notes` | text | nullable |
-| `created_at`, `updated_at` | timestamptz | |
-| `archived_at` | timestamptz | soft delete |
+| Column                     | Type        | Notes                              |
+| -------------------------- | ----------- | ---------------------------------- |
+| `id`                       | UUID        | PK                                 |
+| `name`                     | text        | not null — the only required field |
+| `jurisdiction`             | text        | nullable                           |
+| `primary_contact_name`     | text        | nullable                           |
+| `primary_contact_email`    | text        | nullable                           |
+| `address`                  | text        | nullable                           |
+| `notes`                    | text        | nullable                           |
+| `created_at`, `updated_at` | timestamptz |                                    |
+| `archived_at`              | timestamptz | soft delete                        |
 
 ---
 
 ### `parties_view` (read-only union)
+
 Source: **DD-008**
 
 SQL view that UNIONs `entities` and `counterparties` with a type discriminator and a shared subset of columns. Used by cross-cutting reads (search, party autocomplete, contract party assignment); module-specific reads use the underlying tables directly.
 
-| Column | Source | Notes |
-|---|---|---|
-| `id` | `entities.id` / `counterparties.id` | UUID, unique within type |
-| `type` | constant | `entity` \| `counterparty` |
-| `name` | `entities.legal_name` / `counterparties.name` | |
-| `jurisdiction` | both tables | |
-| `primary_address` | both tables | |
+| Column            | Source                                        | Notes                      |
+| ----------------- | --------------------------------------------- | -------------------------- |
+| `id`              | `entities.id` / `counterparties.id`           | UUID, unique within type   |
+| `type`            | constant                                      | `entity` \| `counterparty` |
+| `name`            | `entities.legal_name` / `counterparties.name` |                            |
+| `jurisdiction`    | both tables                                   |                            |
+| `primary_address` | both tables                                   |                            |
 
 ---
 
 ### `matters`
+
 Source: **DD-007**, **DD-014**, **MTR-001**, **MTR-002**
 
 Work container for any legal effort. Holds Documents and Contracts; references Entities as subjects.
 
-| Column | Type | Source | Notes |
-|---|---|---|---|
-| `id` | UUID | | PK |
-| `number` | integer | **MTR-009** | unique, DB sequence, immutable, never reused; displayed as `M-42`; used in URLs (`/matters/42`) |
-| `title` | text | **MTR-009** | not null; free text, editable (audit-logged) |
-| `matter_type_id` | UUID | **MTR-001** | FK → `matter_types.id`, not null |
-| `status_id` | UUID | **MTR-002** | FK → `matter_statuses.id`, not null; defaults to first `open`-category status by display order |
-| `manager_id` | UUID | **MTR-003** | FK → `users.id`, nullable; the Matter Manager. Null = unassigned (surfaced in triage) |
-| `priority` | text (enum) | **MTR-012** | `low` \| `medium` \| `high` \| `critical` (levels renamed per **DES-018**); not null, default `medium`; drives triage sort |
-| `risk` | text (enum) | **MTR-012** | `low` \| `medium` \| `high` \| `critical`; nullable — null = not yet assessed (set by legal at triage) |
-| `custom_fields` | jsonb | **MTR-011** | values keyed by field slug; GIN-indexed for filtering; values for fields detached from the type are retained but not rendered |
-| `parent_id` | UUID | **MTR-015** | FK → `matters.id`, nullable; single parent, arbitrary depth, cycles rejected in application code. Navigational only — no cascade/inheritance semantics |
-| `opened_at` | timestamptz | **MTR-016** | set once at creation, never changes |
-| `closed_at` | timestamptz | **MTR-016** | set on transition into a `closed`-category status; cleared on reopen; null = open. Cycle time = `closed_at - opened_at` |
-| `is_confidential` | boolean | **DD-014** | default `false`; opt-in restriction gate |
-| `created_by` | UUID | | FK → `users.id`; the matter creator (relevant to **DD-014** team-default) |
-| `created_at`, `updated_at` | timestamptz | | |
-| `archived_at` | timestamptz | | nullable |
+| Column                     | Type        | Source      | Notes                                                                                                                                                  |
+| -------------------------- | ----------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`                       | UUID        |             | PK                                                                                                                                                     |
+| `number`                   | integer     | **MTR-009** | unique, DB sequence, immutable, never reused; displayed as `M-42`; used in URLs (`/matters/42`)                                                        |
+| `title`                    | text        | **MTR-009** | not null; free text, editable (audit-logged)                                                                                                           |
+| `matter_type_id`           | UUID        | **MTR-001** | FK → `matter_types.id`, not null                                                                                                                       |
+| `status_id`                | UUID        | **MTR-002** | FK → `matter_statuses.id`, not null; defaults to first `open`-category status by display order                                                         |
+| `manager_id`               | UUID        | **MTR-003** | FK → `users.id`, nullable; the Matter Manager. Null = unassigned (surfaced in triage)                                                                  |
+| `priority`                 | text (enum) | **MTR-012** | `low` \| `medium` \| `high` \| `critical` (levels renamed per **DES-018**); not null, default `medium`; drives triage sort                             |
+| `risk`                     | text (enum) | **MTR-012** | `low` \| `medium` \| `high` \| `critical`; nullable — null = not yet assessed (set by legal at triage)                                                 |
+| `custom_fields`            | jsonb       | **MTR-011** | values keyed by field slug; GIN-indexed for filtering; values for fields detached from the type are retained but not rendered                          |
+| `parent_id`                | UUID        | **MTR-015** | FK → `matters.id`, nullable; single parent, arbitrary depth, cycles rejected in application code. Navigational only — no cascade/inheritance semantics |
+| `opened_at`                | timestamptz | **MTR-016** | set once at creation, never changes                                                                                                                    |
+| `closed_at`                | timestamptz | **MTR-016** | set on transition into a `closed`-category status; cleared on reopen; null = open. Cycle time = `closed_at - opened_at`                                |
+| `is_confidential`          | boolean     | **DD-014**  | default `false`; opt-in restriction gate                                                                                                               |
+| `created_by`               | UUID        |             | FK → `users.id`; the matter creator (relevant to **DD-014** team-default)                                                                              |
+| `created_at`, `updated_at` | timestamptz |             |                                                                                                                                                        |
+| `archived_at`              | timestamptz |             | nullable                                                                                                                                               |
 
 **TBD columns** to be added by upcoming Matters decisions:
 
@@ -142,20 +147,21 @@ Work container for any legal effort. Holds Documents and Contracts; references E
 ---
 
 ### `matter_types`
+
 Source: **MTR-001**
 
 Configurable taxonomy of matter types. Seeded at install with 9 default rows; Admin-managed thereafter via Matters Settings.
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | PK |
-| `slug` | text | unique, not null, immutable after creation |
-| `display_name` | text | not null, user-editable |
-| `description` | text | nullable |
-| `display_order` | integer | not null; controls picker order |
-| `is_system_default` | boolean | not null, default `false`; `true` for the 9 seed rows |
-| `archived_at` | timestamptz | nullable; soft-delete affordance |
-| `created_at`, `updated_at` | timestamptz | |
+| Column                     | Type        | Notes                                                 |
+| -------------------------- | ----------- | ----------------------------------------------------- |
+| `id`                       | UUID        | PK                                                    |
+| `slug`                     | text        | unique, not null, immutable after creation            |
+| `display_name`             | text        | not null, user-editable                               |
+| `description`              | text        | nullable                                              |
+| `display_order`            | integer     | not null; controls picker order                       |
+| `is_system_default`        | boolean     | not null, default `false`; `true` for the 9 seed rows |
+| `archived_at`              | timestamptz | nullable; soft-delete affordance                      |
+| `created_at`, `updated_at` | timestamptz |                                                       |
 
 **Seed rows** (install-time migration):
 
@@ -166,148 +172,156 @@ Configurable taxonomy of matter types. Seeded at install with 9 default rows; Ad
 ---
 
 ### `matter_key_dates`
+
 Source: **MTR-004**
 
 Named deadlines on a matter. Zero-to-many per matter; the earliest upcoming entry is the matter's "next deadline" in lists and dashboards. No SLA semantics in v1 (see `FUTURE-FEATURES.md`).
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | PK |
-| `matter_id` | UUID | FK → `matters.id`, not null |
-| `date` | date | not null; a calendar date, not a timestamp (deadlines are day-granular; display per **DES-014**) |
-| `label` | text | not null, e.g., "SOL expires", "Preliminary hearing" |
-| `note` | text | nullable |
-| `created_at`, `updated_at` | timestamptz | |
+| Column                     | Type        | Notes                                                                                            |
+| -------------------------- | ----------- | ------------------------------------------------------------------------------------------------ |
+| `id`                       | UUID        | PK                                                                                               |
+| `matter_id`                | UUID        | FK → `matters.id`, not null                                                                      |
+| `date`                     | date        | not null; a calendar date, not a timestamp (deadlines are day-granular; display per **DES-014**) |
+| `label`                    | text        | not null, e.g., "SOL expires", "Preliminary hearing"                                             |
+| `note`                     | text        | nullable                                                                                         |
+| `created_at`, `updated_at` | timestamptz |                                                                                                  |
 
 Indexed on (`matter_id`, `date`). CRUD audit-logged per **DD-017**.
 
 ---
 
 ### `fields` (formerly `matter_fields`)
+
 Source: **MTR-011**, revised by **CTR-016**
 
 Custom-field catalog (Jira model), shared across modules with a scope. A field is defined once here; which records render it is controlled by per-type attachment (`matter_type_fields` / `contract_type_fields`). `field_type` is immutable after creation (archive and recreate instead — no silent value coercion).
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | PK |
-| `slug` | text | unique, not null, immutable; key used in the per-module `custom_fields` jsonb |
-| `display_name` | text | not null, user-editable |
-| `description` | text | nullable; shown as help text on forms |
-| `module_scope` | text (enum) | `matter` \| `contract` \| `entity` (**ENT-001**) \| `global` per **CTR-016**; global attaches across modules. Promotion to `global` allowed; narrowing blocked while cross-module attachments exist |
-| `field_type` | text (enum) | `text` \| `long_text` \| `number` \| `date` \| `boolean` \| `single_select` \| `multi_select` \| `user` \| `entity` (**CTR-016** adds `entity`) — **immutable** |
-| `options` | jsonb | nullable; option list for select types |
-| `field_tag` | text (enum) | `business` \| `legal` per **DD-015**; drives Contributor visibility |
-| `ai_prompt` | text | nullable per **CTR-008/CTR-016**; extraction prompt consumed by contract AI analysis; seeded defaults on contract core fields, editable |
-| `archived_at` | timestamptz | nullable; archived fields hidden everywhere, stored values retained |
-| `created_at`, `updated_at` | timestamptz | |
+| Column                     | Type        | Notes                                                                                                                                                                                               |
+| -------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                                                                                                                  |
+| `slug`                     | text        | unique, not null, immutable; key used in the per-module `custom_fields` jsonb                                                                                                                       |
+| `display_name`             | text        | not null, user-editable                                                                                                                                                                             |
+| `description`              | text        | nullable; shown as help text on forms                                                                                                                                                               |
+| `module_scope`             | text (enum) | `matter` \| `contract` \| `entity` (**ENT-001**) \| `global` per **CTR-016**; global attaches across modules. Promotion to `global` allowed; narrowing blocked while cross-module attachments exist |
+| `field_type`               | text (enum) | `text` \| `long_text` \| `number` \| `date` \| `boolean` \| `single_select` \| `multi_select` \| `user` \| `entity` (**CTR-016** adds `entity`) — **immutable**                                     |
+| `options`                  | jsonb       | nullable; option list for select types                                                                                                                                                              |
+| `field_tag`                | text (enum) | `business` \| `legal` per **DD-015**; drives Contributor visibility                                                                                                                                 |
+| `ai_prompt`                | text        | nullable per **CTR-008/CTR-016**; extraction prompt consumed by contract AI analysis; seeded defaults on contract core fields, editable                                                             |
+| `archived_at`              | timestamptz | nullable; archived fields hidden everywhere, stored values retained                                                                                                                                 |
+| `created_at`, `updated_at` | timestamptz |                                                                                                                                                                                                     |
 
 ---
 
 ### `matter_type_fields`
+
 Source: **MTR-011**
 
 Attachment join: which global fields appear on which matter types, and in what order. Managed from each type's settings.
 
-| Column | Type | Notes |
-|---|---|---|
-| `matter_type_id` | UUID | FK → `matter_types.id`, not null |
-| `field_id` | UUID | FK → `fields.id`, not null (renamed with the **CTR-016** catalog unification); scope must be `matter` or `global` |
-| `display_order` | integer | not null; per-type form order |
-| `is_required` | boolean | **MTR-014**; not null, default `false`; hard-enforced at creation/re-type/edit (not retro-enforced on existing matters) |
-| `created_at` | timestamptz | |
+| Column           | Type        | Notes                                                                                                                   |
+| ---------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `matter_type_id` | UUID        | FK → `matter_types.id`, not null                                                                                        |
+| `field_id`       | UUID        | FK → `fields.id`, not null (renamed with the **CTR-016** catalog unification); scope must be `matter` or `global`       |
+| `display_order`  | integer     | not null; per-type form order                                                                                           |
+| `is_required`    | boolean     | **MTR-014**; not null, default `false`; hard-enforced at creation/re-type/edit (not retro-enforced on existing matters) |
+| `created_at`     | timestamptz |                                                                                                                         |
 
 Compound primary key on (`matter_type_id`, `field_id`). Attachment changes audit-logged per **DD-017**.
 
 ---
 
 ### `matter_relations`
+
 Source: **MTR-015**
 
 Undirected matter↔matter "related" links. One row per pair; application stores with `matter_a_id < matter_b_id` (canonical ordering) and renders on both matters.
 
-| Column | Type | Notes |
-|---|---|---|
-| `matter_a_id` | UUID | FK → `matters.id`, not null |
-| `matter_b_id` | UUID | FK → `matters.id`, not null |
-| `created_by` | UUID | FK → `users.id` |
-| `created_at` | timestamptz | |
+| Column        | Type        | Notes                       |
+| ------------- | ----------- | --------------------------- |
+| `matter_a_id` | UUID        | FK → `matters.id`, not null |
+| `matter_b_id` | UUID        | FK → `matters.id`, not null |
+| `created_by`  | UUID        | FK → `users.id`             |
+| `created_at`  | timestamptz |                             |
 
 Compound primary key on (`matter_a_id`, `matter_b_id`); CHECK `matter_a_id <> matter_b_id`.
 
 ---
 
 ### `matter_templates`
+
 Source: **MTR-013**
 
 Named creation templates, Admin-managed. A template belongs to one matter type and supplies pre-fill values plus a task checklist. Applying one is always optional.
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | PK |
-| `matter_type_id` | UUID | FK → `matter_types.id`, not null |
-| `name` | text | not null (e.g., "Employment – Termination") |
-| `description` | text | nullable |
-| `default_priority` | text (enum) | nullable; per **MTR-012** enum |
-| `default_risk` | text (enum) | nullable; per **MTR-012** enum |
-| `default_custom_fields` | jsonb | nullable; values keyed by field slug (fields attached to the type per **MTR-011**) |
-| `title_prefix` | text | nullable; optional title pattern/prefix |
-| `archived_at` | timestamptz | nullable |
-| `created_at`, `updated_at` | timestamptz | |
+| Column                     | Type        | Notes                                                                              |
+| -------------------------- | ----------- | ---------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                 |
+| `matter_type_id`           | UUID        | FK → `matter_types.id`, not null                                                   |
+| `name`                     | text        | not null (e.g., "Employment – Termination")                                        |
+| `description`              | text        | nullable                                                                           |
+| `default_priority`         | text (enum) | nullable; per **MTR-012** enum                                                     |
+| `default_risk`             | text (enum) | nullable; per **MTR-012** enum                                                     |
+| `default_custom_fields`    | jsonb       | nullable; values keyed by field slug (fields attached to the type per **MTR-011**) |
+| `title_prefix`             | text        | nullable; optional title pattern/prefix                                            |
+| `archived_at`              | timestamptz | nullable                                                                           |
+| `created_at`, `updated_at` | timestamptz |                                                                                    |
 
 ---
 
 ### `matter_template_tasks`
+
 Source: **MTR-013**
 
 Task rows carried by a template; instantiated as `matter_tasks` when the template is applied at matter creation.
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | PK |
-| `matter_template_id` | UUID | FK → `matter_templates.id`, not null |
-| `title` | text | not null |
-| `due_offset_days` | integer | nullable; due date = matter creation + offset |
-| `assignee_role` | text (enum) | `matter_manager` \| `none`; resolved at instantiation (**never** a named user) |
-| `display_order` | integer | not null |
+| Column               | Type        | Notes                                                                          |
+| -------------------- | ----------- | ------------------------------------------------------------------------------ |
+| `id`                 | UUID        | PK                                                                             |
+| `matter_template_id` | UUID        | FK → `matter_templates.id`, not null                                           |
+| `title`              | text        | not null                                                                       |
+| `due_offset_days`    | integer     | nullable; due date = matter creation + offset                                  |
+| `assignee_role`      | text (enum) | `matter_manager` \| `none`; resolved at instantiation (**never** a named user) |
+| `display_order`      | integer     | not null                                                                       |
 
 ---
 
 ### `matter_tasks`
+
 Source: **MTR-005**
 
 Lightweight checklist items on a matter. Deliberately not a task entity: no comments, no statuses beyond done, no sub-tasks, no detail page. Task due dates are internal to-dos and do **not** feed the "next deadline" surfaces (those read `matter_key_dates` per **MTR-004**).
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | PK |
-| `matter_id` | UUID | FK → `matters.id`, not null |
-| `title` | text | not null |
-| `is_done` | boolean | not null, default `false` |
-| `assignee_id` | UUID | FK → `users.id`, nullable |
-| `due_date` | date | nullable |
-| `display_order` | integer | not null; manual ordering within the checklist |
-| `created_at`, `updated_at` | timestamptz | |
+| Column                     | Type        | Notes                                          |
+| -------------------------- | ----------- | ---------------------------------------------- |
+| `id`                       | UUID        | PK                                             |
+| `matter_id`                | UUID        | FK → `matters.id`, not null                    |
+| `title`                    | text        | not null                                       |
+| `is_done`                  | boolean     | not null, default `false`                      |
+| `assignee_id`              | UUID        | FK → `users.id`, nullable                      |
+| `due_date`                 | date        | nullable                                       |
+| `display_order`            | integer     | not null; manual ordering within the checklist |
+| `created_at`, `updated_at` | timestamptz |                                                |
 
 Indexed on (`matter_id`, `display_order`).
 
 ---
 
 ### `matter_statuses`
+
 Source: **MTR-002**
 
 Configurable lifecycle status labels, each mapped to a fixed system category. Application code branches only on `category`; labels are presentation/workflow metadata. Same machinery as `matter_types`.
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | PK |
-| `slug` | text | unique, not null, immutable after creation |
-| `display_name` | text | not null, user-editable |
-| `category` | text (enum) | `open` \| `closed`; **immutable after creation** |
-| `display_order` | integer | not null; controls picker order |
-| `is_system_default` | boolean | not null, default `false`; `true` for the 4 seed rows |
-| `archived_at` | timestamptz | nullable; soft-delete affordance |
-| `created_at`, `updated_at` | timestamptz | |
+| Column                     | Type        | Notes                                                 |
+| -------------------------- | ----------- | ----------------------------------------------------- |
+| `id`                       | UUID        | PK                                                    |
+| `slug`                     | text        | unique, not null, immutable after creation            |
+| `display_name`             | text        | not null, user-editable                               |
+| `category`                 | text (enum) | `open` \| `closed`; **immutable after creation**      |
+| `display_order`            | integer     | not null; controls picker order                       |
+| `is_system_default`        | boolean     | not null, default `false`; `true` for the 4 seed rows |
+| `archived_at`              | timestamptz | nullable; soft-delete affordance                      |
+| `created_at`, `updated_at` | timestamptz |                                                       |
 
 **Seed rows** (install-time migration): `open` (open), `in_progress` (open), `on_hold` (open), `closed` (closed).
 
@@ -316,22 +330,24 @@ The `open` and `closed` seed rows are system-protected (no hard-delete, no archi
 ---
 
 ### `matter_team`
+
 Source: **DD-014**, **DD-015**, **MTR-003**
 
 Membership association linking users to matters with a role tag. Drives confidentiality team-membership semantics and Contributor scoping. The single Matter Manager lives on `matters.manager_id` per **MTR-003**, not in this table.
 
-| Column | Type | Notes |
-|---|---|---|
-| `matter_id` | UUID | FK → `matters.id`, not null |
-| `user_id` | UUID | FK → `users.id`, not null |
-| `role` | text (enum) | `member` \| `watcher` \| `creator` \| `contributor` per **MTR-003** (`assignee` promoted to `matters.manager_id`; `member` = supporting legal staff) |
-| `created_at` | timestamptz | |
+| Column       | Type        | Notes                                                                                                                                                |
+| ------------ | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `matter_id`  | UUID        | FK → `matters.id`, not null                                                                                                                          |
+| `user_id`    | UUID        | FK → `users.id`, not null                                                                                                                            |
+| `role`       | text (enum) | `member` \| `watcher` \| `creator` \| `contributor` per **MTR-003** (`assignee` promoted to `matters.manager_id`; `member` = supporting legal staff) |
+| `created_at` | timestamptz |                                                                                                                                                      |
 
 Compound primary key on (`matter_id`, `user_id`, `role`) — a user may be both `member` and `creator` on the same matter. Same model is reused for `contract_team` (done — **CTR-004**). No `document_team` exists — document access is always inherited from the owning record per **DOC-008**.
 
 ---
 
 ### `contracts`
+
 Source: **DD-007**, **DD-014**, **CTR-001**
 
 Workflow object with parties; owns one or more Documents (draft, redlines, executed version, amendments). Referenced by Matters; can also stand alone.
@@ -371,22 +387,24 @@ Engine behavior per **CTR-006**: notify-only — the system never advances `expi
 ---
 
 ### `contract_counterparties`
+
 Source: **CTR-011**
 
 N counterparties per contract; exactly one `is_primary` (renders in the hero).
 
-| Column | Type | Notes |
-|---|---|---|
-| `contract_id` | UUID | FK → `contracts.id`, not null |
-| `counterparty_id` | UUID | FK → `counterparties.id`, not null |
-| `is_primary` | boolean | not null, default `false`; application enforces exactly one per contract |
-| `created_at` | timestamptz | |
+| Column            | Type        | Notes                                                                    |
+| ----------------- | ----------- | ------------------------------------------------------------------------ |
+| `contract_id`     | UUID        | FK → `contracts.id`, not null                                            |
+| `counterparty_id` | UUID        | FK → `counterparties.id`, not null                                       |
+| `is_primary`      | boolean     | not null, default `false`; application enforces exactly one per contract |
+| `created_at`      | timestamptz |                                                                          |
 
 Compound primary key on (`contract_id`, `counterparty_id`).
 
 ---
 
 ### `approver_groups` / `approver_group_members`
+
 Source: **CTR-012**
 
 Admin-managed reusable approver templates (Settings → Contracts → Approver Groups). Applying a group snapshots its members into `contract_approvals` at apply time; later group edits don't touch existing requests.
@@ -397,138 +415,146 @@ Admin-managed reusable approver templates (Settings → Contracts → Approver G
 ---
 
 ### `contract_approvals`
+
 Source: **CTR-012**
 
 One row per approval request. Parallel — all pending must approve. Soft gate: advancing stage with unresolved approvals is allowed, warned, and activity-logged as an override.
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | PK |
-| `contract_id` | UUID | FK → `contracts.id`, not null |
-| `approver_id` | UUID | FK → `users.id`, not null |
-| `source` | text (enum) | `manual` \| `group` |
-| `group_id` | UUID | FK → `approver_groups.id`, nullable (set when source = group) |
-| `status` | text (enum) | `pending` \| `approved` \| `rejected` |
-| `note` | text | nullable; approver's comment on decision |
-| `requested_by` | UUID | FK → `users.id`, not null |
-| `decided_at` | timestamptz | nullable |
-| `created_at`, `updated_at` | timestamptz | |
+| Column                     | Type        | Notes                                                         |
+| -------------------------- | ----------- | ------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                            |
+| `contract_id`              | UUID        | FK → `contracts.id`, not null                                 |
+| `approver_id`              | UUID        | FK → `users.id`, not null                                     |
+| `source`                   | text (enum) | `manual` \| `group`                                           |
+| `group_id`                 | UUID        | FK → `approver_groups.id`, nullable (set when source = group) |
+| `status`                   | text (enum) | `pending` \| `approved` \| `rejected`                         |
+| `note`                     | text        | nullable; approver's comment on decision                      |
+| `requested_by`             | UUID        | FK → `users.id`, not null                                     |
+| `decided_at`               | timestamptz | nullable                                                      |
+| `created_at`, `updated_at` | timestamptz |                                                               |
 
 ---
 
 ### `contract_type_fields`
+
 Source: **CTR-016** (mirrors `matter_type_fields`, MTR-011/MTR-014)
 
 Attachment join: which catalog fields appear on which contract types. Field scope must be `contract` or `global`.
 
-| Column | Type | Notes |
-|---|---|---|
-| `contract_type_id` | UUID | FK → `contract_types.id`, not null |
-| `field_id` | UUID | FK → `fields.id`, not null |
-| `display_order` | integer | not null; per-type form order |
-| `is_required` | boolean | not null, default `false`; hard-enforced at creation/re-type/edit per the MTR-014 rule |
-| `created_at` | timestamptz | |
+| Column             | Type        | Notes                                                                                  |
+| ------------------ | ----------- | -------------------------------------------------------------------------------------- |
+| `contract_type_id` | UUID        | FK → `contract_types.id`, not null                                                     |
+| `field_id`         | UUID        | FK → `fields.id`, not null                                                             |
+| `display_order`    | integer     | not null; per-type form order                                                          |
+| `is_required`      | boolean     | not null, default `false`; hard-enforced at creation/re-type/edit per the MTR-014 rule |
+| `created_at`       | timestamptz |                                                                                        |
 
 Compound primary key on (`contract_type_id`, `field_id`). Attachment changes audit-logged per **DD-017**.
 
 ---
 
 ### `contract_tasks`
+
 Source: **CTR-017** (mirrors `matter_tasks`, MTR-005)
 
 Lightweight checklist. Task due dates do **not** feed deadline surfaces.
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | PK |
-| `contract_id` | UUID | FK → `contracts.id`, not null |
-| `title` | text | not null |
-| `is_done` | boolean | not null, default `false` |
-| `assignee_id` | UUID | FK → `users.id`, nullable |
-| `due_date` | date | nullable |
-| `display_order` | integer | not null |
-| `created_at`, `updated_at` | timestamptz | |
+| Column                     | Type        | Notes                         |
+| -------------------------- | ----------- | ----------------------------- |
+| `id`                       | UUID        | PK                            |
+| `contract_id`              | UUID        | FK → `contracts.id`, not null |
+| `title`                    | text        | not null                      |
+| `is_done`                  | boolean     | not null, default `false`     |
+| `assignee_id`              | UUID        | FK → `users.id`, nullable     |
+| `due_date`                 | date        | nullable                      |
+| `display_order`            | integer     | not null                      |
+| `created_at`, `updated_at` | timestamptz |                               |
 
 ---
 
 ### `contract_relations`
+
 Source: **CTR-015**
 
 Typed, directional links between contracts (beyond the `parent_id` hierarchy). One row per pair per type (application-enforced). No cascade/inheritance semantics; inaccessible relatives render as "restricted contract".
 
-| Column | Type | Notes |
-|---|---|---|
-| `from_contract_id` | UUID | FK → `contracts.id`, not null |
-| `to_contract_id` | UUID | FK → `contracts.id`, not null |
-| `relation_type` | text (enum) | `related` (symmetric) \| `renews` \| `amends` (directional: from renews/amends to) |
-| `created_at` | timestamptz | |
+| Column             | Type        | Notes                                                                              |
+| ------------------ | ----------- | ---------------------------------------------------------------------------------- |
+| `from_contract_id` | UUID        | FK → `contracts.id`, not null                                                      |
+| `to_contract_id`   | UUID        | FK → `contracts.id`, not null                                                      |
+| `relation_type`    | text (enum) | `related` (symmetric) \| `renews` \| `amends` (directional: from renews/amends to) |
+| `created_at`       | timestamptz |                                                                                    |
 
 Compound primary key on (`from_contract_id`, `to_contract_id`, `relation_type`).
 
 ---
 
 ### `contract_envelopes`
+
 Source: **CTR-013**
 
 Signing envelopes sent via the e-signature adapter (DocuSign first connector). Manual hand-off (upload executed PDF) creates no envelope row.
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | PK |
-| `contract_id` | UUID | FK → `contracts.id`, not null |
-| `provider` | text | `docusign` in v1; adapter-keyed |
-| `provider_envelope_id` | text | not null |
-| `status` | text (enum) | `sent` \| `signed` \| `declined` \| `voided` |
-| `sent_at`, `completed_at` | timestamptz | completed_at nullable |
-| `created_at`, `updated_at` | timestamptz | |
+| Column                     | Type        | Notes                                        |
+| -------------------------- | ----------- | -------------------------------------------- |
+| `id`                       | UUID        | PK                                           |
+| `contract_id`              | UUID        | FK → `contracts.id`, not null                |
+| `provider`                 | text        | `docusign` in v1; adapter-keyed              |
+| `provider_envelope_id`     | text        | not null                                     |
+| `status`                   | text (enum) | `sent` \| `signed` \| `declined` \| `voided` |
+| `sent_at`, `completed_at`  | timestamptz | completed_at nullable                        |
+| `created_at`, `updated_at` | timestamptz |                                              |
 
 ---
 
 ### `contract_key_dates`
+
 Source: **CTR-009** (mirrors `matter_key_dates`, MTR-004)
 
 Free-form named dates beyond the typed term machinery (price reviews, milestones, option-exercise windows). Deadline surfaces show the union of these, `expiry_date`, and the derived notice deadline.
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | PK |
-| `contract_id` | UUID | FK → `contracts.id`, not null |
-| `date` | date | not null |
-| `label` | text | not null |
-| `note` | text | nullable |
-| `created_at`, `updated_at` | timestamptz | |
+| Column                     | Type        | Notes                         |
+| -------------------------- | ----------- | ----------------------------- |
+| `id`                       | UUID        | PK                            |
+| `contract_id`              | UUID        | FK → `contracts.id`, not null |
+| `date`                     | date        | not null                      |
+| `label`                    | text        | not null                      |
+| `note`                     | text        | nullable                      |
+| `created_at`, `updated_at` | timestamptz |                               |
 
 ---
 
 ### `contract_team`
+
 Source: **CTR-004** (mirrors `matter_team`, MTR-003/DD-015)
 
-| Column | Type | Notes |
-|---|---|---|
-| `contract_id` | UUID | FK → `contracts.id`, not null |
-| `user_id` | UUID | FK → `users.id`, not null |
-| `role` | text (enum) | `member` \| `watcher` \| `creator` \| `contributor` per **CTR-004** (owner promoted to `contracts.manager_id`) |
-| `created_at` | timestamptz | |
+| Column        | Type        | Notes                                                                                                          |
+| ------------- | ----------- | -------------------------------------------------------------------------------------------------------------- |
+| `contract_id` | UUID        | FK → `contracts.id`, not null                                                                                  |
+| `user_id`     | UUID        | FK → `users.id`, not null                                                                                      |
+| `role`        | text (enum) | `member` \| `watcher` \| `creator` \| `contributor` per **CTR-004** (owner promoted to `contracts.manager_id`) |
+| `created_at`  | timestamptz |                                                                                                                |
 
 Compound primary key on (`contract_id`, `user_id`, `role`).
 
 ---
 
 ### `contract_types`
+
 Source: **CTR-002**
 
 Configurable taxonomy of contract types. Same machinery as `matter_types` (MTR-001). Admin-managed via Contracts Settings → Types. Designated policy carrier: per-type custom fields (CTR-016), templates (deferred per CTR-017), and approval scoping (CTR-012 approver groups) attach here.
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | PK |
-| `slug` | text | unique, not null, immutable after creation |
-| `display_name` | text | not null, user-editable |
-| `description` | text | nullable |
-| `display_order` | integer | not null; controls picker order |
-| `is_system_default` | boolean | not null, default `false`; `true` for the 8 seed rows |
-| `archived_at` | timestamptz | nullable; soft-delete affordance |
-| `created_at`, `updated_at` | timestamptz | |
+| Column                     | Type        | Notes                                                 |
+| -------------------------- | ----------- | ----------------------------------------------------- |
+| `id`                       | UUID        | PK                                                    |
+| `slug`                     | text        | unique, not null, immutable after creation            |
+| `display_name`             | text        | not null, user-editable                               |
+| `description`              | text        | nullable                                              |
+| `display_order`            | integer     | not null; controls picker order                       |
+| `is_system_default`        | boolean     | not null, default `false`; `true` for the 8 seed rows |
+| `archived_at`              | timestamptz | nullable; soft-delete affordance                      |
+| `created_at`, `updated_at` | timestamptz |                                                       |
 
 **Seed rows** (install-time migration): `nda`, `msa`, `sow`, `sales`, `vendor`, `employment`, `license`, `other`. The `other` row is system-protected (no archive/delete).
 
@@ -537,20 +563,21 @@ Configurable taxonomy of contract types. Same machinery as `matter_types` (MTR-0
 ---
 
 ### `contract_statuses`
+
 Source: **CTR-001**
 
 Configurable lifecycle status labels, each mapped to a fixed system **stage**. Application code branches only on `stage`; labels are presentation/workflow metadata. Same machinery as `matter_statuses`. Transitions are unrestricted (stage regression allowed, logged per DD-017).
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | PK |
-| `slug` | text | unique, not null, immutable after creation |
-| `display_name` | text | not null, user-editable |
-| `stage` | text (enum) | `draft` \| `review` \| `approval` \| `signature` \| `active` \| `ended`; **immutable after creation** |
-| `display_order` | integer | not null; controls picker order |
-| `is_system_default` | boolean | not null, default `false`; `true` for the seed rows |
-| `archived_at` | timestamptz | nullable; soft-delete affordance |
-| `created_at`, `updated_at` | timestamptz | |
+| Column                     | Type        | Notes                                                                                                 |
+| -------------------------- | ----------- | ----------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                    |
+| `slug`                     | text        | unique, not null, immutable after creation                                                            |
+| `display_name`             | text        | not null, user-editable                                                                               |
+| `stage`                    | text (enum) | `draft` \| `review` \| `approval` \| `signature` \| `active` \| `ended`; **immutable after creation** |
+| `display_order`            | integer     | not null; controls picker order                                                                       |
+| `is_system_default`        | boolean     | not null, default `false`; `true` for the seed rows                                                   |
+| `archived_at`              | timestamptz | nullable; soft-delete affordance                                                                      |
+| `created_at`, `updated_at` | timestamptz |                                                                                                       |
 
 **Seed rows** (install-time migration): `draft` (draft), `internal_review` (review), `redlining` (review), `awaiting_approval` (approval), `out_for_signature` (signature), `active` (active), `expired` (ended), `terminated` (ended).
 
@@ -559,85 +586,90 @@ The `draft`, `active`, and `expired` seed rows are system-protected (no hard-del
 ---
 
 ### `documents`
+
 Source: **DD-007**, **DD-014**, **DOC-001**, **DOC-007**, **DOC-008**
 
 Logical document record. No workflow. **Every document has exactly one owning record** (matter, contract, entity, or knowledge item) per **DOC-008** — no standalone documents (revises DD-007's stand-alone clause). Access is always inherited from the owner (its team + DD-014 confidentiality); there is no `document_team`. Files live in the version chain (`document_versions`), never on this record.
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | PK |
-| `title` | text | not null per **DOC-001** |
-| `description` | text | nullable per **DOC-007** (standard metadata only — no custom fields, no tags in v1) |
-| `matter_id` | UUID | FK → `matters.id`, nullable |
-| `contract_id` | UUID | FK → `contracts.id`, nullable |
-| `entity_id` | UUID | FK → `entities.id`, nullable per **ENT-005**/**DOC-008** |
-| `knowledge_item_id` | UUID | FK → `knowledge_items.id`, nullable per **KNW-001**/**DOC-008** |
-| `folder_id` | UUID | FK → `document_folders.id`, nullable per **DOC-006**; the folder must belong to the same owning record as the document |
-| `executed_version_id` | UUID | FK → `document_versions.id`, nullable per **DOC-001** — the CTR-014 executed pin; default target for previews/exports/AI analysis |
-| `is_confidential` | boolean | per **DD-014** (meaningful via the owning record's access; never cascades per CTR-018) |
-| `created_by` | UUID | FK → `users.id`, not null |
-| `created_at`, `updated_at` | timestamptz | |
-| `archived_at` | timestamptz | soft delete |
+| Column                     | Type        | Notes                                                                                                                             |
+| -------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                                                |
+| `title`                    | text        | not null per **DOC-001**                                                                                                          |
+| `description`              | text        | nullable per **DOC-007** (standard metadata only — no custom fields, no tags in v1)                                               |
+| `matter_id`                | UUID        | FK → `matters.id`, nullable                                                                                                       |
+| `contract_id`              | UUID        | FK → `contracts.id`, nullable                                                                                                     |
+| `entity_id`                | UUID        | FK → `entities.id`, nullable per **ENT-005**/**DOC-008**                                                                          |
+| `knowledge_item_id`        | UUID        | FK → `knowledge_items.id`, nullable per **KNW-001**/**DOC-008**                                                                   |
+| `folder_id`                | UUID        | FK → `document_folders.id`, nullable per **DOC-006**; the folder must belong to the same owning record as the document            |
+| `executed_version_id`      | UUID        | FK → `document_versions.id`, nullable per **DOC-001** — the CTR-014 executed pin; default target for previews/exports/AI analysis |
+| `is_confidential`          | boolean     | per **DD-014** (meaningful via the owning record's access; never cascades per CTR-018)                                            |
+| `created_by`               | UUID        | FK → `users.id`, not null                                                                                                         |
+| `created_at`, `updated_at` | timestamptz |                                                                                                                                   |
+| `archived_at`              | timestamptz | soft delete                                                                                                                       |
 
 Exactly-one-owner rule (**DOC-008**): application enforces exactly one of the owner FKs set — `matter_id` | `contract_id` | `entity_id` (**ENT-005**) | `knowledge_item_id` (**KNW-001**). The owner set is now complete and all four columns are declared above. Repository destination is Member+; Contributors/Business Users reach documents only through records they're on (portal-readable knowledge items render their docs read-only per KNW-004).
 
 ---
 
 ### `knowledge_items` / `knowledge_types` / `knowledge_folders`
+
 Source: **KNW-001–004**
 
 The curated know-how home (DOC-002 routing): templates, precedents, playbooks, articles.
 
 `knowledge_items`: `id`, `title` (not null), `knowledge_type_id` FK (configurable list — seeds: template, precedent, playbook, article; MTR-001 machinery), `body` (rich text), `folder_id` nullable FK, `state` (`draft | published`), `audience` (`legal_only | everyone` — published `everyone` items render read-only in the portal), `replaced_by_id` nullable self-FK (supersession on archive), `created_by`, timestamps, `archived_at`. Edit-in-place, audit-logged (no item versioning — owned documents carry DOC-001 version chains).
 
-`knowledge_folders`: nested (`parent_id`), blank-start, organizing knowledge *items* (distinct from `document_folders`, which organize documents within a record): `id`, `parent_id`, `name`, `display_order`, timestamps.
+`knowledge_folders`: nested (`parent_id`), blank-start, organizing knowledge _items_ (distinct from `document_folders`, which organize documents within a record): `id`, `parent_id`, `name`, `display_order`, timestamps.
 
 CTR-014 contract-side requirements (primary-document designation per contract; ordered version chain; kinds; executed pin; generated-redline provenance) are satisfied by **DOC-001**. Primary-document designation mechanism (flag here vs FK on `contracts`) — settle when the contract-side UI lands.
 
 ---
 
 ### `document_folders`
+
 Source: **DOC-006**, **DOC-011**
 
 Optional lightweight folders scoped within one owning matter, contract, or entity (**ENT-005** adds `entity_id` to the owner set; blank-start, nothing seeded). **Nested** per DOC-011 (folder-drop imports retain structure). The global repository view stays flat — folder is a filter facet there.
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | PK |
-| `matter_id` | UUID | FK → `matters.id`, nullable |
-| `contract_id` | UUID | FK → `contracts.id`, nullable |
-| `entity_id` | UUID | FK → `entities.id`, nullable per **ENT-005** |
-| `parent_id` | UUID | FK → `document_folders.id`, nullable per **DOC-011**; no cycles (application-enforced); parent must share the same owning record |
-| `name` | text | not null |
-| `display_order` | integer | not null |
-| `created_at`, `updated_at` | timestamptz | |
+| Column                     | Type        | Notes                                                                                                                            |
+| -------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                                               |
+| `matter_id`                | UUID        | FK → `matters.id`, nullable                                                                                                      |
+| `contract_id`              | UUID        | FK → `contracts.id`, nullable                                                                                                    |
+| `entity_id`                | UUID        | FK → `entities.id`, nullable per **ENT-005**                                                                                     |
+| `parent_id`                | UUID        | FK → `document_folders.id`, nullable per **DOC-011**; no cycles (application-enforced); parent must share the same owning record |
+| `name`                     | text        | not null                                                                                                                         |
+| `display_order`            | integer     | not null                                                                                                                         |
+| `created_at`, `updated_at` | timestamptz |                                                                                                                                  |
 
 Exactly one owner FK set (same rule shape as `documents`). Invariant: a folder, its parent, and every document filed in it all share the same owning record.
 
 ---
 
 ### `document_versions`
+
 Source: **DOC-001**
 
 Immutable file snapshots, strictly linear per document (`version_number` 1..n). Never edited or deleted individually — corrections add a new version.
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | PK |
-| `document_id` | UUID | FK → `documents.id`, not null |
-| `version_number` | integer | not null; unique per document, 1..n |
-| `file_ref` | text | storage reference — shape settled with the storage-backend decision |
-| `kind` | text (enum) | `draft_ours` \| `redline_theirs` \| `redline_ours` \| `executed` \| `amendment` \| `generated_redline` (**CTR-014** kinds + generated) |
-| `source` | text (enum) | `uploaded` \| `generated` |
-| `compared_from_version_id` | UUID | FK → `document_versions.id`, nullable; generated redlines: the older comparison operand |
-| `compared_to_version_id` | UUID | FK → `document_versions.id`, nullable; generated redlines: the newer comparison operand — both operands stored per **DOC-001**/**DOC-003** so the original comparison is reconstructable after the result is appended |
-| `note` | text | nullable |
-| `created_by` | UUID | FK → `users.id`, not null |
-| `created_at` | timestamptz | no `updated_at` — rows are immutable |
+| Column                     | Type        | Notes                                                                                                                                                                                                                 |
+| -------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                                                                                                                                    |
+| `document_id`              | UUID        | FK → `documents.id`, not null                                                                                                                                                                                         |
+| `version_number`           | integer     | not null; unique per document, 1..n                                                                                                                                                                                   |
+| `file_ref`                 | text        | storage reference — shape settled with the storage-backend decision                                                                                                                                                   |
+| `kind`                     | text (enum) | `draft_ours` \| `redline_theirs` \| `redline_ours` \| `executed` \| `amendment` \| `generated_redline` (**CTR-014** kinds + generated)                                                                                |
+| `source`                   | text (enum) | `uploaded` \| `generated`                                                                                                                                                                                             |
+| `compared_from_version_id` | UUID        | FK → `document_versions.id`, nullable; generated redlines: the older comparison operand                                                                                                                               |
+| `compared_to_version_id`   | UUID        | FK → `document_versions.id`, nullable; generated redlines: the newer comparison operand — both operands stored per **DOC-001**/**DOC-003** so the original comparison is reconstructable after the result is appended |
+| `note`                     | text        | nullable                                                                                                                                                                                                              |
+| `created_by`               | UUID        | FK → `users.id`, not null                                                                                                                                                                                             |
+| `created_at`               | timestamptz | no `updated_at` — rows are immutable                                                                                                                                                                                  |
 
 ---
 
 ### `notifications` / `notification_preferences`
+
 Source: **NOT-001**
 
 One notification system rendered on two surfaces: staff bell (full platform) and business-user bell (portal), plus email for both.
@@ -649,30 +681,32 @@ One notification system rendered on two surfaces: staff bell (full platform) and
 ---
 
 ### `requests`
+
 Source: **DD-010** (as revised by **INT-001**), **INT-002**
 
 Structured request envelope, created only via portal forms. Not a work container — converts to a Matter or Contract, or resolves in-thread. Portal conversation uses the `comments` machinery (DD-016).
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | PK |
-| `number` | integer | unique global sequence, displayed **R-42** per **INT-002** |
-| `request_type_id` | UUID | FK → `request_types.id`, not null |
-| `requester_id` | UUID | FK → `users.id`, not null (magic-link identity) |
-| `status` | text (enum) | `new` \| `converted` \| `resolved` \| `declined` per **INT-001** as revised by **INT-007** — fixed, code branches |
-| `summary` | text | not null |
-| `description` | text | nullable |
-| `urgency` | text (enum) | `low|medium|high|critical` (levels per **DES-018**), requester-supplied; maps 1:1 to `priority` at conversion (MTR-012 — `risk` never requester-set) |
-| `custom_fields` | jsonb | collected form values keyed by field slug per **INT-002**; carried into the converted record |
-| `converted_matter_id` | UUID | FK → `matters.id`, nullable |
-| `converted_contract_id` | UUID | FK → `contracts.id`, nullable |
-| `declined_reason` | text | nullable |
-| `created_at`, `updated_at` | timestamptz | |
-| `archived_at` | timestamptz | soft delete |
+| Column                     | Type        | Notes                                                                                                             |
+| -------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                                |
+| `number`                   | integer     | unique global sequence, displayed **R-42** per **INT-002**                                                        |
+| `request_type_id`          | UUID        | FK → `request_types.id`, not null                                                                                 |
+| `requester_id`             | UUID        | FK → `users.id`, not null (magic-link identity)                                                                   |
+| `status`                   | text (enum) | `new` \| `converted` \| `resolved` \| `declined` per **INT-001** as revised by **INT-007** — fixed, code branches |
+| `summary`                  | text        | not null                                                                                                          |
+| `description`              | text        | nullable                                                                                                          |
+| `urgency`                  | text (enum) | `low                                                                                                              | medium | high | critical`(levels per **DES-018**), requester-supplied; maps 1:1 to`priority`at conversion (MTR-012 —`risk` never requester-set) |
+| `custom_fields`            | jsonb       | collected form values keyed by field slug per **INT-002**; carried into the converted record                      |
+| `converted_matter_id`      | UUID        | FK → `matters.id`, nullable                                                                                       |
+| `converted_contract_id`    | UUID        | FK → `contracts.id`, nullable                                                                                     |
+| `declined_reason`          | text        | nullable                                                                                                          |
+| `created_at`, `updated_at` | timestamptz |                                                                                                                   |
+| `archived_at`              | timestamptz | soft delete                                                                                                       |
 
 ---
 
 ### `request_types` / `request_type_fields` / `request_attachments`
+
 Source: **INT-002**
 
 `request_types`: MTR-001 machinery (`slug`, `display_name`, `description`, `display_order`, `is_system_default`, `archived_at`, timestamps) + **target**: `target_matter_type_id` / `target_contract_type_id` (both nullable; at most one set). Admin-managed via Intake Settings → Request Types.
@@ -684,22 +718,23 @@ Source: **INT-002**
 ---
 
 ### `comments`
+
 Source: **DD-016**, **CMT-001–005**
 
 Audience-tiered comments — one system across record threads, document annotations, and the portal request thread. Flat chronological (no `parent_comment_id` by design, CMT-002). On request conversion, comment rows **re-parent** to the converted matter/contract with tiers preserved (CMT-001); `request` remains a target only for never-converted requests. The portal renders the record thread filtered to `full_thread`.
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | PK |
-| `entity_type` | text (enum) | `matter` \| `contract` \| `document` \| `request` |
-| `entity_id` | UUID | polymorphic — references the row in the table named by `entity_type` |
-| `author_id` | UUID | FK → `users.id`, not null |
-| `body` | text | not null |
-| `visibility` | text (enum) | `legal_only` \| `working_team` \| `full_thread` per **DD-016**; **immutable after posting** per CMT-005 |
-| `anchor` | jsonb | nullable per **CMT-001**; document comments only: `{version_id, quote, position}` — renders the K.B9 margin marker |
-| `edited_at` | timestamptz | nullable per **CMT-005**; "edited" marker, prior text in audit log |
-| `deleted_at` | timestamptz | nullable per **CMT-005**; soft delete → tombstone in thread; Admin hard-redact per MTR-008/DOC-010 pattern |
-| `created_at`, `updated_at` | timestamptz | |
+| Column                     | Type        | Notes                                                                                                              |
+| -------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------ |
+| `id`                       | UUID        | PK                                                                                                                 |
+| `entity_type`              | text (enum) | `matter` \| `contract` \| `document` \| `request`                                                                  |
+| `entity_id`                | UUID        | polymorphic — references the row in the table named by `entity_type`                                               |
+| `author_id`                | UUID        | FK → `users.id`, not null                                                                                          |
+| `body`                     | text        | not null                                                                                                           |
+| `visibility`               | text (enum) | `legal_only` \| `working_team` \| `full_thread` per **DD-016**; **immutable after posting** per CMT-005            |
+| `anchor`                   | jsonb       | nullable per **CMT-001**; document comments only: `{version_id, quote, position}` — renders the K.B9 margin marker |
+| `edited_at`                | timestamptz | nullable per **CMT-005**; "edited" marker, prior text in audit log                                                 |
+| `deleted_at`               | timestamptz | nullable per **CMT-005**; soft delete → tombstone in thread; Admin hard-redact per MTR-008/DOC-010 pattern         |
+| `created_at`, `updated_at` | timestamptz |                                                                                                                    |
 
 Unread tracking (CMT-004 working default): `comment_last_read` (`user_id`, `entity_type`, `entity_id`, `read_at`, compound PK on first three). Badges count unread within tiers the viewer can see — hidden-tier counts never leak.
 
@@ -708,20 +743,21 @@ The polymorphic `entity_type / entity_id` pair is unavoidable here unless we sha
 ---
 
 ### `activity_log`
+
 Source: **DD-017**
 
 Source-of-truth for both the per-entity activity feed and the system-wide audit log.
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | PK |
-| `entity_type` | text (enum) | `matter` \| `contract` \| `document` \| `request` \| `user` \| `system` |
-| `entity_id` | UUID | nullable — `system`-typed entries (login, role change, intake-config change) have no entity |
-| `actor_id` | UUID | nullable — system-emitted events (cron jobs, external webhooks) have no human actor |
-| `action` | text | slug, e.g., `matter.created`, `confidentiality.set`, `user.role_changed`, `document.downloaded`, `matter_type.archived` |
-| `visibility` | text (enum) | `legal_only` \| `working_team` \| `full_thread` \| `admin_only` per **DD-017** |
-| `payload` | jsonb | action-specific data (old/new values for edits, etc.) |
-| `created_at` | timestamptz | |
+| Column        | Type        | Notes                                                                                                                   |
+| ------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `id`          | UUID        | PK                                                                                                                      |
+| `entity_type` | text (enum) | `matter` \| `contract` \| `document` \| `request` \| `user` \| `system`                                                 |
+| `entity_id`   | UUID        | nullable — `system`-typed entries (login, role change, intake-config change) have no entity                             |
+| `actor_id`    | UUID        | nullable — system-emitted events (cron jobs, external webhooks) have no human actor                                     |
+| `action`      | text        | slug, e.g., `matter.created`, `confidentiality.set`, `user.role_changed`, `document.downloaded`, `matter_type.archived` |
+| `visibility`  | text (enum) | `legal_only` \| `working_team` \| `full_thread` \| `admin_only` per **DD-017**                                          |
+| `payload`     | jsonb       | action-specific data (old/new values for edits, etc.)                                                                   |
+| `created_at`  | timestamptz |                                                                                                                         |
 
 Append-only at the application layer. **No application-code path issues `UPDATE` or `DELETE`** on this table. Corrections are appended as new entries.
 

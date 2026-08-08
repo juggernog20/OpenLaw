@@ -46,17 +46,17 @@ The first instinct was to lock a fixed enum because "type drives downstream beha
 
 Default seeded types:
 
-| Slug | Display name | Notes |
-| --- | --- | --- |
-| `employment` | Employment | Terminations, severance, harassment investigations, non-competes |
-| `litigation` | Litigation | Lawsuits, threats, demand letters, subpoenas |
-| `regulatory` | Regulatory | Agency inquiries, audits, license issues |
-| `commercial` | Commercial | Bespoke deals, complex MSAs, matter-wrapped contracts |
-| `corporate` | Corporate | Board matters, equity issuances, governance, M&A |
-| `ip` | IP | Trademark filings, patent strategy, infringement |
-| `privacy` | Privacy | GDPR/CCPA, breach response, data-subject requests |
-| `advisory` | Advisory | One-off questions ("can we do X?") |
-| `other` | Other | Long-tail catch-all (system-protected — cannot be hard-deleted) |
+| Slug         | Display name | Notes                                                            |
+| ------------ | ------------ | ---------------------------------------------------------------- |
+| `employment` | Employment   | Terminations, severance, harassment investigations, non-competes |
+| `litigation` | Litigation   | Lawsuits, threats, demand letters, subpoenas                     |
+| `regulatory` | Regulatory   | Agency inquiries, audits, license issues                         |
+| `commercial` | Commercial   | Bespoke deals, complex MSAs, matter-wrapped contracts            |
+| `corporate`  | Corporate    | Board matters, equity issuances, governance, M&A                 |
+| `ip`         | IP           | Trademark filings, patent strategy, infringement                 |
+| `privacy`    | Privacy      | GDPR/CCPA, breach response, data-subject requests                |
+| `advisory`   | Advisory     | One-off questions ("can we do X?")                               |
+| `other`      | Other        | Long-tail catch-all (system-protected — cannot be hard-deleted)  |
 
 Schema (full DDL captured in `SCHEMA.md`):
 
@@ -119,12 +119,12 @@ Matters need a lifecycle state for filtering ("active matters"), workload views,
 1. **Fixed system dimension: `open` | `closed`.** This is the only value application code branches on: default matter-list filter (open), "active matters" counts, SLA/deadline stop-clock, archive eligibility, close affordances.
 2. **Configurable status labels** layered on top. Each label maps to exactly one system category. Stored in a `matter_statuses` table with the MTR-001 machinery (slug, display name, display order, archive, system-default protection). Seeded at install:
 
-| Slug | Display name | Category |
-| --- | --- | --- |
-| `open` | Open | open |
-| `in_progress` | In Progress | open |
-| `on_hold` | On Hold | open |
-| `closed` | Closed | closed |
+| Slug          | Display name | Category |
+| ------------- | ------------ | -------- |
+| `open`        | Open         | open     |
+| `in_progress` | In Progress  | open     |
+| `on_hold`     | On Hold      | open     |
+| `closed`      | Closed       | closed   |
 
 1. **Global status set in v1**, not per-type. Per-type state machines are explicitly rejected.
 
@@ -707,21 +707,21 @@ Cycle-time reporting ("avg days to close, by type") is a named metric in every p
 
 ## Index of decisions
 
-| # | Decision | Status |
-| --- | --- | --- |
-| MTR-001 | Matter type taxonomy — configurable enum, seeded with 9 default types, Admin-managed | Accepted |
-| MTR-002 | Matter lifecycle — fixed open/closed system dimension + configurable status labels | Accepted |
-| MTR-003 | Matter assignment — one Matter Manager, plus legal team members added as needed | Accepted |
-| MTR-004 | Deadlines — first-class named key dates; SLA engine deferred to future | Accepted |
-| MTR-005 | Tasks — lightweight checklist, not a task entity | Accepted |
-| MTR-006 | External counsel — collaboration via Contributor role; fee tracking deferred | Accepted |
-| MTR-007 | Matter ↔ Contract — standalone by default, linked when part of broader work | Accepted |
-| MTR-008 | Closing is a signal, not a lock; archiving separate; no retention engine in v1 | Accepted |
-| MTR-009 | Naming — free-text title plus immutable global sequence number (M-42) | Accepted |
-| MTR-010 | Tags — deferred out of v1 | Accepted |
-| MTR-011 | Custom fields — global field catalog with per-type attachment (Jira model) | Accepted |
-| MTR-012 | Priority and risk — both first-class default fields on every matter | Accepted |
+| #       | Decision                                                                                            | Status   |
+| ------- | --------------------------------------------------------------------------------------------------- | -------- |
+| MTR-001 | Matter type taxonomy — configurable enum, seeded with 9 default types, Admin-managed                | Accepted |
+| MTR-002 | Matter lifecycle — fixed open/closed system dimension + configurable status labels                  | Accepted |
+| MTR-003 | Matter assignment — one Matter Manager, plus legal team members added as needed                     | Accepted |
+| MTR-004 | Deadlines — first-class named key dates; SLA engine deferred to future                              | Accepted |
+| MTR-005 | Tasks — lightweight checklist, not a task entity                                                    | Accepted |
+| MTR-006 | External counsel — collaboration via Contributor role; fee tracking deferred                        | Accepted |
+| MTR-007 | Matter ↔ Contract — standalone by default, linked when part of broader work                         | Accepted |
+| MTR-008 | Closing is a signal, not a lock; archiving separate; no retention engine in v1                      | Accepted |
+| MTR-009 | Naming — free-text title plus immutable global sequence number (M-42)                               | Accepted |
+| MTR-010 | Tags — deferred out of v1                                                                           | Accepted |
+| MTR-011 | Custom fields — global field catalog with per-type attachment (Jira model)                          | Accepted |
+| MTR-012 | Priority and risk — both first-class default fields on every matter                                 | Accepted |
 | MTR-013 | Matter templates — named template entity per type, pre-fills fields and instantiates task checklist | Accepted |
-| MTR-014 | Custom fields — hard-required per type at creation; conditional logic deferred | Accepted |
-| MTR-015 | Matter relationships — parent/child hierarchy plus flat related links; no cascade semantics | Accepted |
-| MTR-016 | Lifecycle timestamps — opened_at/closed_at maintained on category transitions | Accepted |
+| MTR-014 | Custom fields — hard-required per type at creation; conditional logic deferred                      | Accepted |
+| MTR-015 | Matter relationships — parent/child hierarchy plus flat related links; no cascade semantics         | Accepted |
+| MTR-016 | Lifecycle timestamps — opened_at/closed_at maintained on category transitions                       | Accepted |

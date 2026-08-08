@@ -18,7 +18,7 @@ A 2–10 person in-house legal team at a Series A–C company sits in a frustrat
 - They have too much work for the "Drive folders + Slack + email" stack of a one-person legal department.
 - They don't have the budget or contract volume to justify enterprise CLM platforms (Ironclad starts at ~$30k/yr).
 - They typically don't have IT-managed enterprise SSO infrastructure for non-legal employees, so even when they buy a tool, business users won't adopt it.
-- Industry research (ACC, World Commerce & Contracting, CLOC, BCLP) consistently identifies "business-user adoption failure" — *they kept using email* — as a top-tier cause of failed legal-tech rollouts, and the dominant cause for SMB and mid-market segments specifically.
+- Industry research (ACC, World Commerce & Contracting, CLOC, BCLP) consistently identifies "business-user adoption failure" — _they kept using email_ — as a top-tier cause of failed legal-tech rollouts, and the dominant cause for SMB and mid-market segments specifically.
 - IDC research cited by LawVu suggests **~29% of in-house legal teams spend 3+ hours per day** on intake-related email back-and-forth alone.
 - Gartner reports approximately **50% of first-time CLM implementations fail** to deliver expected benefits.
 
@@ -44,26 +44,28 @@ We are **not** building for:
 
 A portable, single-tenant-per-deployment platform with **four functional modules**:
 
-| Module | What it does |
-|---|---|
-| **Matters** | Work containers for any legal effort — employment issues, regulatory inquiries, board matters, M&A, litigation, advisory questions |
-| **Documents** | Central document repository with versioning, search, and tagging — first-class destination, not just an attachment store |
-| **Contracts (CLM)** | Full contract lifecycle from intake through review, negotiation, approval, signature, execution, and renewal |
-| **Entities** | Corporate entity management — your subsidiaries, officers, statutory documents, license/registration renewals, registered agents, compliance calendar at the entity level |
+| Module              | What it does                                                                                                                                                              |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Matters**         | Work containers for any legal effort — employment issues, regulatory inquiries, board matters, M&A, litigation, advisory questions                                        |
+| **Documents**       | Central document repository with versioning, search, and tagging — first-class destination, not just an attachment store                                                  |
+| **Contracts (CLM)** | Full contract lifecycle from intake through review, negotiation, approval, signature, execution, and renewal                                                              |
+| **Entities**        | Corporate entity management — your subsidiaries, officers, statutory documents, license/registration renewals, registered agents, compliance calendar at the entity level |
 
 These modules share a **unified intake surface** that meets business users where they are — ChatOps (Slack first, Teams to follow, others via adapter), magic-link web form, and email-to-intake parser — so legal isn't the bottleneck.
 
-**Cross-cutting capabilities** (search, comments, activity feeds, dashboards, notifications) are designed *into* each module, not as separate destinations.
+**Cross-cutting capabilities** (search, comments, activity feeds, dashboards, notifications) are designed _into_ each module, not as separate destinations.
 
 ## What's in scope
 
 **For the design pass (mocking everything):**
+
 - All four modules above
 - All cross-cutting capabilities
 - Multi-channel intake: ChatOps adapter, magic-link form, email parser
 - A unified `Request` triage layer that routes to Contract or Matter
 
 **Deferred to later phases:**
+
 - Compliance management (regulatory programs, SOC 2, GDPR, policy management, training tracking)
 - Risk management
 - Reporting/analytics as a destination (per-module dashboards remain in scope)
@@ -72,6 +74,7 @@ These modules share a **unified intake surface** that meets business users where
 - E-discovery, legal hold
 
 **Out of scope, possibly forever:**
+
 - Multi-tenancy (one deployment = one organization)
 - Enterprise SSO/SCIM as a v1 requirement
 - Law-firm workflows

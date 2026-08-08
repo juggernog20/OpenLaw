@@ -10,10 +10,7 @@
  * RFC 9457 problem details.
  */
 
-import Fastify, {
-  type FastifyError,
-  type FastifyServerOptions,
-} from "fastify";
+import Fastify, { type FastifyError, type FastifyServerOptions } from "fastify";
 import fastifySwagger from "@fastify/swagger";
 import scalarApiReference from "@scalar/fastify-api-reference";
 import {
@@ -40,8 +37,7 @@ export async function buildApp(opts: FastifyServerOptions = {}) {
       openapi: "3.1.0",
       info: {
         title: "OpenLaw API",
-        description:
-          "REST API for OpenLaw. Also the third-party integration surface (TECH-003).",
+        description: "REST API for OpenLaw. Also the third-party integration surface (TECH-003).",
         version: OPENLAW_VERSION,
         license: { name: "AGPL-3.0-only", identifier: "AGPL-3.0-only" },
       },
@@ -53,9 +49,7 @@ export async function buildApp(opts: FastifyServerOptions = {}) {
 
   await app.register(scalarApiReference, { routePrefix: "/api/docs" });
 
-  app.get("/api/openapi.json", { schema: { hide: true } }, async () =>
-    app.swagger(),
-  );
+  app.get("/api/openapi.json", { schema: { hide: true } }, async () => app.swagger());
 
   // Infra endpoints (TECH-014) — not part of the API surface, hidden
   // from the OpenAPI document.
@@ -93,10 +87,7 @@ export async function buildApp(opts: FastifyServerOptions = {}) {
           message: issue.message ?? "Invalid value.",
         })),
       };
-      return reply
-        .status(400)
-        .header("content-type", PROBLEM_CONTENT_TYPE)
-        .send(problem);
+      return reply.status(400).header("content-type", PROBLEM_CONTENT_TYPE).send(problem);
     }
 
     if (isResponseSerializationError(error)) {
@@ -108,10 +99,7 @@ export async function buildApp(opts: FastifyServerOptions = {}) {
         detail: "The response did not match its schema.",
         instance: request.url,
       };
-      return reply
-        .status(500)
-        .header("content-type", PROBLEM_CONTENT_TYPE)
-        .send(problem);
+      return reply.status(500).header("content-type", PROBLEM_CONTENT_TYPE).send(problem);
     }
 
     const status = error.statusCode && error.statusCode >= 400 ? error.statusCode : 500;
@@ -123,10 +111,7 @@ export async function buildApp(opts: FastifyServerOptions = {}) {
       detail: status >= 500 ? undefined : error.message,
       instance: request.url,
     };
-    return reply
-      .status(status)
-      .header("content-type", PROBLEM_CONTENT_TYPE)
-      .send(problem);
+    return reply.status(status).header("content-type", PROBLEM_CONTENT_TYPE).send(problem);
   });
 
   return app;

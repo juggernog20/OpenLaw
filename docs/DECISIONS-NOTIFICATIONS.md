@@ -8,20 +8,20 @@ Decisions are numbered `NOT-###`.
 
 Commitments accumulated across the module grills that this capability must deliver:
 
-| Source | Commitment |
-| --- | --- |
-| **CTR-006** | Renewal reminders at the derived notice deadline and at expiry; "renewal pending confirmation" prompting. Reminder surfaces show the unverified-AI badge (CTR-008 tension note) |
-| **CTR-012** | Approval requested → pending approvers notified; decisions visible to the owner |
-| **CTR-013** | Envelope status changes (signed / declined / voided) |
-| **MTR-004 / CTR-009** | Approaching named key dates ("no bespoke reminder system" — plugs in here) |
-| **MTR-005 / CTR-017** | Task assignment; task due dates do NOT feed deadline surfaces (but assignees may still want nudges) |
-| **MTR-003 / CTR-004** | Manager assignment (matter/contract handed to you) |
-| **INT-001/003** | Requester email notifications: request created, status changes, thread replies, declined-with-reason; deep-link to portal; host-configurable; no login ever required |
-| **INT-006** | New request → Inbox (the queue itself is the surface; does it also notify?) |
-| **DD-016** | Comment replies / thread activity on records you're on |
-| **A.4 (mock)** | Bell + badge in the top nav; badge cap decided here |
-| **E.1 (mock)** | Notifications module chip on contract details |
-| **DES (deferred)** | Email digest copy register — lands when this ships |
+| Source                | Commitment                                                                                                                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **CTR-006**           | Renewal reminders at the derived notice deadline and at expiry; "renewal pending confirmation" prompting. Reminder surfaces show the unverified-AI badge (CTR-008 tension note) |
+| **CTR-012**           | Approval requested → pending approvers notified; decisions visible to the owner                                                                                                 |
+| **CTR-013**           | Envelope status changes (signed / declined / voided)                                                                                                                            |
+| **MTR-004 / CTR-009** | Approaching named key dates ("no bespoke reminder system" — plugs in here)                                                                                                      |
+| **MTR-005 / CTR-017** | Task assignment; task due dates do NOT feed deadline surfaces (but assignees may still want nudges)                                                                             |
+| **MTR-003 / CTR-004** | Manager assignment (matter/contract handed to you)                                                                                                                              |
+| **INT-001/003**       | Requester email notifications: request created, status changes, thread replies, declined-with-reason; deep-link to portal; host-configurable; no login ever required            |
+| **INT-006**           | New request → Inbox (the queue itself is the surface; does it also notify?)                                                                                                     |
+| **DD-016**            | Comment replies / thread activity on records you're on                                                                                                                          |
+| **A.4 (mock)**        | Bell + badge in the top nav; badge cap decided here                                                                                                                             |
+| **E.1 (mock)**        | Notifications module chip on contract details                                                                                                                                   |
+| **DES (deferred)**    | Email digest copy register — lands when this ships                                                                                                                              |
 
 ## Open questions queued for the next grill-me session
 
@@ -84,10 +84,10 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 
 ## Index of decisions
 
-| # | Decision | Status |
-| --- | --- | --- |
+| #       | Decision                                                          | Status   |
+| ------- | ----------------------------------------------------------------- | -------- |
 | NOT-001 | One system, two surfaces: bell + email for staff and portal users | Accepted |
-| NOT-002 | Event catalog: five groups, defaults by interruptiveness | Accepted |
+| NOT-002 | Event catalog: five groups, defaults by interruptiveness          | Accepted |
 | NOT-003 | Timing: direct events immediate; date reminders in a daily digest | Accepted |
-| NOT-004 | Reminder lead times: admin-configurable offsets, seeded 7/1/0 | Accepted |
-| NOT-005 | Badge: unread count, 9+ cap, read-on-open | Accepted |
+| NOT-004 | Reminder lead times: admin-configurable offsets, seeded 7/1/0     | Accepted |
+| NOT-005 | Badge: unread count, 9+ cap, read-on-open                         | Accepted |

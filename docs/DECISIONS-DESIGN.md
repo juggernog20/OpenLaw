@@ -150,7 +150,7 @@ Four anchors fall out of that:
 1. The mocks already encode this: Light/Dark themes are visibly Primer-derived (palette tokens, top-nav-with-underline-active, card-with-1px-stroke, success-green CTA). Naming the anchor explicitly prevents drift when a later contributor reaches for a different reference.
 2. The reference persona (per `DECISIONS.md` DD-002 — small in-house legal team) wants to scan dense data quickly. Notion-style airiness pushes meaningful rows below the fold and is the wrong register for someone watching 30 active matters. Linear-style extreme density edges into "developer-tool intimidating" for a non-engineer GC.
 3. GitHub Primer is the only major design system that is (a) genuinely free / OSS, (b) production-proven at the persona's density target, and (c) coherent across light and dark — a perfect substrate for a project that already shows three Primer-derived themes in its mocks.
-4. Carrying brand voice in *palette* (Warm) and *labels* ("Triage →") rather than in *shape* (rounded everything, drop shadows, illustrations) keeps the geometry layer cheap and theme-stable. A theme-aware system that also varies geometry is a maintenance burden DES-001 explicitly avoids.
+4. Carrying brand voice in _palette_ (Warm) and _labels_ ("Triage →") rather than in _shape_ (rounded everything, drop shadows, illustrations) keeps the geometry layer cheap and theme-stable. A theme-aware system that also varies geometry is a maintenance burden DES-001 explicitly avoids.
 
 ### Alternatives considered
 
@@ -162,7 +162,7 @@ Four anchors fall out of that:
 
 - Component decisions default to "what would Primer do" unless there is a specific reason to deviate.
 - Density target: 14px base font, 24px section gap, 16px-ish card padding, 1px borders. This is the floor; later decisions may codify a stricter scale.
-- Empty states are *single-icon + sentence + optional CTA*, not illustration + paragraph + CTA. Decision recorded as a separate DES if needed.
+- Empty states are _single-icon + sentence + optional CTA_, not illustration + paragraph + CTA. Decision recorded as a separate DES if needed.
 - Component library choice (next decision) should not introduce shapes that fight Primer's geometry — radii, shadows, and stroke conventions must be overridable via theme tokens.
 - The Pencil mocks' consistent geometry across all three themes is the contract; future themes added to DES-001 must adhere to the same geometry.
 
@@ -198,7 +198,7 @@ The implementation counterpart of this decision is recorded in `DECISIONS-TECH-S
 ### Rationale
 
 1. shadcn's default geometry (6–8px radius, 1px borders, neutral palette, success-green CTA) is a near-1:1 match for the Primer-shaped mocks. Less time fighting library defaults than any other option.
-2. shadcn's `:root` CSS-variable theme model is *exactly* the substrate DES-001 requires — adding the Warm theme is "define another `[data-theme="warm"]` block," not "rewrite components."
+2. shadcn's `:root` CSS-variable theme model is _exactly_ the substrate DES-001 requires — adding the Warm theme is "define another `[data-theme="warm"]` block," not "rewrite components."
 3. shadcn is copy-paste-into-the-repo, not a versioned dependency. This matches `DECISIONS.md` DD-001 / DD-009 (portability, no vendor lock-in) — there is nothing to break when an upstream releases. The components are AGPL-relicensable per DD-011 since they enter the project as source code.
 4. Radix primitives give a high accessibility floor for free. For a tool dealing with sensitive matters and a reference persona that includes a General Counsel reading complex tables daily, keyboard-and-screen-reader correctness is not optional. Re-implementing Radix-equivalent behavior is months of work.
 5. Tailwind compiles to plain CSS at build time — no runtime overhead, no styled-system magic. A self-host contributor can read a component and understand its visuals without learning a new abstraction. Aligned with DD-001's "anyone clones this and it works" goal.
@@ -231,7 +231,7 @@ The implementation counterpart of this decision is recorded in `DECISIONS-TECH-S
 
 **DES-001** commits to three user-selectable themes; **DES-004** commits to Tailwind + CSS variables as the substrate. This decision defines the canonical token vocabulary that every component reads from — names, roles, and the per-theme value mapping.
 
-The tokens were derived by inventorying every distinct color used in `designs/final-themes.pen` across all three themes (Light, Warm, Dark) and grouping them by *role*, not by hue. The full color audit revealed a richer palette than the dashboard screenshot suggested: 4 surface tiers, 2 border tiers, 8 text roles, 6 status pill families (each with a paired bg/fg), a counter-badge family, a confidentiality token, file-type icon colors, and an avatar palette.
+The tokens were derived by inventorying every distinct color used in `designs/final-themes.pen` across all three themes (Light, Warm, Dark) and grouping them by _role_, not by hue. The full color audit revealed a richer palette than the dashboard screenshot suggested: 4 surface tiers, 2 border tiers, 8 text roles, 6 status pill families (each with a paired bg/fg), a counter-badge family, a confidentiality token, file-type icon colors, and an avatar palette.
 
 The reference implementation is `styles/themes/light.css`, `styles/themes/warm.css`, and `styles/themes/dark.css`, with `styles/globals.css` mapping every CSS variable into Tailwind's `@theme` block so utilities like `bg-canvas`, `text-primary`, `border-default`, and `bg-status-success-bg` are available throughout the codebase.
 
@@ -245,7 +245,7 @@ The reference implementation is `styles/themes/light.css`, `styles/themes/warm.c
 - `--bg-raised` — cards, panels, primary content surfaces.
 - `--bg-section-header` — section-header strip inside a card; sub-bar background.
 - `--bg-control` — interactive surfaces: secondary button bg, kbd chip, search-input interior.
-- `--bg-inverted` — header & top-nav surface. In Light this is *darker* than canvas (the GitHub-style dark-on-light pattern); in Warm it's a *deeper cream*; in Dark it's a *darker* near-black than canvas.
+- `--bg-inverted` — header & top-nav surface. In Light this is _darker_ than canvas (the GitHub-style dark-on-light pattern); in Warm it's a _deeper cream_; in Dark it's a _darker_ near-black than canvas.
 
 #### Borders (3 tokens)
 
@@ -262,7 +262,7 @@ The reference implementation is `styles/themes/light.css`, `styles/themes/warm.c
 - `--text-on-accent` — text rendered on `--accent` fill.
 - `--text-on-cta` — text rendered on `--cta-primary` fill.
 - `--text-link` — hyperlinks ("View all →", "Audit log →").
-- `--text-danger` — *inline* high-urgency text (e.g. "due May 5"); intentionally darker than `--status-danger-fg`.
+- `--text-danger` — _inline_ high-urgency text (e.g. "due May 5"); intentionally darker than `--status-danger-fg`.
 
 #### Brand (2 roles)
 
@@ -284,7 +284,7 @@ The reference implementation is `styles/themes/light.css`, `styles/themes/warm.c
 
 **Confidentiality (per `DECISIONS.md` DD-014)**
 
-- `--confidential-fg` — "🔒 CONFI" inline marker. Genuinely theme-divergent in semantics: Light and Dark use *purple* (deliberate cultural marker for "privileged"); Warm uses its *terracotta-brown* (the palette has no purple hue). Recorded as one token with three semantically-different values; the affordance pattern itself is decided in a later DES.
+- `--confidential-fg` — "🔒 CONFI" inline marker. Genuinely theme-divergent in semantics: Light and Dark use _purple_ (deliberate cultural marker for "privileged"); Warm uses its _terracotta-brown_ (the palette has no purple hue). Recorded as one token with three semantically-different values; the affordance pattern itself is decided in a later DES.
 
 **Theme-invariant brand colors** — outside `:root` because they don't theme:
 
@@ -309,9 +309,9 @@ The reference implementation is `styles/themes/light.css`, `styles/themes/warm.c
 
 1. **Roles, not hues, survive theming.** A token named `--orange-500` is a lie in the Warm theme (terracotta) and a worse lie in Dark (where the equivalent shifts in lightness). `--accent` is the only honest name across all three. This is the same pattern Primer, Radix, and shadcn use.
 2. **Four surface tiers match what the mocks actually use.** The Dark theme alone uses four distinct backgrounds (`#0D1117`, `#161B22`, `#1C2128`, `#21262D`) with semantically different roles. Three tiers would force a collapse and lose the section-header / control distinction. Light collapses some tiers to the same hex, which is fine — semantic tokens are allowed to share values per theme.
-3. **Paired status `bg`/`fg` makes contrast a theme decision, not a derivation.** A code path that does `lighten(status-success-fg, 0.85)` for the bg works in Light but not in Dark (Dark's success bg is *darker* than the fg). Per-theme paired values make all three legible by construction.
+3. **Paired status `bg`/`fg` makes contrast a theme decision, not a derivation.** A code path that does `lighten(status-success-fg, 0.85)` for the bg works in Light but not in Dark (Dark's success bg is _darker_ than the fg). Per-theme paired values make all three legible by construction.
 4. **Inline danger text is darker than pill danger text.** Pill danger has a soft bg behind it; inline danger sits on the page surface and needs more contrast to feel urgent without being a pill. Two tokens, two roles, no derivation.
-5. **`--confidential-fg` is a single token with semantically-different values per theme.** Warm intentionally substitutes terracotta-brown for purple because Warm's palette has no purple hue. Forcing purple into Warm would be the wrong call; the confidentiality *affordance* is "marker that contrasts and reads as 'gated,'" not "specifically purple." Decision recorded so the discrepancy is intentional, not accidental.
+5. **`--confidential-fg` is a single token with semantically-different values per theme.** Warm intentionally substitutes terracotta-brown for purple because Warm's palette has no purple hue. Forcing purple into Warm would be the wrong call; the confidentiality _affordance_ is "marker that contrasts and reads as 'gated,'" not "specifically purple." Decision recorded so the discrepancy is intentional, not accidental.
 6. **Avatar and file-type colors are brand-stable, theme-invariant.** A user's avatar color is part of their identity — flipping it when a viewer changes theme would be wrong. File-type colors derive from external brand convention (Word blue, Excel green, PDF red) and don't theme.
 
 ### Alternatives considered
@@ -357,26 +357,26 @@ The size inventory was harvested from `designs/final-themes.pen` across all thre
 
 **Size ramp — 8 named sizes, line-heights baked in:**
 
-| Token | px | Line-height (ratio) | Role in mocks |
-| --- | --- | --- | --- |
-| `--text-xs` | 11 | 1.45 | status-pill labels, counter badges, avatar initials |
-| `--text-sm` | 12 | 1.5 | metadata, dates, secondary timestamps, tiny dates |
-| `--text-base` | 13 | 1.5 | dense list-item body, intake-row author/title, "View all →" link |
-| `--text-md` | 14 | 1.5 | primary body, list-item titles, nav items, section headers |
-| `--text-lg` | 18 | 1.4 | subheads (deferred screens — not in dashboard mock) |
-| `--text-xl` | 20 | 1.3 | page title (h1) — letter-spacing −0.2px |
-| `--text-2xl` | 24 | 1.25 | module hero (deferred screens) |
-| `--text-3xl` | 32 | 1.2 | empty-state hero, marketing |
+| Token         | px  | Line-height (ratio) | Role in mocks                                                    |
+| ------------- | --- | ------------------- | ---------------------------------------------------------------- |
+| `--text-xs`   | 11  | 1.45                | status-pill labels, counter badges, avatar initials              |
+| `--text-sm`   | 12  | 1.5                 | metadata, dates, secondary timestamps, tiny dates                |
+| `--text-base` | 13  | 1.5                 | dense list-item body, intake-row author/title, "View all →" link |
+| `--text-md`   | 14  | 1.5                 | primary body, list-item titles, nav items, section headers       |
+| `--text-lg`   | 18  | 1.4                 | subheads (deferred screens — not in dashboard mock)              |
+| `--text-xl`   | 20  | 1.3                 | page title (h1) — letter-spacing −0.2px                          |
+| `--text-2xl`  | 24  | 1.25                | module hero (deferred screens)                                   |
+| `--text-3xl`  | 32  | 1.2                 | empty-state hero, marketing                                      |
 
 Sizes are exposed as Tailwind utilities `text-xs` through `text-3xl`. Components pick from the ramp; no arbitrary-value `text-[15px]` classes anywhere outside theme files (lint rule deferred).
 
 **Weight ramp — 3 weights only:**
 
-| Token | Value | Role |
-| --- | --- | --- |
-| `--font-normal` | 400 | body copy, list-item descriptions, search placeholder |
-| `--font-medium` | 500 | inactive nav items, "View all →" links, status pill labels |
-| `--font-semibold` | 600 | active nav, titles, section headers, badges, avatar initials |
+| Token             | Value | Role                                                         |
+| ----------------- | ----- | ------------------------------------------------------------ |
+| `--font-normal`   | 400   | body copy, list-item descriptions, search placeholder        |
+| `--font-medium`   | 500   | inactive nav items, "View all →" links, status pill labels   |
+| `--font-semibold` | 600   | active nav, titles, section headers, badges, avatar initials |
 
 The 700-weight on tiny activity-feed avatar initials in the dashboard mock is **normalized to 600**. At 9–10px those initials are already maximally compressed; an extra 100 weight units do not improve legibility and add a third weight token to maintain.
 
@@ -436,23 +436,23 @@ Per DES-001, geometry is theme-invariant — these need to be normalized to a si
 
 **Five named layout tokens** for page-level rhythm — registered as Tailwind utilities so layouts read declaratively (`px-page-x`, `gap-section-gap`, `p-card-x`):
 
-| Token | px | Role |
-| --- | --- | --- |
-| `--spacing-page-x` | 32 | body horizontal padding; sub-bar horizontal padding |
-| `--spacing-page-y` | 24 | body vertical padding |
-| `--spacing-section-gap` | 24 | between cards in a column |
-| `--spacing-card-x` | 16 | card interior horizontal padding |
-| `--spacing-card-y` | 10 | card row interior vertical padding (12 for section-header strips) |
+| Token                   | px  | Role                                                              |
+| ----------------------- | --- | ----------------------------------------------------------------- |
+| `--spacing-page-x`      | 32  | body horizontal padding; sub-bar horizontal padding               |
+| `--spacing-page-y`      | 24  | body vertical padding                                             |
+| `--spacing-section-gap` | 24  | between cards in a column                                         |
+| `--spacing-card-x`      | 16  | card interior horizontal padding                                  |
+| `--spacing-card-y`      | 10  | card row interior vertical padding (12 for section-header strips) |
 
 **Chrome dimensions** (four at decision time; **DES-016** later split the rail into activity bar + panel) — fixed sizes for the application shell, registered as plain CSS variables (not utility-generating) and referenced from the layout shell components only:
 
-| Token | px | Role |
-| --- | --- | --- |
-| `--height-header` | 62 | top header strip |
-| `--height-nav` | 48 | top navigation row |
-| `--height-subbar` | 64 | per-page sub-bar (page title + page actions) |
-| `--width-activitybar` | 48 | record-page activity bar *(amended by **DES-016**; originally a single `--width-rail: 320`)* |
-| `--width-panel` | 320 | record-page side panel hosting the active applet *(amended by **DES-016**)* |
+| Token                 | px  | Role                                                                                         |
+| --------------------- | --- | -------------------------------------------------------------------------------------------- |
+| `--height-header`     | 62  | top header strip                                                                             |
+| `--height-nav`        | 48  | top navigation row                                                                           |
+| `--height-subbar`     | 64  | per-page sub-bar (page title + page actions)                                                 |
+| `--width-activitybar` | 48  | record-page activity bar _(amended by **DES-016**; originally a single `--width-rail: 320`)_ |
+| `--width-panel`       | 320 | record-page side panel hosting the active applet _(amended by **DES-016**)_                  |
 
 **Density normalization.** When Light/Dark disagree with Warm in the existing Pencil mocks, **the implementation follows Light/Dark**: nav height 48px, nav gap 8px, header padding 16px. Warm's slightly tighter mock values were Pencil-time tweaks, not a deliberate brand-density signal. Per DES-001's geometry-invariance contract, the Warm mocks will be normalized to match in a follow-up Pencil pass; until then the implementation is the source of truth.
 
@@ -548,7 +548,7 @@ The icon library for v1 is **Lucide** (`lucide-react` package).
 
 ### Context
 
-`DECISIONS.md` **DD-014** commits to silently hiding confidential matters from non-team Members (no `[hidden]` placeholders, no counts, nothing leaked) while letting *included* viewers (matter team + Admins + creator) work normally. For included viewers, the surface must clearly and persistently signal "this is confidential" so the user does not accidentally screenshot, paste, or @-mention outward.
+`DECISIONS.md` **DD-014** commits to silently hiding confidential matters from non-team Members (no `[hidden]` placeholders, no counts, nothing leaked) while letting _included_ viewers (matter team + Admins + creator) work normally. For included viewers, the surface must clearly and persistently signal "this is confidential" so the user does not accidentally screenshot, paste, or @-mention outward.
 
 The Pencil mocks include a single inline affordance — `🔒 CONFI` text label inline next to the matter title in the row view, rendered with `--confidential-fg` from DES-005. That covers list views but is missable in the detail surface where the highest-leverage actions (commenting, document upload, @-mention) happen.
 
@@ -556,7 +556,7 @@ The Pencil mocks include a single inline affordance — `🔒 CONFI` text label 
 
 **Three escalating affordance tiers**, used together — not interchangeably — across every surface touching a confidential matter:
 
-**Tier 1 — Inline marker.** Rendered as a `Lock` icon (Lucide, 12–14px) + the literal text "CONFI" (uppercase, letter-spacing `0.4`), in `--confidential-fg`. Appears inline next to the matter title wherever the title appears outside the matter's own detail page: list rows, search results, breadcrumbs, mention chips, and as a small lock-only badge next to *every comment, activity-entry, and document filename* inside a confidential matter (so copy-pasted snippets carry the marker visually).
+**Tier 1 — Inline marker.** Rendered as a `Lock` icon (Lucide, 12–14px) + the literal text "CONFI" (uppercase, letter-spacing `0.4`), in `--confidential-fg`. Appears inline next to the matter title wherever the title appears outside the matter's own detail page: list rows, search results, breadcrumbs, mention chips, and as a small lock-only badge next to _every comment, activity-entry, and document filename_ inside a confidential matter (so copy-pasted snippets carry the marker visually).
 
 **Tier 2 — Detail-page persistent banner.** Rendered between the top-nav (`--height-nav`) and the page sub-bar (`--height-subbar`) on every page within a confidential matter — the matter detail, its document detail pages, its activity timeline, etc. The banner is **chrome, not a notification**: no dismiss button, no close action, always visible.
 
@@ -567,15 +567,15 @@ The Pencil mocks include a single inline affordance — `🔒 CONFI` text label 
 - Layout: `Lock` icon (16px) + "Confidential matter — Members + named team only" text, left-aligned · "Manage team →" link, right-aligned (visible to Administrators and the matter creator only, per DD-014's gating rule)
 - Padding: `0 var(--spacing-page-x)` to match sub-bar gutters
 
-**Tier 3 — Composer @-mention warning.** When the comment composer or the document-upload share-list inside a confidential matter receives an @-mention (or named-share) targeting a user who is not currently on the matter team, a non-blocking inline warning renders below the composer: *"@Sara Kim isn't on this confidential matter. They will be added as a watcher if you confirm."* The submit action confirms the membership grant *and* posts. No hard-block. The grant is recorded in the audit log per DD-014.
+**Tier 3 — Composer @-mention warning.** When the comment composer or the document-upload share-list inside a confidential matter receives an @-mention (or named-share) targeting a user who is not currently on the matter team, a non-blocking inline warning renders below the composer: _"@Sara Kim isn't on this confidential matter. They will be added as a watcher if you confirm."_ The submit action confirms the membership grant _and_ posts. No hard-block. The grant is recorded in the audit log per DD-014.
 
 **Lock icon only.** Confidentiality everywhere uses the same `Lock` glyph from Lucide. No alternates (`ShieldAlert`, `EyeOff`) — single glyph reduces cognitive overhead and reads as "restricted access" universally.
 
 **New color token added to the DES-005 token system:**
 
-| Token               | Light                          | Warm                      | Dark                          |
-| ------------------- | ------------------------------ | ------------------------- | ----------------------------- |
-| `--confidential-bg` | `#F5E6FA` (soft lavender)      | `#EFE3D0` (soft tan)      | `#241B30` (soft dark purple)  |
+| Token               | Light                     | Warm                 | Dark                         |
+| ------------------- | ------------------------- | -------------------- | ---------------------------- |
+| `--confidential-bg` | `#F5E6FA` (soft lavender) | `#EFE3D0` (soft tan) | `#241B30` (soft dark purple) |
 
 Warm intentionally diverges from purple per DES-005's per-theme-semantics rationale — Warm's confidentiality fg is terracotta-brown (`#9B6B3A`), so the matching banner background is a soft tan rather than a soft purple. The banner reads as "warm-gated" rather than "purple-gated" in Warm; the affordance is the same.
 
@@ -619,7 +619,7 @@ Warm intentionally diverges from purple per DES-005's per-theme-semantics ration
 
 ### Context
 
-The mocks already commit to keyboard ergonomics: every search input renders a `/` keyboard chip in its placeholder, and the page-shell sub-bars expose filter chips that are obvious tab targets. DES-004 chose Radix primitives, which carry an opinionated keyboard contract (focus trapping in modals, arrow-key navigation in menus and tab strips, focus restoration on close, etc.). The decision to make is what we commit to *globally* — the keystrokes that are app-wide, not per-component — and whether a `Cmd-K` command palette is in scope for v1.
+The mocks already commit to keyboard ergonomics: every search input renders a `/` keyboard chip in its placeholder, and the page-shell sub-bars expose filter chips that are obvious tab targets. DES-004 chose Radix primitives, which carry an opinionated keyboard contract (focus trapping in modals, arrow-key navigation in menus and tab strips, focus restoration on close, etc.). The decision to make is what we commit to _globally_ — the keystrokes that are app-wide, not per-component — and whether a `Cmd-K` command palette is in scope for v1.
 
 ### Decision
 
@@ -627,11 +627,11 @@ A small, fixed global key map ships in v1; `Cmd-K` command palette is **deferred
 
 #### Global keys (v1)
 
-| Key | Action | Scope |
-| --- | --- | --- |
-| `/` | Focus the page-level search input | Any page whose sub-bar contains a search input |
-| `Esc` | Close the topmost overlay (modal, popover, dropdown, command bar) | Global |
-| `?` | Open the keyboard shortcuts cheat-sheet modal | Global |
+| Key   | Action                                                            | Scope                                          |
+| ----- | ----------------------------------------------------------------- | ---------------------------------------------- |
+| `/`   | Focus the page-level search input                                 | Any page whose sub-bar contains a search input |
+| `Esc` | Close the topmost overlay (modal, popover, dropdown, command bar) | Global                                         |
+| `?`   | Open the keyboard shortcuts cheat-sheet modal                     | Global                                         |
 
 Two-key navigation sequences (e.g. Gmail-style `g + d`) were considered and **rejected for v1** — they add cognitive load without a corresponding payoff at this stage; the top-nav is one click away on every screen.
 
@@ -679,7 +679,7 @@ Cmd-K is revisited when either: (a) the catalog of distinct commands worth listi
 - Pencil mocks already render the `/` chip; no mock changes needed.
 - A `--ring-width: 2px` and `--ring-color: var(--accent)` token pair will be added to `styles/globals.css` `@theme` when focus styles are first wired (deferred to component build-out, not blocking).
 - Cmd-K is on the queue for revisit; the routing and entity-search layers should be designed to make adding it cheap (one search index, one command registry — natural shape regardless).
-- A11y screen-reader patterns are *not* covered by this DES; they belong with the WCAG-AA accessibility-floor decision in the open-questions queue.
+- A11y screen-reader patterns are _not_ covered by this DES; they belong with the WCAG-AA accessibility-floor decision in the open-questions queue.
 
 ---
 
@@ -709,7 +709,7 @@ The themes, geometry, typography, and keyboard contract are all locked. Before c
 9. **`prefers-reduced-motion: reduce` honored** by every animation; degrades to instant transitions.
 10. **Screen-reader patterns** for the activity feed (`role="feed"` + `aria-busy` during loads + each entry as `<article>` with `aria-labelledby` to its header) and modals (Radix-default `role="dialog"` + focus trap + `aria-labelledby`).
 
-#### What v1 explicitly does *not* commit to
+#### What v1 explicitly does _not_ commit to
 
 - No formal third-party audit / VPAT / Section 508 conformance statement.
 - No screen-reader certification matrix as a release gate (NVDA + JAWS + VoiceOver).
@@ -760,7 +760,7 @@ The themes, geometry, typography, and keyboard contract are all locked. Before c
 
 ### Context
 
-The mocks in `designs/final-themes.pen` are all desktop-width (~1440px). DES-007 locked the chrome geometry (62 header / 48 nav / 64 sub-bar / 320 right rail) at desktop, but said nothing about narrower viewports. OpenLaw is a desktop-class B2B tool — no one reviews a 30-page MSA on a phone — but the application still needs to behave reasonably at the laptop-window-split (around 1024px), tablet portrait, and "user resized aggressively" sizes. The decision to make is *what primitive* the responsive behavior is built on. As of 2026, container queries (CSS Container Queries Level 1, ~95% global support since 2023) and intrinsic-layout primitives (`grid-template-columns: repeat(auto-fit, minmax(N, 1fr))`) are first-class in Tailwind v4 and have largely displaced viewport-only breakpoint thinking for application UIs.
+The mocks in `designs/final-themes.pen` are all desktop-width (~1440px). DES-007 locked the chrome geometry (62 header / 48 nav / 64 sub-bar / 320 right rail) at desktop, but said nothing about narrower viewports. OpenLaw is a desktop-class B2B tool — no one reviews a 30-page MSA on a phone — but the application still needs to behave reasonably at the laptop-window-split (around 1024px), tablet portrait, and "user resized aggressively" sizes. The decision to make is _what primitive_ the responsive behavior is built on. As of 2026, container queries (CSS Container Queries Level 1, ~95% global support since 2023) and intrinsic-layout primitives (`grid-template-columns: repeat(auto-fit, minmax(N, 1fr))`) are first-class in Tailwind v4 and have largely displaced viewport-only breakpoint thinking for application UIs.
 
 ### Decision
 
@@ -768,14 +768,14 @@ The responsive system is built primarily on **container queries and intrinsic la
 
 #### Rules
 
-| Region | Mechanism | Behavior |
-| --- | --- | --- |
-| Top nav, sub-bar, header | Viewport | Below 768px: top nav collapses to hamburger; sub-bar simplifies to title + primary action; filter chips collapse into a "Filters" sheet. At 768px and above: full chrome as in mocks. |
-| Side panel (`--width-panel: 320px` per **DES-016**; the 48px `--width-activitybar` is always visible) | **Container query** on the page-content container | Docked when content container ≥ ~1100px wide; below the threshold the panel **overlays** instead of docking, opened from the activity bar. The panel is supplementary by design; pages must remain useful without it. |
-| Tables | **Container query** on the table's wrapper | Card-stack rendering when wrapper `< ~640px`; row rendering above. Decoupled from viewport entirely so tables don't break inside narrow modal bodies. |
-| Two-pane detail layouts | **Container query** on the layout shell | Single-pane below ~1024px-of-shell; two-pane above. Secondary pane reachable via a back-button-driven sub-route in single-pane mode. |
-| Card grids, chip rows | `grid-template-columns: repeat(auto-fit, minmax(Npx, 1fr))` | Auto-reflow; no breakpoint code. |
-| Modals | Viewport | Full-screen below 768px; centered overlay above. |
+| Region                                                                                                | Mechanism                                                   | Behavior                                                                                                                                                                                                              |
+| ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Top nav, sub-bar, header                                                                              | Viewport                                                    | Below 768px: top nav collapses to hamburger; sub-bar simplifies to title + primary action; filter chips collapse into a "Filters" sheet. At 768px and above: full chrome as in mocks.                                 |
+| Side panel (`--width-panel: 320px` per **DES-016**; the 48px `--width-activitybar` is always visible) | **Container query** on the page-content container           | Docked when content container ≥ ~1100px wide; below the threshold the panel **overlays** instead of docking, opened from the activity bar. The panel is supplementary by design; pages must remain useful without it. |
+| Tables                                                                                                | **Container query** on the table's wrapper                  | Card-stack rendering when wrapper `< ~640px`; row rendering above. Decoupled from viewport entirely so tables don't break inside narrow modal bodies.                                                                 |
+| Two-pane detail layouts                                                                               | **Container query** on the layout shell                     | Single-pane below ~1024px-of-shell; two-pane above. Secondary pane reachable via a back-button-driven sub-route in single-pane mode.                                                                                  |
+| Card grids, chip rows                                                                                 | `grid-template-columns: repeat(auto-fit, minmax(Npx, 1fr))` | Auto-reflow; no breakpoint code.                                                                                                                                                                                      |
+| Modals                                                                                                | Viewport                                                    | Full-screen below 768px; centered overlay above.                                                                                                                                                                      |
 
 #### What this commits to
 
@@ -833,7 +833,7 @@ Wire ICU MessageFormat-based string wrapping, `Intl.*` browser-native formatting
 
 1. **Every user-facing string lives in a message catalog** with a stable string ID (`action.save`, `matter.empty.title`, `confidential.banner.body`) — never hard-coded in JSX. Renaming the English copy never breaks the catalog.
 2. **ICU MessageFormat** is the message syntax. Handles plurals, gender, select, and interpolation (`"{count, plural, =0 {No matters} one {1 matter} other {# matters}}"`) without per-locale code branches.
-3. **`Intl.DateTimeFormat`, `Intl.NumberFormat`, `Intl.RelativeTimeFormat` for all date / number / currency formatting.** No `date-fns` / `dayjs` / `moment` / `numeral.js` for formatting. (Date *math* is a separate concern — a math lib is fine if needed.)
+3. **`Intl.DateTimeFormat`, `Intl.NumberFormat`, `Intl.RelativeTimeFormat` for all date / number / currency formatting.** No `date-fns` / `dayjs` / `moment` / `numeral.js` for formatting. (Date _math_ is a separate concern — a math lib is fine if needed.)
 4. **Locale stored on the user record**, defaulting to `en-US`. Server-rendered into `<html lang>` (which DES-011 already requires) so initial paint formatting is correct without a client-side flicker.
 5. **Build-time extraction** walks the codebase, harvests message IDs + default English text, emits `messages/en-US.json`. Future locales are sibling files (`messages/de-DE.json` etc.); the JSON is the artifact translators receive.
 6. **No locale switcher in v1 UI** — the mechanism is wired, but only one locale exists to choose. When a second locale ships, the switcher slots into account settings.
@@ -869,7 +869,7 @@ The architectural decision (every string wrapped, ICU MessageFormat, `Intl.*` fo
 - A `messages/` directory at the repo root holds locale JSON catalogs; `messages/en-US.json` is the v1 artifact.
 - Build-time extraction tooling required (the chosen library — react-intl or lingui — provides this).
 - A translation-primitive component (likely `<FormattedMessage>` from react-intl, or equivalent) and a hook/function for non-JSX contexts (`intl.formatMessage(...)`) are required at the component layer. Every `<Button>`, every label, every error message, every empty state uses it.
-- A `formatDate(date, options?)`, `formatNumber(value, options?)`, `formatCurrency(value, currency, options?)` thin wrapper around `Intl.*` is added at the styles/utils layer so component code doesn't reach into `Intl` directly. Centralizes the `locale` argument and lets DES-014 (date/time/currency display) be about *conventions* rather than *plumbing*.
+- A `formatDate(date, options?)`, `formatNumber(value, options?)`, `formatCurrency(value, currency, options?)` thin wrapper around `Intl.*` is added at the styles/utils layer so component code doesn't reach into `Intl` directly. Centralizes the `locale` argument and lets DES-014 (date/time/currency display) be about _conventions_ rather than _plumbing_.
 - The user record needs a `locale` field with default `en-US`. Backend concern; flagged here.
 - Server-side rendering must read the user's locale and render `<html lang>` accordingly; integrates with the same SSR layer that emits `data-theme` from DES-002.
 - **Tailwind logical properties (`ms-*`, `me-*`, `ps-*`, `pe-*`) are required**; physical properties (`ml-*`, `mr-*`, `pl-*`, `pr-*`) are flagged in PR review. Add to lint config when component build-out begins.
@@ -886,21 +886,21 @@ The architectural decision (every string wrapped, ICU MessageFormat, `Intl.*` fo
 
 ### Context
 
-DES-013 plumbed the `Intl.*` formatting APIs and locale-on-user. The remaining design-level decision is *what conventions* those formatters output, where users see different forms (timestamps in activity feeds vs deadlines vs audit logs), and how timezone display is handled. Ad-hoc per-component formatting is the failure mode this DES prevents — every formatter call should resolve to one of a small set of named conventions.
+DES-013 plumbed the `Intl.*` formatting APIs and locale-on-user. The remaining design-level decision is _what conventions_ those formatters output, where users see different forms (timestamps in activity feeds vs deadlines vs audit logs), and how timezone display is handled. Ad-hoc per-component formatting is the failure mode this DES prevents — every formatter call should resolve to one of a small set of named conventions.
 
 ### Decision
 
 #### Date / time display rules
 
-| Context | Format | Example (en-US) |
-| --- | --- | --- |
-| **Activity feed timestamps** | Relative if `≤ 7 days ago`, short absolute thereafter | `12 minutes ago` / `3 hours ago` / `Yesterday` / `Apr 28` / `Apr 28, 2025` (year only when not current year) |
-| **Document upload / created-at columns** | Short absolute | `May 3, 2026` |
-| **Deadlines / due dates** | Short absolute + relative qualifier when relevant | `May 10, 2026 (in 7 days)` / `May 1 (3 days overdue)` |
-| **Detail-screen authoritative timestamps** (audit log, file metadata) | Long absolute with time + zone, **no seconds** | `May 3, 2026, 2:34 PM PDT` |
-| **Tooltip on any displayed time** | Same as detail-screen format (long absolute, hours+minutes, timezone label) | `May 3, 2026, 2:34 PM PDT` |
-| **Date inputs** | Browser-native `<input type="date">` | (locale-aware by default) |
-| **Time inputs** | Browser-native `<input type="time">` | (locale-aware by default) |
+| Context                                                               | Format                                                                      | Example (en-US)                                                                                              |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Activity feed timestamps**                                          | Relative if `≤ 7 days ago`, short absolute thereafter                       | `12 minutes ago` / `3 hours ago` / `Yesterday` / `Apr 28` / `Apr 28, 2025` (year only when not current year) |
+| **Document upload / created-at columns**                              | Short absolute                                                              | `May 3, 2026`                                                                                                |
+| **Deadlines / due dates**                                             | Short absolute + relative qualifier when relevant                           | `May 10, 2026 (in 7 days)` / `May 1 (3 days overdue)`                                                        |
+| **Detail-screen authoritative timestamps** (audit log, file metadata) | Long absolute with time + zone, **no seconds**                              | `May 3, 2026, 2:34 PM PDT`                                                                                   |
+| **Tooltip on any displayed time**                                     | Same as detail-screen format (long absolute, hours+minutes, timezone label) | `May 3, 2026, 2:34 PM PDT`                                                                                   |
+| **Date inputs**                                                       | Browser-native `<input type="date">`                                        | (locale-aware by default)                                                                                    |
+| **Time inputs**                                                       | Browser-native `<input type="time">`                                        | (locale-aware by default)                                                                                    |
 
 Tooltip and authoritative-timestamp formats are intentionally identical — one canonical "human-readable absolute time" and one canonical "compact display." No ISO 8601 in the UI; ISO is for storage and APIs only.
 
@@ -909,7 +909,7 @@ Tooltip and authoritative-timestamp formats are intentionally identical — one 
 - **Storage:** all timestamps as UTC ISO 8601. Non-negotiable.
 - **Display:** rendered in the user's timezone. Resolution order: explicit user-record `timezone` field if set → browser's IANA timezone (`Intl.DateTimeFormat().resolvedOptions().timeZone`) → UTC fallback.
 - **Per-user override:** `timezone` field on user record, defaulting to `null` (= "use browser-detected"). Settings exposes a timezone picker; most users won't touch it.
-- **SSR:** server renders in the user's *stored* timezone if set, otherwise UTC. Client hydration re-renders in browser-detected timezone if no stored override. Acceptable one-time hydration adjustment.
+- **SSR:** server renders in the user's _stored_ timezone if set, otherwise UTC. Client hydration re-renders in browser-detected timezone if no stored override. Acceptable one-time hydration adjustment.
 - **Tooltips always include the rendered timezone abbreviation** (`PDT`, `EST`, `UTC`) so cross-region readers know what they're looking at.
 
 #### Currency display rules
@@ -942,7 +942,7 @@ Component code stays declarative (`<span>{formatRelativeOrShort(comment.createdA
 
 1. **Relative-then-short-absolute is the right register for legal-tool timestamps.** Recent activity benefits from `3 hours ago` (matches the user's mental model of "what just happened"); older items benefit from absolute dates because "3 months ago" loses precision people actually want.
 2. **No ISO in the UI.** ISO 8601 with seconds and offsets is for machines, not humans. `2026-05-03T14:34:21-07:00` reads as engineering-ish in a tool meant for legal counsel and procurement; `May 3, 2026, 2:34 PM PDT` carries the same information, more readably, without the seconds nobody needs.
-3. **Tooltip ≡ detail-screen format** because there's no scenario where an authoritative timestamp needs *more* precision in one place than another. Two formats not three.
+3. **Tooltip ≡ detail-screen format** because there's no scenario where an authoritative timestamp needs _more_ precision in one place than another. Two formats not three.
 4. **Timezone in tooltips solves the cross-region collaboration friction.** US legal counsel + India contractor + UK in-house is a common shape; "is that 2pm my time or theirs?" is a real, recurring question.
 5. **`Intl.NumberFormat` for currency is locale-correct out of the box** (symbol placement, decimal separator, grouping). Building a custom currency formatter is a recipe for regression bugs.
 6. **No compact-number abbreviations** because legal precision matters; if analytics ever needs them, that's a per-context override, not a default.
@@ -1004,7 +1004,7 @@ The voice register for all component-default and system-generated copy is **ters
 - All system-generated copy (toasts, banners, confirmations)
 - The onboarding flow's static per-step user guidance
 
-#### Where this register does *not* apply
+#### Where this register does _not_ apply
 
 - **User-generated content** (comments, request descriptions, document titles) — users write however they write.
 - **Feature-level marketing copy** (landing page, docs site if/when produced) — different audience, register decided per-surface.
@@ -1032,7 +1032,7 @@ The voice register for all component-default and system-generated copy is **ters
 - **Title Case for buttons** (matches some current GitHub UI). Defensible; rejected as default because sentence case reads better at small sizes and is the modern convention.
 - **Allow "please" for softening errors.** Rejected — instructions read as instructions whether or not they say please; "please" adds nothing.
 - **Permit first-person plural ("we") in error states for warmth.** Rejected — see rationale #1; the persona doesn't want a friend.
-- **Allow celebratory confirmations on milestone events** (first matter created, first contract approved). Rejected for v1 — milestones can carry a different register if/when an onboarding-celebration feature ships, but the *default* is functional.
+- **Allow celebratory confirmations on milestone events** (first matter created, first contract approved). Rejected for v1 — milestones can carry a different register if/when an onboarding-celebration feature ships, but the _default_ is functional.
 - **Explicit "voice and tone" guide as a separate document.** Rejected — the rule list above is small enough to live in this DES; a separate doc adds maintenance overhead without commensurate benefit at v1 scale. If contributor count grows, promote to its own doc.
 
 ### Consequences
@@ -1132,23 +1132,23 @@ Linear-style dot+text for statuses (rejected — tinted status pills are establi
 
 ## Index of decisions
 
-| # | Decision | Status |
-| --- | --- | --- |
-| DES-001 | Ship three themes (Light / Warm / Dark) as user-selectable from v1 | Accepted |
-| DES-002 | Light is the default theme; Warm and Dark are user-selectable | Accepted |
-| DES-003 | Design language anchor — "utility-tool with character," GitHub-Primer-shaped | Accepted |
-| DES-004 | Component substrate — shadcn/ui + Tailwind + CSS variables + Radix primitives | Accepted |
-| DES-005 | Color tokens — semantic, theme-aware, four surface tiers, paired status pills | Accepted |
-| DES-006 | Typography ramp — Inter, 8-step size scale, 3 weights, reserved mono | Accepted |
-| DES-007 | Spacing scale + density target — Tailwind default + 5 layout tokens + 4 chrome dimensions, normalized to 48/8/16 | Accepted |
-| DES-008 | Iconography — Lucide as the v1 icon library, sizes 16/20/24, currentColor inheritance | Accepted |
-| DES-009 | Confidentiality affordance — 3-tier pattern (inline marker / detail banner / composer warning) | Accepted |
-| DES-010 | Keyboard contract — `/`, `Esc`, `?` global keys; Radix component defaults; Cmd-K deferred | Accepted |
-| DES-011 | Accessibility floor — WCAG 2.2 AA contract; AAA aspirational on text; no formal audit in v1 | Accepted |
-| DES-012 | Responsive layout primitives — container queries for content, single 768px viewport breakpoint for the mobile shell | Accepted |
-| DES-013 | Internationalization architecture — every string wrapped in ICU MessageFormat from day one; `Intl.*` for formatting; en-US the only v1 locale | Accepted |
+| #       | Decision                                                                                                                                                             | Status   |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| DES-001 | Ship three themes (Light / Warm / Dark) as user-selectable from v1                                                                                                   | Accepted |
+| DES-002 | Light is the default theme; Warm and Dark are user-selectable                                                                                                        | Accepted |
+| DES-003 | Design language anchor — "utility-tool with character," GitHub-Primer-shaped                                                                                         | Accepted |
+| DES-004 | Component substrate — shadcn/ui + Tailwind + CSS variables + Radix primitives                                                                                        | Accepted |
+| DES-005 | Color tokens — semantic, theme-aware, four surface tiers, paired status pills                                                                                        | Accepted |
+| DES-006 | Typography ramp — Inter, 8-step size scale, 3 weights, reserved mono                                                                                                 | Accepted |
+| DES-007 | Spacing scale + density target — Tailwind default + 5 layout tokens + 4 chrome dimensions, normalized to 48/8/16                                                     | Accepted |
+| DES-008 | Iconography — Lucide as the v1 icon library, sizes 16/20/24, currentColor inheritance                                                                                | Accepted |
+| DES-009 | Confidentiality affordance — 3-tier pattern (inline marker / detail banner / composer warning)                                                                       | Accepted |
+| DES-010 | Keyboard contract — `/`, `Esc`, `?` global keys; Radix component defaults; Cmd-K deferred                                                                            | Accepted |
+| DES-011 | Accessibility floor — WCAG 2.2 AA contract; AAA aspirational on text; no formal audit in v1                                                                          | Accepted |
+| DES-012 | Responsive layout primitives — container queries for content, single 768px viewport breakpoint for the mobile shell                                                  | Accepted |
+| DES-013 | Internationalization architecture — every string wrapped in ICU MessageFormat from day one; `Intl.*` for formatting; en-US the only v1 locale                        | Accepted |
 | DES-014 | Date / time / currency display conventions — relative-then-short-absolute; UTC-stored / browser-detected display; ISO 4217 currency; no compact-number abbreviations | Accepted |
-| DES-015 | Content tone register — terse, direct, second-person imperative ("GitHub voice, not Mailchimp voice") | Accepted |
-| DES-016 | Record-page right side — VS Code-style activity bar with page-scoped applets | Accepted |
-| DES-017 | Editing model — per-field inline commit, no page edit mode | Accepted |
-| DES-018 | Chromatic discipline — status families kept, one severity ramp (grey/yellow/orange/red), uniform light-blue avatars with photo override | Accepted |
+| DES-015 | Content tone register — terse, direct, second-person imperative ("GitHub voice, not Mailchimp voice")                                                                | Accepted |
+| DES-016 | Record-page right side — VS Code-style activity bar with page-scoped applets                                                                                         | Accepted |
+| DES-017 | Editing model — per-field inline commit, no page edit mode                                                                                                           | Accepted |
+| DES-018 | Chromatic discipline — status families kept, one severity ramp (grey/yellow/orange/red), uniform light-blue avatars with photo override                              | Accepted |

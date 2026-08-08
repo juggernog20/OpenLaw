@@ -154,16 +154,16 @@ _None — queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/preceden
 
 ## Index of decisions
 
-| # | Decision | Status |
-| --- | --- | --- |
-| DOC-001 | Record model: logical document + linear immutable version chain | Accepted |
-| DOC-002 | Module identity: the legal file layer, made browsable | Accepted |
-| DOC-003 | Redline compare: Workshare-style in-app view + Word track-changes export | Accepted |
-| DOC-004 | In-app rendering: PDF, Word, images, PowerPoint, emails; rest download-only | Accepted |
-| DOC-005 | OCR on upload for image-only PDFs | Accepted |
-| DOC-006 | Folders: inside matters/contracts only; no global tree | Accepted |
-| DOC-007 | Metadata: standard document properties only; no custom fields; tags deferred | Accepted |
+| #       | Decision                                                                       | Status   |
+| ------- | ------------------------------------------------------------------------------ | -------- |
+| DOC-001 | Record model: logical document + linear immutable version chain                | Accepted |
+| DOC-002 | Module identity: the legal file layer, made browsable                          | Accepted |
+| DOC-003 | Redline compare: Workshare-style in-app view + Word track-changes export       | Accepted |
+| DOC-004 | In-app rendering: PDF, Word, images, PowerPoint, emails; rest download-only    | Accepted |
+| DOC-005 | OCR on upload for image-only PDFs                                              | Accepted |
+| DOC-006 | Folders: inside matters/contracts only; no global tree                         | Accepted |
+| DOC-007 | Metadata: standard document properties only; no custom fields; tags deferred   | Accepted |
 | DOC-008 | No standalone documents: every document has an owning record; access inherited | Accepted |
-| DOC-009 | Storage & search: requirements here, engine picks routed to tech-stack | Accepted |
-| DOC-010 | Deletion: soft delete + Admin hard delete; versions immutable | Accepted |
-| DOC-011 | Bulk upload: multi-file + folder drop retaining structure (folders nest) | Accepted |
+| DOC-009 | Storage & search: requirements here, engine picks routed to tech-stack         | Accepted |
+| DOC-010 | Deletion: soft delete + Admin hard delete; versions immutable                  | Accepted |
+| DOC-011 | Bulk upload: multi-file + folder drop retaining structure (folders nest)       | Accepted |

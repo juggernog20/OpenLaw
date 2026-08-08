@@ -255,24 +255,24 @@ _None — queue cleared 2026-08-04 (CTR-001 through CTR-019). New questions from
 
 ## Index of decisions
 
-| # | Decision | Status |
-| --- | --- | --- |
-| CTR-001 | Lifecycle: fixed six-stage backbone + configurable statuses | Accepted |
-| CTR-002 | Contract types: configurable list, MTR-001 sibling | Accepted |
-| CTR-003 | Numbering: free title + global C-### sequence | Accepted |
-| CTR-004 | Owner + team: manager_id + contract_team, MTR-003 sibling | Accepted |
-| CTR-005 | Priority and risk: both first-class, MTR-012 sibling | Accepted |
+| #       | Decision                                                                         | Status   |
+| ------- | -------------------------------------------------------------------------------- | -------- |
+| CTR-001 | Lifecycle: fixed six-stage backbone + configurable statuses                      | Accepted |
+| CTR-002 | Contract types: configurable list, MTR-001 sibling                               | Accepted |
+| CTR-003 | Numbering: free title + global C-### sequence                                    | Accepted |
+| CTR-004 | Owner + team: manager_id + contract_team, MTR-003 sibling                        | Accepted |
+| CTR-005 | Priority and risk: both first-class, MTR-012 sibling                             | Accepted |
 | CTR-006 | Term & renewal model: typed columns, derived notice deadline, notify-only engine | Accepted |
-| CTR-007 | Renewal routing: user's choice of vehicle | Accepted |
+| CTR-007 | Renewal routing: user's choice of vehicle                                        | Accepted |
 | CTR-008 | AI contract analysis: BYO key, field-schema-driven, auto-fill flagged unverified | Accepted |
-| CTR-009 | Key dates: contract_key_dates, MTR-004 sibling | Accepted |
-| CTR-010 | Contract value: amount + currency + cadence | Accepted |
-| CTR-011 | Parties: our entity FK + multi-counterparty join, light counterparty schema | Accepted |
-| CTR-012 | Approvals: manual approvers + reusable approver groups, parallel, soft gate | Accepted |
-| CTR-013 | E-signature: provider adapter, DocuSign first connector, manual fallback | Accepted |
-| CTR-014 | Documents: primary version chain, executed pin, generate-redline capability | Accepted |
-| CTR-015 | Relations: parent_id hierarchy + typed directional links, no inheritance | Accepted |
-| CTR-016 | Custom fields: one catalog, module-scoped, with a global tier | Accepted |
-| CTR-017 | Tasks adopted; contract templates deferred | Accepted |
-| CTR-018 | Confidentiality: independent flags, link-time nudge, no cascade | Accepted |
-| CTR-019 | End of life: signal not lock, MTR-008 sibling | Accepted |
+| CTR-009 | Key dates: contract_key_dates, MTR-004 sibling                                   | Accepted |
+| CTR-010 | Contract value: amount + currency + cadence                                      | Accepted |
+| CTR-011 | Parties: our entity FK + multi-counterparty join, light counterparty schema      | Accepted |
+| CTR-012 | Approvals: manual approvers + reusable approver groups, parallel, soft gate      | Accepted |
+| CTR-013 | E-signature: provider adapter, DocuSign first connector, manual fallback         | Accepted |
+| CTR-014 | Documents: primary version chain, executed pin, generate-redline capability      | Accepted |
+| CTR-015 | Relations: parent_id hierarchy + typed directional links, no inheritance         | Accepted |
+| CTR-016 | Custom fields: one catalog, module-scoped, with a global tier                    | Accepted |
+| CTR-017 | Tasks adopted; contract templates deferred                                       | Accepted |
+| CTR-018 | Confidentiality: independent flags, link-time nudge, no cascade                  | Accepted |
+| CTR-019 | End of life: signal not lock, MTR-008 sibling                                    | Accepted |

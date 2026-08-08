@@ -93,12 +93,12 @@ _None — queue cleared 2026-08-06 (ENT-001 through ENT-007)._
 
 ## Index of decisions
 
-| # | Decision | Status |
-|---|---|---|
+| #       | Decision                                                                               | Status   |
+| ------- | -------------------------------------------------------------------------------------- | -------- |
 | ENT-001 | Schema: typed registry core + officers table; simple share capital; entity field scope | Accepted |
-| ENT-002 | Multi-jurisdiction: registrations table | Accepted |
-| ENT-003 | Corporate structure: full ownership graph + org chart in v1 | Accepted |
-| ENT-004 | Access: global for legal staff; DD-014 confidential flag | Accepted |
-| ENT-005 | Statutory documents: entity-owned documents, no seeded folders | Accepted |
-| ENT-006 | Compliance calendar: recurring obligations, blank-start, human-confirmed roll-forward | Accepted |
-| ENT-007 | Roll-ups: linked-records tabs with query-derived counts | Accepted |
+| ENT-002 | Multi-jurisdiction: registrations table                                                | Accepted |
+| ENT-003 | Corporate structure: full ownership graph + org chart in v1                            | Accepted |
+| ENT-004 | Access: global for legal staff; DD-014 confidential flag                               | Accepted |
+| ENT-005 | Statutory documents: entity-owned documents, no seeded folders                         | Accepted |
+| ENT-006 | Compliance calendar: recurring obligations, blank-start, human-confirmed roll-forward  | Accepted |
+| ENT-007 | Roll-ups: linked-records tabs with query-derived counts                                | Accepted |

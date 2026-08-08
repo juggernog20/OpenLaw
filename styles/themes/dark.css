@@ -16,65 +16,65 @@
 
 [data-theme="dark"] {
   /* Surfaces */
-  --bg-canvas:           #0D1117;
-  --bg-raised:           #161B22;
-  --bg-section-header:   #1C2128;
-  --bg-control:          #21262D;
-  --bg-inverted:         #010409;
+  --bg-canvas: #0d1117;
+  --bg-raised: #161b22;
+  --bg-section-header: #1c2128;
+  --bg-control: #21262d;
+  --bg-inverted: #010409;
 
   /* Borders */
-  --border-default:      #30363D;
-  --border-muted:        #21262D;
-  --border-on-inverted:  #30363D;
+  --border-default: #30363d;
+  --border-muted: #21262d;
+  --border-on-inverted: #30363d;
 
   /* Text */
-  --text-primary:        #E6EDF3;
-  --text-muted:          #7D8590;
-  --text-subtle:         #6E7681;
-  --text-on-inverted:    #F0F6FC;
-  --text-on-accent:      #FFFFFF;
-  --text-on-cta:         #FFFFFF;
-  --text-link:           #2F81F7;
-  --text-danger:         #FF7B72;
+  --text-primary: #e6edf3;
+  --text-muted: #7d8590;
+  --text-subtle: #6e7681;
+  --text-on-inverted: #f0f6fc;
+  --text-on-accent: #ffffff;
+  --text-on-cta: #ffffff;
+  --text-link: #2f81f7;
+  --text-danger: #ff7b72;
 
   /* Brand */
-  --accent:              #F78166;
-  --cta-primary:         #238636;
+  --accent: #f78166;
+  --cta-primary: #238636;
 
   /* Status — paired bg + fg */
-  --status-success-bg:   #0F2D17;
-  --status-success-fg:   #3FB950;
+  --status-success-bg: #0f2d17;
+  --status-success-fg: #3fb950;
 
-  --status-warning-bg:   #3A2F0F;
-  --status-warning-fg:   #D4A72C;
+  --status-warning-bg: #3a2f0f;
+  --status-warning-fg: #d4a72c;
 
-  --status-info-bg:      #0E2C49;
-  --status-info-fg:      #79C0FF;
+  --status-info-bg: #0e2c49;
+  --status-info-fg: #79c0ff;
 
-  --status-danger-bg:    #3D1418;
-  --status-danger-fg:    #F85149;
+  --status-danger-bg: #3d1418;
+  --status-danger-fg: #f85149;
 
-  --status-severe-bg:    #3A2313;
-  --status-severe-fg:    #F0883E;
+  --status-severe-bg: #3a2313;
+  --status-severe-fg: #f0883e;
 
-  --status-assigned-bg:  #2C2138;
-  --status-assigned-fg:  #BC8CFF;
+  --status-assigned-bg: #2c2138;
+  --status-assigned-fg: #bc8cff;
 
-  --status-onhold-bg:    #30363D;
-  --status-onhold-fg:    #C9D1D9;
+  --status-onhold-bg: #30363d;
+  --status-onhold-fg: #c9d1d9;
 
-  --status-neutral-bg:   #21262D;
-  --status-neutral-fg:   #8B949E;
+  --status-neutral-bg: #21262d;
+  --status-neutral-fg: #8b949e;
 
   /* Counter badge */
-  --badge-count-bg:      #21262D;
-  --badge-count-fg:      #7D8590;
+  --badge-count-bg: #21262d;
+  --badge-count-fg: #7d8590;
 
   /* Confidentiality (per DES-009 — see DECISIONS-DESIGN.md) */
-  --confidential-fg:     #C8B5FF;
-  --confidential-bg:     #241B30;
+  --confidential-fg: #c8b5ff;
+  --confidential-bg: #241b30;
 
   /* Avatar — uniform initials treatment per DES-018 */
-  --avatar-bg:           #51B3D6;
-  --avatar-fg:           #0D1117;
+  --avatar-bg: #51b3d6;
+  --avatar-fg: #0d1117;
 }
