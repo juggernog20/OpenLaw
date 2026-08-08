@@ -9,11 +9,9 @@
  * The header (--bg-inverted = #010409) is a hair darker than canvas
  * to keep the inverted-header pattern legible across all three themes.
  *
- * Avatar accent in the mock dashboard uses lavender (#BC8CFF) instead
- * of orange — this surfaces in the deterministic avatar palette in
- * globals.css (theme-invariant), not as a per-theme override.
- *
  * Values verified against designs/final-themes.pen "Theme 3 — Dark".
+ * severe/neutral warm+dark values are derived (DES-018 specifies Light
+ * only); contrast-checked ≥4.5:1.
  */
 
 [data-theme="dark"] {
@@ -56,11 +54,17 @@
   --status-danger-bg:    #3D1418;
   --status-danger-fg:    #F85149;
 
+  --status-severe-bg:    #3A2313;
+  --status-severe-fg:    #F0883E;
+
   --status-assigned-bg:  #2C2138;
   --status-assigned-fg:  #BC8CFF;
 
   --status-onhold-bg:    #30363D;
   --status-onhold-fg:    #C9D1D9;
+
+  --status-neutral-bg:   #21262D;
+  --status-neutral-fg:   #8B949E;
 
   /* Counter badge */
   --badge-count-bg:      #21262D;
@@ -69,4 +73,8 @@
   /* Confidentiality (per DES-009 — see DECISIONS-DESIGN.md) */
   --confidential-fg:     #C8B5FF;
   --confidential-bg:     #241B30;
+
+  /* Avatar — uniform initials treatment per DES-018 */
+  --avatar-bg:           #51B3D6;
+  --avatar-fg:           #0D1117;
 }

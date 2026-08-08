@@ -55,11 +55,17 @@
   --status-danger-bg:    #F0DCD4;
   --status-danger-fg:    #A05540;
 
+  --status-severe-bg:    #F3E2CC;
+  --status-severe-fg:    #935425;
+
   --status-assigned-bg:  #EFE3F0;
   --status-assigned-fg:  #7A4A8A;
 
   --status-onhold-bg:    #5C5448;
   --status-onhold-fg:    #FBFAF7;
+
+  --status-neutral-bg:   #EDE8DF;
+  --status-neutral-fg:   #6E675A;
 
   /* Counter badge */
   --badge-count-bg:      #EAE5DC;
@@ -70,4 +76,8 @@
    * deliberately diverges from the Light/Dark purple semantics. */
   --confidential-fg:     #9B6B3A;
   --confidential-bg:     #EFE3D0;
+
+  /* Avatar — uniform initials treatment per DES-018 */
+  --avatar-bg:           #51B3D6;
+  --avatar-fg:           #0D1117;
 }

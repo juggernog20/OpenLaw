@@ -49,11 +49,17 @@
   --status-danger-bg:    #FFEBE9;
   --status-danger-fg:    #CF222E;
 
+  --status-severe-bg:    #FFF1E5;
+  --status-severe-fg:    #BC4C00;
+
   --status-assigned-bg:  #FBEFFF;
   --status-assigned-fg:  #8250DF;
 
   --status-onhold-bg:    #4D5560;
   --status-onhold-fg:    #F0F6FC;
+
+  --status-neutral-bg:   #EFF1F3;
+  --status-neutral-fg:   #57606A;
 
   /* Counter badge */
   --badge-count-bg:      #EAEEF2;
@@ -62,4 +68,8 @@
   /* Confidentiality (per DES-009 — see DECISIONS-DESIGN.md) */
   --confidential-fg:     #5B2B8C;
   --confidential-bg:     #F5E6FA;
+
+  /* Avatar — uniform initials treatment per DES-018 */
+  --avatar-bg:           #51B3D6;
+  --avatar-fg:           #0D1117;
 }

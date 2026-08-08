@@ -59,7 +59,11 @@
   --color-cta-primary:    var(--cta-primary);
 
   /* ------------------------------------------------------------------ *
-   * Status — paired bg + fg, 6 families                                *
+   * Status — paired bg + fg, 8 families.                               *
+   * Per DES-018, ordinal severity scales (priority, risk, any          *
+   * low→critical enum) use the fixed ramp:                             *
+   *   low = neutral · medium = warning · high = severe ·               *
+   *   critical = danger                                                *
    * ------------------------------------------------------------------ */
   --color-status-success-bg:    var(--status-success-bg);
   --color-status-success-fg:    var(--status-success-fg);
@@ -73,11 +77,17 @@
   --color-status-danger-bg:     var(--status-danger-bg);
   --color-status-danger-fg:     var(--status-danger-fg);
 
+  --color-status-severe-bg:     var(--status-severe-bg);
+  --color-status-severe-fg:     var(--status-severe-fg);
+
   --color-status-assigned-bg:   var(--status-assigned-bg);
   --color-status-assigned-fg:   var(--status-assigned-fg);
 
   --color-status-onhold-bg:     var(--status-onhold-bg);
   --color-status-onhold-fg:     var(--status-onhold-fg);
+
+  --color-status-neutral-bg:    var(--status-neutral-bg);
+  --color-status-neutral-fg:    var(--status-neutral-fg);
 
   /* ------------------------------------------------------------------ *
    * Counter badge (neutral count)                                      *
@@ -103,17 +113,11 @@
   --color-file-default: #656D76;
 
   /* ------------------------------------------------------------------ *
-   * Avatar palette — deterministic per user-id, theme-invariant        *
-   * Hashing strategy and per-id assignment deferred to a future DES.   *
+   * Avatar — uniform per DES-018: initials on the light-blue accent;   *
+   * an uploaded photo overrides. Per-person hue hashing is rejected.   *
    * ------------------------------------------------------------------ */
-  --color-avatar-1: #F78166;  /* orange */
-  --color-avatar-2: #1A7F37;  /* green */
-  --color-avatar-3: #9BB1FF;  /* light blue */
-  --color-avatar-4: #FFC392;  /* light orange */
-  --color-avatar-5: #80CCFF;  /* cyan */
-  --color-avatar-6: #8250DF;  /* purple */
-  --color-avatar-7: #BF8700;  /* yellow */
-  --color-avatar-8: #BC8CFF;  /* lavender */
+  --color-avatar-bg: var(--avatar-bg);
+  --color-avatar-fg: var(--avatar-fg);
 
   /* ------------------------------------------------------------------ *
    * Geometry — radii locked per DES-003 (GitHub-Primer-shaped)         *
@@ -144,7 +148,8 @@
   --height-header:                62px;
   --height-nav:                   48px;
   --height-subbar:                64px;
-  --width-rail:                   320px;
+  --width-activitybar:            48px;   /* record-page icon strip per DES-016 */
+  --width-panel:                  320px;  /* expanded applet panel per DES-016 */
   --height-confidential-banner:   36px;  /* per DES-009 */
 
   /* ------------------------------------------------------------------ *
