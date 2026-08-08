@@ -21,6 +21,7 @@ import {
 } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import { requireAuth, requireRole, userColumns } from "../../auth/guards.js";
+import { getOrgSettings, isEmailDomainAllowed } from "../../lib/org-settings.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
 const UserSchema = z.object({
@@ -221,6 +222,49 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         .limit(1);
       if (!user) throw httpError(500, "The invited user could not be read back.");
       return reply.status(201).send({ user });
+    },
+  );
+
+  app.post(
+    "/auth/magic-link",
+    {
+      schema: {
+        operationId: "requestMagicLink",
+        summary:
+          "Request a portal magic link (DD-010); the response is identical " +
+          "whether or not the address is eligible",
+        tags: ["auth"],
+        body: z.object({ email: z.email() }),
+        response: {
+          202: z.object({ message: z.string() }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request, reply) => {
+      const email = request.body.email.toLowerCase();
+
+      // Policy runs BEFORE issuance. The toggle is global configuration,
+      // so refusing loudly leaks nothing; the allowlist check must not be
+      // observable, so the denied branch simply skips issuance and falls
+      // through to the same 202.
+      const settings = await getOrgSettings(app.db);
+      if (!settings.magicLinkEnabled) {
+        throw httpError(403, "Magic-link sign-in is disabled.");
+      }
+      if (isEmailDomainAllowed(email, settings.allowedEmailDomains)) {
+        try {
+          await app.auth.api.signInMagicLink({
+            body: { email, callbackURL: "/" },
+            headers: fromNodeHeaders(request.headers),
+          });
+        } catch (error) {
+          relayAuthError(error);
+        }
+      }
+      return reply
+        .status(202)
+        .send({ message: "If the address is eligible, a sign-in link is on its way." });
     },
   );
 

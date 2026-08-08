@@ -10,13 +10,15 @@
  */
 
 import { betterAuth } from "better-auth";
-import { admin } from "better-auth/plugins";
+import { admin, magicLink } from "better-auth/plugins";
 import { userAc } from "better-auth/plugins/admin/access";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { hash, verify } from "@node-rs/argon2";
 import { uuidv7 } from "uuidv7";
-import { schema, type Db } from "@openlaw/db";
+import { eq, schema, users, type Db } from "@openlaw/db";
 import type { Mailer } from "../lib/mailer.js";
+import { getOrgSettings, isEmailDomainAllowed } from "../lib/org-settings.js";
 
 export interface AuthConfig {
   secret: string;
@@ -63,6 +65,16 @@ export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
         hash: (password) => hash(password, ARGON2),
         verify: ({ password, hash: digest }) => verify(digest, password),
       },
+      // A reset only completes through a token from the account's inbox,
+      // so it proves email ownership — for invite activation and ordinary
+      // forgotten-password resets alike. Recording that here keeps
+      // magic-link verification from treating the account as unproven
+      // and stripping its password credential (the plugin's
+      // anti-pre-hijack measure, aimed at public-sign-up apps — OpenLaw
+      // has no public sign-up, so every credential is legitimate).
+      onPasswordReset: async ({ user }) => {
+        await db.update(users).set({ emailVerified: true }).where(eq(users.id, user.id));
+      },
     },
     // Set-password and magic-link tokens are at-rest secrets: store their
     // identifiers hashed (lookup hashes symmetrically).
@@ -89,7 +101,77 @@ export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
         adminRoles: ["administrator"],
         defaultRole: "business_user",
       }),
+      // The DD-010/INT-001 portal floor: passwordless sign-in for
+      // requesters. Tokens are single-use, short-lived, and hashed at
+      // rest; issuance policy (toggle + domain allowlist) is enforced in
+      // the hooks below and in the typed issuance route.
+      magicLink({
+        expiresIn: 5 * 60,
+        storeToken: "hashed",
+        sendMagicLink: async ({ email, url }) => {
+          await mailer.send({
+            to: email,
+            subject: "Sign in to OpenLaw",
+            text: [
+              "Hello,",
+              "",
+              "Sign in to OpenLaw using the link below:",
+              "",
+              url,
+              "",
+              "The link expires in five minutes and can be used once. " +
+                "If you did not request it, you can ignore this email.",
+            ].join("\n"),
+          });
+        },
+      }),
     ],
+    hooks: {
+      // Policy holds on better-auth's own magic-link paths, not just our
+      // typed route — direct calls meet the same rules. Guarding verify
+      // as well as issuance means flipping the toggle off takes effect
+      // immediately, including for links already in flight; domains are
+      // not re-checked at verify because a redeemable token can only have
+      // been issued through the allowlist, moments earlier (5-min TTL) —
+      // JIT creation re-checks in the databaseHook below regardless. The
+      // denied branch mirrors the endpoint's success shape so responses
+      // never reveal whether a domain is allowlisted.
+      before: createAuthMiddleware(async (ctx) => {
+        if (ctx.path !== "/sign-in/magic-link" && ctx.path !== "/magic-link/verify") return;
+        const settings = await getOrgSettings(db);
+        if (!settings.magicLinkEnabled) {
+          throw new APIError("FORBIDDEN", { message: "Magic-link sign-in is disabled." });
+        }
+        if (ctx.path !== "/sign-in/magic-link") return;
+        const email = typeof ctx.body?.email === "string" ? ctx.body.email : "";
+        if (!isEmailDomainAllowed(email, settings.allowedEmailDomains)) {
+          return ctx.json({ status: true });
+        }
+      }),
+    },
+    databaseHooks: {
+      user: {
+        create: {
+          // JIT provisioning (DD-010): a user born from magic-link
+          // redemption is a Business User on an allowed domain — checked
+          // again here because policy may have changed since issuance.
+          // Other creation paths (setup, invites) are untouched.
+          before: async (user, ctx) => {
+            if (ctx?.path !== "/magic-link/verify") return;
+            const settings = await getOrgSettings(db);
+            if (
+              !settings.magicLinkEnabled ||
+              !isEmailDomainAllowed(user.email, settings.allowedEmailDomains)
+            ) {
+              throw new APIError("FORBIDDEN", {
+                message: "This email address is not eligible for portal access.",
+              });
+            }
+            return { data: { ...user, name: user.name || user.email, role: "business_user" } };
+          },
+        },
+      },
+    },
     advanced: {
       database: { generateId: () => uuidv7() },
     },
@@ -117,10 +199,15 @@ export interface ProvisionedUser {
 export async function provisionUser(auth: Auth, user: ProvisionedUser): Promise<{ id: string }> {
   const ctx = await auth.$context;
   const passwordHash = await ctx.password.hash(user.password);
+  // Verified from birth: the only caller is first-run setup, where the
+  // installer asserts their own address on an empty install — there is no
+  // one to hijack and no public sign-up to squat through. Leaving it
+  // false would make a later magic-link redemption strip this password
+  // credential as "unproven" (see onPasswordReset above).
   const created = await ctx.internalAdapter.createUser({
     email: user.email.toLowerCase(),
     name: user.displayName,
-    emailVerified: false,
+    emailVerified: true,
   });
   await ctx.internalAdapter.linkAccount({
     userId: created.id,

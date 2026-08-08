@@ -8,12 +8,7 @@
 
 import { sql } from "drizzle-orm";
 import { boolean, check, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
-import { uuidv7 } from "uuidv7";
-
-const uuidPk = () =>
-  text("id")
-    .primaryKey()
-    .$defaultFn(() => uuidv7());
+import { uuidPk } from "./helpers.js";
 
 export const USER_ROLES = [
   "administrator",
