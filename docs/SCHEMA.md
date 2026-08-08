@@ -675,11 +675,10 @@ Structured request envelope, created only via portal forms. Not a work container
 | `number` | integer | unique global sequence, displayed **R-42** per **INT-002** |
 | `request_type_id` | UUID | FK → `request_types.id`, not null |
 | `requester_id` | UUID | FK → `users.id`, not null (magic-link identity) |
-| `status` | text (enum) | `new` \| `in_review` \| `converted` \| `resolved` \| `declined` per **INT-001** — fixed, code branches |
+| `status` | text (enum) | `new` \| `converted` \| `resolved` \| `declined` per **INT-001** as revised by **INT-007** — fixed, code branches |
 | `summary` | text | not null |
 | `description` | text | nullable |
 | `urgency` | text (enum) | `low|normal|high|urgent`, requester-supplied; maps to `priority` at conversion (MTR-012 — `risk` never requester-set) |
-| `assigned_to` | UUID | FK → `users.id`, nullable per **INT-006**; pickup sets it and moves status to `in_review` |
 | `custom_fields` | jsonb | collected form values keyed by field slug per **INT-002**; carried into the converted record |
 | `converted_matter_id` | UUID | FK → `matters.id`, nullable |
 | `converted_contract_id` | UUID | FK → `contracts.id`, nullable |

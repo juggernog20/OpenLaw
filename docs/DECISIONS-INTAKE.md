@@ -41,7 +41,7 @@ Disposition of the former technical queue, per **INT-001**'s form-first revision
   - **The portal is the requester's home**: authenticated via DD-010's magic-link + domain-allowlist mechanics (no accounts/passwords); requesters see their requests, status, and a conversation thread on each; legal's replies land there. Resolve-in-thread happens on this thread and is recorded.
   - **Email is outbound only**: host-configurable email notifications on request creation and updates, deep-linking back to the portal (magic link). No inbound email parsing creates requests.
   - **Request is an envelope, not a work container** (JSM split): no tasks/team/key dates; real work converts to a matter or contract, the request links to what it became, and the requester keeps their portal view.
-  - **Lifecycle (fixed enum, code branches)**: `new → in_review → converted | resolved | declined`; `archived_at` separate.
+  - **Lifecycle (fixed enum, code branches)**: `new → in_review → converted | resolved | declined`; `archived_at` separate. _Revised by INT-007 (2026-08-08): `in_review` removed — lifecycle is `new → converted | resolved | declined`._
   - **DD-010 is revised**: the three-channel capture architecture (ChatOps primary / form / email parser) narrows to **form-first**. Email-to-intake is dropped from v1 (future candidate with parse-to-form-prefill). The ChatAdapter/Slack ambition shrinks from capture+bridge to, at most, notifications and deep-links to the portal form — scope to be set if/when v1.5 revisits it.
 - **Rationale** — Structured collection at the door beats parsing unstructured messages out of N channels; one well-built portal is maintainable by an OSS project where per-channel bridges are not. JSM is the proven reference architecture, and the legal intake-first generation follows the same request→convert split.
 - **Alternatives considered** — Conversational envelope with bidirectional Slack/email bridging (recommended, declined — surface-area anticipation cost). Thin ticket without conversation: answers evaporate. Ticket-as-work: duplicates matters/contracts. Email-to-intake as capture: unstructured.
@@ -94,7 +94,7 @@ Disposition of the former technical queue, per **INT-001**'s form-first revision
 
 ## INT-006 — Triage: one Inbox, pickup assignment, four actions, lossless re-convert
 
-- **Status** — Accepted
+- **Status** — Accepted; assignment mechanic and Inbox scope revised by INT-007
 - **Date** — 2026-08-05
 - **Context** — The triage flow, resolved after the work-model research landed as **DD-018**. Every researched product — regardless of object model — runs a single triage queue with routing pre-encoded, not human-classified.
 - **Decision** —
@@ -106,13 +106,31 @@ Disposition of the former technical queue, per **INT-001**'s form-first revision
 - **Alternatives considered** — Single triage owner: bottleneck + config. Per-request object-kind choice: rejected by DD-018 and by every researched product's happy path.
 - **Consequences** — `requests.assigned_to` in SCHEMA.md. Inbox screen is a v1 build surface (nav slot 1). Grill-plan B.1 resolvable as Inbox.
 
+## INT-007 — Disposition-at-pickup: triage decides the outcome; no parked in-review state
+
+- **Status** — Accepted
+- **Date** — 2026-08-08
+- **Context** — Design review of the Inbox/detail mocks (I1/I2). Under INT-006's pickup model, an assigned request sat in the Inbox as `in_review` with no forcing function — it could linger indefinitely, and an assigned-but-undispositioned row read as a duplicate of the matter/contract it would eventually become. Blair: assignment should require conversion. The strict form ("assigned ⇒ must convert") collides with INT-002's no-target request types and the Resolve/Decline outcomes, so it was refined to disposition-at-pickup.
+- **Decision** —
+  - **There is no assignment step and no parked state.** Acting on a request from the Inbox means choosing its outcome then and there: **Convert** / **Resolve** / **Decline** (Re-target remains the exception path inside Convert, per INT-006/DD-018).
+  - **The Inbox row affordance is an Assign button** (2026-08-08 follow-up): it assigns the triager and immediately opens the disposition flow. Assignment is not a persisted intermediate status — cancelling the flow returns the request to the queue untouched.
+  - **Lifecycle (revises INT-001)**: `new → converted | resolved | declined`; `in_review` is removed; `archived_at` separate.
+  - **The Inbox lists `new` requests only** — it is exactly the undispositioned queue. A toggle reveals triaged (converted/resolved/declined) requests.
+  - A substantive legal question doesn't linger: per DD-018, real work converts — it becomes a matter. Trivial ones are answered in the thread and resolved.
+  - Clarifying back-and-forth with the requester remains possible while a request is `new` (the portal thread is live from submission); replying does not change status.
+  - **`requests.assigned_to` is dropped.** Who dispositioned a request is audit data on the conversion/resolution/decline event, not a live assignment.
+- **Rationale** — Nothing can rot in an intermediate state; the Inbox reads truthfully as "requests whose fate is undecided"; a request and its converted object never coexist as live work items.
+- **Alternatives considered** — Claim-then-convert deadline (keep `in_review`, escalate age-since-assignment): keeps the limbo state, only softens it. Strictly forced conversion on assignment: breaks no-target request types and Decline.
+- **Consequences** — INT-001's lifecycle enum and INT-006's pickup mechanic annotated as revised. SCHEMA.md: `assigned_to` removed, `status` enum shrinks. Inbox mock loses Status/Assignee columns but keeps a per-row Assign button as the entry to disposition; request-detail hero loses Assignee; the subbar's Convert/Resolve/Decline actions are the whole triage surface. Trade-off accepted: no claim mechanism to signal "I'm reading this" — fine at 2–10 person team scale; revisit if duplicate triage effort shows up in practice.
+
 ## Index of decisions
 
 | # | Decision | Status |
 |---|---|---|
-| INT-001 | Intake model: JSM-style structured forms + portal; email notifications only | Accepted |
+| INT-001 | Intake model: JSM-style structured forms + portal; email notifications only | Accepted; lifecycle revised by INT-007 |
 | INT-002 | Request types mapped to target types; forms reuse the fields catalog | Accepted |
 | INT-003 | Requester updates: email notifications only; no status-poke button | Accepted |
 | INT-004 | Deflection links panel in v1; conditional form logic stays deferred | Accepted |
 | INT-005 | No auto-classification: the form is the classification | Accepted |
-| INT-006 | Triage: one Inbox, pickup assignment, four actions, lossless re-convert | Accepted |
+| INT-006 | Triage: one Inbox, pickup assignment, four actions, lossless re-convert | Accepted; revised by INT-007 |
+| INT-007 | Disposition-at-pickup: triage decides the outcome; no parked in-review state | Accepted |
