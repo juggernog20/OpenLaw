@@ -1,0 +1,21 @@
+{
+  "name": "@openlaw/api",
+  "version": "0.0.1",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@openlaw/shared": "workspace:*",
+    "fastify": "^5.11.2"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.11"
+  }
+}

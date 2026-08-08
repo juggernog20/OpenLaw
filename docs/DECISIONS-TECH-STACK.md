@@ -284,6 +284,44 @@ Recorded as working defaults without a grill (all convention, no open design con
 ### Consequences
 Repo scaffold order: monorepo shell → drizzle schema from SCHEMA.md → Fastify + OpenAPI → auth → Compose. The build phasing itself (which module first — CLM per PRODUCT.md) is unchanged.
 
+## TECH-015: TypeScript 7 native compiler + TS 6 API shim for typescript-eslint
+
+- **Status:** Accepted — **temporary by design; see sunset trigger below**
+- **Date:** 2026-08-07
+
+### Context
+
+TypeScript 7.0 (the native Go compiler, ~10× faster) went GA 2026-07-08 but ships **without a stable programmatic API** — that lands in 7.1. typescript-eslint hard-errors on TS 7 and tracks support in [typescript-eslint#10940](https://github.com/typescript-eslint/typescript-eslint/issues/10940). Microsoft publishes `@typescript/typescript6`, a compat package re-exporting the TS 6.0 API (semantically aligned with 7.0) for exactly this gap.
+
+### Decision
+
+Use Microsoft's official side-by-side pattern in the root `package.json`:
+
+```json
+"@typescript/native": "npm:typescript@^7.0.2",
+"typescript": "npm:@typescript/typescript6@^6.0.2"
+```
+
+- `tsc` (from `@typescript/native`) = TS 7 — all typecheck and build scripts.
+- The npm name `typescript` resolves to the TS 6 API compat package — typescript-eslint and any other API consumer (editor tsserver included) load it transparently; its CLI is named `tsc6`, so there is no bin collision.
+
+Because 6.0 and 7.0 are feature-aligned, lint and compile cannot disagree about language semantics.
+
+### Sunset trigger
+
+Tracked as [OpenLaw#1](https://github.com/juggernog20/OpenLaw/issues/1). **When typescript-eslint ships TS 7.1 API support ([#10940](https://github.com/typescript-eslint/typescript-eslint/issues/10940)): delete both aliases, install plain `typescript@^7.1`, and remove this shim** (supersede this decision with a one-line note). Do not "simplify" the alias pair before then — removing it silently breaks lint.
+
+### Alternatives considered
+
+- **TS 6.0.3 only** — fully supported bridge, but forgoes the native compiler's build speed for no semantic gain.
+- **oxlint + tsgolint** — a TS7-native linter (type-aware mode stable 2026-07-22, 59/61 of typescript-eslint's type-aware rules). Rejected for now in favor of the ESLint ecosystem's contributor familiarity; a reasonable revisit if the shim outlives its welcome.
+- **TS 5.9** — a generation behind the bridge release; no advantage over 6.0.
+
+### Consequences
+
+- Contributors' editors that resolve the workspace `typescript` get the 6.0 tsserver — semantically identical to 7.0, just slower; pointing the editor at `@typescript/native` is an optional local tweak.
+- Renovate/dependabot-style updates of typescript-eslint will not auto-remove the shim; the sunset is manual and owned by this record.
+
 ## Index of decisions
 
 | # | Decision | Status |
@@ -302,3 +340,4 @@ Repo scaffold order: monorepo shell → drizzle schema from SCHEMA.md → Fastif
 | TECH-012 | AI providers — three protocol adapters, presets, custom option | Accepted |
 | TECH-013 | DocuSign auth — JWT grant (service integration) | Accepted |
 | TECH-014 | DX housekeeping — repo, CI, testing, observability, telemetry, storage/search | Accepted |
+| TECH-015 | TypeScript 7 native compiler + TS 6 API shim for typescript-eslint | Accepted (temporary) |

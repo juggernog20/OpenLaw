@@ -1,2 +1,12 @@
+node_modules/
+dist/
+.turbo/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
 .claude/skills/design/SKILL.md
+.claude/settings.local.json
 .markdownlint.json
