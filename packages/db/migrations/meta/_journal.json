@@ -15,6 +15,13 @@
       "when": 1786222334034,
       "tag": "0001_admin_plugin_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786225530708,
+      "tag": "0002_org_settings",
+      "breakpoints": true
     }
   ]
 }

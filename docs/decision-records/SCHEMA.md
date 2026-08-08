@@ -45,6 +45,24 @@ Open: authentication-related columns (password hash vs OIDC sub vs magic-link on
 
 ---
 
+### `org_settings`
+
+Source: **TECH-008**, **DD-010**/**INT-001** (revised per INT-001: magic-link portal, form-first)
+
+Organization-wide settings. Exactly one row, seeded by the migration that creates the table; a unique index on a constant expression makes a second row unrepresentable. Columns arrive incrementally with the features that read them (**TECH-014**) — auth policy landed first; later Settings panes append here.
+
+| Column                     | Type        | Notes                                                                                                 |
+| -------------------------- | ----------- | ----------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                    |
+| `auth_mode`                | text (enum) | `built_in` \| `oidc` per **TECH-008**; seeded `built_in`                                              |
+| `magic_link_enabled`       | boolean     | DD-010's portal floor; host-closable where SSO-only is policy. Seeded `true`                          |
+| `allowed_email_domains`    | jsonb       | lower-cased domain strings gating magic-link issuance + JIT provisioning. Empty = nobody; seeded `[]` |
+| `created_at`, `updated_at` | timestamptz |                                                                                                       |
+
+No `archived_at`: the row is neither creatable nor deletable, only edited.
+
+---
+
 ### `entities` (own corporate entities)
 
 Source: **DD-008**, **ENT-001–004**
