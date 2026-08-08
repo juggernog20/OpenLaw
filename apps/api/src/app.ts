@@ -25,6 +25,7 @@ import {
 } from "fastify-type-provider-zod";
 import { OPENLAW_VERSION } from "@openlaw/shared";
 import { PROBLEM_CONTENT_TYPE, type Problem } from "./lib/problem.js";
+import type { Mailer } from "./lib/mailer.js";
 import { metaRoutes } from "./modules/meta/routes.js";
 import { authRoutes } from "./modules/auth/routes.js";
 import { authHandler } from "./auth/handler.js";
@@ -34,19 +35,22 @@ import type { AuthenticatedSession, AuthenticatedUser } from "./auth/guards.js";
 export interface AppDeps {
   db: Db;
   config: AuthConfig;
+  mailer: Mailer;
 }
 
 declare module "fastify" {
   interface FastifyInstance {
     db: Db;
     auth: Auth;
+    mailer: Mailer;
   }
 }
 
 export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   const app = Fastify(opts).withTypeProvider<ZodTypeProvider>();
   app.decorate("db", deps.db);
-  app.decorate("auth", createAuth(deps.db, deps.config));
+  app.decorate("mailer", deps.mailer);
+  app.decorate("auth", createAuth(deps.db, deps.config, deps.mailer));
   // Shape hints for V8; guards assign the real values per request.
   app.decorateRequest("user", undefined as unknown as AuthenticatedUser);
   app.decorateRequest("session", undefined as unknown as AuthenticatedSession);

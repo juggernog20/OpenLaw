@@ -10,9 +10,17 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { fromNodeHeaders } from "better-auth/node";
 import { isAPIError } from "better-auth/api";
 import { z } from "zod";
-import { ADVISORY_LOCK, eq, tryWithAdvisoryLock, users, USER_ROLES } from "@openlaw/db";
+import {
+  accounts,
+  ADVISORY_LOCK,
+  and,
+  eq,
+  tryWithAdvisoryLock,
+  users,
+  USER_ROLES,
+} from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
-import { requireAuth, userColumns } from "../../auth/guards.js";
+import { requireAuth, requireRole, userColumns } from "../../auth/guards.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
 const UserSchema = z.object({
@@ -21,6 +29,14 @@ const UserSchema = z.object({
   displayName: z.string(),
   role: z.enum(USER_ROLES),
 });
+
+const UserEnvelope = z.object({ user: UserSchema });
+
+/**
+ * Invitable roles: everyone but Business Users, who are JIT-provisioned
+ * (DD-010) — invites are the only way these accounts come to exist.
+ */
+const INVITABLE_ROLES = ["administrator", "legal_team_member", "contributor"] as const;
 
 const SessionSchema = z.object({
   id: z.string(),
@@ -87,7 +103,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
           displayName: z.string().min(1),
           password: z.string().min(8),
         }),
-        response: { 201: z.object({ user: UserSchema }), default: problemResponse },
+        response: { 201: UserEnvelope, default: problemResponse },
       },
     },
     async (request, reply) => {
@@ -134,4 +150,82 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       return reply.status(201).send({ user: admin });
     },
   );
+
+  app.post(
+    "/auth/invites",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "inviteUser",
+        summary:
+          "Invite a user (Administrator, Legal Team Member, or Contributor); " +
+          "re-sends the set-password email if they have not activated",
+        tags: ["auth"],
+        body: z.object({
+          email: z.email(),
+          displayName: z.string().min(1),
+          role: z.enum(INVITABLE_ROLES),
+        }),
+        response: {
+          200: UserEnvelope,
+          201: UserEnvelope,
+          default: problemResponse,
+        },
+      },
+    },
+    async (request, reply) => {
+      const { displayName, role } = request.body;
+      const email = request.body.email.toLowerCase();
+
+      const existing = await app.db
+        .select(userColumns)
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+
+      if (existing.length > 0) {
+        const user = existing[0]!;
+        // A credential row means they activated; there is nothing to
+        // re-send and the invite must not touch the account.
+        const credential = await app.db
+          .select({ id: accounts.id })
+          .from(accounts)
+          .where(and(eq(accounts.userId, user.id), eq(accounts.providerId, "credential")))
+          .limit(1);
+        if (credential.length > 0) {
+          throw httpError(409, "This user has already activated their account.");
+        }
+        await sendSetPasswordEmail(email);
+        return reply.status(200).send({ user });
+      }
+
+      // Server-trusted call (no request headers forwarded): authorization
+      // is this route's requireRole guard. No password → no credential row
+      // until the invitee sets their own (spec: no password ever travels
+      // through the Administrator).
+      const created = await app.auth.api.createUser({
+        body: { email, name: displayName, role },
+      });
+      await sendSetPasswordEmail(email);
+
+      const [user] = await app.db
+        .select(userColumns)
+        .from(users)
+        .where(eq(users.id, created.user.id))
+        .limit(1);
+      if (!user) throw httpError(500, "The invited user could not be read back.");
+      return reply.status(201).send({ user });
+    },
+  );
+
+  /** Issues a set-password token and emails it (reset-password flow). */
+  async function sendSetPasswordEmail(email: string): Promise<void> {
+    try {
+      await app.auth.api.requestPasswordReset({
+        body: { email, redirectTo: "/auth/set-password" },
+      });
+    } catch (error) {
+      relayAuthError(error);
+    }
+  }
 };

@@ -10,10 +10,13 @@
  */
 
 import { betterAuth } from "better-auth";
+import { admin } from "better-auth/plugins";
+import { adminAc, userAc } from "better-auth/plugins/admin/access";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { hash, verify } from "@node-rs/argon2";
 import { uuidv7 } from "uuidv7";
 import { schema, type Db } from "@openlaw/db";
+import type { Mailer } from "../lib/mailer.js";
 
 export interface AuthConfig {
   secret: string;
@@ -23,7 +26,7 @@ export interface AuthConfig {
 /** OWASP-recommended Argon2id parameters (19 MiB, t=2, p=1). */
 const ARGON2 = { memoryCost: 19456, timeCost: 2, parallelism: 1 };
 
-export function createAuth(db: Db, config: AuthConfig) {
+export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
   return betterAuth({
     baseURL: config.baseUrl,
     secret: config.secret,
@@ -38,11 +41,52 @@ export function createAuth(db: Db, config: AuthConfig) {
       // provisions through the adapter rather than this endpoint. Nothing
       // reaches /sign-up/email — not a browser, not our own server code.
       disableSignUp: true,
+      // Set-password links for invites *and* ordinary forgotten-password
+      // resets both ride this flow; the copy covers both. The link targets
+      // our web page, which posts the token to /api/auth/reset-password.
+      sendResetPassword: async ({ user, token }) => {
+        await mailer.send({
+          to: user.email,
+          subject: "Set your OpenLaw password",
+          text: [
+            `Hello ${user.name},`,
+            "",
+            "Set your OpenLaw password using the link below:",
+            "",
+            `${config.baseUrl}/auth/set-password?token=${token}`,
+            "",
+            "The link expires in one hour. If you did not expect this email, you can ignore it.",
+          ].join("\n"),
+        });
+      },
       password: {
         hash: (password) => hash(password, ARGON2),
         verify: ({ password, hash: digest }) => verify(digest, password),
       },
     },
+    // Set-password and magic-link tokens are at-rest secrets: store their
+    // identifiers hashed (lookup hashes symmetrically).
+    verification: {
+      storeIdentifier: "hashed",
+    },
+    plugins: [
+      // Owns the users.role column plus ban/impersonation columns. Bans
+      // carry no product semantics yet; adminRoles shields administrators
+      // from ban/impersonation targeting. The roles map exists to teach
+      // the plugin DD-013's vocabulary — its statements are better-auth's
+      // admin-surface permissions, not OpenLaw's authorization model,
+      // which lives in our guards.
+      admin({
+        roles: {
+          administrator: adminAc,
+          legal_team_member: userAc,
+          contributor: userAc,
+          business_user: userAc,
+        },
+        adminRoles: ["administrator"],
+        defaultRole: "business_user",
+      }),
+    ],
     advanced: {
       database: { generateId: () => uuidv7() },
     },

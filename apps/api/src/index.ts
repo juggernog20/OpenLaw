@@ -8,6 +8,7 @@
 
 import { createDb, runMigrations } from "@openlaw/db";
 import { buildApp } from "./app.js";
+import { createSmtpMailer, createUnconfiguredMailer } from "./lib/mailer.js";
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -21,6 +22,13 @@ function requireEnv(name: string): string {
 const db = createDb(requireEnv("DATABASE_URL"));
 await runMigrations(db);
 
+// TECH-011: SMTP is the universal default; the SET-004 wizard surface for
+// configuring it ships later, so env vars carry it until then.
+const mailer =
+  process.env.SMTP_URL && process.env.SMTP_FROM
+    ? createSmtpMailer(process.env.SMTP_URL, process.env.SMTP_FROM)
+    : createUnconfiguredMailer();
+
 const app = await buildApp(
   {
     db,
@@ -28,6 +36,7 @@ const app = await buildApp(
       secret: requireEnv("AUTH_SECRET"),
       baseUrl: process.env.BASE_URL ?? "http://localhost:3000",
     },
+    mailer,
   },
   { logger: true },
 );

@@ -3,13 +3,15 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { buildApp } from "../../app.js";
 import { requireRole } from "../../auth/guards.js";
-import { startHarness, TEST_AUTH_CONFIG, type TestHarness } from "../../testing/harness.js";
-
-const ADMIN = {
-  email: "blair@example.com",
-  displayName: "Blair Wentworth",
-  password: "correct-horse-battery",
-};
+import {
+  CapturingMailer,
+  signIn as harnessSignIn,
+  signInCookies as harnessSignInCookies,
+  startHarness,
+  TEST_ADMIN as ADMIN,
+  TEST_AUTH_CONFIG,
+  type TestHarness,
+} from "../../testing/harness.js";
 
 let harness: TestHarness;
 
@@ -27,22 +29,9 @@ afterAll(async () => {
   await harness.stop();
 });
 
-async function signIn(email: string, password: string) {
-  return harness.app.inject({
-    method: "POST",
-    url: "/api/auth/sign-in/email",
-    payload: { email, password },
-  });
-}
-
-/** Signs in and returns the session cookie as a request `cookies` map. */
-async function signInCookies(email: string, password: string) {
-  const res = await signIn(email, password);
-  expect(res.statusCode, res.body).toBe(200);
-  const cookies: Record<string, string> = {};
-  for (const c of res.cookies) cookies[c.name] = c.value;
-  return cookies;
-}
+const signIn = (email: string, password: string) => harnessSignIn(harness.app, email, password);
+const signInCookies = (email: string, password: string) =>
+  harnessSignInCookies(harness.app, email, password);
 
 describe("password sign-in (mounted better-auth handler)", () => {
   it("signs in with correct credentials and sets a session cookie", async () => {
@@ -97,7 +86,11 @@ describe("requireRole", () => {
   let guarded: Awaited<ReturnType<typeof buildApp>>;
 
   beforeAll(async () => {
-    guarded = await buildApp({ db: harness.db, config: TEST_AUTH_CONFIG });
+    guarded = await buildApp({
+      db: harness.db,
+      config: TEST_AUTH_CONFIG,
+      mailer: new CapturingMailer(),
+    });
     guarded.get(
       "/api/v1/admin-only",
       { schema: { hide: true }, preHandler: requireRole("administrator") },

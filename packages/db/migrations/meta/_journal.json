@@ -8,6 +8,13 @@
       "when": 1786221123151,
       "tag": "0000_auth",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786222334034,
+      "tag": "0001_admin_plugin_columns",
+      "breakpoints": true
     }
   ]
 }
