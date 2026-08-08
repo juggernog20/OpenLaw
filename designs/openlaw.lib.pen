@@ -744,7 +744,7 @@
     },
     "status-success-fg": {
       "type": "color",
-      "value": "#1A7F37"
+      "value": "#1F883D"
     },
     "status-warning-bg": {
       "type": "color",
@@ -780,11 +780,11 @@
     },
     "confidential-bg": {
       "type": "color",
-      "value": "#FBEFFF"
+      "value": "#F5E6FA"
     },
     "confidential-fg": {
       "type": "color",
-      "value": "#8250DF"
+      "value": "#5B2B8C"
     },
     "legal-only-bg": {
       "type": "color",

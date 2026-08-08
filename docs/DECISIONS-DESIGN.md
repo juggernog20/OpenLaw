@@ -239,19 +239,22 @@ The reference implementation is `styles/themes/light.css`, `styles/themes/warm.c
 
 **Token roles.** Color tokens are organized by role, never by hue. Component code references roles; theme files supply values. The role taxonomy is:
 
-**Surfaces (4 tiers — escalating elevation)**
+#### Surfaces (4 tiers — escalating elevation)
+
 - `--bg-canvas` — page background.
 - `--bg-raised` — cards, panels, primary content surfaces.
 - `--bg-section-header` — section-header strip inside a card; sub-bar background.
 - `--bg-control` — interactive surfaces: secondary button bg, kbd chip, search-input interior.
 - `--bg-inverted` — header & top-nav surface. In Light this is *darker* than canvas (the GitHub-style dark-on-light pattern); in Warm it's a *deeper cream*; in Dark it's a *darker* near-black than canvas.
 
-**Borders (3 tokens)**
+#### Borders (3 tokens)
+
 - `--border-default` — panel outlines, sub-bar bottom rule.
 - `--border-muted` — inner row dividers (table rows, list items inside a card).
 - `--border-on-inverted` — borders within the `--bg-inverted` region.
 
-**Text (8 roles)**
+#### Text (8 roles)
+
 - `--text-primary` — body, h1–h3.
 - `--text-muted` — secondary copy, descriptions, timestamps.
 - `--text-subtle` — placeholder, disabled.
@@ -261,11 +264,13 @@ The reference implementation is `styles/themes/light.css`, `styles/themes/warm.c
 - `--text-link` — hyperlinks ("View all →", "Audit log →").
 - `--text-danger` — *inline* high-urgency text (e.g. "due May 5"); intentionally darker than `--status-danger-fg`.
 
-**Brand (2 roles)**
+#### Brand (2 roles)
+
 - `--accent` — active nav underline, mention chips, default avatar fill, focus accent.
 - `--cta-primary` — primary CTAs, "Triage →," success-affirmative button fill.
 
 **Status — paired bg + fg (6 families)** — each pill is a `bg`/`fg` pair so contrast is theme-controlled, not derived.
+
 - `--status-success-bg` / `--status-success-fg` — completed, signed, approved.
 - `--status-warning-bg` / `--status-warning-fg` — in progress, awaiting, expiring.
 - `--status-info-bg` / `--status-info-fg` — informational, draft, "with business," "with external."
@@ -273,13 +278,16 @@ The reference implementation is `styles/themes/light.css`, `styles/themes/warm.c
 - `--status-assigned-bg` / `--status-assigned-fg` — assigned, mention-style; purple in Light/Dark, mauve in Warm.
 - `--status-onhold-bg` / `--status-onhold-fg` — paused / "On hold"; the only **filled-dark** soft pill, distinct from the soft-tinted variants.
 
-**Counter badge (neutral count)**
+#### Counter badge (neutral count)
+
 - `--badge-count-bg` / `--badge-count-fg` — small pill inside section headers showing a count (e.g. "15"); intentionally neutral (gray) so it doesn't compete with status semantics.
 
 **Confidentiality (per `DECISIONS.md` DD-014)**
+
 - `--confidential-fg` — "🔒 CONFI" inline marker. Genuinely theme-divergent in semantics: Light and Dark use *purple* (deliberate cultural marker for "privileged"); Warm uses its *terracotta-brown* (the palette has no purple hue). Recorded as one token with three semantically-different values; the affordance pattern itself is decided in a later DES.
 
 **Theme-invariant brand colors** — outside `:root` because they don't theme:
+
 - `--file-word`, `--file-excel`, `--file-pdf`, `--file-default` — file-type icon backgrounds.
 - `--avatar-1` … `--avatar-8` — generated avatar fills, deterministic per user id (hash → palette index). Theme-invariant because user identity should not change based on theme.
 
@@ -350,24 +358,24 @@ The size inventory was harvested from `designs/final-themes.pen` across all thre
 **Size ramp — 8 named sizes, line-heights baked in:**
 
 | Token | px | Line-height (ratio) | Role in mocks |
-|---|---|---|---|
-| `--text-xs`   | 11 | 1.45 | status-pill labels, counter badges, avatar initials |
-| `--text-sm`   | 12 | 1.5  | metadata, dates, secondary timestamps, tiny dates |
-| `--text-base` | 13 | 1.5  | dense list-item body, intake-row author/title, "View all →" link |
-| `--text-md`   | 14 | 1.5  | primary body, list-item titles, nav items, section headers |
-| `--text-lg`   | 18 | 1.4  | subheads (deferred screens — not in dashboard mock) |
-| `--text-xl`   | 20 | 1.3  | page title (h1) — letter-spacing −0.2px |
-| `--text-2xl`  | 24 | 1.25 | module hero (deferred screens) |
-| `--text-3xl`  | 32 | 1.2  | empty-state hero, marketing |
+| --- | --- | --- | --- |
+| `--text-xs` | 11 | 1.45 | status-pill labels, counter badges, avatar initials |
+| `--text-sm` | 12 | 1.5 | metadata, dates, secondary timestamps, tiny dates |
+| `--text-base` | 13 | 1.5 | dense list-item body, intake-row author/title, "View all →" link |
+| `--text-md` | 14 | 1.5 | primary body, list-item titles, nav items, section headers |
+| `--text-lg` | 18 | 1.4 | subheads (deferred screens — not in dashboard mock) |
+| `--text-xl` | 20 | 1.3 | page title (h1) — letter-spacing −0.2px |
+| `--text-2xl` | 24 | 1.25 | module hero (deferred screens) |
+| `--text-3xl` | 32 | 1.2 | empty-state hero, marketing |
 
 Sizes are exposed as Tailwind utilities `text-xs` through `text-3xl`. Components pick from the ramp; no arbitrary-value `text-[15px]` classes anywhere outside theme files (lint rule deferred).
 
 **Weight ramp — 3 weights only:**
 
 | Token | Value | Role |
-|---|---|---|
-| `--font-normal`   | 400 | body copy, list-item descriptions, search placeholder |
-| `--font-medium`   | 500 | inactive nav items, "View all →" links, status pill labels |
+| --- | --- | --- |
+| `--font-normal` | 400 | body copy, list-item descriptions, search placeholder |
+| `--font-medium` | 500 | inactive nav items, "View all →" links, status pill labels |
 | `--font-semibold` | 600 | active nav, titles, section headers, badges, avatar initials |
 
 The 700-weight on tiny activity-feed avatar initials in the dashboard mock is **normalized to 600**. At 9–10px those initials are already maximally compressed; an extra 100 weight units do not improve legibility and add a third weight token to maintain.
@@ -415,6 +423,7 @@ The 700-weight on tiny activity-feed avatar initials in the dashboard mock is **
 DES-003 anchored the density target qualitatively ("between Linear and Notion, closer to Linear"). This decision pins the actual numbers — what spacing scale components draw from, what page-level rhythm tokens exist by name, what the chrome dimensions are, and which density wins when the Pencil mocks disagree.
 
 A spacing-value inventory of `designs/final-themes.pen` shows two real inconsistencies between themes:
+
 - Top-nav height: Light/Dark `48px` vs Warm `46px`
 - Top-nav item gap: Light/Dark `8px` vs Warm `6px`
 - Header horizontal padding: Light/Dark `16px` vs Warm `20px`
@@ -428,21 +437,22 @@ Per DES-001, geometry is theme-invariant — these need to be normalized to a si
 **Five named layout tokens** for page-level rhythm — registered as Tailwind utilities so layouts read declaratively (`px-page-x`, `gap-section-gap`, `p-card-x`):
 
 | Token | px | Role |
-|---|---|---|
-| `--spacing-page-x`      | 32 | body horizontal padding; sub-bar horizontal padding |
-| `--spacing-page-y`      | 24 | body vertical padding |
+| --- | --- | --- |
+| `--spacing-page-x` | 32 | body horizontal padding; sub-bar horizontal padding |
+| `--spacing-page-y` | 24 | body vertical padding |
 | `--spacing-section-gap` | 24 | between cards in a column |
-| `--spacing-card-x`      | 16 | card interior horizontal padding |
-| `--spacing-card-y`      | 10 | card row interior vertical padding (12 for section-header strips) |
+| `--spacing-card-x` | 16 | card interior horizontal padding |
+| `--spacing-card-y` | 10 | card row interior vertical padding (12 for section-header strips) |
 
-**Four chrome dimensions** — fixed sizes for the application shell, registered as plain CSS variables (not utility-generating) and referenced from the layout shell components only:
+**Chrome dimensions** (four at decision time; **DES-016** later split the rail into activity bar + panel) — fixed sizes for the application shell, registered as plain CSS variables (not utility-generating) and referenced from the layout shell components only:
 
 | Token | px | Role |
-|---|---|---|
-| `--height-header`  | 62  | top header strip |
-| `--height-nav`     | 48  | top navigation row |
-| `--height-subbar`  | 64  | per-page sub-bar (page title + page actions) |
-| `--width-rail`     | 320 | right-rail container |
+| --- | --- | --- |
+| `--height-header` | 62 | top header strip |
+| `--height-nav` | 48 | top navigation row |
+| `--height-subbar` | 64 | per-page sub-bar (page title + page actions) |
+| `--width-activitybar` | 48 | record-page activity bar *(amended by **DES-016**; originally a single `--width-rail: 320`)* |
+| `--width-panel` | 320 | record-page side panel hosting the active applet *(amended by **DES-016**)* |
 
 **Density normalization.** When Light/Dark disagree with Warm in the existing Pencil mocks, **the implementation follows Light/Dark**: nav height 48px, nav gap 8px, header padding 16px. Warm's slightly tighter mock values were Pencil-time tweaks, not a deliberate brand-density signal. Per DES-001's geometry-invariance contract, the Warm mocks will be normalized to match in a follow-up Pencil pass; until then the implementation is the source of truth.
 
@@ -467,7 +477,7 @@ Per DES-001, geometry is theme-invariant — these need to be normalized to a si
 - `styles/globals.css` adds 5 `--spacing-*` layout tokens (registered in `@theme` so they generate Tailwind utilities) and 4 chrome-dimension CSS variables (also in `@theme` for centralized location, but not utility-generating under Tailwind v4's namespace conventions).
 - The Pencil mocks for the Warm theme should be normalized to 48px nav / 8px gap / 16px header padding in a follow-up pass. Not a blocker — implementation proceeds against the contract.
 - A breakpoint / responsive-collapse strategy is **not** decided here. The 320px right-rail and the top-nav layout assume a desktop viewport target; mobile/tablet is a separate DES.
-- The `--width-rail` token is the single source for the right rail; future pages that opt out of the rail (e.g. full-bleed editors, focus mode) override at the layout-shell level rather than via per-page padding math.
+- The record-page right side defers to **DES-016**: `--width-activitybar: 48px` + `--width-panel: 320px` are the layout contract (`--width-rail` is retired). Below the width threshold the panel overlays instead of docking while the activity bar remains visible. Future pages that opt out (e.g. full-bleed editors, focus mode) override at the layout-shell level rather than via per-page padding math.
 - Dense / comfortable user-preference density is parked. If it ever ships, the 5 layout tokens are the right surface to vary (smaller `--spacing-card-y` for compact, larger for comfortable) — adding a `data-density="compact"` attribute to `<html>` would mirror the theme-attribute pattern from DES-001.
 
 ---
@@ -486,6 +496,7 @@ The Pencil mocks use box-drawing characters (`⌂`, `▤`, `⊟`, `⎙`, `◇`) 
 The icon library for v1 is **Lucide** (`lucide-react` package).
 
 **Sizes** are pinned to three values matching the mocks' usage:
+
 - `16px` — inline icons (status-row leading dots, inline action affordances, breadcrumb separators)
 - `20px` — button icons, sub-bar control icons
 - `24px` — top-nav glyphs, section-header icons
@@ -562,9 +573,9 @@ The Pencil mocks include a single inline affordance — `🔒 CONFI` text label 
 
 **New color token added to the DES-005 token system:**
 
-| Token | Light | Warm | Dark |
-|---|---|---|---|
-| `--confidential-bg` | `#F5E6FA` (soft lavender) | `#EFE3D0` (soft tan) | `#241B30` (soft dark purple) |
+| Token               | Light                          | Warm                      | Dark                          |
+| ------------------- | ------------------------------ | ------------------------- | ----------------------------- |
+| `--confidential-bg` | `#F5E6FA` (soft lavender)      | `#EFE3D0` (soft tan)      | `#241B30` (soft dark purple)  |
 
 Warm intentionally diverges from purple per DES-005's per-theme-semantics rationale — Warm's confidentiality fg is terracotta-brown (`#9B6B3A`), so the matching banner background is a soft tan rather than a soft purple. The banner reads as "warm-gated" rather than "purple-gated" in Warm; the affordance is the same.
 
@@ -617,7 +628,7 @@ A small, fixed global key map ships in v1; `Cmd-K` command palette is **deferred
 #### Global keys (v1)
 
 | Key | Action | Scope |
-|---|---|---|
+| --- | --- | --- |
 | `/` | Focus the page-level search input | Any page whose sub-bar contains a search input |
 | `Esc` | Close the topmost overlay (modal, popover, dropdown, command bar) | Global |
 | `?` | Open the keyboard shortcuts cheat-sheet modal | Global |
@@ -758,9 +769,9 @@ The responsive system is built primarily on **container queries and intrinsic la
 #### Rules
 
 | Region | Mechanism | Behavior |
-|---|---|---|
+| --- | --- | --- |
 | Top nav, sub-bar, header | Viewport | Below 768px: top nav collapses to hamburger; sub-bar simplifies to title + primary action; filter chips collapse into a "Filters" sheet. At 768px and above: full chrome as in mocks. |
-| Right rail (`--width-rail: 320px`) | **Container query** on the page-content container | Visible when content container ≥ ~1100px wide; collapsed otherwise. Reachable via a "More" affordance on the page when collapsed. The rail is supplementary by design; pages must remain useful without it. |
+| Side panel (`--width-panel: 320px` per **DES-016**; the 48px `--width-activitybar` is always visible) | **Container query** on the page-content container | Docked when content container ≥ ~1100px wide; below the threshold the panel **overlays** instead of docking, opened from the activity bar. The panel is supplementary by design; pages must remain useful without it. |
 | Tables | **Container query** on the table's wrapper | Card-stack rendering when wrapper `< ~640px`; row rendering above. Decoupled from viewport entirely so tables don't break inside narrow modal bodies. |
 | Two-pane detail layouts | **Container query** on the layout shell | Single-pane below ~1024px-of-shell; two-pane above. Secondary pane reachable via a back-button-driven sub-route in single-pane mode. |
 | Card grids, chip rows | `grid-template-columns: repeat(auto-fit, minmax(Npx, 1fr))` | Auto-reflow; no breakpoint code. |
@@ -882,7 +893,7 @@ DES-013 plumbed the `Intl.*` formatting APIs and locale-on-user. The remaining d
 #### Date / time display rules
 
 | Context | Format | Example (en-US) |
-|---|---|---|
+| --- | --- | --- |
 | **Activity feed timestamps** | Relative if `≤ 7 days ago`, short absolute thereafter | `12 minutes ago` / `3 hours ago` / `Yesterday` / `Apr 28` / `Apr 28, 2025` (year only when not current year) |
 | **Document upload / created-at columns** | Short absolute | `May 3, 2026` |
 | **Deadlines / due dates** | Short absolute + relative qualifier when relevant | `May 10, 2026 (in 7 days)` / `May 1 (3 days overdue)` |
@@ -1122,7 +1133,7 @@ Linear-style dot+text for statuses (rejected — tinted status pills are establi
 ## Index of decisions
 
 | # | Decision | Status |
-|---|---|---|
+| --- | --- | --- |
 | DES-001 | Ship three themes (Light / Warm / Dark) as user-selectable from v1 | Accepted |
 | DES-002 | Light is the default theme; Warm and Dark are user-selectable | Accepted |
 | DES-003 | Design language anchor — "utility-tool with character," GitHub-Primer-shaped | Accepted |

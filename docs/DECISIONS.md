@@ -372,6 +372,8 @@ The success of the platform hinges on whether non-legal business users actually 
 
 ### Decision
 
+> **Superseded architecture note (2026-08-04, INT-001).** The three-surface capture architecture below is retained for history but is no longer the plan. What survives: a single `Request` entity triaged into a Contract, a Matter, or resolved-in-thread; the magic-link + domain-allowlist mechanics of surface 2, which become the **portal's authentication**; and **outbound** email notifications (deep-linking back to the portal). What is superseded: ChatOps capture (parked — at most notifications and portal deep-links, FUTURE-FEATURES), inbound email parsing and its three transports (dropped from v1 — future candidate with parse-to-form-prefill), and the Slack-in-v1.5 build queue. Capture is structured per-type forms in a lightweight portal only — see INT-001.
+
 Three intake surfaces, all feeding a single `Request` entity that is triaged into a `Contract`, a `Matter`, or resolved-in-thread:
 
 **1. ChatOps via adapter pattern** — primary surface

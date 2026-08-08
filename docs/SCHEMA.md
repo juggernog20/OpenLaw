@@ -124,7 +124,7 @@ Work container for any legal effort. Holds Documents and Contracts; references E
 | `matter_type_id` | UUID | **MTR-001** | FK → `matter_types.id`, not null |
 | `status_id` | UUID | **MTR-002** | FK → `matter_statuses.id`, not null; defaults to first `open`-category status by display order |
 | `manager_id` | UUID | **MTR-003** | FK → `users.id`, nullable; the Matter Manager. Null = unassigned (surfaced in triage) |
-| `priority` | text (enum) | **MTR-012** | `low` \| `normal` \| `high` \| `urgent`; not null, default `normal`; drives triage sort |
+| `priority` | text (enum) | **MTR-012** | `low` \| `medium` \| `high` \| `critical` (levels renamed per **DES-018**); not null, default `medium`; drives triage sort |
 | `risk` | text (enum) | **MTR-012** | `low` \| `medium` \| `high` \| `critical`; nullable — null = not yet assessed (set by legal at triage) |
 | `custom_fields` | jsonb | **MTR-011** | values keyed by field slug; GIN-indexed for filtering; values for fields detached from the type are retained but not rendered |
 | `parent_id` | UUID | **MTR-015** | FK → `matters.id`, nullable; single parent, arbitrary depth, cycles rejected in application code. Navigational only — no cascade/inheritance semantics |
@@ -345,7 +345,7 @@ Known columns so far:
 - `contract_type_id` FK → `contract_types.id`, not null per **CTR-002**
 - `status_id` FK → `contract_statuses.id`, not null per **CTR-001**; the contract's **stage** is derived from the status, never stored on the contract
 - `manager_id` FK → `users.id`, nullable (null = unassigned/triage), UI label "Owner" per **CTR-004**
-- `priority` — text enum `low|normal|high|urgent`, not null, default `normal` per **CTR-005**
+- `priority` — text enum `low|medium|high|critical` (levels renamed per **DES-018**), not null, default `medium` per **CTR-005**
 - `risk` — text enum `low|medium|high|critical`, nullable (null = not yet assessed) per **CTR-005**
 - `term_type` — text enum `fixed|auto_renew|evergreen`, not null per **CTR-006**; renewal engine and calendar branch on this
 - `effective_date` — date, nullable until known per **CTR-006**
@@ -517,27 +517,7 @@ Compound primary key on (`contract_id`, `user_id`, `role`).
 ### `contract_types`
 Source: **CTR-002**
 
-Configurable taxonomy of contract types, mirroring `matter_types`. Seeded at install with 7 default rows; Admin-managed thereafter via Contracts Settings. Type is the **policy carrier**: per-type field attachment, contract templates, and approval-rule targeting key off it.
-
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID | PK |
-| `slug` | text | unique, not null, immutable after creation |
-| `display_name` | text | not null, user-editable |
-| `description` | text | nullable |
-| `display_order` | integer | not null; controls picker order |
-| `is_system_default` | boolean | not null, default `false`; `true` for the 7 seed rows |
-| `archived_at` | timestamptz | nullable; soft-delete affordance |
-| `created_at`, `updated_at` | timestamptz | |
-
-**Seed rows** (install-time migration): `nda`, `msa`, `sow`, `sales`, `procurement`, `employment`, `other`. The `other` row is system-protected (no hard-delete, no archive).
-
----
-
-### `contract_types`
-Source: **CTR-002**
-
-Configurable taxonomy of contract types. Same machinery as `matter_types` (MTR-001). Admin-managed via Contracts Settings → Types. Designated policy carrier: per-type custom fields, templates, and approval-rule scoping attach here (CTR decisions pending).
+Configurable taxonomy of contract types. Same machinery as `matter_types` (MTR-001). Admin-managed via Contracts Settings → Types. Designated policy carrier: per-type custom fields (CTR-016), templates (deferred per CTR-017), and approval scoping (CTR-012 approver groups) attach here.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -590,14 +570,16 @@ Logical document record. No workflow. **Every document has exactly one owning re
 | `description` | text | nullable per **DOC-007** (standard metadata only — no custom fields, no tags in v1) |
 | `matter_id` | UUID | FK → `matters.id`, nullable |
 | `contract_id` | UUID | FK → `contracts.id`, nullable |
-| `folder_id` | UUID | FK → `document_folders.id`, nullable per **DOC-006** |
+| `entity_id` | UUID | FK → `entities.id`, nullable per **ENT-005**/**DOC-008** |
+| `knowledge_item_id` | UUID | FK → `knowledge_items.id`, nullable per **KNW-001**/**DOC-008** |
+| `folder_id` | UUID | FK → `document_folders.id`, nullable per **DOC-006**; the folder must belong to the same owning record as the document |
 | `executed_version_id` | UUID | FK → `document_versions.id`, nullable per **DOC-001** — the CTR-014 executed pin; default target for previews/exports/AI analysis |
 | `is_confidential` | boolean | per **DD-014** (meaningful via the owning record's access; never cascades per CTR-018) |
 | `created_by` | UUID | FK → `users.id`, not null |
 | `created_at`, `updated_at` | timestamptz | |
 | `archived_at` | timestamptz | soft delete |
 
-Exactly-one-owner rule (**DOC-008**): application enforces exactly one of the owner FKs set — `matter_id` | `contract_id` | `entity_id` (**ENT-005**) | `knowledge_item_id` (**KNW-001**). The owner set is now complete. Repository destination is Member+; Contributors/Business Users reach documents only through records they're on (portal-readable knowledge items render their docs read-only per KNW-004).
+Exactly-one-owner rule (**DOC-008**): application enforces exactly one of the owner FKs set — `matter_id` | `contract_id` | `entity_id` (**ENT-005**) | `knowledge_item_id` (**KNW-001**). The owner set is now complete and all four columns are declared above. Repository destination is Member+; Contributors/Business Users reach documents only through records they're on (portal-readable knowledge items render their docs read-only per KNW-004).
 
 ---
 
@@ -624,12 +606,13 @@ Optional lightweight folders scoped within one owning matter, contract, or entit
 | `id` | UUID | PK |
 | `matter_id` | UUID | FK → `matters.id`, nullable |
 | `contract_id` | UUID | FK → `contracts.id`, nullable |
+| `entity_id` | UUID | FK → `entities.id`, nullable per **ENT-005** |
 | `parent_id` | UUID | FK → `document_folders.id`, nullable per **DOC-011**; no cycles (application-enforced); parent must share the same owning record |
 | `name` | text | not null |
 | `display_order` | integer | not null |
 | `created_at`, `updated_at` | timestamptz | |
 
-Exactly one owner FK set (same rule shape as `documents`).
+Exactly one owner FK set (same rule shape as `documents`). Invariant: a folder, its parent, and every document filed in it all share the same owning record.
 
 ---
 
@@ -646,7 +629,8 @@ Immutable file snapshots, strictly linear per document (`version_number` 1..n). 
 | `file_ref` | text | storage reference — shape settled with the storage-backend decision |
 | `kind` | text (enum) | `draft_ours` \| `redline_theirs` \| `redline_ours` \| `executed` \| `amendment` \| `generated_redline` (**CTR-014** kinds + generated) |
 | `source` | text (enum) | `uploaded` \| `generated` |
-| `compared_from_version_id` | UUID | FK → `document_versions.id`, nullable; provenance for generated redlines |
+| `compared_from_version_id` | UUID | FK → `document_versions.id`, nullable; generated redlines: the older comparison operand |
+| `compared_to_version_id` | UUID | FK → `document_versions.id`, nullable; generated redlines: the newer comparison operand — both operands stored per **DOC-001**/**DOC-003** so the original comparison is reconstructable after the result is appended |
 | `note` | text | nullable |
 | `created_by` | UUID | FK → `users.id`, not null |
 | `created_at` | timestamptz | no `updated_at` — rows are immutable |
@@ -678,7 +662,7 @@ Structured request envelope, created only via portal forms. Not a work container
 | `status` | text (enum) | `new` \| `converted` \| `resolved` \| `declined` per **INT-001** as revised by **INT-007** — fixed, code branches |
 | `summary` | text | not null |
 | `description` | text | nullable |
-| `urgency` | text (enum) | `low|normal|high|urgent`, requester-supplied; maps to `priority` at conversion (MTR-012 — `risk` never requester-set) |
+| `urgency` | text (enum) | `low|medium|high|critical` (levels per **DES-018**), requester-supplied; maps 1:1 to `priority` at conversion (MTR-012 — `risk` never requester-set) |
 | `custom_fields` | jsonb | collected form values keyed by field slug per **INT-002**; carried into the converted record |
 | `converted_matter_id` | UUID | FK → `matters.id`, nullable |
 | `converted_contract_id` | UUID | FK → `contracts.id`, nullable |

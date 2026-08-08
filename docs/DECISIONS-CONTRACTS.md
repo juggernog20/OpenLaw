@@ -35,17 +35,7 @@ _None — queue cleared 2026-08-04 (CTR-001 through CTR-019). New questions from
   - Same guardrails as MTR-002: ≥1 unarchived status per stage that has seeds; seed rows for `draft`, `active`, and one `ended` status are system-protected; global list, not per-type.
 - **Rationale** — The stage backbone gives approvals, e-sign, renewals, and surfaces a stable enum to branch on without hardcoding labels teams will want to rename. Matches the market-leader pipeline shape (Ironclad/LinkSquares). Deriving stage from status kills the stage-vs-status duplication in the mocks.
 - **Alternatives considered** — Three coarse categories (pre_execution/active/ended): approval and e-sign gates would need separate per-contract flags. Fully fixed status enum: contradicts the configurable default; teams rename these labels. Enforced forward-only transitions: real deals move backwards; a transition matrix adds config surface with no v1 payoff.
-- **Consequences** — `contract_statuses` table + `contracts.status_id` in SCHEMA.md. Settings surface: Contracts → Statuses (sibling of Matters → Statuses). Approval (Q8) and e-signature (Q9) decisions can key off `approval`/`signature` stages. Renewal logic (Q4) keys off `active`/`ended`. Grill-plan rows C.5/D.8 unblocked; H.C4 remains gated on approval rules.
-
-## CTR-002 — Contract types: configurable list, type as policy carrier
-
-- **Status** — Accepted
-- **Date** — 2026-08-02
-- **Context** — Contracts need a type taxonomy (grill-plan row D.2 already leans configurable per the MTR-001 pattern). The deeper question: is type a cosmetic label, or the attachment point for per-type policy the way `matter_types` became one?
-- **Decision** — `contract_types` table mirroring `matter_types` exactly: Admin add/rename/reorder/archive via Contracts Settings → Types; slug immutable; protected `other` row; `contracts.contract_type_id` not null. **Type is the policy carrier**: per-type custom-field attachment, contract templates, and approval-rule targeting all key off it. Seeds: `nda`, `msa`, `sow`, `sales`, `procurement`, `employment`, `other`.
-- **Rationale** — Identical machinery to MTR-001 (one settings pattern to build twice). Type-as-policy-carrier is the universal market pattern and gives approvals/fields/templates a natural hook instead of inventing three targeting mechanisms.
-- **Alternatives considered** — Cosmetic-only type (breaks the Q8/Q12/Q13 composition); fixed enum (no code-branching justification).
-- **Consequences** — `contract_types` in SCHEMA.md; settings row; grill-plan D.2 unblocked. The single-state-machine-for-all-types question from the original queue resolves implicitly: the lifecycle (CTR-001) is global, type does not vary the state machine — type varies *policy* (fields/templates/approvals), not *stages*.
+- **Consequences** — `contract_statuses` table + `contracts.status_id` in SCHEMA.md. Settings surface: Contracts → Statuses (sibling of Matters → Statuses). Approval (Q8) and e-signature (Q9) decisions can key off `approval`/`signature` stages. Renewal logic (Q4) keys off `active`/`ended`. Grill-plan rows C.5/D.8 unblocked; H.C4 unblocked by **CTR-012**'s accepted approval model.
 
 ## CTR-002 — Contract types: configurable list, MTR-001 sibling
 
@@ -55,7 +45,7 @@ _None — queue cleared 2026-08-04 (CTR-001 through CTR-019). New questions from
 - **Decision** — `contract_types` table with identical machinery to `matter_types` (MTR-001): slug (immutable), display_name, description, display_order, is_system_default, archived_at. Admin-managed via Contracts Settings → Types. `contracts.contract_type_id` FK, not null. Seeds: `nda`, `msa`, `sow`, `sales`, `vendor`, `employment`, `license`, `other` — `other` row system-protected (no archive/delete). Type is the designated attachment point for per-type custom fields, templates, and approval-rule scoping as those decisions land (Q8, Q12, Q13).
 - **Rationale** — Nothing in code branches on "NDA vs MSA" — policy attaches via configuration, so the fixed-enum carve-out doesn't apply. Reusing MTR-001's exact machinery keeps the settings UI and application code uniform.
 - **Alternatives considered** — Fixed enum: no code-branching justification; new type shouldn't require a release. Two-level types/subtypes: no v1 feature consumes the parent level; retrofittable later via `parent_id`.
-- **Consequences** — `contract_types` table in SCHEMA.md. Settings surface: Contracts → Types. Later decisions (fields, templates, approvals) hang policy off this FK. Grill-plan row D.2 unblocked.
+- **Consequences** — `contract_types` table in SCHEMA.md. Settings surface: Contracts → Types. Later decisions (fields, templates, approvals) hang policy off this FK. Grill-plan row D.2 unblocked. The single-state-machine-for-all-types question from the original queue resolves implicitly: the lifecycle (CTR-001) is global, type does not vary the state machine — type varies _policy_ (fields/templates/approvals), not _stages_. _(A duplicate CTR-002 record with a shorter seven-row seed list was consolidated into this entry 2026-08-08 — this seed list, including the protected `other` row, is authoritative.)_
 
 ## CTR-003 — Numbering: free title + global C-### sequence
 
@@ -82,7 +72,7 @@ _None — queue cleared 2026-08-04 (CTR-001 through CTR-019). New questions from
 - **Status** — Accepted
 - **Date** — 2026-08-02
 - **Context** — The details mock carries a risk field (G.R2); MTR-012 gave matters both priority and risk. Risk scoring is a headline CLM feature (LinkSquares/Ironclad).
-- **Decision** — `contracts.priority` (`low|normal|high|urgent`, not null, default `normal`) and `contracts.risk` (`low|medium|high|critical`, nullable = not yet assessed, set by legal during review). Identical enums to matters.
+- **Decision** — `contracts.priority` (`low|medium|high|critical` — levels renamed per **DES-018**'s severity-ramp canon, originally `low|normal|high|urgent`; not null, default `medium`) and `contracts.risk` (`low|medium|high|critical`, nullable = not yet assessed, set by legal during review). Identical enums to matters.
 - **Rationale** — Priority orders the review pipeline (matters especially for standalone contracts with no parent matter to carry urgency); risk is the G.R2 field and a standard CLM datum. Same enums as matters means DES-005 pill families map once (grill-plan X.2).
 - **Alternatives considered** — Risk only: leaves the review queue ordered by created_at; standalone contracts get no urgency signal. Configurable scales: these drive sorting/branching and cross-module consistency — the fixed-enum carve-out applies, as in MTR-012.
 - **Consequences** — Two columns in SCHEMA.md. Grill-plan G.R2 unblocked (existence: keep, first-class column; visualization still X.2).
@@ -174,7 +164,7 @@ _None — queue cleared 2026-08-04 (CTR-001 through CTR-019). New questions from
   - Recorded in `contract_approvals`: approver, source (`manual|group` + group ref), status (`pending|approved|rejected`), note, decided_at, requested_by. This is the datum H.C4 renders.
   - **Soft gate** (recommended, accepted): advancing past approval with pending/rejected approvals warns loudly, is allowed, and is activity-logged as an override — consistent with CTR-001's unrestricted transitions and the signal-not-lock philosophy (MTR-008).
 - **Rationale** — Groups capture the recurring 80% ("this is a commercial contract → apply Commercial sign-off") without a rules engine's config surface; in a 2–10 person team the policy holder and the overrider are often the same person.
-- **Alternatives considered** — Threshold rule list (recommended, declined — parked to FUTURE-FEATURES as a natural later layer that would *pre-apply* groups). Ad-hoc only: loses reusable templates. Sequential workflow builder: big-team territory. Hard gate: blocks legitimate small-team situations.
+- **Alternatives considered** — Threshold rule list (recommended, declined — parked to FUTURE-FEATURES as a natural later layer that would _pre-apply_ groups). Ad-hoc only: loses reusable templates. Sequential workflow builder: big-team territory. Hard gate: blocks legitimate small-team situations.
 - **Consequences** — `approver_groups`, `approver_group_members`, `contract_approvals` in SCHEMA.md. Settings surface added. Grill-plan H.C4 unblocked (Decision column = approval outcomes). Approval-stage UI needs an "apply group" affordance.
 
 ## CTR-013 — E-signature: provider adapter, DocuSign first connector, manual fallback
@@ -210,7 +200,7 @@ _None — queue cleared 2026-08-04 (CTR-001 through CTR-019). New questions from
 
 - **Status** — Accepted
 - **Date** — 2026-08-02
-- **Context** — Contract relationships (MSA→SOW trees, amendments, renewal successors). Pulled forward by CTR-007, whose renewal routing requires links that *identify* a renewal. MTR-015 settled the matters sibling with untyped links.
+- **Context** — Contract relationships (MSA→SOW trees, amendments, renewal successors). Pulled forward by CTR-007, whose renewal routing requires links that _identify_ a renewal. MTR-015 settled the matters sibling with untyped links.
 - **Decision** —
   - **Hierarchy**: `contracts.parent_id` — single parent, arbitrary depth, no cycles (application-enforced). MSA → SOWs; substantial amendments as child contracts.
   - **Typed directional links**: `contract_relations(from_contract_id, to_contract_id, relation_type)` with `relation_type` = `related` (symmetric) | `renews` | `amends` (directional). Renewal reporting reads `renews` links (plus confirmed rolls from the activity log) per CTR-007. Minor amendments may instead live as doc-chain versions per CTR-014 — team's choice per case.
@@ -225,13 +215,13 @@ _None — queue cleared 2026-08-04 (CTR-001 through CTR-019). New questions from
 - **Date** — 2026-08-02
 - **Context** — CTR-008 committed contracts to a field catalog with per-field AI prompts; the open question was catalog shape. Blair: "Matter and Contract fields will mostly be separate.. but certain fields can be across both… (global) like departments, our entity."
 - **Decision** —
-  - **One `fields` catalog** (renaming `matter_fields` — storage revision to MTR-011; the MTR-011 decision otherwise stands) with `module_scope`: `matter` | `contract` | `global`. Matter-scoped fields attach only to matter types, contract-scoped only to contract types, **global fields attach to both** (e.g. Department, Our entity).
+  - **One `fields` catalog** (renaming `matter_fields` — storage revision to MTR-011; the MTR-011 decision otherwise stands) with `module_scope`: `matter` | `contract` | `entity` _(added by **ENT-001**, 2026-08-06)_ | `global`. Matter-scoped fields attach only to matter types, contract-scoped only to contract types, entity-scoped only to entities (ENT-001), and **global fields attach across all three modules** (e.g. Department, Our entity).
   - **Field types gain `entity`** (picker over our `entities`, like the `user` type) — 9 types total: text, long_text, number, date, boolean, single_select, multi_select, user, entity. `field_type` remains immutable.
   - **`ai_prompt`** (nullable text) lives on the field definition per CTR-008; seeded defaults on contract core fields; editable. Consumed by contract analysis (matter-side AI stays parked).
   - `contract_type_fields` join mirrors `matter_type_fields`, including **`is_required` hard-enforced at creation/re-type** (MTR-014 rule). `contracts.custom_fields` jsonb keyed by slug, values retained on detach.
 - **Rationale** — Mostly-separate keeps each module's settings tidy; the global tier means "Department" is defined once and reportable across modules without a coupling free-for-all. One table with a scope column beats three tables with a promote-between-them mechanism.
 - **Alternatives considered** — Fully separate catalogs: departments defined twice, cross-module reporting joins on convention. Fully shared single-scope catalog: every field shows up in both settings surfaces.
-- **Consequences** — SCHEMA.md: `matter_fields` → `fields` (+ `module_scope`, `ai_prompt`, `entity` type); `contract_type_fields` + `contracts.custom_fields` added; MTR-011 schema section annotated. Settings: the Fields surface becomes shared with per-module views (Matters Settings → Fields shows matter+global; Contracts Settings → Fields shows contract+global). Scope is immutable after creation except matter/contract → global promotion (values already keyed by slug, so promotion is safe); global → narrower is not allowed while attachments exist on the other module.
+- **Consequences** — SCHEMA.md: `matter_fields` → `fields` (+ `module_scope` — `matter | contract | entity | global` since ENT-001, `ai_prompt`, `entity` type); `contract_type_fields` + `contracts.custom_fields` added; MTR-011 schema section annotated. Settings: the Fields surface becomes shared with per-module views (Matters Settings → Fields shows matter+global; Contracts Settings → Fields shows contract+global; Entities Settings → Fields shows entity+global per ENT-001). Scope is immutable after creation except module-scope → global promotion (values already keyed by slug, so promotion is safe); global → narrower is not allowed while attachments exist on another module.
 
 ## CTR-017 — Tasks adopted; contract templates deferred
 
@@ -266,7 +256,7 @@ _None — queue cleared 2026-08-04 (CTR-001 through CTR-019). New questions from
 ## Index of decisions
 
 | # | Decision | Status |
-|---|---|---|
+| --- | --- | --- |
 | CTR-001 | Lifecycle: fixed six-stage backbone + configurable statuses | Accepted |
 | CTR-002 | Contract types: configurable list, MTR-001 sibling | Accepted |
 | CTR-003 | Numbering: free title + global C-### sequence | Accepted |
@@ -286,4 +276,3 @@ _None — queue cleared 2026-08-04 (CTR-001 through CTR-019). New questions from
 | CTR-017 | Tasks adopted; contract templates deferred | Accepted |
 | CTR-018 | Confidentiality: independent flags, link-time nudge, no cascade | Accepted |
 | CTR-019 | End of life: signal not lock, MTR-008 sibling | Accepted |
-| CTR-002 | Contract types: configurable list, type as policy carrier | Accepted |

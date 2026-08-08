@@ -28,12 +28,12 @@ _None — queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/preceden
 - **Date** — 2026-08-04
 - **Context** — The foundational shape for the module; must satisfy CTR-014's contract-side requirements (version kinds, executed pin, generated-redline provenance). Gates grill-plan K.H3.
 - **Decision** —
-  - **`documents`** is the logical record: title, ownership links (`contract_id`/`matter_id`, both nullable per DD-007), metadata, and an explicit executed pin: `executed_version_id` FK.
-  - **`document_versions`** are immutable file snapshots in a **strictly linear** chain (`version_number` 1..n): `kind` (`draft_ours | redline_theirs | redline_ours | executed | amendment | generated_redline`), `source` (`uploaded | generated`), `compared_from_version_id` (provenance for generated redlines), `note`, `created_by`. Individual versions are never edited or deleted; corrections add a new version.
+  - **`documents`** is the logical record: title, ownership links (`matter_id` / `contract_id` / `entity_id` / `knowledge_item_id`, exactly one set per **DOC-008** — every document has exactly one owning record), metadata, and an explicit executed pin: `executed_version_id` FK.
+  - **`document_versions`** are immutable file snapshots in a **strictly linear** chain (`version_number` 1..n): `kind` (`draft_ours | redline_theirs | redline_ours | executed | amendment | generated_redline`), `source` (`uploaded | generated`), `compared_from_version_id` + `compared_to_version_id` (provenance for generated redlines — both comparison operands: the redline shows changes from the older `from` version to the newer `to` version, so the original comparison is reconstructable even after the result is appended to the chain), `note`, `created_by`. Individual versions are never edited or deleted; corrections add a new version.
   - The K.H3 version pill renders `version_number` of the viewed version.
 - **Rationale** — A stable logical identity is what contracts/matters link to (CTR-014's primary-document designation); immutable snapshots make the chain trustworthy as negotiation history. Linear beats DAG: real negotiation rounds supersede each other, and the rare parallel-drafts case is servable with a second document record instead of branch/merge UI.
 - **Alternatives considered** — DAG with branches: git-for-lawyers UI for a rare case. Self-referencing single table (`prev_version_id`): no stable identity to link from; every query collapses chains.
-- **Consequences** — Two tables in SCHEMA.md; `generated_redline` added to CTR-014's kind list (SCHEMA note updated). Storage question (Q5) deals in immutable blobs — enables content-addressing/dedup. K.H3 unblocked.
+- **Consequences** — Two tables in SCHEMA.md: `documents` carries the four nullable owner FKs (`matter_id` / `contract_id` / `entity_id` / `knowledge_item_id`) with the exactly-one-owner invariant application-enforced per DOC-008; `generated_redline` added to CTR-014's kind list (SCHEMA note updated). Storage question (Q5) deals in immutable blobs — enables content-addressing/dedup. K.H3 unblocked.
 
 ## DOC-002 — Module identity: the legal file layer, made browsable
 
@@ -41,13 +41,13 @@ _None — queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/preceden
 - **Date** — 2026-08-04
 - **Context** — Raised by Blair mid-grill: before technical feature decisions, "have we established more fundamentally what exactly the document feature will be." PRODUCT.md promises a "central document repository with versioning, search, and tagging — first-class destination, not just an attachment store"; DD-007 makes Document the workflow-free file primitive; the Knowledge module exists separately. The identity between those commitments was never pinned.
 - **Decision** — Documents is **the file layer of legal work, made browsable**:
-  - Files mostly **enter through work** — uploaded to matters, contracts, and intake requests; executed copies arriving via e-sign (CTR-013). ~~**Standalone direct upload** exists for files that belong to no matter/contract~~ *(superseded by **DOC-008**: every document has an owning record — matter, contract, entity, or knowledge item; direct upload asks where the file lives).*
+  - Files mostly **enter through work** — uploaded to matters, contracts, and intake requests; executed copies arriving via e-sign (CTR-013). ~~**Standalone direct upload** exists for files that belong to no matter/contract~~ _(superseded by **DOC-008**: every document has an owning record — matter, contract, entity, or knowledge item; direct upload asks where the file lives)._
   - The Documents **destination is a repository view across all of them**: search, filters (type, linked matter/contract, party, date, kind), recents — one place to find any file regardless of where it lives.
   - **Organization comes from links + metadata + search, not a mandatory folder tree.** No filing discipline is imposed at upload.
   - **Explicit non-goals**: OpenLaw is not the org's general file system (Drive/SharePoint stays); no check-in/check-out; templates/precedent library belongs to the **Knowledge module**, not here.
 - **Rationale** — For a 2–10 person team the painful question is "where is that NDA?", not "is our folder taxonomy enforced?" A repository view over work-attached files answers it without building a DMS product category (iManage/NetDocuments territory) or breaking PRODUCT.md's first-class-destination promise.
 - **Alternatives considered** — Full DMS (workspaces/folders/check-out): months of build, entrenched competition, filing discipline a small team won't keep. Attachment-store-only: contradicts PRODUCT.md and DD-007; orphan documents homeless.
-- **Consequences** — This decision is the lens for the rest of the queue: versioning/preview/search serve the repository view; the folders question (Q8) starts from "links + metadata are primary"; templates (Q12) route to Knowledge; bulk import (Q13) matters because legacy files must get *into* the layer. **Reorders DOC-001 conceptually** — DOC-002 is the module's root decision; DOC-001 stands as its record model.
+- **Consequences** — This decision is the lens for the rest of the queue: versioning/preview/search serve the repository view; the folders question (Q8) starts from "links + metadata are primary"; templates (Q12) route to Knowledge; bulk import (Q13) matters because legacy files must get _into_ the layer. **Reorders DOC-001 conceptually** — DOC-002 is the module's root decision; DOC-001 stands as its record model.
 
 ## DOC-003 — Redline compare: Workshare-style in-app view + Word track-changes export
 
@@ -56,7 +56,7 @@ _None — queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/preceden
 - **Context** — The mechanics behind CTR-014's "run a redline against the previous version" (gates K.H4). Blair: "I want to have the option of both a Litera Workshare compare style compare or to export to word track changes."
 - **Decision** — Comparison is **dual-mode**:
   1. **In-app compare view (Litera/Workshare-style)**: a rendered, formatted comparison of two versions — insertions/deletions highlighted in the document's real formatting, with a change list / navigation pane. This is the default result of "Run redline".
-  2. **Export to Word track changes**: from the same comparison, generate a real .docx with tracked changes — saved into the version chain as a `generated_redline` version (DOC-001 provenance) and downloadable for counterparty exchange.
+  2. **Export to Word track changes**: from the same comparison, generate a real .docx with tracked changes — saved into the version chain as a `generated_redline` version recording **both** comparison operands (`compared_from_version_id` + `compared_to_version_id` per DOC-001) and downloadable for counterparty exchange.
   - Non-Word pairs (e.g. PDF↔PDF) support the in-app view via extracted text (degraded: no formatting fidelity); export is Word-pairs only.
   - Comparison engine selection → tech-stack grill (queued).
 - **Rationale** — The in-app view is the daily-driver review experience (Workshare is the lawyer benchmark); the exportable artifact is how the redline leaves the building. Building the view on the same engine output as the export keeps the two consistent.
@@ -88,7 +88,7 @@ _None — queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/preceden
 - **Status** — Accepted
 - **Date** — 2026-08-04
 - **Context** — MTR-013 parked "template folder structures" here; DOC-002 ruled out a mandatory global tree. Blair: folders may also exist inside future modules (Knowledge — templates/precedents/legislation; Entities — articles, resolutions, share registers/certificates), "but yes in the main matters / contracts, that's where folders will live, not in a separate DMS folder system."
-- **Decision** — Optional lightweight folders **scoped within a matter or contract** (~~single level in v1~~ *revised by **DOC-011**: folders nest — folder-drop imports retain structure*). The global repository view stays flat — a folder is just another filter facet there. Knowledge and Entities may define their own organization structures when those modules are grilled (noted in their queues). Re-opens the MTR-013 door: matter templates may later pre-create a folder skeleton.
+- **Decision** — Optional lightweight folders **scoped within a matter or contract** (~~single level in v1~~ _revised by **DOC-011**: folders nest — folder-drop imports retain structure_). The global repository view stays flat — a folder is just another filter facet there. Knowledge and Entities may define their own organization structures when those modules are grilled (noted in their queues). Re-opens the MTR-013 door: matter templates may later pre-create a folder skeleton.
 - **Rationale** — A 60-file litigation matter needs grouping; the org-wide tree is the DMS trap DOC-002 declined.
 - **Alternatives considered** — No folders anywhere: heavy matters become flat 60-row lists. Global tree: two competing sources of truth for "where" a file is.
 - **Consequences** — `document_folders` (scoped to one owning record) + `documents.folder_id` in SCHEMA.md. Folder skeletons added to the matter-templates FUTURE-FEATURES scope. Entities/Knowledge queues annotated.
@@ -114,7 +114,7 @@ _None — queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/preceden
   - The repository destination is Member+ (legal staff); Contributors/Business Users see documents only through records they're on.
 - **Rationale** — One rule source for permissions (no drift between a record's team and its files); "where does this live?" at upload is cheap now that owners include entities and knowledge (the old orphan cases all have homes).
 - **Alternatives considered** — Standalone with default-team-wide visibility (recommended, declined). Per-document teams: permission drift by design.
-- **Consequences** — DD-007 annotated (stand-alone clause revised); DOC-002's standalone bullet superseded; SCHEMA.md documents section gains the exactly-one-owner rule and future `entity_id` / knowledge FKs; MTR-007's "standalone contract" is unaffected (the *contract* stands alone; its documents belong to it).
+- **Consequences** — DD-007 annotated (stand-alone clause revised); DOC-002's standalone bullet superseded; SCHEMA.md documents section gains the exactly-one-owner rule and future `entity_id` / knowledge FKs; MTR-007's "standalone contract" is unaffected (the _contract_ stands alone; its documents belong to it).
 
 ## DOC-009 — Storage & search: requirements here, engine picks routed to tech-stack
 
@@ -155,7 +155,7 @@ _None — queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/preceden
 ## Index of decisions
 
 | # | Decision | Status |
-|---|---|---|
+| --- | --- | --- |
 | DOC-001 | Record model: logical document + linear immutable version chain | Accepted |
 | DOC-002 | Module identity: the legal file layer, made browsable | Accepted |
 | DOC-003 | Redline compare: Workshare-style in-app view + Word track-changes export | Accepted |

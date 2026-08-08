@@ -9,7 +9,7 @@ Decisions are numbered `NOT-###`.
 Commitments accumulated across the module grills that this capability must deliver:
 
 | Source | Commitment |
-|---|---|
+| --- | --- |
 | **CTR-006** | Renewal reminders at the derived notice deadline and at expiry; "renewal pending confirmation" prompting. Reminder surfaces show the unverified-AI badge (CTR-008 tension note) |
 | **CTR-012** | Approval requested → pending approvers notified; decisions visible to the owner |
 | **CTR-013** | Envelope status changes (signed / declined / voided) |
@@ -41,7 +41,7 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
   - The Inbox remains the request **queue** (work to triage); the bell is the **feed** (things that happened) — distinct jobs, distinct surfaces. Slack/Teams delivery stays parked (FUTURE-FEATURES ChatOps entry).
 - **Rationale** — Staff live in the app; requesters live in the portal — each gets events where they already are, with email as the reach-out channel. One system underneath keeps the event catalog and preference model single-sourced.
 - **Alternatives considered** — Email-only (removes the mock's A.4 bell; round-trips staff through mail). Requesters email-only (recommended, declined — the portal bell rounds out the JSM shape). Chat delivery now: re-opens what INT-001 parked.
-- **Consequences** — `notifications` + `notification_preferences` tables in SCHEMA.md. Portal gains a bell + settings surface (INT portal scope grows slightly). A.4 unblocked pending badge semantics (Q5); E.1 (notifications chip on contract details) resolvable once the center exists — likely redundant with the bell, settle in the screen batch.
+- **Consequences** — `notifications` + `notification_preferences` tables in SCHEMA.md. Portal gains a bell + settings surface (INT portal scope grows slightly). A.4 unblocked pending badge semantics (Q5); E.1 resolved by the screen-batch grill plan: the notifications chip is **removed** from contract details — per-record notifications aren't a NOT-002 concept; the global bell (A.4) is the surface.
 
 ## NOT-002 — Event catalog: five groups, defaults by interruptiveness
 
@@ -53,7 +53,7 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
   3. **Dates approaching** — key dates (MTR-004/CTR-009), notice deadlines and expiries (CTR-006). Bell ✓, email ✓ via daily digest (NOT-003). Unverified-AI dates carry the CTR-008 badge.
   4. **New requests** — Inbox arrivals (INT-006). Bell ✓, email ✗ (opt-in).
   5. **Requester events** (portal audience) — request created, status change, thread reply, declined-with-reason (INT-001/003/006). Portal bell ✓, email ✓ immediate.
-- **Rationale** — Defaults follow interruptiveness: things done *to* you interrupt; ambient activity doesn't; everything is user-adjustable.
+- **Rationale** — Defaults follow interruptiveness: things done _to_ you interrupt; ambient activity doesn't; everything is user-adjustable.
 - **Alternatives considered** — Everything-on defaults: day-one unsubscribe exercise.
 - **Consequences** — `event_type` catalog enumerated per group in the schema notes; `notification_preferences.event_group` takes these five values.
 
@@ -85,7 +85,7 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 ## Index of decisions
 
 | # | Decision | Status |
-|---|---|---|
+| --- | --- | --- |
 | NOT-001 | One system, two surfaces: bell + email for staff and portal users | Accepted |
 | NOT-002 | Event catalog: five groups, defaults by interruptiveness | Accepted |
 | NOT-003 | Timing: direct events immediate; date reminders in a daily digest | Accepted |

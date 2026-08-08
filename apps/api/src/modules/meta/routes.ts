@@ -8,6 +8,7 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { OPENLAW_VERSION } from "@openlaw/shared";
+import { problemResponse } from "../../lib/problem.js";
 
 const MetaSchema = z
   .object({
@@ -26,7 +27,7 @@ export const metaRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "getMeta",
         tags: ["meta"],
         summary: "Instance metadata",
-        response: { 200: MetaSchema },
+        response: { 200: MetaSchema, default: problemResponse },
       },
     },
     async () => ({ name: "OpenLaw" as const, version: OPENLAW_VERSION }),

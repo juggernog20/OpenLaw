@@ -86,6 +86,15 @@ export interface operations {
                     "application/json": components["schemas"]["Meta"];
                 };
             };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
     };
 }

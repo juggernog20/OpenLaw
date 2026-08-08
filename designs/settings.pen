@@ -31139,7 +31139,21 @@
                           "id": "bxy4x",
                           "name": "HelpWrap",
                           "width": "fill_container",
-                          "height": "fit_content(16)"
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "HlpTxA",
+                              "name": "t Drag to reorder. R",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Drag to reorder. Required fields are enforced at creation and re-type; detaching a field keeps stored values.",
+                              "lineHeight": 1.4,
+                              "fontFamily": "$font",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
                         }
                       ]
                     }

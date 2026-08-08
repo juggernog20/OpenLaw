@@ -2376,14 +2376,28 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "QWiCE",
-                          "name": "t Low",
-                          "fill": "$text-secondary",
-                          "content": "Low",
-                          "fontFamily": "$font",
-                          "fontSize": 12,
-                          "fontWeight": "normal"
+                          "type": "frame",
+                          "id": "PilLoA",
+                          "name": "Pill Low",
+                          "fill": "$status-neutral-bg",
+                          "cornerRadius": 10,
+                          "padding": [
+                            3,
+                            10
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "TxLoA",
+                              "name": "PillText",
+                              "fill": "$status-neutral-fg",
+                              "content": "Low",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            }
+                          ]
                         }
                       ]
                     },
@@ -2584,14 +2598,28 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "n8Glf",
-                          "name": "t Low",
-                          "fill": "$text-secondary",
-                          "content": "Low",
-                          "fontFamily": "$font",
-                          "fontSize": 12,
-                          "fontWeight": "normal"
+                          "type": "frame",
+                          "id": "PilLoB",
+                          "name": "Pill Low",
+                          "fill": "$status-neutral-bg",
+                          "cornerRadius": 10,
+                          "padding": [
+                            3,
+                            10
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "TxLoB",
+                              "name": "PillText",
+                              "fill": "$status-neutral-fg",
+                              "content": "Low",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            }
+                          ]
                         }
                       ]
                     },

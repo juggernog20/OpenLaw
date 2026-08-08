@@ -58,6 +58,7 @@ _None — queue cleared 2026-08-05 (SET-001 through SET-004). Audit treatment ne
 | **KNW-001** | Knowledge Settings → Types | Admin | List view; seeds: template, precedent, playbook, article; MTR-001 machinery |
 | **ENT-001** | Entities Settings → Types | Admin | List view; add / rename / reorder / archive; `other` row protected |
 | **ENT-001** | Entities Settings → Officer Roles | Admin | List view; seeds: director, ceo, cfo, secretary, other |
+| **ENT-001** | Entities Settings → Fields | Admin | Catalog view scoped to `entity` + `global` fields per **CTR-016**'s shared `fields` catalog (ENT-001 adds the `entity` scope): add / rename / describe / archive; entity-scoped fields render on every entity (no per-type attachment join); same machinery as the matters/contracts views |
 | **CTR-001** | Contracts Settings → Statuses | Admin | List view; add / rename / reorder / archive; stage (draft/review/approval/signature/active/ended) picked at creation, immutable after; seed `draft`, `active`, `expired` rows protected |
 
 ---
@@ -67,7 +68,7 @@ _None — queue cleared 2026-08-05 (SET-001 through SET-004). Audit treatment ne
 - **Status** — Accepted
 - **Date** — 2026-08-05
 - **Context** — Where the 17-surface inventory lives. (Grilled after five of seven module grills; Entities/Knowledge sections slot in when theirs land.)
-- **Decision** — A single `/settings` destination, reached via the avatar menu and gear affordances. Left rail in two groups: **Personal** (Profile, Appearance per DES-001/002, Notification preferences per NOT-001) and **Organization** (General, Users, Matters, Contracts, Intake, Notifications, Integrations) — Organization sections hidden from non-Admins. **Contextual deep-links** from module UIs jump to the relevant section (Admin-only affordances, e.g. "Manage types…" under a type picker). Grill-plan J.9 becomes a deep-link, not a separate surface.
+- **Decision** — A single `/settings` destination, reached via the avatar menu and gear affordances. Left rail in two groups: **Personal** (Profile, Appearance per DES-001/002, Notification preferences per NOT-001) and **Organization** (General, Users, Matters, Contracts, Intake, Entities, Knowledge, Notifications, Integrations) — Organization sections hidden from non-Admins. _(Entities and Knowledge sections slotted in when their grills landed — ENT-001 Types / Officer Roles / Fields, KNW-001 Types — per this decision's original provision.)_ **Contextual deep-links** from module UIs jump to the relevant section (Admin-only affordances, e.g. "Manage types…" under a type picker). Grill-plan J.9 becomes a deep-link, not a separate surface.
 - **Rationale** — Cross-cutting surfaces (the shared fields catalog, notifications, users) have no module home; a single destination with module sections keeps one IA pattern and one component substrate.
 - **Alternatives considered** — Per-module gear pages: orphans/duplicates cross-cutting surfaces.
 - **Consequences** — Two net-new Organization sections implied beyond the module inventory: **General** (org identity: name, logo, locale/timezone defaults) and **Users** (invite, role assignment per DD-013, archive). Integrations hosts E-signature (CTR-013) + AI (CTR-008) credentials. Settings screens become one design family (list-editor pattern per DES).
