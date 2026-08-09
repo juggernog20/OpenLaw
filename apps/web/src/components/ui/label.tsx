@@ -6,14 +6,14 @@
  * 12px medium, per the C10 field-label pattern in contracts.pen.
  */
 
-import * as React from "react";
 import * as LabelPrimitive from "@radix-ui/react-label";
+import * as React from "react";
 import { cn } from "../../lib/utils";
 
 export function Label({
   className,
   ...props
-}: React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>) {
+}: Readonly<React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>>) {
   return (
     <LabelPrimitive.Root className={cn("text-sm font-medium text-primary", className)} {...props} />
   );
