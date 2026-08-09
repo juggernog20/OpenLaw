@@ -191,7 +191,14 @@ describe("TOTP two-factor (mounted better-auth twoFactor plugin)", () => {
   });
 
   it("stores the TOTP seed and backup codes encrypted, never in the clear", async () => {
-    const [row] = await harness.db.select().from(twoFactors).limit(1);
+    const [admin] = await harness.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, TEST_ADMIN.email));
+    const [row] = await harness.db
+      .select()
+      .from(twoFactors)
+      .where(eq(twoFactors.userId, admin!.id));
     expect(row).toBeDefined();
     expect(row!.secret).not.toContain(adminSecret!);
     for (const code of adminBackupCodes) {
