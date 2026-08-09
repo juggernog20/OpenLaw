@@ -5,36 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1786221123151,
+      "when": 1786259916427,
       "tag": "0000_auth",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1786222334034,
-      "tag": "0001_admin_plugin_columns",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1786225530708,
-      "tag": "0002_org_settings",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1786229038343,
-      "tag": "0003_sso_providers",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1786239815904,
-      "tag": "0004_two_factor",
       "breakpoints": true
     }
   ]
