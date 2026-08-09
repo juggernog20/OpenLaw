@@ -19,7 +19,9 @@ export default defineConfig({
   workers: 1,
   retries: 0,
   forbidOnly: !!process.env.CI,
-  reporter: [["list"]],
+  // CI adds the HTML report so the workflow can upload it (with the
+  // traces) as a failure artifact; locally the list output is enough.
+  reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : [["list"]],
   use: {
     baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
     trace: "retain-on-failure",
