@@ -42,6 +42,20 @@ const UserEnvelope = z.object({ user: UserSchema });
  */
 const INVITABLE_ROLES = ["administrator", "legal_team_member", "contributor"] as const;
 
+/**
+ * A bare DNS name — dot-separated labels, no scheme, port, path, or `@`.
+ * Mixed case is accepted and normalised to lower case on write.
+ */
+const AllowedDomainSchema = z
+  .string()
+  .max(253)
+  // Case-insensitivity is spelled out (no /i flag) because the pattern is
+  // emitted into the OpenAPI document, where flags do not survive.
+  .regex(
+    /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/,
+    "A bare domain like acme.example — no scheme, path, port, or @.",
+  );
+
 const SessionSchema = z.object({
   id: z.string(),
   expiresAt: z.iso.datetime(),
@@ -401,6 +415,58 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         .returning({ mode: orgSettings.authMode });
       if (!row) throw httpError(500, "org_settings has no row to update.");
       return { mode: row.mode };
+    },
+  );
+
+  app.get(
+    "/auth/allowed-domains",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "getAllowedDomains",
+        summary: "The magic-link domain allowlist (DD-010); empty admits nobody",
+        tags: ["auth"],
+        response: {
+          200: z.object({ domains: z.array(z.string()) }),
+          default: problemResponse,
+        },
+      },
+    },
+    async () => {
+      const settings = await getOrgSettings(app.db);
+      return { domains: settings.allowedEmailDomains };
+    },
+  );
+
+  app.put(
+    "/auth/allowed-domains",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "setAllowedDomains",
+        summary:
+          "Replace the magic-link domain allowlist (DD-010); the list is " +
+          "normalised to lower case and enforced on the next request — an " +
+          "empty list closes the portal to everyone",
+        tags: ["auth"],
+        body: z.object({ domains: z.array(AllowedDomainSchema).max(1000) }),
+        response: {
+          200: z.object({ domains: z.array(z.string()) }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => {
+      // Lower-casing first makes duplicates that differ only by case
+      // collapse; the policy check is case-insensitive anyway, so the
+      // stored list is just its canonical spelling.
+      const domains = [...new Set(request.body.domains.map((domain) => domain.toLowerCase()))];
+      const [row] = await app.db
+        .update(orgSettings)
+        .set({ allowedEmailDomains: domains, updatedAt: new Date() })
+        .returning({ domains: orgSettings.allowedEmailDomains });
+      if (!row) throw httpError(500, "org_settings has no row to update.");
+      return { domains: row.domains };
     },
   );
 
