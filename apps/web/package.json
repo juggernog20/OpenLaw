@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "lint": "eslint src",
-    "i18n:extract": "formatjs extract 'src/**/*.tsx' --ignore 'src/**/*.test.tsx' --out-file ../../messages/en-US.json"
+    "i18n:extract": "formatjs extract 'src/**/*.{ts,tsx}' --ignore 'src/**/*.test.tsx' --out-file ../../messages/en-US.json"
   },
   "dependencies": {
     "@better-auth/sso": "1.6.26",

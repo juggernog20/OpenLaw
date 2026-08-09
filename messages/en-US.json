@@ -38,6 +38,9 @@
   "auth.enroll.error.code": {
     "defaultMessage": "Wrong code. Scan the QR code again and retry."
   },
+  "auth.enroll.error.copy": {
+    "defaultMessage": "Could not copy the codes. Copy them manually."
+  },
   "auth.enroll.error.password": {
     "defaultMessage": "Check your password."
   },
@@ -128,6 +131,9 @@
   "auth.setPassword.doneTitle": {
     "defaultMessage": "Password set"
   },
+  "auth.setPassword.error.generic": {
+    "defaultMessage": "The password could not be set. Try again."
+  },
   "auth.setPassword.error.mismatch": {
     "defaultMessage": "The passwords do not match."
   },
@@ -198,7 +204,10 @@
     "defaultMessage": "Use your authenticator app"
   },
   "error.body": {
-    "defaultMessage": "The server could not be reached. Check your connection, then reload."
+    "defaultMessage": "The page could not load. Reload to try again."
+  },
+  "error.network": {
+    "defaultMessage": "The server could not be reached. Try again."
   },
   "error.title": {
     "defaultMessage": "Something went wrong."

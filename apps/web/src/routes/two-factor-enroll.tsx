@@ -14,6 +14,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { Check, Copy } from "lucide-react";
 import { renderSVG } from "uqr";
 import { authClient } from "../lib/auth-client";
+import { networkError } from "../lib/messages";
 import { Alert } from "../components/ui/alert";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
@@ -58,13 +59,18 @@ export function TwoFactorEnrollPage() {
     const password = String(new FormData(event.currentTarget).get("password") ?? "");
     setBusy(true);
     setError(null);
-    const res = await authClient.twoFactor.enable({ password });
-    setBusy(false);
-    if (res.error || !res.data) {
-      wrongPassword();
-      return;
+    try {
+      const res = await authClient.twoFactor.enable({ password });
+      if (res.error || !res.data) {
+        wrongPassword();
+        return;
+      }
+      setStep({ name: "verify", totpURI: res.data.totpURI, backupCodes: res.data.backupCodes });
+    } catch {
+      setError(networkError(intl));
+    } finally {
+      setBusy(false);
     }
-    setStep({ name: "verify", totpURI: res.data.totpURI, backupCodes: res.data.backupCodes });
   }
 
   async function verify(event: FormEvent<HTMLFormElement>) {
@@ -73,18 +79,23 @@ export function TwoFactorEnrollPage() {
     const code = String(new FormData(event.currentTarget).get("code") ?? "").trim();
     setBusy(true);
     setError(null);
-    const res = await authClient.twoFactor.verifyTotp({ code });
-    setBusy(false);
-    if (res.error) {
-      setError(
-        intl.formatMessage({
-          id: "auth.enroll.error.code",
-          defaultMessage: "Wrong code. Scan the QR code again and retry.",
-        }),
-      );
-      return;
+    try {
+      const res = await authClient.twoFactor.verifyTotp({ code });
+      if (res.error) {
+        setError(
+          intl.formatMessage({
+            id: "auth.enroll.error.code",
+            defaultMessage: "Wrong code. Scan the QR code again and retry.",
+          }),
+        );
+        return;
+      }
+      setStep({ name: "codes", backupCodes: step.backupCodes });
+    } catch {
+      setError(networkError(intl));
+    } finally {
+      setBusy(false);
     }
-    setStep({ name: "codes", backupCodes: step.backupCodes });
   }
 
   async function disable(event: FormEvent<HTMLFormElement>) {
@@ -92,18 +103,34 @@ export function TwoFactorEnrollPage() {
     const password = String(new FormData(event.currentTarget).get("password") ?? "");
     setBusy(true);
     setError(null);
-    const res = await authClient.twoFactor.disable({ password });
-    setBusy(false);
-    if (res.error) {
-      wrongPassword();
-      return;
+    try {
+      const res = await authClient.twoFactor.disable({ password });
+      if (res.error) {
+        wrongPassword();
+        return;
+      }
+      setStep({ name: "password" });
+    } catch {
+      setError(networkError(intl));
+    } finally {
+      setBusy(false);
     }
-    setStep({ name: "password" });
   }
 
   async function copyCodes(codes: string[]) {
-    await navigator.clipboard.writeText(codes.join("\n"));
-    setCopied(true);
+    try {
+      await navigator.clipboard.writeText(codes.join("\n"));
+      setCopied(true);
+    } catch {
+      // Clipboard access can be denied (permissions policy, insecure
+      // context); the codes are on screen either way.
+      setError(
+        intl.formatMessage({
+          id: "auth.enroll.error.copy",
+          defaultMessage: "Could not copy the codes. Copy them manually.",
+        }),
+      );
+    }
   }
 
   return (

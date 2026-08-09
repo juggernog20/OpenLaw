@@ -14,6 +14,7 @@ import { redirect, useLoaderData, useNavigate, useSearchParams } from "react-rou
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
+import { networkError } from "../lib/messages";
 import { currentUser, needsSetup } from "../lib/session";
 import { Alert } from "../components/ui/alert";
 import { Button } from "../components/ui/button";
@@ -60,77 +61,93 @@ export function LoginPage() {
     const form = new FormData(event.currentTarget);
     setBusy(true);
     setError(null);
-    const res = await authClient.signIn.email({
-      email,
-      password: String(form.get("password") ?? ""),
-    });
-    setBusy(false);
-    if (res.error) {
-      // 401 is the deliberately unrevealing wrong-credentials answer;
-      // other refusals (mode closed, archived) carry their own message.
-      setError(
-        res.error.status === 401
-          ? intl.formatMessage({
-              id: "auth.login.error.invalidCredentials",
-              defaultMessage: "Check your email and password.",
-            })
-          : (res.error.message ??
-              intl.formatMessage({
-                id: "auth.login.error.generic",
-                defaultMessage: "Sign-in failed. Try again.",
-              })),
-      );
-      return;
+    try {
+      const res = await authClient.signIn.email({
+        email,
+        password: String(form.get("password") ?? ""),
+      });
+      if (res.error) {
+        // 401 is the deliberately unrevealing wrong-credentials answer;
+        // other refusals (mode closed, archived) carry their own message.
+        setError(
+          res.error.status === 401
+            ? intl.formatMessage({
+                id: "auth.login.error.invalidCredentials",
+                defaultMessage: "Check your email and password.",
+              })
+            : (res.error.message ??
+                intl.formatMessage({
+                  id: "auth.login.error.generic",
+                  defaultMessage: "Sign-in failed. Try again.",
+                })),
+        );
+        return;
+      }
+      if ((res.data as { twoFactorRedirect?: boolean } | null)?.twoFactorRedirect) {
+        void navigate("/auth/two-factor");
+        return;
+      }
+      void navigate("/");
+    } catch {
+      setError(networkError(intl));
+    } finally {
+      setBusy(false);
     }
-    if ((res.data as { twoFactorRedirect?: boolean } | null)?.twoFactorRedirect) {
-      void navigate("/auth/two-factor");
-      return;
-    }
-    void navigate("/");
   }
 
   async function submitMagicLink(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setError(null);
-    const { response, error: problem } = await api.POST("/api/v1/auth/magic-link", {
-      body: { email },
-    });
-    setBusy(false);
-    if (response.status === 202) {
-      setView("magicSent");
-      return;
+    try {
+      const { response, error: problem } = await api.POST("/api/v1/auth/magic-link", {
+        body: { email },
+      });
+      if (response.status === 202) {
+        setView("magicSent");
+        return;
+      }
+      setError(
+        (problem as { detail?: string } | undefined)?.detail ??
+          intl.formatMessage({
+            id: "auth.login.error.magicLink",
+            defaultMessage: "The link could not be sent. Try again.",
+          }),
+      );
+    } catch {
+      setError(networkError(intl));
+    } finally {
+      setBusy(false);
     }
-    setError(
-      (problem as { detail?: string } | undefined)?.detail ??
-        intl.formatMessage({
-          id: "auth.login.error.magicLink",
-          defaultMessage: "The link could not be sent. Try again.",
-        }),
-    );
   }
 
   async function startSso() {
     if (!methods.ssoProviderId) return;
     setBusy(true);
     setError(null);
-    const res = await authClient.signIn.sso({
-      providerId: methods.ssoProviderId,
-      callbackURL: "/",
-      errorCallbackURL: "/auth/login?error=sso",
-    });
-    if (res.error || !res.data?.url) {
+    try {
+      const res = await authClient.signIn.sso({
+        providerId: methods.ssoProviderId,
+        callbackURL: "/",
+        errorCallbackURL: "/auth/login?error=sso",
+      });
+      if (res.error || !res.data?.url) {
+        setBusy(false);
+        setError(
+          res.error?.message ??
+            intl.formatMessage({
+              id: "auth.login.error.sso",
+              defaultMessage: "Single sign-on could not start. Try again.",
+            }),
+        );
+        return;
+      }
+      // busy stays set on purpose: the browser is leaving for the IdP.
+      window.location.assign(res.data.url);
+    } catch {
       setBusy(false);
-      setError(
-        res.error?.message ??
-          intl.formatMessage({
-            id: "auth.login.error.sso",
-            defaultMessage: "Single sign-on could not start. Try again.",
-          }),
-      );
-      return;
+      setError(networkError(intl));
     }
-    window.location.assign(res.data.url);
   }
 
   if (view === "magicSent") {

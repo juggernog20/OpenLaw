@@ -12,6 +12,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { authClient } from "../lib/auth-client";
+import { networkError } from "../lib/messages";
 import { Alert } from "../components/ui/alert";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
@@ -42,18 +43,31 @@ export function SetPasswordPage() {
     }
     setBusy(true);
     setError(null);
-    const res = await authClient.resetPassword({ newPassword, token });
-    setBusy(false);
-    if (res.error) {
-      setError(
-        intl.formatMessage({
-          id: "auth.setPassword.error.token",
-          defaultMessage: "This link has expired or was already used. Ask for a new one.",
-        }),
-      );
-      return;
+    try {
+      const res = await authClient.resetPassword({ newPassword, token });
+      if (res.error) {
+        // Only a dead token gets the expired copy; anything else (e.g. a
+        // password the server refuses) explains itself.
+        setError(
+          res.error.code === "INVALID_TOKEN"
+            ? intl.formatMessage({
+                id: "auth.setPassword.error.token",
+                defaultMessage: "This link has expired or was already used. Ask for a new one.",
+              })
+            : (res.error.message ??
+                intl.formatMessage({
+                  id: "auth.setPassword.error.generic",
+                  defaultMessage: "The password could not be set. Try again.",
+                })),
+        );
+        return;
+      }
+      setDone(true);
+    } catch {
+      setError(networkError(intl));
+    } finally {
+      setBusy(false);
     }
-    setDone(true);
   }
 
   if (done) {

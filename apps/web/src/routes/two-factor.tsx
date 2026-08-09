@@ -11,6 +11,7 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { authClient } from "../lib/auth-client";
+import { networkError } from "../lib/messages";
 import { Alert } from "../components/ui/alert";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
@@ -29,29 +30,34 @@ export function TwoFactorPage() {
     const code = String(new FormData(event.currentTarget).get("code") ?? "").trim();
     setBusy(true);
     setError(null);
-    const res = useBackup
-      ? await authClient.twoFactor.verifyBackupCode({ code })
-      : await authClient.twoFactor.verifyTotp({ code });
-    setBusy(false);
-    if (res.error) {
-      if (res.error.status === 429) {
-        setError(
-          intl.formatMessage({
-            id: "auth.twoFactor.error.locked",
-            defaultMessage: "Too many attempts. Wait 15 minutes, then try again.",
-          }),
-        );
-      } else {
-        setError(
-          intl.formatMessage({
-            id: "auth.twoFactor.error.wrongCode",
-            defaultMessage: "Wrong code. Try again, or restart sign-in.",
-          }),
-        );
+    try {
+      const res = useBackup
+        ? await authClient.twoFactor.verifyBackupCode({ code })
+        : await authClient.twoFactor.verifyTotp({ code });
+      if (res.error) {
+        if (res.error.status === 429) {
+          setError(
+            intl.formatMessage({
+              id: "auth.twoFactor.error.locked",
+              defaultMessage: "Too many attempts. Wait 15 minutes, then try again.",
+            }),
+          );
+        } else {
+          setError(
+            intl.formatMessage({
+              id: "auth.twoFactor.error.wrongCode",
+              defaultMessage: "Wrong code. Try again, or restart sign-in.",
+            }),
+          );
+        }
+        return;
       }
-      return;
+      void navigate("/");
+    } catch {
+      setError(networkError(intl));
+    } finally {
+      setBusy(false);
     }
-    void navigate("/");
   }
 
   return (

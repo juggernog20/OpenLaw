@@ -11,6 +11,7 @@ import { useState, type FormEvent } from "react";
 import { Link, redirect, useNavigate } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
+import { networkError } from "../lib/messages";
 import { needsSetup } from "../lib/session";
 import { Alert } from "../components/ui/alert";
 import { Button } from "../components/ui/button";
@@ -45,30 +46,35 @@ export function SetupPage() {
     }
     setBusy(true);
     setError(null);
-    const { response, error: problem } = await api.POST("/api/v1/auth/setup", {
-      body: {
-        email: String(form.get("email") ?? ""),
-        displayName: String(form.get("displayName") ?? ""),
-        password,
-      },
-    });
-    setBusy(false);
-    if (response.status === 201) {
-      // The response set the session cookie; land signed in.
-      void navigate("/");
-      return;
+    try {
+      const { response, error: problem } = await api.POST("/api/v1/auth/setup", {
+        body: {
+          email: String(form.get("email") ?? ""),
+          displayName: String(form.get("displayName") ?? ""),
+          password,
+        },
+      });
+      if (response.status === 201) {
+        // The response set the session cookie; land signed in.
+        void navigate("/");
+        return;
+      }
+      if (response.status === 409) {
+        setAlreadyDone(true);
+        return;
+      }
+      setError(
+        (problem as { detail?: string } | undefined)?.detail ??
+          intl.formatMessage({
+            id: "auth.setup.error.generic",
+            defaultMessage: "Setup failed. Try again.",
+          }),
+      );
+    } catch {
+      setError(networkError(intl));
+    } finally {
+      setBusy(false);
     }
-    if (response.status === 409) {
-      setAlreadyDone(true);
-      return;
-    }
-    setError(
-      (problem as { detail?: string } | undefined)?.detail ??
-        intl.formatMessage({
-          id: "auth.setup.error.generic",
-          defaultMessage: "Setup failed. Try again.",
-        }),
-    );
   }
 
   return (

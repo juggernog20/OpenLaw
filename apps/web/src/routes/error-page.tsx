@@ -13,7 +13,7 @@ export function RouteErrorPage() {
       <p className="text-md text-muted">
         <FormattedMessage
           id="error.body"
-          defaultMessage="The server could not be reached. Check your connection, then reload."
+          defaultMessage="The page could not load. Reload to try again."
         />
       </p>
       <Button variant="secondary" onClick={() => window.location.reload()}>
