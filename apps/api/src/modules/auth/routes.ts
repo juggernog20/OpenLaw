@@ -18,6 +18,7 @@ import {
   eq,
   orgSettings,
   ssoProviders,
+  THEMES,
   tryWithAdvisoryLock,
   users,
   USER_ROLES,
@@ -32,6 +33,7 @@ const UserSchema = z.object({
   email: z.string(),
   displayName: z.string(),
   role: z.enum(USER_ROLES),
+  theme: z.enum(THEMES),
 });
 
 const UserEnvelope = z.object({ user: UserSchema });
@@ -91,6 +93,31 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         expiresAt: request.session.expiresAt.toISOString(),
       },
     }),
+  );
+
+  app.patch(
+    "/me/preferences",
+    {
+      preHandler: requireAuth,
+      schema: {
+        operationId: "updateMyPreferences",
+        summary: "Update the signed-in user's preferences (theme, #44)",
+        tags: ["auth"],
+        body: z.object({ theme: z.enum(THEMES) }),
+        response: { 200: UserEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const [user] = await app.db
+        .update(users)
+        .set({ theme: request.body.theme, updatedAt: new Date() })
+        .where(eq(users.id, request.user.id))
+        .returning(userColumns);
+      // requireAuth just loaded this user, so the row exists; a vanished
+      // row here means the account was deleted mid-request.
+      if (!user) throw httpError(401, "Authentication required.");
+      return { user };
+    },
   );
 
   app.get(

@@ -72,4 +72,16 @@
   /* Avatar — uniform initials treatment per DES-018 */
   --avatar-bg: #51b3d6;
   --avatar-fg: #0d1117;
+
+  /* Shell chrome colors (DES-019, #44) — the strips whose token mapping
+   * diverges per theme. In Light the chrome is one dark surface: the nav
+   * shares the header color and the header needs no separating border. */
+  --chrome-header-border: transparent;
+  --chrome-search-bg: #0d1117;
+  --chrome-brand-chip: transparent;
+  --chrome-brand-fg: #f0f6fc;
+  --chrome-nav-bg: #0d1117;
+  --chrome-nav-border: #30363d;
+  --chrome-nav-muted: #7d8590;
+  --chrome-subbar-border: #d0d7de;
 }

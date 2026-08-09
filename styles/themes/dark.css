@@ -77,4 +77,16 @@
   /* Avatar — uniform initials treatment per DES-018 */
   --avatar-bg: #51b3d6;
   --avatar-fg: #0d1117;
+
+  /* Shell chrome colors (DES-019, #44). Dark separates its near-black
+   * strips with the muted border; the nav and search sit on canvas,
+   * one step lighter than the header. */
+  --chrome-header-border: #21262d;
+  --chrome-search-bg: #0d1117;
+  --chrome-brand-chip: transparent;
+  --chrome-brand-fg: #f0f6fc;
+  --chrome-nav-bg: #0d1117;
+  --chrome-nav-border: #21262d;
+  --chrome-nav-muted: #7d8590;
+  --chrome-subbar-border: #21262d;
 }

@@ -77,7 +77,20 @@
   --confidential-fg: #9b6b3a;
   --confidential-bg: #efe3d0;
 
-  /* Avatar — uniform initials treatment per DES-018 */
-  --avatar-bg: #51b3d6;
-  --avatar-fg: #0d1117;
+  /* Avatar — Warm overrides DES-018's light blue with the terracotta
+   * accent (DES-019): blue is the one hue Warm's palette refuses. */
+  --avatar-bg: #c97b5c;
+  --avatar-fg: #fbfaf7;
+
+  /* Shell chrome colors (DES-019, #44). Warm's chrome is layered light
+   * surfaces, so every strip carries a separating border, the search box
+   * sits on the paper tone, and the brand mark keeps its dark chip. */
+  --chrome-header-border: #d8d0c0;
+  --chrome-search-bg: #fbfaf7;
+  --chrome-brand-chip: #3a332a;
+  --chrome-brand-fg: #f4f1eb;
+  --chrome-nav-bg: #f4f1eb;
+  --chrome-nav-border: #eae5dc;
+  --chrome-nav-muted: #7a7264;
+  --chrome-subbar-border: #eae5dc;
 }

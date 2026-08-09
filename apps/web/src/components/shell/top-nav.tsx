@@ -14,7 +14,7 @@ import { destinations } from "./destinations";
 
 export function TopNav() {
   return (
-    <nav className="flex h-(--height-nav) shrink-0 items-center gap-2 border-b border-border-on-inverted bg-inverted px-4">
+    <nav className="flex h-(--height-nav) shrink-0 items-center gap-2 border-b border-(--chrome-nav-border) bg-(--chrome-nav-bg) px-4">
       {destinations.map((destination) => (
         <NavLink
           key={destination.id}
@@ -25,7 +25,7 @@ export function TopNav() {
               "-mb-px flex h-full items-center gap-2 border-b-2 px-3 text-md",
               isActive
                 ? "border-accent font-semibold text-on-inverted"
-                : "border-transparent font-medium text-subtle hover:text-on-inverted",
+                : "border-transparent font-medium text-(--chrome-nav-muted) hover:text-on-inverted",
             )
           }
         >

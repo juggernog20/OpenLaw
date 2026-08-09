@@ -11,14 +11,30 @@
 
 import { Scale } from "lucide-react";
 import { FormattedMessage } from "react-intl";
+import type { Theme } from "../../lib/theme";
 import { SearchInput } from "./search-input";
 import { UserMenu, type ShellUser } from "./user-menu";
 
-export function AppHeader({ user, onSignOut }: { user: ShellUser; onSignOut: () => void }) {
+export function AppHeader({
+  user,
+  theme,
+  onThemeChange,
+  onSignOut,
+}: {
+  user: ShellUser;
+  theme: Theme;
+  onThemeChange: (theme: Theme) => void;
+  onSignOut: () => void;
+}) {
   return (
-    <header className="flex h-(--height-header) shrink-0 items-center justify-between gap-4 bg-inverted px-4 text-on-inverted">
+    <header className="flex h-(--height-header) shrink-0 items-center justify-between gap-4 border-b border-(--chrome-header-border) bg-inverted px-4 text-on-inverted">
       <div className="flex shrink-0 items-center gap-4">
-        <span className="flex size-8 items-center justify-center" aria-hidden="true">
+        {/* Warm gives the brand mark a dark chip; Light/Dark leave the
+            chip transparent (DES-019). */}
+        <span
+          className="flex size-8 items-center justify-center rounded-card bg-(--chrome-brand-chip) text-(--chrome-brand-fg)"
+          aria-hidden="true"
+        >
           <Scale size={20} />
         </span>
         <span className="flex items-center gap-4 text-md">
@@ -35,7 +51,7 @@ export function AppHeader({ user, onSignOut }: { user: ShellUser; onSignOut: () 
       </div>
       <SearchInput />
       <div className="flex shrink-0 items-center">
-        <UserMenu user={user} onSignOut={onSignOut} />
+        <UserMenu user={user} theme={theme} onThemeChange={onThemeChange} onSignOut={onSignOut} />
       </div>
     </header>
   );

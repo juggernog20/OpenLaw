@@ -27,6 +27,10 @@ export const USER_ROLES = [
 ] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
+/** The three shipped UI themes (DES-001); Light is the default (DES-002). */
+export const THEMES = ["light", "warm", "dark"] as const;
+export type Theme = (typeof THEMES)[number];
+
 export const users = pgTable(
   "users",
   {
@@ -34,6 +38,8 @@ export const users = pgTable(
     email: text("email").notNull(),
     displayName: text("display_name").notNull(),
     role: text("role", { enum: USER_ROLES }).notNull().default("business_user"),
+    // UI theme preference (#44): follows the user across browsers.
+    theme: text("theme", { enum: THEMES }).notNull().default("light"),
     emailVerified: boolean("email_verified").notNull().default(false),
     image: text("image"),
     // twoFactor-plugin column (nullable per its schema, like the admin
@@ -58,6 +64,7 @@ export const users = pgTable(
       "users_role_check",
       sql`${table.role} in ('administrator', 'legal_team_member', 'contributor', 'business_user')`,
     ),
+    check("users_theme_check", sql`${table.theme} in ('light', 'warm', 'dark')`),
   ],
 );
 

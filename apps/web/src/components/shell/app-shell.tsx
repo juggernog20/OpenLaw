@@ -8,7 +8,9 @@
  * their container, never the viewport (DES-012).
  */
 
-import type { ReactNode } from "react";
+import { useLayoutEffect, useState, type ReactNode } from "react";
+import { api } from "../../lib/api";
+import { applyPreferredTheme, type Theme } from "../../lib/theme";
 import { SkipLink } from "../skip-link";
 import { AppHeader } from "./app-header";
 import { TopNav } from "./top-nav";
@@ -25,10 +27,26 @@ export function AppShell({
   subbar?: ReactNode;
   children: ReactNode;
 }) {
+  // Server value first: the loader's /me answer seeds the state, and the
+  // effect reconciles the pre-paint mirror with it (#44). Layout effect
+  // so a switch repaints in the new theme on the very next frame.
+  const [theme, setTheme] = useState<Theme>(user.theme);
+  useLayoutEffect(() => {
+    applyPreferredTheme(theme);
+  }, [theme]);
+
+  function changeTheme(next: Theme) {
+    // The state change applies the attribute instantly via the effect;
+    // persistence rides behind it. A failed write is deliberately not
+    // reverted — the server value simply wins again on the next load.
+    setTheme(next);
+    void api.PATCH("/api/v1/me/preferences", { body: { theme: next } });
+  }
+
   return (
     <div className="@container/shell flex min-h-screen flex-col bg-canvas text-primary">
       <SkipLink />
-      <AppHeader user={user} onSignOut={onSignOut} />
+      <AppHeader user={user} theme={theme} onThemeChange={changeTheme} onSignOut={onSignOut} />
       <TopNav />
       {subbar}
       {/* tabIndex={-1} makes the skip-link target programmatically

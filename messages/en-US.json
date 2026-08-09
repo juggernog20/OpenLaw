@@ -239,11 +239,23 @@
   "shell.search.placeholder": {
     "defaultMessage": "Type / to search"
   },
+  "shell.userMenu.theme": {
+    "defaultMessage": "Theme"
+  },
   "shell.userMenu.twoFactor": {
     "defaultMessage": "Two-factor authentication"
   },
   "shell.workspace": {
     "defaultMessage": "workspace"
+  },
+  "theme.dark": {
+    "defaultMessage": "Dark"
+  },
+  "theme.light": {
+    "defaultMessage": "Light"
+  },
+  "theme.warm": {
+    "defaultMessage": "Warm"
   },
   "welcome.auth.builtIn": {
     "defaultMessage": "Built-in sign-in"

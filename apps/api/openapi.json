@@ -183,9 +183,13 @@
                             "contributor",
                             "business_user"
                           ]
+                        },
+                        "theme": {
+                          "type": "string",
+                          "enum": ["light", "warm", "dark"]
                         }
                       },
-                      "required": ["id", "email", "displayName", "role"],
+                      "required": ["id", "email", "displayName", "role", "theme"],
                       "additionalProperties": false
                     },
                     "session": {
@@ -205,6 +209,85 @@
                     }
                   },
                   "required": ["user", "session"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/preferences": {
+      "patch": {
+        "operationId": "updateMyPreferences",
+        "summary": "Update the signed-in user's preferences (theme, #44)",
+        "tags": ["auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "theme": {
+                    "type": "string",
+                    "enum": ["light", "warm", "dark"]
+                  }
+                },
+                "required": ["theme"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "administrator",
+                            "legal_team_member",
+                            "contributor",
+                            "business_user"
+                          ]
+                        },
+                        "theme": {
+                          "type": "string",
+                          "enum": ["light", "warm", "dark"]
+                        }
+                      },
+                      "required": ["id", "email", "displayName", "role", "theme"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["user"],
                   "additionalProperties": false
                 }
               }
@@ -316,9 +399,13 @@
                             "contributor",
                             "business_user"
                           ]
+                        },
+                        "theme": {
+                          "type": "string",
+                          "enum": ["light", "warm", "dark"]
                         }
                       },
-                      "required": ["id", "email", "displayName", "role"],
+                      "required": ["id", "email", "displayName", "role", "theme"],
                       "additionalProperties": false
                     }
                   },
@@ -453,9 +540,13 @@
                             "contributor",
                             "business_user"
                           ]
+                        },
+                        "theme": {
+                          "type": "string",
+                          "enum": ["light", "warm", "dark"]
                         }
                       },
-                      "required": ["id", "email", "displayName", "role"],
+                      "required": ["id", "email", "displayName", "role", "theme"],
                       "additionalProperties": false
                     }
                   },
@@ -492,9 +583,13 @@
                             "contributor",
                             "business_user"
                           ]
+                        },
+                        "theme": {
+                          "type": "string",
+                          "enum": ["light", "warm", "dark"]
                         }
                       },
-                      "required": ["id", "email", "displayName", "role"],
+                      "required": ["id", "email", "displayName", "role", "theme"],
                       "additionalProperties": false
                     }
                   },

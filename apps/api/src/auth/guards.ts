@@ -7,7 +7,7 @@
  * immediately (DD-013).
  */
 
-import { eq, users, type UserRole } from "@openlaw/db";
+import { eq, users, type Theme, type UserRole } from "@openlaw/db";
 import { fromNodeHeaders } from "better-auth/node";
 import type { FastifyRequest } from "fastify";
 import { httpError } from "../lib/problem.js";
@@ -17,6 +17,7 @@ export interface AuthenticatedUser {
   email: string;
   displayName: string;
   role: UserRole;
+  theme: Theme;
 }
 
 export interface AuthenticatedSession {
@@ -40,6 +41,7 @@ export const userColumns = {
   email: users.email,
   displayName: users.displayName,
   role: users.role,
+  theme: users.theme,
 } as const;
 
 export async function requireAuth(request: FastifyRequest): Promise<void> {
@@ -61,6 +63,7 @@ export async function requireAuth(request: FastifyRequest): Promise<void> {
     email: user.email,
     displayName: user.displayName,
     role: user.role,
+    theme: user.theme,
   };
   request.session = {
     id: session.session.id,
