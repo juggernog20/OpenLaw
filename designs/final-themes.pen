@@ -231,7 +231,7 @@
                   "name": "hRav",
                   "width": 32,
                   "height": 32,
-                  "fill": "#F78166",
+                  "fill": "$q:avatar-bg",
                   "cornerRadius": 16,
                   "justifyContent": "center",
                   "alignItems": "center",
@@ -5818,7 +5818,7 @@
                   "name": "hRav",
                   "width": 32,
                   "height": 32,
-                  "fill": "#BC8CFF",
+                  "fill": "$q:avatar-bg",
                   "cornerRadius": 16,
                   "justifyContent": "center",
                   "alignItems": "center",
@@ -8403,5 +8403,8 @@
       ]
     }
   ],
+  "imports": {
+    "q": "openlaw.lib.pen"
+  },
   "fileToken": "49950f08-204b-45db-8080-a24a84832d51"
 }
