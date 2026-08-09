@@ -9,24 +9,23 @@
  */
 
 import { expect, type APIRequestContext } from "@playwright/test";
+import { z } from "zod";
 
 const MAILPIT_URL = process.env.E2E_MAILPIT_URL ?? "http://localhost:8025";
 
-interface MailpitSearch {
-  messages: { ID: string }[];
-}
+const MailpitSearch = z.object({ messages: z.array(z.object({ ID: z.string() })) });
 
-interface MailpitMessage {
-  Subject: string;
-  Text: string;
-}
+const MailpitMessage = z.object({ Subject: z.string(), Text: z.string() });
 
-async function searchMailTo(request: APIRequestContext, address: string): Promise<MailpitSearch> {
+async function searchMailTo(
+  request: APIRequestContext,
+  address: string,
+): Promise<z.infer<typeof MailpitSearch>> {
   const search = await request.get(`${MAILPIT_URL}/api/v1/search`, {
     params: { query: `to:"${address}"` },
   });
   expect(search.ok()).toBe(true);
-  return (await search.json()) as MailpitSearch;
+  return MailpitSearch.parse(await search.json());
 }
 
 /**
@@ -61,7 +60,7 @@ export async function waitForMailTo(
 
   const detail = await request.get(`${MAILPIT_URL}/api/v1/message/${newestId}`);
   expect(detail.ok()).toBe(true);
-  const message = (await detail.json()) as MailpitMessage;
+  const message = MailpitMessage.parse(await detail.json());
   return { subject: message.Subject, text: message.Text };
 }
 

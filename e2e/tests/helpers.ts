@@ -8,6 +8,7 @@
  */
 
 import { expect, type APIRequestContext, type Page } from "@playwright/test";
+import { z } from "zod";
 
 /**
  * The instance's Administrator. Stable across runs on purpose — the
@@ -33,8 +34,7 @@ export function uniqueEmail(prefix: string): string {
 export async function needsSetup(request: APIRequestContext): Promise<boolean> {
   const probe = await request.get("/api/v1/auth/setup");
   expect(probe.status()).toBe(200);
-  const body = (await probe.json()) as { needsSetup: boolean };
-  return body.needsSetup;
+  return z.object({ needsSetup: z.boolean() }).parse(await probe.json()).needsSetup;
 }
 
 /**

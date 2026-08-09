@@ -16,11 +16,14 @@
  */
 
 import { test, expect } from "@playwright/test";
-import { ADMIN, ensureAdminExists, signInAs } from "./helpers";
-import { extractLink, mailCountTo, waitForMailTo } from "./mailpit";
+import { z } from "zod";
+import { ADMIN, ensureAdminExists, signInAs } from "./helpers.js";
+import { extractLink, mailCountTo, waitForMailTo } from "./mailpit.js";
 
 const RUN_DOMAIN = `e2e-${Date.now()}.example`;
 const REQUESTER = `requester@${RUN_DOMAIN}`;
+
+const DomainsEnvelope = z.object({ domains: z.array(z.string()) });
 
 test.describe.serial("magic link → JIT provisioning → route guards", () => {
   let magicLink: string;
@@ -36,14 +39,14 @@ test.describe.serial("magic link → JIT provisioning → route guards", () => {
     // domains earlier runs left behind, and add this run's.
     const read = await page.request.get("/api/v1/auth/allowed-domains");
     expect(read.status()).toBe(200);
-    const { domains: existing } = (await read.json()) as { domains: string[] };
+    const { domains: existing } = DomainsEnvelope.parse(await read.json());
     const kept = existing.filter((domain) => !/^e2e-\d+\.example$/.test(domain));
 
     const written = await page.request.put("/api/v1/auth/allowed-domains", {
       data: { domains: [...kept, RUN_DOMAIN] },
     });
     expect(written.status()).toBe(200);
-    const { domains } = (await written.json()) as { domains: string[] };
+    const { domains } = DomainsEnvelope.parse(await written.json());
     expect(domains).toContain(RUN_DOMAIN);
   });
 
@@ -92,7 +95,9 @@ test.describe.serial("magic link → JIT provisioning → route guards", () => {
     // exactly a Business User — the me endpoint carries the live role.
     const me = await page.request.get("/api/v1/me");
     expect(me.status()).toBe(200);
-    const { user } = (await me.json()) as { user: { email: string; role: string } };
+    const { user } = z
+      .object({ user: z.object({ email: z.string(), role: z.string() }) })
+      .parse(await me.json());
     expect(user.email).toBe(REQUESTER);
     expect(user.role).toBe("business_user");
   });

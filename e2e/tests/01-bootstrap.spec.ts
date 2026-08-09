@@ -8,7 +8,7 @@
  */
 
 import { test, expect } from "@playwright/test";
-import { ADMIN, ensureAdminExists, needsSetup, signInAs, uniqueEmail } from "./helpers";
+import { ADMIN, ensureAdminExists, needsSetup, signInAs, uniqueEmail } from "./helpers.js";
 
 test.describe("bootstrap probe", () => {
   test("the instance has its Administrator — created via first-run setup when fresh", async ({

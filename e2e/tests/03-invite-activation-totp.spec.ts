@@ -16,9 +16,9 @@
  */
 
 import { test, expect, type Locator, type Page } from "@playwright/test";
-import { ADMIN, ensureAdminExists, signInAs, submitLogin, uniqueEmail } from "./helpers";
-import { extractLink, waitForMailTo } from "./mailpit";
-import { totp } from "./totp";
+import { ADMIN, ensureAdminExists, signInAs, submitLogin, uniqueEmail } from "./helpers.js";
+import { extractLink, waitForMailTo } from "./mailpit.js";
+import { totp } from "./totp.js";
 
 const MEMBER = {
   email: uniqueEmail("staff"),

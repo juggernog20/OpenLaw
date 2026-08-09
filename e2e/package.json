@@ -10,6 +10,7 @@
     "lint": "eslint tests playwright.config.ts"
   },
   "devDependencies": {
+    "zod": "^4.4.3",
     "@playwright/test": "^1.58.2",
     "@types/node": "^26.2.0",
     "typescript": "npm:@typescript/typescript6@^6.0.2"

@@ -246,6 +246,22 @@ reviews:
             path: auth failure, validation failure, and conflict cases matter
             more than the success case.
 
+    - path: "e2e/**/*.ts"
+      instructions: |
+        Playwright E2E (TECH-014, TECH-018). These run against the built
+        production image and the real Compose stack — never testcontainers,
+        and the persistent instance is never reset.
+          - Suites are serial and rerunnable without cleanup. Flag a test
+            that depends on a clean database, on ordering beyond the numeric
+            file prefix, or on a fixture another spec file created; per-run
+            state uses unique fixtures.
+          - Discovery is by polling, never by sleeping.
+          - Query the way a user does — role, label, text — never by test id
+            or CSS selector.
+          - Flag a test whose name does not say what behaviour it pins.
+          - Repo-wide TypeScript conventions apply: the SPDX header, `.js`
+            on relative imports, `import type`, and no `any`.
+
     - path: "styles/**/*.css"
       instructions: |
         Theme token layer (DES-001/002/005). Three themes ship as peers:
@@ -283,7 +299,7 @@ reviews:
         Do not comment on formatting, key order, or naming style — the emitter
         owns those, and the fix would have to be made upstream anyway.
 
-    - path: ".github/workflows/**/*.yml"
+    - path: ".github/workflows/**/*.{yml,yaml}"
       instructions: |
         - Actions are pinned and `permissions:` is least-privilege and
           explicit at the job level.
@@ -449,7 +465,7 @@ reviews:
           the licence claim on that file.
 
           For every file ADDED by this PR with extension .ts, .tsx, .js, .css,
-          .sql, or .yml, check that one of the first three lines contains
+          .sql, .yml, or .yaml, check that one of the first three lines contains
           `SPDX-License-Identifier: AGPL-3.0-only`.
 
           PASS if there are no such added files, or if all of them carry it.
@@ -480,7 +496,7 @@ reviews:
       - name: "add spdx headers"
         instructions: |
           For every file changed in this PR with extension .ts, .tsx, .js,
-          .css, .sql, or .yml that does not already contain an
+          .css, .sql, .yml, or .yaml that does not already contain an
           SPDX-License-Identifier line, insert
           `// SPDX-License-Identifier: AGPL-3.0-only` as the first line —
           using the comment syntax of that language (`/* ... */` for CSS,

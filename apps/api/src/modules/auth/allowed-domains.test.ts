@@ -79,13 +79,20 @@ async function setDomains(domains: string[]) {
 
 describe("allowed-domains guards", () => {
   it("is an Administrator-only surface", async () => {
-    expect((await getDomains()).statusCode).toBe(401);
+    const anonymous = await getDomains();
+    expect(anonymous.statusCode).toBe(401);
+    expect(anonymous.headers["content-type"]).toContain("application/problem+json");
+    expect(anonymous.json()).toMatchObject({ status: 401 });
 
     const staffCookies = await signInCookies(harness.app, STAFF.email, STAFF.password);
     const read = await getDomains(staffCookies);
     expect(read.statusCode).toBe(403);
     expect(read.headers["content-type"]).toContain("application/problem+json");
-    expect((await putDomains(["acme.example"], staffCookies)).statusCode).toBe(403);
+    expect(read.json()).toMatchObject({ status: 403 });
+
+    const write = await putDomains(["acme.example"], staffCookies);
+    expect(write.statusCode).toBe(403);
+    expect(write.headers["content-type"]).toContain("application/problem+json");
 
     const admin = await getDomains(adminCookies);
     expect(admin.statusCode, admin.body).toBe(200);
@@ -134,11 +141,16 @@ describe("allowed-domains validation", () => {
     await setDomains(["kept.example"]);
     const res = await putDomains(["fine.example", invalid]);
     expect(res.statusCode, res.body).toBe(400);
+    expect(res.headers["content-type"]).toContain("application/problem+json");
+    expect(res.json()).toMatchObject({ status: 400 });
     expect((await getDomains(adminCookies)).json()).toEqual({ domains: ["kept.example"] });
   });
 
   it("rejects a non-array body", async () => {
-    expect((await putDomains("acme.example")).statusCode).toBe(400);
+    const res = await putDomains("acme.example");
+    expect(res.statusCode).toBe(400);
+    expect(res.headers["content-type"]).toContain("application/problem+json");
+    expect(res.json()).toMatchObject({ status: 400 });
   });
 });
 
@@ -156,17 +168,17 @@ describe("the stored list is the magic-link policy", () => {
     await setDomains(["acme.example"]);
 
     await requestMagicLink("client@acme.example");
-    expect(harness.mailer.messagesTo("client@acme.example").length).toBe(1);
+    expect(harness.mailer.messagesTo("client@acme.example")).toHaveLength(1);
 
     // Same 202, no email: the allowlist decision stays unobservable.
     await requestMagicLink("stranger@other.example");
-    expect(harness.mailer.messagesTo("stranger@other.example").length).toBe(0);
+    expect(harness.mailer.messagesTo("stranger@other.example")).toHaveLength(0);
   });
 
   it("closes a domain the moment it leaves the list", async () => {
     await setDomains(["acme.example"]);
     await setDomains([]);
     await requestMagicLink("late@acme.example");
-    expect(harness.mailer.messagesTo("late@acme.example").length).toBe(0);
+    expect(harness.mailer.messagesTo("late@acme.example")).toHaveLength(0);
   });
 });

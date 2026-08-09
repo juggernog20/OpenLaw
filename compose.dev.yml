@@ -19,7 +19,11 @@ services:
       AUTH_RATE_LIMIT: "off"
 
   mailpit:
-    image: axllent/mailpit:latest
+    # Pinned like every other image: `latest` could change delivery
+    # behaviour between E2E runs without a repository change.
+    image: axllent/mailpit:v1.30
     ports:
-      - "8025:8025"
+      # Loopback only — the UI and REST API are unauthenticated and show
+      # every delivered token (set-password, magic links).
+      - "127.0.0.1:8025:8025"
     restart: unless-stopped

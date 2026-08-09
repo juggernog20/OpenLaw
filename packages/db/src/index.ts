@@ -125,10 +125,14 @@ export async function tryWithAdvisoryLock<T>(
  * (pg honors a per-query `query_timeout`, falling back to the client's
  * — see pg/lib/client.js), so a hung server can't strand the probe on
  * the pool; @types/pg only declares the client-level option, hence the
- * cast.
+ * widened config type.
  */
 export async function pingDb(db: Db, timeoutMs = 2000): Promise<void> {
-  await db.$client.query({ text: "select 1", query_timeout: timeoutMs } as pg.QueryConfig);
+  const probe: pg.QueryConfig & { query_timeout: number } = {
+    text: "select 1",
+    query_timeout: timeoutMs,
+  };
+  await db.$client.query(probe);
 }
 
 /** Applies committed drizzle-kit migrations. Called on API boot (TECH-005). */

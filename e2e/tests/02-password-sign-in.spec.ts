@@ -7,7 +7,7 @@
  */
 
 import { test, expect } from "@playwright/test";
-import { ADMIN, ensureAdminExists, signInAs, uniqueEmail } from "./helpers";
+import { ADMIN, ensureAdminExists, signInAs, uniqueEmail } from "./helpers.js";
 
 test.describe("password sign-in", () => {
   test("correct credentials land in the app", async ({ page, request }) => {
