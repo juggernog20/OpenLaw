@@ -24,6 +24,12 @@ services:
       # external/managed Postgres (TECH-004 — both equally supported).
       DATABASE_URL: ${DATABASE_URL:-postgres://openlaw:openlaw@postgres:5432/openlaw}
       AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET is required — generate one with `openssl rand -base64 32` and set it in .env}
+      # Public origin (emailed links, Origin/CSRF checks — TECH-008),
+      # interpolated from .env or the shell — the shell wins, so a stack
+      # published on another port (the E2E fresh stack) can match its
+      # origin. Empty means unset: the app falls back to its localhost
+      # default and warns in production.
+      BASE_URL: ${BASE_URL:-}
       # In-container listen address is fixed; PORT in .env moves the
       # published host port instead (see ports below).
       PORT: 3000

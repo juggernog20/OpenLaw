@@ -24,6 +24,13 @@ import { getOrgSettings, isEmailDomainAllowed } from "../lib/org-settings.js";
 export interface AuthConfig {
   secret: string;
   baseUrl: string;
+  /**
+   * Turns better-auth's rate limiter off (TECH-018). The E2E suite reruns
+   * sign-in flows far faster than any human, from one shared IP, so the
+   * dev overlay sets this on the persistent instance; a real deployment
+   * never should.
+   */
+  disableRateLimit?: boolean;
 }
 
 /** OWASP-recommended Argon2id parameters (19 MiB, t=2, p=1). */
@@ -64,6 +71,7 @@ export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
     appName: "OpenLaw",
     baseURL: config.baseUrl,
     secret: config.secret,
+    ...(config.disableRateLimit ? { rateLimit: { enabled: false } } : {}),
     database: drizzleAdapter(db, { provider: "pg", usePlural: true, schema }),
     // Registered providers' issuer origins stay trusted so the plugin can
     // re-run endpoint discovery after registration if it ever needs to;
