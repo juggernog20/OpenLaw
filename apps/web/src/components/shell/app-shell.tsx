@@ -10,9 +10,11 @@
 
 import { useLayoutEffect, useState, type ReactNode } from "react";
 import { api } from "../../lib/api";
+import { useGlobalKeys } from "../../lib/keyboard";
 import { applyPreferredTheme, type Theme } from "../../lib/theme";
 import { SkipLink } from "../skip-link";
 import { AppHeader } from "./app-header";
+import { KeyboardShortcutsDialog } from "./keyboard-shortcuts";
 import { TopNav } from "./top-nav";
 import type { ShellUser } from "./user-menu";
 
@@ -35,6 +37,11 @@ export function AppShell({
     applyPreferredTheme(theme);
   }, [theme]);
 
+  // The global keyboard contract (DES-010, #45) lives on the shell:
+  // pre-login screens have no search input and no overlays to serve.
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  useGlobalKeys({ onOpenCheatSheet: () => setShortcutsOpen(true) });
+
   function changeTheme(next: Theme) {
     // The state change applies the attribute instantly via the effect;
     // persistence rides behind it. A failed write is deliberately not
@@ -56,6 +63,7 @@ export function AppShell({
       <main id="main" tabIndex={-1} className="@container/page flex-1 px-page-x py-page-y">
         {children}
       </main>
+      <KeyboardShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     </div>
   );
 }
