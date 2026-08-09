@@ -95,6 +95,44 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
+  app.get(
+    "/auth/methods",
+    {
+      schema: {
+        operationId: "getAuthMethods",
+        summary:
+          "What the login screen may offer (TECH-008): the auth mode, the " +
+          "magic-link toggle, and the SSO provider to start, if one is registered",
+        tags: ["auth"],
+        response: {
+          200: z.object({
+            mode: z.enum(AUTH_MODES),
+            magicLinkEnabled: z.boolean(),
+            /** Slug of the provider the SSO button starts; null when none exists. */
+            ssoProviderId: z.string().nullable(),
+          }),
+          default: problemResponse,
+        },
+      },
+    },
+    // Deliberately unauthenticated: the login screen has no session yet,
+    // and everything here is visible on that screen anyway the moment it
+    // renders. The admin-only GET /auth/mode stays the management surface.
+    async () => {
+      const settings = await getOrgSettings(app.db);
+      const [provider] = await app.db
+        .select({ providerId: ssoProviders.providerId })
+        .from(ssoProviders)
+        .orderBy(ssoProviders.createdAt)
+        .limit(1);
+      return {
+        mode: settings.authMode,
+        magicLinkEnabled: settings.magicLinkEnabled,
+        ssoProviderId: provider?.providerId ?? null,
+      };
+    },
+  );
+
   app.post(
     "/auth/setup",
     {

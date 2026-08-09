@@ -119,6 +119,31 @@ describe("auth mode (GET/PATCH /api/v1/auth/mode)", () => {
   });
 });
 
+describe("login method discovery (GET /api/v1/auth/methods)", () => {
+  it("tells an anonymous visitor what the login screen may offer", async () => {
+    const res = await harness.app.inject({ method: "GET", url: "/api/v1/auth/methods" });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json()).toEqual({
+      mode: "built_in",
+      magicLinkEnabled: true,
+      ssoProviderId: null,
+    });
+  });
+
+  it("tracks the auth mode and the magic-link toggle live", async () => {
+    await enterMode("oidc");
+    await harness.db.update(orgSettings).set({ magicLinkEnabled: false });
+    try {
+      const res = await harness.app.inject({ method: "GET", url: "/api/v1/auth/methods" });
+      expect(res.statusCode, res.body).toBe(200);
+      expect(res.json()).toMatchObject({ mode: "oidc", magicLinkEnabled: false });
+    } finally {
+      await harness.db.update(orgSettings).set({ magicLinkEnabled: true });
+      await enterMode("built_in");
+    }
+  });
+});
+
 describe("oidc-mode semantics (break-glass)", () => {
   it("closes password sign-in for non-administrators without revealing accounts", async () => {
     await enterMode("oidc");
