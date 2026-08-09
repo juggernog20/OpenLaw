@@ -35,7 +35,7 @@ test.describe("bootstrap probe", () => {
       // skipping out marks onboarding complete and proves the session.
       await expect(page).toHaveURL("/welcome");
       await expect(page.getByRole("heading", { name: "Welcome to OpenLaw" })).toBeVisible();
-      await page.getByRole("button", { name: "Skip for now" }).click();
+      await page.getByRole("button", { name: "Set up later" }).click();
       await expect(page).toHaveURL("/");
       await expect(page.getByRole("banner").getByText(ADMIN.displayName)).toBeVisible();
     } else {

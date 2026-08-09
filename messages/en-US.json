@@ -351,10 +351,10 @@
     "defaultMessage": "Step {current} of {total}"
   },
   "welcome.skip": {
-    "defaultMessage": "Skip"
+    "defaultMessage": "Set up later"
   },
   "welcome.skipAll": {
-    "defaultMessage": "Skip for now"
+    "defaultMessage": "Set up later"
   },
   "welcome.start": {
     "defaultMessage": "Get started"

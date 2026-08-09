@@ -339,7 +339,7 @@ export function WelcomePage() {
                     <FormattedMessage id="welcome.start" defaultMessage="Get started" />
                   </Button>
                   <Button variant="ghost" disabled={busy} onClick={() => void finish()}>
-                    <FormattedMessage id="welcome.skipAll" defaultMessage="Skip for now" />
+                    <FormattedMessage id="welcome.skipAll" defaultMessage="Set up later" />
                   </Button>
                 </div>
               )}
@@ -685,6 +685,9 @@ export function WelcomePage() {
                     <FormattedMessage id="welcome.back" defaultMessage="Back" />
                   </Button>
                   <div className="flex items-center gap-2">
+                    {/* Every step defers, none is required (SET-004) —
+                        only the Administrator account is, and that was
+                        first-run setup, before this flow. */}
                     {step !== "invites" ? (
                       <>
                         <Button
@@ -692,7 +695,7 @@ export function WelcomePage() {
                           disabled={busy}
                           onClick={() => goTo(STEPS[stepIndex + 1] ?? "invites")}
                         >
-                          <FormattedMessage id="welcome.skip" defaultMessage="Skip" />
+                          <FormattedMessage id="welcome.skip" defaultMessage="Set up later" />
                         </Button>
                         <Button
                           disabled={busy}
@@ -706,9 +709,14 @@ export function WelcomePage() {
                         </Button>
                       </>
                     ) : (
-                      <Button disabled={busy} onClick={() => void finish()}>
-                        <FormattedMessage id="welcome.finish" defaultMessage="Finish" />
-                      </Button>
+                      <>
+                        <Button variant="ghost" disabled={busy} onClick={() => void finish()}>
+                          <FormattedMessage id="welcome.skip" defaultMessage="Set up later" />
+                        </Button>
+                        <Button disabled={busy} onClick={() => void finish()}>
+                          <FormattedMessage id="welcome.finish" defaultMessage="Finish" />
+                        </Button>
+                      </>
                     )}
                   </div>
                 </div>
