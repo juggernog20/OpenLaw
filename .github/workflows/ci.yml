@@ -61,3 +61,80 @@ jobs:
             echo "::error::openapi.json / api-client are stale — run 'pnpm openapi' and commit the result."
             exit 1
           fi
+
+  # The deployment-fidelity gate (TECH-018): the browser E2E suite runs
+  # against images built by the real Dockerfiles, brought up by the
+  # blessed compose.yml plus the dev overlay (Mailpit only). This is what
+  # catches "works with vite dev / breaks in the built image" drift. The
+  # e2e package's lint/typecheck ride in `pnpm check` above; only the
+  # browser run lives here, because it needs the live stack.
+  e2e:
+    name: E2E against the built Compose stack
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install the Playwright browser
+        run: pnpm --filter @openlaw/e2e exec playwright install --with-deps chromium
+
+      # compose.yml refuses to start without AUTH_SECRET (env_file: .env).
+      # A throwaway per-run secret is exactly right for a stack whose
+      # volumes never outlive the job.
+      - name: Write the CI .env
+        run: echo "AUTH_SECRET=$(openssl rand -base64 32)" > .env
+
+      - name: Build the stack from the real Dockerfiles
+        run: docker compose -f compose.yml -f compose.dev.yml build
+
+      # Fresh volumes by construction — the runner has none. The suite's
+      # bootstrap probe takes the fresh-instance path via first-run setup.
+      - name: Start the stack
+        run: docker compose -f compose.yml -f compose.dev.yml up -d
+
+      # Poll the readiness probe directly instead of `up --wait`: the
+      # container healthcheck's 30s interval would add most of a minute
+      # of dead time to every run.
+      - name: Wait for /readyz
+        run: |
+          for _ in $(seq 1 60); do
+            if curl --connect-timeout 2 --max-time 5 -fsS http://localhost:3000/readyz >/dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::app never answered /readyz"
+          exit 1
+
+      - name: Run the Playwright suite
+        run: pnpm e2e
+
+      - name: Show compose logs
+        if: failure()
+        run: docker compose -f compose.yml -f compose.dev.yml logs
+
+      # Traces (retain-on-failure) plus the HTML report the config emits
+      # under CI — download and `playwright show-report` to replay.
+      - name: Upload Playwright traces and report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: |
+            e2e/test-results/
+            e2e/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Tear down the stack
+        if: always()
+        run: docker compose -f compose.yml -f compose.dev.yml down -v

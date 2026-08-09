@@ -24,6 +24,8 @@ services:
     image: axllent/mailpit:v1.30
     ports:
       # Loopback only — the UI and REST API are unauthenticated and show
-      # every delivered token (set-password, magic links).
-      - "127.0.0.1:8025:8025"
+      # every delivered token (set-password, magic links). MAILPIT_PORT
+      # moves the host port so a second stack (the E2E suite's own
+      # instance) can run beside the default one.
+      - "127.0.0.1:${MAILPIT_PORT:-8025}:8025"
     restart: unless-stopped

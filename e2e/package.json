@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "e2e": "playwright test",
+    "e2e:local": "scripts/local-stack.sh",
     "typecheck": "tsc --noEmit",
     "lint": "eslint tests playwright.config.ts"
   },
