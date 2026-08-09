@@ -21,6 +21,24 @@ interface MailpitMessage {
   Text: string;
 }
 
+async function searchMailTo(request: APIRequestContext, address: string): Promise<MailpitSearch> {
+  const search = await request.get(`${MAILPIT_URL}/api/v1/search`, {
+    params: { query: `to:"${address}"` },
+  });
+  expect(search.ok()).toBe(true);
+  return (await search.json()) as MailpitSearch;
+}
+
+/**
+ * How many messages Mailpit holds for `address`, right now — the
+ * anti-enumeration suites' proof that an ineligible request delivered
+ * nothing (always sequenced after some later delivery has confirmed
+ * the pipeline flushed).
+ */
+export async function mailCountTo(request: APIRequestContext, address: string): Promise<number> {
+  return (await searchMailTo(request, address)).messages.length;
+}
+
 /**
  * Polls Mailpit until a message addressed to `address` exists and
  * returns the newest one's subject and plain-text body.
@@ -33,11 +51,7 @@ export async function waitForMailTo(
   await expect
     .poll(
       async () => {
-        const search = await request.get(`${MAILPIT_URL}/api/v1/search`, {
-          params: { query: `to:"${address}"` },
-        });
-        expect(search.ok()).toBe(true);
-        const body = (await search.json()) as MailpitSearch;
+        const body = await searchMailTo(request, address);
         newestId = body.messages[0]?.ID;
         return body.messages.length;
       },
