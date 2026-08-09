@@ -1,0 +1,15 @@
+.git
+node_modules
+**/node_modules
+**/dist
+**/.turbo
+designs
+docs
+.scratch
+.claude
+.env
+.env.*
+!.env.example
+Dockerfile
+compose.yml
+compose.dev.yml

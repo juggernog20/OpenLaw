@@ -16,7 +16,7 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "secretlint": "secretlint \"**/*\"",
-    "openapi": "pnpm --filter @openlaw/api openapi:emit && pnpm --filter @openlaw/api-client generate && prettier --write apps/api/openapi.json packages/api-client/src/schema.ts",
+    "openapi": "turbo run build --filter=@openlaw/api... && pnpm --filter @openlaw/api openapi:emit && pnpm --filter @openlaw/api-client generate && prettier --write apps/api/openapi.json packages/api-client/src/schema.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "fix": "pnpm lint:fix && pnpm format && pnpm secretlint && turbo run typecheck --continue",
