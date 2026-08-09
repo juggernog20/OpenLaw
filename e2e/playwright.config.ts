@@ -3,8 +3,10 @@
 /**
  * E2E configuration (TECH-018): the suite runs against the blessed Compose
  * stack's origin — built images, real Postgres, real HTTP — never a dev
- * server. Point E2E_BASE_URL elsewhere to target a fresh throwaway stack;
- * the default is the persistent local instance.
+ * server. The default origin fits CI, which brings its stack up on 3000;
+ * local runs go through `pnpm e2e:local` (scripts/local-stack.sh), which
+ * orchestrates the suite's own separate instance and points E2E_BASE_URL
+ * at it — never at the human testing ground on the default ports.
  *
  * Serial on purpose: one worker, no parallelism. The suites are journeys
  * through one shared, persistent instance, and later flows build on state

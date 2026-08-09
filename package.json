@@ -16,6 +16,7 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "e2e": "pnpm --filter @openlaw/e2e e2e",
+    "e2e:local": "pnpm --filter @openlaw/e2e e2e:local",
     "secretlint": "secretlint \"**/*\"",
     "openapi": "turbo run build --filter=@openlaw/api... && pnpm --filter @openlaw/api openapi:emit && pnpm --filter @openlaw/api-client generate && prettier --write apps/api/openapi.json packages/api-client/src/schema.ts",
     "format": "prettier --write .",
