@@ -50,6 +50,18 @@ export async function ensureAdminExists(request: APIRequestContext): Promise<voi
   expect([201, 409]).toContain(created.status());
 }
 
+/**
+ * Fills and submits the login form. Where the submission lands depends
+ * on the account — home, or the two-factor challenge — so callers
+ * assert the destination themselves.
+ */
+export async function submitLogin(page: Page, email: string, password: string): Promise<void> {
+  await page.goto("/auth/login");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill(password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+}
+
 /** Signs in through the login screen and lands on the guarded home. */
 export async function signInAs(
   page: Page,
@@ -57,10 +69,7 @@ export async function signInAs(
   password: string,
   displayName: string,
 ): Promise<void> {
-  await page.goto("/auth/login");
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill(password);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await submitLogin(page, email, password);
   await expect(page).toHaveURL("/");
   await expect(page.getByRole("banner").getByText(displayName)).toBeVisible();
 }
