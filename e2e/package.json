@@ -1,0 +1,19 @@
+{
+  "name": "@openlaw/e2e",
+  "version": "0.0.1",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "e2e": "playwright test",
+    "e2e:local": "scripts/local-stack.sh",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint tests playwright.config.ts"
+  },
+  "devDependencies": {
+    "zod": "^4.4.3",
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^26.2.0",
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
+  }
+}

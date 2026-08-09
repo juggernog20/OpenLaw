@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+#
+# Development / E2E overlay (TECH-017, TECH-018): adds Mailpit as the
+# SMTP sink and points the app at it. This is the ONLY divergence from
+# the deployer stack — a mail catcher must never ship in compose.yml,
+# where it would silently swallow real invites and magic links.
+#
+#   docker compose -f compose.yml -f compose.dev.yml up
+#
+# Mail UI and pollable REST API (used by the E2E suite): http://localhost:8025
+
+services:
+  app:
+    environment:
+      SMTP_URL: smtp://mailpit:1025
+      SMTP_FROM: OpenLaw <openlaw@localhost>
+      # The E2E suite replays sign-in flows from one IP far faster than
+      # any human; production keeps better-auth's limits.
+      AUTH_RATE_LIMIT: "off"
+
+  mailpit:
+    # Pinned like every other image: `latest` could change delivery
+    # behaviour between E2E runs without a repository change.
+    image: axllent/mailpit:v1.30
+    ports:
+      # Loopback only — the UI and REST API are unauthenticated and show
+      # every delivered token (set-password, magic links). MAILPIT_PORT
+      # moves the host port so a second stack (the E2E suite's own
+      # instance) can run beside the default one.
+      - "127.0.0.1:${MAILPIT_PORT:-8025}:8025"
+    restart: unless-stopped

@@ -1,0 +1,32 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * E2E configuration (TECH-018): the suite runs against the blessed Compose
+ * stack's origin — built images, real Postgres, real HTTP — never a dev
+ * server. The default origin fits CI, which brings its stack up on 3000;
+ * local runs go through `pnpm e2e:local` (scripts/local-stack.sh), which
+ * orchestrates the suite's own separate instance and points E2E_BASE_URL
+ * at it — never at the human testing ground on the default ports.
+ *
+ * Serial on purpose: one worker, no parallelism. The suites are journeys
+ * through one shared, persistent instance, and later flows build on state
+ * earlier ones created.
+ */
+
+import { defineConfig, devices } from "@playwright/test";
+
+export default defineConfig({
+  testDir: "./tests",
+  fullyParallel: false,
+  workers: 1,
+  retries: 0,
+  forbidOnly: !!process.env.CI,
+  // CI adds the HTML report so the workflow can upload it (with the
+  // traces) as a failure artifact; locally the list output is enough.
+  reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : [["list"]],
+  use: {
+    baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
+    trace: "retain-on-failure",
+  },
+  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+});

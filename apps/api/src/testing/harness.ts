@@ -70,6 +70,9 @@ export function linkFrom(text: string): string {
  * magic-link tokens from what a real recipient would have received.
  */
 export class CapturingMailer implements Mailer {
+  // Configured by default: most suites exercise flows that send. Flip to
+  // false to act out a deployment with no SMTP wired.
+  configured = true;
   readonly messages: MailMessage[] = [];
 
   send(message: MailMessage): Promise<void> {

@@ -24,7 +24,17 @@ export { and, asc, count, desc, eq, inArray, isNull, lt, gt, ne, or, sql } from 
 export type Db = NodePgDatabase<typeof schema> & { $client: pg.Pool };
 
 export function createDb(databaseUrl: string): Db {
-  const pool = new pg.Pool({ connectionString: databaseUrl });
+  // pg's default connect wait is unbounded; a cap keeps failed attempts
+  // (e.g. readiness probes against a down database) from dangling.
+  const pool = new pg.Pool({ connectionString: databaseUrl, connectionTimeoutMillis: 10_000 });
+  // Idle pooled connections surface server-side terminations (a Postgres
+  // restart, pg_terminate_backend) as pool 'error' events; with no
+  // listener that is an uncaught exception crashing a process no request
+  // ever touched. The client is already discarded when this fires — the
+  // next checkout dials a fresh connection — so noting it is enough.
+  pool.on("error", (error) => {
+    console.error(`postgres: idle client error (${error.message})`);
+  });
   return drizzle(pool, { schema });
 }
 
@@ -107,6 +117,22 @@ export async function tryWithAdvisoryLock<T>(
     // Same as withAdvisoryLock: never pool a possibly-still-locked session.
     holder.release(unlockFailure);
   }
+}
+
+/**
+ * Bounded connectivity probe for readiness checks: resolves iff the
+ * database answers within `timeoutMs`. The bound rides the query itself
+ * (pg honors a per-query `query_timeout`, falling back to the client's
+ * — see pg/lib/client.js), so a hung server can't strand the probe on
+ * the pool; @types/pg only declares the client-level option, hence the
+ * widened config type.
+ */
+export async function pingDb(db: Db, timeoutMs = 2000): Promise<void> {
+  const probe: pg.QueryConfig & { query_timeout: number } = {
+    text: "select 1",
+    query_timeout: timeoutMs,
+  };
+  await db.$client.query(probe);
 }
 
 /** Applies committed drizzle-kit migrations. Called on API boot (TECH-005). */
