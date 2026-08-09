@@ -36,7 +36,8 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arc 1, milestone 2** — authentication (issues #2–#10; 1/8 and 2/8 landed).
+**Arc 1, milestone 4** — the app shell and design system. M1–M3 are done: the monorepo and CI, the
+authentication chain, and the Compose stack a deployer actually runs.
 
 ---
 
@@ -53,7 +54,7 @@ follows.
   - Vitest + the API test harness; GitHub Actions for CI, CodeQL, secret scanning, Dependabot
   - _Decisions:_ TECH-002, TECH-003, TECH-014, TECH-015, TECH-016
 
-- [ ] **M2 — Authentication** _(in flight)_
+- [x] **M2 — Authentication**
       _Demo:_ A fresh install shows the first-run Administrator setup; that Administrator invites a Legal
       Team Member, who sets a password, enrols TOTP, and signs in.
   - better-auth behind our own session model; built-in basic and runtime BYO-OIDC modes
@@ -61,13 +62,14 @@ follows.
   - `packages/db` is born with the first real tables; the guard chain every later route builds on
   - _Decisions:_ TECH-008, DD-010, DD-013 · _Issues:_ #2–#10
 
-- [ ] **M3 — The Compose stack**
+- [x] **M3 — The Compose stack**
       _Demo:_ On a clean Linux VM, clone, copy `.env.example`, `docker compose up`, and reach the first-run
       setup screen in a browser.
   - `compose.yml` with the blessed service set; migrations run on API boot
   - `/healthz` and `/readyz`; structured JSON logs with request IDs
-  - Local-filesystem storage driver on a volume, S3-compatible driver behind the same adapter
-  - _Decisions:_ TECH-005, TECH-014, DOC-009
+  - The demo itself is a CI gate: the browser suite runs against images built from the real Dockerfiles
+    on a fresh runner, so "works in dev, breaks in the image" fails the build [TECH-018]
+  - _Decisions:_ TECH-005, TECH-014, TECH-017, TECH-018
 
 - [ ] **M4 — App shell and design system**
       _Demo:_ Sign in, land on the authenticated shell, switch between the three themes, and resize to the
@@ -148,7 +150,10 @@ makes OpenLaw a CLM rather than a database with a form on it.
   - `documents` plus `document_versions`; every document has exactly one owning record
   - Corrections append a version; versions are never edited
   - Soft delete plus Administrator hard delete
-  - _Decisions:_ DOC-001, DOC-008, DOC-010
+  - The storage adapter, with its local-filesystem driver on a volume and the S3-compatible driver behind
+    the same interface — this is the first demo that puts a file anywhere, so the adapter lands here
+    rather than with the Compose stack
+  - _Decisions:_ DOC-001, DOC-008, DOC-009, DOC-010, TECH-014
 
 - [ ] **M12 — Rendering, OCR, and text extraction**
       _Demo:_ Preview a Word draft in-app without downloading it, then upload a scanned PDF and watch OCR

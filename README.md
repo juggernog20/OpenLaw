@@ -34,8 +34,12 @@ pnpm test
 Day-to-day iteration runs the apps as local watch processes; everything E2E and every milestone acceptance runs against the built Compose stack (TECH-018):
 
 ```sh
-docker compose -f compose.yml -f compose.dev.yml up -d --build
+pnpm stack        # build, start, then follow the logs
+pnpm stack:logs   # follow the logs of an already-running stack
+pnpm stack:down   # stop it (add -v by hand to drop the pg volume)
 ```
+
+`pnpm stack` leaves the containers running in the background, so Ctrl-C detaches from the logs rather than stopping the stack — the instance's accumulated state survives between sessions. All three wrap `docker compose -f compose.yml -f compose.dev.yml`.
 
 The Playwright suite in [`e2e/`](e2e/) targets that stack's origin (`E2E_BASE_URL`, default `http://localhost:3000`) and needs no cleanup between runs — the instance's accumulated state is part of the point:
 
