@@ -10,8 +10,10 @@
  * RFC 9457 problem details.
  */
 
+import { sep } from "node:path";
 import Fastify, { type FastifyError, type FastifyServerOptions } from "fastify";
-import type { Db } from "@openlaw/db";
+import { pingDb, type Db } from "@openlaw/db";
+import fastifyStatic from "@fastify/static";
 import fastifySwagger from "@fastify/swagger";
 import scalarApiReference from "@scalar/fastify-api-reference";
 import {
@@ -36,6 +38,12 @@ export interface AppDeps {
   db: Db;
   config: AuthConfig;
   mailer: Mailer;
+  /**
+   * Directory of the built SPA (TECH-017: the app serves the web bundle
+   * same-origin). Unset — e.g. API-only development — leaves every
+   * non-API path a JSON 404.
+   */
+  webDist?: string;
 }
 
 declare module "fastify" {
@@ -82,15 +90,66 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   app.get("/healthz", { schema: { hide: true } }, async () => ({
     status: "ok",
   }));
-  // readyz gains real DB/queue checks when those dependencies exist.
-  app.get("/readyz", { schema: { hide: true } }, async () => ({
-    status: "ok",
-  }));
+  // Readiness = the DB answers a query in bounded time. The race caps
+  // the probe when the host is unreachable-but-not-refusing, where pg
+  // would otherwise wait on its own (much longer) connect timeout.
+  app.get("/readyz", { schema: { hide: true } }, async (_request, reply) => {
+    // pingDb bounds the query itself; the race additionally bounds the
+    // response when the pool is still waiting for a connection. Whichever
+    // side loses settles later, unobserved — both get handlers up front
+    // so neither becomes an unhandled rejection.
+    let timer: NodeJS.Timeout | undefined;
+    const probe = pingDb(deps.db, 2000);
+    probe.catch(() => {});
+    const timeout = new Promise((_resolve, reject) => {
+      timer = setTimeout(() => reject(new Error("readiness probe timed out")), 2000);
+      timer.unref();
+    });
+    timeout.catch(() => {});
+    try {
+      await Promise.race([probe, timeout]);
+      return { status: "ok" };
+    } catch {
+      return reply.status(503).send({ status: "unavailable" });
+    } finally {
+      clearTimeout(timer);
+    }
+  });
+
+  if (deps.webDist) {
+    // TECH-017: the built SPA is served same-origin by this process.
+    // Hashed build artifacts cache forever; everything else (the shell,
+    // favicons) revalidates so a new image shows up on reload.
+    await app.register(fastifyStatic, {
+      root: deps.webDist,
+      cacheControl: false,
+      setHeaders: (reply, filePath) => {
+        void reply.header(
+          "cache-control",
+          filePath.includes(`${sep}assets${sep}`)
+            ? "public, max-age=31536000, immutable"
+            : "no-cache",
+        );
+      },
+    });
+  }
 
   // Error/404 handlers are installed before route plugins register:
   // encapsulated contexts snapshot their parent, so handlers added
   // afterwards would never apply inside the modules.
   app.setNotFoundHandler((request, reply) => {
+    // SPA fallback: a GET for a non-API path is a client-side route —
+    // the shell owns it. API paths and writes stay JSON 404s. Match on
+    // the pathname alone so a query string can't disguise an API path.
+    const pathname = request.url.split("?", 1)[0] ?? request.url;
+    if (
+      deps.webDist &&
+      (request.method === "GET" || request.method === "HEAD") &&
+      !(pathname === "/api" || pathname.startsWith("/api/"))
+    ) {
+      void reply.sendFile("index.html");
+      return;
+    }
     const problem: Problem = {
       type: "about:blank",
       title: "Not found",
