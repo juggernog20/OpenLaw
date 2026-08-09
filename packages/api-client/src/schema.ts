@@ -125,6 +125,24 @@ export interface paths {
     patch: operations["setAuthMode"];
     trace?: never;
   };
+  "/api/v1/auth/allowed-domains": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The magic-link domain allowlist (DD-010); empty admits nobody */
+    get: operations["getAllowedDomains"];
+    /** Replace the magic-link domain allowlist (DD-010); the list is normalised to lower case and enforced on the next request — an empty list closes the portal to everyone */
+    put: operations["setAllowedDomains"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/auth/magic-link": {
     parameters: {
       query?: never;
@@ -540,6 +558,74 @@ export interface operations {
           "application/json": {
             /** @enum {string} */
             mode: "built_in" | "oidc";
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getAllowedDomains: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            domains: string[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setAllowedDomains: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          domains: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            domains: string[];
           };
         };
       };

@@ -1,32 +1,115 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+# CodeRabbit review policy.
+#
+# Convention: this file records deviations from CodeRabbit's defaults, plus a
+# small number of defaults pinned deliberately because something in the repo
+# depends on them. A key present here is a decision; a key absent is a default
+# we are content with.
+
+language: "en-US" # DES-013: en-US is the only v1 locale.
+
+# DES-015 register, applied to the reviewer itself.
+tone_instructions: |
+  Terse, direct, second-person imperative. No praise, no preamble, no
+  restating the diff. Give the defect, the consequence, and the fix.
+
 reviews:
+  # CodeRabbit is the only reviewer on this repo. Prefer over-reporting to
+  # silence; drop to "chill" if the nit volume stops being worth reading.
+  profile: "assertive"
+
+  # Left off deliberately. Turning this on makes `mode: "error"` checks below
+  # into merge blocks and lets CodeRabbit approve. With a single maintainer and
+  # a hard CI gate already in front of merge, that adds latency, not eyes.
+  request_changes_workflow: false
+
+  # The PR description is human-authored and is itself graded by the
+  # description pre-merge check — so keep CodeRabbit's summary out of it.
+  high_level_summary_in_walkthrough: true
+
+  # Report which files were skipped and why. With the path_filters below doing
+  # real work, this is how we notice a filter that is too broad.
+  review_details: true
+
+  # Pinned, not incidental: the `autofix` skill in this repo consumes the
+  # "prompt for AI agents" blocks CodeRabbit emits under each finding.
+  enable_prompt_for_ai_agents: true
+
+  in_progress_fortune: false
+  poem: false
+
+  # Single-maintainer repo; there is nobody to suggest.
+  suggested_reviewers: false
+
+  # Public repo, and the drive-by AI-generated PR is a real cost here.
+  # Requires the label to exist: `gh label create slop -d "Low-quality or
+  # unreviewed AI-generated PR" -c ededed`
+  slop_detection:
+    enabled: true
+    label: "slop"
+
+  # Restricting the list turns it into an allowlist: CodeRabbit suggests only
+  # from here. That deliberately keeps it out of the five-label triage state
+  # machine (needs-triage / needs-info / ready-for-agent / ready-for-human /
+  # wontfix), which docs/agents/triage-labels.md reserves for the maintainer
+  # and the triage skill.
+  labeling_instructions:
+    - label: "bug"
+      instructions: |
+        Apply when the PR fixes incorrect behaviour that already shipped to
+        `dev` or `main`. Not for fixing a defect introduced earlier in the
+        same PR stack.
+    - label: "enhancement"
+      instructions: |
+        Apply when the PR adds a user-visible capability or extends an
+        existing one. New modules, new routes, new UI surfaces.
+    - label: "documentation"
+      instructions: |
+        Apply when the PR's substantive changes are to Markdown under docs/,
+        CONTEXT.md, README.md, or CLAUDE.md. Do not apply for doc comments
+        inside source files.
+    - label: "chore"
+      instructions: |
+        Apply for maintenance with no product behaviour change: dependency
+        bumps, CI config, lint/format config, refactors that preserve
+        behaviour, regenerated artifacts.
+  mutually_exclusive_groups:
+    kind: ["bug", "enhancement", "documentation", "chore"]
+  auto_apply_labels: true
+
   auto_review:
     # Patterns for base branches OTHER than the default branch, which is always
     # reviewed. `dev` is where feature PRs actually land (main receives merges
     # from dev), so without this every real review was skipped with
     # "auto reviews are disabled on base/target branches other than the default
     # branch". Anchored so it matches dev alone, not `develop` or `feat/dev-x`.
+    # Note: these are regexes, not globs.
     base_branches:
       - "^dev$"
+    ignore_title_keywords:
+      - "wip"
+      - "do not review"
+    # A long-running branch should keep getting reviewed, not go quiet after
+    # the fifth commit. 0 disables the auto-pause entirely.
+    auto_pause_after_reviewed_commits: 0
 
-  # Generated artifacts: reviewing them produces findings nobody can act on,
-  # since the fix always belongs upstream in the emitter.
-  # Migrations are deliberately NOT excluded — drizzle emits them but they are
-  # hand-consolidated and hand-hardened, and they are the highest-consequence
-  # SQL in the repo.
   path_filters:
+    # Generated artifacts whose fix always belongs upstream in the emitter.
     - "!packages/api-client/src/schema.ts"
-    - "!apps/api/openapi.json"
-
-  pre_merge_checks:
-    docstrings:
-      # Off by decision, not by neglect — see TECH-019. This repo documents at
-      # module granularity (a file-level block citing the decision record that
-      # governs the module) plus comments on members whose behaviour the type
-      # cannot express. A per-exported-symbol percentage cannot see that: it
-      # scored a codebase where 47/58 files carry a module doc and 70 decision
-      # citations sit in source comments at 36%, and the only way to raise the
-      # number is to add comments that restate signatures.
-      mode: "off"
+    # drizzle-kit's own bookkeeping. The migration SQL itself stays in scope —
+    # see the migrations path_instructions below.
+    - "!packages/db/migrations/meta/**"
+    # Encrypted Pencil sources. Ciphertext; there is nothing to review, and
+    # .pen is not in CodeRabbit's default ignore list because it is ours.
+    - "!designs/**"
+    #
+    # Deliberately NOT excluded (was excluded before): apps/api/openapi.json.
+    # It is generated, but it is also the published contract, and it is the
+    # only input `oasdiff` has for detecting breaking API changes. The
+    # path_instructions below tell CodeRabbit to judge it as a contract rather
+    # than as source.
 
   path_instructions:
     - path: "{apps,packages}/**/*.{ts,tsx}"
@@ -56,3 +139,561 @@ reviews:
 
         Do not flag a well-documented module for lacking a doc block on each
         individual export.
+
+        Repo-wide TypeScript conventions:
+          - Every file starts with `// SPDX-License-Identifier: AGPL-3.0-only`
+            above the module doc block (DD-011).
+          - Relative imports carry the `.js` extension; this is NodeNext
+            resolution, and an extensionless relative import fails at runtime,
+            not at build.
+          - `import type` for type-only imports.
+          - No `any`, and no `as` cast that launders one. TECH-015 puts the
+            native TS 7 compiler in the loop; a cast is a defect report, not a
+            fix.
+
+    - path: "apps/api/src/**/*.ts"
+      instructions: |
+        Fastify API (TECH-003). Review against these contracts:
+          - Zod is the single schema source (TECH-016). A route that declares
+            body/query/params/response shapes anywhere other than a Zod schema
+            breaks OpenAPI emission and the generated client with it.
+          - Every operation declares `problemResponse` for non-2xx. The error
+            envelope is RFC 9457 problem details (see src/lib/problem.ts);
+            hand-rolled `{ error: "..." }` bodies are a defect.
+          - Route handlers go through the auth guards in src/auth/guards.ts.
+            Flag a handler reachable without an explicit authorization
+            decision, and flag one that authenticates but never authorizes.
+          - DD-013's four roles (Administrator, Legal Team Member,
+            Contributor, Business User) are the permission vocabulary. Flag a
+            new capability that does not say which roles hold it.
+          - Database access goes through Drizzle (TECH-006). Flag raw SQL that
+            bypasses it, and flag any query built by string concatenation.
+          - Flag secrets, tokens, session identifiers, or personal data
+            reaching logs or error `detail` fields.
+
+    - path: "apps/web/src/**/*.{ts,tsx}"
+      instructions: |
+        React SPA (TECH-001/TECH-003) under the DECISIONS-DESIGN contract:
+          - Every user-visible string is wrapped for i18n via react-intl with
+            an explicit `id` and `defaultMessage` (DES-013). A bare string
+            literal in JSX, or in an aria-label, placeholder, title, or error
+            path, is a defect. New ids must be added to messages/en-US.json.
+          - Colour, spacing, and type come from semantic tokens (DES-005/006/
+            007). Flag raw hex, `rgb()`, arbitrary Tailwind values like
+            `text-[13px]` or `bg-[#fff]`, and any `dark:` variant — theming is
+            done with CSS variables across three themes, not per-utility.
+          - Icons are Lucide at 16/20/24 inheriting `currentColor` (DES-008).
+          - Components are shadcn-shaped owned source over Radix primitives
+            (DES-004). Props are declared `Readonly<...>`.
+          - WCAG 2.2 AA is a floor, not a goal (DES-011): label association,
+            focus visibility, keyboard reachability, contrast, and the `/`,
+            `Esc`, `?` global keys (DES-010). Flag a control that is
+            mouse-only.
+          - Dates, times, and currency use `Intl.*` with the conventions in
+            DES-014 (relative-then-short-absolute, UTC stored, browser-
+            detected display, ISO 4217). Flag hand-rolled formatting.
+          - Copy follows DES-015: terse, direct, second-person imperative.
+
+    - path: "packages/db/src/schema/**/*.ts"
+      instructions: |
+        Drizzle schema (TECH-006), conventions in docs/decision-records/
+        SCHEMA.md:
+          - Use the shared helpers in schema/helpers.ts rather than
+            re-declaring column patterns. Primary keys are UUID v7 via
+            `uuidPk()`.
+          - Tables land with the feature that uses them. Flag a table, column,
+            or enum added ahead of the code that reads or writes it — SCHEMA.md
+            is a target, not a to-do list to be applied up front.
+          - DD-008: `entities` (our own corporate entities) and
+            `counterparties` are separate tables reached through
+            `parties_view`. Flag anything that collapses them.
+          - DD-009 is single-tenant per deployment. Flag a tenant_id column
+            added without a decision record that supersedes it.
+          - Flag a nullable column whose emptiness carries meaning unless a
+            comment says what the meaning is.
+
+    - path: "packages/db/migrations/*.sql"
+      instructions: |
+        The highest-consequence SQL in the repo. drizzle-kit emits these, but
+        they are hand-consolidated and hand-hardened, and they run against
+        live customer databases on upgrade.
+          - Flag DDL that takes a long-held lock on a populated table: adding a
+            NOT NULL column without a default, changing a column type,
+            rewriting a table, adding a non-concurrent index.
+          - Flag destructive statements — DROP, TRUNCATE, and any column
+            removal that is not paired with a stated data-migration plan.
+          - Flag a migration that is not reproducible: `now()` baked into a
+            default that should be per-row, non-deterministic backfills,
+            statements whose result depends on existing row order.
+          - The migration must correspond to the Drizzle schema change in the
+            same PR. Flag drift in either direction.
+
+    - path: "**/*.test.{ts,tsx}"
+      instructions: |
+        Tests (TECH-014):
+          - API tests run against a real Postgres via testcontainers, with the
+            committed migrations applied and the app built through the same
+            factory production uses (see apps/api/src/testing/harness.ts).
+            Never mocks, never SQLite. Flag a mocked database, a stubbed
+            repository, or an in-memory substitute.
+          - API tests assert at the HTTP seam — status, headers, body — not
+            against internal functions.
+          - Web tests query the way a user does (role, label, text), not by
+            test id or class name.
+          - Flag a test whose name does not say what behaviour it pins, and a
+            test that asserts only that a call did not throw.
+          - Flag a happy-path-only suite when the change has a stated error
+            path: auth failure, validation failure, and conflict cases matter
+            more than the success case.
+
+    - path: "e2e/**/*.ts"
+      instructions: |
+        Playwright E2E (TECH-014, TECH-018). These run against the built
+        production image and the real Compose stack — never testcontainers,
+        and the persistent instance is never reset.
+          - Suites are serial and rerunnable without cleanup. Flag a test
+            that depends on a clean database, on ordering beyond the numeric
+            file prefix, or on a fixture another spec file created; per-run
+            state uses unique fixtures.
+          - Discovery is by polling, never by sleeping.
+          - Query the way a user does — role, label, text — never by test id
+            or CSS selector.
+          - Flag a test whose name does not say what behaviour it pins.
+          - Repo-wide TypeScript conventions apply: the SPDX header, `.js`
+            on relative imports, `import type`, and no `any`.
+
+    - path: "styles/**/*.css"
+      instructions: |
+        Theme token layer (DES-001/002/005). Three themes ship as peers:
+        light (default), warm, dark.
+          - A custom property added to, removed from, or renamed in one theme
+            file must appear in all three. A token defined only in light.css
+            renders as an unset variable in warm and dark — silent, and
+            invisible in review.
+          - Tokens are semantic (surface tier, status pair, intent), never
+            literal colour names. Flag `--blue-500`-shaped names.
+          - Flag a colour pair whose contrast is below WCAG 2.2 AA for its
+            stated use (DES-011).
+
+    - path: "messages/*.json"
+      instructions: |
+        ICU MessageFormat catalogue (DES-013). en-US is the only v1 locale.
+          - Flag ICU syntax errors: unbalanced braces, an unknown argument
+            type, a `plural` without an `other` branch.
+          - Flag message ids that do not match the dotted convention already
+            in the file, and duplicate ids.
+          - Copy follows DES-015. Flag apologetic or chatty strings.
+          - Flag a string that concatenates a translated fragment with a value
+            instead of using an ICU argument.
+
+    - path: "apps/api/openapi.json"
+      instructions: |
+        Generated by `pnpm openapi` and committed on purpose (TECH-003). Judge
+        it as a published contract, not as source.
+
+        Flag only: removed or renamed operations, paths, or schema fields;
+        a response or request shape that changed type or nullability; a
+        parameter that became required; a removed enum member; an operation
+        that lost its `default` Problem response.
+
+        Do not comment on formatting, key order, or naming style — the emitter
+        owns those, and the fix would have to be made upstream anyway.
+
+    - path: ".github/workflows/**/*.{yml,yaml}"
+      instructions: |
+        - Actions are pinned and `permissions:` is least-privilege and
+          explicit at the job level.
+        - Flag untrusted input (PR title, branch name, body, author) reaching
+          a `run:` block through `${{ }}` interpolation.
+        - Flag a secret exposed to a workflow that runs on `pull_request` from
+          a fork.
+        - Flag a new gate added to CI without a matching local command, and
+          vice versa: `pnpm check` is the non-mutating counterpart to
+          `pnpm fix`, and the two must not drift.
+
+    - path: "docs/decision-records/**/*.md"
+      instructions: |
+        The decision record set is the repo's memory. Conventions from
+        CLAUDE.md and docs/agents/domain.md:
+          - New decisions append to the module file that covers the area
+            (DECISIONS-CONTRACTS.md, DECISIONS-DESIGN.md, ...) or to
+            DECISIONS.md for system-wide ones, using the existing numbered
+            format: DD-xxx for product, DES-xxx for design, TECH-xxx for
+            stack. Flag a new one-file-per-decision ADR, and flag anything
+            added under docs/adr/.
+          - Numbers are sequential within a file and never reused.
+          - A superseded decision is marked as superseded with a pointer to
+            what replaced it. Flag deletion or silent rewriting of a decision
+            that has already shipped.
+          - Flag a decision that states a choice without stating what it costs
+            or what it rules out.
+          - DECISIONS-DESIGN.md is front-end design only — visual system,
+            layout, interaction, formatting. Flag feature-level UX (lifecycle
+            states, notification rules, comment tiers) landing there instead
+            of the owning module file.
+
+    - path: "**/*.md"
+      instructions: |
+        Prose follows DES-015: terse, direct, second-person imperative.
+        Terminology comes from CONTEXT.md — flag a synonym introduced for a
+        term the glossary already fixes. Flag a link to a file path that does
+        not exist in the repo.
+
+  pre_merge_checks:
+    docstrings:
+      # Off by decision, not by neglect — see TECH-019. This repo documents at
+      # module granularity (a file-level block citing the decision record that
+      # governs the module) plus comments on members whose behaviour the type
+      # cannot express. A per-exported-symbol percentage cannot see that: it
+      # scored a codebase where 47/58 files carry a module doc and 70 decision
+      # citations sit in source comments at 36%, and the only way to raise the
+      # number is to add comments that restate signatures.
+      mode: "off"
+
+    title:
+      mode: "warning"
+      requirements: |
+        Imperative mood, sentence case, no trailing period, under ~65
+        characters. No conventional-commit prefix ("feat:", "fix:") — this
+        repo does not use them. Name the change, not the area: "Enforce
+        readonly props on Label", not "Label updates". A decision record
+        landing in the PR may be cited as "Record TECH-017/018: <summary>".
+
+    description:
+      mode: "warning"
+
+    issue_assessment:
+      mode: "warning"
+
+    custom_checks:
+      - name: "Schema change ships a migration"
+        mode: "error"
+        instructions: |
+          PURPOSE: drizzle-kit migrations are the only mechanism that carries a
+          schema change to an existing deployment. A schema edit without a
+          migration passes CI and silently breaks upgrade.
+
+          PASS if any of these hold:
+            - No file under packages/db/src/schema/ was added or modified.
+            - The changed schema files alter only comments, imports, type-only
+              exports, or formatting — nothing that changes emitted DDL.
+            - A new .sql file was added under packages/db/migrations/ in this
+              PR, and packages/db/migrations/meta/_journal.json gained a
+              matching entry.
+
+          FAIL if a file under packages/db/src/schema/ changed in a way that
+          alters emitted DDL (a table, column, index, constraint, enum, or
+          default added, removed, renamed, or retyped) and no new migration
+          .sql file was added in this PR.
+
+          Also FAIL if an existing, already-committed migration .sql file was
+          modified rather than a new one added — those have already run on
+          deployed databases, so editing one changes history rather than
+          extending it. Treat consolidation of migrations that exist only on
+          this branch as PASS if the PR description says so.
+
+          Report the schema files that changed and whether a migration
+          accompanied them.
+
+      - name: "Theme token parity across all three themes"
+        mode: "error"
+        instructions: |
+          PURPOSE: DES-001/002 ship light, warm, and dark as peers. A CSS
+          custom property that exists in one theme file and not the others
+          resolves to nothing in the missing themes — no error, no visual
+          smoke, just an unstyled element on two of three themes.
+
+          PASS if no file under styles/themes/ changed, or if the set of CSS
+          custom property names (`--*`) declared in styles/themes/light.css,
+          styles/themes/warm.css, and styles/themes/dark.css is identical
+          after this PR.
+
+          FAIL if the three files declare different sets of custom property
+          names. List, per theme file, the property names that are missing
+          relative to the union of all three.
+
+          Compare names only, not values — the values are supposed to differ.
+          Ignore properties declared in styles/globals.css.
+
+      - name: "Cited decision records exist"
+        mode: "warning"
+        instructions: |
+          PURPOSE: TECH-019 has module doc blocks cite the decision record
+          that governs the module. A citation that points at nothing is worse
+          than no citation: it reads as authority.
+
+          Collect every decision-record identifier matching the pattern
+          `(DD|DES|TECH|INT)-[0-9]{3}` that appears in files added or modified
+          by this PR, in both source comments and Markdown.
+
+          For each one, search docs/decision-records/ for a heading that
+          defines it (the format is `## TECH-017: <title>`).
+
+          PASS if every cited identifier has a defining heading in
+          docs/decision-records/.
+
+          FAIL and list each identifier that has no defining heading, with the
+          file and line that cites it. If the PR itself adds the defining
+          heading, that counts as existing.
+
+      - name: "Decision records land in the right place"
+        mode: "warning"
+        instructions: |
+          PURPOSE: CLAUDE.md fixes one layout for decisions. Skills that
+          default to one-file-per-ADR get this wrong, and the drift is only
+          visible at review time.
+
+          FAIL if this PR adds any file under docs/adr/.
+
+          FAIL if this PR adds a new Markdown file under docs/decision-records/
+          whose content is a single architectural decision, rather than
+          appending that decision to an existing DECISIONS*.md module file.
+          Files that are inventories, plans, or schema references (names not
+          starting with DECISIONS) are fine.
+
+          FAIL if a decision identifier added in this PR reuses a number
+          already defined elsewhere in docs/decision-records/, or skips
+          ahead of the highest existing number in its file by more than one.
+
+          PASS if no files under docs/decision-records/ or docs/adr/ changed.
+
+      - name: "SPDX header on new source files"
+        mode: "warning"
+        instructions: |
+          PURPOSE: DD-011 licenses this project AGPL-3.0-only. Every source
+          file in the repo carries the identifier; a file without one weakens
+          the licence claim on that file.
+
+          For every file ADDED by this PR with extension .ts, .tsx, .js, .css,
+          .sql, .yml, or .yaml, check that one of the first three lines contains
+          `SPDX-License-Identifier: AGPL-3.0-only`.
+
+          PASS if there are no such added files, or if all of them carry it.
+          FAIL and list the added files that do not.
+
+          Ignore generated files (apps/api/openapi.json,
+          packages/api-client/src/schema.ts, anything under
+          packages/db/migrations/meta/) and .json files generally.
+
+  finishing_touches:
+    docstrings:
+      # Kept available, but constrained by code_generation.docstrings below so
+      # that running it produces TECH-019-shaped module blocks rather than a
+      # per-symbol restatement of every signature.
+      enabled: true
+    unit_tests:
+      # Likewise constrained, by code_generation.unit_tests below — an
+      # unguided generator would reach for mocks, which TECH-014 forbids.
+      enabled: true
+    simplify:
+      # Matches the /simplify skill this repo already uses.
+      enabled: true
+    autofix:
+      # Pinned: the `autofix` skill depends on the checkboxes being present.
+      enabled: true
+
+    custom:
+      - name: "add spdx headers"
+        instructions: |
+          For every file changed in this PR with extension .ts, .tsx, .js,
+          .css, .sql, .yml, or .yaml that does not already contain an
+          SPDX-License-Identifier line, insert
+          `// SPDX-License-Identifier: AGPL-3.0-only` as the first line —
+          using the comment syntax of that language (`/* ... */` for CSS,
+          `-- ...` for SQL, `# ...` for YAML), followed by a blank line.
+
+          Do not touch generated files: apps/api/openapi.json,
+          packages/api-client/src/schema.ts, or anything under
+          packages/db/migrations/meta/. Change nothing else.
+
+      - name: "wrap strings for i18n"
+        instructions: |
+          In files changed by this PR under apps/web/src/, find user-visible
+          string literals that are not wrapped for i18n — JSX text nodes and
+          the values of aria-label, placeholder, title, and alt props.
+
+          Wrap each with react-intl, following the pattern already used in
+          apps/web/src/lib/messages.ts and the route components: an explicit
+          dotted `id` and a `defaultMessage`. Add every new id to
+          messages/en-US.json, keeping the file's existing key ordering.
+
+          Leave test files, developer-facing error strings that never reach a
+          user, and non-textual attributes alone.
+
+  # Post-merge actions are deliberately absent. They fire only on merges to the
+  # default branch, which in this repo is the dev -> main promotion rather than
+  # the landing of any individual feature — so they are the wrong hook for
+  # per-change automation. Revisit if main ever becomes the merge target.
+
+  tools:
+    # ESLint is the repo's linter (eslint.config.js). Biome and Oxlint lint the
+    # same TypeScript with different opinions; running all three produces
+    # contradictory style nits on every PR.
+    biome:
+      enabled: false
+    oxc:
+      enabled: false
+
+    # SQLFluff has no config in this repo, so it would lint Postgres DDL
+    # against its default dialect and style. Squawk is migration-safety
+    # specific and is the one that earns its place.
+    sqlfluff:
+      enabled: false
+    squawk:
+      enabled: true
+
+    # Breaking-change detection on the committed contract — the reason
+    # apps/api/openapi.json is no longer in path_filters.
+    oasdiff:
+      enabled: true
+
+    reactDoctor:
+      enabled: true
+
+    # LanguageTool off: DES-015's clipped register (sentence fragments,
+    # imperative one-liners) is exactly what it flags, and structure is
+    # already covered by markdownlint. Re-enable if the false-positive rate
+    # turns out to be lower than expected.
+    languagetool:
+      enabled: false
+
+    # `pnpm install --frozen-lockfile` plus turbo across six workspaces, twice,
+    # runs well past 90 seconds. Without this CodeRabbit gives up before CI
+    # concludes and cannot analyse a failure.
+    github-checks:
+      enabled: true
+      timeout_ms: 600000
+
+    actionlint:
+      enabled: true
+    zizmor:
+      enabled: true
+
+knowledge_base:
+  # CLAUDE.md is picked up by default. These are not, and they are where the
+  # actual constraints live. `applyTo` scopes each one so the design contract
+  # is not consulted while reviewing a migration.
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - files: "CONTEXT.md"
+        applyTo: "**"
+      - files: "docs/decision-records/DECISIONS.md,docs/decision-records/DECISIONS-TECH-STACK.md"
+        applyTo: "{apps,packages}/**"
+      - files: "docs/decision-records/DECISIONS-DESIGN.md"
+        applyTo: "{apps/web/**,styles/**,messages/**}"
+      - files: "docs/decision-records/SCHEMA.md"
+        applyTo: "packages/db/**"
+      - files: "docs/decision-records/DECISIONS-CONTRACTS.md,docs/decision-records/DECISIONS-DOCUMENTS.md,docs/decision-records/DECISIONS-MATTERS.md,docs/decision-records/DECISIONS-ENTITIES.md,docs/decision-records/DECISIONS-INTAKE.md,docs/decision-records/DECISIONS-COMMENTS.md,docs/decision-records/DECISIONS-KNOWLEDGE.md,docs/decision-records/DECISIONS-NOTIFICATIONS.md,docs/decision-records/DECISIONS-SETTINGS.md"
+        applyTo: "{apps,packages}/**"
+
+  # `auto` already resolves to local on a public repo; pinned so it does not
+  # change meaning if the repo ever goes private.
+  learnings:
+    scope: "local"
+  issues:
+    scope: "local"
+  pull_requests:
+    scope: "local"
+
+  web_search:
+    enabled: true
+
+  # GitHub Issues is the tracker (CLAUDE.md). Nothing else should be consulted.
+  jira:
+    usage: "disabled"
+  linear:
+    usage: "disabled"
+
+code_generation:
+  docstrings:
+    language: "en-US"
+    path_instructions:
+      - path: "{apps,packages}/**/*.{ts,tsx}"
+        instructions: |
+          Follow TECH-019, not a per-symbol docstring convention.
+
+          Produce a module-level `/** ... */` block at the top of the file,
+          below the SPDX line, stating what the module is for and citing the
+          decision record that governs it (TECH-xxx, DD-xxx, DES-xxx) where
+          one applies. Cite only identifiers that exist in
+          docs/decision-records/.
+
+          Add member-level comments only where behaviour is not derivable from
+          the type: invariants, ordering and lifecycle constraints, what an
+          empty or defaulted value means, and deliberate departures from the
+          obvious alternative.
+
+          Do not add a doc block to every export. Do not write a comment that
+          restates the signature.
+
+  unit_tests:
+    path_instructions:
+      - path: "apps/api/**/*.ts"
+        instructions: |
+          Use the existing harness in apps/api/src/testing/harness.ts: a real
+          Postgres through testcontainers, committed migrations applied, and
+          the app built via the same `buildApp` factory production uses
+          (TECH-014). Never mock the database, never substitute SQLite,
+          never stub a repository.
+
+          Assert at the HTTP seam — status, headers, and body — using the
+          harness's request helpers, not by calling internal functions.
+          Non-2xx bodies are RFC 9457 problem details; assert on `title`,
+          `status`, and `errors[]` rather than on a free-text message.
+
+          Cover the stated error paths, not just the happy one: unauthenticated,
+          unauthorized for the role (DD-013), validation failure, and conflict.
+
+      - path: "apps/web/**/*.tsx"
+        instructions: |
+          Use @testing-library/react with the helpers in
+          apps/web/src/testing/helpers.tsx, which supply the router and the
+          react-intl provider. Query by role, label, or text — never by test
+          id or class name.
+
+          Assert what a user perceives: the rendered message, the focused
+          element, the disabled state. Cover keyboard interaction for anything
+          the DES-010 contract makes reachable by key.
+
+chat:
+  art: false
+  auto_reply: true
+  # Public repo taking outside contributions — leave contributors able to talk
+  # to the reviewer on their own PRs.
+  allow_non_org_members: true
+
+issue_enrichment:
+  # Public repo: inbound issues arrive under-specified. Enrichment attaches the
+  # related code and a complexity read before triage looks at it.
+  auto_enrich:
+    enabled: true
+
+  planning:
+    enabled: true
+    auto_planning:
+      enabled: true
+      # Plan only what triage has already declared fully specified. This is the
+      # `ready-for-agent` state from docs/agents/triage-labels.md — the same
+      # signal the AFK agent workflow keys on.
+      labels:
+        - "ready-for-agent"
+
+  labeling:
+    # Same allowlist reasoning as the PR labels above: keep suggestions to the
+    # content vocabulary and out of the triage state machine. Not auto-applied
+    # — triage state is the maintainer's call.
+    labeling_instructions:
+      - label: "bug"
+        instructions: "Apply when the issue reports behaviour that differs from what the docs or decision records say should happen."
+      - label: "enhancement"
+        instructions: "Apply when the issue requests a capability that does not exist yet."
+      - label: "documentation"
+        instructions: "Apply when the issue is about docs, CONTEXT.md terminology, or decision records rather than code."
+      - label: "chore"
+        instructions: "Apply for maintenance requests with no product behaviour change: dependency bumps, CI, tooling, lint config."
+      - label: "good first issue"
+        instructions: "Apply when the issue is self-contained, touches one module, and needs no decision-record change to resolve."
+      - label: "blocked-upstream"
+        instructions: "Apply when resolution waits on a release from a dependency named in the issue."
+    auto_apply_labels: false
