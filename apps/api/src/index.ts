@@ -6,6 +6,9 @@
  * builds the app (see app.ts), and listens.
  */
 
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { createDb, runMigrations } from "@openlaw/db";
 import { buildApp } from "./app.js";
 import { createSmtpMailer, createUnconfiguredMailer } from "./lib/mailer.js";
@@ -38,6 +41,12 @@ if (!process.env.BASE_URL && process.env.NODE_ENV === "production") {
   );
 }
 
+// TECH-017: serve the built SPA same-origin when it exists — true in the
+// container image and after a local `pnpm build`. Absent (API-only dev,
+// where Vite serves the SPA and proxies /api) every non-API path 404s.
+const webDist = fileURLToPath(new URL("../../web/dist", import.meta.url));
+const webDistPresent = existsSync(join(webDist, "index.html"));
+
 const app = await buildApp(
   {
     db,
@@ -46,9 +55,14 @@ const app = await buildApp(
       baseUrl: process.env.BASE_URL ?? "http://localhost:3000",
     },
     mailer,
+    webDist: webDistPresent ? webDist : undefined,
   },
   { logger: true },
 );
+
+if (!webDistPresent) {
+  app.log.info(`no web bundle at ${webDist}; serving the API only`);
+}
 
 const port = Number(process.env.PORT ?? 3000);
 const host = process.env.HOST ?? "0.0.0.0";
