@@ -75,6 +75,13 @@ async function setMode(mode: string, cookies: Record<string, string> = adminCook
   });
 }
 
+/** Switches mode as test setup — asserts the switch actually landed. */
+async function enterMode(mode: "built_in" | "oidc") {
+  const res = await setMode(mode);
+  expect(res.statusCode, res.body).toBe(200);
+  expect(res.json()).toEqual({ mode });
+}
+
 function hasSessionCookie(res: { cookies: { name: string; value: string }[] }): boolean {
   return res.cookies.some((c) => c.name.includes("session_token") && c.value);
 }
@@ -114,7 +121,7 @@ describe("auth mode (GET/PATCH /api/v1/auth/mode)", () => {
 
 describe("oidc-mode semantics (break-glass)", () => {
   it("closes password sign-in for non-administrators without revealing accounts", async () => {
-    await setMode("oidc");
+    await enterMode("oidc");
     try {
       const staff = await signIn(harness.app, STAFF.email, STAFF.password);
       const unknown = await signIn(harness.app, "nobody@example.com", "whatever-password");
@@ -125,24 +132,24 @@ describe("oidc-mode semantics (break-glass)", () => {
       expect(unknown.body).toBe(staff.body);
       expect(hasSessionCookie(staff)).toBe(false);
     } finally {
-      await setMode("built_in");
+      await enterMode("built_in");
     }
   });
 
   it("keeps password sign-in open for Administrators (break-glass is never disabled)", async () => {
-    await setMode("oidc");
+    await enterMode("oidc");
     try {
       const res = await signIn(harness.app, TEST_ADMIN.email, TEST_ADMIN.password);
       expect(res.statusCode, res.body).toBe(200);
       expect(hasSessionCookie(res)).toBe(true);
     } finally {
-      await setMode("built_in");
+      await enterMode("built_in");
     }
   });
 
   it("never invalidates live sessions when the mode switches", async () => {
     const staffCookies = await signInCookies(harness.app, STAFF.email, STAFF.password);
-    await setMode("oidc");
+    await enterMode("oidc");
     try {
       // The staffer could not sign in NOW, but the session they already
       // hold keeps working in both directions of the switch.
@@ -153,7 +160,7 @@ describe("oidc-mode semantics (break-glass)", () => {
       });
       expect(during.statusCode, during.body).toBe(200);
     } finally {
-      await setMode("built_in");
+      await enterMode("built_in");
     }
     const after = await harness.app.inject({
       method: "GET",
@@ -164,7 +171,7 @@ describe("oidc-mode semantics (break-glass)", () => {
   });
 
   it("keeps the magic-link portal floor open in oidc mode", async () => {
-    await setMode("oidc");
+    await enterMode("oidc");
     try {
       const email = "requester@acme.example";
       const issue = await harness.app.inject({
@@ -180,7 +187,7 @@ describe("oidc-mode semantics (break-glass)", () => {
       const redeemed = await harness.app.inject({ method: "GET", url: url.pathname + url.search });
       expect(hasSessionCookie(redeemed), "portal magic link must survive oidc mode").toBe(true);
     } finally {
-      await setMode("built_in");
+      await enterMode("built_in");
     }
   });
 });

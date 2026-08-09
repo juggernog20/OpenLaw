@@ -10,7 +10,6 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   check,
-  index,
   integer,
   pgTable,
   text,
@@ -169,7 +168,10 @@ export const twoFactors = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index("two_factors_user_id_idx").on(table.userId)],
+  // One factor per user is the plugin's working invariant (enable deletes
+  // any prior row before inserting); unique makes the database hold it
+  // even under concurrent enrolments.
+  (table) => [uniqueIndex("two_factors_user_id_unique").on(table.userId)],
 );
 
 /** Short-lived tokens (magic links, set-password); values stored hashed. */

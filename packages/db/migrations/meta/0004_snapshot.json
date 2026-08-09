@@ -1,5 +1,5 @@
 {
-  "id": "d68d8755-0ebc-4009-b5bf-f3f1763bbb85",
+  "id": "7055694d-f53d-4c07-804f-be05f8ebd0bb",
   "prevId": "071d47b7-8d5f-4341-86b5-51efec1f4b3f",
   "version": "7",
   "dialect": "postgresql",
@@ -396,8 +396,8 @@
         }
       },
       "indexes": {
-        "two_factors_user_id_idx": {
-          "name": "two_factors_user_id_idx",
+        "two_factors_user_id_unique": {
+          "name": "two_factors_user_id_unique",
           "columns": [
             {
               "expression": "user_id",
@@ -406,7 +406,7 @@
               "nulls": "last"
             }
           ],
-          "isUnique": false,
+          "isUnique": true,
           "concurrently": false,
           "method": "btree",
           "with": {}
