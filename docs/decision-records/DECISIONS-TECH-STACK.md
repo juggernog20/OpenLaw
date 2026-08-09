@@ -394,6 +394,77 @@ TECH-003 makes the OpenAPI document a first-class artifact. Fastify needs a sche
 
 Zod is the validation vocabulary everywhere — API routes, shared package, frontend forms. No hand-written OpenAPI YAML, ever; the document is generated. The typed SPA client is generated from the emitted document (`openapi-typescript` + `openapi-fetch`), committed, and CI-checked for staleness.
 
+## TECH-017: Compose topology — single app container, BYO reverse proxy, incremental service growth
+
+- **Status:** Accepted
+- **Date:** 2026-08-09
+
+### Context
+
+TECH-005 blessed `docker compose up` and named the destination service set — `app (API+SPA)`, `worker`, `postgres`, doc-engine sidecar — but the topology mechanics were never pinned: who serves the SPA, whether a reverse proxy ships in the box, and which services exist from day one. M3 (the Compose stack) is pulled forward because the auth epic's acceptance requires a browser E2E pass against a deployer-faithful instance, and that instance becomes the de facto reference deployment for every later epic. Grilled 2026-08-09.
+
+### Decision
+
+1. **Single app container serves the SPA.** Fastify serves `apps/web/dist` via `@fastify/static` with an SPA fallback (non-`/api` misses → `index.html`). A multi-stage Dockerfile builds the web bundle and copies it into the API image. The `worker` container remains the same image with a worker entrypoint (TECH-007).
+2. **Bring-your-own reverse proxy.** No proxy container ships. Compose exposes the app on a host port (default 3000), plain HTTP. The deploy docs define the proxy contract: deployer terminates TLS, sets `BASE_URL` to the public origin, passes `Origin`/`Host` through unmodified, no path rewriting, no response buffering on `/api/events` (SSE, TECH-009). A copy-paste Caddyfile example lives in docs, not in the stack.
+3. **Compose grows incrementally.** `compose.yml` ships now with exactly `app` + `postgres`. A service lands in `compose.yml` in the same change as the feature that first needs it — the compose counterpart of TECH-014's incremental-schema rule. TECH-005's four-service set is the destination, not the starting lineup (`worker` joins with the first pg-boss job, doc-engine with the first DOC feature).
+4. **Mail catcher via dev overlay only.** `compose.dev.yml` (repo root, merged with `-f`) adds a **Mailpit** service and points the app's `SMTP_URL`/`SMTP_FROM` at it. The production `compose.yml` never contains a catcher.
+
+Working defaults: `compose.yml`/`compose.dev.yml` at repo root next to `.env.example`; app env from `.env` via `env_file`; `postgres:16` pinned to the major, `pg_isready` healthcheck, `depends_on: condition: service_healthy` on app; pg data on a named volume (`openlaw-pgdata`); app service carries both `image: ghcr.io/…` and `build:` so the same file serves deployers (pull) and local builds.
+
+### Rationale
+
+- **Same-origin becomes structural, not configurational.** The auth epic's cookie/CSRF model (httpOnly session cookie, Origin checked against `BASE_URL`, TECH-008 addendum) cannot be broken by deployment config when SPA and API are one server on one port. A separate web/nginx container turns that guarantee into routing config that can silently drift.
+- **One upstream keeps the proxy contract one line** — and the self-hosting audience (the Okta-era orgs TECH-008 targets) has existing ingress; a bundled Caddy needs a real domain to do anything (defeating the clean-VM M3 demo) and gets ripped out by everyone else.
+- **A shipped mail catcher is a dangerous default**: it accepts and silently swallows real invites/magic links, and its unauthenticated web UI would expose live credential links in a legal tool. TECH-011's posture — unset SMTP loudly reports unconfigured — stays intact.
+- **No stubbed services** (IMPLEMENTATION-PLAN doctrine): the worker is an empty entrypoint today; containerizing a no-op adds surface without a demo.
+
+### Alternatives considered
+
+- **Separate web container (nginx static + `/api` routing)** — best-in-class static serving nobody needs at 10 users; two images in lockstep; same-origin becomes config; three-service floor.
+- **Bundled Caddy with auto-HTTPS** — needs DNS to demo; double-proxy for orgs with ingress.
+- **All four TECH-005 services from day one** — idle worker and unused doc-engine violate no-stubbed-demos.
+- **Mailpit in `compose.yml` (commented or live)** — the dangerous-default problem above.
+
+### Consequences
+
+- Release artifact (TECH-005) gains its concrete shape: `compose.yml` + `compose.dev.yml` + `.env.example` + ghcr images.
+- `apps/api` takes `@fastify/static` and the SPA-fallback route; the Vite dev proxy (with its Origin rewrite) remains a dev-only affordance.
+- The M3 demo reaches `http://<vm-ip>:3000` directly — TLS is the deployer's proxy's job.
+- Every future service addition is a reviewable compose diff riding its feature's PR.
+
+## TECH-018: Deployment fidelity — hybrid dev loop, hard E2E gate on built images, `e2e/` workspace
+
+- **Status:** Accepted
+- **Date:** 2026-08-09
+
+### Context
+
+IMPLEMENTATION-PLAN says development happens "the way a deployer would," but deployers run built images and iteration requires unbuilt code — no dev loop is actually deployer-faithful. The question is where fidelity is enforced. Grilled 2026-08-09 alongside TECH-017.
+
+### Decision
+
+1. **Hybrid dev loop.** Infra services (postgres, mailpit, later sidecars) always run from compose; `apps/api`/`apps/web` run as local watch processes (tsx / vite) during iteration.
+2. **Hard fidelity gate.** All browser E2E and every milestone acceptance run against the real artifacts: images built by the real Dockerfiles, brought up by `compose.yml` + `compose.dev.yml`. CI enforces the same gate on PRs ([#18](https://github.com/juggernog20/OpenLaw/issues/18)).
+3. **`e2e/` workspace package** holds the Playwright suite (`@playwright/test`, own config). Its lint/typecheck ride in root `pnpm check`; the browser run is excluded (needs the live stack) and runs via its own script against the stack's origin.
+4. **The persistent local instance is the blessed stack itself** — `compose.yml` + dev overlay, locally built images, named volumes; state persists across runs and epics, so each epic's E2E builds on the accumulated instance. Suites use per-run unique fixtures (e.g. `staff+<ts>@…`) so reruns are clean and accumulation is harmless.
+
+### Rationale
+
+The works-on-my-machine failures this guards against — dev-server masking build breaks, origin/CSRF topology differences, migrations-on-boot behavior, env wiring — are properties of the _built stack_, so that is what gets checked, on every E2E run and every PR. Fully containerized dev (bind-mounts + in-container watch) has the worst DX and is still not the production image path — a deployer costume, not fidelity.
+
+### Alternatives considered
+
+- **`docker compose watch` as the blessed loop** — genuinely faithful (image rebuild per change) but the rebuild latency makes people stop running the app; remains available via a `develop: watch` block for those who want it.
+- **Bind-mount containerized dev** — slow _and_ unfaithful.
+- **Fresh instance per E2E run** — loses the accumulated-state property that makes the persistent instance a standing reference deployment; CI still uses fresh volumes (the suite's bootstrap probe handles both).
+
+### Consequences
+
+- A first-run-vs-existing bootstrap probe is a structural requirement of the E2E suite (fresh CI volumes vs persistent local state).
+- The magic-link E2E needs the domain allowlist reachable through the front door: an Administrator-only `GET`/`PUT /api/v1/auth/allowed-domains` (read + replace-whole-list) lands with this workstream — the surface a future SET-004 settings pane consumes.
+- Playwright joins the dependency set (TECH-014's E2E confirmation becomes concrete).
+
 ## Index of decisions
 
 | #        | Decision                                                                      | Status               |
@@ -414,3 +485,5 @@ Zod is the validation vocabulary everywhere — API routes, shared package, fron
 | TECH-014 | DX housekeeping — repo, CI, testing, observability, telemetry, storage/search | Accepted             |
 | TECH-015 | TypeScript 7 native compiler + TS 6 API shim for typescript-eslint            | Accepted (temporary) |
 | TECH-016 | API validation vocabulary — Zod as the single schema source                   | Accepted             |
+| TECH-017 | Compose topology — single app container, BYO proxy, incremental growth        | Accepted             |
+| TECH-018 | Deployment fidelity — hybrid dev loop, E2E gate on built images, `e2e/` pkg   | Accepted             |
