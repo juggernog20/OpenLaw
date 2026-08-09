@@ -28,20 +28,87 @@ These apply unless a specific table overrides them.
 
 ### `users`
 
-Source: **DD-013**
+Source: **DD-013**, **TECH-008** (auth columns)
 
-Application user. Single role per user (no multi-role membership in v1).
+Application user. Single role per user (no multi-role membership in v1). better-auth maps onto this table via model/field mapping: `display_name` maps to its `name`, and `role` **is** the admin plugin's role column — never redeclared as an additional field.
 
-| Column                     | Type        | Notes                                                                                     |
-| -------------------------- | ----------- | ----------------------------------------------------------------------------------------- |
-| `id`                       | UUID        | PK                                                                                        |
-| `email`                    | text        | unique, not null                                                                          |
-| `display_name`             | text        | not null                                                                                  |
-| `role`                     | text (enum) | `administrator` \| `legal_team_member` \| `contributor` \| `business_user` per **DD-013** |
-| `created_at`, `updated_at` | timestamptz |                                                                                           |
-| `archived_at`              | timestamptz | soft-delete affordance                                                                    |
+| Column                     | Type        | Notes                                                                                                              |
+| -------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------ |
+| `id`                       | UUID        | PK                                                                                                                 |
+| `email`                    | text        | unique, not null                                                                                                   |
+| `display_name`             | text        | not null                                                                                                           |
+| `role`                     | text (enum) | `administrator` \| `legal_team_member` \| `contributor` \| `business_user` per **DD-013**                          |
+| `email_verified`           | boolean     | not null, default `false` per **TECH-008**; proven inbox control (set-password activation, magic-link redemption)  |
+| `image`                    | text        | nullable; better-auth core writes IdP profile pictures here — **deliberate deviation**, demanded by its core model |
+| `two_factor_enabled`       | boolean     | nullable; twoFactor-plugin column, flipped by TOTP enrolment/disable (see `two_factors`)                           |
+| `banned`                   | boolean     | nullable; admin-plugin column — **no product semantics yet** (offboarding is `archived_at`, not bans)              |
+| `ban_reason`               | text        | nullable; admin-plugin column, same status as `banned`                                                             |
+| `ban_expires`              | timestamptz | nullable; admin-plugin column, same status as `banned`                                                             |
+| `created_at`, `updated_at` | timestamptz |                                                                                                                    |
+| `archived_at`              | timestamptz | soft-delete affordance; checked in the session-creation hook — an archived user cannot authenticate by any path    |
 
-Open: authentication-related columns (password hash vs OIDC sub vs magic-link only) deferred to the Intake / tech-stack grills. **DD-010** establishes that non-legal users authenticate via magic-link / ChatOps, not password.
+Resolved (**TECH-008**, closing the earlier "Open" note): no credential material lives on `users`. Password hashes and OIDC subjects live in `accounts`; magic-link and set-password tokens live in `verifications`. The plugin-demanded columns above (`image`, `two_factor_enabled`, the ban trio) are deliberate deviations recorded per the auth spec. **DD-010**'s floor stands: non-legal users authenticate via magic link, not password.
+
+---
+
+### `sessions`
+
+Source: **TECH-008** (sessions are ours in every auth mode)
+
+Server-side sessions: one row per live sign-in, referenced by an httpOnly cookie. Database rows only — no cookie cache in v1, so revocation and role changes are instant. Default sliding expiry. Sign-out and admin revocation delete the row; a copied cookie is dead the moment the row is gone. Mode switches (`org_settings.auth_mode`) never invalidate existing sessions — the session model is mode-independent.
+
+| Column                     | Type        | Notes                                                                                                                                                                                                |
+| -------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                                                                                                                   |
+| `user_id`                  | UUID FK     | → `users.id`, not null, cascade delete                                                                                                                                                               |
+| `token`                    | text        | unique, not null; the cookie-carried session token                                                                                                                                                   |
+| `expires_at`               | timestamptz | not null; sliding expiry                                                                                                                                                                             |
+| `ip_address`               | text        | nullable; captured at creation for the session-management surface                                                                                                                                    |
+| `user_agent`               | text        | nullable; same purpose                                                                                                                                                                               |
+| `impersonated_by`          | UUID        | nullable; references `users.id` — admin-plugin column whose name deviates from the `<entity>_id` FK convention (plugin-dictated); no product semantics yet (the admin-plugin HTTP surface is closed) |
+| `created_at`, `updated_at` | timestamptz |                                                                                                                                                                                                      |
+
+No `archived_at`: sessions are revoked by deletion, not archived.
+
+---
+
+### `accounts`
+
+Source: **TECH-008**
+
+One row per authentication method per user: a **credential row** (holding the Argon2id password hash) and/or **OIDC-subject rows** (one per IdP the user has signed in through). Invited staff have no credential row until first-use activation sets a password — an unactivated invite has nothing to brute-force.
+
+| Column                                                | Type        | Notes                                                                              |
+| ----------------------------------------------------- | ----------- | ---------------------------------------------------------------------------------- |
+| `id`                                                  | UUID        | PK                                                                                 |
+| `user_id`                                             | UUID FK     | → `users.id`, not null, cascade delete                                             |
+| `provider_id`                                         | text        | `credential`, or the `sso_providers.provider_id` slug for OIDC rows                |
+| `account_id`                                          | text        | provider-side subject (OIDC `sub`); equals the user id on credential rows          |
+| `password`                                            | text        | nullable; Argon2id hash per **TECH-008** — credential rows only, NULL on OIDC rows |
+| `access_token`, `refresh_token`, `id_token`           | text        | nullable; OIDC token columns, demanded by better-auth's model                      |
+| `access_token_expires_at`, `refresh_token_expires_at` | timestamptz | nullable; companions to the token columns                                          |
+| `scope`                                               | text        | nullable; granted OIDC scopes                                                      |
+| `created_at`, `updated_at`                            | timestamptz |                                                                                    |
+
+Unique on (`provider_id`, `account_id`): one credential row per user, and no second user can ever claim someone else's OIDC subject. No `archived_at`: offboarding archives the _user_; account rows die with the user via cascade.
+
+---
+
+### `verifications`
+
+Source: **TECH-008**, **DD-010**/**INT-001** (magic-link floor)
+
+Short-lived single-use tokens: magic links and set-password (invite activation) tokens. Both the identifier and the token value are stored **hashed** — a database read never yields a usable link. Redemption consumes the row; expiry makes leftovers worthless.
+
+| Column                     | Type        | Notes                                                      |
+| -------------------------- | ----------- | ---------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                         |
+| `identifier`               | text        | not null, stored hashed; addresses the pending token       |
+| `value`                    | text        | not null, stored hashed; the token itself                  |
+| `expires_at`               | timestamptz | not null; magic links and activation links are short-lived |
+| `created_at`, `updated_at` | timestamptz |                                                            |
+
+No user FK — the identifier carries the addressing (magic-link issuance is gated by `org_settings.allowed_email_domains` _before_ a row exists). No `archived_at`: rows are consumed or expire.
 
 ---
 
@@ -836,5 +903,5 @@ Tracked here so they're not forgotten when the relevant grill begins.
 - **ORM and migration framework** — formalized in the tech-stack grill (will affect comment polymorphism strategy and FK naming).
 - **Comments table polymorphism strategy** — single table with `entity_type / entity_id` pair (current proposal), per-host-type sharded tables, or polymorphic via association — depends on ORM ergonomics.
 - **Full-text search column placement** — per-table generated `tsvector` columns vs separate index store (Meilisearch / Typesense) — depends on Documents module decisions and tech-stack picks.
-- **Authentication-related columns on `users`** — depends on Intake decisions (DD-010 establishes magic-link for non-legal; legal-team auth model TBD).
+- **Authentication-related columns on `users`** — resolved per **TECH-008**: credential material lives in `accounts`/`verifications`, not on `users`; see the `users`, `sessions`, `accounts`, and `verifications` sections.
 - **Tags table(s)** — resolved: deferred out of v1 per **MTR-010**; see `FUTURE-FEATURES.md`.
