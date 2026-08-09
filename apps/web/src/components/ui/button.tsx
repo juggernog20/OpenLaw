@@ -13,16 +13,19 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../../lib/utils";
 
+// 13px text throughout and a semibold CTA, matching every button in the
+// contracts.pen / final-themes.pen mocks (32px tall, 12px inset, r6).
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-button text-md font-medium transition-[filter,background-color] duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-button text-base transition-[filter,background-color] duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        primary: "bg-cta-primary text-on-cta hover:brightness-95 active:brightness-90",
+        primary:
+          "bg-cta-primary font-semibold text-on-cta hover:brightness-95 active:brightness-90",
         secondary:
-          "border border-border-default bg-control text-primary hover:brightness-95 active:brightness-90",
-        ghost: "text-primary hover:bg-control",
-        link: "text-link underline-offset-4 hover:underline",
+          "border border-border-default bg-control font-medium text-primary hover:brightness-95 active:brightness-90",
+        ghost: "font-medium text-primary hover:bg-control",
+        link: "font-medium text-link underline-offset-4 hover:underline",
       },
       size: {
         default: "h-8 px-3",

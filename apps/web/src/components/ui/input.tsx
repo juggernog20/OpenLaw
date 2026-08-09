@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Input (DES-004/DES-005: bg-control surface tier, semantic tokens).
- * Focus ring matches the Button's Primer-shaped convention.
+ * Input, per the C10 form-field pattern in contracts.pen: raised
+ * surface (bg-control is for secondary buttons and the header search
+ * per DES-005, not form fields), 32px tall, 10px inset, 12px text with
+ * a muted placeholder. Focus ring matches the Button's Primer-shaped
+ * convention.
  */
 
 import * as React from "react";
@@ -13,7 +16,7 @@ export function Input({ className, type, ...props }: React.InputHTMLAttributes<H
     <input
       type={type}
       className={cn(
-        "h-8 w-full rounded-button border border-border-default bg-control px-3 text-md text-primary placeholder:text-subtle focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50",
+        "h-8 w-full rounded-button border border-border-default bg-raised px-2.5 text-sm text-primary placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50",
         className,
       )}
       {...props}

@@ -8,7 +8,8 @@ export function Label({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>) {
+  // 12px medium, per the C10 field-label pattern in contracts.pen.
   return (
-    <LabelPrimitive.Root className={cn("text-md font-medium text-primary", className)} {...props} />
+    <LabelPrimitive.Root className={cn("text-sm font-medium text-primary", className)} {...props} />
   );
 }
