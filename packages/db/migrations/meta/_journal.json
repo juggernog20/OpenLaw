@@ -29,6 +29,13 @@
       "when": 1786229038343,
       "tag": "0003_sso_providers",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1786239815904,
+      "tag": "0004_two_factor",
+      "breakpoints": true
     }
   ]
 }

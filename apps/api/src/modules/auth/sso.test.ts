@@ -335,4 +335,23 @@ describe("runtime BYO-OIDC (POST /api/v1/auth/sso-providers + sso sign-in)", () 
     expect(list.statusCode).toBe(403);
     expect(list.body).not.toContain(PROVIDER.clientSecret);
   });
+
+  it("refuses an archived user a session even when the IdP still asserts them", async () => {
+    // The Business User JIT-provisioned earlier, now archived by the org.
+    const email = "newbie@acme.example";
+    const [archived] = await harness.db
+      .update(users)
+      .set({ archivedAt: new Date() })
+      .where(eq(users.email, email))
+      .returning({ id: users.id });
+    expect(archived, "the JIT test should have created this user").toBeDefined();
+
+    try {
+      const redeemed = await ssoRoundTrip({ sub: "idp-newbie", email }, { email });
+      expect(sessionCookies(redeemed), "archived user must not get a session").toBeNull();
+      expect(redeemed.headers.location ?? "").toContain("error");
+    } finally {
+      await harness.db.update(users).set({ archivedAt: null }).where(eq(users.email, email));
+    }
+  });
 });

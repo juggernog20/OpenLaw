@@ -128,6 +128,66 @@ describe("requireRole", () => {
   });
 });
 
+describe("session revocation (mounted better-auth routes)", () => {
+  /** The raw session token inside a signed session cookie. */
+  function tokenOf(cookies: Record<string, string>): string {
+    const value = Object.entries(cookies).find(([name]) => name.includes("session_token"))?.[1];
+    expect(value, "no session cookie to read a token from").toBeTruthy();
+    return decodeURIComponent(value!).split(".")[0]!;
+  }
+
+  it("lists own sessions and revokes a chosen one", async () => {
+    const keeper = await signInCookies(ADMIN.email, ADMIN.password);
+    const target = await signInCookies(ADMIN.email, ADMIN.password);
+
+    const list = await harness.app.inject({
+      method: "GET",
+      url: "/api/auth/list-sessions",
+      cookies: keeper,
+    });
+    expect(list.statusCode, list.body).toBe(200);
+    const sessions = list.json() as { token: string }[];
+    expect(sessions.length).toBeGreaterThanOrEqual(2);
+    expect(sessions.map((s) => s.token)).toContain(tokenOf(target));
+
+    const revoke = await harness.app.inject({
+      method: "POST",
+      url: "/api/auth/revoke-session",
+      cookies: keeper,
+      payload: { token: tokenOf(target) },
+    });
+    expect(revoke.statusCode, revoke.body).toBe(200);
+
+    // The revoked session is dead server-side; the caller's own survives.
+    expect(
+      (await harness.app.inject({ method: "GET", url: "/api/v1/me", cookies: target })).statusCode,
+    ).toBe(401);
+    expect(
+      (await harness.app.inject({ method: "GET", url: "/api/v1/me", cookies: keeper })).statusCode,
+    ).toBe(200);
+  });
+
+  it("revokes every other session in one call", async () => {
+    const keeper = await signInCookies(ADMIN.email, ADMIN.password);
+    const other = await signInCookies(ADMIN.email, ADMIN.password);
+
+    const revoke = await harness.app.inject({
+      method: "POST",
+      url: "/api/auth/revoke-other-sessions",
+      cookies: keeper,
+      payload: {},
+    });
+    expect(revoke.statusCode, revoke.body).toBe(200);
+
+    expect(
+      (await harness.app.inject({ method: "GET", url: "/api/v1/me", cookies: other })).statusCode,
+    ).toBe(401);
+    expect(
+      (await harness.app.inject({ method: "GET", url: "/api/v1/me", cookies: keeper })).statusCode,
+    ).toBe(200);
+  });
+});
+
 describe("sign-out", () => {
   it("revokes the session server-side — a replayed cookie is dead", async () => {
     const cookies = await signInCookies(ADMIN.email, ADMIN.password);

@@ -86,6 +86,27 @@ No `archived_at`: providers are deleted (future management surface), not archive
 
 ---
 
+### `two_factors`
+
+Source: **TECH-008** (TOTP second factor for password accounts)
+
+One row per 2FA-enrolled user, owned by better-auth's twoFactor plugin. The seed and backup codes are symmetrically encrypted with the auth secret before storage and are never returned by any endpoint. 2FA gates only password sign-in — SSO delegates MFA to the IdP, and a magic link already proves inbox control. A companion `two_factor_enabled` boolean lives on `users` (plugin-demanded, like the admin-plugin columns).
+
+| Column                      | Type        | Notes                                                                                                |
+| --------------------------- | ----------- | ---------------------------------------------------------------------------------------------------- |
+| `id`                        | UUID        | PK                                                                                                   |
+| `secret`                    | text        | encrypted TOTP seed                                                                                  |
+| `backup_codes`              | text        | encrypted JSON array of one-time recovery codes; redemption rewrites the array without the used code |
+| `user_id`                   | UUID FK     | cascade delete — the factor dies with the user                                                       |
+| `verified`                  | boolean     | false until the user proves the first code; unproven enrolments never challenge (or lock) a sign-in  |
+| `failed_verification_count` | integer     | consecutive failed verifications, reset on success                                                   |
+| `locked_until`              | timestamptz | account-level lockout: set after 10 consecutive failures, 15-minute lock                             |
+| `created_at`, `updated_at`  | timestamptz |                                                                                                      |
+
+No `archived_at`: rows are deleted on disable, not archived.
+
+---
+
 ### `entities` (own corporate entities)
 
 Source: **DD-008**, **ENT-001–004**

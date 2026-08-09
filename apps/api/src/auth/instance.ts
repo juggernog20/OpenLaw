@@ -10,7 +10,7 @@
  */
 
 import { betterAuth } from "better-auth";
-import { admin, magicLink } from "better-auth/plugins";
+import { admin, magicLink, twoFactor } from "better-auth/plugins";
 import { userAc } from "better-auth/plugins/admin/access";
 import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
@@ -61,6 +61,7 @@ export async function withTrustedIssuerOrigin<T>(
 
 export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
   return betterAuth({
+    appName: "OpenLaw",
     baseURL: config.baseUrl,
     secret: config.secret,
     database: drizzleAdapter(db, { provider: "pg", usePlural: true, schema }),
@@ -208,6 +209,28 @@ export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
         // admin-gated (hook below) and unused.
         domainVerification: { enabled: true },
       }),
+      // TOTP second factor for password accounts (TECH-008). Enrolment,
+      // disable, and backup-code regeneration all demand the password
+      // again on top of a session; the challenge hook only watches
+      // /sign-in/email, so SSO and magic-link sign-ins are never gated —
+      // deliberate: the IdP owns MFA for SSO, and a magic link already
+      // proves inbox control. Codes ride the plugin's own budget pair:
+      // five wrong codes void the challenge, and the account-level
+      // lockout below caps consecutive failures across challenges. The
+      // TOTP seed and backup codes are stored encrypted with the auth
+      // secret. The e-mail OTP fallback is not configured (no sendOTP),
+      // so TOTP and backup codes are the only second factors.
+      twoFactor({
+        // The plugin's defaults, pinned so a dependency bump cannot
+        // silently relax the lockout (NIST SP 800-63B §5.2.2 allows far
+        // stricter; 10-in-a-row is generous enough to never lock out a
+        // fumbling human on a phone keyboard).
+        accountLockout: {
+          enabled: true,
+          maxFailedAttempts: 10,
+          durationSeconds: 15 * 60,
+        },
+      }),
     ],
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
@@ -239,6 +262,31 @@ export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
           return;
         }
 
+        // Auth-mode semantics (TECH-008): in `oidc` mode the IdP is the
+        // front door, so password sign-in closes — except for
+        // Administrators, whose break-glass is never disabled (a broken
+        // or misconfigured IdP must not lock the org out of the install
+        // that configures it). Unknown emails get the same refusal as
+        // non-administrators, so the response never reveals whether an
+        // account exists. The lookup is by our lowercased email column;
+        // sign-in bodies arrive in whatever case the user typed.
+        if (ctx.path === "/sign-in/email") {
+          const settings = await getOrgSettings(db);
+          if (settings.authMode !== "oidc") return;
+          const email = typeof ctx.body?.email === "string" ? ctx.body.email.toLowerCase() : "";
+          const [account] = await db
+            .select({ role: users.role })
+            .from(users)
+            .where(eq(users.email, email))
+            .limit(1);
+          if (account?.role !== "administrator") {
+            throw new APIError("FORBIDDEN", {
+              message: "Password sign-in is disabled while single sign-on is required.",
+            });
+          }
+          return;
+        }
+
         // Policy holds on better-auth's own magic-link paths, not just our
         // typed route — direct calls meet the same rules. Guarding verify
         // as well as issuance means flipping the toggle off takes effect
@@ -261,6 +309,38 @@ export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
       }),
     },
     databaseHooks: {
+      session: {
+        create: {
+          // Archival takes effect at the door: an archived user is
+          // rejected the moment any flow tries to mint them a session —
+          // password (including the post-2FA-challenge session), SSO
+          // callback, and magic-link redemption all funnel through here.
+          // Sessions that already exist are untouched (archival is not
+          // revocation; DD-013 keeps archived users readable history).
+          // The read and the insert are not one transaction — a sign-in
+          // racing the archival UPDATE can still slip a session through.
+          // Accepted: such a session is indistinguishable from one minted
+          // a moment before archival, which also survives; both end at
+          // the session-revocation surface, the actual tool for cutting
+          // someone off. Enforcement stays in the app layer per this
+          // repo's no-database-triggers convention (SCHEMA.md).
+          before: async (session) => {
+            const [row] = await db
+              .select({ archivedAt: users.archivedAt })
+              .from(users)
+              .where(eq(users.id, session.userId))
+              .limit(1);
+            if (row?.archivedAt) {
+              // Coded so the browser-facing SSO callback redirects to the
+              // app's error page instead of dumping bare JSON.
+              throw new APIError("FORBIDDEN", {
+                message: "This account has been archived.",
+                code: "USER_ARCHIVED",
+              });
+            }
+          },
+        },
+      },
       user: {
         create: {
           // The DD-010 provisioning matrix for users born from a sign-in

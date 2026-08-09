@@ -90,6 +90,24 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/auth/mode": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The organization's auth mode (TECH-008) */
+    get: operations["getAuthMode"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Switch the auth mode (TECH-008): `oidc` closes password sign-in for everyone but Administrators (break-glass); switching never invalidates existing sessions */
+    patch: operations["setAuthMode"];
+    trace?: never;
+  };
   "/api/v1/auth/magic-link": {
     parameters: {
       query?: never;
@@ -400,6 +418,77 @@ export interface operations {
               domain: string;
             };
             callbackUrl: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getAuthMode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** @enum {string} */
+            mode: "built_in" | "oidc";
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setAuthMode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          mode: "built_in" | "oidc";
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** @enum {string} */
+            mode: "built_in" | "oidc";
           };
         };
       };

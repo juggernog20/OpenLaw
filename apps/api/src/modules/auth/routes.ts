@@ -14,7 +14,9 @@ import {
   accounts,
   ADVISORY_LOCK,
   and,
+  AUTH_MODES,
   eq,
+  orgSettings,
   ssoProviders,
   tryWithAdvisoryLock,
   users,
@@ -309,6 +311,58 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         provider,
         callbackUrl: registered.redirectURI,
       });
+    },
+  );
+
+  app.get(
+    "/auth/mode",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "getAuthMode",
+        summary: "The organization's auth mode (TECH-008)",
+        tags: ["auth"],
+        response: {
+          200: z.object({ mode: z.enum(AUTH_MODES) }),
+          default: problemResponse,
+        },
+      },
+    },
+    async () => {
+      const settings = await getOrgSettings(app.db);
+      return { mode: settings.authMode };
+    },
+  );
+
+  app.patch(
+    "/auth/mode",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "setAuthMode",
+        summary:
+          "Switch the auth mode (TECH-008): `oidc` closes password sign-in " +
+          "for everyone but Administrators (break-glass); switching never " +
+          "invalidates existing sessions",
+        tags: ["auth"],
+        body: z.object({ mode: z.enum(AUTH_MODES) }),
+        response: {
+          200: z.object({ mode: z.enum(AUTH_MODES) }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => {
+      // A plain column flip: enforcement reads org_settings on every
+      // sign-in decision, so the switch takes effect immediately — and
+      // ONLY at sign-in. Live sessions survive in both directions;
+      // archival and revocation are the tools for ending them.
+      const [row] = await app.db
+        .update(orgSettings)
+        .set({ authMode: request.body.mode, updatedAt: new Date() })
+        .returning({ mode: orgSettings.authMode });
+      if (!row) throw httpError(500, "org_settings has no row to update.");
+      return { mode: row.mode };
     },
   );
 
