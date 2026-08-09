@@ -27,6 +27,14 @@ export function createDb(databaseUrl: string): Db {
   // pg's default connect wait is unbounded; a cap keeps failed attempts
   // (e.g. readiness probes against a down database) from dangling.
   const pool = new pg.Pool({ connectionString: databaseUrl, connectionTimeoutMillis: 10_000 });
+  // Idle pooled connections surface server-side terminations (a Postgres
+  // restart, pg_terminate_backend) as pool 'error' events; with no
+  // listener that is an uncaught exception crashing a process no request
+  // ever touched. The client is already discarded when this fires — the
+  // next checkout dials a fresh connection — so noting it is enough.
+  pool.on("error", (error) => {
+    console.error(`postgres: idle client error (${error.message})`);
+  });
   return drizzle(pool, { schema });
 }
 
