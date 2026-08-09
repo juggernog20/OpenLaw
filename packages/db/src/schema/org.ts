@@ -27,6 +27,12 @@ export const orgSettings = pgTable(
      * grants portal access only once an Administrator opens a domain.
      */
     allowedEmailDomains: jsonb("allowed_email_domains").$type<string[]>().notNull().default([]),
+    /**
+     * When the first-run onboarding wizard (SET-004) was finished or
+     * skipped through. NULL routes the Administrator into the wizard on
+     * login; set once, never cleared — the wizard is first-run only.
+     */
+    onboardingCompletedAt: timestamp("onboarding_completed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     // $onUpdate keeps the audit trail honest for writers that forget to
     // set it — application code owns every write here, unlike the

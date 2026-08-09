@@ -15,6 +15,7 @@ const alertVariants = cva("rounded-card px-3 py-2 text-md", {
       danger: "bg-status-danger-bg text-status-danger-fg",
       info: "bg-status-info-bg text-status-info-fg",
       success: "bg-status-success-bg text-status-success-fg",
+      warning: "bg-status-warning-bg text-status-warning-fg",
     },
   },
   defaultVariants: {

@@ -7,8 +7,12 @@
  * accumulated one where earlier runs already left their state behind.
  */
 
-import { expect, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, request as apiRequest, type APIRequestContext, type Page } from "@playwright/test";
 import { z } from "zod";
+
+/** Mirrors playwright.config.ts — helpers that build their own request
+ * context need the stack's origin outside any fixture. */
+const BASE_URL = process.env.E2E_BASE_URL ?? "http://localhost:3000";
 
 /**
  * The instance's Administrator. Stable across runs on purpose — the
@@ -38,16 +42,49 @@ export async function needsSetup(request: APIRequestContext): Promise<boolean> {
 }
 
 /**
- * Guarantees the Administrator exists, via the API. Suites that are not
- * about first-run setup call this in beforeAll so each spec file also
- * passes alone against a fresh stack; in a full run the bootstrap spec
- * has already done this through the browser and it no-ops.
+ * Signs in as the Administrator over the API and marks SET-004
+ * onboarding complete (idempotent), so browser journeys land on home
+ * instead of the wizard. Also covers instances migrated from before the
+ * wizard existed, whose completion timestamp starts NULL.
+ */
+export async function ensureOnboardingComplete(): Promise<void> {
+  // A throwaway context: the admin session this creates must never leak
+  // into a caller's cookie jar — a jar with a session makes better-auth
+  // treat later Origin-less requests as CSRF (403), changing what the
+  // anti-enumeration tests observe.
+  const ctx = await apiRequest.newContext({ baseURL: BASE_URL });
+  try {
+    const signedIn = await ctx.post("/api/auth/sign-in/email", {
+      data: { email: ADMIN.email, password: ADMIN.password },
+    });
+    expect(signedIn.ok()).toBe(true);
+    const completed = await ctx.post("/api/v1/onboarding/complete");
+    expect(completed.ok()).toBe(true);
+  } finally {
+    await ctx.dispose();
+  }
+}
+
+/**
+ * Guarantees the Administrator exists and onboarding is closed, via the
+ * API. Suites that are not about first-run flows call this in beforeAll
+ * so each spec file also passes alone against a fresh stack; in a full
+ * run the bootstrap spec has already done both through the browser.
  */
 export async function ensureAdminExists(request: APIRequestContext): Promise<void> {
-  if (!(await needsSetup(request))) return;
-  const created = await request.post("/api/v1/auth/setup", { data: ADMIN });
-  // 201 wins the race; 409 means someone else just did — both mean done.
-  expect([201, 409]).toContain(created.status());
+  if (await needsSetup(request)) {
+    // Setup answers with the creator's session cookie; keep it out of
+    // the caller's jar for the same reason as ensureOnboardingComplete.
+    const ctx = await apiRequest.newContext({ baseURL: BASE_URL });
+    try {
+      const created = await ctx.post("/api/v1/auth/setup", { data: ADMIN });
+      // 201 wins the race; 409 means someone else just did — both mean done.
+      expect([201, 409]).toContain(created.status());
+    } finally {
+      await ctx.dispose();
+    }
+  }
+  await ensureOnboardingComplete();
 }
 
 /**

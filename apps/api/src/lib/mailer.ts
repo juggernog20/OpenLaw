@@ -15,6 +15,12 @@ export interface MailMessage {
 }
 
 export interface Mailer {
+  /**
+   * Whether outbound email is wired to a real sender. Read by surfaces
+   * that must not promise mail they cannot deliver (the SET-004 wizard's
+   * email step); `send` on an unconfigured mailer still fails loudly.
+   */
+  readonly configured: boolean;
   send(message: MailMessage): Promise<void>;
 }
 
@@ -39,6 +45,7 @@ export function createSmtpMailer(url: string, from: string): Mailer {
   }
   const transport = nodemailer.createTransport(bounded.toString());
   return {
+    configured: true,
     async send(message) {
       await transport.sendMail({ from, ...message });
     },
@@ -51,6 +58,7 @@ export function createSmtpMailer(url: string, from: string): Mailer {
  */
 export function createUnconfiguredMailer(): Mailer {
   return {
+    configured: false,
     send() {
       return Promise.reject(
         new Error("SMTP is not configured. Set SMTP_URL and SMTP_FROM to enable outbound email."),

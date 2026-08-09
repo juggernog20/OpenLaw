@@ -9,6 +9,7 @@
 
 import { Link, redirect, useNavigate, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { FormattedMessage } from "react-intl";
+import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import { currentUser, needsSetup } from "../lib/session";
 import { SkipLink } from "../components/skip-link";
@@ -24,6 +25,14 @@ export async function homeLoader({ request }: LoaderFunctionArgs) {
   const user = await currentUser();
   if (!user) {
     return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
+  }
+  // SET-004: the wizard runs on first Administrator login — any admin
+  // landing here while onboarding is open belongs there instead. A
+  // failed status read deliberately falls through to home: the wizard
+  // is a convenience, and it must never make home unreachable.
+  if (user.role === "administrator") {
+    const { data } = await api.GET("/api/v1/onboarding");
+    if (data && !data.completed) return redirect("/welcome");
   }
   return { user };
 }

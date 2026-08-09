@@ -69,6 +69,8 @@ export interface ApiState {
   signedIn?: { id: string; email: string; displayName: string; role: string } | null;
   needsSetup?: boolean;
   methods?: { mode: "built_in" | "oidc"; magicLinkEnabled: boolean; ssoProviderId: string | null };
+  /** Defaults to completed, so guard tests land on home, not the wizard. */
+  onboarding?: { completed: boolean; emailConfigured: boolean };
   extra?: (call: StubCall) => Response | undefined;
 }
 
@@ -92,6 +94,9 @@ export function stubApi(state: ApiState) {
         200,
         state.methods ?? { mode: "built_in", magicLinkEnabled: true, ssoProviderId: null },
       );
+    }
+    if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
+      return json(200, state.onboarding ?? { completed: true, emailConfigured: true });
     }
     return undefined;
   });
