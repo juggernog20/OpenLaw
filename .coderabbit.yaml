@@ -1,4 +1,13 @@
 reviews:
+  auto_review:
+    # Patterns for base branches OTHER than the default branch, which is always
+    # reviewed. `dev` is where feature PRs actually land (main receives merges
+    # from dev), so without this every real review was skipped with
+    # "auto reviews are disabled on base/target branches other than the default
+    # branch". Anchored so it matches dev alone, not `develop` or `feat/dev-x`.
+    base_branches:
+      - "^dev$"
+
   # Generated artifacts: reviewing them produces findings nobody can act on,
   # since the fix always belongs upstream in the emitter.
   # Migrations are deliberately NOT excluded — drizzle emits them but they are
