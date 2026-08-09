@@ -73,6 +73,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/auth/sso-providers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Register a bring-your-own OIDC identity provider (TECH-008); endpoint discovery runs from the issuer, and the response carries the callback URL to paste into the IdP console */
+    post: operations["registerSsoProvider"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/auth/magic-link": {
     parameters: {
       query?: never;
@@ -335,6 +352,54 @@ export interface operations {
               /** @enum {string} */
               role: "administrator" | "legal_team_member" | "contributor" | "business_user";
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  registerSsoProvider: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          providerId: string;
+          /** Format: uri */
+          issuer: string;
+          domain: string;
+          clientId: string;
+          clientSecret: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            provider: {
+              id: string;
+              providerId: string;
+              issuer: string;
+              domain: string;
+            };
+            callbackUrl: string;
           };
         };
       };

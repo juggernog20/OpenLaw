@@ -63,6 +63,29 @@ No `archived_at`: the row is neither creatable nor deletable, only edited.
 
 ---
 
+### `sso_providers`
+
+Source: **TECH-008** (bring-your-own IdP, configured at runtime)
+
+Runtime-registered OIDC identity providers, one row per IdP, created only through the admin-guarded registration endpoint. Mapped onto by better-auth's sso plugin.
+
+| Column                     | Type        | Notes                                                                                                               |
+| -------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                                  |
+| `provider_id`              | text        | unique slug; identifies the provider in sign-in and callback flows                                                  |
+| `issuer`                   | text        | OIDC issuer URL; endpoint discovery runs from it at registration                                                    |
+| `domain`                   | text        | email domain(s) served by the IdP, comma-separated for multi-domain                                                 |
+| `oidc_config`              | text (JSON) | discovered + supplied OIDC config, **including the client secret** — at-rest encryption is a flagged future pass    |
+| `saml_config`              | text (JSON) | demanded by the plugin's model; SAML is out of scope, always NULL                                                   |
+| `organization_id`          | text        | demanded by the plugin's model; organization plugin unused, always NULL                                             |
+| `domain_verified`          | boolean     | plugin trust flag gating email-linking to existing users; set at registration (admin registration = trust decision) |
+| `user_id`                  | UUID FK     | the registering Administrator; no cascade — the provider outlives the registrant                                    |
+| `created_at`, `updated_at` | timestamptz |                                                                                                                     |
+
+No `archived_at`: providers are deleted (future management surface), not archived.
+
+---
+
 ### `entities` (own corporate entities)
 
 Source: **DD-008**, **ENT-001–004**
