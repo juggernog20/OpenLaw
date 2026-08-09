@@ -125,8 +125,22 @@ describe("login method discovery (GET /api/v1/auth/methods)", () => {
     expect(res.json()).toEqual({
       mode: "built_in",
       magicLinkEnabled: true,
+      emailConfigured: true,
       ssoProviderId: null,
     });
+  });
+
+  it("reports a deployment that cannot send email, so the screen can hide the affordance", async () => {
+    harness.mailer.configured = false;
+    try {
+      const res = await harness.app.inject({ method: "GET", url: "/api/v1/auth/methods" });
+      expect(res.statusCode, res.body).toBe(200);
+      // The toggle stays on: the org still wants the portal floor, the
+      // deployment just cannot deliver. The two are reported separately.
+      expect(res.json()).toMatchObject({ magicLinkEnabled: true, emailConfigured: false });
+    } finally {
+      harness.mailer.configured = true;
+    }
   });
 
   it("tracks the auth mode and the magic-link toggle live", async () => {

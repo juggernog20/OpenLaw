@@ -6,7 +6,9 @@
  * `oidc` leads with the SSO button and keeps password sign-in reachable
  * behind "Administrator sign-in" — break-glass is never hidden entirely,
  * because a dead IdP must not lock the org out. The magic-link request
- * rides its own toggle in both modes (DD-010 portal floor).
+ * rides its own toggle in both modes (DD-010 portal floor), and appears
+ * only when the deployment can send email — an undeliverable link is a
+ * dead affordance.
  */
 
 import { useState, type FormEvent } from "react";
@@ -44,6 +46,12 @@ export function LoginPage() {
   // The SSO callback and magic-link verify both land back here with an
   // ?error= query when the round trip failed.
   const arrivedWithError = searchParams.get("error") !== null;
+
+  // The toggle says the org wants the portal floor; `emailConfigured`
+  // says the deployment can actually deliver the link. Offering the
+  // affordance without both leaves the requester waiting for mail that
+  // can never arrive.
+  const magicLinkOffered = methods.magicLinkEnabled && methods.emailConfigured;
 
   const primaryView: View = methods.mode === "oidc" ? "sso" : "password";
   const [view, setView] = useState<View>(primaryView);
@@ -214,7 +222,7 @@ export function LoginPage() {
               </Alert>
             )}
             <div className="flex flex-col items-start gap-1">
-              {methods.magicLinkEnabled && (
+              {magicLinkOffered && (
                 <Button variant="link" onClick={() => show("magic")}>
                   <FormattedMessage
                     id="auth.login.magicLink"
@@ -266,7 +274,7 @@ export function LoginPage() {
               </Button>
             </form>
             <div className="flex flex-col items-start gap-1">
-              {methods.mode === "built_in" && methods.magicLinkEnabled && (
+              {methods.mode === "built_in" && magicLinkOffered && (
                 <Button variant="link" onClick={() => show("magic")}>
                   <FormattedMessage
                     id="auth.login.magicLink"

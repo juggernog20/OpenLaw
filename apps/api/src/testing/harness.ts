@@ -76,6 +76,14 @@ export class CapturingMailer implements Mailer {
   readonly messages: MailMessage[] = [];
 
   send(message: MailMessage): Promise<void> {
+    // An unconfigured mailer fails loudly in production
+    // (`createUnconfiguredMailer`), so the fake must too — otherwise a
+    // suite that flips `configured` off still silently "sends", and the
+    // surfaces that must not promise undeliverable mail look correct
+    // when they are not.
+    if (!this.configured) {
+      return Promise.reject(new Error("SMTP is not configured."));
+    }
     this.messages.push(message);
     return Promise.resolve();
   }

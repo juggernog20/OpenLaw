@@ -4,7 +4,8 @@
  * The login screen offers exactly what GET /api/v1/auth/methods allows
  * (TECH-008 mode semantics), and drives the three flows off the same
  * card: password (with the 2FA challenge redirect), SSO, and the
- * magic-link request with its sent state.
+ * magic-link request with its sent state. The magic-link affordance
+ * needs both the toggle and a deployment that can send email.
  */
 
 import { describe, expect, it } from "vitest";
@@ -28,6 +29,40 @@ describe("login offers what the auth mode allows", () => {
     stubApi({ methods: { mode: "built_in", magicLinkEnabled: false, ssoProviderId: null } });
     renderAt("/auth/login");
     expect(await screen.findByLabelText("Email")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Email me a sign-in link" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("hides the magic-link option when the deployment cannot send email", async () => {
+    stubApi({
+      methods: {
+        mode: "built_in",
+        magicLinkEnabled: true,
+        emailConfigured: false,
+        ssoProviderId: null,
+      },
+    });
+    renderAt("/auth/login");
+    expect(await screen.findByLabelText("Email")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Email me a sign-in link" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("hides the magic-link option in oidc mode when email is unconfigured", async () => {
+    stubApi({
+      methods: {
+        mode: "oidc",
+        magicLinkEnabled: true,
+        emailConfigured: false,
+        ssoProviderId: "acme-idp",
+      },
+    });
+    renderAt("/auth/login");
+    expect(
+      await screen.findByRole("button", { name: "Continue with single sign-on" }),
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Email me a sign-in link" }),
     ).not.toBeInTheDocument();

@@ -63,7 +63,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** What the login screen may offer (TECH-008): the auth mode, the magic-link toggle, and the SSO provider to start, if one is registered */
+    /** What the login screen may offer (TECH-008): the auth mode, the magic-link toggle, whether outbound email works, and the SSO provider to start, if one is registered */
     get: operations["getAuthMethods"];
     put?: never;
     post?: never;
@@ -425,6 +425,7 @@ export interface operations {
             /** @enum {string} */
             mode: "built_in" | "oidc";
             magicLinkEnabled: boolean;
+            emailConfigured: boolean;
             ssoProviderId: string | null;
           };
         };
