@@ -465,6 +465,42 @@ The works-on-my-machine failures this guards against — dev-server masking buil
 - The magic-link E2E needs the domain allowlist reachable through the front door: an Administrator-only `GET`/`PUT /api/v1/auth/allowed-domains` (read + replace-whole-list) lands with this workstream — the surface a future SET-004 settings pane consumes.
 - Playwright joins the dependency set (TECH-014's E2E confirmation becomes concrete).
 
+## TECH-019: Code documentation — module-granular doc comments, no coverage percentage
+
+- **Status:** Accepted
+- **Date:** 2026-08-09
+
+### Context
+
+CodeRabbit's `docstrings` pre-merge check reported 36.05% coverage against its stock 80% threshold. Nothing in the repo requested that check — it is a CodeRabbit default, and at `warning` it gates nothing — but the number invited a repo-wide comment sweep, so the convention it was measuring against needed pinning. A survey of the 58 TypeScript sources found 47 carrying a module-level doc block (the 11 without are 6 test files, `vite.config.ts`, `drizzle.config.ts`, `main.tsx`, `testing/setup.ts`, and one genuine gap since closed) and 70 decision-record citations sitting in source comments.
+
+### Decision
+
+1. **Document at module granularity.** Every non-test, non-config source file opens with a `/** ... */` block stating what the module is for and citing the decision record that governs it. This is the primary unit of documentation.
+2. **Comment the members a type cannot describe** — invariants, lifecycle and ordering constraints, why an empty or defaulted value means what it means, deliberate departures from the obvious alternative. Not every export.
+3. **No coverage percentage.** `.coderabbit.yaml` sets `reviews.pre_merge_checks.docstrings.mode: off`, and a `path_instructions` entry teaches the reviewer the convention above — including that a comment restating its signature is a finding, not a contribution.
+4. **Generated artifacts are excluded from review** via `path_filters`: `packages/api-client/src/schema.ts` and `apps/api/openapi.json`, whose fixes always belong upstream in the emitter. Migrations are not excluded — drizzle emits them, but they are hand-consolidated and are the highest-consequence SQL in the repo.
+
+### Rationale
+
+- **The metric is anti-correlated with the practice here.** Per-exported-symbol counting scored a codebase with near-universal module docs and 70 decision citations at 36%, because the information sits in one block per file rather than one per symbol. The only way to move the number is to add comments that restate signatures.
+- **TypeScript already carries what a docstring carries elsewhere.** The 80% default is calibrated for ecosystems where a bare signature says nothing. `getMatter(id: MatterId): Promise<Matter | null>` documents its inputs, output, and that it can miss.
+- **A signature-restating comment is worse than no comment**: it rots when the signature changes and then actively misleads.
+- **Agent navigability is the real reason to write them.** An agent greps into one file without the surrounding context a human carries; nobody reads `DECISIONS-CONTRACTS.md` before editing one function. The module block is where a decision record becomes reachable at the point of use — which is why the citation, not the coverage, is the thing worth enforcing.
+
+### Alternatives considered
+
+- **Write to 80%** — ~44 points of filler over a well-documented codebase; large diff, lower signal.
+- **Lower the threshold to just under current (30–40)** — keeps a metric nobody believes and ratchets on the wrong axis; a real regression against the actual convention (a new module with no block) would still pass.
+- **`mode: error`** — makes a default nobody chose into a merge gate.
+- **Leave it at defaults** — a standing warning that is not a defect trains the team to ignore pre-merge checks.
+
+### Consequences
+
+- `.coderabbit.yaml` enters the repo and becomes the place review policy is expressed; future custom checks belong there.
+- The convention is enforced by review instruction rather than by tooling — no linter measures it, deliberately.
+- New modules are expected to cite a decision record; where none applies, that is a signal the decision has not been recorded yet.
+
 ## Index of decisions
 
 | #        | Decision                                                                      | Status               |
@@ -487,3 +523,4 @@ The works-on-my-machine failures this guards against — dev-server masking buil
 | TECH-016 | API validation vocabulary — Zod as the single schema source                   | Accepted             |
 | TECH-017 | Compose topology — single app container, BYO proxy, incremental growth        | Accepted             |
 | TECH-018 | Deployment fidelity — hybrid dev loop, E2E gate on built images, `e2e/` pkg   | Accepted             |
+| TECH-019 | Code documentation — module-granular doc comments, no coverage percentage     | Accepted             |

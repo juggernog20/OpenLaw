@@ -1,0 +1,49 @@
+reviews:
+  # Generated artifacts: reviewing them produces findings nobody can act on,
+  # since the fix always belongs upstream in the emitter.
+  # Migrations are deliberately NOT excluded — drizzle emits them but they are
+  # hand-consolidated and hand-hardened, and they are the highest-consequence
+  # SQL in the repo.
+  path_filters:
+    - "!packages/api-client/src/schema.ts"
+    - "!apps/api/openapi.json"
+
+  pre_merge_checks:
+    docstrings:
+      # Off by decision, not by neglect — see TECH-019. This repo documents at
+      # module granularity (a file-level block citing the decision record that
+      # governs the module) plus comments on members whose behaviour the type
+      # cannot express. A per-exported-symbol percentage cannot see that: it
+      # scored a codebase where 47/58 files carry a module doc and 70 decision
+      # citations sit in source comments at 36%, and the only way to raise the
+      # number is to add comments that restate signatures.
+      mode: "off"
+
+  path_instructions:
+    - path: "{apps,packages}/**/*.{ts,tsx}"
+      instructions: |
+        Documentation convention for this repo (TECH-019). Judge comments by
+        whether they carry information the TypeScript signature cannot; do not
+        judge them by density or per-symbol coverage.
+
+        Expected:
+          - Every non-test, non-config source file opens with a module-level
+            `/** ... */` block stating what the module is for, citing the
+            decision record that governs it (TECH-xxx, DD-xxx, DES-xxx,
+            INT-xxx) where one applies.
+          - Comments on members whose behaviour is not derivable from the
+            type: invariants, lifecycle and ordering constraints, why a
+            defaulted or empty value means what it means, and deliberate
+            departures from an obvious alternative.
+
+        Flag:
+          - A new module with no module-level block.
+          - A comment that restates its signature and adds nothing
+            ("Gets the user." above `getUser(): Promise<User>`), including on
+            React components and route handlers. These are worse than absent:
+            they rot silently and then mislead.
+          - A comment that contradicts the code, or cites a decision record
+            that does not exist in docs/decision-records/.
+
+        Do not flag a well-documented module for lacking a doc block on each
+        individual export.
