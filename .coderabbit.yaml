@@ -143,9 +143,13 @@ reviews:
         Repo-wide TypeScript conventions:
           - Every file starts with `// SPDX-License-Identifier: AGPL-3.0-only`
             above the module doc block (DD-011).
-          - Relative imports carry the `.js` extension; this is NodeNext
-            resolution, and an extensionless relative import fails at runtime,
-            not at build.
+          - Relative import extensions follow the package's module
+            resolution. apps/api and packages/db override to NodeNext and
+            carry `.js`, because their compiled output runs on Node
+            directly. apps/web and packages/api-client inherit `bundler`
+            from tsconfig.base.json (apps/web is bundled by Vite) and are
+            extensionless. Flag only an import that breaks its own
+            package's convention.
           - `import type` for type-only imports.
           - No `any`, and no `as` cast that launders one. TECH-015 puts the
             native TS 7 compiler in the loop; a cast is a defect report, not a
@@ -184,7 +188,10 @@ reviews:
             done with CSS variables across three themes, not per-utility.
           - Icons are Lucide at 16/20/24 inheriting `currentColor` (DES-008).
           - Components are shadcn-shaped owned source over Radix primitives
-            (DES-004). Props are declared `Readonly<...>`.
+            (DES-004). Props are plain inline types or an exported
+            `XxxProps` interface extending the element's HTML attributes;
+            do not ask for `Readonly<...>` wrappers — the components do
+            not use them.
           - WCAG 2.2 AA is a floor, not a goal (DES-011): label association,
             focus visibility, keyboard reachability, contrast, and the `/`,
             `Esc`, `?` global keys (DES-010). Flag a control that is
