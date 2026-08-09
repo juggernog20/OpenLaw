@@ -19,6 +19,7 @@ Decisions are numbered `KNW-###`.
 ## Open questions queued for the next grill-me session
 
 _None — queue cleared 2026-08-06 (KNW-001 through KNW-005)._
+
 ---
 
 ## KNW-001 — Entry model: one typed entity, text body + owned documents

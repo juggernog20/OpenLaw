@@ -3,9 +3,11 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { eq, orgSettings, sql, users, verifications } from "@openlaw/db";
 import {
+  linkFrom,
   signInCookies,
   startHarness,
   TEST_ADMIN,
+  tokenFrom,
   type TestHarness,
 } from "../../testing/harness.js";
 
@@ -35,13 +37,6 @@ afterAll(async () => {
 /** POST /api/v1/auth/magic-link — the typed issuance route. */
 async function requestLink(email: string) {
   return harness.app.inject({ method: "POST", url: "/api/v1/auth/magic-link", payload: { email } });
-}
-
-/** The verify link a recipient would click, from a captured email. */
-function linkFrom(text: string): string {
-  const match = /(https?:\/\/\S*\/api\/auth\/magic-link\/verify\?\S+)/.exec(text);
-  expect(match?.[1], `no magic-link verify URL in:\n${text}`).toBeTruthy();
-  return match![1]!;
 }
 
 /** Follows the emailed link through the mounted better-auth handler. */
@@ -236,9 +231,7 @@ describe("magic-link portal auth (POST /api/v1/auth/magic-link)", () => {
     });
     expect(invited.statusCode, invited.body).toBe(201);
 
-    const setToken = /\/auth\/set-password\?token=([A-Za-z0-9._~-]+)/.exec(
-      harness.mailer.messagesTo(invitee.email)[0]!.text,
-    )![1]!;
+    const setToken = tokenFrom(harness.mailer.messagesTo(invitee.email)[0]!.text);
     const reset = await harness.app.inject({
       method: "POST",
       url: "/api/auth/reset-password",

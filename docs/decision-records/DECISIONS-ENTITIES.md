@@ -37,9 +37,9 @@ _None — queue cleared 2026-08-06 (ENT-001 through ENT-007)._
 
 - **Status** — Accepted
 - **Date** — 2026-08-06
-- **Decision** — `entity_registrations`: one row per jurisdiction of registration/qualification — `jurisdiction`, `registration_number`, `registered_agent`, `status` (`active | lapsed | withdrawn`), timestamps. Formation jurisdiction stays on the entity; registrations cover everywhere it must stay in good standing. Renewal obligations per registration feed the compliance calendar (ENT-005).
+- **Decision** — `entity_registrations`: one row per jurisdiction of registration/qualification — `jurisdiction`, `registration_number`, `registered_agent`, `status` (`active | lapsed | withdrawn`), timestamps. Formation jurisdiction stays on the entity; registrations cover everywhere it must stay in good standing. Renewal obligations per registration feed the compliance calendar (ENT-006).
 - **Rationale** — Per-state registration numbers, agents, and renewal dates are exactly the data a jurisdiction multi-select can't hold.
-- **Consequences** — Table in SCHEMA.md; the compliance calendar (ENT-005) references registrations.
+- **Consequences** — Table in SCHEMA.md; the compliance calendar (ENT-006) references registrations.
 
 ## ENT-003 — Corporate structure: full ownership graph + org chart in v1
 

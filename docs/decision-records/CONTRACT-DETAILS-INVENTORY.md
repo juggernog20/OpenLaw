@@ -314,4 +314,4 @@ These are not elements per se but recurring questions surfaced by the inventory 
 13. **Activity bar slot order + glyphs** (J.1–J.9) — eight slots is a lot; needs a justification per slot.
 14. **Activity bar badges** (J.2, J.3, J.6) — "3 / v7 / 42" is ad-hoc; need rules for when a badge appears and what the count means.
 15. **Document panel toolbar density** (K.T1–T9) — nine controls for a preview; can collapse some behind more-vert.
-16. **Inline comment markers in the doc body** (K.B9) — assumes a comment system; depends on DECISIONS-CONTRACTS / DD-? for comment-tier UX.
+16. **Inline comment markers in the doc body** (K.B9) — assumes a comment system; decided since: CMT-001 anchors document comments, CMT-003 defines tier rendering (DECISIONS-COMMENTS.md).

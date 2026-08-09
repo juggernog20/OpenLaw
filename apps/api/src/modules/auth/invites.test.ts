@@ -7,6 +7,7 @@ import {
   signInCookies,
   startHarness,
   TEST_ADMIN,
+  tokenFrom,
   type TestHarness,
 } from "../../testing/harness.js";
 
@@ -44,13 +45,6 @@ async function setPassword(token: string, newPassword: string) {
     url: "/api/auth/reset-password",
     payload: { newPassword, token },
   });
-}
-
-/** The set-password token a recipient would click, from a captured email. */
-function tokenFrom(text: string): string {
-  const match = /\/auth\/set-password\?token=([A-Za-z0-9._~-]+)/.exec(text);
-  expect(match?.[1], `no set-password link in:\n${text}`).toBeTruthy();
-  return match![1]!;
 }
 
 describe("invites (POST /api/v1/auth/invites)", () => {
@@ -133,7 +127,9 @@ describe("invites (POST /api/v1/auth/invites)", () => {
   it("rejects a replay of an already-used set-password token", async () => {
     const usedToken = tokenFrom(harness.mailer.messagesTo(INVITEE.email)[0]!.text);
     const res = await setPassword(usedToken, "attacker-chosen-pw-1");
+    // A client error, never a server fault masquerading as a rejection.
     expect(res.statusCode).toBeGreaterThanOrEqual(400);
+    expect(res.statusCode).toBeLessThan(500);
     // The replay must not have changed the password set at activation.
     await signInCookies(harness.app, INVITEE.email, "casey-sets-her-own");
   });
@@ -146,6 +142,7 @@ describe("invites (POST /api/v1/auth/invites)", () => {
 
     const res = await setPassword(token, "too-late-password-1");
     expect(res.statusCode).toBeGreaterThanOrEqual(400);
+    expect(res.statusCode).toBeLessThan(500);
     const signInRes = await signIn(harness.app, "noa@example.com", "too-late-password-1");
     expect(signInRes.statusCode).toBe(401);
   });

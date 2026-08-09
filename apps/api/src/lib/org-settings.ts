@@ -11,7 +11,7 @@ import { orgSettings, type Db, type OrgSettings } from "@openlaw/db";
 export async function getOrgSettings(db: Db): Promise<OrgSettings> {
   const [row] = await db.select().from(orgSettings).limit(1);
   if (!row) {
-    throw new Error("org_settings has no row; the 0002_org_settings migration seeds exactly one.");
+    throw new Error("org_settings has no row; the 0000_auth migration seeds exactly one.");
   }
   return row;
 }

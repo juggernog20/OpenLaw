@@ -1,6 +1,6 @@
 # OpenLaw (working title)
 
-> Open-source legal department management for small in-house teams.
+_Open-source legal department management for small in-house teams._
 
 > [!NOTE]
 > "OpenLaw" is a working title. The original openlaw.io project (a ConsenSys spinoff focused on smart legal contracts) is functionally dormant — its team rebranded to TributeLabs in 2021–22 — but SEO collisions remain. The name is reclaimable but a final naming decision is deferred.

@@ -28,7 +28,13 @@ export const orgSettings = pgTable(
      */
     allowedEmailDomains: jsonb("allowed_email_domains").$type<string[]>().notNull().default([]),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    // $onUpdate keeps the audit trail honest for writers that forget to
+    // set it — application code owns every write here, unlike the
+    // better-auth tables where the adapter maintains updatedAt.
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
   },
   (table) => [
     uniqueIndex("org_settings_singleton").on(sql`(true)`),

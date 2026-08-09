@@ -143,7 +143,7 @@
    * Chrome dimensions — fixed sizes for the application shell.         *
    * Per DES-007 these are bare CSS variables, not utility-generating.  *
    * Reference from layout components via var() or arbitrary value      *
-   * (e.g. h-[--height-nav]).                                           *
+   * (e.g. h-(--height-nav)).                                           *
    * ------------------------------------------------------------------ */
   --height-header: 62px;
   --height-nav: 48px;

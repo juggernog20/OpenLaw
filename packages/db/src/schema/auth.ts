@@ -10,6 +10,7 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   check,
+  index,
   integer,
   pgTable,
   text,
@@ -49,7 +50,10 @@ export const users = pgTable(
     archivedAt: timestamp("archived_at", { withTimezone: true }),
   },
   (table) => [
-    uniqueIndex("users_email_unique").on(table.email),
+    // Unique on lower(email): every write path normalizes to lower case,
+    // and this makes the database reject a casing-variant duplicate that
+    // a direct adapter write could otherwise sneak past the application.
+    uniqueIndex("users_email_unique").on(sql`lower(${table.email})`),
     check(
       "users_role_check",
       sql`${table.role} in ('administrator', 'legal_team_member', 'contributor', 'business_user')`,
@@ -75,7 +79,12 @@ export const sessions = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [uniqueIndex("sessions_token_unique").on(table.token)],
+  (table) => [
+    uniqueIndex("sessions_token_unique").on(table.token),
+    // Postgres does not index FK columns automatically; this one backs
+    // both cascade deletes and "revoke all sessions of a user".
+    index("sessions_user_id_idx").on(table.userId),
+  ],
 );
 
 /** Credential and OIDC-subject rows per user (TECH-008). */
@@ -102,6 +111,7 @@ export const accounts = pgTable(
   // per user, and no second user can ever claim someone else's OIDC subject.
   (table) => [
     uniqueIndex("accounts_provider_account_unique").on(table.providerId, table.accountId),
+    index("accounts_user_id_idx").on(table.userId),
   ],
 );
 
@@ -175,11 +185,17 @@ export const twoFactors = pgTable(
 );
 
 /** Short-lived tokens (magic links, set-password); values stored hashed. */
-export const verifications = pgTable("verifications", {
-  id: uuidPk(),
-  identifier: text("identifier").notNull(),
-  value: text("value").notNull(),
-  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const verifications = pgTable(
+  "verifications",
+  {
+    id: uuidPk(),
+    identifier: text("identifier").notNull(),
+    value: text("value").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  // Every redemption looks tokens up by identifier, and this table grows
+  // with traffic.
+  (table) => [index("verifications_identifier_idx").on(table.identifier)],
+);

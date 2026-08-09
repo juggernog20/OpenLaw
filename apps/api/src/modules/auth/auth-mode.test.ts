@@ -15,6 +15,7 @@ import {
   signInCookies,
   startHarness,
   TEST_ADMIN,
+  tokenFrom,
   type TestHarness,
 } from "../../testing/harness.js";
 
@@ -47,9 +48,7 @@ beforeAll(async () => {
     payload: { email: STAFF.email, displayName: STAFF.displayName, role: "legal_team_member" },
   });
   expect(invited.statusCode, invited.body).toBe(201);
-  const token = /\/auth\/set-password\?token=([A-Za-z0-9._~-]+)/.exec(
-    harness.mailer.messagesTo(STAFF.email)[0]!.text,
-  )![1]!;
+  const token = tokenFrom(harness.mailer.messagesTo(STAFF.email)[0]!.text);
   const reset = await harness.app.inject({
     method: "POST",
     url: "/api/auth/reset-password",

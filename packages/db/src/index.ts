@@ -53,15 +53,25 @@ export const ADVISORY_LOCK = {
  */
 export async function withAdvisoryLock<T>(db: Db, key: number, fn: () => Promise<T>): Promise<T> {
   const holder = await db.$client.connect();
+  let unlockFailure: Error | undefined;
   try {
     await holder.query("select pg_advisory_lock($1)", [key]);
     try {
       return await fn();
     } finally {
-      await holder.query("select pg_advisory_unlock($1)", [key]);
+      try {
+        await holder.query("select pg_advisory_unlock($1)", [key]);
+      } catch (error) {
+        // Swallowed deliberately: destroying the client (below) ends the
+        // session, which releases the lock anyway — `fn`'s outcome stands.
+        unlockFailure = error as Error;
+      }
     }
   } finally {
-    holder.release();
+    // A connection that may still hold the lock must not return to the
+    // pool — a session-level lock outlives the query, not the session.
+    // Passing the error makes pg destroy the client, ending the session.
+    holder.release(unlockFailure);
   }
 }
 
@@ -77,6 +87,7 @@ export async function tryWithAdvisoryLock<T>(
   fn: () => Promise<T>,
 ): Promise<{ acquired: true; result: T } | { acquired: false }> {
   const holder = await db.$client.connect();
+  let unlockFailure: Error | undefined;
   try {
     const locked = await holder.query<{ acquired: boolean }>(
       "select pg_try_advisory_lock($1) as acquired",
@@ -86,10 +97,15 @@ export async function tryWithAdvisoryLock<T>(
     try {
       return { acquired: true, result: await fn() };
     } finally {
-      await holder.query("select pg_advisory_unlock($1)", [key]);
+      try {
+        await holder.query("select pg_advisory_unlock($1)", [key]);
+      } catch (error) {
+        unlockFailure = error as Error;
+      }
     }
   } finally {
-    holder.release();
+    // Same as withAdvisoryLock: never pool a possibly-still-locked session.
+    holder.release(unlockFailure);
   }
 }
 

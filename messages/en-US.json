@@ -48,7 +48,7 @@
     "defaultMessage": "No camera? Enter this secret manually: {secret}"
   },
   "auth.enroll.passwordHint": {
-    "defaultMessage": "Confirm your password to start enrolment."
+    "defaultMessage": "Confirm your password to start enrollment."
   },
   "auth.enroll.title": {
     "defaultMessage": "Two-factor authentication"

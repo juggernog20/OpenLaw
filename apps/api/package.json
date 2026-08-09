@@ -17,7 +17,7 @@
     "openapi:emit": "tsx scripts/emit-openapi.ts"
   },
   "dependencies": {
-    "@better-auth/drizzle-adapter": "^1.6.26",
+    "@better-auth/drizzle-adapter": "~1.6.26",
     "@better-auth/sso": "1.6.26",
     "@fastify/swagger": "^9.8.1",
     "@node-rs/argon2": "^2.0.2",

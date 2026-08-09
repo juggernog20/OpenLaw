@@ -143,7 +143,7 @@ export function TwoFactorEnrollPage() {
           <CardDescription>
             <FormattedMessage
               id="auth.enroll.passwordHint"
-              defaultMessage="Confirm your password to start enrolment."
+              defaultMessage="Confirm your password to start enrollment."
             />
           </CardDescription>
         )}

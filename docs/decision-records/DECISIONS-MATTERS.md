@@ -63,13 +63,13 @@ Schema (full DDL captured in `SCHEMA.md`):
 - `matter_types(id, slug, display_name, description, display_order, is_system_default, archived_at, created_at, updated_at)`
 - `slug` is stable for analytics + URLs and is **not** user-editable after creation; `display_name` is.
 - `is_system_default = true` marks seed rows; the `other` row carries an additional protection preventing hard-delete.
-- `archived_at` enables soft-delete; archived types are hidden from the new-matter picker but retained on existing matters.
+- `archived_at` enables soft-delete; archived types are hidden from the new-matter picker. (_Per **SET-003**'s archive guard, in-use types are bulk-reassigned before archiving, so existing matters never carry an archived type._)
 
 Behavior:
 
 - Admins add, rename, reorder, and archive types via Matters Settings.
-- Archiving a type that is in use prompts an optional bulk-reassign step ("Move 14 existing matters to: Other ▾"). If skipped, existing matters keep their archived type for historical fidelity.
-- `matters.matter_type_id` is non-null at creation. Intake (per **DD-010**) collects type at submission or defaults to `advisory` (lowest-commitment default; Member triage assigns the real type at handoff).
+- ~~Archiving a type that is in use prompts an optional bulk-reassign step ("Move 14 existing matters to: Other ▾"). If skipped, existing matters keep their archived type for historical fidelity.~~ _Superseded by **SET-003** (2026-08-05), the cross-module archive guard: archiving an in-use type shows the live-usage count and **requires** a reassignment target — existing matters no longer keep an archived type._
+- `matters.matter_type_id` is non-null at creation. ~~Intake (per **DD-010**) collects type at submission or defaults to `advisory` (lowest-commitment default; Member triage assigns the real type at handoff).~~ _Revised by **INT-001/INT-002** (2026-08-04): intake captures a structured request type, not a matter type; the triaging Member picks the final matter type at Convert (request types may suggest a default target)._
 - Re-typing an existing matter is restricted to Member+ (Contributors cannot per **DD-015**) and audit-logged per **DD-017**.
 - Type CRUD writes audit-log entries per **DD-017**.
 

@@ -51,6 +51,20 @@ export async function signInCookies(
   return cookies;
 }
 
+/** The set-password token a recipient would click, from a captured email. */
+export function tokenFrom(text: string): string {
+  const match = /\/auth\/set-password\?token=([A-Za-z0-9._~-]+)/.exec(text);
+  if (!match?.[1]) throw new Error(`no set-password link in:\n${text}`);
+  return match[1];
+}
+
+/** The magic-link verify URL a recipient would click, from a captured email. */
+export function linkFrom(text: string): string {
+  const match = /(https?:\/\/\S*\/api\/auth\/magic-link\/verify\?\S+)/.exec(text);
+  if (!match?.[1]) throw new Error(`no magic-link verify URL in:\n${text}`);
+  return match[1];
+}
+
 /**
  * TECH-011 fake: captures outbound mail so tests can extract invite and
  * magic-link tokens from what a real recipient would have received.
@@ -80,19 +94,29 @@ export async function startHarness(): Promise<TestHarness> {
   const container: StartedPostgreSqlContainer = await new PostgreSqlContainer(
     "postgres:16-alpine",
   ).start();
-  const db = createDb(container.getConnectionUri());
-  await runMigrations(db);
-  const mailer = new CapturingMailer();
-  const app = await buildApp({ db, config: TEST_AUTH_CONFIG, mailer });
-  await app.ready();
-  return {
-    app,
-    db,
-    mailer,
-    stop: async () => {
-      await app.close();
-      await db.$client.end();
-      await container.stop();
-    },
-  };
+  // The container must come down on every path: a leaked container masks
+  // the original failure in the suite output and outlives the test run.
+  try {
+    const db = createDb(container.getConnectionUri());
+    await runMigrations(db);
+    const mailer = new CapturingMailer();
+    const app = await buildApp({ db, config: TEST_AUTH_CONFIG, mailer });
+    await app.ready();
+    return {
+      app,
+      db,
+      mailer,
+      stop: async () => {
+        try {
+          await app.close();
+          await db.$client.end();
+        } finally {
+          await container.stop();
+        }
+      },
+    };
+  } catch (error) {
+    await container.stop();
+    throw error;
+  }
 }

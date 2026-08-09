@@ -27,6 +27,13 @@ afterAll(async () => {
   await harness.stop();
 });
 
+/** The user id behind an email, for direct factor-table manipulation. */
+async function userIdOf(email: string): Promise<string> {
+  const [row] = await harness.db.select({ id: users.id }).from(users).where(eq(users.email, email));
+  expect(row, `no user with email ${email}`).toBeTruthy();
+  return row!.id;
+}
+
 /** Every cookie a response set, for carrying state to the next request. */
 function cookiesOf(res: { cookies: { name: string; value: string }[] }): Record<string, string> {
   const jar: Record<string, string> = {};
@@ -272,16 +279,11 @@ describe("TOTP two-factor (mounted better-auth twoFactor plugin)", () => {
 
     // Once the lock expires (time-travelled via the database), the right
     // code signs in and the failure budget resets.
+    const userId = await userIdOf(email);
     await harness.db
       .update(twoFactors)
       .set({ lockedUntil: new Date(Date.now() - 1000) })
-      .where(
-        eq(
-          twoFactors.userId,
-          (await harness.db.select({ id: users.id }).from(users).where(eq(users.email, email)))[0]!
-            .id,
-        ),
-      );
+      .where(eq(twoFactors.userId, userId));
     const retry = await answer(
       await challenge(email, password),
       "verify-totp",
@@ -291,13 +293,7 @@ describe("TOTP two-factor (mounted better-auth twoFactor plugin)", () => {
     const [factor] = await harness.db
       .select()
       .from(twoFactors)
-      .where(
-        eq(
-          twoFactors.userId,
-          (await harness.db.select({ id: users.id }).from(users).where(eq(users.email, email)))[0]!
-            .id,
-        ),
-      );
+      .where(eq(twoFactors.userId, userId));
     expect(factor!.failedVerificationCount).toBe(0);
     expect(factor!.lockedUntil).toBeNull();
   });

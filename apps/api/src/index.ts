@@ -29,6 +29,15 @@ const mailer =
     ? createSmtpMailer(process.env.SMTP_URL, process.env.SMTP_FROM)
     : createUnconfiguredMailer();
 
+// BASE_URL anchors emailed links (set-password, magic links) and origin
+// checks. The localhost default exists for development; a production
+// deploy without it would email links nobody outside the host can open.
+if (!process.env.BASE_URL && process.env.NODE_ENV === "production") {
+  console.warn(
+    "BASE_URL is not set; emailed links and OIDC callbacks will point at http://localhost:3000.",
+  );
+}
+
 const app = await buildApp(
   {
     db,

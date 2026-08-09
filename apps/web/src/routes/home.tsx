@@ -43,7 +43,7 @@ export function HomePage() {
   return (
     <div className="min-h-screen bg-canvas text-primary">
       <SkipLink />
-      <header className="flex h-[--height-header] items-center justify-between bg-inverted px-page-x text-on-inverted">
+      <header className="flex h-(--height-header) items-center justify-between bg-inverted px-page-x text-on-inverted">
         <span className="text-md font-semibold">OpenLaw</span>
         <div className="flex items-center gap-4">
           <span className="text-sm">{user.displayName}</span>

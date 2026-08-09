@@ -8,12 +8,14 @@ import { buildApp } from "./app.js";
 import { CapturingMailer, TEST_AUTH_CONFIG } from "./testing/harness.js";
 
 let app: Awaited<ReturnType<typeof buildApp>>;
+let db: ReturnType<typeof createDb>;
 
 beforeAll(async () => {
   // These suites never touch the database; pg pools connect lazily, so a
   // placeholder URL keeps them container-free.
+  db = createDb("postgresql://unused:unused@localhost:5432/unused");
   app = await buildApp({
-    db: createDb("postgresql://unused:unused@localhost:5432/unused"),
+    db,
     config: TEST_AUTH_CONFIG,
     mailer: new CapturingMailer(),
   });
@@ -28,6 +30,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await app.close();
+  await db.$client.end();
 });
 
 describe("meta", () => {
