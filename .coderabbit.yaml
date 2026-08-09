@@ -91,9 +91,14 @@ reviews:
     ignore_title_keywords:
       - "wip"
       - "do not review"
-    # A long-running branch should keep getting reviewed, not go quiet after
-    # the fifth commit. 0 disables the auto-pause entirely.
-    auto_pause_after_reviewed_commits: 0
+    # Review once, when the PR opens. Pushes to an open PR do not requeue a
+    # review — CI is the gate on updates, and most pushes are small fixes
+    # responding to CI or to the initial review. Ask for another pass
+    # explicitly with an `@coderabbitai review` comment when a revision
+    # warrants fresh eyes. (This also retires the earlier
+    # `auto_pause_after_reviewed_commits: 0` decision, which only governed
+    # incremental reviews.)
+    auto_incremental_review: false
 
   path_filters:
     # Generated artifacts whose fix always belongs upstream in the emitter.

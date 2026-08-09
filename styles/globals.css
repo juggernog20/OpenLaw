@@ -153,13 +153,25 @@
   --height-confidential-banner: 36px; /* per DES-009 */
 
   /* ------------------------------------------------------------------ *
+   * Focus ring — the default keyboard-focus treatment (M4 spec, #40).  *
+   * Applied globally in @layer base; components may override with a    *
+   * recorded exception (buttons keep Primer's link-blue ring per       *
+   * DES-004).                                                          *
+   * ------------------------------------------------------------------ */
+  --ring-width: 2px;
+  --ring-color: var(--accent);
+
+  /* ------------------------------------------------------------------ *
    * Typography — per DES-006                                           *
    * Inter as the only typeface; mono stack reserved for future use.    *
    * Self-hosted woff2 (no Google Fonts) per DECISIONS.md DD-001.       *
    * ------------------------------------------------------------------ */
+  /* "Inter Variable" is the family @fontsource-variable/inter registers
+   * (imported in the app entry); plain "Inter" keeps working where the
+   * host has it installed. */
   --font-sans:
-    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
-    sans-serif;
+    "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Roboto",
+    "Helvetica Neue", "Arial", sans-serif;
   --font-mono:
     ui-monospace, "JetBrains Mono", "Fira Mono", "SFMono-Regular", Menlo, Consolas, monospace;
 
@@ -193,12 +205,21 @@
 /* Base layer — minimal defaults from DES-003 / DES-005 / DES-006.
  * Anything more opinionated belongs in a component, not in @layer base. */
 @layer base {
+  /* The 14px body default (DES-006) lives on <body>, NOT on <html>:
+   * html font-size defines 1rem, and Tailwind's spacing utilities are
+   * rem-based — DES-007's px-to-utility mapping (16 → p-4, …) only
+   * holds at the UA-default 16px rem. Shrinking the root would shrink
+   * every spacing step by 12.5% and override the reader's browser
+   * font-size preference. */
   html {
     font-family: var(--font-sans);
-    font-size: var(--text-md); /* 14px base per DES-006 */
-    line-height: var(--text-md--line-height);
     color: var(--text-primary);
     background-color: var(--bg-canvas);
+  }
+
+  body {
+    font-size: var(--text-md); /* 14px base per DES-006 */
+    line-height: var(--text-md--line-height);
   }
 
   /* Letter-spacing tightening on h1 only, per DES-006. */
@@ -208,5 +229,10 @@
 
   a {
     color: var(--text-link);
+  }
+
+  :focus-visible {
+    outline: var(--ring-width) solid var(--ring-color);
+    outline-offset: 2px;
   }
 }

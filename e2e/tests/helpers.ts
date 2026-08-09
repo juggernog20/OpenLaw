@@ -108,5 +108,14 @@ export async function signInAs(
 ): Promise<void> {
   await submitLogin(page, email, password);
   await expect(page).toHaveURL("/");
-  await expect(page.getByRole("banner").getByText(displayName)).toBeVisible();
+  // The shell header (#41) shows the signed-in identity as the user
+  // menu's avatar; the display name is its accessible name.
+  await expect(page.getByRole("banner").getByRole("button", { name: displayName })).toBeVisible();
+}
+
+/** Signs out through the shell's header user menu (#41). */
+export async function signOut(page: Page, displayName: string): Promise<void> {
+  await page.getByRole("banner").getByRole("button", { name: displayName }).click();
+  await page.getByRole("menuitem", { name: "Sign out" }).click();
+  await expect(page).toHaveURL(/\/auth\/login$/);
 }

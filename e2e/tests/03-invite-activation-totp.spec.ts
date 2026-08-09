@@ -16,7 +16,14 @@
  */
 
 import { test, expect, type Locator, type Page } from "@playwright/test";
-import { ADMIN, ensureAdminExists, signInAs, submitLogin, uniqueEmail } from "./helpers.js";
+import {
+  ADMIN,
+  ensureAdminExists,
+  signInAs,
+  signOut,
+  submitLogin,
+  uniqueEmail,
+} from "./helpers.js";
 import { extractLink, waitForMailTo } from "./mailpit.js";
 import { totp } from "./totp.js";
 
@@ -76,8 +83,7 @@ test.describe.serial("invite → activation → TOTP", () => {
 
     // The invitee redeems the link, not the Administrator: hand the
     // browser over before following it.
-    await page.getByRole("button", { name: "Sign out" }).click();
-    await expect(page).toHaveURL(/\/auth\/login$/);
+    await signOut(page, ADMIN.displayName);
 
     // Redeem exactly the link the email carries — a wrong BASE_URL on
     // the stack must fail here, not be papered over by rewriting it.
@@ -135,7 +141,9 @@ test.describe.serial("invite → activation → TOTP", () => {
       page.getByText("Wrong code. Try again"),
     );
     await expect(page).toHaveURL("/");
-    await expect(page.getByRole("banner").getByText(MEMBER.displayName)).toBeVisible();
+    await expect(
+      page.getByRole("banner").getByRole("button", { name: MEMBER.displayName }),
+    ).toBeVisible();
   });
 
   test("a backup code passes the challenge — once", async ({ page }) => {
@@ -147,12 +155,13 @@ test.describe.serial("invite → activation → TOTP", () => {
     await page.getByLabel("Backup code").fill(spent);
     await page.getByRole("button", { name: "Verify" }).click();
     await expect(page).toHaveURL("/");
-    await expect(page.getByRole("banner").getByText(MEMBER.displayName)).toBeVisible();
+    await expect(
+      page.getByRole("banner").getByRole("button", { name: MEMBER.displayName }),
+    ).toBeVisible();
 
     // Each backup code works exactly once: replaying the spent one on a
     // fresh challenge must fail.
-    await page.getByRole("button", { name: "Sign out" }).click();
-    await expect(page).toHaveURL(/\/auth\/login$/);
+    await signOut(page, MEMBER.displayName);
     await submitLogin(page, MEMBER.email, MEMBER.password);
     await expect(page).toHaveURL(/\/auth\/two-factor$/);
     await page.getByRole("button", { name: "Use a backup code" }).click();

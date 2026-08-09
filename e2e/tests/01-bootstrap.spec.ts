@@ -37,7 +37,11 @@ test.describe("bootstrap probe", () => {
       await expect(page.getByRole("heading", { name: "Welcome to OpenLaw" })).toBeVisible();
       await page.getByRole("button", { name: "Set up later" }).click();
       await expect(page).toHaveURL("/");
-      await expect(page.getByRole("banner").getByText(ADMIN.displayName)).toBeVisible();
+      // The shell header (#41) shows the signed-in identity as the
+      // user menu's avatar; the display name is its accessible name.
+      await expect(
+        page.getByRole("banner").getByRole("button", { name: ADMIN.displayName }),
+      ).toBeVisible();
     } else {
       // An accumulated instance may predate the wizard (its completion
       // timestamp arrives NULL with the migration) — close it via the
