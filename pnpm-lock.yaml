@@ -13,7 +13,7 @@ importers:
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
-        version: 10.0.1(eslint@10.8.0(jiti@2.7.0))
+        version: 10.0.1(eslint@10.8.1(jiti@2.7.0))
       '@secretlint/secretlint-rule-preset-recommend':
         specifier: ^13.0.4
         version: 13.0.4
@@ -24,8 +24,8 @@ importers:
         specifier: npm:typescript@^7.0.2
         version: typescript@7.0.2
       eslint:
-        specifier: ^10.8.0
-        version: 10.8.0(jiti@2.7.0)
+        specifier: ^10.8.1
+        version: 10.8.1(jiti@2.7.0)
       prettier:
         specifier: ^3.9.6
         version: 3.9.6
@@ -33,23 +33,23 @@ importers:
         specifier: ^13.0.4
         version: 13.0.4
       turbo:
-        specifier: ^2.10.8
-        version: 2.10.8
+        specifier: ^2.10.9
+        version: 2.10.9
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
       typescript-eslint:
         specifier: ^8.66.0
-        version: 8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.0(jiti@2.7.0))
+        version: 8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.1(jiti@2.7.0))
 
   apps/api:
     dependencies:
       '@better-auth/drizzle-adapter':
         specifier: ~1.6.26
-        version: 1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.22.0))
+        version: 1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.23.0))
       '@better-auth/sso':
         specifier: 1.6.26
-        version: 1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.6.26(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.22.0))(pg@8.22.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.10(@types/node@26.2.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(yaml@2.9.0))))(better-call@1.3.7(zod@4.4.3))
+        version: 1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.6.26(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.23.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.10(@types/node@26.2.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(yaml@2.9.0))))(better-call@1.3.7(zod@4.4.3))
       '@fastify/swagger':
         specifier: ^9.8.1
         version: 9.8.1
@@ -67,13 +67,13 @@ importers:
         version: 1.64.1
       better-auth:
         specifier: ~1.6.26
-        version: 1.6.26(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.22.0))(pg@8.22.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.10(@types/node@26.2.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(yaml@2.9.0)))
+        version: 1.6.26(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.23.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.10(@types/node@26.2.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(yaml@2.9.0)))
       fastify:
-        specifier: ^5.11.2
-        version: 5.11.2
+        specifier: ^5.11.3
+        version: 5.11.3
       fastify-type-provider-zod:
         specifier: ^7.0.0
-        version: 7.0.0(@fastify/swagger@9.8.1)(fastify@5.11.2)(openapi-types@12.1.3)(zod@4.4.3)
+        version: 7.0.0(@fastify/swagger@9.8.1)(fastify@5.11.3)(openapi-types@12.1.3)(zod@4.4.3)
       nodemailer:
         specifier: ^9.0.5
         version: 9.0.5
@@ -104,7 +104,7 @@ importers:
     dependencies:
       '@better-auth/sso':
         specifier: 1.6.26
-        version: 1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.6.26(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.22.0))(pg@8.22.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.10(@types/node@26.2.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(yaml@2.9.0))))(better-call@1.3.7(zod@4.4.3))
+        version: 1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.6.26(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.23.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.10(@types/node@26.2.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(yaml@2.9.0))))(better-call@1.3.7(zod@4.4.3))
       '@fontsource-variable/inter':
         specifier: ^5.3.0
         version: 5.3.0
@@ -122,7 +122,7 @@ importers:
         version: 1.3.3(@types/react@19.2.18)(react@19.2.8)
       better-auth:
         specifier: ~1.6.26
-        version: 1.6.26(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.22.0))(pg@8.22.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.10(@types/node@26.2.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(yaml@2.9.0)))
+        version: 1.6.26(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.23.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.10(@types/node@26.2.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(yaml@2.9.0)))
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -218,10 +218,10 @@ importers:
     dependencies:
       drizzle-orm:
         specifier: ^0.45.2
-        version: 0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.22.0)
+        version: 0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.23.0)
       pg:
-        specifier: ^8.16.3
-        version: 8.22.0
+        specifier: ^8.23.0
+        version: 8.23.0
       uuidv7:
         specifier: ^1.2.1
         version: 1.2.1
@@ -1593,33 +1593,33 @@ packages:
   '@textlint/types@15.8.0':
     resolution: {integrity: sha512-Anhc6y5736YIsvqae0U6k0YmB2M/QVHkEeOv2aydAn/WIkdI69dCOiDbe3/+RagS3qstFTSFWJzNRA2lUjv19w==}
 
-  '@turbo/darwin-64@2.10.8':
-    resolution: {integrity: sha512-po+7rfJfUnFXjWlcoN2RwhErgzCdRtBc1T26vYPcywHlggmCQiQe1uWaE4j+BibI2uY9/2pDoFzMN0rmSaPFOw==}
+  '@turbo/darwin-64@2.10.9':
+    resolution: {integrity: sha512-Jh+pTGXLNz8+1tkUU13TI/f+ZOI+OvC4YbHi1H+57iSpLt5DR3xgptd+4sA07RdjdRR/RX/01uQQu2OkbzIefA==}
     cpu: [x64]
     os: [darwin]
 
-  '@turbo/darwin-arm64@2.10.8':
-    resolution: {integrity: sha512-+zB2btDJ00lnPRuqOvpVvgl4x34k/djZQGZTTCfjn7JgNCl8QFY5Njo5+dqkY1g/+9gbbsnAvWm9CmJg9ebcXA==}
+  '@turbo/darwin-arm64@2.10.9':
+    resolution: {integrity: sha512-aqtpPkiIC4IUas8Vv27oJ3aDfTuP1d5wofd01dZ7gfhHRrIKuFdqQb4imvNnVFahcOViF9Jh8Oi7feDoz8/ciA==}
     cpu: [arm64]
     os: [darwin]
 
-  '@turbo/linux-64@2.10.8':
-    resolution: {integrity: sha512-K1dxqiVisyN7cViVsfQLs6xscQbYuI8aO2nbUhFURDACgEDfZRdP/b4CCxeosBJpcMfhYyiibWqJorCnvz9kKg==}
+  '@turbo/linux-64@2.10.9':
+    resolution: {integrity: sha512-XyAneUBsS5uNOUOjBSs81zyigMVwwhVUd3u7F2JFMKGQk6F7eNAiOEBASJ+aHLldjYsOEjhfW+5gWIqwziyFFw==}
     cpu: [x64]
     os: [android, linux]
 
-  '@turbo/linux-arm64@2.10.8':
-    resolution: {integrity: sha512-Gi77ibVnrE1fEmvr+/wBD/yvRqhwp/RQuCp2+//lv1U1wNFFyVg0V7Wj8FG9FXPFAw5QHReo8rxc9+wBSDZjzA==}
+  '@turbo/linux-arm64@2.10.9':
+    resolution: {integrity: sha512-5jAcldLnkuWIjujGhCn2MGIeUwW8IVNOq9Sce4EEzzgLcxmhTasbV0RiW6ZkaRdOjmOCGzeNXPLkDJEOIucOLw==}
     cpu: [arm64]
     os: [android, linux]
 
-  '@turbo/windows-64@2.10.8':
-    resolution: {integrity: sha512-znnLO1haJPYTHoKMKwlAvlkjRiYbbhBzME6wIGaMd+fwir23U6jVd1ecaTWWi1fbnRVqxMfgDBKseQ/hLKb83g==}
+  '@turbo/windows-64@2.10.9':
+    resolution: {integrity: sha512-u1xGpGlefzuhBedbt/VR2nWdftfFVZwPeDg9e5uZl68sV1fL3HNYTNr5VyHkzgtPK2VTYg1x4OKZuGrh1Gvhtg==}
     cpu: [x64]
     os: [win32]
 
-  '@turbo/windows-arm64@2.10.8':
-    resolution: {integrity: sha512-VN30vh3b3Czh2WzYHNTfF1FE0YMZ5aHsLO8dBMGHJewA6792wX6iJR8ZxlzFW6WdOu0gEAKIvlYhfyT81Wkm4Q==}
+  '@turbo/windows-arm64@2.10.9':
+    resolution: {integrity: sha512-W2Ub165Qv0iMFljbYKxxbZN+2dVSngnzEjQNEFXtnz5oJVx9XSypmNmUvMtuYMeZ3kdVC1zI7yd/rtuX+SDnbg==}
     cpu: [arm64]
     os: [win32]
 
@@ -2500,8 +2500,8 @@ packages:
     resolution: {integrity: sha512-tD40eHxA35h0PEIZNeIjkHoDR4YjjJp34biM0mDvplBe//mB+IHCqHDGV7pxF+7MklTvighcCPPZC7ynWyjdTA==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
 
-  eslint@10.8.0:
-    resolution: {integrity: sha512-nuKKvN+oIBO0koN7Tm7dlkmnkc21mtt0QJLwAKzjLq14y6lRTdVG36MZHJ8eQHwdJMwZbQNMlPOYedMq/oVJvQ==}
+  eslint@10.8.1:
+    resolution: {integrity: sha512-wqA7W2jbsC/BnV9Iv1UZpKVFkO1AdNoSmYW8NWG4HNOBbkAMvIqDZ27pI2f07dqn583NcIC44ckjAcOXDL1QbQ==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
     hasBin: true
     peerDependencies:
@@ -2596,8 +2596,8 @@ packages:
       openapi-types: ^12.1.3
       zod: '>=4.1.5'
 
-  fastify@5.11.2:
-    resolution: {integrity: sha512-i/eJG7nXR9OkbFgoX4jFiPOHoRq0rXqDACVAXELh5Fdg6BFBErIVZ8MyibGCwup9Go1pYrxZJ0ogIub8vVdEcQ==}
+  fastify@5.11.3:
+    resolution: {integrity: sha512-W6hzDP8s0iSeL7LGwY6Oc/ZxuXWOvFEMs6p2L0Si415YRo27W5pBKdOTXxhemBDeSTAcpYf5evRA9onF2OYhPA==}
 
   fastq@1.20.1:
     resolution: {integrity: sha512-GGToxJ/w1x32s/D2EKND7kTil4n8OVk/9mycTc4VDza13lOvpUZTGX3mFSCtV9ksdGBVzvsyAVLM6mHFThxXxw==}
@@ -3192,12 +3192,24 @@ packages:
   pg-protocol@1.15.0:
     resolution: {integrity: sha512-cq9sECI5s0+uPUXjbz8ioyPJni6RzsRib0US67i5IoTZKw8fNeYlVE7u8F4dG7vEJJtc5wdD1K189lCCUwqWTQ==}
 
+  pg-protocol@1.16.0:
+    resolution: {integrity: sha512-sILXutLVjCLjcDuOmvhX5e2Z4cS5qG/6Bu3VkpFwdf/633ElGLpEh9bgmuI5I4sqKqkifQiGyiCcx1HdtrK7tg==}
+
   pg-types@2.2.0:
     resolution: {integrity: sha512-qTAAlrEsl8s4OiEQY69wDvcMIdQN6wdz5ojQiOy6YRMuynxenON0O5oCpJI6lshc6scgAY8qvJ2On/p+CXY0GA==}
     engines: {node: '>=4'}
 
   pg@8.22.0:
     resolution: {integrity: sha512-8wih1vVIBMxoUM2oB4soJsD9tDnDpLv4OXBJ+EJzFsvycD+lfyIreC2gGHq78f8jbLLt+bvlPTFdFZfJkOuzAA==}
+    engines: {node: '>= 16.0.0'}
+    peerDependencies:
+      pg-native: '>=3.0.1'
+    peerDependenciesMeta:
+      pg-native:
+        optional: true
+
+  pg@8.23.0:
+    resolution: {integrity: sha512-Ip2EQCngowJLGOfCwkFhPXU7/ljlhn6Rxlmy4XYfL2Y+vyRM59+8uR2xqRWKdYmbXmxCFOAmKxBuSUCdF34qLg==}
     engines: {node: '>= 16.0.0'}
     peerDependencies:
       pg-native: '>=3.0.1'
@@ -3672,8 +3684,8 @@ packages:
     engines: {node: '>=18.0.0'}
     hasBin: true
 
-  turbo@2.10.8:
-    resolution: {integrity: sha512-9+8YX5QOkGXzZxcIykTHgaooRHGMWO+jfdyRK0o+rN0U7hBIig2MrJ8r/aNzIPDPhdA73SGb0O+tIztaModTMg==}
+  turbo@2.10.9:
+    resolution: {integrity: sha512-Yl9+ukxH+UmPtKidpDkjn82tvPoEvFNb9UACd9vUomN1Ft0cwl3rx0P8yC1D93W9EOsWRMjllvIDG8y25sFOog==}
     hasBin: true
 
   tweetnacl@0.14.5:
@@ -3997,12 +4009,12 @@ snapshots:
       nanostores: 1.4.2
       zod: 4.4.3
 
-  '@better-auth/drizzle-adapter@1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.22.0))':
+  '@better-auth/drizzle-adapter@1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.23.0))':
     dependencies:
       '@better-auth/core': 1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2)
       '@better-auth/utils': 0.4.2
     optionalDependencies:
-      drizzle-orm: 0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.22.0)
+      drizzle-orm: 0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.23.0)
 
   '@better-auth/kysely-adapter@1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(kysely@0.29.4)':
     dependencies:
@@ -4026,12 +4038,12 @@ snapshots:
       '@better-auth/core': 1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2)
       '@better-auth/utils': 0.4.2
 
-  '@better-auth/sso@1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.6.26(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.22.0))(pg@8.22.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.10(@types/node@26.2.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(yaml@2.9.0))))(better-call@1.3.7(zod@4.4.3))':
+  '@better-auth/sso@1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.6.26(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.23.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.10(@types/node@26.2.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(yaml@2.9.0))))(better-call@1.3.7(zod@4.4.3))':
     dependencies:
       '@better-auth/core': 1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2)
       '@better-auth/utils': 0.4.2
       '@better-fetch/fetch': 1.3.1
-      better-auth: 1.6.26(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.22.0))(pg@8.22.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.10(@types/node@26.2.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(yaml@2.9.0)))
+      better-auth: 1.6.26(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.23.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.10(@types/node@26.2.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(yaml@2.9.0)))
       better-call: 1.3.7(zod@4.4.3)
       fast-xml-parser: 5.10.1
       jose: 6.2.8
@@ -4329,9 +4341,9 @@ snapshots:
   '@esbuild/win32-x64@0.28.1':
     optional: true
 
-  '@eslint-community/eslint-utils@4.10.1(eslint@10.8.0(jiti@2.7.0))':
+  '@eslint-community/eslint-utils@4.10.1(eslint@10.8.1(jiti@2.7.0))':
     dependencies:
-      eslint: 10.8.0(jiti@2.7.0)
+      eslint: 10.8.1(jiti@2.7.0)
       eslint-visitor-keys: 3.4.3
 
   '@eslint-community/regexpp@4.12.2': {}
@@ -4352,9 +4364,9 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
 
-  '@eslint/js@10.0.1(eslint@10.8.0(jiti@2.7.0))':
+  '@eslint/js@10.0.1(eslint@10.8.1(jiti@2.7.0))':
     optionalDependencies:
-      eslint: 10.8.0(jiti@2.7.0)
+      eslint: 10.8.1(jiti@2.7.0)
 
   '@eslint/object-schema@3.0.5': {}
 
@@ -4983,22 +4995,22 @@ snapshots:
     dependencies:
       '@textlint/ast-node-types': 15.8.0
 
-  '@turbo/darwin-64@2.10.8':
+  '@turbo/darwin-64@2.10.9':
     optional: true
 
-  '@turbo/darwin-arm64@2.10.8':
+  '@turbo/darwin-arm64@2.10.9':
     optional: true
 
-  '@turbo/linux-64@2.10.8':
+  '@turbo/linux-64@2.10.9':
     optional: true
 
-  '@turbo/linux-arm64@2.10.8':
+  '@turbo/linux-arm64@2.10.9':
     optional: true
 
-  '@turbo/windows-64@2.10.8':
+  '@turbo/windows-64@2.10.9':
     optional: true
 
-  '@turbo/windows-arm64@2.10.8':
+  '@turbo/windows-arm64@2.10.9':
     optional: true
 
   '@tybys/wasm-util@0.10.3':
@@ -5073,15 +5085,15 @@ snapshots:
     dependencies:
       '@types/node': 18.19.130
 
-  '@typescript-eslint/eslint-plugin@8.66.0(@typescript-eslint/parser@8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.0(jiti@2.7.0)))(@typescript/typescript6@6.0.2)(eslint@10.8.0(jiti@2.7.0))':
+  '@typescript-eslint/eslint-plugin@8.66.0(@typescript-eslint/parser@8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.1(jiti@2.7.0)))(@typescript/typescript6@6.0.2)(eslint@10.8.1(jiti@2.7.0))':
     dependencies:
       '@eslint-community/regexpp': 4.12.2
-      '@typescript-eslint/parser': 8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.0(jiti@2.7.0))
+      '@typescript-eslint/parser': 8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.1(jiti@2.7.0))
       '@typescript-eslint/scope-manager': 8.66.0
-      '@typescript-eslint/type-utils': 8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.0(jiti@2.7.0))
-      '@typescript-eslint/utils': 8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.0(jiti@2.7.0))
+      '@typescript-eslint/type-utils': 8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.1(jiti@2.7.0))
+      '@typescript-eslint/utils': 8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.1(jiti@2.7.0))
       '@typescript-eslint/visitor-keys': 8.66.0
-      eslint: 10.8.0(jiti@2.7.0)
+      eslint: 10.8.1(jiti@2.7.0)
       ignore: 7.0.6
       natural-compare: 1.4.0
       ts-api-utils: 2.5.0(@typescript/typescript6@6.0.2)
@@ -5089,14 +5101,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/parser@8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.0(jiti@2.7.0))':
+  '@typescript-eslint/parser@8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.1(jiti@2.7.0))':
     dependencies:
       '@typescript-eslint/scope-manager': 8.66.0
       '@typescript-eslint/types': 8.66.0
       '@typescript-eslint/typescript-estree': 8.66.0(@typescript/typescript6@6.0.2)
       '@typescript-eslint/visitor-keys': 8.66.0
       debug: 4.4.3(supports-color@10.2.2)
-      eslint: 10.8.0(jiti@2.7.0)
+      eslint: 10.8.1(jiti@2.7.0)
       typescript: '@typescript/typescript6@6.0.2'
     transitivePeerDependencies:
       - supports-color
@@ -5119,13 +5131,13 @@ snapshots:
     dependencies:
       typescript: '@typescript/typescript6@6.0.2'
 
-  '@typescript-eslint/type-utils@8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.0(jiti@2.7.0))':
+  '@typescript-eslint/type-utils@8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.1(jiti@2.7.0))':
     dependencies:
       '@typescript-eslint/types': 8.66.0
       '@typescript-eslint/typescript-estree': 8.66.0(@typescript/typescript6@6.0.2)
-      '@typescript-eslint/utils': 8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.0(jiti@2.7.0))
+      '@typescript-eslint/utils': 8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.1(jiti@2.7.0))
       debug: 4.4.3(supports-color@10.2.2)
-      eslint: 10.8.0(jiti@2.7.0)
+      eslint: 10.8.1(jiti@2.7.0)
       ts-api-utils: 2.5.0(@typescript/typescript6@6.0.2)
       typescript: '@typescript/typescript6@6.0.2'
     transitivePeerDependencies:
@@ -5148,13 +5160,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.0(jiti@2.7.0))':
+  '@typescript-eslint/utils@8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.1(jiti@2.7.0))':
     dependencies:
-      '@eslint-community/eslint-utils': 4.10.1(eslint@10.8.0(jiti@2.7.0))
+      '@eslint-community/eslint-utils': 4.10.1(eslint@10.8.1(jiti@2.7.0))
       '@typescript-eslint/scope-manager': 8.66.0
       '@typescript-eslint/types': 8.66.0
       '@typescript-eslint/typescript-estree': 8.66.0(@typescript/typescript6@6.0.2)
-      eslint: 10.8.0(jiti@2.7.0)
+      eslint: 10.8.1(jiti@2.7.0)
       typescript: '@typescript/typescript6@6.0.2'
     transitivePeerDependencies:
       - supports-color
@@ -5430,10 +5442,10 @@ snapshots:
     dependencies:
       tweetnacl: 0.14.5
 
-  better-auth@1.6.26(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.22.0))(pg@8.22.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.10(@types/node@26.2.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(yaml@2.9.0))):
+  better-auth@1.6.26(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.23.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.10(@types/node@26.2.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(yaml@2.9.0))):
     dependencies:
       '@better-auth/core': 1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2)
-      '@better-auth/drizzle-adapter': 1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.22.0))
+      '@better-auth/drizzle-adapter': 1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.23.0))
       '@better-auth/kysely-adapter': 1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(kysely@0.29.4)
       '@better-auth/memory-adapter': 1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)
       '@better-auth/mongo-adapter': 1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.8)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)
@@ -5451,8 +5463,8 @@ snapshots:
       zod: 4.4.3
     optionalDependencies:
       drizzle-kit: 0.31.10
-      drizzle-orm: 0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.22.0)
-      pg: 8.22.0
+      drizzle-orm: 0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.23.0)
+      pg: 8.23.0
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
       vitest: 4.1.10(@types/node@26.2.0)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(yaml@2.9.0))
@@ -5646,11 +5658,11 @@ snapshots:
       esbuild: 0.25.12
       tsx: 4.23.11
 
-  drizzle-orm@0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.22.0):
+  drizzle-orm@0.45.2(@types/pg@8.21.0)(kysely@0.29.4)(pg@8.23.0):
     optionalDependencies:
       '@types/pg': 8.21.0
       kysely: 0.29.4
-      pg: 8.22.0
+      pg: 8.23.0
 
   eastasianwidth@0.2.0: {}
 
@@ -5777,9 +5789,9 @@ snapshots:
 
   eslint-visitor-keys@5.0.1: {}
 
-  eslint@10.8.0(jiti@2.7.0):
+  eslint@10.8.1(jiti@2.7.0):
     dependencies:
-      '@eslint-community/eslint-utils': 4.10.1(eslint@10.8.0(jiti@2.7.0))
+      '@eslint-community/eslint-utils': 4.10.1(eslint@10.8.1(jiti@2.7.0))
       '@eslint-community/regexpp': 4.12.2
       '@eslint/config-array': 0.23.5
       '@eslint/config-helpers': 0.7.0
@@ -5893,15 +5905,15 @@ snapshots:
 
   fastify-plugin@6.0.0: {}
 
-  fastify-type-provider-zod@7.0.0(@fastify/swagger@9.8.1)(fastify@5.11.2)(openapi-types@12.1.3)(zod@4.4.3):
+  fastify-type-provider-zod@7.0.0(@fastify/swagger@9.8.1)(fastify@5.11.3)(openapi-types@12.1.3)(zod@4.4.3):
     dependencies:
       '@fastify/error': 4.2.0
       '@fastify/swagger': 9.8.1
-      fastify: 5.11.2
+      fastify: 5.11.3
       openapi-types: 12.1.3
       zod: 4.4.3
 
-  fastify@5.11.2:
+  fastify@5.11.3:
     dependencies:
       '@fastify/ajv-compiler': 4.0.5
       '@fastify/error': 4.2.0
@@ -6413,7 +6425,13 @@ snapshots:
     dependencies:
       pg: 8.22.0
 
+  pg-pool@3.14.0(pg@8.23.0):
+    dependencies:
+      pg: 8.23.0
+
   pg-protocol@1.15.0: {}
+
+  pg-protocol@1.16.0: {}
 
   pg-types@2.2.0:
     dependencies:
@@ -6428,6 +6446,16 @@ snapshots:
       pg-connection-string: 2.14.0
       pg-pool: 3.14.0(pg@8.22.0)
       pg-protocol: 1.15.0
+      pg-types: 2.2.0
+      pgpass: 1.0.5
+    optionalDependencies:
+      pg-cloudflare: 1.4.0
+
+  pg@8.23.0:
+    dependencies:
+      pg-connection-string: 2.14.0
+      pg-pool: 3.14.0(pg@8.23.0)
+      pg-protocol: 1.16.0
       pg-types: 2.2.0
       pgpass: 1.0.5
     optionalDependencies:
@@ -6980,14 +7008,14 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
 
-  turbo@2.10.8:
+  turbo@2.10.9:
     optionalDependencies:
-      '@turbo/darwin-64': 2.10.8
-      '@turbo/darwin-arm64': 2.10.8
-      '@turbo/linux-64': 2.10.8
-      '@turbo/linux-arm64': 2.10.8
-      '@turbo/windows-64': 2.10.8
-      '@turbo/windows-arm64': 2.10.8
+      '@turbo/darwin-64': 2.10.9
+      '@turbo/darwin-arm64': 2.10.9
+      '@turbo/linux-64': 2.10.9
+      '@turbo/linux-arm64': 2.10.9
+      '@turbo/windows-64': 2.10.9
+      '@turbo/windows-arm64': 2.10.9
 
   tweetnacl@0.14.5: {}
 
@@ -7001,13 +7029,13 @@ snapshots:
     dependencies:
       tagged-tag: 1.0.0
 
-  typescript-eslint@8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.0(jiti@2.7.0)):
+  typescript-eslint@8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.1(jiti@2.7.0)):
     dependencies:
-      '@typescript-eslint/eslint-plugin': 8.66.0(@typescript-eslint/parser@8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.0(jiti@2.7.0)))(@typescript/typescript6@6.0.2)(eslint@10.8.0(jiti@2.7.0))
-      '@typescript-eslint/parser': 8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.0(jiti@2.7.0))
+      '@typescript-eslint/eslint-plugin': 8.66.0(@typescript-eslint/parser@8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.1(jiti@2.7.0)))(@typescript/typescript6@6.0.2)(eslint@10.8.1(jiti@2.7.0))
+      '@typescript-eslint/parser': 8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.1(jiti@2.7.0))
       '@typescript-eslint/typescript-estree': 8.66.0(@typescript/typescript6@6.0.2)
-      '@typescript-eslint/utils': 8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.0(jiti@2.7.0))
-      eslint: 10.8.0(jiti@2.7.0)
+      '@typescript-eslint/utils': 8.66.0(@typescript/typescript6@6.0.2)(eslint@10.8.1(jiti@2.7.0))
+      eslint: 10.8.1(jiti@2.7.0)
       typescript: '@typescript/typescript6@6.0.2'
     transitivePeerDependencies:
       - supports-color
