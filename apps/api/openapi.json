@@ -344,7 +344,7 @@
     "/api/v1/auth/methods": {
       "get": {
         "operationId": "getAuthMethods",
-        "summary": "What the login screen may offer (TECH-008): the auth mode, the magic-link toggle, and the SSO provider to start, if one is registered",
+        "summary": "What the login screen may offer (TECH-008): the auth mode, the magic-link toggle, whether outbound email works, and the SSO provider to start, if one is registered",
         "tags": ["auth"],
         "responses": {
           "200": {
@@ -361,6 +361,9 @@
                     "magicLinkEnabled": {
                       "type": "boolean"
                     },
+                    "emailConfigured": {
+                      "type": "boolean"
+                    },
                     "ssoProviderId": {
                       "anyOf": [
                         {
@@ -372,7 +375,7 @@
                       ]
                     }
                   },
-                  "required": ["mode", "magicLinkEnabled", "ssoProviderId"],
+                  "required": ["mode", "magicLinkEnabled", "emailConfigured", "ssoProviderId"],
                   "additionalProperties": false
                 }
               }

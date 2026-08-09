@@ -68,7 +68,13 @@ export function stubFetch(handler: (call: StubCall) => Response | undefined) {
 export interface ApiState {
   signedIn?: { id: string; email: string; displayName: string; role: string } | null;
   needsSetup?: boolean;
-  methods?: { mode: "built_in" | "oidc"; magicLinkEnabled: boolean; ssoProviderId: string | null };
+  methods?: {
+    mode: "built_in" | "oidc";
+    magicLinkEnabled: boolean;
+    /** Defaults to true — only the dead-affordance tests wire it off. */
+    emailConfigured?: boolean;
+    ssoProviderId: string | null;
+  };
   /** Defaults to completed, so guard tests land on home, not the wizard. */
   onboarding?: { completed: boolean; emailConfigured: boolean };
   extra?: (call: StubCall) => Response | undefined;
@@ -90,10 +96,12 @@ export function stubApi(state: ApiState) {
       return json(200, { needsSetup: state.needsSetup ?? false });
     }
     if (call.url.pathname === "/api/v1/auth/methods" && call.method === "GET") {
-      return json(
-        200,
-        state.methods ?? { mode: "built_in", magicLinkEnabled: true, ssoProviderId: null },
-      );
+      const methods = state.methods ?? {
+        mode: "built_in" as const,
+        magicLinkEnabled: true,
+        ssoProviderId: null,
+      };
+      return json(200, { ...methods, emailConfigured: methods.emailConfigured ?? true });
     }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
       return json(200, state.onboarding ?? { completed: true, emailConfigured: true });

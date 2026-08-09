@@ -116,12 +116,23 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "getAuthMethods",
         summary:
           "What the login screen may offer (TECH-008): the auth mode, the " +
-          "magic-link toggle, and the SSO provider to start, if one is registered",
+          "magic-link toggle, whether outbound email works, and the SSO " +
+          "provider to start, if one is registered",
         tags: ["auth"],
         response: {
           200: z.object({
             mode: z.enum(AUTH_MODES),
             magicLinkEnabled: z.boolean(),
+            /**
+             * Whether the deployment can send mail at all. The login screen
+             * hides the magic-link affordance when this is false, because a
+             * link that can never be delivered is a dead end for the
+             * requester. Deliberately says nothing about the DD-010 domain
+             * allowlist: allowlist contents are org policy, and reflecting
+             * them here would tell an anonymous visitor whether the portal
+             * is open.
+             */
+            emailConfigured: z.boolean(),
             /** Slug of the provider the SSO button starts; null when none exists. */
             ssoProviderId: z.string().nullable(),
           }),
@@ -131,7 +142,9 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     // Deliberately unauthenticated: the login screen has no session yet,
     // and everything here is visible on that screen anyway the moment it
-    // renders. The admin-only GET /auth/mode stays the management surface.
+    // renders. `emailConfigured` is global deployment configuration, the
+    // same disclosure class as the magic-link toggle beside it. The
+    // admin-only GET /auth/mode stays the management surface.
     async () => {
       const settings = await getOrgSettings(app.db);
       const [provider] = await app.db
@@ -142,6 +155,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       return {
         mode: settings.authMode,
         magicLinkEnabled: settings.magicLinkEnabled,
+        emailConfigured: app.mailer.configured,
         ssoProviderId: provider?.providerId ?? null,
       };
     },
@@ -516,13 +530,25 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request, reply) => {
       const email = request.body.email.toLowerCase();
 
-      // Policy runs BEFORE issuance. The toggle is global configuration,
-      // so refusing loudly leaks nothing; the allowlist check must not be
-      // observable, so the denied branch simply skips issuance and falls
-      // through to the same 202.
+      // Policy runs BEFORE issuance. The toggle and the mailer are global
+      // configuration, so refusing loudly leaks nothing; the allowlist
+      // check must not be observable, so the denied branch simply skips
+      // issuance and falls through to the same 202.
       const settings = await getOrgSettings(app.db);
       if (!settings.magicLinkEnabled) {
         throw httpError(403, "Magic-link sign-in is disabled.");
+      }
+      // Uniformly, and before the allowlist check. With no mailer, the
+      // send inside issuance throws — so checking later (or not at all)
+      // would answer allowlisted addresses with an error and everyone
+      // else with the neutral 202, handing an anonymous visitor exactly
+      // the allowlist oracle DD-010's identical response exists to deny.
+      if (!app.mailer.configured) {
+        throw httpError(
+          403,
+          "Sign-in links are unavailable: this instance cannot send email. " +
+            "Contact your administrator.",
+        );
       }
       if (isEmailDomainAllowed(email, settings.allowedEmailDomains)) {
         try {

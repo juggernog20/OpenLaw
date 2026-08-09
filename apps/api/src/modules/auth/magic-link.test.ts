@@ -169,6 +169,56 @@ describe("magic-link portal auth (POST /api/v1/auth/magic-link)", () => {
     }
   });
 
+  it("refuses uniformly when the deployment cannot send email", async () => {
+    // Without this refusal the send throws for allowlisted addresses and
+    // nobody else, so the status code alone tells an anonymous visitor
+    // which domains are on the DD-010 allowlist — the exact oracle the
+    // identical-response design exists to deny.
+    harness.mailer.configured = false;
+    try {
+      const allowed = await requestLink("someone@acme.example");
+      const denied = await requestLink("mallory@evil.example");
+      expect(allowed.statusCode).toBe(403);
+      expect(allowed.headers["content-type"]).toContain("application/problem+json");
+      expect(denied.statusCode).toBe(allowed.statusCode);
+      // The content type is part of the response an anonymous visitor can
+      // see, so it has to match too — a problem+json for one address and
+      // anything else for another would rebuild the same oracle.
+      expect(denied.headers["content-type"]).toBe(allowed.headers["content-type"]);
+      expect(denied.body).toBe(allowed.body);
+
+      const raw = (email: string) =>
+        harness.app.inject({
+          method: "POST",
+          url: "/api/auth/sign-in/magic-link",
+          payload: { email },
+        });
+      const rawAllowed = await raw("someone@acme.example");
+      const rawDenied = await raw("mallory@evil.example");
+      expect(rawAllowed.statusCode).toBe(403);
+      expect(rawDenied.statusCode).toBe(rawAllowed.statusCode);
+      expect(rawDenied.headers["content-type"]).toBe(rawAllowed.headers["content-type"]);
+      expect(rawDenied.body).toBe(rawAllowed.body);
+
+      expect(harness.mailer.messagesTo("someone@acme.example")).toHaveLength(0);
+      // Refusal is complete: no link, and no JIT account either.
+      const noUser = await harness.db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.email, "someone@acme.example"));
+      expect(noUser, "a refused request must not create an account").toHaveLength(0);
+    } finally {
+      harness.mailer.configured = true;
+    }
+  });
+
+  it("issues again once email is configured", async () => {
+    const email = "someone@acme.example";
+    const res = await requestLink(email);
+    expect(res.statusCode, res.body).toBe(202);
+    expect(harness.mailer.messagesTo(email)).toHaveLength(1);
+  });
+
   it("rejects redemption of an already-issued link once the toggle is off", async () => {
     const email = "in-flight@acme.example";
     await requestLink(email);

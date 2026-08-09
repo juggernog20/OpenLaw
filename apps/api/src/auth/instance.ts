@@ -310,6 +310,20 @@ export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
           throw new APIError("FORBIDDEN", { message: "Magic-link sign-in is disabled." });
         }
         if (ctx.path !== "/sign-in/magic-link") return;
+        // A deployment with no mailer cannot issue at all, so refuse
+        // uniformly here — ahead of the allowlist branch below. Were this
+        // check missing, the send would throw for allowlisted addresses
+        // only, and the denied branch's mimicked success would become a
+        // reliable allowlist oracle. Verify is deliberately left alone: a
+        // token in flight was issued while mail still worked, and
+        // refusing it would strand a link the requester already holds.
+        if (!mailer.configured) {
+          throw new APIError("FORBIDDEN", {
+            message:
+              "Sign-in links are unavailable: this instance cannot send email. " +
+              "Contact your administrator.",
+          });
+        }
         const email = typeof ctx.body?.email === "string" ? ctx.body.email : "";
         if (!isEmailDomainAllowed(email, settings.allowedEmailDomains)) {
           return ctx.json({ status: true });
