@@ -317,6 +317,13 @@ export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
           // callback, and magic-link redemption all funnel through here.
           // Sessions that already exist are untouched (archival is not
           // revocation; DD-013 keeps archived users readable history).
+          // The read and the insert are not one transaction — a sign-in
+          // racing the archival UPDATE can still slip a session through.
+          // Accepted: such a session is indistinguishable from one minted
+          // a moment before archival, which also survives; both end at
+          // the session-revocation surface, the actual tool for cutting
+          // someone off. Enforcement stays in the app layer per this
+          // repo's no-database-triggers convention (SCHEMA.md).
           before: async (session) => {
             const [row] = await db
               .select({ archivedAt: users.archivedAt })

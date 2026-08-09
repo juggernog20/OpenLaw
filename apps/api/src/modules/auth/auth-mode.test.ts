@@ -235,6 +235,9 @@ describe("archived users are refused at session creation", () => {
     await archive(email, true);
     try {
       const redeemed = await issueFor();
+      // The browser flow answers 302 either way; refusal shows as an
+      // error redirect and no session, never a signed-in landing.
+      expect(redeemed.headers.location ?? "", redeemed.body).toContain("error");
       expect(hasSessionCookie(redeemed), "archived user must not get a session").toBe(false);
     } finally {
       await archive(email, false);
