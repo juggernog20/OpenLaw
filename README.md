@@ -37,6 +37,13 @@ Day-to-day iteration runs the apps as local watch processes; everything E2E and 
 docker compose -f compose.yml -f compose.dev.yml up -d --build
 ```
 
+The Playwright suite in [`e2e/`](e2e/) targets that stack's origin (`E2E_BASE_URL`, default `http://localhost:3000`) and needs no cleanup between runs — the instance's accumulated state is part of the point:
+
+```sh
+pnpm --filter @openlaw/e2e exec playwright install chromium   # once
+pnpm e2e
+```
+
 ## Deployment
 
 `docker compose up` from a clean Linux VM is the whole story — see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the quickstart, the reverse-proxy contract, upgrades, and backups.

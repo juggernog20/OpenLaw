@@ -14,6 +14,9 @@ services:
     environment:
       SMTP_URL: smtp://mailpit:1025
       SMTP_FROM: OpenLaw <openlaw@localhost>
+      # The E2E suite replays sign-in flows from one IP far faster than
+      # any human; production keeps better-auth's limits.
+      AUTH_RATE_LIMIT: "off"
 
   mailpit:
     image: axllent/mailpit:latest
