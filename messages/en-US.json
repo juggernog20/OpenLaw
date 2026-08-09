@@ -213,13 +213,13 @@
     "defaultMessage": "Something went wrong."
   },
   "home.placeholder": {
-    "defaultMessage": "Modules arrive with their own builds. Account surfaces available now:"
+    "defaultMessage": "Modules arrive with their own builds."
   },
   "home.title": {
     "defaultMessage": "Home"
   },
-  "home.twoFactorLink": {
-    "defaultMessage": "Two-factor authentication"
+  "nav.home": {
+    "defaultMessage": "Home"
   },
   "role.administrator": {
     "defaultMessage": "Administrator"
@@ -229,6 +229,21 @@
   },
   "role.legalTeamMember": {
     "defaultMessage": "Legal team member"
+  },
+  "shell.brand": {
+    "defaultMessage": "openlaw"
+  },
+  "shell.search.label": {
+    "defaultMessage": "Search"
+  },
+  "shell.search.placeholder": {
+    "defaultMessage": "Type / to search"
+  },
+  "shell.userMenu.twoFactor": {
+    "defaultMessage": "Two-factor authentication"
+  },
+  "shell.workspace": {
+    "defaultMessage": "workspace"
   },
   "welcome.auth.builtIn": {
     "defaultMessage": "Built-in sign-in"

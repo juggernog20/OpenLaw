@@ -41,14 +41,16 @@ describe("route guard", () => {
   it("shows the signed-in home to a session holder", async () => {
     stubApi({ signedIn: BLAIR });
     renderAt("/");
-    expect(await screen.findByText("Ada Admin")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
+    // The shell's user menu carries the signed-in identity (#41): the
+    // avatar trigger is named after the person.
+    expect(await screen.findByRole("button", { name: "Ada Admin" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Home" })).toBeInTheDocument();
   });
 
   it("bounces a signed-in user away from the login screen", async () => {
     stubApi({ signedIn: BLAIR });
     renderAt("/auth/login");
-    expect(await screen.findByText("Ada Admin")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Ada Admin" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Sign in" })).not.toBeInTheDocument();
   });
 
