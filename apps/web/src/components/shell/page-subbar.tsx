@@ -18,7 +18,7 @@ export function PageSubBar({
   actions?: ReactNode;
 }) {
   return (
-    <div className="flex h-(--height-subbar) shrink-0 items-center justify-between gap-4 border-b border-border-default bg-canvas px-page-x">
+    <div className="flex h-(--height-subbar) shrink-0 items-center justify-between gap-4 border-b border-(--chrome-subbar-border) bg-canvas px-page-x">
       <div className="flex min-w-0 flex-col gap-0.5">
         <h1 className="text-xl font-semibold">{title}</h1>
         {subtitle ? <p className="truncate text-base text-muted">{subtitle}</p> : null}

@@ -1130,6 +1130,49 @@ Linear-style dot+text for statuses (rejected — tinted status pills are establi
 
 **Implementation clarification (2026-08-08):** the ramp's `low` step requires a light-grey pill family that DES-005's set lacked (badge-count is a counter, onhold is the dark inverted pill), so `status-neutral-*` — already present in the .pen library — was added to the CSS registry as a seventh status family. The decision specifies Light values only; Warm/Dark values for `severe` and `neutral` were derived per-theme in `styles/themes/` and contrast-checked ≥ 4.5:1 (Warm's severe fg is `#935425`, darkened from the first candidate to pass). The derived values should be back-ported to the .pen library's theme frames when those mocks next get touched.
 
+## DES-019: Shell chrome color variables — per-theme chrome mapping, Warm terracotta avatar (amends DES-018)
+
+- **Status:** Accepted
+- **Date:** 2026-08-10
+
+### Context
+
+Building theme switching (#44) against the Warm and Dark frames of `designs/final-themes.pen` showed that the shell chrome does not map onto DES-005's semantic tokens uniformly across themes. The nav surface is `#0D1117` in Light (= that theme's inverted surface) but `#F4F1EB` in Warm (= that theme's section-header tint) and `#0D1117` in Dark (= that theme's canvas, one step lighter than its header). Borders and secondary chrome text diverge the same way. Reusing body tokens for the chrome therefore leaks one theme's mapping into another. The .pen component library models this layer with its own `chrome-*` variables, confirming the chrome is a distinct token group.
+
+### Decision
+
+Eight chrome color variables join the theme files, one value per theme, consumed only by shell chrome components (referenced as bare variables, the DES-007 chrome-dimension pattern):
+
+| Variable                 | Light         | Warm      | Dark          |
+| ------------------------ | ------------- | --------- | ------------- |
+| `--chrome-header-border` | `transparent` | `#D8D0C0` | `#21262D`     |
+| `--chrome-search-bg`     | `#0D1117`     | `#FBFAF7` | `#0D1117`     |
+| `--chrome-brand-chip`    | `transparent` | `#3A332A` | `transparent` |
+| `--chrome-brand-fg`      | `#F0F6FC`     | `#F4F1EB` | `#F0F6FC`     |
+| `--chrome-nav-bg`        | `#0D1117`     | `#F4F1EB` | `#0D1117`     |
+| `--chrome-nav-border`    | `#30363D`     | `#EAE5DC` | `#21262D`     |
+| `--chrome-nav-muted`     | `#7D8590`     | `#7A7264` | `#7D8590`     |
+| `--chrome-subbar-border` | `#D0D7DE`     | `#EAE5DC` | `#21262D`     |
+
+The Light column is exactly what the shell rendered before this record, so Light is unchanged.
+
+**Warm avatar (amends DES-018 point 3):** Warm's avatar is terracotta (`--avatar-bg: #C97B5C`, `--avatar-fg: #FBFAF7`) per the updated mock — blue is the one hue Warm's palette refuses. Light and Dark keep the light-blue treatment; the "no per-person hue hashing" rule is untouched.
+
+### Recorded normalization points (mock deviations accepted)
+
+1. Nav labels stay 14px in every theme (DES-001 theme-invariant typography); the Warm frame's 13px labels are treated as frame noise.
+2. Search placeholder, crumb slash, and the `/` key hint stay `--text-subtle` in every theme; Dark renders `#6E7681` where its frame shows `#7D8590`, and Warm's key hint renders `#A8A294` where its frame shows `#7A7264`.
+3. The Dark sub-bar title stays `--text-primary` (`#E6EDF3`) where its frame shows `#F0F6FC`.
+4. Warm's brand chip is 32px (the shell's icon slot) where its frame draws 30px, and the brand glyph stays the 20px Lucide scale in every theme (the Warm frame shows an 18px glyph).
+
+### Rationale
+
+The chrome is the one region where themes deliberately restructure (Light: single dark slab; Warm: layered light paper; Dark: near-black strips on canvas). Forcing it through body tokens would either distort body surfaces or leave the chrome mis-themed; a small named group keeps both honest, and mirrors the vocabulary the design library already uses.
+
+### Consequences
+
+Theme files each carry the chrome block; shell components reference only chrome variables plus the tokens that do hold across themes (`bg-inverted`, `text-on-inverted`, `--accent`, avatar pair). Future chrome surfaces (activity bar, panel — DES-016) should extend this group rather than borrow body tokens.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -1152,3 +1195,4 @@ Linear-style dot+text for statuses (rejected — tinted status pills are establi
 | DES-016 | Record-page right side — VS Code-style activity bar with page-scoped applets                                                                                         | Accepted |
 | DES-017 | Editing model — per-field inline commit, no page edit mode                                                                                                           | Accepted |
 | DES-018 | Chromatic discipline — status families kept, one severity ramp (grey/yellow/orange/red), uniform light-blue avatars with photo override                              | Accepted |
+| DES-019 | Shell chrome color variables — per-theme chrome mapping, Warm terracotta avatar (amends DES-018)                                                                     | Accepted |

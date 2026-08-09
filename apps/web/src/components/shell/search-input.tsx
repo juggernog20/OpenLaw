@@ -20,7 +20,7 @@ export function SearchInput() {
           id: "shell.search.placeholder",
           defaultMessage: "Type / to search",
         })}
-        className="h-[30px] w-full rounded-button border border-border-on-inverted bg-inverted pe-10 ps-3 text-base text-on-inverted placeholder:text-subtle"
+        className="h-[30px] w-full rounded-button border border-border-on-inverted bg-(--chrome-search-bg) pe-10 ps-3 text-base text-on-inverted placeholder:text-subtle"
       />
       <kbd
         aria-hidden="true"

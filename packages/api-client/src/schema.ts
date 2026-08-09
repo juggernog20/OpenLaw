@@ -38,6 +38,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/me/preferences": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Update the signed-in user's preferences (theme, #44) */
+    patch: operations["updateMyPreferences"];
+    trace?: never;
+  };
   "/api/v1/auth/setup": {
     parameters: {
       query?: never;
@@ -309,11 +326,59 @@ export interface operations {
               displayName: string;
               /** @enum {string} */
               role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              /** @enum {string} */
+              theme: "light" | "warm" | "dark";
             };
             session: {
               id: string;
               /** Format: date-time */
               expiresAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateMyPreferences: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          theme: "light" | "warm" | "dark";
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            user: {
+              id: string;
+              email: string;
+              displayName: string;
+              /** @enum {string} */
+              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              /** @enum {string} */
+              theme: "light" | "warm" | "dark";
             };
           };
         };
@@ -391,6 +456,8 @@ export interface operations {
               displayName: string;
               /** @enum {string} */
               role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              /** @enum {string} */
+              theme: "light" | "warm" | "dark";
             };
           };
         };
@@ -473,6 +540,8 @@ export interface operations {
               displayName: string;
               /** @enum {string} */
               role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              /** @enum {string} */
+              theme: "light" | "warm" | "dark";
             };
           };
         };
@@ -490,6 +559,8 @@ export interface operations {
               displayName: string;
               /** @enum {string} */
               role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              /** @enum {string} */
+              theme: "light" | "warm" | "dark";
             };
           };
         };

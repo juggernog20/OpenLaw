@@ -4,6 +4,24 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OpenLaw</title>
+    <!-- Pre-paint theme boot (#44): the local mirror of the signed-in
+         user's stored theme (written by src/lib/theme.ts) applies before
+         first paint, so a Warm/Dark user never sees a Light flash. The
+         /auth screens are always Light, so the mirror is skipped there.
+         Runs synchronously in <head> on purpose. -->
+    <script>
+      (function () {
+        if (location.pathname.startsWith("/auth")) return;
+        try {
+          var theme = localStorage.getItem("openlaw.theme");
+          if (theme === "warm" || theme === "dark") {
+            document.documentElement.dataset.theme = theme;
+          }
+        } catch (error) {
+          /* storage unavailable: stay Light */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -66,7 +66,14 @@ export function stubFetch(handler: (call: StubCall) => Response | undefined) {
 
 /** The three answers every guard consults, plus per-test overrides. */
 export interface ApiState {
-  signedIn?: { id: string; email: string; displayName: string; role: string } | null;
+  signedIn?: {
+    id: string;
+    email: string;
+    displayName: string;
+    role: string;
+    /** Defaults to "light" — only the theme tests set it. */
+    theme?: string;
+  } | null;
   needsSetup?: boolean;
   methods?: {
     mode: "built_in" | "oidc";
@@ -87,7 +94,7 @@ export function stubApi(state: ApiState) {
     if (call.url.pathname === "/api/v1/me" && call.method === "GET") {
       return state.signedIn
         ? json(200, {
-            user: state.signedIn,
+            user: { ...state.signedIn, theme: state.signedIn.theme ?? "light" },
             session: { id: "sess-1", expiresAt: new Date(Date.now() + 60_000).toISOString() },
           })
         : problem(401, "Authentication required.");
