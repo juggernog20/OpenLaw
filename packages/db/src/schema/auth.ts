@@ -7,7 +7,16 @@
  */
 
 import { sql } from "drizzle-orm";
-import { boolean, check, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  check,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 import { uuidPk } from "./helpers.js";
 
 export const USER_ROLES = [
@@ -27,6 +36,10 @@ export const users = pgTable(
     role: text("role", { enum: USER_ROLES }).notNull().default("business_user"),
     emailVerified: boolean("email_verified").notNull().default(false),
     image: text("image"),
+    // twoFactor-plugin column (nullable per its schema, like the admin
+    // columns below); flipped by TOTP enrolment/disable, read by the
+    // credential sign-in hook to decide whether to challenge.
+    twoFactorEnabled: boolean("two_factor_enabled").default(false),
     // Admin-plugin columns (nullable per its schema; unban writes NULLs).
     // No product semantics attach to bans yet — deliberately out of scope.
     banned: boolean("banned").default(false),
@@ -128,6 +141,35 @@ export const ssoProviders = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [uniqueIndex("sso_providers_provider_id_unique").on(table.providerId)],
+);
+
+/**
+ * TOTP second factor (TECH-008). One row per enrolled user, owned by the
+ * twoFactor plugin: `secret` is the symmetrically encrypted TOTP seed and
+ * `backup_codes` the encrypted recovery codes — both encrypted with the
+ * auth secret, never returned by any endpoint. `verified` stays false
+ * until the user proves the first code, so a half-finished enrolment
+ * never challenges (or locks out) a sign-in. The failure counter and
+ * `locked_until` implement the plugin's account-level lockout: too many
+ * failed verifications lock the factor across challenges until the
+ * timestamp passes.
+ */
+export const twoFactors = pgTable(
+  "two_factors",
+  {
+    id: uuidPk(),
+    secret: text("secret").notNull(),
+    backupCodes: text("backup_codes").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    verified: boolean("verified").default(false),
+    failedVerificationCount: integer("failed_verification_count").default(0),
+    lockedUntil: timestamp("locked_until", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("two_factors_user_id_idx").on(table.userId)],
 );
 
 /** Short-lived tokens (magic links, set-password); values stored hashed. */
