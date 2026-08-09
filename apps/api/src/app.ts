@@ -11,6 +11,7 @@
  */
 
 import Fastify, { type FastifyError, type FastifyServerOptions } from "fastify";
+import type { Db } from "@openlaw/db";
 import fastifySwagger from "@fastify/swagger";
 import scalarApiReference from "@scalar/fastify-api-reference";
 import {
@@ -24,10 +25,35 @@ import {
 } from "fastify-type-provider-zod";
 import { OPENLAW_VERSION } from "@openlaw/shared";
 import { PROBLEM_CONTENT_TYPE, type Problem } from "./lib/problem.js";
+import type { Mailer } from "./lib/mailer.js";
 import { metaRoutes } from "./modules/meta/routes.js";
+import { authRoutes } from "./modules/auth/routes.js";
+import { authHandler } from "./auth/handler.js";
+import { createAuth, type Auth, type AuthConfig } from "./auth/instance.js";
+import type { AuthenticatedSession, AuthenticatedUser } from "./auth/guards.js";
 
-export async function buildApp(opts: FastifyServerOptions = {}) {
+export interface AppDeps {
+  db: Db;
+  config: AuthConfig;
+  mailer: Mailer;
+}
+
+declare module "fastify" {
+  interface FastifyInstance {
+    db: Db;
+    auth: Auth;
+    mailer: Mailer;
+  }
+}
+
+export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   const app = Fastify(opts).withTypeProvider<ZodTypeProvider>();
+  app.decorate("db", deps.db);
+  app.decorate("mailer", deps.mailer);
+  app.decorate("auth", createAuth(deps.db, deps.config, deps.mailer));
+  // Shape hints for V8; guards assign the real values per request.
+  app.decorateRequest("user", undefined as unknown as AuthenticatedUser);
+  app.decorateRequest("session", undefined as unknown as AuthenticatedSession);
 
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
@@ -61,8 +87,9 @@ export async function buildApp(opts: FastifyServerOptions = {}) {
     status: "ok",
   }));
 
-  await app.register(metaRoutes, { prefix: "/api/v1" });
-
+  // Error/404 handlers are installed before route plugins register:
+  // encapsulated contexts snapshot their parent, so handlers added
+  // afterwards would never apply inside the modules.
   app.setNotFoundHandler((request, reply) => {
     const problem: Problem = {
       type: "about:blank",
@@ -71,7 +98,10 @@ export async function buildApp(opts: FastifyServerOptions = {}) {
       detail: `Route ${request.method} ${request.url} does not exist.`,
       instance: request.url,
     };
-    void reply.status(404).header("content-type", PROBLEM_CONTENT_TYPE).send(problem);
+    void reply
+      .status(404)
+      .header("content-type", PROBLEM_CONTENT_TYPE)
+      .send(JSON.stringify(problem));
   });
 
   app.setErrorHandler((error: FastifyError, request, reply) => {
@@ -87,7 +117,10 @@ export async function buildApp(opts: FastifyServerOptions = {}) {
           message: issue.message ?? "Invalid value.",
         })),
       };
-      return reply.status(400).header("content-type", PROBLEM_CONTENT_TYPE).send(problem);
+      return reply
+        .status(400)
+        .header("content-type", PROBLEM_CONTENT_TYPE)
+        .send(JSON.stringify(problem));
     }
 
     if (isResponseSerializationError(error)) {
@@ -99,7 +132,10 @@ export async function buildApp(opts: FastifyServerOptions = {}) {
         detail: "The response did not match its schema.",
         instance: request.url,
       };
-      return reply.status(500).header("content-type", PROBLEM_CONTENT_TYPE).send(problem);
+      return reply
+        .status(500)
+        .header("content-type", PROBLEM_CONTENT_TYPE)
+        .send(JSON.stringify(problem));
     }
 
     const status = error.statusCode && error.statusCode >= 400 ? error.statusCode : 500;
@@ -111,8 +147,15 @@ export async function buildApp(opts: FastifyServerOptions = {}) {
       detail: status >= 500 ? undefined : error.message,
       instance: request.url,
     };
-    return reply.status(status).header("content-type", PROBLEM_CONTENT_TYPE).send(problem);
+    return reply
+      .status(status)
+      .header("content-type", PROBLEM_CONTENT_TYPE)
+      .send(JSON.stringify(problem));
   });
+
+  await app.register(authHandler);
+  await app.register(metaRoutes, { prefix: "/api/v1" });
+  await app.register(authRoutes, { prefix: "/api/v1" });
 
   return app;
 }

@@ -24,6 +24,13 @@ z.globalRegistry.add(ProblemSchema, { id: "Problem" });
 
 export const PROBLEM_CONTENT_TYPE = "application/problem+json; charset=utf-8";
 
+/** Throwable that the app error handler renders as a Problem response. */
+export function httpError(statusCode: number, message: string): Error {
+  const err = new Error(message) as Error & { statusCode: number };
+  err.statusCode = statusCode;
+  return err;
+}
+
 /**
  * Shared `default` response entry for route schemas: every operation
  * answers non-2xx with a Problem body, so the generated OpenAPI document

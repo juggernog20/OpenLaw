@@ -1,0 +1,224 @@
+{
+  "a11y.skipToContent": {
+    "defaultMessage": "Skip to content"
+  },
+  "action.copied": {
+    "defaultMessage": "Copied"
+  },
+  "action.copy": {
+    "defaultMessage": "Copy"
+  },
+  "action.done": {
+    "defaultMessage": "Done"
+  },
+  "action.reload": {
+    "defaultMessage": "Reload"
+  },
+  "auth.backToSignIn": {
+    "defaultMessage": "Back to sign-in"
+  },
+  "auth.enroll.codesHint": {
+    "defaultMessage": "Two-factor authentication is on. Save these backup codes somewhere safe — each works once, and they are shown only now."
+  },
+  "auth.enroll.confirm": {
+    "defaultMessage": "Confirm"
+  },
+  "auth.enroll.disable": {
+    "defaultMessage": "Turn off two-factor"
+  },
+  "auth.enroll.disablePassword": {
+    "defaultMessage": "Confirm your password to turn it off"
+  },
+  "auth.enroll.enable": {
+    "defaultMessage": "Turn on two-factor"
+  },
+  "auth.enroll.enabledHint": {
+    "defaultMessage": "Two-factor authentication is on for your account."
+  },
+  "auth.enroll.error.code": {
+    "defaultMessage": "Wrong code. Scan the QR code again and retry."
+  },
+  "auth.enroll.error.copy": {
+    "defaultMessage": "Could not copy the codes. Copy them manually."
+  },
+  "auth.enroll.error.password": {
+    "defaultMessage": "Check your password."
+  },
+  "auth.enroll.manualEntry": {
+    "defaultMessage": "No camera? Enter this secret manually: {secret}"
+  },
+  "auth.enroll.passwordHint": {
+    "defaultMessage": "Confirm your password to start enrollment."
+  },
+  "auth.enroll.title": {
+    "defaultMessage": "Two-factor authentication"
+  },
+  "auth.enroll.verifyHint": {
+    "defaultMessage": "Scan the QR code with your authenticator app, then enter the code it shows."
+  },
+  "auth.field.displayName": {
+    "defaultMessage": "Name"
+  },
+  "auth.field.email": {
+    "defaultMessage": "Email"
+  },
+  "auth.field.password": {
+    "defaultMessage": "Password"
+  },
+  "auth.linkExpired.body": {
+    "defaultMessage": "The link has expired or was already used. Request a new one from the sign-in page."
+  },
+  "auth.linkExpired.title": {
+    "defaultMessage": "Sign-in link expired"
+  },
+  "auth.login.backToSso": {
+    "defaultMessage": "Back"
+  },
+  "auth.login.breakGlass": {
+    "defaultMessage": "Administrator sign-in"
+  },
+  "auth.login.error.generic": {
+    "defaultMessage": "Sign-in failed. Try again."
+  },
+  "auth.login.error.invalidCredentials": {
+    "defaultMessage": "Check your email and password."
+  },
+  "auth.login.error.magicLink": {
+    "defaultMessage": "The link could not be sent. Try again."
+  },
+  "auth.login.error.sso": {
+    "defaultMessage": "Single sign-on could not start. Try again."
+  },
+  "auth.login.error.ssoCallback": {
+    "defaultMessage": "Single sign-on failed. Try again."
+  },
+  "auth.login.magicLink": {
+    "defaultMessage": "Email me a sign-in link"
+  },
+  "auth.login.sso": {
+    "defaultMessage": "Continue with single sign-on"
+  },
+  "auth.login.ssoUnconfigured": {
+    "defaultMessage": "Single sign-on is not configured yet. Use administrator sign-in."
+  },
+  "auth.login.submit": {
+    "defaultMessage": "Sign in"
+  },
+  "auth.login.title": {
+    "defaultMessage": "Sign in"
+  },
+  "auth.magic.body": {
+    "defaultMessage": "Enter your work email to get a single-use sign-in link."
+  },
+  "auth.magic.submit": {
+    "defaultMessage": "Send link"
+  },
+  "auth.magic.title": {
+    "defaultMessage": "Get a sign-in link"
+  },
+  "auth.magicSent.body": {
+    "defaultMessage": "If {email} is eligible, a sign-in link is on its way. It expires in 5 minutes and works once."
+  },
+  "auth.magicSent.title": {
+    "defaultMessage": "Check your email"
+  },
+  "auth.setPassword.confirmPassword": {
+    "defaultMessage": "Confirm password"
+  },
+  "auth.setPassword.doneBody": {
+    "defaultMessage": "Sign in with your new password."
+  },
+  "auth.setPassword.doneTitle": {
+    "defaultMessage": "Password set"
+  },
+  "auth.setPassword.error.generic": {
+    "defaultMessage": "The password could not be set. Try again."
+  },
+  "auth.setPassword.error.mismatch": {
+    "defaultMessage": "The passwords do not match."
+  },
+  "auth.setPassword.error.missingToken": {
+    "defaultMessage": "This link is not valid. Ask for a new invitation or password reset."
+  },
+  "auth.setPassword.error.token": {
+    "defaultMessage": "This link has expired or was already used. Ask for a new one."
+  },
+  "auth.setPassword.hint": {
+    "defaultMessage": "At least 8 characters."
+  },
+  "auth.setPassword.newPassword": {
+    "defaultMessage": "New password"
+  },
+  "auth.setPassword.submit": {
+    "defaultMessage": "Set password"
+  },
+  "auth.setPassword.title": {
+    "defaultMessage": "Set your password"
+  },
+  "auth.setup.alreadyDone": {
+    "defaultMessage": "Setup has already been completed."
+  },
+  "auth.setup.error.generic": {
+    "defaultMessage": "Setup failed. Try again."
+  },
+  "auth.setup.hint": {
+    "defaultMessage": "Create the first Administrator account. This screen disables itself once a user exists."
+  },
+  "auth.setup.submit": {
+    "defaultMessage": "Create Administrator"
+  },
+  "auth.setup.title": {
+    "defaultMessage": "Set up OpenLaw"
+  },
+  "auth.signOut": {
+    "defaultMessage": "Sign out"
+  },
+  "auth.twoFactor.backupField": {
+    "defaultMessage": "Backup code"
+  },
+  "auth.twoFactor.backupHint": {
+    "defaultMessage": "Enter one of your backup codes. Each works once."
+  },
+  "auth.twoFactor.error.locked": {
+    "defaultMessage": "Too many attempts. Wait 15 minutes, then try again."
+  },
+  "auth.twoFactor.error.wrongCode": {
+    "defaultMessage": "Wrong code. Try again, or restart sign-in."
+  },
+  "auth.twoFactor.submit": {
+    "defaultMessage": "Verify"
+  },
+  "auth.twoFactor.title": {
+    "defaultMessage": "Two-factor authentication"
+  },
+  "auth.twoFactor.totpField": {
+    "defaultMessage": "Code"
+  },
+  "auth.twoFactor.totpHint": {
+    "defaultMessage": "Enter the 6-digit code from your authenticator app."
+  },
+  "auth.twoFactor.useBackup": {
+    "defaultMessage": "Use a backup code"
+  },
+  "auth.twoFactor.useTotp": {
+    "defaultMessage": "Use your authenticator app"
+  },
+  "error.body": {
+    "defaultMessage": "The page could not load. Reload to try again."
+  },
+  "error.network": {
+    "defaultMessage": "The server could not be reached. Try again."
+  },
+  "error.title": {
+    "defaultMessage": "Something went wrong."
+  },
+  "home.placeholder": {
+    "defaultMessage": "Modules arrive with their own builds. Account surfaces available now:"
+  },
+  "home.title": {
+    "defaultMessage": "Home"
+  },
+  "home.twoFactorLink": {
+    "defaultMessage": "Two-factor authentication"
+  }
+}
