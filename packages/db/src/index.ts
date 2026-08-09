@@ -24,7 +24,9 @@ export { and, asc, count, desc, eq, inArray, isNull, lt, gt, ne, or, sql } from 
 export type Db = NodePgDatabase<typeof schema> & { $client: pg.Pool };
 
 export function createDb(databaseUrl: string): Db {
-  const pool = new pg.Pool({ connectionString: databaseUrl });
+  // pg's default connect wait is unbounded; a cap keeps failed attempts
+  // (e.g. readiness probes against a down database) from dangling.
+  const pool = new pg.Pool({ connectionString: databaseUrl, connectionTimeoutMillis: 10_000 });
   return drizzle(pool, { schema });
 }
 
@@ -107,6 +109,18 @@ export async function tryWithAdvisoryLock<T>(
     // Same as withAdvisoryLock: never pool a possibly-still-locked session.
     holder.release(unlockFailure);
   }
+}
+
+/**
+ * Bounded connectivity probe for readiness checks: resolves iff the
+ * database answers within `timeoutMs`. The bound rides the query itself
+ * (pg honors a per-query `query_timeout`, falling back to the client's
+ * — see pg/lib/client.js), so a hung server can't strand the probe on
+ * the pool; @types/pg only declares the client-level option, hence the
+ * cast.
+ */
+export async function pingDb(db: Db, timeoutMs = 2000): Promise<void> {
+  await db.$client.query({ text: "select 1", query_timeout: timeoutMs } as pg.QueryConfig);
 }
 
 /** Applies committed drizzle-kit migrations. Called on API boot (TECH-005). */
