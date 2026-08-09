@@ -55,8 +55,10 @@ export function SetupPage() {
         },
       });
       if (response.status === 201) {
-        // The response set the session cookie; land signed in.
-        void navigate("/");
+        // The response set the session cookie; the fresh Administrator
+        // lands in the SET-004 onboarding wizard. Replace, so Back does
+        // not step onto the now-disabled setup screen.
+        void navigate("/welcome", { replace: true });
         return;
       }
       if (response.status === 409) {

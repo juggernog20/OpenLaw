@@ -17,6 +17,7 @@ import { SetPasswordPage } from "./routes/set-password";
 import { SetupPage, setupLoader } from "./routes/setup";
 import { TwoFactorPage } from "./routes/two-factor";
 import { TwoFactorEnrollPage, enrollLoader } from "./routes/two-factor-enroll";
+import { WelcomePage, welcomeLoader } from "./routes/welcome";
 
 export const routes: RouteObject[] = [
   {
@@ -26,6 +27,15 @@ export const routes: RouteObject[] = [
     errorElement: <RouteErrorPage />,
     // Guards run before first paint; a blank canvas beats a flash of the
     // wrong screen.
+    hydrateFallbackElement: <></>,
+  },
+  {
+    // SET-004 first-run wizard; its loader admits only an Administrator
+    // on an instance whose onboarding is still open.
+    path: "/welcome",
+    loader: welcomeLoader,
+    element: <WelcomePage />,
+    errorElement: <RouteErrorPage />,
     hydrateFallbackElement: <></>,
   },
   {

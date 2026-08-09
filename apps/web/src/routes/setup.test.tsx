@@ -20,10 +20,14 @@ async function fillAndSubmit() {
 }
 
 describe("first-run setup", () => {
-  it("creates the Administrator and lands signed in", async () => {
+  it("creates the Administrator and lands in the onboarding wizard", async () => {
     // Mutable state: the moment setup succeeds, the stubbed instance has
     // a user and a session — exactly what the real API's Set-Cookie does.
-    const state: ApiState = { signedIn: null, needsSetup: true };
+    const state: ApiState = {
+      signedIn: null,
+      needsSetup: true,
+      onboarding: { completed: false, emailConfigured: true },
+    };
     state.extra = (call) => {
       if (call.url.pathname === "/api/v1/auth/setup" && call.method === "POST") {
         state.signedIn = {
@@ -35,14 +39,17 @@ describe("first-run setup", () => {
         state.needsSetup = false;
         return json(201, { user: state.signedIn });
       }
+      if (call.url.pathname === "/api/v1/auth/allowed-domains" && call.method === "GET") {
+        return json(200, { domains: [] });
+      }
       return undefined;
     };
     stubApi(state);
     renderAt("/auth/setup");
 
     await fillAndSubmit();
-    expect(await screen.findByText("Ada Admin")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
+    // A fresh instance's Administrator lands in the SET-004 wizard.
+    expect(await screen.findByRole("heading", { name: "Welcome to OpenLaw" })).toBeInTheDocument();
   });
 
   it("surfaces the lost setup race with a path to sign-in", async () => {

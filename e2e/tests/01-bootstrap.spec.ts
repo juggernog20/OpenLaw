@@ -8,7 +8,14 @@
  */
 
 import { test, expect } from "@playwright/test";
-import { ADMIN, ensureAdminExists, needsSetup, signInAs, uniqueEmail } from "./helpers.js";
+import {
+  ADMIN,
+  ensureAdminExists,
+  ensureOnboardingComplete,
+  needsSetup,
+  signInAs,
+  uniqueEmail,
+} from "./helpers.js";
 
 test.describe("bootstrap probe", () => {
   test("the instance has its Administrator — created via first-run setup when fresh", async ({
@@ -24,10 +31,18 @@ test.describe("bootstrap probe", () => {
       await page.getByLabel("Password", { exact: true }).fill(ADMIN.password);
       await page.getByLabel("Confirm password").fill(ADMIN.password);
       await page.getByRole("button", { name: "Create Administrator" }).click();
-      // Setup signs its creator in; landing on home proves the session.
+      // Setup signs its creator in and lands them in the SET-004 wizard;
+      // skipping out marks onboarding complete and proves the session.
+      await expect(page).toHaveURL("/welcome");
+      await expect(page.getByRole("heading", { name: "Welcome to OpenLaw" })).toBeVisible();
+      await page.getByRole("button", { name: "Set up later" }).click();
       await expect(page).toHaveURL("/");
       await expect(page.getByRole("banner").getByText(ADMIN.displayName)).toBeVisible();
     } else {
+      // An accumulated instance may predate the wizard (its completion
+      // timestamp arrives NULL with the migration) — close it via the
+      // API so sign-in lands on home.
+      await ensureOnboardingComplete();
       await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
     }
   });

@@ -470,6 +470,33 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
+  app.patch(
+    "/auth/portal",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "setMagicLinkEnabled",
+        summary:
+          "Open or close magic-link sign-in (DD-010's portal floor); takes " +
+          "effect on the next request, independent of the domain allowlist",
+        tags: ["auth"],
+        body: z.object({ magicLinkEnabled: z.boolean() }),
+        response: {
+          200: z.object({ magicLinkEnabled: z.boolean() }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => {
+      const [row] = await app.db
+        .update(orgSettings)
+        .set({ magicLinkEnabled: request.body.magicLinkEnabled })
+        .returning({ magicLinkEnabled: orgSettings.magicLinkEnabled });
+      if (!row) throw httpError(500, "org_settings has no row to update.");
+      return { magicLinkEnabled: row.magicLinkEnabled };
+    },
+  );
+
   app.post(
     "/auth/magic-link",
     {

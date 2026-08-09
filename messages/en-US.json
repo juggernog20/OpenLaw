@@ -220,5 +220,158 @@
   },
   "home.twoFactorLink": {
     "defaultMessage": "Two-factor authentication"
+  },
+  "role.administrator": {
+    "defaultMessage": "Administrator"
+  },
+  "role.contributor": {
+    "defaultMessage": "Contributor"
+  },
+  "role.legalTeamMember": {
+    "defaultMessage": "Legal team member"
+  },
+  "welcome.auth.builtIn": {
+    "defaultMessage": "Built-in sign-in"
+  },
+  "welcome.auth.builtIn.hint": {
+    "defaultMessage": "Email and password, with optional two-factor authentication. The default."
+  },
+  "welcome.auth.callback": {
+    "defaultMessage": "Paste this callback URL into your IdP console: {url}"
+  },
+  "welcome.auth.error.mode": {
+    "defaultMessage": "The authentication mode could not be saved."
+  },
+  "welcome.auth.error.noProvider": {
+    "defaultMessage": "Register an identity provider before switching to single sign-on."
+  },
+  "welcome.auth.error.register": {
+    "defaultMessage": "The identity provider could not be registered."
+  },
+  "welcome.auth.field.clientId": {
+    "defaultMessage": "Client ID"
+  },
+  "welcome.auth.field.clientSecret": {
+    "defaultMessage": "Client secret"
+  },
+  "welcome.auth.field.domain": {
+    "defaultMessage": "Email domain"
+  },
+  "welcome.auth.field.issuer": {
+    "defaultMessage": "Issuer URL"
+  },
+  "welcome.auth.field.providerId": {
+    "defaultMessage": "Provider ID"
+  },
+  "welcome.auth.oidc": {
+    "defaultMessage": "Single sign-on (OIDC)"
+  },
+  "welcome.auth.oidc.hint": {
+    "defaultMessage": "Bring your own identity provider. Administrators keep password sign-in as break-glass."
+  },
+  "welcome.auth.register.submit": {
+    "defaultMessage": "Register provider"
+  },
+  "welcome.auth.register.title": {
+    "defaultMessage": "Register your identity provider"
+  },
+  "welcome.auth.registered": {
+    "defaultMessage": "Identity provider {providerId} is registered."
+  },
+  "welcome.back": {
+    "defaultMessage": "Back"
+  },
+  "welcome.continue": {
+    "defaultMessage": "Continue"
+  },
+  "welcome.email.configured": {
+    "defaultMessage": "Outbound email is configured. Invites and magic links will be delivered."
+  },
+  "welcome.email.hint": {
+    "defaultMessage": "Email settings live in the deployment environment, not in the app — see the deployment guide."
+  },
+  "welcome.email.unconfigured": {
+    "defaultMessage": "Outbound email is not configured. Invites and magic links cannot be delivered until SMTP_URL and SMTP_FROM are set in the deployment environment."
+  },
+  "welcome.error.complete": {
+    "defaultMessage": "Onboarding could not be marked finished. Try again."
+  },
+  "welcome.finish": {
+    "defaultMessage": "Finish"
+  },
+  "welcome.intro": {
+    "defaultMessage": "A few choices get this instance ready for your team. Every step is skippable and stays editable later."
+  },
+  "welcome.invites.error": {
+    "defaultMessage": "The invite could not be sent."
+  },
+  "welcome.invites.noEmail": {
+    "defaultMessage": "Without outbound email, invited people will not receive their set-password link."
+  },
+  "welcome.invites.role": {
+    "defaultMessage": "Role"
+  },
+  "welcome.invites.sent": {
+    "defaultMessage": "{count, plural, one {# invite sent:} other {# invites sent:}} {emails}"
+  },
+  "welcome.invites.submit": {
+    "defaultMessage": "Send invite"
+  },
+  "welcome.portal.add": {
+    "defaultMessage": "Add"
+  },
+  "welcome.portal.disabled": {
+    "defaultMessage": "Magic-link sign-in is off"
+  },
+  "welcome.portal.domains": {
+    "defaultMessage": "Allowed email domains"
+  },
+  "welcome.portal.empty": {
+    "defaultMessage": "No domains allowed yet — the portal is closed."
+  },
+  "welcome.portal.enabled": {
+    "defaultMessage": "Magic-link sign-in is on"
+  },
+  "welcome.portal.error.domains": {
+    "defaultMessage": "The domain allowlist could not be saved."
+  },
+  "welcome.portal.error.toggle": {
+    "defaultMessage": "The magic-link setting could not be saved."
+  },
+  "welcome.portal.hint": {
+    "defaultMessage": "Business users sign in with emailed magic links, restricted to the domains you allow. An empty list admits nobody."
+  },
+  "welcome.portal.remove": {
+    "defaultMessage": "Remove {domain}"
+  },
+  "welcome.portal.toggle.hint": {
+    "defaultMessage": "Select to change. Off closes the portal entirely, even for allowed domains."
+  },
+  "welcome.progress": {
+    "defaultMessage": "Step {current} of {total}"
+  },
+  "welcome.skip": {
+    "defaultMessage": "Set up later"
+  },
+  "welcome.skipAll": {
+    "defaultMessage": "Set up later"
+  },
+  "welcome.start": {
+    "defaultMessage": "Get started"
+  },
+  "welcome.step.authentication": {
+    "defaultMessage": "Authentication"
+  },
+  "welcome.step.email": {
+    "defaultMessage": "Outbound email"
+  },
+  "welcome.step.invites": {
+    "defaultMessage": "Invite your team"
+  },
+  "welcome.step.portal": {
+    "defaultMessage": "Business-user portal"
+  },
+  "welcome.step.welcome": {
+    "defaultMessage": "Welcome to OpenLaw"
   }
 }
