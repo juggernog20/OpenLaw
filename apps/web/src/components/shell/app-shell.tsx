@@ -31,7 +31,11 @@ export function AppShell({
       <AppHeader user={user} onSignOut={onSignOut} />
       <TopNav />
       {subbar}
-      <main id="main" className="@container/page flex-1 px-page-x py-page-y">
+      {/* tabIndex={-1} makes the skip-link target programmatically
+          focusable, so activating the link moves keyboard focus here in
+          every browser — not only the ones that reset the sequential
+          focus start point on fragment navigation. */}
+      <main id="main" tabIndex={-1} className="@container/page flex-1 px-page-x py-page-y">
         {children}
       </main>
     </div>

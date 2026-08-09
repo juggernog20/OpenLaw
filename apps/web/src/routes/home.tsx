@@ -39,10 +39,7 @@ export async function homeLoader({ request }: LoaderFunctionArgs) {
 }
 
 export function HomePage() {
-  const { user } = useLoaderData<typeof homeLoader>() as Exclude<
-    Awaited<ReturnType<typeof homeLoader>>,
-    Response
-  >;
+  const { user } = useLoaderData<typeof homeLoader>();
   const navigate = useNavigate();
 
   async function signOut() {
