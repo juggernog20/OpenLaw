@@ -25,7 +25,7 @@
     "@openlaw/shared": "workspace:*",
     "@scalar/fastify-api-reference": "^1.64.1",
     "better-auth": "~1.6.26",
-    "fastify": "^5.11.2",
+    "fastify": "^5.11.3",
     "fastify-type-provider-zod": "^7.0.0",
     "nodemailer": "^9.0.5",
     "uuidv7": "^1.2.1",
