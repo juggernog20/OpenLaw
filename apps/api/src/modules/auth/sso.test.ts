@@ -152,6 +152,12 @@ describe("runtime BYO-OIDC (POST /api/v1/auth/sso-providers + sso sign-in)", () 
     const oidc = JSON.parse(row!.oidcConfig!) as Record<string, unknown>;
     expect(oidc.tokenEndpoint).toContain(issuerUrl);
     expect(oidc.authorizationEndpoint).toContain(issuerUrl);
+
+    // The login screen's public discovery now carries the provider slug,
+    // so the SSO button knows which provider to start.
+    const methods = await harness.app.inject({ method: "GET", url: "/api/v1/auth/methods" });
+    expect(methods.statusCode, methods.body).toBe(200);
+    expect(methods.json().ssoProviderId).toBe(PROVIDER.providerId);
   });
 
   it("rejects a duplicate provider slug through the same relayed error shape", async () => {

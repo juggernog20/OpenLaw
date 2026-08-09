@@ -4,6 +4,9 @@
   "private": true,
   "license": "AGPL-3.0-only",
   "type": "module",
+  "exports": {
+    "./auth": "./src/auth/instance.ts"
+  },
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
