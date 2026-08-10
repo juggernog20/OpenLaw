@@ -4,7 +4,8 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { Button } from "../components/ui/button";
 import { PageTitle } from "../components/page-title";
 
-/** Router-level error boundary: a loader threw (API unreachable, 5xx). */
+/** Router-level error boundary: a loader threw (API unreachable,
+ * 5xx). Sets its own document title per DES-011. */
 export function RouteErrorPage() {
   const intl = useIntl();
   return (

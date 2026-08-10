@@ -83,7 +83,7 @@ export function SetupPage() {
   return (
     <Card>
       <PageTitle
-        title={intl.formatMessage({ id: "auth.setup.title", defaultMessage: "Set up OpenLaw" })}
+        title={intl.formatMessage({ id: "auth.setup.pageTitle", defaultMessage: "Set up" })}
       />
       <CardHeader>
         <CardTitle>

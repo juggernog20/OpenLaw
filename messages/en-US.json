@@ -179,6 +179,9 @@
   "auth.setup.hint": {
     "defaultMessage": "Create the first Administrator account. This screen disables itself once a user exists."
   },
+  "auth.setup.pageTitle": {
+    "defaultMessage": "Set up"
+  },
   "auth.setup.submit": {
     "defaultMessage": "Create Administrator"
   },

@@ -159,9 +159,15 @@ export function LoginPage() {
     }
   }
 
-  const pageTitle = (
-    <PageTitle title={intl.formatMessage({ id: "auth.login.title", defaultMessage: "Sign in" })} />
-  );
+  // The magic-link views swap the visible heading; the document
+  // title follows it (DES-011).
+  const pageTitleMessage =
+    view === "magicSent"
+      ? { id: "auth.magicSent.title", defaultMessage: "Check your email" }
+      : view === "magic"
+        ? { id: "auth.magic.title", defaultMessage: "Get a sign-in link" }
+        : { id: "auth.login.title", defaultMessage: "Sign in" };
+  const pageTitle = <PageTitle title={intl.formatMessage(pageTitleMessage)} />;
 
   if (view === "magicSent") {
     return (

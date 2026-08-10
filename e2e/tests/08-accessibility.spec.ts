@@ -42,7 +42,7 @@ test.describe("accessibility floor", () => {
     await expect(page.getByLabel("Email")).toBeVisible();
 
     // DES-011 commitment 7: declared language, unique screen title.
-    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+    expect(await page.evaluate(() => document.documentElement.lang)).toBe("en");
     await expect(page).toHaveTitle("Sign in · OpenLaw");
 
     await reportAxeViolations(page, testInfo, "login");
