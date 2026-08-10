@@ -266,6 +266,12 @@
   "shell.brand": {
     "defaultMessage": "openlaw"
   },
+  "shell.nav.open": {
+    "defaultMessage": "Open navigation"
+  },
+  "shell.nav.title": {
+    "defaultMessage": "Navigation"
+  },
   "shell.search.label": {
     "defaultMessage": "Search"
   },
