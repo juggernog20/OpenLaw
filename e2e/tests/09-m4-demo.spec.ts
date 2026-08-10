@@ -11,7 +11,7 @@
  */
 
 import { test, expect, type Page } from "@playwright/test";
-import { ADMIN, ensureAdminExists, signInAs } from "./helpers.js";
+import { ADMIN, ensureAdminExists, signInAs, switchTheme } from "./helpers.js";
 
 /** The header background per theme — bg-inverted from styles/themes/. */
 const HEADER_BG = {
@@ -22,11 +22,6 @@ const HEADER_BG = {
 
 const DESKTOP = { width: 1280, height: 800 } as const;
 const MOBILE = { width: 375, height: 812 } as const;
-
-async function switchTheme(page: Page, label: "Light" | "Warm" | "Dark"): Promise<void> {
-  await page.getByRole("banner").getByRole("button", { name: ADMIN.displayName }).click();
-  await page.getByRole("menuitemradio", { name: label }).click();
-}
 
 const rootTheme = (page: Page) =>
   page.evaluate(() => document.documentElement.getAttribute("data-theme"));
@@ -53,7 +48,7 @@ test.describe("M4 demo path", () => {
     const menuButton = page.getByRole("banner").getByRole("button", { name: ADMIN.displayName });
     if (!(await menuButton.isVisible().catch(() => false))) return;
     if ((await rootTheme(page)) === "light") return;
-    await switchTheme(page, "Light");
+    await switchTheme(page, ADMIN.displayName, "Light");
     await expect.poll(() => rootTheme(page)).toBe("light");
   });
 
@@ -65,30 +60,30 @@ test.describe("M4 demo path", () => {
     const header = page.getByRole("banner");
     await expect(header.getByText("openlaw")).toBeVisible();
     await expect(header.getByRole("searchbox", { name: "Search" })).toBeVisible();
-    await expect(page.getByRole("navigation").getByRole("link", { name: "Home" })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
+    await expect(
+      page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Home" }),
+    ).toHaveAttribute("aria-current", "page");
     await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
 
-    // Switch between the three themes; each applies to the chrome
-    // instantly via the token layer.
+    // Switch between the three themes — from the Appearance pane, the
+    // theme's home since #62; each applies to the chrome instantly via
+    // the token layer.
     for (const label of ["Warm", "Dark", "Light"] as const) {
       const theme = label.toLowerCase() as Lowercase<typeof label>;
-      await switchTheme(page, label);
+      await switchTheme(page, ADMIN.displayName, label);
       await expect.poll(() => rootTheme(page)).toBe(theme);
       await expect.poll(() => headerBg(page)).toBe(HEADER_BG[theme]);
     }
 
     // Mid-journey theme for the resize leg: the mobile shell must work
     // in whatever theme the user chose, not just the default.
-    await switchTheme(page, "Dark");
+    await switchTheme(page, ADMIN.displayName, "Dark");
     await expect.poll(() => rootTheme(page)).toBe("dark");
 
     // Resize to the mobile layout: nav collapses into the hamburger
     // drawer, the theme survives, nothing overflows sideways.
     await page.setViewportSize({ ...MOBILE });
-    await expect(page.getByRole("navigation")).toBeHidden();
+    await expect(page.getByRole("navigation", { name: "Primary" })).toBeHidden();
     const hamburger = page.getByRole("button", { name: "Open navigation" });
     await expect(hamburger).toBeVisible();
     expect(await rootTheme(page)).toBe("dark");
@@ -107,7 +102,7 @@ test.describe("M4 demo path", () => {
 
     // Back up to desktop: the full chrome returns, still themed.
     await page.setViewportSize({ ...DESKTOP });
-    await expect(page.getByRole("navigation")).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Primary" })).toBeVisible();
     await expect(hamburger).toBeHidden();
     expect(await rootTheme(page)).toBe("dark");
   });

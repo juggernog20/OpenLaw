@@ -11,22 +11,11 @@
 
 import { Scale } from "lucide-react";
 import { FormattedMessage } from "react-intl";
-import type { Theme } from "../../lib/theme";
 import { NavDrawer } from "./nav-drawer";
 import { SearchInput } from "./search-input";
 import { UserMenu, type ShellUser } from "./user-menu";
 
-export function AppHeader({
-  user,
-  theme,
-  onThemeChange,
-  onSignOut,
-}: {
-  user: ShellUser;
-  theme: Theme;
-  onThemeChange: (theme: Theme) => void;
-  onSignOut: () => void;
-}) {
+export function AppHeader({ user, onSignOut }: { user: ShellUser; onSignOut: () => void }) {
   return (
     <header className="flex h-(--height-header) shrink-0 items-center justify-between gap-4 border-b border-(--chrome-header-border) bg-inverted px-4 text-on-inverted">
       <div className="flex shrink-0 items-center gap-4">
@@ -56,7 +45,7 @@ export function AppHeader({
       </div>
       <SearchInput />
       <div className="flex shrink-0 items-center">
-        <UserMenu user={user} theme={theme} onThemeChange={onThemeChange} onSignOut={onSignOut} />
+        <UserMenu user={user} onSignOut={onSignOut} />
       </div>
     </header>
   );

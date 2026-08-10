@@ -57,6 +57,20 @@ test.describe("accessibility floor", () => {
     await reportAxeViolations(page, testInfo, "home");
   });
 
+  test("settings page: /settings forwards to Appearance; axe scan and title", async ({
+    page,
+    request,
+  }, testInfo) => {
+    await ensureAdminExists(request);
+    await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+    await page.goto("/settings");
+
+    await expect(page).toHaveURL(/\/settings\/appearance$/);
+    await expect(page).toHaveTitle("Appearance · OpenLaw");
+
+    await reportAxeViolations(page, testInfo, "settings");
+  });
+
   test("reduced motion degrades transitions to instant", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/auth/login");
