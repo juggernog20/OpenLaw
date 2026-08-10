@@ -14,6 +14,9 @@
   "action.reload": {
     "defaultMessage": "Reload"
   },
+  "app.pageTitle": {
+    "defaultMessage": "{screen} · OpenLaw"
+  },
   "applets.barLabel": {
     "defaultMessage": "Applets"
   },
@@ -55,6 +58,9 @@
   },
   "auth.enroll.manualEntry": {
     "defaultMessage": "No camera? Enter this secret manually: {secret}"
+  },
+  "auth.enroll.pageTitle": {
+    "defaultMessage": "Two-factor enrollment"
   },
   "auth.enroll.passwordHint": {
     "defaultMessage": "Confirm your password to start enrollment."
@@ -173,6 +179,9 @@
   "auth.setup.hint": {
     "defaultMessage": "Create the first Administrator account. This screen disables itself once a user exists."
   },
+  "auth.setup.pageTitle": {
+    "defaultMessage": "Set up"
+  },
   "auth.setup.submit": {
     "defaultMessage": "Create Administrator"
   },
@@ -220,6 +229,9 @@
   },
   "error.network": {
     "defaultMessage": "The server could not be reached. Try again."
+  },
+  "error.pageTitle": {
+    "defaultMessage": "Something went wrong"
   },
   "error.title": {
     "defaultMessage": "Something went wrong."
@@ -391,6 +403,9 @@
   },
   "welcome.invites.submit": {
     "defaultMessage": "Send invite"
+  },
+  "welcome.pageTitle": {
+    "defaultMessage": "Welcome"
   },
   "welcome.portal.add": {
     "defaultMessage": "Add"

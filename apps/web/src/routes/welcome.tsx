@@ -17,6 +17,7 @@ import { api } from "../lib/api";
 import { networkError } from "../lib/messages";
 import { currentUser, needsSetup } from "../lib/session";
 import { cn } from "../lib/utils";
+import { PageTitle } from "../components/page-title";
 import { SkipLink } from "../components/skip-link";
 import { Alert } from "../components/ui/alert";
 import { Button } from "../components/ui/button";
@@ -308,6 +309,9 @@ export function WelcomePage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-canvas text-primary">
+      <PageTitle
+        title={intl.formatMessage({ id: "welcome.pageTitle", defaultMessage: "Welcome" })}
+      />
       <SkipLink />
       <main id="main" className="flex flex-1 items-start justify-center px-page-x py-page-y">
         <div className="w-full max-w-xl">

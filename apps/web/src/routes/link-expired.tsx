@@ -8,13 +8,21 @@
  */
 
 import { Link } from "react-router";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { PageTitle } from "../components/page-title";
 
 export function LinkExpiredPage() {
+  const intl = useIntl();
   return (
     <Card>
+      <PageTitle
+        title={intl.formatMessage({
+          id: "auth.linkExpired.title",
+          defaultMessage: "Sign-in link expired",
+        })}
+      />
       <CardHeader>
         <CardTitle>
           <FormattedMessage id="auth.linkExpired.title" defaultMessage="Sign-in link expired" />

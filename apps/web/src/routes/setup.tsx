@@ -18,6 +18,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { PageTitle } from "../components/page-title";
 
 export async function setupLoader() {
   if (!(await needsSetup())) return redirect("/auth/login");
@@ -81,6 +82,9 @@ export function SetupPage() {
 
   return (
     <Card>
+      <PageTitle
+        title={intl.formatMessage({ id: "auth.setup.pageTitle", defaultMessage: "Set up" })}
+      />
       <CardHeader>
         <CardTitle>
           <FormattedMessage id="auth.setup.title" defaultMessage="Set up OpenLaw" />

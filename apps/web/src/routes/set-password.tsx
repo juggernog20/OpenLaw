@@ -18,6 +18,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { PageTitle } from "../components/page-title";
 
 export function SetPasswordPage() {
   const intl = useIntl();
@@ -70,9 +71,19 @@ export function SetPasswordPage() {
     }
   }
 
+  const pageTitle = (
+    <PageTitle
+      title={intl.formatMessage({
+        id: "auth.setPassword.title",
+        defaultMessage: "Set your password",
+      })}
+    />
+  );
+
   if (done) {
     return (
       <Card>
+        {pageTitle}
         <CardHeader>
           <CardTitle>
             <FormattedMessage id="auth.setPassword.doneTitle" defaultMessage="Password set" />
@@ -97,6 +108,7 @@ export function SetPasswordPage() {
 
   return (
     <Card>
+      {pageTitle}
       <CardHeader>
         <CardTitle>
           <FormattedMessage id="auth.setPassword.title" defaultMessage="Set your password" />

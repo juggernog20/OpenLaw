@@ -243,3 +243,19 @@
     outline-offset: 2px;
   }
 }
+
+/* Reduced motion (DES-011 commitment 9): when the user prefers reduced
+ * motion, every animation and transition degrades to instant. Unlayered
+ * on purpose — it must win over any layered or utility declaration.
+ * Durations are near-zero rather than zero so animationend and
+ * transitionend still fire for any code that waits on them. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
