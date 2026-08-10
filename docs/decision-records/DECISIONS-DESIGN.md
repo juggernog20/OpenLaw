@@ -278,9 +278,10 @@ The reference implementation is `styles/themes/light.css`, `styles/themes/warm.c
 - `--status-assigned-bg` / `--status-assigned-fg` — assigned, mention-style; purple in Light/Dark, mauve in Warm.
 - `--status-onhold-bg` / `--status-onhold-fg` — paused / "On hold"; the only **filled-dark** soft pill, distinct from the soft-tinted variants.
 
-#### Counter badge (neutral count)
+#### Counter badges
 
 - `--badge-count-bg` / `--badge-count-fg` — small pill inside section headers showing a count (e.g. "15"); intentionally neutral (gray) so it doesn't compete with status semantics.
+- `--badge-alert-bg` / `--badge-alert-fg` — the solid attention badge on an activity-bar applet icon (**DES-016**), added 2026-08-10 with #47. Filled red, not a soft tint, so a count reads at 11px over a 20px glyph. The only user today is the chat unread count (CMT-004). See the DES-016 implementation clarification for the per-theme values.
 
 **Confidentiality (per `DECISIONS.md` DD-014)**
 
@@ -1075,6 +1076,21 @@ Chips only (no side-by-side panels — breaks CMT-004); both trimmed (the X.8 du
 ### Consequences
 
 Layout-shell change: `--width-activitybar` + `--width-panel` tokens replace `--width-rail`. The pattern generalizes to matter/entity/knowledge record pages (same bar, page-appropriate applets). Mocks: delete chip row, add bar to V12.
+
+### Implementation clarification (2026-08-10, #47)
+
+The components landed as `ActivityBar` + `AppletPanel`, composed by `RecordApplets`. Five points the decision left open:
+
+Geometry comes from the ActivityBar and panel frames of the matter-detail screens in `designs/matters.pen` (M2 closed, M3 comments open, M13 history open) — the newest mock suite and the only artifact drawing the decided applet set (chat, history, settings). Where the older `initial-contract-details.pen` V12/V13 strips disagree (48px slots, 24px Material glyphs, settings pinned to the bar's bottom edge), matters.pen wins: 48px bar with 12px vertical padding, 32px slots on an 8px gap, 18px Lucide glyphs, a 24px divider, and the settings slot flowing directly below the divider.
+
+1. **The bar takes body surface tokens, not the DES-019 chrome group.** DES-019 said future chrome surfaces should extend that group, but the group exists because the header/nav/sub-bar slab restructures per theme. The activity bar sits inside the body region, and the matters.pen bar is body tokens verbatim: `#FFFFFF` fill, `#D0D7DE` leading border, `#D8DEE4` divider, `#656D76` glyphs — `bg-raised` / `border-default` / `border-muted` / `text-muted` in Light values. No `--chrome-activitybar-*` variables were added. If a later theme pass shows the bar diverging, that is the moment to extend the chrome group.
+2. **The badge is a new token pair.** matters.pen fills the chat badge `#CF222E` with white text — Light's danger red, but the badge is an attention count, not a danger status, so it gets its own pair rather than borrowing `status-danger-fg` (which in Dark is too light to carry white text). `--badge-alert-bg` / `--badge-alert-fg` joins the registry and all three themes: Light `#CF222E` on `#FFFFFF` (5.4:1), Warm `#A05540` on `#FBFAF7` (5.2:1, warm's own red), Dark `#DA3633` on `#FFFFFF` (4.6:1). `--badge-count-*` stays the neutral counter.
+3. **The badge count uses `text-xs` (11px) where the frames draw 9px** — DES-006's ramp floors at 11px — so the badge is a 16px pill rather than the frames' 14px. The glyphs render at the 20px Lucide scale where the frames draw 18px — DES-008's ramp is 16/20/24, and DES-019 already normalized the brand glyph 18→20.
+4. **The active applet keeps DES-016's accent indicator strip, with a `text-primary` glyph.** matters.pen draws no strip and instead tints the active glyph `#51B3D6` — but that is the avatar token, not an interactive one, and it reads 2.4:1 on white, under DES-011's 3:1 affordance floor. The strip is what DES-016 decided (J.0); the V13 frame draws it in the accent. Back-port to matters.pen when those mocks next get touched. (The `CONTRACT-DETAILS-INVENTORY.md` J.0 row called the strip a green pill; corrected — the frame draws a square-ended accent bar.)
+5. **The panel has a 44px header: the applet's title (13px semibold) and a close X (16px glyph), over a `border-muted` rule.** Both M3 and M13 draw it. The close control duplicates the bar toggle deliberately — the panel can overlay below the container threshold, where the collapse affordance should not be 320px away on the far side of the panel. The M3 header's count pill ("4", total comments) is applet content, not panel chrome; it lands with the chat applet (M8/M9).
+6. **A slot is either a panel or a link.** DES-016 names settings as a deep link, so the applet type is a union: `render` opens the panel, `href` navigates. Only `render` slots own the panel, and only they toggle. Link slots are the ones grouped below the divider.
+
+The panel carries no chrome of its own — no title strip, no close button. The bar's indicator strip names the visible applet and clicking that icon again collapses it, so panel chrome would be a third affordance for two jobs. Docking is a container query at 1100px of record-region width per DES-012; the threshold is written literally into the class list because Tailwind scans source text and container conditions cannot read a CSS variable.
 
 ## DES-017: Editing model — per-field inline commit, no page edit mode
 

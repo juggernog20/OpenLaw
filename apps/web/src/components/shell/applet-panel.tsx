@@ -1,0 +1,57 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * The record-page side panel (DES-016, #47), from the panel frames of
+ * designs/matters.pen (M3 comments, M13 history): a 320px surface
+ * hosting whichever applet the activity bar has expanded, one at a
+ * time, under a 44px header carrying the applet's title and a close
+ * control. The M3 header also shows a count pill — that is applet
+ * content (total comments, not the bar badge's unread count) and lands
+ * with the chat applet, not here.
+ *
+ * Docking is a container query on the record region, per DES-012. At or
+ * above ~1100px of region width the panel is a flex sibling holding its
+ * own 320px column; below that it overlays the content, pinned to the
+ * inner edge of the activity bar, which never disappears. The threshold
+ * is written into the class list literally: Tailwind scans source text,
+ * so a variable would leave the utility ungenerated.
+ */
+
+import type { ReactNode } from "react";
+import { X } from "lucide-react";
+import { useIntl } from "react-intl";
+
+export function AppletPanel({
+  id,
+  label,
+  onClose,
+  children,
+}: {
+  id: string;
+  /** Accessible name and header title — the active applet's label. */
+  label: string;
+  onClose: () => void;
+  children: ReactNode;
+}) {
+  const intl = useIntl();
+  return (
+    <aside
+      id={id}
+      aria-label={label}
+      className="absolute inset-y-0 end-(--width-activitybar) z-10 flex w-(--width-panel) shrink-0 flex-col border-s border-default bg-raised @min-[1100px]/record:static @min-[1100px]/record:z-auto"
+    >
+      <header className="flex h-11 shrink-0 items-center justify-between border-b border-muted px-4">
+        <h2 className="text-base font-semibold">{label}</h2>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={intl.formatMessage({ id: "applets.closePanel", defaultMessage: "Close" })}
+          className="-me-1 flex size-6 items-center justify-center text-muted hover:text-primary"
+        >
+          <X size={16} aria-hidden="true" />
+        </button>
+      </header>
+      <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
+    </aside>
+  );
+}

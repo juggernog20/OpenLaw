@@ -90,10 +90,16 @@
   --color-status-neutral-fg: var(--status-neutral-fg);
 
   /* ------------------------------------------------------------------ *
-   * Counter badge (neutral count)                                      *
+   * Counter badges                                                     *
+   * `count` is the neutral counter; `alert` is the solid attention     *
+   * badge the activity-bar applets carry (DES-016, #47) — the only     *
+   * user of it today is the chat unread count (CMT-004).               *
    * ------------------------------------------------------------------ */
   --color-badge-count-bg: var(--badge-count-bg);
   --color-badge-count-fg: var(--badge-count-fg);
+
+  --color-badge-alert-bg: var(--badge-alert-bg);
+  --color-badge-alert-fg: var(--badge-alert-fg);
 
   /* ------------------------------------------------------------------ *
    * Confidentiality (per DECISIONS.md DD-014, DES-009)                 *

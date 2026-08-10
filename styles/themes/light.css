@@ -61,9 +61,12 @@
   --status-neutral-bg: #eff1f3;
   --status-neutral-fg: #57606a;
 
-  /* Counter badge */
+  /* Counter badges — neutral count, and the solid alert badge the
+   * activity-bar applets carry (#47; 5.4:1 on white). */
   --badge-count-bg: #eaeef2;
   --badge-count-fg: #656d76;
+  --badge-alert-bg: #cf222e;
+  --badge-alert-fg: #ffffff;
 
   /* Confidentiality (per DES-009 — see DECISIONS-DESIGN.md) */
   --confidential-fg: #5b2b8c;
