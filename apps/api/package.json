@@ -36,7 +36,7 @@
     "@testcontainers/postgresql": "^12.1.0",
     "@types/nodemailer": "^8.0.1",
     "oauth2-mock-server": "^9.1.0",
-    "tsx": "^4.23.11",
+    "tsx": "^4.23.12",
     "vitest": "^4.1.10"
   }
 }
