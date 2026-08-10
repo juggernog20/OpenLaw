@@ -40,10 +40,16 @@ function assertRelayUrl(url: string): void {
 
 /**
  * A send failure the Administrator can act on: the common transport
- * errors in plain language, anything else as the error's own message.
+ * errors in plain language. Everything else gets a fixed generic line —
+ * never the error's own message, which can quote the relay's response
+ * verbatim, and a relay that was just handed the credential must not
+ * have its text echoed into `detail` (the write-only relay-URL posture).
+ * The guard on `error` matters too: a null or primitive rejection must
+ * still produce the 502 Problem, not a TypeError-turned-500.
  */
 function describeSendFailure(error: unknown): string {
-  const err = error as Partial<NodeJS.ErrnoException> & { message?: string };
+  const err =
+    typeof error === "object" && error !== null ? (error as Partial<NodeJS.ErrnoException>) : {};
   switch (err.code) {
     case "EDNS":
     case "ENOTFOUND":
@@ -57,7 +63,7 @@ function describeSendFailure(error: unknown): string {
     case "EAUTH":
       return "The relay rejected the credentials. Check the user and password in the relay URL.";
     default:
-      return err.message ?? "The relay reported an unknown error.";
+      return "The relay reported an unexpected error. Check the relay URL, credentials, and from-address.";
   }
 }
 
@@ -148,6 +154,15 @@ export const emailSettingsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const { mailer } = await app.resolveMailer();
+      // Unconfigured fails before dialing anything: the reason is ours to
+      // author, so the relay-text scrubbing in describeSendFailure never
+      // has to special-case it.
+      if (!mailer.configured) {
+        throw httpError(
+          502,
+          "The test email could not be sent. SMTP is not configured — save a relay first.",
+        );
+      }
       try {
         await mailer.send({
           to: request.user.email,

@@ -76,8 +76,15 @@ describe("email settings guards", () => {
     ]) {
       const anonymous = await harness.app.inject(request);
       expect(anonymous.statusCode, `${request.method} anonymous`).toBe(401);
+      expect(anonymous.headers["content-type"]).toContain("application/problem+json");
+      expect(anonymous.json()).toMatchObject({ title: "Authentication required.", status: 401 });
       const staff = await harness.app.inject({ ...request, cookies: staffCookies });
       expect(staff.statusCode, `${request.method} staff`).toBe(403);
+      expect(staff.headers["content-type"]).toContain("application/problem+json");
+      expect(staff.json()).toMatchObject({
+        title: "You do not have permission to perform this action.",
+        status: 403,
+      });
     }
   });
 });

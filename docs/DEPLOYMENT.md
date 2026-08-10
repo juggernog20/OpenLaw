@@ -88,14 +88,14 @@ Set `DATABASE_URL` in `.env` to any reachable PostgreSQL 16+ and the app uses it
 
 ## Email
 
-OpenLaw sends through whatever SMTP relay you already run (TECH-011). There are two ways to configure it:
+OpenLaw sends through whatever SMTP relay you already run (TECH-011). Configure it one of two ways:
 
-- **In the app**: an Administrator enters the relay URL and From address in the Welcome to OpenLaw wizard's email step. Saves take effect on the next send — no restart.
+- **In the app**: enter the relay URL and From address in the Welcome to OpenLaw wizard's email step (Administrator only). Saves take effect on the next send — no restart.
 - **In the environment**: set `SMTP_URL` and `SMTP_FROM` in `.env`.
 
-**Precedence: the environment always wins over app configuration.** If `SMTP_URL` is set, the instance is pinned to it — values saved in the app are ignored entirely, and the wizard shows the environment configuration read-only instead of accepting settings that would never apply. Use env pinning when your deployment tooling is the source of truth for configuration.
+**The environment always wins.** Setting `SMTP_URL` pins the instance: values saved in the app are ignored entirely, and the wizard shows the environment configuration read-only instead of accepting settings that would never apply. Pin via the environment when your deployment tooling is the source of truth.
 
-With neither configured, email-dependent flows (invites, magic links) tell the user email is unconfigured rather than failing silently.
+With neither configured, email-dependent flows (invites, magic links) report email as unconfigured rather than failing silently.
 
 To _test_ email locally without a relay, use the development overlay — it adds [Mailpit](https://mailpit.axllent.org/) and points the app at it:
 
