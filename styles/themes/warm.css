@@ -7,12 +7,13 @@
  *
  * Notable substitutions from the standard Light/Dark vocabulary:
  *   - Confidentiality marker uses terracotta-brown (--confidential-fg
- *     = #855A2E), not purple. Warm keeps purple out of its core
+ *     = #856135), not purple. Warm keeps purple out of its core
  *     palette (the assigned status family's mauve is the one
  *     exception), so the marker would clash. Per DES-005 this is
- *     intentional.
- *   - Link color (--text-link) is terracotta-brown, not blue. Warm
- *     does not use Primer's blue at all.
+ *     intentional. Shifted one hue step from --text-link to maintain
+ *     visual distinction between lock markers and hyperlinks.
+ *   - Link color (--text-link) is terracotta-brown (#855A2E), not
+ *     blue. Warm does not use Primer's blue at all.
  *
  * Values verified against designs/final-themes.pen "Theme 2 — Warm".
  * Warm's cream surfaces leave a tight contrast budget, so several
@@ -85,7 +86,7 @@
   /* Confidentiality — terracotta-brown, not purple. See file header.
    * Banner background is soft tan (per DES-009), not soft purple — Warm
    * deliberately diverges from the Light/Dark purple semantics. */
-  --confidential-fg: #855a2e;
+  --confidential-fg: #856135;
   --confidential-bg: #efe3d0;
 
   /* Avatar — Warm overrides DES-018's light blue with the terracotta
