@@ -27,6 +27,14 @@ export const orgSettings = pgTable(
      * grants portal access only once an Administrator opens a domain.
      */
     allowedEmailDomains: jsonb("allowed_email_domains").$type<string[]>().notNull().default([]),
+    /** Org identity (SET-001 General pane). Empty until an Administrator names the org. */
+    name: text("name").notNull().default(""),
+    /** The org logo as a data: URI; NULL until one is uploaded. */
+    logo: text("logo"),
+    /** BCP 47 tag; the display locale until per-user locales exist (DES-013). */
+    defaultLocale: text("default_locale").notNull().default("en-US"),
+    /** IANA zone name; the display timezone until a user sets their own (DES-014). */
+    defaultTimezone: text("default_timezone").notNull().default("UTC"),
     /**
      * When the first-run onboarding wizard (SET-004) was finished or
      * skipped through. NULL routes the Administrator into the wizard on

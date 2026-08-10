@@ -47,6 +47,8 @@ ActivityBar, Pill, Avatar) live in this file as local copies per the designs con
    mock draws Security as a flat rail item whose page body is Authentication. Update the rail
    treatment; the page content stands.
 2. **ST17 lacks the DD-010 allowed-email-domains editor** — it belongs on the Authentication pane.
+   The mock had drawn it on ST4 instead; that card was removed from ST4 when the General pane
+   shipped (2026-08-11, #63). The ST17 half lands with the Authentication pane build.
 3. **ST5 lacks**: the archived-user render state (greyed + inactive, behind an Archived filter),
    in-place role edit, per-user session revocation, and resend/revoke actions on invite rows
    (SET-005).

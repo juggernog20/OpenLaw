@@ -69,6 +69,11 @@ test.describe("accessibility floor", () => {
     await expect(page).toHaveTitle("Appearance · OpenLaw");
 
     await reportAxeViolations(page, testInfo, "settings");
+
+    // The Organization · General form (#63), as the Administrator.
+    await page.goto("/settings/general");
+    await expect(page).toHaveTitle("General · OpenLaw");
+    await reportAxeViolations(page, testInfo, "settings-general");
   });
 
   test("reduced motion degrades transitions to instant", async ({ page }) => {
