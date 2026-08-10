@@ -15,7 +15,7 @@ import { registerSearchTarget, SEARCH_KEY } from "../../lib/keyboard";
 export function SearchInput() {
   const intl = useIntl();
   return (
-    <div className="relative w-full max-w-120">
+    <div className="relative w-full min-w-0 max-w-120">
       <input
         type="search"
         ref={(element) => (element ? registerSearchTarget(element) : undefined)}

@@ -5,6 +5,8 @@
  * only). Radix supplies the dialog role, focus trap, Esc dismissal,
  * and focus restoration; only the parts the app uses are kept. The
  * surface matches card chrome: bg-raised with the default border.
+ * Full-screen below md, centered overlay card at md and above
+ * (DES-012, #46).
  */
 
 import * as React from "react";
@@ -23,7 +25,7 @@ function DialogContent({
       <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
       <DialogPrimitive.Content
         className={cn(
-          "fixed start-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-card border border-border-default bg-raised p-6 text-base text-primary shadow-md",
+          "fixed inset-0 z-50 overflow-y-auto bg-raised p-6 text-base text-primary md:inset-auto md:start-1/2 md:top-1/2 md:max-h-[calc(100dvh-4rem)] md:w-[calc(100%-2rem)] md:max-w-lg md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-card md:border md:border-border-default md:shadow-md",
           className,
         )}
         {...props}
