@@ -44,6 +44,19 @@ const hasNoHorizontalOverflow = (page: Page) =>
 test.describe("M4 demo path", () => {
   test.use({ viewport: { ...DESKTOP } });
 
+  // The suite runs against a never-reset instance (TECH-018) and the
+  // theme rides the shared Administrator's record, so restore the
+  // default even when the journey fails part way through. The guard
+  // skips the reset when the failure happened before sign-in.
+  test.afterEach(async ({ page }) => {
+    if (page.isClosed()) return;
+    const menuButton = page.getByRole("banner").getByRole("button", { name: ADMIN.displayName });
+    if (!(await menuButton.isVisible().catch(() => false))) return;
+    if ((await rootTheme(page)) === "light") return;
+    await switchTheme(page, "Light");
+    await expect.poll(() => rootTheme(page)).toBe("light");
+  });
+
   test("sign in, shell, three themes, mobile resize — one journey", async ({ page, request }) => {
     await ensureAdminExists(request);
 
@@ -64,7 +77,7 @@ test.describe("M4 demo path", () => {
       const theme = label.toLowerCase() as Lowercase<typeof label>;
       await switchTheme(page, label);
       await expect.poll(() => rootTheme(page)).toBe(theme);
-      expect(await headerBg(page)).toBe(HEADER_BG[theme]);
+      await expect.poll(() => headerBg(page)).toBe(HEADER_BG[theme]);
     }
 
     // Mid-journey theme for the resize leg: the mobile shell must work
@@ -79,7 +92,7 @@ test.describe("M4 demo path", () => {
     const hamburger = page.getByRole("button", { name: "Open navigation" });
     await expect(hamburger).toBeVisible();
     expect(await rootTheme(page)).toBe("dark");
-    expect(await headerBg(page)).toBe(HEADER_BG.dark);
+    await expect.poll(() => headerBg(page)).toBe(HEADER_BG.dark);
     expect(await hasNoHorizontalOverflow(page)).toBe(true);
 
     // The drawer navigates, then gets out of the way.
@@ -97,11 +110,5 @@ test.describe("M4 demo path", () => {
     await expect(page.getByRole("navigation")).toBeVisible();
     await expect(hamburger).toBeHidden();
     expect(await rootTheme(page)).toBe("dark");
-
-    // Leave the shared Administrator on the default theme: the suite
-    // runs against a never-reset instance (TECH-018), and the theme
-    // rides the user record across runs.
-    await switchTheme(page, "Light");
-    await expect.poll(() => rootTheme(page)).toBe("light");
   });
 });
