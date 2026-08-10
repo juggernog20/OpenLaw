@@ -231,6 +231,11 @@ Recorded at feature close (auth spec, issues #4–#10). The decision stands as w
 - **SSO client secret at rest.** The sso plugin stores the OIDC client secret inside the provider row's config JSON. v1 accepts DB-at-rest storage (single-tenant, self-hosted, the DB already holds privileged material); **flagged for a future secrets-encryption pass** — deliberate, not accidental.
 - **Version pin.** better-auth pinned to **1.6.x** (≥ 1.6.22 for the two-factor lockout columns; currently 1.6.26). 1.7 renames/changes some plugin options (two-factor enable signature, SSO option names) — treat its upgrade guide as a known, small chore, not a drop-in bump.
 
+### Addendum (2026-08-10) — settings home and cross-user session revocation (M5 grill)
+
+- The "switchable later in Settings → Organization" phrase above now has a concrete home: **Settings → Organization → Security → Authentication** (SET-001 amendment). The pane holds auth mode, OIDC provider config, the DD-010 allowed-email-domains list, and the magic-link portal toggle — the same surfaces the M2 typed routes already serve.
+- **Cross-user session revocation** (an Administrator cutting another user off, SET-005) is **our own typed Admin route**, consistent with the settled pattern above — typed routes exist where OpenLaw's authorization model diverges. better-auth's `/api/auth/admin/*` endpoints remain closed; the zero-permission roles map stays as it is.
+
 ## TECH-009: Real-time — SSE on live surfaces
 
 - **Status:** Accepted

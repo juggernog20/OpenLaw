@@ -85,10 +85,14 @@ follows.
       _Demo:_ An Administrator opens `/settings`, changes their own theme, then switches the organization's
       auth mode and revokes another user's session.
   - `/settings` IA with the Personal and Organization rails; Admin-only Organization access
-  - Personal: profile, theme, notification channel toggles
-  - Organization: Users & Roles, Authentication (the M2 admin surfaces reach their real home)
-  - Immediate-on-save semantics; guarded archive with reassignment
-  - _Decisions:_ SET-001, SET-002, SET-003, DD-013
+  - Personal: Profile (name, avatar, password, TOTP, sign-out-other-devices, timezone) and Appearance —
+    the Notifications pane waits for the engine in M18
+  - Organization: General (org identity), Users (pending-invite rows, in-place role edits, guarded
+    archive, per-user session revocation), and the Security group with Authentication as its first
+    sub-item — the M2 admin surfaces reach their real home
+  - Immediate-on-save semantics; `activity_log` lands here with writes from every settings mutation
+    (M9 builds the surfaces that read it)
+  - _Decisions:_ SET-001, SET-002, SET-003, SET-005, SET-006, DD-013, DD-017
 
 ---
 
@@ -101,6 +105,8 @@ every later module reuses, so it is slower than it looks and pays for itself thr
       _Demo:_ An Administrator adds a contract type, renames a status without breaking anything, defines a
       custom field, and attaches it to that type.
   - The configurable-taxonomy machinery: add / rename / reorder / archive, protected seed rows
+  - The list-editor DES record gets written here, with the first real list-editor to write it against
+    (the forward reference in SET-001/SET-003)
   - Contract statuses each mapped to one of the six fixed stages, immutable after creation
   - The shared `fields` catalog with module scopes plus a global tier; per-type attachment and required flags
   - _Decisions:_ CTR-001, CTR-002, CTR-016, MTR-014
@@ -127,6 +133,8 @@ every later module reuses, so it is slower than it looks and pays for itself thr
       record a field edit at the right visibility tier.
   - One comment system: flat, chronological, @mentions, no nesting; segmented composer with tier badges
   - The per-record activity feed and the Administrator-only audit log — two surfaces over one table
+    (the table itself has existed since M5, fed by settings mutations; the audit-log view joins the
+    Security group in `/settings`)
   - Edit-with-marker and soft delete; tier immutable after posting
   - _Decisions:_ CMT-001 to CMT-005, DD-016, DD-017
 
@@ -207,7 +215,9 @@ makes OpenLaw a CLM rather than a database with a form on it.
       _Demo:_ An approaching notice deadline produces a bell item and a morning digest email, while an
       approval request emails the approver immediately.
   - pg-boss on Postgres as the job pipeline; SMTP with a provider adapter for delivery
-  - The five event groups with defaults set by interruptiveness; per-user channel preferences
+  - The five event groups with defaults set by interruptiveness; per-user channel preferences — the
+    Personal → Notifications pane in `/settings` ships here, deferred from M5 so the toggles control
+    events that actually fire
   - Immediate email for direct events, a daily digest for dates; the admin-configurable 7/1/0 offsets
   - Bell with a 9+ capped unread badge, read-on-open
   - _Decisions:_ TECH-007, TECH-011, NOT-001 to NOT-005
@@ -350,7 +360,17 @@ leaves a coherent product; none of them is optional in the sense that we intend 
   - Word track-changes export
   - _Decisions:_ DOC-003
 
-- [ ] **M33 — Release**
+- [ ] **M33 — The finished first run**
+      _Demo:_ On a fresh install, the first Administrator is walked from sign-in to a configured, populated
+      system by the onboarding wizard alone — org identity, domains, email, invites, integrations, and the
+      seeded types reviewed — with every skipped step waiting on the Settings checklist card.
+  - The SET-004 wizard, completed: the auth, portal, email, and invite steps shipped with M2; the org
+    identity, integrations, and review-seeded-types steps land here, once the features behind them exist
+  - Sits deliberately last-but-one: building these steps earlier would mean wizard steps for features
+    that don't exist, which the no-stubbed-demos rule forbids
+  - _Decisions:_ SET-004
+
+- [ ] **M34 — Release**
       _Demo:_ A stranger with a clean Linux VM has OpenLaw running in under an hour, from the README alone.
   - Semver tag to ghcr images plus `compose.yml` and `.env.example` artifacts; generated CHANGELOG
   - Install documentation, upgrade path, and the backup story
