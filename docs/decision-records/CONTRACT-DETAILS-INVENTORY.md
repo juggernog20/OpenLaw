@@ -227,18 +227,18 @@ V12 `pMMbr` and V13 `DsgRA`: three swatch + label pairs — Date marker (`fNrNC`
 
 48px-wide vertical strip on the right edge. V12 `HGWot @ 1392,166`. V13 `cFsVz` is the activity-bar half of the right column `i4DfDF` (the doc panel sits to its right).
 
-| #   | Slot                       | V12 ID   | V13 ID                               | Glyph            | Badge                        |
-| --- | -------------------------- | -------- | ------------------------------------ | ---------------- | ---------------------------- |
-| J.0 | Active indicator strip     | —        | `xTe2Z`                              | (3px green pill) | V13 only — flags active item |
-| J.1 | description                | `fF2Xr`  | `I8U5hg`                             | description      | —                            |
-| J.2 | chat                       | `EgLMW`  | `Wm84X`                              | chat             | "3" (`uPwNS`/`APHvS`)        |
-| J.3 | history                    | `gUCf3`  | `s0onk8`                             | history          | "v7" (`vfGGn`/`Huk0J`)       |
-| J.4 | draw / redline             | `U3fHF6` | `uP3Nm`                              | draw             | —                            |
-| J.5 | bolt / automation          | `Qveno`  | `cQcRz`                              | bolt             | —                            |
-| J.6 | track_changes              | `pRCgl`  | `b2Dh6g`                             | track_changes    | "42" (`jybsM`/`vKhfn`)       |
-| J.7 | attach_file                | `UHDvJ`  | (V13 has no attach in current strip) | attach_file      | —                            |
-| J.8 | divider                    | `dLEvZ`  | `RdfHw`                              | hairline         | —                            |
-| J.9 | settings (bottom-anchored) | `tFokx`  | `bu8dm`                              | settings         | —                            |
+| #   | Slot                       | V12 ID   | V13 ID                               | Glyph                                                                                                                 | Badge                        |
+| --- | -------------------------- | -------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| J.0 | Active indicator strip     | —        | `xTe2Z`                              | (3×48 accent bar, `#F78166`, square ends — corrected 2026-08-10 from "3px green pill", which the frame does not show) | V13 only — flags active item |
+| J.1 | description                | `fF2Xr`  | `I8U5hg`                             | description                                                                                                           | —                            |
+| J.2 | chat                       | `EgLMW`  | `Wm84X`                              | chat                                                                                                                  | "3" (`uPwNS`/`APHvS`)        |
+| J.3 | history                    | `gUCf3`  | `s0onk8`                             | history                                                                                                               | "v7" (`vfGGn`/`Huk0J`)       |
+| J.4 | draw / redline             | `U3fHF6` | `uP3Nm`                              | draw                                                                                                                  | —                            |
+| J.5 | bolt / automation          | `Qveno`  | `cQcRz`                              | bolt                                                                                                                  | —                            |
+| J.6 | track_changes              | `pRCgl`  | `b2Dh6g`                             | track_changes                                                                                                         | "42" (`jybsM`/`vKhfn`)       |
+| J.7 | attach_file                | `UHDvJ`  | (V13 has no attach in current strip) | attach_file                                                                                                           | —                            |
+| J.8 | divider                    | `dLEvZ`  | `RdfHw`                              | hairline                                                                                                              | —                            |
+| J.9 | settings (bottom-anchored) | `tFokx`  | `bu8dm`                              | settings                                                                                                              | —                            |
 
 ## K. Document panel (V13 only)
 
