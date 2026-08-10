@@ -753,6 +753,20 @@ The themes, geometry, typography, and keyboard contract are all locked. Before c
 - **Activity feed and modal screen-reader patterns** become a checklist for those component PRs — this DES is the source for the checklist.
 - **Smoke-testing matrix** (VoiceOver on macOS Safari, NVDA on Windows Firefox) becomes a pre-release manual check, not yet a release blocker.
 
+**Implementation clarification (2026-08-10, #42):** the contrast lint gate is `styles/lint-contrast.mjs`, run as `pnpm lint:contrast` and inside the aggregate `pnpm check` (so it gates CI). It checks every text/surface and status bg/fg pair from DES-005, the DES-018 severe/neutral families, the DES-019 chrome text pairs, the badge, confidentiality, and avatar pairs, and the file-type colors against canvas — 123 pairs across the three themes. Category calls made when the pair table was built:
+
+- `--text-subtle` is held to the 3:1 floor, not 4.5:1. Its only roles are placeholder and disabled text (DES-005); WCAG 1.4.3 exempts disabled text, and placeholders are held to the non-text floor instead of exempted. It is never body copy. Holding it to 4.5:1 would collapse it into `--text-muted` and erase the text tier in Warm.
+- Avatar initials and the file-type icon squares are graphical objects at 3:1. The user's name accompanies the avatar in accessible contexts; DES-019's Warm terracotta avatar reads 3.1:1.
+- `--text-on-accent` × `--accent` is **not** checked yet. Nothing renders on the accent fill today and the pair reads 2.5:1 in Light/Dark. It must be fixed and added to the gate when mention chips land.
+
+Running the gate resolved the suspect list: onhold passes in all themes (6.9–7.9:1), Light warning passes at 4.52:1, and the file-type colors pass at the graphical floor. But Warm `--text-subtle` was 2.44:1 (not borderline), and the gate surfaced failures the suspect list missed. Per the rule above, the tokens were adjusted, not the check — each darkened or lightened one step on its own hue:
+
+- Light: `--status-success-fg` #1F883D → #1A7F37 (4.06 → 4.56); `--badge-count-fg` #656D76 → #636A73 (4.4996 → 4.69).
+- Warm: `--text-muted` and `--chrome-nav-muted` #7A7264 → #6F6759; `--text-subtle` #A8A294 → #928B78; `--text-link` and `--confidential-fg` #9B6B3A → #855A2E; `--status-success-fg` #5C7A4A → #527040; `--status-warning-fg` #8A6B1F → #7E6119; `--status-info-fg` #3A6E94 → #35658A; `--status-danger-fg` #A05540 → #944C38.
+- Dark: `--text-muted` and `--badge-count-fg` #7D8590 → #8B949E; `--text-link` #2F81F7 → #4493F8.
+
+The adjusted values should be back-ported to `designs/final-themes.pen` and the .pen library's theme frames when those mocks next get touched.
+
 ---
 
 ## DES-012: Responsive layout primitives — container queries for content, single 768px viewport breakpoint for the mobile shell
