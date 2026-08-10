@@ -1,5 +1,5 @@
 {
-  "version": "2.15",
+  "version": "2.17",
   "children": [
     {
       "type": "frame",
@@ -3740,7 +3740,8 @@
                           "fill": "$text-primary",
                           "content": "Sep 12",
                           "fontFamily": "$font",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -4281,7 +4282,8 @@
                           "fill": "$text-primary",
                           "content": "Sep 20",
                           "fontFamily": "$font",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -4545,7 +4547,8 @@
                           "fill": "$text-primary",
                           "content": "—",
                           "fontFamily": "$font",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -4786,7 +4789,8 @@
                           "fill": "$text-primary",
                           "content": "Sep 30",
                           "fontFamily": "$font",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -5050,7 +5054,8 @@
                           "fill": "$text-primary",
                           "content": "Oct 2",
                           "fontFamily": "$font",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -5300,7 +5305,8 @@
                           "fill": "$text-primary",
                           "content": "—",
                           "fontFamily": "$font",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -5552,7 +5558,8 @@
                           "fill": "$text-primary",
                           "content": "Sep 8",
                           "fontFamily": "$font",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -44603,7 +44610,8 @@
                                       "fill": "$text-secondary",
                                       "content": "Parent of",
                                       "fontFamily": "$font",
-                                      "fontSize": 12
+                                      "fontSize": 12,
+                                      "fontWeight": "normal"
                                     }
                                   ]
                                 },
@@ -44626,7 +44634,8 @@
                                       "fill": "$text-secondary",
                                       "content": "Child of",
                                       "fontFamily": "$font",
-                                      "fontSize": 12
+                                      "fontSize": 12,
+                                      "fontWeight": "normal"
                                     }
                                   ]
                                 }
