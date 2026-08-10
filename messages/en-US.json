@@ -236,6 +236,12 @@
   "error.title": {
     "defaultMessage": "Something went wrong."
   },
+  "format.deadline.overdue": {
+    "defaultMessage": "{days, plural, one {# day} other {# days}} overdue"
+  },
+  "format.deadline.withQualifier": {
+    "defaultMessage": "{date} ({qualifier})"
+  },
   "home.placeholder": {
     "defaultMessage": "Modules arrive with their own builds."
   },

@@ -993,6 +993,16 @@ Component code stays declarative (`<span>{formatRelativeOrShort(comment.createdA
 - The "Documents" tab's file size column uses `formatFileSize`. File-type icon colors come from DES-005 (`--color-file-*`).
 - A small set of unit tests covers each helper against representative locales (en-US, en-GB, de-DE) to lock in the expected output strings.
 
+**Implementation clarification (2026-08-10, #43):** the helper layer is `apps/web/src/lib/format.ts`; its tests lock the literal output strings for en-US, en-GB, and de-DE. Calls made where the decision text left room:
+
+- **Inputs.** Date helpers accept the stored ISO 8601 string or a `Date`. Currency takes a `Money` pair — integer amount in the currency's smallest unit plus the ISO 4217 code — and derives the unit's precision from the code itself (`resolvedOptions().maximumFractionDigits`), so JPY (0 digits) and BHD (3 digits) divide correctly. `showCode: true` appends the trailing code for multi-currency surfaces.
+- **Session seam.** `configureFormatting({ locale, timeZone })` is where the stored user preference lands when a session loads; per-call options override it, then browser detection, then UTC — the DES resolution order. Tests inject `locale`, `timeZone`, and `now` for determinism.
+- **Sub-minute activity.** Renders as ICU's own "this minute" (`RelativeTimeFormat` with `numeric: "auto"`), not an invented "just now" string. Casing throughout follows ICU ("yesterday" lowercase — the decision table's "Yesterday" was illustrative).
+- **Day math.** The relative-or-short window uses truncated 24-hour units (feed precision); `formatDeadline` uses calendar days in the display timezone, because deadlines are dates. Year elision likewise compares calendar years in the display timezone.
+- **Deadline qualifier window.** The "(in 7 days)" / "(3 days overdue)" qualifier shows within ±30 calendar days and drops beyond, where the absolute date alone reads better. The "overdue" wording is helper-owned ICU copy (`format.deadline.overdue`); future and today qualifiers come from `RelativeTimeFormat` directly.
+- **File sizes.** Intl `unit` style with SI decimal steps (1 kB = 1000 bytes) — the labels ICU renders are SI units, so the math matches them.
+- **The `<TimeStamp>` component** from the consequences waits for its first consumer; this ticket shipped the pure library only (#43).
+
 ---
 
 ## DES-015: Content tone register — terse, direct, second-person imperative ("GitHub voice, not Mailchimp voice")
