@@ -203,6 +203,9 @@
   "auth.twoFactor.useTotp": {
     "defaultMessage": "Use your authenticator app"
   },
+  "dialog.close": {
+    "defaultMessage": "Close"
+  },
   "error.body": {
     "defaultMessage": "The page could not load. Reload to try again."
   },
@@ -217,6 +220,36 @@
   },
   "home.title": {
     "defaultMessage": "Home"
+  },
+  "keys.arrows": {
+    "defaultMessage": "Move within menus and lists"
+  },
+  "keys.closeOverlay": {
+    "defaultMessage": "Close the open menu or dialog"
+  },
+  "keys.enter": {
+    "defaultMessage": "Activate the focused control"
+  },
+  "keys.focusSearch": {
+    "defaultMessage": "Focus search"
+  },
+  "keys.openCheatSheet": {
+    "defaultMessage": "Open keyboard shortcuts"
+  },
+  "keys.section.components": {
+    "defaultMessage": "In menus and dialogs"
+  },
+  "keys.section.global": {
+    "defaultMessage": "Global"
+  },
+  "keys.space": {
+    "defaultMessage": "Toggle the focused control"
+  },
+  "keys.tab": {
+    "defaultMessage": "Move to the next control"
+  },
+  "keys.title": {
+    "defaultMessage": "Keyboard shortcuts"
   },
   "nav.home": {
     "defaultMessage": "Home"
@@ -237,7 +270,7 @@
     "defaultMessage": "Search"
   },
   "shell.search.placeholder": {
-    "defaultMessage": "Type / to search"
+    "defaultMessage": "Type {key} to search"
   },
   "shell.userMenu.theme": {
     "defaultMessage": "Theme"
