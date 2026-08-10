@@ -12,6 +12,10 @@
  * Values verified against designs/final-themes.pen "Theme 3 — Dark".
  * severe/neutral warm+dark values are derived (DES-018 specifies Light
  * only); contrast-checked ≥4.5:1.
+ * Three foregrounds are lightened a step from the mock values to clear
+ * the DES-011 contrast gate (#42): --text-muted, --text-link, and
+ * --badge-count-fg. Back-port to the .pen when the mocks next get
+ * touched.
  */
 
 [data-theme="dark"] {
@@ -29,12 +33,12 @@
 
   /* Text */
   --text-primary: #e6edf3;
-  --text-muted: #7d8590;
+  --text-muted: #8b949e;
   --text-subtle: #6e7681;
   --text-on-inverted: #f0f6fc;
   --text-on-accent: #ffffff;
   --text-on-cta: #ffffff;
-  --text-link: #2f81f7;
+  --text-link: #4493f8;
   --text-danger: #ff7b72;
 
   /* Brand */
@@ -70,7 +74,7 @@
    * activity-bar applets carry (#47; 4.6:1, one step down from the
    * status-danger foreground so white text still passes). */
   --badge-count-bg: #21262d;
-  --badge-count-fg: #7d8590;
+  --badge-count-fg: #8b949e;
   --badge-alert-bg: #da3633;
   --badge-alert-fg: #ffffff;
 

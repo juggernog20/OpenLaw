@@ -7,12 +7,18 @@
  *
  * Notable substitutions from the standard Light/Dark vocabulary:
  *   - Confidentiality marker uses terracotta-brown (--confidential-fg
- *     = #9B6B3A), not purple. Warm's palette has no purple hue and
+ *     = #855A2E), not purple. Warm's palette has no purple hue and
  *     forcing one in would clash. Per DES-005 this is intentional.
  *   - Link color (--text-link) is terracotta-brown, not blue. Warm
  *     does not use Primer's blue at all.
  *
  * Values verified against designs/final-themes.pen "Theme 2 — Warm".
+ * Warm's cream surfaces leave a tight contrast budget, so several
+ * foregrounds are darkened a step from the mock values to clear the
+ * DES-011 contrast gate (#42): muted/subtle/link text, the success/
+ * warning/info/danger status foregrounds, the confidentiality marker,
+ * and the nav's muted chrome text. Same pattern as DES-018's severe
+ * derivation. Back-port to the .pen when the mocks next get touched.
  */
 
 [data-theme="warm"] {
@@ -30,12 +36,12 @@
 
   /* Text */
   --text-primary: #2d2a24;
-  --text-muted: #7a7264;
-  --text-subtle: #a8a294;
+  --text-muted: #6f6759;
+  --text-subtle: #928b78;
   --text-on-inverted: #2d2a24; /* dark text on cream-deep header */
   --text-on-accent: #ffffff;
   --text-on-cta: #ffffff;
-  --text-link: #9b6b3a;
+  --text-link: #855a2e;
   --text-danger: #8c3a2c;
 
   /* Brand */
@@ -44,16 +50,16 @@
 
   /* Status — paired bg + fg */
   --status-success-bg: #e5eddc;
-  --status-success-fg: #5c7a4a;
+  --status-success-fg: #527040;
 
   --status-warning-bg: #f4ebc9;
-  --status-warning-fg: #8a6b1f;
+  --status-warning-fg: #7e6119;
 
   --status-info-bg: #dde8f0;
-  --status-info-fg: #3a6e94;
+  --status-info-fg: #35658a;
 
   --status-danger-bg: #f0dcd4;
-  --status-danger-fg: #a05540;
+  --status-danger-fg: #944c38;
 
   --status-severe-bg: #f3e2cc;
   --status-severe-fg: #935425;
@@ -77,7 +83,7 @@
   /* Confidentiality — terracotta-brown, not purple. See file header.
    * Banner background is soft tan (per DES-009), not soft purple — Warm
    * deliberately diverges from the Light/Dark purple semantics. */
-  --confidential-fg: #9b6b3a;
+  --confidential-fg: #855a2e;
   --confidential-bg: #efe3d0;
 
   /* Avatar — Warm overrides DES-018's light blue with the terracotta
@@ -94,6 +100,6 @@
   --chrome-brand-fg: #f4f1eb;
   --chrome-nav-bg: #f4f1eb;
   --chrome-nav-border: #eae5dc;
-  --chrome-nav-muted: #7a7264;
+  --chrome-nav-muted: #6f6759;
   --chrome-subbar-border: #eae5dc;
 }
