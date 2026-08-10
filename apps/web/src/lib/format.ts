@@ -51,8 +51,19 @@ function resolveTimeZone(options?: FormatOptions): string {
   );
 }
 
-function toDate(value: Date | string): Date {
-  return typeof value === "string" ? new Date(value) : value;
+/**
+ * A bare `YYYY-MM-DD` is a civil calendar date, not an instant. Pin it
+ * to UTC midnight and format it in UTC so the calendar date survives
+ * every display timezone — `new Date("2026-05-10")` alone renders as
+ * May 9 in negative-offset zones. Timestamps stay instants.
+ */
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+
+function parseValue(value: Date | string): { date: Date; dateOnly: boolean } {
+  if (typeof value === "string" && DATE_ONLY.test(value)) {
+    return { date: new Date(`${value}T00:00:00Z`), dateOnly: true };
+  }
+  return { date: typeof value === "string" ? new Date(value) : value, dateOnly: false };
 }
 
 const MINUTE = 60_000;
@@ -126,7 +137,7 @@ function civilDate(date: Date, timeZone: string): { year: number; month: number;
  * only when not current). Sub-minute renders as "this minute".
  */
 export function formatRelativeOrShort(value: Date | string, options?: FormatOptions): string {
-  const date = toDate(value);
+  const { date } = parseValue(value);
   const now = options?.now ?? new Date();
   const diff = date.getTime() - now.getTime();
   const distance = Math.abs(diff);
@@ -144,9 +155,12 @@ export function formatRelativeOrShort(value: Date | string, options?: FormatOpti
  * year (in the display timezone) is not the current one — "May 3, 2025".
  */
 export function formatShortDate(value: Date | string, options?: FormatOptions): string {
-  const date = toDate(value);
-  const timeZone = resolveTimeZone(options);
-  const currentYear = civilDate(options?.now ?? new Date(), timeZone).year;
+  const { date, dateOnly } = parseValue(value);
+  const displayZone = resolveTimeZone(options);
+  // Date-only values format in UTC to keep their calendar date; the
+  // "current year" still comes from the viewer's timezone.
+  const timeZone = dateOnly ? "UTC" : displayZone;
+  const currentYear = civilDate(options?.now ?? new Date(), displayZone).year;
   const withYear = civilDate(date, timeZone).year !== currentYear;
   return dateFormatter(resolveLocale(options), {
     month: "short",
@@ -171,7 +185,7 @@ export function formatLongDateTime(value: Date | string, options?: FormatOptions
     minute: "2-digit",
     timeZoneName: "short",
     timeZone: resolveTimeZone(options),
-  }).format(toDate(value));
+  }).format(parseValue(value).date);
 }
 
 /**
@@ -182,9 +196,9 @@ export function formatLongDateTime(value: Date | string, options?: FormatOptions
  * days in the display timezone, not 24-hour blocks.
  */
 export function formatDeadline(value: Date | string, options?: FormatOptions): string {
-  const date = toDate(value);
+  const { date, dateOnly } = parseValue(value);
   const timeZone = resolveTimeZone(options);
-  const target = civilDate(date, timeZone);
+  const target = civilDate(date, dateOnly ? "UTC" : timeZone);
   const today = civilDate(options?.now ?? new Date(), timeZone);
   const days = Math.round(
     (Date.UTC(target.year, target.month - 1, target.day) -
@@ -204,7 +218,15 @@ export function formatDeadline(value: Date | string, options?: FormatOptions): s
           },
           { days: -days },
         );
-  return `${absolute} (${qualifier})`;
+  // The date-with-qualifier composition is an ICU message too — the
+  // parenthesis pattern is locale copy, not code.
+  return intlFor(locale).formatMessage(
+    {
+      id: "format.deadline.withQualifier",
+      defaultMessage: "{date} ({qualifier})",
+    },
+    { date: absolute, qualifier },
+  );
 }
 
 /** Count rule: full digits with locale grouping — never "1.2K". */

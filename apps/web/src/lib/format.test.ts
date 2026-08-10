@@ -68,6 +68,13 @@ describe("formatShortDate (upload-column rule)", () => {
     expect(formatShortDate("2025-12-20T12:00:00Z", deDE)).toBe("20. Dez. 2025");
   });
 
+  it("keeps date-only values on their calendar date in every timezone", () => {
+    // A bare YYYY-MM-DD must not slide to the prior day west of UTC.
+    expect(formatShortDate("2026-05-10", { ...enUS, timeZone: "America/Los_Angeles" })).toBe(
+      "May 10",
+    );
+  });
+
   it("decides the year on the display timezone's calendar", () => {
     // 2025-12-31 23:30 UTC is already 2026-01-01 in Tokyo: no year there.
     const instant = "2025-12-31T23:30:00Z";
@@ -92,6 +99,14 @@ describe("formatDeadline (due-date rule)", () => {
     expect(formatDeadline("2026-05-04", enUS)).toBe("May 4 (tomorrow)");
     expect(formatDeadline("2026-05-03", enUS)).toBe("May 3 (today)");
     expect(formatDeadline("2026-05-10", deDE)).toBe("10. Mai (in 7 Tagen)");
+  });
+
+  it("keeps date-only deadlines on their calendar date in every timezone", () => {
+    // Regression: new Date("2026-05-10") is UTC midnight, which is
+    // May 9 in Los Angeles — the day count was off by one there.
+    const la = { ...enUS, timeZone: "America/Los_Angeles" } as const;
+    expect(formatDeadline("2026-05-10", la)).toBe("May 10 (in 7 days)");
+    expect(formatDeadline("2026-04-30", la)).toBe("Apr 30 (3 days overdue)");
   });
 
   it("marks overdue deadlines", () => {
@@ -156,5 +171,25 @@ describe("timezone resolution (stored override → detected → UTC)", () => {
     } finally {
       configureFormatting({});
     }
+  });
+
+  it("prefers the per-call override over the configured session timezone", () => {
+    configureFormatting({ timeZone: "Asia/Tokyo" });
+    try {
+      expect(formatLongDateTime(NOW, { now: NOW, locale: "en-US", timeZone: "UTC" })).toBe(
+        "May 3, 2026, 9:34 PM UTC",
+      );
+    } finally {
+      configureFormatting({});
+    }
+  });
+
+  // The final "UTC" fallback is untestable here: modern engines always
+  // report a resolved timezone, so detection never comes back undefined.
+  it("falls back to the browser-detected timezone without overrides", () => {
+    const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    expect(formatLongDateTime(NOW, { now: NOW, locale: "en-US" })).toBe(
+      formatLongDateTime(NOW, { now: NOW, locale: "en-US", timeZone: detected }),
+    );
   });
 });
