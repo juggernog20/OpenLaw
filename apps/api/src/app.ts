@@ -27,10 +27,11 @@ import {
 } from "fastify-type-provider-zod";
 import { OPENLAW_VERSION } from "@openlaw/shared";
 import { PROBLEM_CONTENT_TYPE, type Problem } from "./lib/problem.js";
-import type { Mailer } from "./lib/mailer.js";
+import type { MailerResolver } from "./lib/mailer.js";
 import { metaRoutes } from "./modules/meta/routes.js";
 import { authRoutes } from "./modules/auth/routes.js";
 import { onboardingRoutes } from "./modules/onboarding/routes.js";
+import { emailSettingsRoutes } from "./modules/email-settings/routes.js";
 import { authHandler } from "./auth/handler.js";
 import { createAuth, type Auth, type AuthConfig } from "./auth/instance.js";
 import type { AuthenticatedSession, AuthenticatedUser } from "./auth/guards.js";
@@ -38,7 +39,12 @@ import type { AuthenticatedSession, AuthenticatedUser } from "./auth/guards.js";
 export interface AppDeps {
   db: Db;
   config: AuthConfig;
-  mailer: Mailer;
+  /**
+   * Mail is resolved per send (#37: env-else-database), so a wizard save
+   * takes effect on the next send with no restart. Env-pinned deployments
+   * inject a resolver that always answers with the same fixed mailer.
+   */
+  resolveMailer: MailerResolver;
   /**
    * Directory of the built SPA (TECH-017: the app serves the web bundle
    * same-origin). Unset — e.g. API-only development — leaves every
@@ -51,15 +57,15 @@ declare module "fastify" {
   interface FastifyInstance {
     db: Db;
     auth: Auth;
-    mailer: Mailer;
+    resolveMailer: MailerResolver;
   }
 }
 
 export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   const app = Fastify(opts).withTypeProvider<ZodTypeProvider>();
   app.decorate("db", deps.db);
-  app.decorate("mailer", deps.mailer);
-  app.decorate("auth", createAuth(deps.db, deps.config, deps.mailer));
+  app.decorate("resolveMailer", deps.resolveMailer);
+  app.decorate("auth", createAuth(deps.db, deps.config, deps.resolveMailer));
   // Shape hints for V8; guards assign the real values per request.
   app.decorateRequest("user", undefined as unknown as AuthenticatedUser);
   app.decorateRequest("session", undefined as unknown as AuthenticatedSession);
@@ -217,6 +223,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(metaRoutes, { prefix: "/api/v1" });
   await app.register(authRoutes, { prefix: "/api/v1" });
   await app.register(onboardingRoutes, { prefix: "/api/v1" });
+  await app.register(emailSettingsRoutes, { prefix: "/api/v1" });
 
   return app;
 }

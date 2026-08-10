@@ -179,10 +179,11 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         .from(ssoProviders)
         .orderBy(ssoProviders.createdAt)
         .limit(1);
+      const { mailer } = await app.resolveMailer();
       return {
         mode: settings.authMode,
         magicLinkEnabled: settings.magicLinkEnabled,
-        emailConfigured: app.mailer.configured,
+        emailConfigured: mailer.configured,
         ssoProviderId: provider?.providerId ?? null,
       };
     },
@@ -570,7 +571,8 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       // would answer allowlisted addresses with an error and everyone
       // else with the neutral 202, handing an anonymous visitor exactly
       // the allowlist oracle DD-010's identical response exists to deny.
-      if (!app.mailer.configured) {
+      const { mailer } = await app.resolveMailer();
+      if (!mailer.configured) {
         throw httpError(
           403,
           "Sign-in links are unavailable: this instance cannot send email. " +

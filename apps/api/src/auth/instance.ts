@@ -18,7 +18,7 @@ import { sso } from "@better-auth/sso";
 import { hash, verify } from "@node-rs/argon2";
 import { uuidv7 } from "uuidv7";
 import { eq, schema, ssoProviders, users, type Db } from "@openlaw/db";
-import type { Mailer } from "../lib/mailer.js";
+import type { MailerResolver } from "../lib/mailer.js";
 import { getOrgSettings, isEmailDomainAllowed } from "../lib/org-settings.js";
 
 export interface AuthConfig {
@@ -66,7 +66,10 @@ export async function withTrustedIssuerOrigin<T>(
   }
 }
 
-export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
+// The resolver, not a fixed mailer (#37): every send resolves the
+// current configuration, so an SMTP relay saved through the wizard is
+// used by the very next email with no restart.
+export function createAuth(db: Db, config: AuthConfig, resolveMailer: MailerResolver) {
   return betterAuth({
     appName: "OpenLaw",
     baseURL: config.baseUrl,
@@ -118,6 +121,7 @@ export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
       // resets both ride this flow; the copy covers both. The link targets
       // our web page, which posts the token to /api/auth/reset-password.
       sendResetPassword: async ({ user, token }) => {
+        const { mailer } = await resolveMailer();
         await mailer.send({
           to: user.email,
           subject: "Set your OpenLaw password",
@@ -180,6 +184,7 @@ export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
         expiresIn: 5 * 60,
         storeToken: "hashed",
         sendMagicLink: async ({ email, url }) => {
+          const { mailer } = await resolveMailer();
           await mailer.send({
             to: email,
             subject: "Sign in to OpenLaw",
@@ -310,13 +315,14 @@ export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
           throw new APIError("FORBIDDEN", { message: "Magic-link sign-in is disabled." });
         }
         if (ctx.path !== "/sign-in/magic-link") return;
-        // A deployment with no mailer cannot issue at all, so refuse
-        // uniformly here — ahead of the allowlist branch below. Were this
-        // check missing, the send would throw for allowlisted addresses
-        // only, and the denied branch's mimicked success would become a
-        // reliable allowlist oracle. Verify is deliberately left alone: a
-        // token in flight was issued while mail still worked, and
+        // An instance with no resolved mailer cannot issue at all, so
+        // refuse uniformly here — ahead of the allowlist branch below.
+        // Were this check missing, the send would throw for allowlisted
+        // addresses only, and the denied branch's mimicked success would
+        // become a reliable allowlist oracle. Verify is deliberately left
+        // alone: a token in flight was issued while mail still worked, and
         // refusing it would strand a link the requester already holds.
+        const { mailer } = await resolveMailer();
         if (!mailer.configured) {
           throw new APIError("FORBIDDEN", {
             message:

@@ -106,6 +106,7 @@ _2026-08-10 — the M5 pre-build grill closed the gaps between SET-001..004 and 
 - **Alternatives considered** — Seeds + passive "Finish setup" checklist card (recommended, declined).
 - **Consequences** — The wizard is a real v1 build surface (one flow, ~6 steps). Wizard completion state stored per-org; skipped steps resurface as a Settings checklist card until done.
 - **Addendum (2026-08-10, M5 grill)** — Scheduling: the auth, portal, email, and invite steps shipped with M2 (`/welcome`). The **complete** wizard is its own milestone (plan M33), placed just before Release — building the remaining steps earlier would mean wizard steps for features that don't exist yet, which the plan's no-stubbed-demos rule forbids.
+- **Addendum (2026-08-10, #37)** — The email step is no longer status-only: it is a working **SMTP setup screen**. It shows one of three states — set by environment (read-only, names `SMTP_URL`/`SMTP_FROM` as the place to change it), set in the app (from-address shown; replace or clear), or not set (relay URL + from-address form). Saves take effect on the next send, a "Send test email" button delivers to the signed-in Administrator's own address, and the step stays skippable. Environment always wins over app configuration — see the TECH-011 addendum for the precedence rule.
 
 ## SET-005 — User management: the Users pane, role edits, guarded user archive, session revocation
 

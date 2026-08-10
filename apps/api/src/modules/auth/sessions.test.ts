@@ -5,6 +5,7 @@ import { buildApp } from "../../app.js";
 import { requireRole } from "../../auth/guards.js";
 import {
   CapturingMailer,
+  fixedMailerResolver,
   signIn as harnessSignIn,
   signInCookies as harnessSignInCookies,
   startHarness,
@@ -89,7 +90,7 @@ describe("requireRole", () => {
     guarded = await buildApp({
       db: harness.db,
       config: TEST_AUTH_CONFIG,
-      mailer: new CapturingMailer(),
+      resolveMailer: fixedMailerResolver(new CapturingMailer()),
     });
     guarded.get(
       "/api/v1/admin-only",
