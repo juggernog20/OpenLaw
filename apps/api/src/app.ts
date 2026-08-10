@@ -206,11 +206,15 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
 
     const status = error.statusCode && error.statusCode >= 400 ? error.statusCode : 500;
     if (status >= 500) request.log.error(error, "request failed");
+    // 5xx messages are scrubbed — an unexpected error's text can leak
+    // internals — unless the error was authored via httpError, whose
+    // message is written for the client (e.g. the 502 test-send reasons).
+    const expose = status < 500 || (error as { expose?: boolean }).expose === true;
     const problem: Problem = {
       type: "about:blank",
-      title: status >= 500 ? "Internal server error" : error.message,
+      title: expose ? error.message : "Internal server error",
       status,
-      detail: status >= 500 ? undefined : error.message,
+      detail: expose ? error.message : undefined,
       instance: request.url,
     };
     return reply

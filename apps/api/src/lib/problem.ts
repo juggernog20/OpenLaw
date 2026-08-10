@@ -24,10 +24,15 @@ z.globalRegistry.add(ProblemSchema, { id: "Problem" });
 
 export const PROBLEM_CONTENT_TYPE = "application/problem+json; charset=utf-8";
 
-/** Throwable that the app error handler renders as a Problem response. */
+/**
+ * Throwable that the app error handler renders as a Problem response.
+ * The message is authored for the client, so the handler exposes it even
+ * on 5xx — unlike unexpected errors, whose messages are scrubbed there.
+ */
 export function httpError(statusCode: number, message: string): Error {
-  const err = new Error(message) as Error & { statusCode: number };
+  const err = new Error(message) as Error & { statusCode: number; expose: boolean };
   err.statusCode = statusCode;
+  err.expose = true;
   return err;
 }
 
