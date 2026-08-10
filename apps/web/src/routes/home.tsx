@@ -9,12 +9,13 @@
  */
 
 import { redirect, useNavigate, useLoaderData, type LoaderFunctionArgs } from "react-router";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import { currentUser, needsSetup } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
+import { PageTitle } from "../components/page-title";
 
 export async function homeLoader({ request }: LoaderFunctionArgs) {
   // A failed magic-link redemption redirects here with an ?error= query
@@ -40,6 +41,7 @@ export async function homeLoader({ request }: LoaderFunctionArgs) {
 
 export function HomePage() {
   const { user } = useLoaderData<typeof homeLoader>();
+  const intl = useIntl();
   const navigate = useNavigate();
 
   async function signOut() {
@@ -53,6 +55,7 @@ export function HomePage() {
       onSignOut={() => void signOut()}
       subbar={<PageSubBar title={<FormattedMessage id="home.title" defaultMessage="Home" />} />}
     >
+      <PageTitle title={intl.formatMessage({ id: "home.title", defaultMessage: "Home" })} />
       <p className="text-muted">
         <FormattedMessage
           id="home.placeholder"

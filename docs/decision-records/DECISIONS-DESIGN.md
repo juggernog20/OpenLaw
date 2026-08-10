@@ -767,6 +767,13 @@ Running the gate resolved the suspect list: onhold passes in all themes (6.9–7
 
 The adjusted values should be back-ported to `designs/final-themes.pen` and the .pen library's theme frames when those mocks next get touched.
 
+**Implementation clarification (2026-08-10, #48):** the remaining floor commitments landed as follows.
+
+- **`axe-core` scan (verification stack):** `e2e/tests/08-accessibility.spec.ts` runs `@axe-core/playwright` against the login and home pages in the browser suite. It is advisory, as decided: violations are printed to the runner output, emitted as GitHub warning annotations in CI, and attached to the Playwright report, but they do not fail the run — the e2e job gates merges, so a failing assertion would have turned the triage signal into a build gate. The scan was clean on both pages when #48 closed; anything it reports is new. Matter detail and settings join the scan when those screens exist. Starting clean took one fix: the page sub-bar sat outside every landmark, so it became a `<section>` labeled by its own h1 — it cannot move inside `<main>`, because the skip link (commitment 8) deliberately jumps past it.
+- **Reduced motion (commitment 9):** one unlayered `@media (prefers-reduced-motion: reduce)` block at the end of `styles/globals.css` forces every animation and transition to a near-zero duration (0.01ms, not 0ms, so `transitionend`/`animationend` still fire). Unlayered so it outranks any layered or utility declaration.
+- **Page titles (commitment 7):** every screen mounts `apps/web/src/components/page-title.tsx`, which renders a React-19-hoisted `<title>` as `{screen} · OpenLaw` (the "·" separator matches the GitHub-shaped brand, DES-003). The screen name is the screen's own localized title; the template itself is the ICU message `app.pageTitle`. The two-factor enrollment screen titles itself "Two-factor enrollment" to stay distinct from the challenge screen's "Two-factor authentication".
+- **Document language (commitment 7):** `<html lang="en">` was already declared in `apps/web/index.html`; the e2e spec now asserts it. When DES-013's stored locale ships server-rendering of the attribute, the assertion is the regression net.
+
 ---
 
 ## DES-012: Responsive layout primitives — container queries for content, single 768px viewport breakpoint for the mobile shell

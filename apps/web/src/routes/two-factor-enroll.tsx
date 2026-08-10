@@ -20,6 +20,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { PageTitle } from "../components/page-title";
 
 export async function enrollLoader() {
   const { data } = await authClient.getSession();
@@ -135,6 +136,13 @@ export function TwoFactorEnrollPage() {
 
   return (
     <Card>
+      {/* Distinct from the challenge screen's title (DES-011: unique per screen). */}
+      <PageTitle
+        title={intl.formatMessage({
+          id: "auth.enroll.pageTitle",
+          defaultMessage: "Two-factor enrollment",
+        })}
+      />
       <CardHeader>
         <CardTitle>
           <FormattedMessage id="auth.enroll.title" defaultMessage="Two-factor authentication" />

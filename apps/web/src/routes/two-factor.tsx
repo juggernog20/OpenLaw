@@ -17,6 +17,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { PageTitle } from "../components/page-title";
 
 export function TwoFactorPage() {
   const intl = useIntl();
@@ -62,6 +63,12 @@ export function TwoFactorPage() {
 
   return (
     <Card>
+      <PageTitle
+        title={intl.formatMessage({
+          id: "auth.twoFactor.title",
+          defaultMessage: "Two-factor authentication",
+        })}
+      />
       <CardHeader>
         <CardTitle>
           <FormattedMessage id="auth.twoFactor.title" defaultMessage="Two-factor authentication" />

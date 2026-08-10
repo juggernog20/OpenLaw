@@ -23,6 +23,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { PageTitle } from "../components/page-title";
 
 export async function loginLoader() {
   if (await currentUser()) return redirect("/");
@@ -158,9 +159,14 @@ export function LoginPage() {
     }
   }
 
+  const pageTitle = (
+    <PageTitle title={intl.formatMessage({ id: "auth.login.title", defaultMessage: "Sign in" })} />
+  );
+
   if (view === "magicSent") {
     return (
       <Card>
+        {pageTitle}
         <CardHeader>
           <CardTitle>
             <FormattedMessage id="auth.magicSent.title" defaultMessage="Check your email" />
@@ -184,6 +190,7 @@ export function LoginPage() {
 
   return (
     <Card>
+      {pageTitle}
       <CardHeader>
         <CardTitle>
           {view === "magic" ? (
