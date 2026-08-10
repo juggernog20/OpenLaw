@@ -36,8 +36,9 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arc 1, milestone 4** — the app shell and design system. M1–M3 are done: the monorepo and CI, the
-authentication chain, and the Compose stack a deployer actually runs.
+**Arc 1, milestone 5** — the settings destination. M1–M4 are done: the monorepo and CI, the
+authentication chain, the Compose stack a deployer actually runs, and the themed app shell the
+whole product renders inside.
 
 ---
 
@@ -71,7 +72,7 @@ follows.
     on a fresh runner, so "works in dev, breaks in the image" fails the build [TECH-018]
   - _Decisions:_ TECH-005, TECH-014, TECH-017, TECH-018
 
-- [ ] **M4 — App shell and design system**
+- [x] **M4 — App shell and design system**
       _Demo:_ Sign in, land on the authenticated shell, switch between the three themes, and resize to the
       mobile layout without anything breaking.
   - Nav, page chrome, the record-page activity bar, and the responsive shell
