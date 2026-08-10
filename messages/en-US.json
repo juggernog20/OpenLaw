@@ -290,11 +290,38 @@
   "role.legalTeamMember": {
     "defaultMessage": "Legal team member"
   },
+  "settings.appearance.caption": {
+    "defaultMessage": "Theme is a personal preference — it doesn't affect other users."
+  },
+  "settings.appearance.theme": {
+    "defaultMessage": "Theme"
+  },
+  "settings.group.personal": {
+    "defaultMessage": "Personal"
+  },
+  "settings.profile.placeholder": {
+    "defaultMessage": "Profile settings arrive with their own build."
+  },
+  "settings.rail.label": {
+    "defaultMessage": "Settings sections"
+  },
+  "settings.section.appearance": {
+    "defaultMessage": "Appearance"
+  },
+  "settings.section.profile": {
+    "defaultMessage": "Profile"
+  },
+  "settings.title": {
+    "defaultMessage": "Settings"
+  },
   "shell.brand": {
     "defaultMessage": "openlaw"
   },
   "shell.nav.open": {
     "defaultMessage": "Open navigation"
+  },
+  "shell.nav.primary": {
+    "defaultMessage": "Primary"
   },
   "shell.nav.title": {
     "defaultMessage": "Navigation"
@@ -305,8 +332,8 @@
   "shell.search.placeholder": {
     "defaultMessage": "Type {key} to search"
   },
-  "shell.userMenu.theme": {
-    "defaultMessage": "Theme"
+  "shell.userMenu.settings": {
+    "defaultMessage": "Settings"
   },
   "shell.userMenu.twoFactor": {
     "defaultMessage": "Two-factor authentication"

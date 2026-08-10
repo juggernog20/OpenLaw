@@ -14,6 +14,9 @@ import { HomePage, homeLoader } from "./routes/home";
 import { LinkExpiredPage } from "./routes/link-expired";
 import { LoginPage, loginLoader } from "./routes/login";
 import { SetPasswordPage } from "./routes/set-password";
+import { SettingsLayout, settingsIndexLoader, settingsLoader } from "./routes/settings";
+import { SettingsAppearancePage } from "./routes/settings-appearance";
+import { SettingsProfilePage } from "./routes/settings-profile";
 import { SetupPage, setupLoader } from "./routes/setup";
 import { TwoFactorPage } from "./routes/two-factor";
 import { TwoFactorEnrollPage, enrollLoader } from "./routes/two-factor-enroll";
@@ -37,6 +40,22 @@ export const routes: RouteObject[] = [
     element: <WelcomePage />,
     errorElement: <RouteErrorPage />,
     hydrateFallbackElement: <></>,
+  },
+  {
+    // SET-001: the one settings destination; every pane is a routable
+    // URL so later modules can deep-link into a section.
+    path: "/settings",
+    loader: settingsLoader,
+    element: <SettingsLayout />,
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <></>,
+    children: [
+      // The empty element never renders — the loader always redirects —
+      // but its absence would make the router warn on every match.
+      { index: true, loader: settingsIndexLoader, element: <></> },
+      { path: "profile", element: <SettingsProfilePage /> },
+      { path: "appearance", element: <SettingsAppearancePage /> },
+    ],
   },
   {
     path: "/auth",

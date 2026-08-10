@@ -113,6 +113,30 @@ export async function signInAs(
   await expect(page.getByRole("banner").getByRole("button", { name: displayName })).toBeVisible();
 }
 
+/**
+ * Switches the theme from its home, the Appearance pane (#62): avatar
+ * menu → Settings → theme radio. Leaves the page on /settings/appearance.
+ */
+export async function switchTheme(
+  page: Page,
+  displayName: string,
+  label: "Light" | "Warm" | "Dark",
+): Promise<void> {
+  await page.getByRole("banner").getByRole("button", { name: displayName }).click();
+  await page.getByRole("menuitem", { name: "Settings" }).click();
+  await expect(page).toHaveURL(/\/settings\/appearance$/);
+  const radio = page.getByRole("radio", { name: label });
+  if (await radio.isChecked()) return;
+  // The pane applies instantly and persists behind the paint; wait for
+  // the PATCH so a reload right after the switch cannot race it.
+  const persisted = page.waitForResponse(
+    (response) =>
+      response.url().includes("/api/v1/me/preferences") && response.request().method() === "PATCH",
+  );
+  await radio.check();
+  expect((await persisted).ok()).toBe(true);
+}
+
 /** Signs out through the shell's header user menu (#41). */
 export async function signOut(page: Page, displayName: string): Promise<void> {
   await page.getByRole("banner").getByRole("button", { name: displayName }).click();

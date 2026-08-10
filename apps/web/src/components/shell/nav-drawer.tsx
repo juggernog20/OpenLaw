@@ -50,7 +50,10 @@ export function NavDrawer() {
           <DialogPrimitive.Title className="sr-only">
             <FormattedMessage id="shell.nav.title" defaultMessage="Navigation" />
           </DialogPrimitive.Title>
-          <nav className="flex flex-col">
+          <nav
+            aria-label={intl.formatMessage({ id: "shell.nav.primary", defaultMessage: "Primary" })}
+            className="flex flex-col"
+          >
             {destinations.map((destination) => (
               <NavLink
                 key={destination.id}

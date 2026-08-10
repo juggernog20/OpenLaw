@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Theme switching end to end (#44): the user-menu switcher applies the
- * theme instantly via the root data-theme attribute, the choice
- * persists on the user record across a reload, computed chrome colors
- * follow the token layer, and pre-login screens are always Light.
+ * Theme switching end to end (#44): the Appearance-pane switcher — the
+ * theme's home since #62 — applies the theme instantly via the root
+ * data-theme attribute, the choice persists on the user record across
+ * a reload, computed chrome colors follow the token layer, and
+ * pre-login screens are always Light.
  */
 
 import { test, expect, type Page } from "@playwright/test";
-import { ADMIN, ensureAdminExists, signInAs, signOut } from "./helpers.js";
+import { ADMIN, ensureAdminExists, signInAs, signOut, switchTheme } from "./helpers.js";
 
 /** The header background per theme — bg-inverted from styles/themes/. */
 const HEADER_BG = {
@@ -16,11 +17,6 @@ const HEADER_BG = {
   dark: "rgb(1, 4, 9)", // #010409
   light: "rgb(13, 17, 23)", // #0D1117
 } as const;
-
-async function switchTheme(page: Page, label: "Light" | "Warm" | "Dark"): Promise<void> {
-  await page.getByRole("banner").getByRole("button", { name: ADMIN.displayName }).click();
-  await page.getByRole("menuitemradio", { name: label }).click();
-}
 
 const rootTheme = (page: Page) =>
   page.evaluate(() => document.documentElement.getAttribute("data-theme"));
@@ -37,7 +33,7 @@ test.describe.serial("theme switching", () => {
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
 
     // Warm: instant root attribute, token-driven computed chrome color.
-    await switchTheme(page, "Warm");
+    await switchTheme(page, ADMIN.displayName, "Warm");
     await expect.poll(() => rootTheme(page)).toBe("warm");
     expect(await headerBg(page)).toBe(HEADER_BG.warm);
 
@@ -48,7 +44,7 @@ test.describe.serial("theme switching", () => {
     expect(await headerBg(page)).toBe(HEADER_BG.warm);
 
     // And Dark, the same round trip.
-    await switchTheme(page, "Dark");
+    await switchTheme(page, ADMIN.displayName, "Dark");
     await expect.poll(() => rootTheme(page)).toBe("dark");
     expect(await headerBg(page)).toBe(HEADER_BG.dark);
 
@@ -71,7 +67,7 @@ test.describe.serial("theme switching", () => {
     // runs against a never-reset instance (TECH-018), and the theme
     // rides the user record across runs.
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
-    await switchTheme(page, "Light");
+    await switchTheme(page, ADMIN.displayName, "Light");
     await expect.poll(() => rootTheme(page)).toBe("light");
     expect(await headerBg(page)).toBe(HEADER_BG.light);
   });
