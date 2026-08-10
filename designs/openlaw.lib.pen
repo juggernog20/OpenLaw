@@ -1,5 +1,5 @@
 {
-  "version": "2.15",
+  "version": "2.17",
   "children": [
     {
       "type": "frame",
@@ -671,8 +671,292 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "hClCW",
+      "x": 1520,
+      "y": 0,
+      "name": "Theme values — DES-018 severe/neutral",
+      "gap": 24,
+      "children": [
+        {
+          "type": "frame",
+          "id": "IPcnt",
+          "name": "Severity values — Light",
+          "theme": {
+            "theme": "light"
+          },
+          "fill": "#FFFFFF",
+          "cornerRadius": 6,
+          "stroke": "#D0D7DE",
+          "strokeWidth": 1,
+          "layout": "vertical",
+          "gap": 10,
+          "padding": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "hn64O",
+              "name": "LightTitle",
+              "fill": "#656D76",
+              "content": "Light",
+              "fontFamily": "$font",
+              "fontSize": 12,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "ehxrM",
+              "name": "Severe",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "N43YV",
+                  "type": "ref",
+                  "ref": "aYSYF",
+                  "name": "SeverePill",
+                  "fill": "$status-severe-bg",
+                  "descendants": {
+                    "QL4vL": {
+                      "content": "High",
+                      "fill": "$status-severe-fg"
+                    }
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "fgc9A",
+                  "name": "SevereHex",
+                  "fill": "#656D76",
+                  "content": "#FFF1E5 / #BC4C00",
+                  "fontFamily": "$font",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "clXTP",
+              "name": "Neutral",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "MKWgv",
+                  "type": "ref",
+                  "ref": "aYSYF",
+                  "name": "NeutralPill",
+                  "descendants": {
+                    "QL4vL": {
+                      "content": "Low"
+                    }
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "ePyRt",
+                  "name": "NeutralHex",
+                  "fill": "#656D76",
+                  "content": "#EFF1F3 / #57606A",
+                  "fontFamily": "$font",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Wl8fe",
+          "name": "Severity values — Warm",
+          "theme": {
+            "theme": "warm"
+          },
+          "fill": "#FBFAF7",
+          "cornerRadius": 6,
+          "stroke": "#EAE5DC",
+          "strokeWidth": 1,
+          "layout": "vertical",
+          "gap": 10,
+          "padding": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "UtmB3",
+              "name": "WarmTitle",
+              "fill": "#6F6759",
+              "content": "Warm",
+              "fontFamily": "$font",
+              "fontSize": 12,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "j9VNy",
+              "name": "Severe",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "VQ7Fz",
+                  "type": "ref",
+                  "ref": "aYSYF",
+                  "name": "SeverePill",
+                  "fill": "$status-severe-bg",
+                  "descendants": {
+                    "QL4vL": {
+                      "content": "High",
+                      "fill": "$status-severe-fg"
+                    }
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "NeEYX",
+                  "name": "SevereHex",
+                  "fill": "#6F6759",
+                  "content": "#F3E2CC / #935425",
+                  "fontFamily": "$font",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "LLqLu",
+              "name": "Neutral",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "aIebN",
+                  "type": "ref",
+                  "ref": "aYSYF",
+                  "name": "NeutralPill",
+                  "descendants": {
+                    "QL4vL": {
+                      "content": "Low"
+                    }
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "s8OvXz",
+                  "name": "NeutralHex",
+                  "fill": "#6F6759",
+                  "content": "#EDE8DF / #6E675A",
+                  "fontFamily": "$font",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "H6frK",
+          "name": "Severity values — Dark",
+          "theme": {
+            "theme": "dark"
+          },
+          "fill": "#0D1117",
+          "cornerRadius": 6,
+          "stroke": "#30363D",
+          "strokeWidth": 1,
+          "layout": "vertical",
+          "gap": 10,
+          "padding": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "UnK1J",
+              "name": "DarkTitle",
+              "fill": "#8B949E",
+              "content": "Dark",
+              "fontFamily": "$font",
+              "fontSize": 12,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "m4FgOS",
+              "name": "Severe",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "oUI9a",
+                  "type": "ref",
+                  "ref": "aYSYF",
+                  "name": "SeverePill",
+                  "fill": "$status-severe-bg",
+                  "descendants": {
+                    "QL4vL": {
+                      "content": "High",
+                      "fill": "$status-severe-fg"
+                    }
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "luvxJ",
+                  "name": "SevereHex",
+                  "fill": "#8B949E",
+                  "content": "#3A2313 / #F0883E",
+                  "fontFamily": "$font",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "l8FL4",
+              "name": "Neutral",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "mQOK0",
+                  "type": "ref",
+                  "ref": "aYSYF",
+                  "name": "NeutralPill",
+                  "descendants": {
+                    "QL4vL": {
+                      "content": "Low"
+                    }
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "W9bUI",
+                  "name": "NeutralHex",
+                  "fill": "#8B949E",
+                  "content": "#21262D / #8B949E",
+                  "fontFamily": "$font",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
+  "themes": {
+    "theme": [
+      "light",
+      "warm",
+      "dark"
+    ]
+  },
   "variables": {
     "canvas": {
       "type": "color",
@@ -772,11 +1056,49 @@
     },
     "status-neutral-bg": {
       "type": "color",
-      "value": "#EFF1F3"
+      "value": [
+        {
+          "value": "#EFF1F3",
+          "theme": {
+            "theme": "light"
+          }
+        },
+        {
+          "value": "#EDE8DF",
+          "theme": {
+            "theme": "warm"
+          }
+        },
+        {
+          "value": "#21262D",
+          "theme": {
+            "theme": "dark"
+          }
+        }
+      ]
     },
     "status-neutral-fg": {
       "type": "color",
-      "value": "#57606A"
+      "value": [
+        {
+          "value": "#57606A",
+          "theme": {
+            "theme": "light"
+          }
+        },
+        {
+          "value": "#6E675A",
+          "theme": {
+            "theme": "warm"
+          }
+        },
+        {
+          "value": "#8B949E",
+          "theme": {
+            "theme": "dark"
+          }
+        }
+      ]
     },
     "confidential-bg": {
       "type": "color",
@@ -808,11 +1130,49 @@
     },
     "status-severe-bg": {
       "type": "color",
-      "value": "#FFF1E5"
+      "value": [
+        {
+          "value": "#FFF1E5",
+          "theme": {
+            "theme": "light"
+          }
+        },
+        {
+          "value": "#F3E2CC",
+          "theme": {
+            "theme": "warm"
+          }
+        },
+        {
+          "value": "#3A2313",
+          "theme": {
+            "theme": "dark"
+          }
+        }
+      ]
     },
     "status-severe-fg": {
       "type": "color",
-      "value": "#BC4C00"
+      "value": [
+        {
+          "value": "#BC4C00",
+          "theme": {
+            "theme": "light"
+          }
+        },
+        {
+          "value": "#935425",
+          "theme": {
+            "theme": "warm"
+          }
+        },
+        {
+          "value": "#F0883E",
+          "theme": {
+            "theme": "dark"
+          }
+        }
+      ]
     }
   },
   "fileToken": "7eaadf6a-1a6a-4239-ae4c-922d7b9451ee"

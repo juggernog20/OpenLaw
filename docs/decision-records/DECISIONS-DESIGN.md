@@ -1176,7 +1176,7 @@ Linear-style dot+text for statuses (rejected — tinted status pills are establi
 
 `status-severe-*` and `avatar-*` tokens added to the registry and every theme file. Pill components consume the ramp by value, not per-callsite choice. matters.pen and openlaw.lib.pen updated; future module mocks inherit via the library.
 
-**Implementation clarification (2026-08-08):** the ramp's `low` step requires a light-grey pill family that DES-005's set lacked (badge-count is a counter, onhold is the dark inverted pill), so `status-neutral-*` — already present in the .pen library — was added to the CSS registry as a seventh status family. The decision specifies Light values only; Warm/Dark values for `severe` and `neutral` were derived per-theme in `styles/themes/` and contrast-checked ≥ 4.5:1 (Warm's severe fg is `#935425`, darkened from the first candidate to pass). The derived values should be back-ported to the .pen library's theme frames when those mocks next get touched.
+**Implementation clarification (2026-08-08):** the ramp's `low` step requires a light-grey pill family that DES-005's set lacked (badge-count is a counter, onhold is the dark inverted pill), so `status-neutral-*` — already present in the .pen library — was added to the CSS registry as a seventh status family. The decision specifies Light values only; Warm/Dark values for `severe` and `neutral` were derived per-theme in `styles/themes/` and contrast-checked ≥ 4.5:1 (Warm's severe fg is `#935425`, darkened from the first candidate to pass). The derived values should be back-ported to the .pen library's theme frames when those mocks next get touched. **Back-ported (2026-08-10, #49):** `openlaw.lib.pen`'s `status-severe-*` / `status-neutral-*` variables now carry themed light/warm/dark values, previewed in the library's "Theme values — DES-018 severe/neutral" frames.
 
 ## DES-019: Shell chrome color variables — per-theme chrome mapping, Warm terracotta avatar (amends DES-018)
 
@@ -1212,6 +1212,8 @@ The Light column is exactly what the shell rendered before this record, so Light
 2. Search placeholder, crumb slash, and the `/` key hint stay `--text-subtle` in every theme; Dark renders `#6E7681` where its frame shows `#7D8590`, and Warm's key hint renders `#A8A294` where its frame shows `#7A7264`.
 3. The Dark sub-bar title stays `--text-primary` (`#E6EDF3`) where its frame shows `#F0F6FC`.
 4. Warm's brand chip is 32px (the shell's icon slot) where its frame draws 30px, and the brand glyph stays the 20px Lucide scale in every theme (the Warm frame shows an 18px glyph).
+5. The search placeholder is "Type / to search" in every theme, as the Light and Dark frames draw it. The Warm frame's longer "Type / to search matters, contracts, entities…" copy describes the M25 cross-module search scope, not the M4 shell. (Added during the #49 acceptance comparison.)
+6. The nav is 48px and the sub-bar 64px tall in every theme (the DES-007 contract, drawn by the Light and Dark frames). The Warm frame draws them 46px and 62px — the same 13px-label frame noise as point 1. (Added during the #49 acceptance comparison.)
 
 ### Rationale
 
