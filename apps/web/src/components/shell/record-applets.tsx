@@ -14,7 +14,7 @@
  * record at M8/M9.
  */
 
-import { useId, useState, type ReactNode } from "react";
+import { useId, useRef, useState, type ReactNode } from "react";
 import { useIntl } from "react-intl";
 import { ActivityBar } from "./activity-bar";
 import { AppletPanel } from "./applet-panel";
@@ -31,6 +31,7 @@ export function RecordApplets({
   const intl = useIntl();
   const panelId = useId();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const triggers = useRef(new Map<string, HTMLElement>());
 
   // Resolved from the current set, never from the last click: a page
   // that drops an applet drops its panel with it.
@@ -45,15 +46,20 @@ export function RecordApplets({
     setExpandedId((current) => (current === applet.id ? null : applet.id));
   }
 
+  // Closing from inside the panel (its X, or Esc) unmounts whatever
+  // holds focus, so focus moves back to the applet's bar icon —
+  // DES-010's restore-to-trigger rule, done by hand because the panel
+  // is a plain aside, not a Radix overlay.
+  function close() {
+    if (expanded) triggers.current.get(expanded.id)?.focus();
+    setExpandedId(null);
+  }
+
   return (
     <div className="@container/record relative flex min-h-0 flex-1">
       <div className="min-w-0 flex-1">{children}</div>
       {expanded ? (
-        <AppletPanel
-          id={panelId}
-          label={intl.formatMessage(expanded.label)}
-          onClose={() => setExpandedId(null)}
-        >
+        <AppletPanel id={panelId} label={intl.formatMessage(expanded.label)} onClose={close}>
           {expanded.render()}
         </AppletPanel>
       ) : null}
@@ -62,6 +68,10 @@ export function RecordApplets({
         activeId={expanded?.id ?? null}
         panelId={panelId}
         onToggle={toggle}
+        triggerRef={(id, node) => {
+          if (node) triggers.current.set(id, node);
+          else triggers.current.delete(id);
+        }}
       />
     </div>
   );

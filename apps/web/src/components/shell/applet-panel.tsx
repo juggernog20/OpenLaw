@@ -7,7 +7,8 @@
  * time, under a 44px header carrying the applet's title and a close
  * control. The M3 header also shows a count pill — that is applet
  * content (total comments, not the bar badge's unread count) and lands
- * with the chat applet, not here.
+ * with the chat applet, not here. Esc from inside the panel closes it
+ * (DES-010's overlay rule — Radix does not drive this aside).
  *
  * Docking is a container query on the record region, per DES-012. At or
  * above ~1100px of region width the panel is a flex sibling holding its
@@ -38,6 +39,13 @@ export function AppletPanel({
     <aside
       id={id}
       aria-label={label}
+      // DES-010 says Esc closes the topmost overlay. The panel is a
+      // plain aside, so Radix does not handle the key for it; a layer
+      // inside an applet that already consumed the press marks it
+      // defaultPrevented.
+      onKeyDown={(event) => {
+        if (event.key === "Escape" && !event.defaultPrevented) onClose();
+      }}
       className="absolute inset-y-0 end-(--width-activitybar) z-10 flex w-(--width-panel) shrink-0 flex-col border-s border-default bg-raised @min-[1100px]/record:static @min-[1100px]/record:z-auto"
     >
       <header className="flex h-11 shrink-0 items-center justify-between border-b border-muted px-4">

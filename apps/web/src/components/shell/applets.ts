@@ -8,7 +8,7 @@
  * list: each record page passes the set it offers, so the bar can never
  * show a tool that page does not have. Contract details opens with
  * chat (CMT-004), history (DD-017), and the settings deep-link
- * (SET-001) anchored below the divider.
+ * (SET-001) grouped below the divider.
  *
  * A slot either opens the side panel (`render`) or navigates away
  * (`href`) — the settings slot is a deep link, not a panel.
@@ -30,8 +30,11 @@ interface AppletBase {
    * the only applet that carries one.
    */
   badge?: number;
-  /** Places the slot in the group below the bar's divider. */
-  anchor?: "bottom";
+  /** Places the slot in the group below the bar's divider. The group
+   * flows right after the leading slots — it is not pinned to the
+   * bar's bottom edge (that was the superseded V12/V13 treatment; see
+   * the DES-016 implementation clarification). */
+  group?: "below-divider";
 }
 
 /** A slot that expands the side panel with its own content. */

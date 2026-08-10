@@ -38,7 +38,7 @@ const SETTINGS: Applet = {
   id: "settings",
   icon: Settings,
   label: defineMessage({ id: "test.applet.settings", defaultMessage: "Settings" }),
-  anchor: "bottom",
+  group: "below-divider",
   href: "/settings/contracts",
 };
 
@@ -121,10 +121,30 @@ describe("record applets (#47)", () => {
 
     await user.click(within(panel).getByRole("button", { name: "Close" }));
     expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "History" })).toHaveAttribute(
-      "aria-expanded",
-      "false",
-    );
+    const icon = screen.getByRole("button", { name: "History" });
+    expect(icon).toHaveAttribute("aria-expanded", "false");
+    // The X was focused and is gone — focus returns to the applet's
+    // icon per DES-010's restore-to-trigger rule.
+    expect(icon).toHaveFocus();
+  });
+
+  it("closes on Escape from inside the panel and refocuses the icon", async () => {
+    const user = userEvent.setup();
+    renderApplets();
+
+    const chat = screen.getByRole("button", { name: "Chat (3)" });
+    await user.click(chat);
+    const panel = screen.getByRole("complementary", { name: "Chat" });
+
+    // Move focus into the panel — its close control is the tab stop
+    // before the toolbar — then dismiss with the DES-010 global key.
+    await user.tab({ shift: true });
+    expect(within(panel).getByRole("button", { name: "Close" })).toHaveFocus();
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
+    expect(chat).toHaveFocus();
+    expect(chat).toHaveAttribute("aria-expanded", "false");
   });
 
   it("collapses the panel when the expanded icon is clicked again", async () => {

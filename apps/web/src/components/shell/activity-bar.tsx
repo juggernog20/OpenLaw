@@ -6,7 +6,7 @@
  * the newest mock suite and the one that draws the decided applet set:
  * a 48px strip on the record's trailing edge with 12px vertical
  * padding, 32px icon slots on an 8px gap, and a 24px divider ahead of
- * the anchored group. Everything sits on body surface tokens — the
+ * the below-divider group. Everything sits on body surface tokens — the
  * frames' fills are exactly raised / border-default / border-muted /
  * text-muted in Light values — not the DES-019 chrome group, which
  * exists for the top slab that restructures per theme.
@@ -39,6 +39,7 @@ export function ActivityBar({
   activeId,
   panelId,
   onToggle,
+  triggerRef,
 }: {
   applets: readonly Applet[];
   /** The expanded applet, or null when the panel is collapsed. */
@@ -46,10 +47,15 @@ export function ActivityBar({
   /** The panel element the icons control; only referenced while open. */
   panelId: string;
   onToggle: (applet: Applet) => void;
+  /** Receives each panel slot's control (null on unmount) — the panel
+   * owner focuses these to restore focus when the panel closes
+   * (DES-010; the panel is not a Radix overlay, so nothing restores
+   * focus for it). */
+  triggerRef?: (id: string, node: HTMLElement | null) => void;
 }) {
   const intl = useIntl();
-  const anchored = applets.filter((applet) => applet.anchor === "bottom");
-  const leading = applets.filter((applet) => applet.anchor !== "bottom");
+  const belowDivider = applets.filter((applet) => applet.group === "below-divider");
+  const leading = applets.filter((applet) => applet.group !== "below-divider");
 
   function slot(applet: Applet) {
     const active = applet.id === activeId;
@@ -66,7 +72,10 @@ export function ActivityBar({
         {/* The strip marks the slot on the bar's leading edge, so the
             control spans the bar's full width, not just the 32px slot. */}
         {active ? (
-          <span aria-hidden="true" className="absolute inset-y-0 start-0 w-[3px] bg-accent" />
+          <span
+            aria-hidden="true"
+            className="absolute inset-y-0 start-0 w-(--width-activitybar-indicator) bg-accent"
+          />
         ) : null}
         <applet.icon size={20} aria-hidden="true" />
         {/* Overhangs the glyph's trailing top corner, as in the frames. */}
@@ -88,6 +97,7 @@ export function ActivityBar({
     return applet.href === undefined ? (
       <Toolbar.Button
         key={applet.id}
+        ref={(node) => triggerRef?.(applet.id, node)}
         type="button"
         aria-label={name}
         aria-expanded={active}
@@ -111,10 +121,13 @@ export function ActivityBar({
       className="flex w-(--width-activitybar) shrink-0 flex-col items-center gap-2 border-s border-default bg-raised py-3"
     >
       {leading.map(slot)}
-      {anchored.length > 0 ? (
+      {belowDivider.length > 0 ? (
         <>
+          {/* The group flows right after the leading slots, per the
+              matters.pen frames — no mt-auto: pinning it to the bar's
+              bottom edge was the superseded V12/V13 treatment. */}
           <Toolbar.Separator className="h-px w-6 shrink-0 bg-border-muted" />
-          {anchored.map(slot)}
+          {belowDivider.map(slot)}
         </>
       ) : null}
     </Toolbar.Root>

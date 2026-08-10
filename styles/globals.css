@@ -155,6 +155,7 @@
   --height-nav: 48px;
   --height-subbar: 64px;
   --width-activitybar: 48px; /* record-page icon strip per DES-016 */
+  --width-activitybar-indicator: 3px; /* active-applet strip on the bar's leading edge (DES-016, #47) */
   --width-panel: 320px; /* expanded applet panel per DES-016 */
   --height-confidential-banner: 36px; /* per DES-009 */
 
