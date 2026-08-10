@@ -27,13 +27,13 @@ Then open `http://<host>:3000` — a fresh install lands on first-run setup, whe
 
 All configuration is environment variables in `.env`; [`.env.example`](../.env.example) documents every one. The short version:
 
-| Variable                 | Required | Meaning                                                                                                                                                  |
-| ------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `AUTH_SECRET`            | yes      | Session signing + at-rest crypto for 2FA material. Changing it signs everyone out and breaks enrolled 2FA.                                               |
-| `DATABASE_URL`           | no       | Unset = the bundled Postgres. Set for external/managed Postgres (TECH-004 — equally supported).                                                          |
-| `BASE_URL`               | in prod  | The public origin (e.g. `https://legal.example.com`). Emailed links and OIDC callbacks point here, and the auth layer checks request origins against it. |
-| `SMTP_URL` / `SMTP_FROM` | no       | Outbound email. Unset = email flows report "unconfigured" instead of sending.                                                                            |
-| `PORT`                   | no       | The published host port (the container always listens on 3000 internally).                                                                               |
+| Variable                 | Required | Meaning                                                                                                                                                                                                                           |
+| ------------------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AUTH_SECRET`            | yes      | Session signing + at-rest crypto for 2FA material. Changing it signs everyone out and breaks enrolled 2FA.                                                                                                                        |
+| `DATABASE_URL`           | no       | Unset = the bundled Postgres. Set for external/managed Postgres (TECH-004 — equally supported).                                                                                                                                   |
+| `BASE_URL`               | in prod  | The public origin (e.g. `https://legal.example.com`). Emailed links and OIDC callbacks point here, and the auth layer checks request origins against it.                                                                          |
+| `SMTP_URL` / `SMTP_FROM` | no       | Outbound email; setting `SMTP_URL` pins SMTP to the environment, overriding anything saved in the app (see [Email](#email)). Unset = configurable in the app; with neither, email flows report "unconfigured" instead of sending. |
+| `PORT`                   | no       | The published host port (the container always listens on 3000 internally).                                                                                                                                                        |
 
 ## Reverse proxy contract
 
@@ -88,7 +88,14 @@ Set `DATABASE_URL` in `.env` to any reachable PostgreSQL 16+ and the app uses it
 
 ## Email
 
-OpenLaw sends through whatever SMTP relay you already run (TECH-011): set `SMTP_URL` and `SMTP_FROM`. With them unset, email-dependent flows (invites, magic links) tell the user email is unconfigured rather than failing silently.
+OpenLaw sends through whatever SMTP relay you already run (TECH-011). There are two ways to configure it:
+
+- **In the app**: an Administrator enters the relay URL and From address in the Welcome to OpenLaw wizard's email step. Saves take effect on the next send — no restart.
+- **In the environment**: set `SMTP_URL` and `SMTP_FROM` in `.env`.
+
+**Precedence: the environment always wins over app configuration.** If `SMTP_URL` is set, the instance is pinned to it — values saved in the app are ignored entirely, and the wizard shows the environment configuration read-only instead of accepting settings that would never apply. Use env pinning when your deployment tooling is the source of truth for configuration.
+
+With neither configured, email-dependent flows (invites, magic links) tell the user email is unconfigured rather than failing silently.
 
 To _test_ email locally without a relay, use the development overlay — it adds [Mailpit](https://mailpit.axllent.org/) and points the app at it:
 

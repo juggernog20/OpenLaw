@@ -279,6 +279,10 @@ SMTP (Nodemailer-class) as the universal default — every org's existing relay 
 
 API providers only: forces a SaaS mail account on regulated self-hosters.
 
+### Addendum (2026-08-10) — database-configurable SMTP; environment wins (#37)
+
+The SET-004 wizard surface this decision named (deferred at M2, where env vars carried SMTP alone) shipped: the wizard's email step saves a relay URL + from-address to the `org_settings` singleton, mirroring the `SMTP_URL`/`SMTP_FROM` shape — one mental model, two carriers. The mailer is resolved at send time, env-else-database (the TECH-014 read-on-every-decision pattern), so a save applies to the very next send with no restart. **Precedence: environment wins.** A set `SMTP_URL` pins the instance — database values are ignored entirely and saves are refused. This is a safety property, not a convenience: the dev/E2E overlay pins Mailpit via env, and a database-saved real relay must never beat it, or test mail leaks to real inboxes. The relay URL is write-only through the API (it embeds the credential) and stored plaintext for v1 — at-rest encryption is a flagged follow-up shared with the TECH-008 SSO client secret.
+
 ## TECH-012: AI providers — three protocol adapters, provider presets, custom option
 
 - **Status:** Accepted

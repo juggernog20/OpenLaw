@@ -5,7 +5,8 @@
  * itself is a web flow built on the auth management routes; these two
  * routes carry only what it cannot learn elsewhere — whether onboarding
  * has been completed (org_settings) and whether outbound email is wired
- * (deployment env, TECH-011).
+ * (TECH-011: env-pinned or saved through the wizard, whatever the
+ * resolved source is).
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -17,7 +18,10 @@ import { problemResponse } from "../../lib/problem.js";
 
 const StatusSchema = z.object({
   completed: z.boolean(),
-  /** Whether SMTP is wired (TECH-011); the wizard's email step shows it. */
+  /**
+   * Whether the resolved mailer is configured (TECH-011), whatever the
+   * source — environment or app; the wizard's email step shows it.
+   */
   emailConfigured: z.boolean(),
 });
 
@@ -35,9 +39,10 @@ export const onboardingRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async () => {
       const settings = await getOrgSettings(app.db);
+      const { mailer } = await app.resolveMailer();
       return {
         completed: settings.onboardingCompletedAt !== null,
-        emailConfigured: app.mailer.configured,
+        emailConfigured: mailer.configured,
       };
     },
   );
@@ -67,7 +72,7 @@ export const onboardingRoutes: FastifyPluginAsyncZod = async (app) => {
           .set({ onboardingCompletedAt: new Date() })
           .where(isNull(orgSettings.onboardingCompletedAt));
       }
-      return { completed: true, emailConfigured: app.mailer.configured };
+      return { completed: true, emailConfigured: (await app.resolveMailer()).mailer.configured };
     },
   );
 };

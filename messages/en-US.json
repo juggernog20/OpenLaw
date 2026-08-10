@@ -377,14 +377,62 @@
   "welcome.continue": {
     "defaultMessage": "Continue"
   },
-  "welcome.email.configured": {
-    "defaultMessage": "Outbound email is configured. Invites and magic links will be delivered."
+  "welcome.email.app": {
+    "defaultMessage": "Outbound email is set in the app. Mail is sent from {from}."
   },
-  "welcome.email.hint": {
-    "defaultMessage": "Email settings live in the deployment environment, not in the app — see the deployment guide."
+  "welcome.email.clear": {
+    "defaultMessage": "Clear relay"
   },
-  "welcome.email.unconfigured": {
-    "defaultMessage": "Outbound email is not configured. Invites and magic links cannot be delivered until SMTP_URL and SMTP_FROM are set in the deployment environment."
+  "welcome.email.cleared": {
+    "defaultMessage": "Relay cleared. This instance can no longer send email."
+  },
+  "welcome.email.env": {
+    "defaultMessage": "Outbound email is set by the deployment environment. Mail is sent from {from}."
+  },
+  "welcome.email.env.hint": {
+    "defaultMessage": "Settings saved here would never apply — the environment always wins. To change the relay, change SMTP_URL and SMTP_FROM in the deployment environment (see the deployment guide)."
+  },
+  "welcome.email.env.incomplete": {
+    "defaultMessage": "The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent. Set SMTP_FROM in the environment."
+  },
+  "welcome.email.error.clear": {
+    "defaultMessage": "The relay could not be cleared."
+  },
+  "welcome.email.error.save": {
+    "defaultMessage": "The relay could not be saved."
+  },
+  "welcome.email.error.test": {
+    "defaultMessage": "The test email could not be sent."
+  },
+  "welcome.email.field.from": {
+    "defaultMessage": "From address"
+  },
+  "welcome.email.field.url": {
+    "defaultMessage": "SMTP relay URL"
+  },
+  "welcome.email.field.url.hint": {
+    "defaultMessage": "Starts with smtp:// or smtps://; credentials go in the URL. It is stored, never shown again."
+  },
+  "welcome.email.replace": {
+    "defaultMessage": "Replace relay"
+  },
+  "welcome.email.replace.cancel": {
+    "defaultMessage": "Keep current relay"
+  },
+  "welcome.email.save": {
+    "defaultMessage": "Save relay"
+  },
+  "welcome.email.saved": {
+    "defaultMessage": "Relay saved. The next email this instance sends will use it."
+  },
+  "welcome.email.test": {
+    "defaultMessage": "Send test email"
+  },
+  "welcome.email.testSent": {
+    "defaultMessage": "Test email sent to {email}. Check your inbox."
+  },
+  "welcome.email.unset": {
+    "defaultMessage": "Outbound email is not set up. Invites and sign-in links cannot be delivered until you save an SMTP relay."
   },
   "welcome.error.complete": {
     "defaultMessage": "Onboarding could not be marked finished. Try again."

@@ -3,10 +3,11 @@
 /**
  * "Welcome to OpenLaw" — the SET-004 first-run onboarding wizard,
  * scoped to the steps whose features exist (issue #34): authentication
- * mode, the DD-010 portal (magic-link toggle + domain allowlist), email
- * status (TECH-011: SMTP is env-carried, so this step only reports), and
- * invites. Every step is skippable; finishing — or skipping out — marks
- * onboarding complete, and a completed wizard never shows again.
+ * mode, the DD-010 portal (magic-link toggle + domain allowlist), SMTP
+ * setup (#37: save a relay in the app unless the environment pins one —
+ * env always wins), and invites. Every step is skippable; finishing —
+ * or skipping out — marks onboarding complete, and a completed wizard
+ * never shows again.
  */
 
 import { useState, type FormEvent, type ReactNode } from "react";
@@ -34,17 +35,19 @@ export async function welcomeLoader() {
   const onboarding = await api.GET("/api/v1/onboarding");
   if (!onboarding.data) throw new Error("The onboarding state could not be read.");
   if (onboarding.data.completed) return redirect("/");
-  const [methods, domains] = await Promise.all([
+  const [methods, domains, email] = await Promise.all([
     api.GET("/api/v1/auth/methods"),
     api.GET("/api/v1/auth/allowed-domains"),
+    api.GET("/api/v1/email-settings"),
   ]);
-  if (!methods.data || !domains.data) {
+  if (!methods.data || !domains.data || !email.data) {
     throw new Error("The onboarding state could not be read.");
   }
   return {
     emailConfigured: onboarding.data.emailConfigured,
     methods: methods.data,
     domains: domains.data.domains,
+    emailSettings: email.data,
   };
 }
 
@@ -99,6 +102,15 @@ export function WelcomePage() {
   const [domains, setDomains] = useState<string[]>(loaded.domains);
   const [domainInput, setDomainInput] = useState("");
 
+  // Email step (#37): the resolved SMTP state drives which of the three
+  // faces shows — set by environment (read-only), set in the app, or a
+  // setup form. Saves update it in place, so the step and the invites
+  // warning track what the instance can actually deliver.
+  const [emailState, setEmailState] = useState(loaded.emailSettings);
+  const [emailConfigured, setEmailConfigured] = useState(loaded.emailConfigured);
+  const [replacingRelay, setReplacingRelay] = useState(false);
+  const [emailNotice, setEmailNotice] = useState<string | null>(null);
+
   // Invites step.
   const [inviteRole, setInviteRole] = useState<InviteRole>("legal_team_member");
   const [invited, setInvited] = useState<string[]>([]);
@@ -107,6 +119,7 @@ export function WelcomePage() {
 
   function goTo(next: Step) {
     setError(null);
+    setEmailNotice(null);
     setStep(next);
   }
 
@@ -254,6 +267,116 @@ export function WelcomePage() {
         loaded.methods.magicLinkEnabled = toggled.data.magicLinkEnabled;
       }
       goTo("email");
+    } catch {
+      setError(networkError(intl));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveEmailSettings(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setBusy(true);
+    setError(null);
+    setEmailNotice(null);
+    try {
+      const { data, error: problem } = await api.PUT("/api/v1/email-settings", {
+        body: {
+          smtpUrl: String(form.get("smtpUrl") ?? ""),
+          smtpFrom: String(form.get("smtpFrom") ?? ""),
+        },
+      });
+      if (data) {
+        setEmailState(data);
+        setEmailConfigured(data.source !== "unset");
+        setReplacingRelay(false);
+        setEmailNotice(
+          intl.formatMessage({
+            id: "welcome.email.saved",
+            defaultMessage: "Relay saved. The next email this instance sends will use it.",
+          }),
+        );
+        return;
+      }
+      setError(
+        problemDetail(
+          problem,
+          intl.formatMessage({
+            id: "welcome.email.error.save",
+            defaultMessage: "The relay could not be saved.",
+          }),
+        ),
+      );
+    } catch {
+      setError(networkError(intl));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function clearEmailSettings() {
+    setBusy(true);
+    setError(null);
+    setEmailNotice(null);
+    try {
+      const { data, error: problem } = await api.PUT("/api/v1/email-settings", {
+        body: { smtpUrl: null, smtpFrom: null },
+      });
+      if (data) {
+        setEmailState(data);
+        setEmailConfigured(data.source !== "unset");
+        setEmailNotice(
+          intl.formatMessage({
+            id: "welcome.email.cleared",
+            defaultMessage: "Relay cleared. This instance can no longer send email.",
+          }),
+        );
+        return;
+      }
+      setError(
+        problemDetail(
+          problem,
+          intl.formatMessage({
+            id: "welcome.email.error.clear",
+            defaultMessage: "The relay could not be cleared.",
+          }),
+        ),
+      );
+    } catch {
+      setError(networkError(intl));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function sendTestEmail() {
+    setBusy(true);
+    setError(null);
+    setEmailNotice(null);
+    try {
+      const { data, error: problem } = await api.POST("/api/v1/email-settings/test");
+      if (data) {
+        setEmailNotice(
+          intl.formatMessage(
+            {
+              id: "welcome.email.testSent",
+              defaultMessage: "Test email sent to {email}. Check your inbox.",
+            },
+            { email: data.to },
+          ),
+        );
+        return;
+      }
+      setError(
+        problemDetail(
+          problem,
+          intl.formatMessage({
+            id: "welcome.email.error.test",
+            defaultMessage: "The test email could not be sent.",
+          }),
+        ),
+      );
     } catch {
       setError(networkError(intl));
     } finally {
@@ -576,33 +699,159 @@ export function WelcomePage() {
 
               {step === "email" && (
                 <>
-                  {loaded.emailConfigured ? (
-                    <Alert variant="success">
-                      <FormattedMessage
-                        id="welcome.email.configured"
-                        defaultMessage="Outbound email is configured. Invites and magic links will be delivered."
-                      />
-                    </Alert>
-                  ) : (
-                    <Alert variant="warning">
-                      <FormattedMessage
-                        id="welcome.email.unconfigured"
-                        defaultMessage="Outbound email is not configured. Invites and magic links cannot be delivered until SMTP_URL and SMTP_FROM are set in the deployment environment."
-                      />
-                    </Alert>
+                  {emailNotice && <Alert variant="success">{emailNotice}</Alert>}
+
+                  {emailState.source === "env" && (
+                    <>
+                      {emailState.fromAddress ? (
+                        <Alert variant="success">
+                          <FormattedMessage
+                            id="welcome.email.env"
+                            defaultMessage="Outbound email is set by the deployment environment. Mail is sent from {from}."
+                            values={{ from: emailState.fromAddress }}
+                          />
+                        </Alert>
+                      ) : (
+                        <Alert variant="warning">
+                          <FormattedMessage
+                            id="welcome.email.env.incomplete"
+                            defaultMessage="The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent. Set SMTP_FROM in the environment."
+                          />
+                        </Alert>
+                      )}
+                      <p className="text-md text-muted">
+                        <FormattedMessage
+                          id="welcome.email.env.hint"
+                          defaultMessage="Settings saved here would never apply — the environment always wins. To change the relay, change SMTP_URL and SMTP_FROM in the deployment environment (see the deployment guide)."
+                        />
+                      </p>
+                    </>
                   )}
-                  <p className="text-md text-muted">
-                    <FormattedMessage
-                      id="welcome.email.hint"
-                      defaultMessage="Email settings live in the deployment environment, not in the app — see the deployment guide."
-                    />
-                  </p>
+
+                  {emailState.source === "app" && !replacingRelay && (
+                    <>
+                      <Alert variant="success">
+                        <FormattedMessage
+                          id="welcome.email.app"
+                          defaultMessage="Outbound email is set in the app. Mail is sent from {from}."
+                          values={{ from: emailState.fromAddress }}
+                        />
+                      </Alert>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          disabled={busy}
+                          onClick={() => void sendTestEmail()}
+                        >
+                          <FormattedMessage
+                            id="welcome.email.test"
+                            defaultMessage="Send test email"
+                          />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          disabled={busy}
+                          onClick={() => {
+                            setEmailNotice(null);
+                            setReplacingRelay(true);
+                          }}
+                        >
+                          <FormattedMessage
+                            id="welcome.email.replace"
+                            defaultMessage="Replace relay"
+                          />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          disabled={busy}
+                          onClick={() => void clearEmailSettings()}
+                        >
+                          <FormattedMessage id="welcome.email.clear" defaultMessage="Clear relay" />
+                        </Button>
+                      </div>
+                    </>
+                  )}
+
+                  {(emailState.source === "unset" || replacingRelay) && (
+                    <>
+                      {emailState.source === "unset" && (
+                        <Alert variant="warning">
+                          <FormattedMessage
+                            id="welcome.email.unset"
+                            defaultMessage="Outbound email is not set up. Invites and sign-in links cannot be delivered until you save an SMTP relay."
+                          />
+                        </Alert>
+                      )}
+                      <form
+                        className="flex flex-col gap-3"
+                        onSubmit={(e) => void saveEmailSettings(e)}
+                      >
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="smtpUrl">
+                            <FormattedMessage
+                              id="welcome.email.field.url"
+                              defaultMessage="SMTP relay URL"
+                            />
+                          </Label>
+                          <Input
+                            id="smtpUrl"
+                            name="smtpUrl"
+                            autoComplete="off"
+                            required
+                            placeholder="smtp://user:password@mail.example.com:587"
+                          />
+                          <p className="text-sm text-muted">
+                            <FormattedMessage
+                              id="welcome.email.field.url.hint"
+                              defaultMessage="Starts with smtp:// or smtps://; credentials go in the URL. It is stored, never shown again."
+                            />
+                          </p>
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="smtpFrom">
+                            <FormattedMessage
+                              id="welcome.email.field.from"
+                              defaultMessage="From address"
+                            />
+                          </Label>
+                          <Input
+                            id="smtpFrom"
+                            name="smtpFrom"
+                            autoComplete="off"
+                            required
+                            placeholder="OpenLaw <openlaw@example.com>"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button type="submit" variant="secondary" disabled={busy}>
+                            <FormattedMessage id="welcome.email.save" defaultMessage="Save relay" />
+                          </Button>
+                          {replacingRelay && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              disabled={busy}
+                              onClick={() => setReplacingRelay(false)}
+                            >
+                              <FormattedMessage
+                                id="welcome.email.replace.cancel"
+                                defaultMessage="Keep current relay"
+                              />
+                            </Button>
+                          )}
+                        </div>
+                      </form>
+                    </>
+                  )}
                 </>
               )}
 
               {step === "invites" && (
                 <>
-                  {!loaded.emailConfigured && (
+                  {!emailConfigured && (
                     <Alert variant="warning">
                       <FormattedMessage
                         id="welcome.invites.noEmail"

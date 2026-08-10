@@ -15,6 +15,7 @@ import { createDb } from "@openlaw/db";
 import { buildApp } from "./app.js";
 import {
   CapturingMailer,
+  fixedMailerResolver,
   TEST_AUTH_CONFIG,
   startHarness,
   type TestHarness,
@@ -38,7 +39,12 @@ describe("SPA serving", () => {
 
     // pg pools connect lazily; these suites never touch the database.
     db = createDb("postgresql://unused:unused@localhost:5432/unused");
-    app = await buildApp({ db, config: TEST_AUTH_CONFIG, mailer: new CapturingMailer(), webDist });
+    app = await buildApp({
+      db,
+      config: TEST_AUTH_CONFIG,
+      resolveMailer: fixedMailerResolver(new CapturingMailer()),
+      webDist,
+    });
     await app.ready();
   });
 
@@ -122,7 +128,11 @@ describe("readiness", () => {
     beforeAll(async () => {
       // A port nothing listens on: connection attempts fail fast.
       db = createDb("postgresql://unused:unused@127.0.0.1:59999/unused");
-      app = await buildApp({ db, config: TEST_AUTH_CONFIG, mailer: new CapturingMailer() });
+      app = await buildApp({
+        db,
+        config: TEST_AUTH_CONFIG,
+        resolveMailer: fixedMailerResolver(new CapturingMailer()),
+      });
       await app.ready();
     });
 

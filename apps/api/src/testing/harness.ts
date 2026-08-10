@@ -7,10 +7,15 @@
  */
 
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
-import { createDb, runMigrations, type Db } from "@openlaw/db";
+import { createDb, orgSettings, runMigrations, type Db } from "@openlaw/db";
 import { buildApp } from "../app.js";
 import type { AuthConfig } from "../auth/instance.js";
-import type { Mailer, MailMessage } from "../lib/mailer.js";
+import {
+  createUnconfiguredMailer,
+  type Mailer,
+  type MailerResolver,
+  type MailMessage,
+} from "../lib/mailer.js";
 
 /** Shared by every test app so session cookies verify across instances. */
 export const TEST_AUTH_CONFIG: AuthConfig = {
@@ -94,10 +99,32 @@ export class CapturingMailer implements Mailer {
   }
 }
 
+/** The from-address the harness's env-pinned default reports. */
+export const TEST_SMTP_ENV = {
+  url: "smtp://capture.invalid:1025",
+  from: "OpenLaw test <openlaw@example.com>",
+} as const;
+
+/**
+ * Fixed env-pinned resolver over one mailer — the #37 test double for
+ * suites that call buildApp directly instead of through startHarness.
+ */
+export function fixedMailerResolver(mailer: Mailer): MailerResolver {
+  return () => Promise.resolve({ source: "env", from: TEST_SMTP_ENV.from, mailer });
+}
+
 export interface TestHarness {
   app: Awaited<ReturnType<typeof buildApp>>;
   db: Db;
   mailer: CapturingMailer;
+  /**
+   * The env half of the injected mailer-resolver double (#37). Non-null
+   * acts out an env-pinned deployment — the default, since most suites
+   * just need mail to flow into the capturing mailer. Set to null to act
+   * out an operator with no SMTP env: resolution then reads org_settings
+   * like production, with sends still captured when configured.
+   */
+  smtpEnv: { url: string; from: string } | null;
   stop: () => Promise<void>;
 }
 
@@ -111,12 +138,33 @@ export async function startHarness(): Promise<TestHarness> {
     const db = createDb(container.getConnectionUri());
     await runMigrations(db);
     const mailer = new CapturingMailer();
-    const app = await buildApp({ db, config: TEST_AUTH_CONFIG, mailer });
+    // The TECH-011 double moved up one level (#37): the same env-else-
+    // database resolution production runs, with the SMTP transport
+    // swapped for the capturing mailer. `smtpEnv` below is the mutable
+    // stand-in for the process environment.
+    let smtpEnv: TestHarness["smtpEnv"] = TEST_SMTP_ENV;
+    const resolveMailer: MailerResolver = async () => {
+      if (smtpEnv) return { source: "env", from: smtpEnv.from, mailer };
+      const [row] = await db
+        .select({ smtpUrl: orgSettings.smtpUrl, smtpFrom: orgSettings.smtpFrom })
+        .from(orgSettings)
+        .limit(1);
+      return row?.smtpUrl && row.smtpFrom
+        ? { source: "app", from: row.smtpFrom, mailer }
+        : { source: "unset", from: null, mailer: createUnconfiguredMailer() };
+    };
+    const app = await buildApp({ db, config: TEST_AUTH_CONFIG, resolveMailer });
     await app.ready();
     return {
       app,
       db,
       mailer,
+      get smtpEnv() {
+        return smtpEnv;
+      },
+      set smtpEnv(value) {
+        smtpEnv = value;
+      },
       stop: async () => {
         try {
           await app.close();
