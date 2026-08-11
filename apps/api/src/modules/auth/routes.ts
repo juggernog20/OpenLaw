@@ -25,6 +25,7 @@ import {
 } from "@openlaw/db";
 import { provisionUser, withTrustedIssuerOrigin } from "../../auth/instance.js";
 import { requireAuth, requireRole, userColumns } from "../../auth/guards.js";
+import { recordActivity } from "../../lib/activity.js";
 import { getOrgSettings, isEmailDomainAllowed } from "../../lib/org-settings.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
@@ -108,14 +109,37 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
-      const [user] = await app.db
-        .update(users)
-        .set({ theme: request.body.theme, updatedAt: new Date() })
-        .where(eq(users.id, request.user.id))
-        .returning(userColumns);
-      // requireAuth just loaded this user, so the row exists; a vanished
-      // row here means the account was deleted mid-request.
-      if (!user) throw httpError(401, "Authentication required.");
+      // Mutation and audit entry commit together (SET-003/DD-017): every
+      // settings change is recorded, or it does not land. The old value
+      // is lock-read inside the transaction — the guard's earlier read
+      // could be stale under a concurrent PATCH.
+      const user = await app.db.transaction(async (tx) => {
+        const [current] = await tx
+          .select({ theme: users.theme })
+          .from(users)
+          .where(eq(users.id, request.user.id))
+          .for("update");
+        // requireAuth just loaded this user, so the row exists; a vanished
+        // row here means the account was deleted mid-request.
+        if (!current) throw httpError(401, "Authentication required.");
+        const [row] = await tx
+          .update(users)
+          .set({ theme: request.body.theme, updatedAt: new Date() })
+          .where(eq(users.id, request.user.id))
+          .returning(userColumns);
+        if (!row) throw httpError(401, "Authentication required.");
+        if (row.theme !== current.theme) {
+          await recordActivity(tx, {
+            entityType: "user",
+            entityId: row.id,
+            actorId: row.id,
+            action: "user.theme_changed",
+            visibility: "admin_only",
+            payload: { field: "theme", old: current.theme, new: row.theme },
+          });
+        }
+        return row;
+      });
       return { user };
     },
   );

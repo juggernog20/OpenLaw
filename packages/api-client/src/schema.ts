@@ -228,6 +228,24 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/org/general": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The organization's identity (SET-001 General pane) */
+    get: operations["getOrgGeneral"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Update the organization's identity; applies immediately (SET-003) and appends one audit entry per changed field */
+    patch: operations["updateOrgGeneral"];
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -888,6 +906,90 @@ export interface operations {
           "application/json": {
             completed: boolean;
             emailConfigured: boolean;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getOrgGeneral: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            general: {
+              name: string;
+              logo: string | null;
+              /** @enum {string} */
+              defaultLocale: "en-US";
+              defaultTimezone: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateOrgGeneral: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name?: string;
+          logo?: string | null;
+          /** @enum {string} */
+          defaultLocale?: "en-US";
+          defaultTimezone?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            general: {
+              name: string;
+              logo: string | null;
+              /** @enum {string} */
+              defaultLocale: "en-US";
+              defaultTimezone: string;
+            };
           };
         };
       };

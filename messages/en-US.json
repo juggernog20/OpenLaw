@@ -296,6 +296,45 @@
   "settings.appearance.theme": {
     "defaultMessage": "Theme"
   },
+  "settings.field.error": {
+    "defaultMessage": "The change could not be saved. Try again."
+  },
+  "settings.field.saved": {
+    "defaultMessage": "Saved"
+  },
+  "settings.field.saving": {
+    "defaultMessage": "Saving…"
+  },
+  "settings.general.locale": {
+    "defaultMessage": "Default locale"
+  },
+  "settings.general.locale.enUS": {
+    "defaultMessage": "English (United States)"
+  },
+  "settings.general.logo": {
+    "defaultMessage": "Logo"
+  },
+  "settings.general.name": {
+    "defaultMessage": "Organization name"
+  },
+  "settings.general.organization": {
+    "defaultMessage": "Organization"
+  },
+  "settings.general.timezone": {
+    "defaultMessage": "Default timezone"
+  },
+  "settings.general.timezone.hint": {
+    "defaultMessage": "Used for the daily digest and date displays until a user signs in."
+  },
+  "settings.general.upload": {
+    "defaultMessage": "Upload"
+  },
+  "settings.general.uploadLogo": {
+    "defaultMessage": "Upload a logo"
+  },
+  "settings.group.organization": {
+    "defaultMessage": "Organization"
+  },
   "settings.group.personal": {
     "defaultMessage": "Personal"
   },
@@ -307,6 +346,9 @@
   },
   "settings.section.appearance": {
     "defaultMessage": "Appearance"
+  },
+  "settings.section.general": {
+    "defaultMessage": "General"
   },
   "settings.section.profile": {
     "defaultMessage": "Profile"

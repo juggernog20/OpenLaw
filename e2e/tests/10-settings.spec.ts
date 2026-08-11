@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The settings destination (#62): reached from the avatar menu, the
- * rail carries the Personal group only, and the Appearance pane is the
- * theme's home — a pick applies instantly and persists on the user
- * record across a reload. Deeper theme mechanics (chrome colors,
- * pre-login Light) stay in 06; this spec proves the destination.
+ * The settings destination (#62, #63): reached from the avatar menu,
+ * and the Appearance pane is the theme's home — a pick applies
+ * instantly and persists on the user record across a reload. The
+ * Administrator's rail also carries the Organization group (SET-002),
+ * whose General pane commits org identity per field (DES-017). Deeper
+ * theme mechanics (chrome colors, pre-login Light) stay in 06; this
+ * spec proves the destination.
  */
 
 import { test, expect, type Page } from "@playwright/test";
@@ -52,14 +54,16 @@ test.describe.serial("the settings destination", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Settings" })).toBeVisible();
     await expect(page).toHaveTitle("Appearance · OpenLaw");
 
-    // The rail: Personal group only — no Organization entries yet.
+    // The rail: the Personal group, and — for the Administrator — the
+    // Organization group with its one shipped pane (#63).
     const rail = page.getByRole("navigation", { name: "Settings sections" });
     await expect(rail.getByRole("link", { name: "Profile" })).toBeVisible();
     await expect(rail.getByRole("link", { name: "Appearance" })).toHaveAttribute(
       "aria-current",
       "page",
     );
-    await expect(rail.getByText("Organization")).toHaveCount(0);
+    await expect(rail.getByText("Organization")).toBeVisible();
+    await expect(rail.getByRole("link", { name: "General" })).toBeVisible();
 
     // Picking Warm applies the moment it is chosen — no save ceremony.
     // Await the preference PATCH too, so the reload below cannot race
@@ -83,5 +87,30 @@ test.describe.serial("the settings destination", () => {
     await rail.getByRole("link", { name: "Profile" }).click();
     await expect(page).toHaveURL(/\/settings\/profile$/);
     await expect(page).toHaveTitle("Profile · OpenLaw");
+  });
+
+  test("the General pane commits an org name edit on blur and it survives a reload", async ({
+    page,
+  }) => {
+    await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+    await page.goto("/settings/general");
+    await expect(page).toHaveTitle("General · OpenLaw");
+
+    // Per-run unique (TECH-018 never-reset instance): a repeated name
+    // would be a no-op commit, and no PATCH would fire to wait on.
+    const name = `Acme QA ${Date.now()}`;
+    const field = page.getByLabel("Organization name");
+    await field.fill(name);
+    const persisted = page.waitForResponse(
+      (response) =>
+        response.url().includes("/api/v1/org/general") && response.request().method() === "PATCH",
+    );
+    // Blur commits the field (DES-017) — no Save button exists to click.
+    await field.blur();
+    expect((await persisted).ok()).toBe(true);
+    await expect(page.getByText("Saved")).toBeVisible();
+
+    await page.reload();
+    await expect(page.getByLabel("Organization name")).toHaveValue(name);
   });
 });
