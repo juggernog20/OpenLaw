@@ -37,7 +37,21 @@ export const schema = {
 
 // Query operators re-exported so consumers use this package's drizzle-orm
 // instance — a second copy (peer-variant split) makes SQL types incompatible.
-export { and, asc, count, desc, eq, inArray, isNull, lt, gt, ne, or, sql } from "drizzle-orm";
+export {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  gt,
+  ne,
+  or,
+  sql,
+} from "drizzle-orm";
 
 export type Db = NodePgDatabase<typeof schema> & { $client: pg.Pool };
 

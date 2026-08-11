@@ -24,6 +24,7 @@ import {
   eq,
   fields,
   FIELD_TYPES,
+  isNotNull,
   isNull,
   type ContractType,
   type ContractTypeField,
@@ -289,6 +290,34 @@ export const attachedFieldsRoutes: FastifyPluginAsyncZod = async (app) => {
             )
             .returning();
           reordered.push(toRow(updated!, current.field));
+        }
+        // Attachments whose fields are archived are hidden, not gone —
+        // renumber them behind the new live order so their old numbers
+        // can't collide with it, and a restored field rejoins its
+        // attachments at the end of the list (the DES-020 restore
+        // position), never the front.
+        const hidden = await tx
+          .select({
+            fieldId: contractTypeFields.fieldId,
+            displayOrder: contractTypeFields.displayOrder,
+          })
+          .from(contractTypeFields)
+          .innerJoin(fields, eq(contractTypeFields.fieldId, fields.id))
+          .where(and(eq(contractTypeFields.contractTypeId, type.id), isNotNull(fields.archivedAt)))
+          .orderBy(asc(contractTypeFields.displayOrder), asc(contractTypeFields.createdAt))
+          .for("update", { of: contractTypeFields });
+        for (const [index, row] of hidden.entries()) {
+          const displayOrder = fieldIds.length + index + 1;
+          if (row.displayOrder === displayOrder) continue;
+          await tx
+            .update(contractTypeFields)
+            .set({ displayOrder })
+            .where(
+              and(
+                eq(contractTypeFields.contractTypeId, type.id),
+                eq(contractTypeFields.fieldId, row.fieldId),
+              ),
+            );
         }
         await recordActivity(tx, {
           entityType: "system",

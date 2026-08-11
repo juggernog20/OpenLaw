@@ -447,6 +447,63 @@ describe("per-type reordering", () => {
   });
 });
 
+describe("attachments whose field is archived", () => {
+  it("hides them, renumbers them behind a reorder, and restores them to the end", async () => {
+    const employment = await typeBySlug("employment");
+    const mk = async (displayName: string) => {
+      const res = await harness.app.inject({
+        method: "POST",
+        url: "/api/v1/fields",
+        cookies: adminCookies,
+        payload: { displayName, moduleScope: "contract", fieldType: "text", fieldTag: "legal" },
+      });
+      expect(res.statusCode, res.body).toBe(201);
+      return res.json().field.id as string;
+    };
+    // Attached first, so its display order sits ahead of the others.
+    const early = await mk("Early bird");
+    const second = await mk("Second");
+    const third = await mk("Third");
+    for (const fieldId of [early, second, third]) {
+      const res = await attach(employment.id, { fieldId });
+      expect(res.statusCode, res.body).toBe(201);
+    }
+
+    // Archiving the field hides its attachment — but detaches nothing.
+    const archived = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/fields/${early}/archive`,
+      cookies: adminCookies,
+    });
+    expect(archived.statusCode, archived.body).toBe(200);
+    expect((await listAttached(employment.id)).map((row) => row.slug)).toEqual(["second", "third"]);
+
+    // Reordering the live rows renumbers the hidden attachment behind
+    // them, so its old order can't collide with the new front.
+    const reorder = await harness.app.inject({
+      method: "PUT",
+      url: `/api/v1/contract-types/${employment.id}/fields/order`,
+      cookies: adminCookies,
+      payload: { fieldIds: [third, second] },
+    });
+    expect(reorder.statusCode, reorder.body).toBe(200);
+
+    const restored = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/fields/${early}/restore`,
+      cookies: adminCookies,
+    });
+    expect(restored.statusCode, restored.body).toBe(200);
+    // The restored field rejoins its attachments at the end — the
+    // DES-020 restore position, not the front of the list.
+    expect((await listAttached(employment.id)).map((row) => row.slug)).toEqual([
+      "third",
+      "second",
+      "early_bird",
+    ]);
+  });
+});
+
 describe("the DD-017 activity trail", () => {
   it("wrote one entry per attachment mutation, in vocabulary", async () => {
     const entries = await attachmentAuditRows();
