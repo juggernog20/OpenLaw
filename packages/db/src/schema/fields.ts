@@ -58,16 +58,18 @@ export const fields = pgTable(
      * changes — it keys the per-module `custom_fields` jsonb. */
     slug: text("slug").notNull(),
     displayName: text("display_name").notNull(),
-    /** Shown as help text on forms. */
+    /** Shown as help text on forms; NULL = the field renders with no
+     * help text. */
     description: text("description"),
     moduleScope: text("module_scope", { enum: FIELD_MODULE_SCOPES }).notNull(),
     fieldType: text("field_type", { enum: FIELD_TYPES }).notNull(),
     /** Option labels for the select types, in display order; NULL on
-     * every other type. */
+     * every other type — the options check enforces both directions. */
     options: jsonb("options").$type<string[]>(),
     fieldTag: text("field_tag", { enum: FIELD_TAGS }).notNull(),
     /** The CTR-008 extraction prompt, consumed by contract AI analysis;
-     * lives on contract-scoped fields, seeded on the core three. */
+     * lives on contract-scoped fields, seeded on the core three. NULL =
+     * contract analysis skips the field. */
     aiPrompt: text("ai_prompt"),
     /** SET-003 soft delete: NULL = live; a timestamp = archived, hidden
      * everywhere, stored values retained (MTR-014). */
@@ -91,6 +93,13 @@ export const fields = pgTable(
       sql`${table.fieldType} in ('text', 'long_text', 'number', 'date', 'boolean', 'single_select', 'multi_select', 'user', 'entity')`,
     ),
     check("fields_field_tag_check", sql`${table.fieldTag} in ('business', 'legal')`),
+    // Options ride exactly the select types: a non-null jsonb array on
+    // single/multi select, SQL NULL everywhere else. jsonb_typeof(NULL)
+    // is NULL, so the array arm also refuses a missing list.
+    check(
+      "fields_options_check",
+      sql`(${table.fieldType} in ('single_select', 'multi_select') and jsonb_typeof(${table.options}) = 'array') or (${table.fieldType} not in ('single_select', 'multi_select') and ${table.options} is null)`,
+    ),
   ],
 );
 

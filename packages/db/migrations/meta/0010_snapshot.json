@@ -1,5 +1,5 @@
 {
-  "id": "596a5e61-83cb-4567-a2d9-adacec45b508",
+  "id": "ae328901-6bf5-4f95-9afd-f287c619065a",
   "prevId": "515bad33-1322-473a-8b7f-b6516207e1bd",
   "version": "7",
   "dialect": "postgresql",
@@ -1102,6 +1102,10 @@
         "fields_field_tag_check": {
           "name": "fields_field_tag_check",
           "value": "\"fields\".\"field_tag\" in ('business', 'legal')"
+        },
+        "fields_options_check": {
+          "name": "fields_options_check",
+          "value": "(\"fields\".\"field_type\" in ('single_select', 'multi_select') and jsonb_typeof(\"fields\".\"options\") = 'array') or (\"fields\".\"field_type\" not in ('single_select', 'multi_select') and \"fields\".\"options\" is null)"
         }
       },
       "isRLSEnabled": false

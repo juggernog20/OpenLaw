@@ -13,7 +13,8 @@ CREATE TABLE "fields" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "fields_module_scope_check" CHECK ("fields"."module_scope" in ('matter', 'contract', 'entity', 'global')),
 	CONSTRAINT "fields_field_type_check" CHECK ("fields"."field_type" in ('text', 'long_text', 'number', 'date', 'boolean', 'single_select', 'multi_select', 'user', 'entity')),
-	CONSTRAINT "fields_field_tag_check" CHECK ("fields"."field_tag" in ('business', 'legal'))
+	CONSTRAINT "fields_field_tag_check" CHECK ("fields"."field_tag" in ('business', 'legal')),
+	CONSTRAINT "fields_options_check" CHECK (("fields"."field_type" in ('single_select', 'multi_select') and jsonb_typeof("fields"."options") = 'array') or ("fields"."field_type" not in ('single_select', 'multi_select') and "fields"."options" is null))
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX "fields_slug_unique" ON "fields" USING btree ("slug");--> statement-breakpoint
