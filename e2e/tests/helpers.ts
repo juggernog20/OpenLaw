@@ -7,8 +7,17 @@
  * accumulated one where earlier runs already left their state behind.
  */
 
-import { expect, request as apiRequest, type APIRequestContext, type Page } from "@playwright/test";
+import http from "node:http";
+import {
+  expect,
+  request as apiRequest,
+  type APIRequestContext,
+  type Browser,
+  type BrowserContext,
+  type Page,
+} from "@playwright/test";
 import { z } from "zod";
+import { extractLink, waitForMailTo } from "./mailpit.js";
 
 /** Mirrors playwright.config.ts — helpers that build their own request
  * context need the stack's origin outside any fixture. */
@@ -148,4 +157,138 @@ export async function signOut(page: Page, displayName: string): Promise<void> {
   await page.getByRole("banner").getByRole("button", { name: displayName }).click();
   await page.getByRole("menuitem", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/auth\/login$/);
+}
+
+/**
+ * A minimal OIDC issuer for provider registration: registration only
+ * runs discovery (plus JWKS at most), so a discovery document that
+ * echoes the registered issuer is enough. Listens on every interface —
+ * the app reaches it from its container as host.docker.internal
+ * (compose.dev.yml maps the name to the host gateway).
+ */
+async function startMockIssuer(): Promise<{ issuer: string; close: () => Promise<void> }> {
+  let issuer = "";
+  const server = http.createServer((req, res) => {
+    if (req.url?.startsWith("/.well-known/openid-configuration")) {
+      res.setHeader("content-type", "application/json");
+      res.end(
+        JSON.stringify({
+          issuer,
+          authorization_endpoint: `${issuer}/authorize`,
+          token_endpoint: `${issuer}/token`,
+          jwks_uri: `${issuer}/jwks`,
+          userinfo_endpoint: `${issuer}/userinfo`,
+        }),
+      );
+      return;
+    }
+    if (req.url?.startsWith("/jwks")) {
+      res.setHeader("content-type", "application/json");
+      res.end(JSON.stringify({ keys: [] }));
+      return;
+    }
+    res.statusCode = 404;
+    res.end();
+  });
+  await new Promise<void>((resolve) => server.listen(0, "0.0.0.0", resolve));
+  const address = server.address();
+  if (!address || typeof address === "string") throw new Error("The mock issuer has no port.");
+  issuer = `http://host.docker.internal:${address.port}`;
+  return {
+    issuer,
+    close: () => new Promise((resolve) => server.close(() => resolve())),
+  };
+}
+
+/**
+ * Guarantees a registered SSO provider, which the Authentication pane
+ * requires before it lets the auth mode switch to OIDC. Registers one
+ * against a throwaway mock issuer when the instance has none; on the
+ * never-reset instance (TECH-018) an earlier run's provider counts.
+ * The request context must carry an Administrator session.
+ */
+export async function ensureSsoProviderExists(request: APIRequestContext): Promise<void> {
+  const listed = await request.get("/api/v1/auth/sso-providers");
+  expect(listed.ok()).toBe(true);
+  const { providers } = z.object({ providers: z.array(z.unknown()) }).parse(await listed.json());
+  if (providers.length > 0) return;
+  const idp = await startMockIssuer();
+  try {
+    const registered = await request.post("/api/v1/auth/sso-providers", {
+      data: {
+        providerId: `e2e-idp-${Date.now()}`,
+        issuer: idp.issuer,
+        domain: "sso.example",
+        clientId: "openlaw-e2e",
+        clientSecret: "e2e-client-secret",
+      },
+    });
+    expect(registered.status(), await registered.text()).toBe(201);
+  } finally {
+    await idp.close();
+  }
+}
+
+/** A per-run staff member with a live session of their own. */
+export interface OnboardedMember {
+  context: BrowserContext;
+  page: Page;
+}
+
+/**
+ * Onboards a per-run member through the real flows: invite → the
+ * set-password email → their own sign-in, in a second browser context
+ * so their session lives alongside the caller's. The request context
+ * must carry an Administrator session. From the moment this is called
+ * the user row exists, so callers clean up with ensureMemberInert in a
+ * finally that covers this call too — activation can fail partway.
+ */
+export async function onboardActivatedMember(
+  request: APIRequestContext,
+  browser: Browser,
+  member: { email: string; displayName: string; role: string; password: string },
+): Promise<OnboardedMember> {
+  const invited = await request.post("/api/v1/auth/invites", {
+    data: { email: member.email, displayName: member.displayName, role: member.role },
+  });
+  expect(invited.status()).toBe(201);
+
+  const context = await browser.newContext();
+  try {
+    const mail = await waitForMailTo(request, member.email);
+    const link = extractLink(mail.text, "/auth/set-password");
+    const page = await context.newPage();
+    await page.goto(link);
+    await page.getByLabel("New password").fill(member.password);
+    await page.getByLabel("Confirm password").fill(member.password);
+    await page.getByRole("button", { name: "Set password" }).click();
+    await expect(page.getByText("Password set")).toBeVisible();
+    await signInAs(page, member.email, member.password, member.displayName);
+    return { context, page };
+  } catch (error) {
+    await context.close();
+    throw error;
+  }
+}
+
+/**
+ * Leaves a per-run member inert on the never-reset instance (TECH-018),
+ * whatever state a failure stranded them in: a still-pending invite
+ * (activation failed) is revoked outright; an activated user cannot be
+ * deleted, so archived is their resting state. The request context must
+ * carry an Administrator session.
+ */
+export async function ensureMemberInert(request: APIRequestContext, email: string): Promise<void> {
+  const listed = await request.get("/api/v1/users");
+  if (!listed.ok()) return;
+  const { users } = z
+    .object({ users: z.array(z.object({ id: z.string(), email: z.string(), status: z.string() })) })
+    .parse(await listed.json());
+  const member = users.find((user) => user.email === email);
+  if (!member) return;
+  if (member.status === "invited") {
+    await request.delete(`/api/v1/auth/invites/${member.id}`);
+  } else if (member.status !== "archived") {
+    await request.post(`/api/v1/users/${member.id}/archive`);
+  }
 }
