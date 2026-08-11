@@ -3507,6 +3507,985 @@
           }
         }
       }
+    },
+    "/api/v1/fields": {
+      "get": {
+        "operationId": "listFields",
+        "summary": "The shared field catalog (CTR-016) scoped to contract and global fields, in creation order; archived rows only with includeArchived=true",
+        "tags": ["fields"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "in": "query",
+            "name": "includeArchived",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "fields": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "moduleScope": {
+                            "type": "string",
+                            "enum": ["contract", "global"]
+                          },
+                          "fieldType": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "long_text",
+                              "number",
+                              "date",
+                              "boolean",
+                              "single_select",
+                              "multi_select",
+                              "user",
+                              "entity"
+                            ]
+                          },
+                          "options": {
+                            "anyOf": [
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "fieldTag": {
+                            "type": "string",
+                            "enum": ["business", "legal"]
+                          },
+                          "aiPrompt": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "archivedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "inUseCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "slug",
+                          "displayName",
+                          "description",
+                          "moduleScope",
+                          "fieldType",
+                          "options",
+                          "fieldTag",
+                          "aiPrompt",
+                          "archivedAt",
+                          "inUseCount"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["fields"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createField",
+        "summary": "Define a field: the slug derives from the name and the field type is picked here, once — both are immutable after creation. Select types take their options list; an AI prompt rides on contract-scoped fields only (CTR-008)",
+        "tags": ["fields"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "displayName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "moduleScope": {
+                    "type": "string",
+                    "enum": ["contract", "global"]
+                  },
+                  "fieldType": {
+                    "type": "string",
+                    "enum": [
+                      "text",
+                      "long_text",
+                      "number",
+                      "date",
+                      "boolean",
+                      "single_select",
+                      "multi_select",
+                      "user",
+                      "entity"
+                    ]
+                  },
+                  "fieldTag": {
+                    "type": "string",
+                    "enum": ["business", "legal"]
+                  },
+                  "options": {
+                    "minItems": 1,
+                    "maxItems": 100,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    }
+                  },
+                  "aiPrompt": {
+                    "type": "string",
+                    "maxLength": 2000
+                  }
+                },
+                "required": ["displayName", "moduleScope", "fieldType", "fieldTag"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "moduleScope": {
+                          "type": "string",
+                          "enum": ["contract", "global"]
+                        },
+                        "fieldType": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "long_text",
+                            "number",
+                            "date",
+                            "boolean",
+                            "single_select",
+                            "multi_select",
+                            "user",
+                            "entity"
+                          ]
+                        },
+                        "options": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "fieldTag": {
+                          "type": "string",
+                          "enum": ["business", "legal"]
+                        },
+                        "aiPrompt": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "moduleScope",
+                        "fieldType",
+                        "options",
+                        "fieldTag",
+                        "aiPrompt",
+                        "archivedAt",
+                        "inUseCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["field"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fields/{id}": {
+      "patch": {
+        "operationId": "updateField",
+        "summary": "Rename, describe, retag, or edit a field's options and AI prompt; the slug and the field type never change, and the scope moves through its own route — a body carrying any of them is refused, not silently stripped",
+        "tags": ["fields"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "displayName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "description": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "fieldTag": {
+                    "type": "string",
+                    "enum": ["business", "legal"]
+                  },
+                  "options": {
+                    "minItems": 1,
+                    "maxItems": 100,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    }
+                  },
+                  "aiPrompt": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 2000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "moduleScope": {
+                          "type": "string",
+                          "enum": ["contract", "global"]
+                        },
+                        "fieldType": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "long_text",
+                            "number",
+                            "date",
+                            "boolean",
+                            "single_select",
+                            "multi_select",
+                            "user",
+                            "entity"
+                          ]
+                        },
+                        "options": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "fieldTag": {
+                          "type": "string",
+                          "enum": ["business", "legal"]
+                        },
+                        "aiPrompt": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "moduleScope",
+                        "fieldType",
+                        "options",
+                        "fieldTag",
+                        "aiPrompt",
+                        "archivedAt",
+                        "inUseCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["field"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fields/{id}/scope": {
+      "put": {
+        "operationId": "setFieldScope",
+        "summary": "Move a field's scope (CTR-016): promotion to global is always safe (values stay keyed by slug); narrowing back is refused while another module attaches the field",
+        "tags": ["fields"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "moduleScope": {
+                    "type": "string",
+                    "enum": ["contract", "global"]
+                  }
+                },
+                "required": ["moduleScope"]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "moduleScope": {
+                          "type": "string",
+                          "enum": ["contract", "global"]
+                        },
+                        "fieldType": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "long_text",
+                            "number",
+                            "date",
+                            "boolean",
+                            "single_select",
+                            "multi_select",
+                            "user",
+                            "entity"
+                          ]
+                        },
+                        "options": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "fieldTag": {
+                          "type": "string",
+                          "enum": ["business", "legal"]
+                        },
+                        "aiPrompt": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "moduleScope",
+                        "fieldType",
+                        "options",
+                        "fieldTag",
+                        "aiPrompt",
+                        "archivedAt",
+                        "inUseCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["field"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fields/{id}/archive": {
+      "post": {
+        "operationId": "archiveField",
+        "summary": "Archive a field (SET-003): it leaves the catalog and every form; the definition and all stored values are retained (MTR-014) — there is no hard delete",
+        "tags": ["fields"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "moduleScope": {
+                          "type": "string",
+                          "enum": ["contract", "global"]
+                        },
+                        "fieldType": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "long_text",
+                            "number",
+                            "date",
+                            "boolean",
+                            "single_select",
+                            "multi_select",
+                            "user",
+                            "entity"
+                          ]
+                        },
+                        "options": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "fieldTag": {
+                          "type": "string",
+                          "enum": ["business", "legal"]
+                        },
+                        "aiPrompt": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "moduleScope",
+                        "fieldType",
+                        "options",
+                        "fieldTag",
+                        "aiPrompt",
+                        "archivedAt",
+                        "inUseCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["field"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fields/{id}/restore": {
+      "post": {
+        "operationId": "restoreField",
+        "summary": "Restore an archived field (SET-003's recovery story): it rejoins the catalog under its original slug",
+        "tags": ["fields"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "moduleScope": {
+                          "type": "string",
+                          "enum": ["contract", "global"]
+                        },
+                        "fieldType": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "long_text",
+                            "number",
+                            "date",
+                            "boolean",
+                            "single_select",
+                            "multi_select",
+                            "user",
+                            "entity"
+                          ]
+                        },
+                        "options": {
+                          "anyOf": [
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "fieldTag": {
+                          "type": "string",
+                          "enum": ["business", "legal"]
+                        },
+                        "aiPrompt": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "moduleScope",
+                        "fieldType",
+                        "options",
+                        "fieldTag",
+                        "aiPrompt",
+                        "archivedAt",
+                        "inUseCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["field"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "servers": [
