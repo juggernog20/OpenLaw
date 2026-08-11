@@ -9,10 +9,15 @@
 
 import { createContext, useContext } from "react";
 import type { Theme } from "../../lib/theme";
+import type { FieldStatus } from "../status-note";
 
 export interface ShellTheme {
   theme: Theme;
   changeTheme: (theme: Theme) => void;
+  /** The persistence micro-state (DES-017): the switch applies
+   * instantly, but a failed write must still be visible — otherwise the
+   * choice silently reverts on the next load. */
+  themeStatus: FieldStatus;
 }
 
 export const ShellThemeContext = createContext<ShellTheme | null>(null);

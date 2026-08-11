@@ -22,6 +22,11 @@ import type { Mailer } from "../lib/mailer.js";
 import { getOrgSettings, isEmailDomainAllowed } from "../lib/org-settings.js";
 import { createProfileAuditHook } from "./audit.js";
 
+/** The slice of the app's pino logger the auth instance needs. */
+export interface AuthLogger {
+  warn: (context: Record<string, unknown>, message: string) => void;
+}
+
 export interface AuthConfig {
   secret: string;
   baseUrl: string;
@@ -67,7 +72,7 @@ export async function withTrustedIssuerOrigin<T>(
   }
 }
 
-export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
+export function createAuth(db: Db, config: AuthConfig, mailer: Mailer, logger: AuthLogger) {
   return betterAuth({
     appName: "OpenLaw",
     baseURL: config.baseUrl,
@@ -406,8 +411,10 @@ export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
                 .update(users)
                 .set({ lastActiveAt: new Date() })
                 .where(eq(users.id, session.userId));
-            } catch {
+            } catch (error) {
               // Losing one stamp is invisible; failing a sign-in is not.
+              // Logged so a persistent failure is not equally invisible.
+              logger.warn({ err: error, userId: session.userId }, "last-active stamp failed");
             }
           },
         },
@@ -422,8 +429,9 @@ export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
                   .update(users)
                   .set({ lastActiveAt: new Date() })
                   .where(eq(users.id, session.userId));
-              } catch {
+              } catch (error) {
                 // Same best-effort contract as the create stamp above.
+                logger.warn({ err: error, userId: session.userId }, "last-active stamp failed");
               }
             }
           },

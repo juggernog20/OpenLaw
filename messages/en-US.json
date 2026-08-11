@@ -332,11 +332,17 @@
   "settings.auth.domain": {
     "defaultMessage": "Email domain"
   },
+  "settings.auth.domainPlaceholder": {
+    "defaultMessage": "acme.example"
+  },
   "settings.auth.domains": {
     "defaultMessage": "Allowed email domains"
   },
   "settings.auth.issuer": {
     "defaultMessage": "Issuer URL"
+  },
+  "settings.auth.issuerPlaceholder": {
+    "defaultMessage": "https://idp.example.com"
   },
   "settings.auth.magicLink": {
     "defaultMessage": "Magic-link sign-in"
@@ -368,6 +374,9 @@
   "settings.auth.providerId": {
     "defaultMessage": "Provider ID"
   },
+  "settings.auth.providerIdPlaceholder": {
+    "defaultMessage": "okta"
+  },
   "settings.auth.registerProvider": {
     "defaultMessage": "Register provider"
   },
@@ -380,8 +389,11 @@
   "settings.auth.saveProvider": {
     "defaultMessage": "Save provider"
   },
-  "settings.auth.secretHint": {
+  "settings.auth.secret.hint": {
     "defaultMessage": "Leave blank to keep the current secret. Paste a new value to rotate."
+  },
+  "settings.auth.secretPlaceholder": {
+    "defaultMessage": "••••••••••••••••"
   },
   "settings.auth.sessionsCaption": {
     "defaultMessage": "The identity provider only authenticates — sessions stay in OpenLaw and remain revocable."
@@ -400,6 +412,9 @@
   },
   "settings.general.locale.enUS": {
     "defaultMessage": "English (United States)"
+  },
+  "settings.general.locale.hint": {
+    "defaultMessage": "English (United States) is the only available locale for now."
   },
   "settings.general.logo": {
     "defaultMessage": "Logo"
@@ -452,6 +467,9 @@
   "settings.profile.passwordChanged": {
     "defaultMessage": "Last changed {date}."
   },
+  "settings.profile.passwordRevokesSessions": {
+    "defaultMessage": "Saving signs you out on your other devices."
+  },
   "settings.profile.passwordSet": {
     "defaultMessage": "A password is set."
   },
@@ -461,7 +479,7 @@
   "settings.profile.photo": {
     "defaultMessage": "Profile photo"
   },
-  "settings.profile.photoHint": {
+  "settings.profile.photo.hint": {
     "defaultMessage": "JPG or PNG, 1 MB max."
   },
   "settings.profile.reenroll": {
@@ -470,13 +488,13 @@
   "settings.profile.role": {
     "defaultMessage": "Role"
   },
-  "settings.profile.roleHint": {
+  "settings.profile.role.hint": {
     "defaultMessage": "Roles are managed in Organization → Users."
   },
   "settings.profile.sessions": {
     "defaultMessage": "Sessions"
   },
-  "settings.profile.sessionsHint": {
+  "settings.profile.sessions.hint": {
     "defaultMessage": "Ends every session except this one."
   },
   "settings.profile.signOutOthers": {
@@ -485,7 +503,7 @@
   "settings.profile.timezone": {
     "defaultMessage": "Timezone"
   },
-  "settings.profile.timezoneHint": {
+  "settings.profile.timezone.hint": {
     "defaultMessage": "Dates and times display in this timezone."
   },
   "settings.profile.twoFactor": {
@@ -556,9 +574,6 @@
   },
   "settings.users.invite": {
     "defaultMessage": "Invite user"
-  },
-  "settings.users.inviteCancel": {
-    "defaultMessage": "Cancel"
   },
   "settings.users.inviteError": {
     "defaultMessage": "The invite could not be sent."

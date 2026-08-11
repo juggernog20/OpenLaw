@@ -223,7 +223,8 @@ describe("the settings destination (#62)", () => {
     await user.type(name, "Acme Holdings");
     await user.tab();
 
-    expect(await screen.findByText("The change could not be saved. Try again.")).toBeVisible();
+    // The API's own refusal sentence beats the generic line.
+    expect(await screen.findByText("The database is unavailable.")).toBeVisible();
     expect(screen.queryByText("Saved")).not.toBeInTheDocument();
   });
 

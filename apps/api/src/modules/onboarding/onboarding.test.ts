@@ -8,8 +8,9 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, asc, eq, orgSettings } from "@openlaw/db";
+import { orgSettings } from "@openlaw/db";
 import {
+  settingsAuditRows,
   signInCookies,
   startHarness,
   TEST_ADMIN,
@@ -195,12 +196,7 @@ describe("portal toggle (PATCH /api/v1/auth/portal)", () => {
   });
 
   it("logs each toggle as an admin_only org_settings entry, skipping no-ops (#64)", async () => {
-    const settingsRows = () =>
-      harness.db
-        .select()
-        .from(activityLog)
-        .where(eq(activityLog.action, "org_settings.updated"))
-        .orderBy(asc(activityLog.createdAt));
+    const settingsRows = () => settingsAuditRows(harness.db);
 
     const before = (await settingsRows()).length;
     const closed = await harness.app.inject({

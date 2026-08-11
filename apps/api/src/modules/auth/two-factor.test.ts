@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { eq, orgSettings, twoFactors, users } from "@openlaw/db";
+import { activityLog, eq, orgSettings, twoFactors, users } from "@openlaw/db";
 import {
   signIn,
   signInCookies,
@@ -195,6 +195,15 @@ describe("TOTP two-factor (mounted better-auth twoFactor plugin)", () => {
     const who = await me(sessionJar);
     expect(who.statusCode, who.body).toBe(200);
     expect(who.json().user).toMatchObject({ email: TEST_ADMIN.email, role: "administrator" });
+
+    // The sign-in challenge verify must not read as a (re-)enrolment:
+    // only the session-carrying enrolment verify writes the DD-017 row,
+    // so the enrolment above stays the single entry.
+    const enrolments = await harness.db
+      .select({ id: activityLog.id })
+      .from(activityLog)
+      .where(eq(activityLog.action, "user.two_factor_enrolled"));
+    expect(enrolments).toHaveLength(1);
   });
 
   it("stores the TOTP seed and backup codes encrypted, never in the clear", async () => {

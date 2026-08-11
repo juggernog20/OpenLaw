@@ -7,7 +7,7 @@
  */
 
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
-import { createDb, runMigrations, type Db } from "@openlaw/db";
+import { activityLog, asc, createDb, eq, runMigrations, type Db } from "@openlaw/db";
 import { buildApp } from "../app.js";
 import type { AuthConfig } from "../auth/instance.js";
 import type { Mailer, MailMessage } from "../lib/mailer.js";
@@ -92,6 +92,16 @@ export class CapturingMailer implements Mailer {
   messagesTo(email: string): MailMessage[] {
     return this.messages.filter((m) => m.to === email);
   }
+}
+
+/** The org_settings audit rows, oldest first — the DD-017 assertion
+ * every settings-pane suite makes. */
+export function settingsAuditRows(db: Db) {
+  return db
+    .select()
+    .from(activityLog)
+    .where(eq(activityLog.action, "org_settings.updated"))
+    .orderBy(asc(activityLog.createdAt));
 }
 
 export interface TestHarness {

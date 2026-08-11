@@ -43,12 +43,15 @@ function entriesFor(ctx: {
       }
       // Presence-only, like the org logo: a data: URI in the payload
       // would bloat every later audit query with the encoded image.
-      if ((typeof body.image === "string" || body.image === null) && body.image !== user.image) {
+      // The stored value can be absent (undefined) or cleared (null);
+      // both mean "no avatar", so clearing a missing avatar is a no-op.
+      const oldImage = user.image ?? null;
+      if ((typeof body.image === "string" || body.image === null) && body.image !== oldImage) {
         entries.push({
           action: "user.avatar_changed",
           payload: {
             field: "avatar",
-            old: user.image == null ? null : "[image]",
+            old: oldImage === null ? null : "[image]",
             new: body.image === null ? null : "[image]",
           },
         });

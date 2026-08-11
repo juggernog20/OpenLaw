@@ -14,12 +14,13 @@ import { useRef, useState } from "react";
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
+import { problemDetail } from "../lib/messages";
 import { currentUser, needsSetup } from "../lib/session";
 import { PageTitle } from "../components/page-title";
+import { SettingsCard } from "../components/settings-card";
 import { StatusNote, type FieldStatus } from "../components/status-note";
 import { TimezonePicker } from "../components/timezone-picker";
 import { Button } from "../components/ui/button";
-import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
@@ -40,15 +41,16 @@ interface General {
   defaultTimezone: string;
 }
 
-/** One PATCH per committed field (DES-017); resolves to the saved row or null. */
+/** One PATCH per committed field (DES-017); resolves to the saved row,
+ * or the refusal's own sentence when the API sent one. */
 async function patchGeneral(body: {
   name?: string;
   logo?: string | null;
   defaultLocale?: "en-US";
   defaultTimezone?: string;
-}): Promise<General | null> {
-  const { data } = await api.PATCH("/api/v1/org/general", { body });
-  return data ? data.general : null;
+}): Promise<{ general: General | null; detail?: string }> {
+  const { data, error } = await api.PATCH("/api/v1/org/general", { body });
+  return data ? { general: data.general } : { general: null, detail: problemDetail(error) };
 }
 
 /** ~256 KB of image; matches the API's cap on the encoded data: URI. */
@@ -70,13 +72,23 @@ export function SettingsGeneralPage() {
     defaultLocale: "idle",
     defaultTimezone: "idle",
   });
+  const [detail, setDetail] = useState<Record<keyof General, string | undefined>>({
+    name: undefined,
+    logo: undefined,
+    defaultLocale: undefined,
+    defaultTimezone: undefined,
+  });
   const fileInput = useRef<HTMLInputElement>(null);
 
   async function commit(field: keyof General, body: Parameters<typeof patchGeneral>[0]) {
     setStatus((s) => ({ ...s, [field]: "saving" }));
-    const next = await patchGeneral(body).catch(() => null);
+    const { general: next, detail: message } = await patchGeneral(body).catch(() => ({
+      general: null,
+      detail: undefined,
+    }));
     if (next) setSaved(next);
     setStatus((s) => ({ ...s, [field]: next ? "saved" : "error" }));
+    setDetail((s) => ({ ...s, [field]: next ? undefined : message }));
     return next;
   }
 
@@ -109,124 +121,129 @@ export function SettingsGeneralPage() {
       <PageTitle
         title={intl.formatMessage({ id: "settings.section.general", defaultMessage: "General" })}
       />
-      <Card className="w-full max-w-[45rem]">
-        <div className="flex h-[38px] items-center rounded-t-card border-b border-border-default bg-section-header px-4">
-          <h2 className="text-base font-semibold">
-            <FormattedMessage id="settings.general.organization" defaultMessage="Organization" />
-          </h2>
+      <SettingsCard
+        title={
+          <FormattedMessage id="settings.general.organization" defaultMessage="Organization" />
+        }
+      >
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="org-name">
+            <FormattedMessage id="settings.general.name" defaultMessage="Organization name" />
+          </Label>
+          <div className="flex items-center gap-2">
+            <Input
+              id="org-name"
+              className="w-80"
+              value={nameDraft}
+              onChange={(event) => setNameDraft(event.target.value)}
+              onBlur={commitName}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") commitName();
+                if (event.key === "Escape") setNameDraft(saved.name);
+              }}
+            />
+            <StatusNote status={status.name} detail={detail.name} />
+          </div>
         </div>
-        <div className="flex flex-col gap-4 p-4">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="org-name">
-              <FormattedMessage id="settings.general.name" defaultMessage="Organization name" />
-            </Label>
-            <div className="flex items-center gap-2">
-              <Input
-                id="org-name"
-                className="w-80"
-                value={nameDraft}
-                onChange={(event) => setNameDraft(event.target.value)}
-                onBlur={commitName}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") commitName();
-                  if (event.key === "Escape") setNameDraft(saved.name);
-                }}
-              />
-              <StatusNote status={status.name} />
-            </div>
-          </div>
 
-          <div className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-primary">
-              <FormattedMessage id="settings.general.logo" defaultMessage="Logo" />
-            </span>
-            <div className="flex items-center gap-3">
-              {saved.logo ? (
-                <img
-                  src={saved.logo}
-                  alt=""
-                  className="size-10 rounded-button border border-border-default object-contain"
-                />
-              ) : (
-                <span
-                  aria-hidden="true"
-                  className="flex size-10 items-center justify-center rounded-button bg-control text-lg font-semibold text-primary"
-                >
-                  {(saved.name || "O").charAt(0).toUpperCase()}
-                </span>
-              )}
-              <input
-                ref={fileInput}
-                type="file"
-                accept={LOGO_TYPES.join(",")}
-                // Visually hidden but still in the accessibility tree, so
-                // it carries its own name (the Upload button drives it).
-                aria-label={intl.formatMessage({
-                  id: "settings.general.uploadLogo",
-                  defaultMessage: "Upload a logo",
-                })}
-                className="sr-only"
-                onChange={(event) => {
-                  uploadLogo(event.target.files?.[0]);
-                  event.target.value = "";
-                }}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-primary">
+            <FormattedMessage id="settings.general.logo" defaultMessage="Logo" />
+          </span>
+          <div className="flex items-center gap-3">
+            {saved.logo ? (
+              <img
+                src={saved.logo}
+                alt=""
+                className="size-10 rounded-button border border-border-default object-contain"
               />
-              <Button variant="secondary" size="sm" onClick={() => fileInput.current?.click()}>
-                <FormattedMessage id="settings.general.upload" defaultMessage="Upload" />
-              </Button>
-              <StatusNote status={status.logo} />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="org-locale">
-              <FormattedMessage id="settings.general.locale" defaultMessage="Default locale" />
-            </Label>
-            <div className="flex items-center gap-2">
-              <select
-                id="org-locale"
-                className={selectClassName}
-                value={saved.defaultLocale}
-                onChange={(event) =>
-                  void commit("defaultLocale", {
-                    defaultLocale: event.target.value as General["defaultLocale"],
-                  })
-                }
+            ) : (
+              <span
+                aria-hidden="true"
+                className="flex size-10 items-center justify-center rounded-button bg-control text-lg font-semibold text-primary"
               >
-                <option value="en-US">
-                  {intl.formatMessage({
-                    id: "settings.general.locale.enUS",
-                    defaultMessage: "English (United States)",
-                  })}
-                </option>
-              </select>
-              <StatusNote status={status.defaultLocale} />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="org-timezone">
-              <FormattedMessage id="settings.general.timezone" defaultMessage="Default timezone" />
-            </Label>
-            <div className="flex items-center gap-2">
-              <TimezonePicker
-                id="org-timezone"
-                value={saved.defaultTimezone}
-                onCommit={(zone) => {
-                  if (zone) void commit("defaultTimezone", { defaultTimezone: zone });
-                }}
-              />
-              <StatusNote status={status.defaultTimezone} />
-            </div>
-            <p className="text-xs text-muted">
-              <FormattedMessage
-                id="settings.general.timezone.hint"
-                defaultMessage="Used for the daily digest and date displays until a user signs in."
-              />
-            </p>
+                {(saved.name || "O").charAt(0).toUpperCase()}
+              </span>
+            )}
+            <input
+              ref={fileInput}
+              type="file"
+              accept={LOGO_TYPES.join(",")}
+              // Visually hidden but still in the accessibility tree, so
+              // it carries its own name (the Upload button drives it).
+              aria-label={intl.formatMessage({
+                id: "settings.general.uploadLogo",
+                defaultMessage: "Upload a logo",
+              })}
+              className="sr-only"
+              onChange={(event) => {
+                uploadLogo(event.target.files?.[0]);
+                event.target.value = "";
+              }}
+            />
+            <Button variant="secondary" size="sm" onClick={() => fileInput.current?.click()}>
+              <FormattedMessage id="settings.general.upload" defaultMessage="Upload" />
+            </Button>
+            <StatusNote status={status.logo} detail={detail.logo} />
           </div>
         </div>
-      </Card>
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="org-locale">
+            <FormattedMessage id="settings.general.locale" defaultMessage="Default locale" />
+          </Label>
+          <div className="flex items-center gap-2">
+            <select
+              id="org-locale"
+              className={selectClassName}
+              value={saved.defaultLocale}
+              onChange={(event) =>
+                void commit("defaultLocale", {
+                  defaultLocale: event.target.value as General["defaultLocale"],
+                })
+              }
+            >
+              <option value="en-US">
+                {intl.formatMessage({
+                  id: "settings.general.locale.enUS",
+                  defaultMessage: "English (United States)",
+                })}
+              </option>
+            </select>
+            <StatusNote status={status.defaultLocale} detail={detail.defaultLocale} />
+          </div>
+          {/* One option today is honest, not broken: DES-013 ships
+                en-US alone, and the select comes alive with locale #2. */}
+          <p className="text-xs text-muted">
+            <FormattedMessage
+              id="settings.general.locale.hint"
+              defaultMessage="English (United States) is the only available locale for now."
+            />
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="org-timezone">
+            <FormattedMessage id="settings.general.timezone" defaultMessage="Default timezone" />
+          </Label>
+          <div className="flex items-center gap-2">
+            <TimezonePicker
+              id="org-timezone"
+              value={saved.defaultTimezone}
+              onCommit={(zone) => {
+                if (zone) void commit("defaultTimezone", { defaultTimezone: zone });
+              }}
+            />
+            <StatusNote status={status.defaultTimezone} detail={detail.defaultTimezone} />
+          </div>
+          <p className="text-xs text-muted">
+            <FormattedMessage
+              id="settings.general.timezone.hint"
+              defaultMessage="Used for the daily digest and date displays until a user signs in."
+            />
+          </p>
+        </div>
+      </SettingsCard>
     </>
   );
 }

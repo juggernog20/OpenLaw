@@ -18,8 +18,6 @@ export interface AuthenticatedUser {
   displayName: string;
   role: UserRole;
   theme: Theme;
-  /** Avatar as a data: URI, or null for initials (DES-018). */
-  image: string | null;
   /** IANA zone override; null = use the browser's (DES-014). */
   timezone: string | null;
 }
@@ -38,16 +36,24 @@ declare module "fastify" {
   }
 }
 
-/** The users columns behind the API-facing user shape — one projection
- * shared by every query that returns a user to a client. */
-export const userColumns = {
+/** The users columns the guard loads on every request. The avatar is
+ * deliberately absent: it can be a data: URI of up to ~1.4 MB, and only
+ * /me returns it — every other guarded request would haul it out of the
+ * database for nothing. */
+const guardColumns = {
   id: users.id,
   email: users.email,
   displayName: users.displayName,
   role: users.role,
   theme: users.theme,
-  image: users.image,
   timezone: users.timezone,
+} as const;
+
+/** The users columns behind the API-facing user shape — one projection
+ * shared by every query that returns a user to a client. */
+export const userColumns = {
+  ...guardColumns,
+  image: users.image,
 } as const;
 
 export async function requireAuth(request: FastifyRequest): Promise<void> {
@@ -57,7 +63,7 @@ export async function requireAuth(request: FastifyRequest): Promise<void> {
   if (!session) throw httpError(401, "Authentication required.");
 
   const rows = await request.server.db
-    .select({ ...userColumns, archivedAt: users.archivedAt })
+    .select({ ...guardColumns, archivedAt: users.archivedAt })
     .from(users)
     .where(eq(users.id, session.user.id))
     .limit(1);
@@ -70,7 +76,6 @@ export async function requireAuth(request: FastifyRequest): Promise<void> {
     displayName: user.displayName,
     role: user.role,
     theme: user.theme,
-    image: user.image,
     timezone: user.timezone,
   };
   request.session = {

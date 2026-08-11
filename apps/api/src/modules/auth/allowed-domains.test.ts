@@ -9,8 +9,8 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, asc, eq } from "@openlaw/db";
 import {
+  settingsAuditRows,
   signInCookies,
   startHarness,
   TEST_ADMIN,
@@ -156,12 +156,7 @@ describe("allowed-domains validation", () => {
 });
 
 describe("the DD-017 audit trail (#64)", () => {
-  const settingsRows = () =>
-    harness.db
-      .select()
-      .from(activityLog)
-      .where(eq(activityLog.action, "org_settings.updated"))
-      .orderBy(asc(activityLog.createdAt));
+  const settingsRows = () => settingsAuditRows(harness.db);
 
   it("logs a replacement with the old and new lists", async () => {
     await setDomains(["before.example"]);

@@ -217,7 +217,7 @@ test.describe.serial("the settings destination", () => {
     const dialog = page.getByRole("dialog", { name: "Invite user" });
     await dialog.getByLabel("Display name").fill("Pending Invitee");
     await dialog.getByLabel("Email").fill(email);
-    await dialog.getByRole("button", { name: "Contributor" }).click();
+    await dialog.getByRole("radio", { name: "Contributor" }).click();
     await dialog.getByRole("button", { name: "Send invite" }).click();
 
     try {

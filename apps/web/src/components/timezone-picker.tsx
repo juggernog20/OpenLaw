@@ -20,12 +20,17 @@ import { cn } from "../lib/utils";
 export function timezoneOptions(): { zone: string; label: string }[] {
   const zones = new Set(["UTC", ...Intl.supportedValuesOf("timeZone")]);
   const now = new Date();
-  return [...zones].sort().map((zone) => {
-    const offset = new Intl.DateTimeFormat("en-US", { timeZone: zone, timeZoneName: "longOffset" })
-      .formatToParts(now)
-      .find((part) => part.type === "timeZoneName")?.value;
-    return { zone, label: offset && offset !== "GMT" ? `${zone} (${offset})` : zone };
-  });
+  return [...zones]
+    .sort((a, b) => a.localeCompare(b))
+    .map((zone) => {
+      const offset = new Intl.DateTimeFormat("en-US", {
+        timeZone: zone,
+        timeZoneName: "longOffset",
+      })
+        .formatToParts(now)
+        .find((part) => part.type === "timeZoneName")?.value;
+      return { zone, label: offset && offset !== "GMT" ? `${zone} (${offset})` : zone };
+    });
 }
 
 /** The null sentinel rides the option list as a zone of "". */
@@ -160,8 +165,16 @@ export function TimezonePicker({
             {option.label}
           </li>
         ))}
+        {/* A disabled option, not role="presentation": non-option children
+            of a listbox are not reliably exposed, so a query with zero
+            results would read as silence to assistive technology. */}
         {filtered.length === 0 && (
-          <li className="px-2 py-1 text-sm text-muted" role="presentation">
+          <li
+            className="px-2 py-1 text-sm text-muted"
+            role="option"
+            aria-disabled="true"
+            aria-selected={false}
+          >
             {intl.formatMessage({
               id: "timezone.noMatches",
               defaultMessage: "No matching timezones.",

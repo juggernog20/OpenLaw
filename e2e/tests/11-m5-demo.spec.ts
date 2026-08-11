@@ -29,7 +29,10 @@ import {
 const rootTheme = (page: Page) =>
   page.evaluate(() => document.documentElement.getAttribute("data-theme"));
 
-test.describe("M5 demo path", () => {
+// Serial like 10-settings.spec.ts: both tests drive the same
+// Administrator's theme and auth mode on the never-reset instance, so
+// they must never share a wall clock even if fullyParallel turns on.
+test.describe.serial("M5 demo path", () => {
   test.beforeAll(async ({ request }) => {
     await ensureAdminExists(request);
   });

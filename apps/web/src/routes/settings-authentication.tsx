@@ -11,17 +11,19 @@
  * SET-002 bounce.
  */
 
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useState, type ReactNode, type SubmitEvent as FormSubmitEvent } from "react";
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { X } from "lucide-react";
+import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
+import { problemDetail } from "../lib/messages";
 import { currentUser, needsSetup } from "../lib/session";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
+import { SettingsCard } from "../components/settings-card";
 import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Button } from "../components/ui/button";
-import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Switch } from "../components/ui/switch";
@@ -55,18 +57,6 @@ interface Provider {
   issuer: string;
   domain: string;
   clientId: string | null;
-}
-
-/** The card chrome every settings pane shares (38px section header). */
-function SettingsCard({ title, children }: { title: ReactNode; children: ReactNode }) {
-  return (
-    <Card className="w-full max-w-[45rem]">
-      <div className="flex h-[38px] items-center rounded-t-card border-b border-border-default bg-section-header px-4">
-        <h2 className="text-base font-semibold">{title}</h2>
-      </div>
-      <div className="flex flex-col gap-4 p-4">{children}</div>
-    </Card>
-  );
 }
 
 /** A mode card from ST17: radio, title, description — one per mode. */
@@ -111,6 +101,29 @@ function ModeOption(props: {
   );
 }
 
+/** The PATCH body as the generated contract types it — a misspelled key
+ * is a compile error, not a field the Zod schema silently strips. */
+type ProviderPatch = NonNullable<
+  paths["/api/v1/auth/sso-providers/{providerId}"]["patch"]["requestBody"]
+>["content"]["application/json"];
+
+/**
+ * Only the provider fields the admin actually changed: each one becomes
+ * its own DD-017 entry, so an untouched field must not resave (or
+ * re-log). An empty secret draft means "keep the stored secret".
+ */
+function changedProviderFields(
+  provider: Provider,
+  drafts: { issuer: string; domain: string; clientId: string; secret: string },
+): ProviderPatch {
+  const body: ProviderPatch = {};
+  if (drafts.issuer !== provider.issuer) body.issuer = drafts.issuer;
+  if (drafts.domain !== provider.domain) body.domain = drafts.domain;
+  if (drafts.clientId !== (provider.clientId ?? "")) body.clientId = drafts.clientId;
+  if (drafts.secret !== "") body.clientSecret = drafts.secret;
+  return body;
+}
+
 function FormField(props: { id: string; label: ReactNode; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -144,9 +157,16 @@ export function SettingsAuthenticationPage() {
   const [status, setStatus] = useState<
     Record<"mode" | "portal" | "domains" | "provider", FieldStatus>
   >({ mode: "idle", portal: "idle", domains: "idle", provider: "idle" });
+  const [detail, setDetail] = useState<Record<keyof typeof status, string | undefined>>({
+    mode: undefined,
+    portal: undefined,
+    domains: undefined,
+    provider: undefined,
+  });
 
-  function note(field: keyof typeof status, value: FieldStatus) {
+  function note(field: keyof typeof status, value: FieldStatus, message?: string) {
     setStatus((current) => ({ ...current, [field]: value }));
+    setDetail((current) => ({ ...current, [field]: message }));
   }
 
   const selectedMode = modeDraft ?? mode;
@@ -154,15 +174,20 @@ export function SettingsAuthenticationPage() {
   async function commitMode(next: AuthMode): Promise<void> {
     note("mode", "saving");
     try {
-      const { data } = await api.PATCH("/api/v1/auth/mode", { body: { mode: next } });
+      const { data, error } = await api.PATCH("/api/v1/auth/mode", { body: { mode: next } });
       if (!data) {
         setModeDraft(null);
-        note("mode", "error");
+        note("mode", "error", problemDetail(error));
         return;
       }
       setMode(data.mode);
       setModeDraft(null);
       note("mode", "saved");
+      // The DD-010 floor as state, not only a disabled switch: magic
+      // links could be off from OIDC mode, and built-in mode locks the
+      // toggle — without this restore the portal would be shut with no
+      // control left to reopen it.
+      if (data.mode === "built_in" && !magicLinkEnabled) await commitPortal(true);
     } catch {
       setModeDraft(null);
       note("mode", "error");
@@ -192,11 +217,11 @@ export function SettingsAuthenticationPage() {
   async function commitPortal(next: boolean): Promise<void> {
     note("portal", "saving");
     try {
-      const { data } = await api.PATCH("/api/v1/auth/portal", {
+      const { data, error } = await api.PATCH("/api/v1/auth/portal", {
         body: { magicLinkEnabled: next },
       });
       if (!data) {
-        note("portal", "error");
+        note("portal", "error", problemDetail(error));
         return;
       }
       setMagicLinkEnabled(data.magicLinkEnabled);
@@ -206,52 +231,61 @@ export function SettingsAuthenticationPage() {
     }
   }
 
-  async function commitDomains(next: string[]): Promise<void> {
+  /** Resolves with whether the list landed, so callers can sequence on
+   * the outcome (the input clears only on success). */
+  async function commitDomains(next: string[]): Promise<boolean> {
     note("domains", "saving");
     try {
-      const { data } = await api.PUT("/api/v1/auth/allowed-domains", {
+      const { data, error } = await api.PUT("/api/v1/auth/allowed-domains", {
         body: { domains: next },
       });
       if (!data) {
-        note("domains", "error");
-        return;
+        note("domains", "error", problemDetail(error));
+        return false;
       }
       setDomains(data.domains);
       note("domains", "saved");
+      return true;
     } catch {
       note("domains", "error");
+      return false;
     }
   }
 
   function addDomain() {
     const domain = domainInput.trim().toLowerCase();
-    setDomainInput("");
-    if (!domain || domains.includes(domain)) return;
-    void commitDomains([...domains, domain]);
+    if (!domain || domains.includes(domain)) {
+      setDomainInput("");
+      return;
+    }
+    // The typed domain survives a failed request — clearing it early
+    // would leave retyping as the only recovery.
+    void commitDomains([...domains, domain]).then((saved) => {
+      if (saved) setDomainInput("");
+    });
   }
 
-  async function saveProvider(event: FormEvent<HTMLFormElement>): Promise<void> {
+  async function saveProvider(event: FormSubmitEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     note("provider", "saving");
     try {
       if (provider) {
-        // Send only what changed: each field becomes its own DD-017
-        // entry, so an untouched field must not resave (or re-log).
-        const body: Record<string, string> = {};
-        if (issuerDraft !== provider.issuer) body.issuer = issuerDraft;
-        if (domainDraft !== provider.domain) body.domain = domainDraft;
-        if (clientIdDraft !== (provider.clientId ?? "")) body.clientId = clientIdDraft;
-        if (secretDraft !== "") body.clientSecret = secretDraft;
+        const body = changedProviderFields(provider, {
+          issuer: issuerDraft,
+          domain: domainDraft,
+          clientId: clientIdDraft,
+          secret: secretDraft,
+        });
         if (Object.keys(body).length === 0) {
           note("provider", "idle");
           return;
         }
-        const { data } = await api.PATCH("/api/v1/auth/sso-providers/{providerId}", {
+        const { data, error } = await api.PATCH("/api/v1/auth/sso-providers/{providerId}", {
           params: { path: { providerId: provider.providerId } },
           body,
         });
         if (!data) {
-          note("provider", "error");
+          note("provider", "error", problemDetail(error));
           return;
         }
         setProvider({ ...data.provider, clientId: clientIdDraft });
@@ -260,7 +294,7 @@ export function SettingsAuthenticationPage() {
         note("provider", "saved");
         return;
       }
-      const { data } = await api.POST("/api/v1/auth/sso-providers", {
+      const { data, error } = await api.POST("/api/v1/auth/sso-providers", {
         body: {
           providerId: providerIdDraft,
           issuer: issuerDraft,
@@ -270,7 +304,7 @@ export function SettingsAuthenticationPage() {
         },
       });
       if (!data) {
-        note("provider", "error");
+        note("provider", "error", problemDetail(error));
         return;
       }
       setProvider({ ...data.provider, clientId: clientIdDraft });
@@ -303,7 +337,10 @@ export function SettingsAuthenticationPage() {
             id="sso-provider-id"
             className="w-80"
             required
-            placeholder="okta"
+            placeholder={intl.formatMessage({
+              id: "settings.auth.providerIdPlaceholder",
+              defaultMessage: "okta",
+            })}
             value={providerIdDraft}
             onChange={(event) => setProviderIdDraft(event.target.value)}
           />
@@ -318,7 +355,10 @@ export function SettingsAuthenticationPage() {
           className="w-80"
           type="url"
           required
-          placeholder="https://idp.example.com"
+          placeholder={intl.formatMessage({
+            id: "settings.auth.issuerPlaceholder",
+            defaultMessage: "https://idp.example.com",
+          })}
           value={issuerDraft}
           onChange={(event) => setIssuerDraft(event.target.value)}
         />
@@ -331,7 +371,10 @@ export function SettingsAuthenticationPage() {
           id="sso-domain"
           className="w-80"
           required
-          placeholder="acme.example"
+          placeholder={intl.formatMessage({
+            id: "settings.auth.domainPlaceholder",
+            defaultMessage: "acme.example",
+          })}
           value={domainDraft}
           onChange={(event) => setDomainDraft(event.target.value)}
         />
@@ -357,14 +400,19 @@ export function SettingsAuthenticationPage() {
           className="w-80"
           type="password"
           required={!provider}
-          placeholder="••••••••••••••••"
+          placeholder={intl.formatMessage({
+            id: "settings.auth.secretPlaceholder",
+            // A visual mask, not copy — but it still rides the catalog
+            // so a locale can swap the glyph.
+            defaultMessage: "••••••••••••••••",
+          })}
           value={secretDraft}
           onChange={(event) => setSecretDraft(event.target.value)}
         />
         {provider && (
           <p className="text-xs text-muted">
             <FormattedMessage
-              id="settings.auth.secretHint"
+              id="settings.auth.secret.hint"
               defaultMessage="Leave blank to keep the current secret. Paste a new value to rotate."
             />
           </p>
@@ -381,7 +429,7 @@ export function SettingsAuthenticationPage() {
             />
           )}
         </Button>
-        <StatusNote status={status.provider} />
+        <StatusNote status={status.provider} detail={detail.provider} />
       </div>
       {callbackUrl && (
         <p className="text-sm text-muted">
@@ -450,7 +498,7 @@ export function SettingsAuthenticationPage() {
               />
             )}
           </p>
-          <StatusNote status={status.mode} />
+          <StatusNote status={status.mode} detail={detail.mode} />
         </div>
       </SettingsCard>
 
@@ -470,7 +518,7 @@ export function SettingsAuthenticationPage() {
             </span>
           </span>
           <span className="flex items-center gap-2 pt-0.5">
-            <StatusNote status={status.portal} />
+            <StatusNote status={status.portal} detail={detail.portal} />
             <Switch
               checked={magicLinkEnabled}
               // The DD-010 floor: in built-in mode magic links cannot be
@@ -501,14 +549,17 @@ export function SettingsAuthenticationPage() {
             <Label htmlFor="allowed-domain">
               <FormattedMessage id="settings.auth.domains" defaultMessage="Allowed email domains" />
             </Label>
-            <StatusNote status={status.domains} />
+            <StatusNote status={status.domains} detail={detail.domains} />
           </div>
           <div className="flex gap-2">
             <Input
               id="allowed-domain"
               className="w-80"
               value={domainInput}
-              placeholder="acme.example"
+              placeholder={intl.formatMessage({
+                id: "settings.auth.domainPlaceholder",
+                defaultMessage: "acme.example",
+              })}
               onChange={(event) => setDomainInput(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === "Enter") {

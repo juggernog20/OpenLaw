@@ -28,7 +28,7 @@ import { requireAuth, requireRole, userColumns } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { getOrgSettings, isEmailDomainAllowed } from "../../lib/org-settings.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
-import { KNOWN_TIMEZONES } from "../../lib/timezones.js";
+import { TimezoneSchema } from "../../lib/timezones.js";
 
 const UserSchema = z.object({
   id: z.string(),
@@ -127,13 +127,23 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async (request) => ({
-      user: request.user,
-      session: {
-        id: request.session.id,
-        expiresAt: request.session.expiresAt.toISOString(),
-      },
-    }),
+    async (request) => {
+      // The guard leaves the avatar out of its per-request projection —
+      // a data: URI can reach ~1.4 MB. /me is the one route that returns
+      // it, so it loads the column itself.
+      const [row] = await app.db
+        .select({ image: users.image })
+        .from(users)
+        .where(eq(users.id, request.user.id))
+        .limit(1);
+      return {
+        user: { ...request.user, image: row?.image ?? null },
+        session: {
+          id: request.session.id,
+          expiresAt: request.session.expiresAt.toISOString(),
+        },
+      };
+    },
   );
 
   app.patch(
@@ -149,10 +159,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
             theme: z.enum(THEMES),
             // null clears the override back to "use browser timezone"
             // (DES-014's default, which most users never leave).
-            timezone: z
-              .string()
-              .refine((zone) => KNOWN_TIMEZONES.has(zone), "An IANA zone name like Europe/Berlin.")
-              .nullable(),
+            timezone: TimezoneSchema.nullable(),
           })
           .partial()
           .refine((body) => Object.keys(body).length > 0, "At least one preference is required."),
@@ -784,7 +791,13 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
             changes.push({ field: "domain", old: existing.domain, new: provider.domain });
           }
           if (request.body.clientId !== undefined && request.body.clientId !== stored.clientId) {
-            changes.push({ field: "clientId", old: stored.clientId, new: request.body.clientId });
+            // jsonb drops undefined keys; null survives and states
+            // "there was no previous value".
+            changes.push({
+              field: "clientId",
+              old: stored.clientId ?? null,
+              new: request.body.clientId,
+            });
           }
           // A provided secret counts as rotated — equality with the
           // stored one is not worth checking, and the value never
@@ -859,7 +872,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       // concurrent switch cannot make the audit trail lie.
       const mode = await app.db.transaction(async (tx) => {
         const [current] = await tx
-          .select({ authMode: orgSettings.authMode })
+          .select({ id: orgSettings.id, authMode: orgSettings.authMode })
           .from(orgSettings)
           .limit(1)
           .for("update");
@@ -868,6 +881,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         const [row] = await tx
           .update(orgSettings)
           .set({ authMode: request.body.mode, updatedAt: new Date() })
+          .where(eq(orgSettings.id, current.id))
           .returning({ mode: orgSettings.authMode });
         if (!row) throw httpError(500, "org_settings has no row to update.");
         await recordActivity(tx, {
@@ -928,7 +942,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       const domains = [...new Set(request.body.domains.map((domain) => domain.toLowerCase()))];
       const stored = await app.db.transaction(async (tx) => {
         const [current] = await tx
-          .select({ domains: orgSettings.allowedEmailDomains })
+          .select({ id: orgSettings.id, domains: orgSettings.allowedEmailDomains })
           .from(orgSettings)
           .limit(1)
           .for("update");
@@ -938,6 +952,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         const [row] = await tx
           .update(orgSettings)
           .set({ allowedEmailDomains: domains, updatedAt: new Date() })
+          .where(eq(orgSettings.id, current.id))
           .returning({ domains: orgSettings.allowedEmailDomains });
         if (!row) throw httpError(500, "org_settings has no row to update.");
         await recordActivity(tx, {
@@ -973,7 +988,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const magicLinkEnabled = await app.db.transaction(async (tx) => {
         const [current] = await tx
-          .select({ magicLinkEnabled: orgSettings.magicLinkEnabled })
+          .select({ id: orgSettings.id, magicLinkEnabled: orgSettings.magicLinkEnabled })
           .from(orgSettings)
           .limit(1)
           .for("update");
@@ -984,6 +999,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         const [row] = await tx
           .update(orgSettings)
           .set({ magicLinkEnabled: request.body.magicLinkEnabled, updatedAt: new Date() })
+          .where(eq(orgSettings.id, current.id))
           .returning({ magicLinkEnabled: orgSettings.magicLinkEnabled });
         if (!row) throw httpError(500, "org_settings has no row to update.");
         await recordActivity(tx, {

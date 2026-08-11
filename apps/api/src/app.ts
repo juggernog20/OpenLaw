@@ -61,7 +61,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   const app = Fastify(opts).withTypeProvider<ZodTypeProvider>();
   app.decorate("db", deps.db);
   app.decorate("mailer", deps.mailer);
-  app.decorate("auth", createAuth(deps.db, deps.config, deps.mailer));
+  app.decorate("auth", createAuth(deps.db, deps.config, deps.mailer, app.log));
   // Shape hints for V8; guards assign the real values per request.
   app.decorateRequest("user", undefined as unknown as AuthenticatedUser);
   app.decorateRequest("session", undefined as unknown as AuthenticatedSession);

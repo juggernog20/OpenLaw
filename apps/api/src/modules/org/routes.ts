@@ -9,11 +9,11 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { orgSettings } from "@openlaw/db";
+import { eq, orgSettings } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
-import { KNOWN_TIMEZONES } from "../../lib/timezones.js";
+import { TimezoneSchema } from "../../lib/timezones.js";
 
 /** Locales the UI actually ships (DES-013: one until a second exists). */
 const SHIPPED_LOCALES = ["en-US"] as const;
@@ -47,9 +47,7 @@ const GeneralPatchSchema = z
     name: z.string().trim().min(1).max(200),
     logo: LogoSchema.nullable(),
     defaultLocale: z.enum(SHIPPED_LOCALES),
-    defaultTimezone: z
-      .string()
-      .refine((zone) => KNOWN_TIMEZONES.has(zone), "An IANA zone name like Europe/Berlin."),
+    defaultTimezone: TimezoneSchema,
   })
   .partial();
 
@@ -74,7 +72,9 @@ export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
         general: {
           name: row.name,
           logo: row.logo,
-          defaultLocale: row.defaultLocale as (typeof SHIPPED_LOCALES)[number],
+          // A parse, not a cast: a stored locale outside the shipped set
+          // fails loudly here instead of inside the response serializer.
+          defaultLocale: GeneralSchema.shape.defaultLocale.parse(row.defaultLocale),
           defaultTimezone: row.defaultTimezone,
         },
       };
@@ -109,12 +109,13 @@ export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
         );
         if (changed.length === 0) return current;
 
+        // Spreading the typed patch keeps the payload checked (a field
+        // equal to its current value rewrites itself, which is harmless);
+        // the WHERE binds the write to the row the lock-read locked.
         const [row] = await tx
           .update(orgSettings)
-          .set({
-            ...Object.fromEntries(changed.map((field) => [field, patch[field]])),
-            updatedAt: new Date(),
-          })
+          .set({ ...patch, updatedAt: new Date() })
+          .where(eq(orgSettings.id, current.id))
           .returning();
         if (!row) throw httpError(500, "org_settings has no row to update.");
 
@@ -143,7 +144,7 @@ export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
         general: {
           name: updated.name,
           logo: updated.logo,
-          defaultLocale: updated.defaultLocale as (typeof SHIPPED_LOCALES)[number],
+          defaultLocale: GeneralSchema.shape.defaultLocale.parse(updated.defaultLocale),
           defaultTimezone: updated.defaultTimezone,
         },
       };

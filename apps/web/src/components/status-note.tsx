@@ -33,9 +33,7 @@ export function StatusNote({
           last-Administrator floor) beats the generic line when it exists —
           an empty string counts as absent, never as a blank note. */}
       {status === "error" &&
-        (detail ? (
-          detail
-        ) : (
+        (detail || (
           <FormattedMessage
             id="settings.field.error"
             defaultMessage="The change could not be saved. Try again."

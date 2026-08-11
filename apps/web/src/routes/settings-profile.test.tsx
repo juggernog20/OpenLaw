@@ -9,7 +9,7 @@
  * are proven at the HTTP seam in apps/api.
  */
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
@@ -25,7 +25,15 @@ const TOTP_URI =
   "otpauth://totp/OpenLaw:casey%40example.com?secret=JBSWY3DPEHPK3PXP&issuer=OpenLaw";
 
 describe("the Profile pane (SET-006, #67)", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("shows email and role read-only, with the Users pointer", async () => {
+    // The credential fixture is stamped 2026-05-02; the clock is frozen
+    // in the same year so "May 2" (year elided) stays true after 2026.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date("2026-08-11T00:00:00Z"));
     stubApi({ signedIn: MEMBER });
     renderAt("/settings/profile");
 
@@ -175,7 +183,14 @@ describe("the Profile pane (SET-006, #67)", () => {
     await user.click(within(dialog).getByRole("button", { name: "Save" }));
 
     await waitFor(() =>
-      expect(changes).toEqual([{ currentPassword: "old-pass-123", newPassword: "new-pass-456" }]),
+      expect(changes).toEqual([
+        {
+          currentPassword: "old-pass-123",
+          newPassword: "new-pass-456",
+          // The other-device sign-out rides every password change.
+          revokeOtherSessions: true,
+        },
+      ]),
     );
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });

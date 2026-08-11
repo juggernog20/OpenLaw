@@ -12,18 +12,20 @@
  * client half of SET-002's gate; the API's 403 is the real refusal.
  */
 
-import { useState, type FormEvent } from "react";
+import { useState, type SubmitEvent as FormSubmitEvent } from "react";
 import { redirect, useLoaderData } from "react-router";
 import { defineMessages, FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { Archive, ArchiveRestore, ChevronDown, LogOut, Plus, Send, Trash2 } from "lucide-react";
 import { api } from "../lib/api";
+import { field } from "../lib/forms";
+import { problemDetail } from "../lib/messages";
 import { currentUser, needsSetup } from "../lib/session";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
+import { SettingsCard } from "../components/settings-card";
 import { StatusNote, type FieldStatus } from "../components/status-note";
 import { UserIdentity } from "../components/user-identity";
 import { Button } from "../components/ui/button";
-import { Card } from "../components/ui/card";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
 import {
   DropdownMenu,
@@ -124,15 +126,6 @@ function lastActiveLabel(intl: IntlShape, iso: string | null): string {
   });
 }
 
-/** The problem envelope's human sentence, when the refusal carried one. */
-function problemDetail(problem: unknown): string | undefined {
-  if (problem && typeof problem === "object" && "detail" in problem) {
-    const { detail } = problem as { detail?: unknown };
-    if (typeof detail === "string") return detail;
-  }
-  return undefined;
-}
-
 function InviteDialog({
   open,
   onOpenChange,
@@ -147,7 +140,7 @@ function InviteDialog({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormSubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     const fields = new FormData(event.currentTarget);
     setBusy(true);
@@ -155,8 +148,8 @@ function InviteDialog({
     try {
       const { data, error: problem } = await api.POST("/api/v1/auth/invites", {
         body: {
-          email: String(fields.get("inviteEmail") ?? ""),
-          displayName: String(fields.get("inviteName") ?? ""),
+          email: field(fields, "inviteEmail"),
+          displayName: field(fields, "inviteName"),
           role,
         },
       });
@@ -211,18 +204,22 @@ function InviteDialog({
             <legend className="mb-1.5 text-sm font-medium">
               <FormattedMessage id="settings.users.inviteRole" defaultMessage="Role" />
             </legend>
-            <div className="flex flex-wrap gap-2">
+            {/* Real radios, matching the Authentication pane's mode
+                choice: the fieldset/legend promises a single-choice
+                group, and radios deliver its keyboard model for free. */}
+            <div className="flex flex-wrap gap-4">
               {INVITE_ROLES.map((option) => (
-                <Button
-                  key={option}
-                  type="button"
-                  size="sm"
-                  variant={role === option ? "primary" : "secondary"}
-                  aria-pressed={role === option}
-                  onClick={() => setRole(option)}
-                >
+                <label key={option} className="flex items-center gap-1.5 text-sm font-medium">
+                  <input
+                    type="radio"
+                    name="inviteRole"
+                    value={option}
+                    checked={role === option}
+                    onChange={() => setRole(option)}
+                    className="size-3.5 accent-cta-primary"
+                  />
                   <RoleLabel role={option} />
-                </Button>
+                </label>
               ))}
             </div>
           </fieldset>
@@ -233,7 +230,7 @@ function InviteDialog({
           )}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
-              <FormattedMessage id="settings.users.inviteCancel" defaultMessage="Cancel" />
+              <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
             </Button>
             <Button type="submit" disabled={busy}>
               <FormattedMessage id="settings.users.inviteSubmit" defaultMessage="Send invite" />
@@ -269,12 +266,18 @@ export function SettingsUsersPage() {
 
   async function resend(row: UserRow) {
     noteRow(row.id, "saving");
-    const { data } = await api
+    const { data, error } = await api
       .POST("/api/v1/auth/invites/{userId}/resend", {
         params: { path: { userId: row.id } },
       })
-      .catch(() => ({ data: null }));
-    noteRow(row.id, data ? "saved" : "error");
+      .catch(() => ({ data: null, error: undefined }));
+    if (data) {
+      noteRow(row.id, "saved");
+      return;
+    }
+    // An actionable refusal (an already-accepted invite) beats the
+    // generic line, same as every sibling handler.
+    noteRow(row.id, "error", problemDetail(error));
   }
 
   async function revoke(row: UserRow) {
@@ -285,7 +288,7 @@ export function SettingsUsersPage() {
       })
       .catch(() => ({ error: true as const }));
     if (error) {
-      noteRow(row.id, "error");
+      noteRow(row.id, "error", problemDetail(error));
       return;
     }
     setRows((current) => current.filter((user) => user.id !== row.id));
@@ -377,11 +380,13 @@ export function SettingsUsersPage() {
       <PageTitle
         title={intl.formatMessage({ id: "settings.section.users", defaultMessage: "Users" })}
       />
-      <Card className="w-full">
-        <div className="flex h-[38px] items-center justify-between rounded-t-card border-b border-border-default bg-section-header px-4">
-          <h2 className="text-base font-semibold">
-            <FormattedMessage id="settings.section.users" defaultMessage="Users" />
-          </h2>
+      <SettingsCard
+        title={<FormattedMessage id="settings.section.users" defaultMessage="Users" />}
+        // The user table spans the pane; the shared card's max width is
+        // for form panes.
+        className="max-w-none"
+        flush
+        actions={
           <div className="flex items-center gap-3">
             {/* The Archived filter (SET-005) only appears once there is
                 something behind it. */}
@@ -410,7 +415,8 @@ export function SettingsUsersPage() {
               <FormattedMessage id="settings.users.invite" defaultMessage="Invite user" />
             </Button>
           </div>
-        </div>
+        }
+      >
         {/* DES-012: the table scrolls inside the card on narrow screens. */}
         <div className="overflow-x-auto">
           <table className="w-full text-left">
@@ -419,19 +425,21 @@ export function SettingsUsersPage() {
                 <th scope="col" className="h-9 px-4 font-semibold">
                   <FormattedMessage id="settings.users.colUser" defaultMessage="User" />
                 </th>
-                <th scope="col" className="h-9 w-[200px] px-3 font-semibold">
+                {/* Column widths ride the 4px spacing scale (DES-007):
+                    w-50/25/30/22 are 200/100/120/88px. */}
+                <th scope="col" className="h-9 w-50 px-3 font-semibold">
                   <FormattedMessage id="settings.users.colRole" defaultMessage="Role" />
                 </th>
-                <th scope="col" className="h-9 w-[100px] px-3 font-semibold">
+                <th scope="col" className="h-9 w-25 px-3 font-semibold">
                   <FormattedMessage id="settings.users.colStatus" defaultMessage="Status" />
                 </th>
-                <th scope="col" className="h-9 w-[120px] px-3 font-semibold">
+                <th scope="col" className="h-9 w-30 px-3 font-semibold">
                   <FormattedMessage
                     id="settings.users.colLastActive"
                     defaultMessage="Last active"
                   />
                 </th>
-                <th scope="col" className="h-9 w-[88px] px-3">
+                <th scope="col" className="h-9 w-22 px-3">
                   <span className="sr-only">
                     <FormattedMessage id="settings.users.colActions" defaultMessage="Actions" />
                   </span>
@@ -590,7 +598,7 @@ export function SettingsUsersPage() {
             </tbody>
           </table>
         </div>
-      </Card>
+      </SettingsCard>
       <InviteDialog
         open={inviteOpen}
         onOpenChange={setInviteOpen}

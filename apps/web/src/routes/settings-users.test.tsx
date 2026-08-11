@@ -227,7 +227,7 @@ describe("the Users pane (#65)", () => {
     const dialog = await screen.findByRole("dialog", { name: "Invite user" });
     await user.type(within(dialog).getByLabelText("Display name"), "Noor Haddad");
     await user.type(within(dialog).getByLabelText("Email"), "noor@example.com");
-    await user.click(within(dialog).getByRole("button", { name: "Contributor" }));
+    await user.click(within(dialog).getByRole("radio", { name: "Contributor" }));
     await user.click(within(dialog).getByRole("button", { name: "Send invite" }));
 
     await waitFor(() =>
@@ -299,7 +299,7 @@ describe("the Users pane (#65)", () => {
       await screen.findByRole("button", { name: "Resend the invite to dana.ruiz@example.com" }),
     );
 
-    expect(await screen.findByText("The change could not be saved. Try again.")).toBeVisible();
+    expect(await screen.findByText("The database is unavailable.")).toBeVisible();
     expect(screen.getByText("dana.ruiz@example.com")).toBeVisible();
   });
 
@@ -336,7 +336,7 @@ describe("the Users pane (#65)", () => {
       await screen.findByRole("button", { name: "Revoke the invite to dana.ruiz@example.com" }),
     );
 
-    expect(await screen.findByText("The change could not be saved. Try again.")).toBeVisible();
+    expect(await screen.findByText("The database is unavailable.")).toBeVisible();
     expect(screen.getByText("dana.ruiz@example.com")).toBeVisible();
   });
 
@@ -417,8 +417,6 @@ describe("the Users pane (#65)", () => {
     await user.click(screen.getByRole("switch", { name: "Show archived" }));
     const marcusRow = (await screen.findByText("marcus.webb@example.com")).closest("tr")!;
     expect(within(marcusRow).getByText("Archived")).toBeVisible();
-    // The reusable inactive treatment: the identity cell is greyed out.
-    expect(within(marcusRow).getByText("Marcus Webb").closest("div.opacity-50")).not.toBeNull();
     // No role select and no archive/revoke actions on an archived row.
     expect(
       within(marcusRow).queryByRole("button", {

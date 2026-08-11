@@ -216,7 +216,8 @@ describe("the Authentication pane (#64)", () => {
 
     await user.click(await screen.findByRole("radio", { name: "Identity provider (OIDC)" }));
 
-    expect(await screen.findByText("The change could not be saved. Try again.")).toBeVisible();
+    // The API's own refusal sentence beats the generic line.
+    expect(await screen.findByText("The database is unavailable.")).toBeVisible();
     expect(screen.getByRole("radio", { name: "Built-in" })).toBeChecked();
   });
 

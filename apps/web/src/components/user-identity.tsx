@@ -9,26 +9,26 @@
  */
 
 import { cn } from "../lib/utils";
-import { initialsOf } from "./avatar";
+import { Avatar } from "./avatar";
 
 export function UserIdentity({
   displayName,
   email,
+  image,
   archived,
 }: {
   displayName: string;
   /** Omitted on compact surfaces that show the name alone. */
   email?: string;
+  /** Photo as a data: URI or URL; omitted where the API sends none. */
+  image?: string | null;
   archived?: boolean;
 }) {
   return (
     <div className={cn("flex items-center gap-2.5", archived && "opacity-50")}>
-      <span
-        aria-hidden="true"
-        className="flex size-7 shrink-0 items-center justify-center rounded-full bg-control text-xs font-semibold text-primary"
-      >
-        {initialsOf(displayName)}
-      </span>
+      {/* One avatar treatment everywhere (DES-018): render through
+          Avatar, never a re-styled copy of its initials branch. */}
+      <Avatar name={displayName} image={image} className="size-7" />
       <div className="flex flex-col gap-0.5">
         <span className="text-base font-medium whitespace-nowrap">{displayName}</span>
         {email && <span className="text-sm whitespace-nowrap text-muted">{email}</span>}

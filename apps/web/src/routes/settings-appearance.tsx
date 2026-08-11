@@ -13,7 +13,8 @@ import { useIntl, FormattedMessage, defineMessage, type MessageDescriptor } from
 import { THEMES, type Theme } from "../lib/theme";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
-import { Card } from "../components/ui/card";
+import { SettingsCard } from "../components/settings-card";
+import { StatusNote } from "../components/status-note";
 import { useShellTheme } from "../components/shell/theme-context";
 
 const THEME_LABELS: Record<Theme, MessageDescriptor> = {
@@ -52,7 +53,7 @@ function ThemePreview({ theme, selected }: { theme: Theme; selected: boolean }) 
 
 export function SettingsAppearancePage() {
   const intl = useIntl();
-  const { theme, changeTheme } = useShellTheme();
+  const { theme, changeTheme, themeStatus } = useShellTheme();
 
   return (
     <>
@@ -62,12 +63,11 @@ export function SettingsAppearancePage() {
           defaultMessage: "Appearance",
         })}
       />
-      <Card className="w-full max-w-[45rem]">
-        <div className="flex h-[38px] items-center rounded-t-card border-b border-border-default bg-section-header px-4">
-          <h2 className="text-base font-semibold">
-            <FormattedMessage id="settings.appearance.theme" defaultMessage="Theme" />
-          </h2>
-        </div>
+      <SettingsCard
+        title={<FormattedMessage id="settings.appearance.theme" defaultMessage="Theme" />}
+        actions={<StatusNote status={themeStatus} />}
+        flush
+      >
         <fieldset className="flex flex-col gap-4 p-4">
           <legend className="sr-only">
             <FormattedMessage id="settings.appearance.theme" defaultMessage="Theme" />
@@ -101,7 +101,7 @@ export function SettingsAppearancePage() {
             />
           </p>
         </fieldset>
-      </Card>
+      </SettingsCard>
     </>
   );
 }

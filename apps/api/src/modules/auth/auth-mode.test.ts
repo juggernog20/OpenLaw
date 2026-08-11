@@ -9,8 +9,9 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, asc, eq, orgSettings, sql, users } from "@openlaw/db";
+import { eq, orgSettings, sql, users } from "@openlaw/db";
 import {
+  settingsAuditRows,
   signIn,
   signInCookies,
   startHarness,
@@ -231,12 +232,7 @@ describe("oidc-mode semantics (break-glass)", () => {
 });
 
 describe("the DD-017 audit trail (#64)", () => {
-  const settingsRows = () =>
-    harness.db
-      .select()
-      .from(activityLog)
-      .where(eq(activityLog.action, "org_settings.updated"))
-      .orderBy(asc(activityLog.createdAt));
+  const settingsRows = () => settingsAuditRows(harness.db);
 
   it("logs a mode switch as an admin_only org_settings entry with the actor", async () => {
     const before = (await settingsRows()).length;

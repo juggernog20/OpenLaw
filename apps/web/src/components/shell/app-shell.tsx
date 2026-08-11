@@ -10,10 +10,10 @@
 
 import { useCallback, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
 import { api } from "../../lib/api";
-import { configureFormatting } from "../../lib/format";
 import { useGlobalKeys } from "../../lib/keyboard";
 import { cn } from "../../lib/utils";
 import { applyPreferredTheme, type Theme } from "../../lib/theme";
+import type { FieldStatus } from "../status-note";
 import { SkipLink } from "../skip-link";
 import { AppHeader } from "./app-header";
 import { KeyboardShortcutsDialog } from "./keyboard-shortcuts";
@@ -43,29 +43,28 @@ export function AppShell({
     applyPreferredTheme(theme);
   }, [theme]);
 
-  // DES-014's resolution order starts at the stored override; seeding
-  // the helper layer here puts every date the shell renders in the
-  // user's timezone (null falls back to browser-detected inside).
-  // Configured during render — an effect would run after the children
-  // have already formatted their first paint with the wrong zone. The
-  // call is an idempotent module-level assignment, so it is safe here.
-  useMemo(() => {
-    configureFormatting({ timeZone: user.timezone ?? null });
-  }, [user.timezone]);
-
   // The global keyboard contract (DES-010, #45) lives on the shell:
   // pre-login screens have no search input and no overlays to serve.
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   useGlobalKeys({ onOpenCheatSheet: () => setShortcutsOpen(true) });
 
+  const [themeStatus, setThemeStatus] = useState<FieldStatus>("idle");
   const changeTheme = useCallback((next: Theme) => {
     // The state change applies the attribute instantly via the effect;
     // persistence rides behind it. A failed write is deliberately not
-    // reverted — the server value simply wins again on the next load.
+    // reverted — the server value simply wins again on the next load —
+    // but it is reported, so the user knows the choice did not stick.
     setTheme(next);
-    void api.PATCH("/api/v1/me/preferences", { body: { theme: next } });
+    setThemeStatus("saving");
+    api
+      .PATCH("/api/v1/me/preferences", { body: { theme: next } })
+      .then(({ data }) => setThemeStatus(data ? "saved" : "error"))
+      .catch(() => setThemeStatus("error"));
   }, []);
-  const shellTheme = useMemo(() => ({ theme, changeTheme }), [theme, changeTheme]);
+  const shellTheme = useMemo(
+    () => ({ theme, changeTheme, themeStatus }),
+    [theme, changeTheme, themeStatus],
+  );
 
   return (
     <ShellThemeContext.Provider value={shellTheme}>

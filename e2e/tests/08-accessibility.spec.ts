@@ -63,7 +63,7 @@ test.describe("accessibility floor", () => {
     await reportAxeViolations(page, testInfo, "home");
   });
 
-  test("settings page: /settings forwards to Profile; axe scan and title", async ({
+  test("settings page: /settings forwards to Profile; axe scan and title on every pane, plus a seeded archived row", async ({
     page,
     request,
   }, testInfo) => {
@@ -79,7 +79,7 @@ test.describe("accessibility floor", () => {
     // The Appearance pane, the theme's home.
     await page.goto("/settings/appearance");
     await expect(page).toHaveTitle("Appearance · OpenLaw");
-    await reportAxeViolations(page, testInfo, "settings");
+    await reportAxeViolations(page, testInfo, "settings-appearance");
 
     // The Organization · General form (#63), as the Administrator.
     await page.goto("/settings/general");

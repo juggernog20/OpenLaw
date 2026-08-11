@@ -14,23 +14,23 @@
  * SSO- or magic-link-only account.
  */
 
-import { useRef, useState, type FormEvent } from "react";
+import { useRef, useState, type SubmitEvent as FormSubmitEvent } from "react";
 import { redirect, useLoaderData, useRevalidator } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
-import type { ReactNode } from "react";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import { formatShortDate } from "../lib/format";
+import { field } from "../lib/forms";
 import { networkError } from "../lib/messages";
 import { currentUser, needsSetup } from "../lib/session";
 import { Avatar } from "../components/avatar";
 import { PageTitle } from "../components/page-title";
+import { SettingsCard } from "../components/settings-card";
 import { StatusNote, type FieldStatus } from "../components/status-note";
 import { TimezonePicker } from "../components/timezone-picker";
 import { BackupCodes, TotpQr } from "../components/two-factor";
 import { Alert } from "../components/ui/alert";
 import { Button } from "../components/ui/button";
-import { Card } from "../components/ui/card";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -59,17 +59,6 @@ export async function settingsProfileLoader() {
 const AVATAR_BYTE_LIMIT = 1024 * 1024;
 const AVATAR_TYPES = ["image/png", "image/jpeg"];
 
-function SettingsCard({ title, children }: { title: ReactNode; children: ReactNode }) {
-  return (
-    <Card className="w-full max-w-[45rem]">
-      <div className="flex h-[38px] items-center rounded-t-card border-b border-border-default bg-section-header px-4">
-        <h2 className="text-base font-semibold">{title}</h2>
-      </div>
-      <div className="flex flex-col gap-4 p-4">{children}</div>
-    </Card>
-  );
-}
-
 function RoleLabel({
   role,
 }: {
@@ -94,10 +83,7 @@ type TotpDialog =
   | { kind: "codes"; backupCodes: string[] };
 
 export function SettingsProfilePage() {
-  const loaded = useLoaderData<typeof settingsProfileLoader>() as Exclude<
-    Awaited<ReturnType<typeof settingsProfileLoader>>,
-    Response
-  >;
+  const loaded = useLoaderData<typeof settingsProfileLoader>();
   const intl = useIntl();
   const revalidator = useRevalidator();
 
@@ -191,15 +177,21 @@ export function SettingsProfilePage() {
       .catch(() => note("sessions", "error"));
   }
 
-  async function changePassword(event: FormEvent<HTMLFormElement>) {
+  async function changePassword(event: FormSubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const currentPassword = String(form.get("currentPassword") ?? "");
-    const newPassword = String(form.get("newPassword") ?? "");
+    const currentPassword = field(form, "currentPassword");
+    const newPassword = field(form, "newPassword");
     setDialogBusy(true);
     setDialogError(null);
     try {
-      const res = await authClient.changePassword({ currentPassword, newPassword });
+      // A password change is often a response to a leak — every other
+      // session dies with the old password, this one stays.
+      const res = await authClient.changePassword({
+        currentPassword,
+        newPassword,
+        revokeOtherSessions: true,
+      });
       if (res.error) {
         setDialogError(
           intl.formatMessage({
@@ -220,9 +212,9 @@ export function SettingsProfilePage() {
     }
   }
 
-  async function startTotp(event: FormEvent<HTMLFormElement>, mode: "enroll" | "disable") {
+  async function startTotp(event: FormSubmitEvent<HTMLFormElement>, mode: "enroll" | "disable") {
     event.preventDefault();
-    const password = String(new FormData(event.currentTarget).get("password") ?? "");
+    const password = field(new FormData(event.currentTarget), "password");
     setDialogBusy(true);
     setDialogError(null);
     try {
@@ -263,10 +255,10 @@ export function SettingsProfilePage() {
     }
   }
 
-  async function verifyTotp(event: FormEvent<HTMLFormElement>) {
+  async function verifyTotp(event: FormSubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (totpDialog?.kind !== "verify") return;
-    const code = String(new FormData(event.currentTarget).get("code") ?? "").trim();
+    const code = field(new FormData(event.currentTarget), "code").trim();
     setDialogBusy(true);
     setDialogError(null);
     try {
@@ -312,7 +304,7 @@ export function SettingsProfilePage() {
               </span>
               <span className="text-xs text-muted">
                 <FormattedMessage
-                  id="settings.profile.photoHint"
+                  id="settings.profile.photo.hint"
                   defaultMessage="JPG or PNG, 1 MB max."
                 />
               </span>
@@ -384,7 +376,7 @@ export function SettingsProfilePage() {
           </span>
           <p className="text-xs text-muted">
             <FormattedMessage
-              id="settings.profile.roleHint"
+              id="settings.profile.role.hint"
               defaultMessage="Roles are managed in Organization → Users."
             />
           </p>
@@ -405,7 +397,7 @@ export function SettingsProfilePage() {
           </div>
           <p className="text-xs text-muted">
             <FormattedMessage
-              id="settings.profile.timezoneHint"
+              id="settings.profile.timezone.hint"
               defaultMessage="Dates and times display in this timezone."
             />
           </p>
@@ -490,7 +482,7 @@ export function SettingsProfilePage() {
         <div className="flex items-center justify-between gap-4">
           <span className="text-sm text-muted">
             <FormattedMessage
-              id="settings.profile.sessionsHint"
+              id="settings.profile.sessions.hint"
               defaultMessage="Ends every session except this one."
             />
           </span>
@@ -549,6 +541,12 @@ export function SettingsProfilePage() {
                 required
               />
             </div>
+            <p className="text-sm text-muted">
+              <FormattedMessage
+                id="settings.profile.passwordRevokesSessions"
+                defaultMessage="Saving signs you out on your other devices."
+              />
+            </p>
             <div className="flex items-center gap-2 self-end">
               <Button
                 type="button"

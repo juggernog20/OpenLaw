@@ -7,7 +7,7 @@
  * show-once backup-code grid with its copy affordance.
  */
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Check, Copy } from "lucide-react";
 import { renderSVG } from "uqr";
@@ -52,12 +52,22 @@ export function BackupCodes({
   const intl = useIntl();
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (copiedTimer.current) clearTimeout(copiedTimer.current);
+    };
+  }, []);
 
   async function copyCodes() {
     try {
       await navigator.clipboard.writeText(codes.join("\n"));
       setCopied(true);
       setCopyError(false);
+      // "Copied" is feedback for one copy, not a permanent state — it
+      // resets so a second copy confirms itself too.
+      if (copiedTimer.current) clearTimeout(copiedTimer.current);
+      copiedTimer.current = setTimeout(() => setCopied(false), 2000);
     } catch {
       // Clipboard access can be denied (permissions policy, insecure
       // context); the codes are on screen either way.
@@ -74,7 +84,7 @@ export function BackupCodes({
       </ul>
       <div className="flex items-center gap-2">
         <Button variant="secondary" onClick={() => void copyCodes()} aria-live="polite">
-          {copied ? <Check size={16} /> : <Copy size={16} />}
+          {copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
           {copied ? (
             <FormattedMessage id="action.copied" defaultMessage="Copied" />
           ) : (

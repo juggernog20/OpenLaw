@@ -57,11 +57,11 @@ interface UserRecord {
  * were never invited: they exist because they signed in.
  */
 function statusOf(row: UserRecord, activated: boolean) {
-  return row.archivedAt
-    ? ("archived" as const)
-    : !activated && (INVITABLE_ROLES as readonly string[]).includes(row.role)
-      ? ("invited" as const)
-      : ("active" as const);
+  if (row.archivedAt) return "archived" as const;
+  if (!activated && (INVITABLE_ROLES as readonly string[]).includes(row.role)) {
+    return "invited" as const;
+  }
+  return "active" as const;
 }
 
 function toUserRow(row: UserRecord, activated: boolean) {
@@ -302,7 +302,9 @@ export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
           "case); the account itself is untouched",
         tags: ["users"],
         params: z.object({ userId: z.string() }),
-        response: { 204: z.null(), default: problemResponse },
+        // z.undefined() = a bodyless 204; z.null() would advertise a
+        // JSON null payload to OpenAPI clients.
+        response: { 204: z.undefined(), default: problemResponse },
       },
     },
     async (request, reply) => {
@@ -330,7 +332,7 @@ export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
           payload: { email: target.email, sessions: revoked.length },
         });
       });
-      return reply.status(204).send(null);
+      return reply.status(204).send();
     },
   );
 };
