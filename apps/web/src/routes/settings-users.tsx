@@ -1,30 +1,40 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Organization · Users (#65), from the ST5 frame of settings.pen: every
- * user in one table — name, email, role, status, last active — with
- * pending invites as ordinary rows (SET-005), never fire-and-forget.
- * Inviting happens right here through a dialog (the wizard is no longer
- * the only door), and an invite row carries resend and revoke. Role
- * edits, archival, and session revocation follow with #66. The loader
- * is the client half of SET-002's gate; the API's 403 is the real
- * refusal.
+ * Organization · Users (#65, #66), from the ST5 frame of settings.pen:
+ * every user in one table — name, email, role, status, last active —
+ * with pending invites as ordinary rows (SET-005), never
+ * fire-and-forget. Inviting happens right here through a dialog, and
+ * every people-facing action lives on the person's row: invite rows
+ * carry resend and revoke; active rows carry the in-place role select,
+ * session revocation, and the guarded archive; archived rows sit greyed
+ * behind the Show-archived filter with restore. The loader is the
+ * client half of SET-002's gate; the API's 403 is the real refusal.
  */
 
 import { useState, type FormEvent } from "react";
 import { redirect, useLoaderData } from "react-router";
-import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
-import { Plus, Send, Trash2 } from "lucide-react";
+import { defineMessages, FormattedMessage, useIntl, type IntlShape } from "react-intl";
+import { Archive, ArchiveRestore, ChevronDown, LogOut, Plus, Send, Trash2 } from "lucide-react";
 import { api } from "../lib/api";
 import { currentUser, needsSetup } from "../lib/session";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
 import { StatusNote, type FieldStatus } from "../components/status-note";
+import { UserIdentity } from "../components/user-identity";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { Switch } from "../components/ui/switch";
 
 export async function settingsUsersLoader() {
   const user = await currentUser();
@@ -32,7 +42,7 @@ export async function settingsUsersLoader() {
   if (user.role !== "administrator") return redirect("/settings/appearance");
   const { data } = await api.GET("/api/v1/users");
   if (!data) throw new Error("The user list could not be read.");
-  return { users: data.users };
+  return { users: data.users, selfId: user.id };
 }
 
 /** One row of GET /users, as the client sees it. */
@@ -48,17 +58,26 @@ interface UserRow {
 const INVITE_ROLES = ["legal_team_member", "contributor", "administrator"] as const;
 type InviteRole = (typeof INVITE_ROLES)[number];
 
+/** Role edits span the whole DD-013 enum (SET-005) — a Business User can
+ * be promoted to staff in place, and staff can be moved between roles. */
+const ALL_ROLES = [
+  "administrator",
+  "legal_team_member",
+  "contributor",
+  "business_user",
+] as const satisfies readonly UserRow["role"][];
+
+/** One source for role wording: the visible labels and the accessible
+ * names both format from here, so they can never drift apart. */
+const ROLE_MESSAGES = defineMessages({
+  administrator: { id: "role.administrator", defaultMessage: "Administrator" },
+  legal_team_member: { id: "role.legalTeamMember", defaultMessage: "Legal team member" },
+  contributor: { id: "role.contributor", defaultMessage: "Contributor" },
+  business_user: { id: "role.businessUser", defaultMessage: "Business user" },
+});
+
 function RoleLabel({ role }: { role: UserRow["role"] }) {
-  switch (role) {
-    case "administrator":
-      return <FormattedMessage id="role.administrator" defaultMessage="Administrator" />;
-    case "legal_team_member":
-      return <FormattedMessage id="role.legalTeamMember" defaultMessage="Legal team member" />;
-    case "contributor":
-      return <FormattedMessage id="role.contributor" defaultMessage="Contributor" />;
-    case "business_user":
-      return <FormattedMessage id="role.businessUser" defaultMessage="Business user" />;
-  }
+  return <FormattedMessage {...ROLE_MESSAGES[role]} />;
 }
 
 function StatusPill({ status }: { status: UserRow["status"] }) {
@@ -105,9 +124,13 @@ function lastActiveLabel(intl: IntlShape, iso: string | null): string {
   });
 }
 
-function initialsOf(displayName: string): string {
-  const words = displayName.trim().split(/\s+/);
-  return ((words[0]?.[0] ?? "") + (words[1]?.[0] ?? "")).toUpperCase() || "?";
+/** The problem envelope's human sentence, when the refusal carried one. */
+function problemDetail(problem: unknown): string | undefined {
+  if (problem && typeof problem === "object" && "detail" in problem) {
+    const { detail } = problem as { detail?: unknown };
+    if (typeof detail === "string") return detail;
+  }
+  return undefined;
 }
 
 function InviteDialog({
@@ -145,12 +168,11 @@ function InviteDialog({
         // The API's own refusal (a 409 duplicate, a barred domain) is
         // more actionable than any generic line.
         setError(
-          typeof problem?.detail === "string"
-            ? problem.detail
-            : intl.formatMessage({
-                id: "settings.users.inviteError",
-                defaultMessage: "The invite could not be sent.",
-              }),
+          problemDetail(problem) ??
+            intl.formatMessage({
+              id: "settings.users.inviteError",
+              defaultMessage: "The invite could not be sent.",
+            }),
         );
       }
     } catch {
@@ -224,15 +246,25 @@ function InviteDialog({
 }
 
 export function SettingsUsersPage() {
-  const { users } = useLoaderData<typeof settingsUsersLoader>();
+  const { users, selfId } = useLoaderData<typeof settingsUsersLoader>();
   const intl = useIntl();
 
   const [rows, setRows] = useState<UserRow[]>(users);
   const [rowStatus, setRowStatus] = useState<Record<string, FieldStatus>>({});
+  const [rowError, setRowError] = useState<Record<string, string | undefined>>({});
+  const [showArchived, setShowArchived] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
 
-  function noteRow(id: string, status: FieldStatus) {
-    setRowStatus((s) => ({ ...s, [id]: status }));
+  const hasArchived = rows.some((row) => row.status === "archived");
+  const visible = showArchived ? rows : rows.filter((row) => row.status !== "archived");
+
+  function noteRow(id: string, status: FieldStatus, detail?: string) {
+    setRowStatus((current) => ({ ...current, [id]: status }));
+    setRowError((current) => ({ ...current, [id]: detail }));
+  }
+
+  function replaceRow(user: UserRow) {
+    setRows((current) => current.map((row) => (row.id === user.id ? user : row)));
   }
 
   async function resend(row: UserRow) {
@@ -259,6 +291,87 @@ export function SettingsUsersPage() {
     setRows((current) => current.filter((user) => user.id !== row.id));
   }
 
+  async function changeRole(row: UserRow, role: UserRow["role"]) {
+    if (role === row.role) return;
+    noteRow(row.id, "saving");
+    const { data, error } = await api
+      .PATCH("/api/v1/users/{userId}/role", {
+        params: { path: { userId: row.id } },
+        body: { role },
+      })
+      .catch(() => ({ data: null, error: undefined }));
+    if (data) {
+      replaceRow(data.user);
+      noteRow(row.id, "saved");
+    } else {
+      // The floor's refusal ("You cannot demote the last Administrator.")
+      // is the answer to "why not?" — show it, not a generic line.
+      noteRow(row.id, "error", problemDetail(error));
+    }
+  }
+
+  async function archive(row: UserRow) {
+    noteRow(row.id, "saving");
+    const { data, error } = await api
+      .POST("/api/v1/users/{userId}/archive", {
+        params: { path: { userId: row.id } },
+      })
+      .catch(() => ({ data: null, error: undefined }));
+    if (data) {
+      replaceRow(data.user);
+      noteRow(row.id, "saved");
+    } else {
+      noteRow(row.id, "error", problemDetail(error));
+    }
+  }
+
+  async function unarchive(row: UserRow) {
+    noteRow(row.id, "saving");
+    const { data, error } = await api
+      .POST("/api/v1/users/{userId}/unarchive", {
+        params: { path: { userId: row.id } },
+      })
+      .catch(() => ({ data: null, error: undefined }));
+    if (data) {
+      replaceRow(data.user);
+      noteRow(row.id, "saved");
+    } else {
+      noteRow(row.id, "error", problemDetail(error));
+    }
+  }
+
+  async function revokeSessions(row: UserRow) {
+    noteRow(row.id, "saving");
+    const { error } = await api
+      .POST("/api/v1/users/{userId}/revoke-sessions", {
+        params: { path: { userId: row.id } },
+      })
+      .catch(() => ({ error: true as const }));
+    noteRow(row.id, error ? "error" : "saved", error ? problemDetail(error) : undefined);
+  }
+
+  /** A ghost icon action on the row; every row's actions share the
+   * saving lock so a double-click cannot race two mutations. */
+  function rowAction(
+    row: UserRow,
+    label: string,
+    Icon: typeof Archive,
+    onClick: (row: UserRow) => Promise<void>,
+  ) {
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        className="px-1.5"
+        disabled={rowStatus[row.id] === "saving"}
+        aria-label={label}
+        onClick={() => void onClick(row)}
+      >
+        <Icon size={16} aria-hidden="true" className="text-muted" />
+      </Button>
+    );
+  }
+
   return (
     <>
       <PageTitle
@@ -270,11 +383,26 @@ export function SettingsUsersPage() {
             <FormattedMessage id="settings.section.users" defaultMessage="Users" />
           </h2>
           <div className="flex items-center gap-3">
+            {/* The Archived filter (SET-005) only appears once there is
+                something behind it. */}
+            {hasArchived && (
+              <span className="flex items-center gap-2 text-sm text-muted">
+                <FormattedMessage id="settings.users.showArchived" defaultMessage="Show archived" />
+                <Switch
+                  checked={showArchived}
+                  onCheckedChange={setShowArchived}
+                  aria-label={intl.formatMessage({
+                    id: "settings.users.showArchived",
+                    defaultMessage: "Show archived",
+                  })}
+                />
+              </span>
+            )}
             <span className="text-sm text-muted">
               <FormattedMessage
                 id="settings.users.count"
                 defaultMessage="{count, plural, one {# user} other {# users}}"
-                values={{ count: rows.length }}
+                values={{ count: visible.length }}
               />
             </span>
             <Button size="sm" className="px-3" onClick={() => setInviteOpen(true)}>
@@ -311,26 +439,67 @@ export function SettingsUsersPage() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
+              {visible.map((row) => (
                 <tr key={row.id} className="h-12 border-b border-border-muted">
                   <td className="px-4">
-                    <div className="flex items-center gap-2.5">
-                      <span
-                        aria-hidden="true"
-                        className="flex size-7 shrink-0 items-center justify-center rounded-full bg-control text-xs font-semibold text-primary"
-                      >
-                        {initialsOf(row.displayName)}
-                      </span>
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-base font-medium whitespace-nowrap">
-                          {row.displayName}
-                        </span>
-                        <span className="text-sm whitespace-nowrap text-muted">{row.email}</span>
-                      </div>
-                    </div>
+                    <UserIdentity
+                      displayName={row.displayName}
+                      email={row.email}
+                      archived={row.status === "archived"}
+                    />
                   </td>
                   <td className="px-3 text-sm font-medium whitespace-nowrap">
-                    <RoleLabel role={row.role} />
+                    {row.status === "active" ? (
+                      // In-place role edit (SET-005): the row IS the
+                      // editor. Invite rows never edit roles, and an
+                      // archived row waits for restore first.
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            disabled={rowStatus[row.id] === "saving"}
+                            // Label-in-name (WCAG 2.5.3): the visible
+                            // role text leads the accessible name, so a
+                            // voice user's "click Administrator" lands.
+                            aria-label={intl.formatMessage(
+                              {
+                                id: "settings.users.changeRole",
+                                defaultMessage: "{role} — change the role of {email}",
+                              },
+                              {
+                                role: intl.formatMessage(ROLE_MESSAGES[row.role]),
+                                email: row.email,
+                              },
+                            )}
+                            className="flex items-center gap-1 rounded-chip focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link disabled:opacity-60"
+                          >
+                            <RoleLabel role={row.role} />
+                            <ChevronDown size={12} aria-hidden="true" className="text-muted" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start">
+                          <DropdownMenuRadioGroup
+                            value={row.role}
+                            onValueChange={(value) => {
+                              // Radix hands back a plain string; narrow it
+                              // against the enum instead of asserting.
+                              const role = ALL_ROLES.find((option) => option === value);
+                              if (role) void changeRole(row, role);
+                            }}
+                          >
+                            {ALL_ROLES.map((role) => (
+                              <DropdownMenuRadioItem key={role} value={role}>
+                                <RoleLabel role={role} />
+                              </DropdownMenuRadioItem>
+                            ))}
+                          </DropdownMenuRadioGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    ) : (
+                      <span className={cn(row.status === "archived" && "opacity-50")}>
+                        <RoleLabel role={row.role} />
+                      </span>
+                    )}
                   </td>
                   <td className="px-3">
                     <StatusPill status={row.status} />
@@ -339,46 +508,82 @@ export function SettingsUsersPage() {
                     {lastActiveLabel(intl, row.lastActiveAt)}
                   </td>
                   <td className="px-3">
-                    {row.status === "invited" && (
-                      <div className="flex items-center justify-end gap-1">
-                        <StatusNote status={rowStatus[row.id] ?? "idle"} />
-                        {/* Both actions pause while either request is in
-                            flight — a double-click must not race a resend
-                            against a revoke of the same invite. */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="px-1.5"
-                          disabled={rowStatus[row.id] === "saving"}
-                          aria-label={intl.formatMessage(
+                    <div className="flex items-center justify-end gap-1">
+                      <StatusNote status={rowStatus[row.id] ?? "idle"} detail={rowError[row.id]} />
+                      {row.status === "invited" && (
+                        <>
+                          {rowAction(
+                            row,
+                            intl.formatMessage(
+                              {
+                                id: "settings.users.resend",
+                                defaultMessage: "Resend the invite to {email}",
+                              },
+                              { email: row.email },
+                            ),
+                            Send,
+                            resend,
+                          )}
+                          {rowAction(
+                            row,
+                            intl.formatMessage(
+                              {
+                                id: "settings.users.revoke",
+                                defaultMessage: "Revoke the invite to {email}",
+                              },
+                              { email: row.email },
+                            ),
+                            Trash2,
+                            revoke,
+                          )}
+                        </>
+                      )}
+                      {/* Your own row keeps the role select but no row
+                          actions (the mock's rule): self-archive is
+                          refused by the API, and signing yourself out
+                          belongs to Profile (SET-006). */}
+                      {row.status === "active" && row.id !== selfId && (
+                        <>
+                          {rowAction(
+                            row,
+                            intl.formatMessage(
+                              {
+                                id: "settings.users.revokeSessions",
+                                defaultMessage: "Revoke all sessions of {email}",
+                              },
+                              { email: row.email },
+                            ),
+                            LogOut,
+                            revokeSessions,
+                          )}
+                          {rowAction(
+                            row,
+                            intl.formatMessage(
+                              {
+                                id: "settings.users.archive",
+                                defaultMessage: "Archive {email}",
+                              },
+                              { email: row.email },
+                            ),
+                            Archive,
+                            archive,
+                          )}
+                        </>
+                      )}
+                      {row.status === "archived" &&
+                        rowAction(
+                          row,
+                          intl.formatMessage(
                             {
-                              id: "settings.users.resend",
-                              defaultMessage: "Resend the invite to {email}",
+                              id: "settings.users.restore",
+                              defaultMessage: "Restore {email}",
                             },
                             { email: row.email },
-                          )}
-                          onClick={() => void resend(row)}
-                        >
-                          <Send size={16} aria-hidden="true" className="text-muted" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="px-1.5"
-                          disabled={rowStatus[row.id] === "saving"}
-                          aria-label={intl.formatMessage(
-                            {
-                              id: "settings.users.revoke",
-                              defaultMessage: "Revoke the invite to {email}",
-                            },
-                            { email: row.email },
-                          )}
-                          onClick={() => void revoke(row)}
-                        >
-                          <Trash2 size={16} aria-hidden="true" className="text-muted" />
-                        </Button>
-                      </div>
-                    )}
+                          ),
+                          ArchiveRestore,
+                          unarchive,
+                        )}
+                    </div>
                   </td>
                 </tr>
               ))}

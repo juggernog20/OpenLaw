@@ -55,12 +55,17 @@ ActivityBar, Pill, Avatar) live in this file as local copies per the designs con
    Connected" affordance became "Save provider / Saved" (no test route exists — a successful save
    IS the discovery round-trip), and the secret hint dropped its "Stored encrypted" claim, which
    contradicted the TECH-008 addendum (DB-at-rest storage, encryption flagged for later)._
-3. **ST5 lacks**: the archived-user render state (greyed + inactive, behind an Archived filter),
-   in-place role edit, and per-user session revocation (SET-005) — these land with #66. ~~Resend
+3. ~~**ST5 lacks**: the archived-user render state (greyed + inactive, behind an Archived filter),
+   in-place role edit, and per-user session revocation (SET-005) — these land with #66. Resend
    /revoke actions on invite rows~~ _Invite part done (2026-08-11, #65): the invite row carries
    send (resend) and trash (revoke) icons in a widened actions column, and its role select is
    flattened to plain text — invites never edit roles per SET-005. Same pass: the Invite-user
-   CTA's plus icon moved to 16px (DES-008)._
+   CTA's plus icon moved to 16px (DES-008)._ _Remainder done (2026-08-11, #66): active rows gained
+   a log-out (revoke sessions) icon beside archive; a greyed archived row (identity and role at
+   50% opacity, neutral "Archived" pill, archive-restore action) sits at the bottom; the header
+   gained a "Show archived" toggle (drawn on, count 7) — no mock had an archived filter, so the
+   toggle is the recorded normalization. The self row keeps its role select but carries no row
+   actions: self-archive is refused and your own sign-out belongs to Profile (SET-006)._
 4. **ST1 lacks**: TOTP management, sign-out-my-other-devices, and the DES-014 timezone picker
    (SET-006).
 5. **ST3 ships in M18**, not M5 — the toggles wait for the notification engine.
