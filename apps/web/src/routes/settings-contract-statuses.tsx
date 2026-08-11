@@ -655,12 +655,16 @@ export function SettingsContractStatusesPage() {
                       defaultMessage: "New status stage",
                     })}
                     className="h-7 rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
-                    onChange={(event) =>
-                      setAddDraft((current) => ({
-                        ...current,
-                        stage: event.target.value as Stage | "",
-                      }))
-                    }
+                    onChange={(event) => {
+                      const stage = event.target.value as Stage | "";
+                      setAddDraft((current) => ({ ...current, stage }));
+                      // Picking a stage answers the "pick a stage"
+                      // refusal — don't leave it standing.
+                      if (stage !== "" && addStatus === "error") {
+                        setAddStatus("idle");
+                        setAddError(undefined);
+                      }
+                    }}
                     onKeyDown={(event) => {
                       if (event.key === "Enter") void create();
                       if (event.key === "Escape") setAdding(false);

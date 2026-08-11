@@ -122,9 +122,10 @@ function statusesApi(calls: StatusCalls, rows = seededStatuses()) {
 const statusList = () => screen.getByRole("list");
 
 /** Matches the stage badge by its full accessible text ("Stage: Draft"),
- * which spans the sr-only prefix and the visible label. */
+ * which spans the sr-only prefix and the visible label — no single text
+ * node carries it, so the default matcher can't. */
 const stageBadge = (text: string) => (_: string, element: Element | null) =>
-  element?.textContent === text && element.querySelector(".sr-only") !== null;
+  element?.textContent === text;
 
 describe("the SET-002 gate on the pane", () => {
   it("bounces a Legal Team Member off the URL", async () => {
@@ -274,6 +275,9 @@ describe("add (the inline draft row, with the stage picked at creation)", () => 
     expect(await screen.findByText("Pick a stage for the new status.")).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "New status name" })).toHaveValue("On hold");
     expect(calls.creates).toEqual([]);
+    // Picking a stage answers the refusal, so it clears.
+    await user.selectOptions(screen.getByRole("combobox", { name: "New status stage" }), "review");
+    expect(screen.queryByText("Pick a stage for the new status.")).not.toBeInTheDocument();
   });
 
   it("discards on Escape without a request", async () => {
