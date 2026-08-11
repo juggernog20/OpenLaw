@@ -92,6 +92,8 @@ export interface ApiState {
   };
   /** Defaults to completed, so guard tests land on home, not the wizard. */
   onboarding?: { completed: boolean; emailConfigured: boolean };
+  /** Defaults to env-pinned — the wizard's email step reads it (#37). */
+  emailSettings?: { source: "env" | "app" | "unset"; fromAddress: string | null };
   extra?: (call: StubCall) => Response | undefined;
 }
 
@@ -160,6 +162,12 @@ export function stubApi(state: ApiState) {
     }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
       return json(200, state.onboarding ?? { completed: true, emailConfigured: true });
+    }
+    if (call.url.pathname === "/api/v1/email-settings" && call.method === "GET") {
+      return json(
+        200,
+        state.emailSettings ?? { source: "env", fromAddress: "OpenLaw <openlaw@example.com>" },
+      );
     }
     return undefined;
   });

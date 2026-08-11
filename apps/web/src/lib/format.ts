@@ -12,7 +12,7 @@
  * declarative — changing a convention is a change in this file only.
  */
 
-import { createIntl, createIntlCache, type IntlShape } from "react-intl";
+import { createIntl, createIntlCache, ReactIntlErrorCode, type IntlShape } from "react-intl";
 
 /** Per-call overrides; tests inject all three for locked-string output. */
 export interface FormatOptions {
@@ -113,7 +113,19 @@ const intls = new Map<string, IntlShape>();
 function intlFor(locale: string): IntlShape {
   let intl = intls.get(locale);
   if (!intl) {
-    intl = createIntl({ locale, defaultLocale: "en-US" }, intlCache);
+    intl = createIntl(
+      {
+        locale,
+        defaultLocale: "en-US",
+        // No catalog exists yet for any locale: the inline defaultMessage
+        // IS the en-US copy (DES-013), so falling back to it elsewhere is
+        // the design, not an error worth logging.
+        onError: (error) => {
+          if (error.code !== ReactIntlErrorCode.MISSING_TRANSLATION) console.error(error);
+        },
+      },
+      intlCache,
+    );
     intls.set(locale, intl);
   }
   return intl;

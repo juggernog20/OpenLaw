@@ -41,6 +41,18 @@ export const orgSettings = pgTable(
      * login; set once, never cleared — the wizard is first-run only.
      */
     onboardingCompletedAt: timestamp("onboarding_completed_at", { withTimezone: true }),
+    /**
+     * App-saved SMTP relay URL (TECH-011 revision), credentials inline —
+     * the same single-URL shape as the SMTP_URL env variable, one mental
+     * model across both carriers. Write-only through the API: it embeds
+     * the credential and is never echoed back. Ignored entirely while the
+     * environment pins SMTP — env always wins over app configuration.
+     * Stored plaintext for v1 (the recorded TECH-008 posture; at-rest
+     * encryption is a flagged follow-up shared with the SSO secret).
+     */
+    smtpUrl: text("smtp_url"),
+    /** From-address paired with smtpUrl — the SMTP_FROM shape. */
+    smtpFrom: text("smtp_from"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     // $onUpdate keeps the audit trail honest for writers that forget to
     // set it — application code owns every write here, unlike the

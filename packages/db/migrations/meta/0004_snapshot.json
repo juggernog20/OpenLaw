@@ -1,6 +1,6 @@
 {
-  "id": "f8d0c5ad-e6d1-422a-ad17-439c9e25407a",
-  "prevId": "11dac582-fcc4-46e4-b8a5-bda402ae1841",
+  "id": "11dac582-fcc4-46e4-b8a5-bda402ae1841",
+  "prevId": "f3de1216-daae-4eac-994c-b4679514033d",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -838,33 +838,6 @@
           "notNull": true,
           "default": "'[]'::jsonb"
         },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "''"
-        },
-        "logo": {
-          "name": "logo",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "default_locale": {
-          "name": "default_locale",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'en-US'"
-        },
-        "default_timezone": {
-          "name": "default_timezone",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'UTC'"
-        },
         "onboarding_completed_at": {
           "name": "onboarding_completed_at",
           "type": "timestamp with time zone",
@@ -884,6 +857,18 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "smtp_url": {
+          "name": "smtp_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "smtp_from": {
+          "name": "smtp_from",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {

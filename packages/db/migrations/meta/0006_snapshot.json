@@ -1,6 +1,6 @@
 {
-  "id": "0a833d90-03b8-4b14-9712-9ad3318d80f8",
-  "prevId": "49031c0c-0abd-4243-9ac5-a6667e49df16",
+  "id": "49031c0c-0abd-4243-9ac5-a6667e49df16",
+  "prevId": "f8d0c5ad-e6d1-422a-ad17-439c9e25407a",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -647,12 +647,6 @@
           "notNull": true,
           "default": "'light'"
         },
-        "timezone": {
-          "name": "timezone",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "email_verified": {
           "name": "email_verified",
           "type": "boolean",
@@ -896,6 +890,18 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "smtp_url": {
+          "name": "smtp_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "smtp_from": {
+          "name": "smtp_from",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {

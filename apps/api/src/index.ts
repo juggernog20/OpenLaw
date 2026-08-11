@@ -11,7 +11,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createDb, runMigrations } from "@openlaw/db";
 import { buildApp } from "./app.js";
-import { createSmtpMailer, createUnconfiguredMailer } from "./lib/mailer.js";
+import { createMailerResolver } from "./lib/mailer.js";
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -25,12 +25,15 @@ function requireEnv(name: string): string {
 const db = createDb(requireEnv("DATABASE_URL"));
 await runMigrations(db);
 
-// TECH-011: SMTP is the universal default; the SET-004 wizard surface for
-// configuring it ships later, so env vars carry it until then.
-const mailer =
-  process.env.SMTP_URL && process.env.SMTP_FROM
-    ? createSmtpMailer(process.env.SMTP_URL, process.env.SMTP_FROM)
-    : createUnconfiguredMailer();
+// TECH-011: SMTP is the universal default, carried by env vars or saved
+// through the SET-004 wizard's email step (#37). Environment wins: with
+// SMTP_URL set the instance is env-pinned and database values are ignored
+// entirely. Under Compose the variables always exist (empty when unset in
+// .env); empty is falsy, so empty means "not configured" here too.
+const resolveMailer = createMailerResolver(db, {
+  url: process.env.SMTP_URL,
+  from: process.env.SMTP_FROM,
+});
 
 // BASE_URL anchors emailed links (set-password, magic links) and origin
 // checks. The localhost default exists for development; a production
@@ -67,7 +70,7 @@ const app = await buildApp(
       // env var is the only signal; the warning below is the guard rail.
       disableRateLimit: process.env.AUTH_RATE_LIMIT === "off",
     },
-    mailer,
+    resolveMailer,
     webDist: webDistPresent ? webDist : undefined,
   },
   { logger: true },

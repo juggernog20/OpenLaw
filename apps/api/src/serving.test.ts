@@ -15,6 +15,7 @@ import { createDb } from "@openlaw/db";
 import { buildApp } from "./app.js";
 import {
   CapturingMailer,
+  fixedMailerResolver,
   TEST_AUTH_CONFIG,
   startHarness,
   type TestHarness,
@@ -38,7 +39,12 @@ describe("SPA serving", () => {
 
     // pg pools connect lazily; these suites never touch the database.
     db = createDb("postgresql://unused:unused@localhost:5432/unused");
-    app = await buildApp({ db, config: TEST_AUTH_CONFIG, mailer: new CapturingMailer(), webDist });
+    app = await buildApp({
+      db,
+      config: TEST_AUTH_CONFIG,
+      resolveMailer: fixedMailerResolver(new CapturingMailer()),
+      webDist,
+    });
     await app.ready();
   });
 
@@ -95,9 +101,12 @@ describe("readiness", () => {
   describe("with the database reachable", () => {
     let harness: TestHarness;
 
+    // Every harness suite races to start its own Postgres container; this
+    // file starts last and can be starved past vitest's default 10s hook
+    // timeout when the full suite runs.
     beforeAll(async () => {
       harness = await startHarness();
-    });
+    }, 60_000);
 
     afterAll(async () => {
       await harness.stop();
@@ -122,7 +131,11 @@ describe("readiness", () => {
     beforeAll(async () => {
       // A port nothing listens on: connection attempts fail fast.
       db = createDb("postgresql://unused:unused@127.0.0.1:59999/unused");
-      app = await buildApp({ db, config: TEST_AUTH_CONFIG, mailer: new CapturingMailer() });
+      app = await buildApp({
+        db,
+        config: TEST_AUTH_CONFIG,
+        resolveMailer: fixedMailerResolver(new CapturingMailer()),
+      });
       await app.ready();
     });
 

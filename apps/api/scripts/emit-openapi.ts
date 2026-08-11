@@ -18,7 +18,8 @@ const app = await buildApp(
   {
     db: createDb("postgres://emit:emit@localhost:5432/never-connected"),
     config: { secret: "openapi-emit-only-never-a-real-secret-00", baseUrl: "http://localhost" },
-    mailer: createUnconfiguredMailer(),
+    resolveMailer: () =>
+      Promise.resolve({ source: "unset", from: null, mailer: createUnconfiguredMailer() }),
   },
   { logger: false },
 );

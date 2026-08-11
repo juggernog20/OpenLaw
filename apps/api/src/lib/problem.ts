@@ -24,11 +24,30 @@ z.globalRegistry.add(ProblemSchema, { id: "Problem" });
 
 export const PROBLEM_CONTENT_TYPE = "application/problem+json; charset=utf-8";
 
-/** Throwable that the app error handler renders as a Problem response. */
-export function httpError(statusCode: number, message: string): Error {
-  const err = new Error(message) as Error & { statusCode: number };
-  err.statusCode = statusCode;
-  return err;
+/**
+ * Throwable that the app error handler renders as a Problem response.
+ * A 4xx message is always exposed as the Problem's title and detail. A
+ * 5xx message is scrubbed unless `expose` opts it in — set that only on
+ * copy authored for the client (the 502 test-send reasons), never on
+ * text relayed from another component, which could quote internals.
+ */
+export class HttpError extends Error {
+  readonly statusCode: number;
+  readonly expose: boolean;
+
+  constructor(statusCode: number, message: string, options?: { expose?: boolean }) {
+    super(message);
+    this.statusCode = statusCode;
+    this.expose = options?.expose ?? false;
+  }
+}
+
+export function httpError(
+  statusCode: number,
+  message: string,
+  options?: { expose?: boolean },
+): HttpError {
+  return new HttpError(statusCode, message, options);
 }
 
 /**
