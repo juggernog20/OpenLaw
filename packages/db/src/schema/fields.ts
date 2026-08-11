@@ -12,7 +12,7 @@
  * are hidden everywhere; stored values are always retained (MTR-014).
  */
 
-import { check, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { boolean, check, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { uuidPk } from "./helpers.js";
 
@@ -104,3 +104,25 @@ export const fields = pgTable(
 );
 
 export type Field = typeof fields.$inferSelect;
+
+/**
+ * The shared half of every per-type attachment join (MTR-011/CTR-016):
+ * `matter_type_fields` and `contract_type_fields` are this exact shape
+ * plus their own type FK — the same machinery serves both. The flag and
+ * the order live on the attachment, never on the field (a field can be
+ * required for NDAs and optional elsewhere).
+ */
+export const typeFieldColumns = () => ({
+  /** No cascade: fields have no hard delete (MTR-014), so a dangling
+   * attachment can only mean a bug — let the constraint say so. */
+  fieldId: text("field_id")
+    .notNull()
+    .references(() => fields.id),
+  /** Per-type form order, 1-based; reorder rewrites the rows whose
+   * fields are live. */
+  displayOrder: integer("display_order").notNull(),
+  /** MTR-014: hard-enforced at record creation/re-type once records
+   * exist (M8/M22); until then stored and editable only. */
+  isRequired: boolean("is_required").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
