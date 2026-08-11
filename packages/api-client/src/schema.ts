@@ -51,7 +51,7 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
-    /** Update the signed-in user's preferences (theme, #44) */
+    /** Update the signed-in user's preferences (theme #44, timezone SET-006) */
     patch: operations["updateMyPreferences"];
     trace?: never;
   };
@@ -415,6 +415,8 @@ export interface operations {
               role: "administrator" | "legal_team_member" | "contributor" | "business_user";
               /** @enum {string} */
               theme: "light" | "warm" | "dark";
+              image: string | null;
+              timezone: string | null;
             };
             session: {
               id: string;
@@ -446,7 +448,8 @@ export interface operations {
       content: {
         "application/json": {
           /** @enum {string} */
-          theme: "light" | "warm" | "dark";
+          theme?: "light" | "warm" | "dark";
+          timezone?: string | null;
         };
       };
     };
@@ -466,6 +469,8 @@ export interface operations {
               role: "administrator" | "legal_team_member" | "contributor" | "business_user";
               /** @enum {string} */
               theme: "light" | "warm" | "dark";
+              image: string | null;
+              timezone: string | null;
             };
           };
         };
@@ -545,6 +550,8 @@ export interface operations {
               role: "administrator" | "legal_team_member" | "contributor" | "business_user";
               /** @enum {string} */
               theme: "light" | "warm" | "dark";
+              image: string | null;
+              timezone: string | null;
             };
           };
         };
@@ -629,6 +636,8 @@ export interface operations {
               role: "administrator" | "legal_team_member" | "contributor" | "business_user";
               /** @enum {string} */
               theme: "light" | "warm" | "dark";
+              image: string | null;
+              timezone: string | null;
             };
           };
         };
@@ -648,6 +657,8 @@ export interface operations {
               role: "administrator" | "legal_team_member" | "contributor" | "business_user";
               /** @enum {string} */
               theme: "light" | "warm" | "dark";
+              image: string | null;
+              timezone: string | null;
             };
           };
         };
@@ -689,6 +700,8 @@ export interface operations {
               role: "administrator" | "legal_team_member" | "contributor" | "business_user";
               /** @enum {string} */
               theme: "light" | "warm" | "dark";
+              image: string | null;
+              timezone: string | null;
             };
           };
         };

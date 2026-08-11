@@ -20,6 +20,7 @@ import { uuidv7 } from "uuidv7";
 import { eq, schema, ssoProviders, users, type Db } from "@openlaw/db";
 import type { Mailer } from "../lib/mailer.js";
 import { getOrgSettings, isEmailDomainAllowed } from "../lib/org-settings.js";
+import { createProfileAuditHook } from "./audit.js";
 
 export interface AuthConfig {
   secret: string;
@@ -242,6 +243,34 @@ export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
     ],
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
+        // better-auth's own /update-user validates nothing beyond "is a
+        // string", so the Profile pane's contract (SET-006; the mock
+        // promises "JPG or PNG, 1 MB max") is enforced here — the one
+        // door every update-user call passes through. The avatar cap
+        // bounds the users row, like the org logo's (SET-001).
+        if (ctx.path === "/update-user") {
+          const { name, image } = (ctx.body ?? {}) as { name?: unknown; image?: unknown };
+          if (
+            name !== undefined &&
+            (typeof name !== "string" || !name.trim() || name.length > 200)
+          ) {
+            throw new APIError("BAD_REQUEST", {
+              message: "Display name must be 1–200 characters.",
+            });
+          }
+          const AVATAR_PATTERN = /^data:image\/(png|jpeg);base64,[A-Za-z0-9+/]+={0,2}$/;
+          if (
+            image !== undefined &&
+            image !== null &&
+            (typeof image !== "string" || image.length > 1_400_000 || !AVATAR_PATTERN.test(image))
+          ) {
+            throw new APIError("BAD_REQUEST", {
+              message: "Avatar must be a PNG or JPEG data: URI of at most 1 MB.",
+            });
+          }
+          return;
+        }
+
         // SSO provider management is an Administrator-only surface. The
         // plugin's own endpoints only demand *a* session, which in
         // OpenLaw would let any Business User stand up an IdP for a
@@ -329,6 +358,9 @@ export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
           return ctx.json({ status: true });
         }
       }),
+      // DD-017 audit entries for the profile mutations better-auth owns
+      // (SET-006) — see ./audit.ts for what is recorded and why here.
+      after: createProfileAuditHook(db),
     },
     databaseHooks: {
       session: {

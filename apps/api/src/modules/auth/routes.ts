@@ -28,6 +28,7 @@ import { requireAuth, requireRole, userColumns } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { getOrgSettings, isEmailDomainAllowed } from "../../lib/org-settings.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
+import { KNOWN_TIMEZONES } from "../../lib/timezones.js";
 
 const UserSchema = z.object({
   id: z.string(),
@@ -35,6 +36,8 @@ const UserSchema = z.object({
   displayName: z.string(),
   role: z.enum(USER_ROLES),
   theme: z.enum(THEMES),
+  image: z.string().nullable(),
+  timezone: z.string().nullable(),
 });
 
 const UserEnvelope = z.object({ user: UserSchema });
@@ -139,40 +142,59 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireAuth,
       schema: {
         operationId: "updateMyPreferences",
-        summary: "Update the signed-in user's preferences (theme, #44)",
+        summary: "Update the signed-in user's preferences (theme #44, timezone SET-006)",
         tags: ["auth"],
-        body: z.object({ theme: z.enum(THEMES) }),
+        body: z
+          .object({
+            theme: z.enum(THEMES),
+            // null clears the override back to "use browser timezone"
+            // (DES-014's default, which most users never leave).
+            timezone: z
+              .string()
+              .refine((zone) => KNOWN_TIMEZONES.has(zone), "An IANA zone name like Europe/Berlin.")
+              .nullable(),
+          })
+          .partial()
+          .refine((body) => Object.keys(body).length > 0, "At least one preference is required."),
         response: { 200: UserEnvelope, default: problemResponse },
       },
     },
     async (request) => {
-      // Mutation and audit entry commit together (SET-003/DD-017): every
-      // settings change is recorded, or it does not land. The old value
-      // is lock-read inside the transaction — the guard's earlier read
-      // could be stale under a concurrent PATCH.
+      // Mutation and audit entries commit together (SET-003/DD-017):
+      // every settings change is recorded, or it does not land. The old
+      // values are lock-read inside the transaction — the guard's
+      // earlier read could be stale under a concurrent PATCH.
       const user = await app.db.transaction(async (tx) => {
         const [current] = await tx
-          .select({ theme: users.theme })
+          .select(userColumns)
           .from(users)
           .where(eq(users.id, request.user.id))
           .for("update");
         // requireAuth just loaded this user, so the row exists; a vanished
         // row here means the account was deleted mid-request.
         if (!current) throw httpError(401, "Authentication required.");
+        const patch = request.body;
+        const changed = (["theme", "timezone"] as const).filter(
+          (field) => patch[field] !== undefined && patch[field] !== current[field],
+        );
+        if (changed.length === 0) return current;
         const [row] = await tx
           .update(users)
-          .set({ theme: request.body.theme, updatedAt: new Date() })
+          .set({
+            ...Object.fromEntries(changed.map((field) => [field, patch[field]])),
+            updatedAt: new Date(),
+          })
           .where(eq(users.id, request.user.id))
           .returning(userColumns);
         if (!row) throw httpError(401, "Authentication required.");
-        if (row.theme !== current.theme) {
+        for (const field of changed) {
           await recordActivity(tx, {
             entityType: "user",
             entityId: row.id,
             actorId: row.id,
-            action: "user.theme_changed",
+            action: `user.${field}_changed`,
             visibility: "admin_only",
-            payload: { field: "theme", old: current.theme, new: row.theme },
+            payload: { field, old: current[field], new: row[field] },
           });
         }
         return row;
