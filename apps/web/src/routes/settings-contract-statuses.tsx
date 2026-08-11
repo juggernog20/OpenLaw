@@ -2,40 +2,32 @@
 
 /**
  * Contracts · Statuses (#82), the DES-020 list-editor extended per the
- * ST10 frame of settings.pen: the CTR-001 taxonomy as 44px rows — grip,
- * in-place rename, the stage badge in the qualifier-pill slot, usage
- * count, archive — with `draft`, `active`, and `expired` locked, drag
- * or arrow-key reorder, and an inline draft row whose stage is picked
- * at creation and immutable after. The archive guard blocks at the
- * CTR-001 floor (every stage keeps one unarchived status) instead of
- * offering reassignment — SET-003's structural-minimum rule. Every
- * mutation applies immediately on save. The loader is the client half
- * of SET-002's gate; the API's 403 is the real refusal.
+ * ST10 frame of settings.pen: the CTR-001 taxonomy with the stage badge
+ * in the qualifier-pill slot, `draft`, `active`, and `expired` locked,
+ * drag or arrow-key reorder, and an inline draft row whose stage is
+ * picked at creation and immutable after. The archive guard blocks at
+ * the CTR-001 floor (every stage keeps one unarchived status) instead
+ * of offering reassignment — SET-003's structural-minimum rule. Every
+ * mutation applies immediately on save. The shared anatomy lives in the
+ * ListEditor component (extracted with #83); this pane owns the CTR-001
+ * vocabulary, the API calls, and the guard dialog. The loader is the
+ * client half of SET-002's gate; the API's 403 is the real refusal.
  */
 
-import { useRef, useState, type DragEvent } from "react";
+import { useRef, useState } from "react";
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
-import {
-  Archive,
-  ArchiveRestore,
-  GripVertical,
-  History,
-  Lock,
-  Plus,
-  TriangleAlert,
-} from "lucide-react";
+import { History, TriangleAlert } from "lucide-react";
 import { api } from "../lib/api";
 import { problemDetail } from "../lib/messages";
 import { currentUser, needsSetup } from "../lib/session";
 import { ContractsSettingsTabs } from "../components/contracts-settings-tabs";
+import { ListEditor } from "../components/list-editor";
 import { PageTitle } from "../components/page-title";
-import { SettingsCard } from "../components/settings-card";
 import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
-import { Switch } from "../components/ui/switch";
 
 export async function settingsContractStatusesLoader() {
   const user = await currentUser();
@@ -227,8 +219,6 @@ export function SettingsContractStatusesPage() {
   const [rowError, setRowError] = useState<Record<string, string | undefined>>({});
   const [orderStatus, setOrderStatus] = useState<FieldStatus>("idle");
   const [orderError, setOrderError] = useState<string | undefined>(undefined);
-  const [showArchived, setShowArchived] = useState(false);
-  const [editing, setEditing] = useState<{ id: string; draft: string } | null>(null);
   const [adding, setAdding] = useState(false);
   const [addDraft, setAddDraft] = useState<{ name: string; stage: Stage | "" }>({
     name: "",
@@ -238,13 +228,11 @@ export function SettingsContractStatusesPage() {
   const [addError, setAddError] = useState<string | undefined>(undefined);
   const [archiveTarget, setArchiveTarget] = useState<StatusRow | null>(null);
   const [announcement, setAnnouncement] = useState("");
-  const dragFrom = useRef<number | null>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const createInFlight = useRef(false);
 
   const live = rows.filter((row) => !row.archivedAt).sort(byDisplayOrder);
   const archived = rows.filter((row) => row.archivedAt).sort(byDisplayOrder);
-  const hasArchived = archived.length > 0;
 
   /** The CTR-001 floor, client-side: is this row its stage's last live one? */
   const lastLiveInStage = (row: StatusRow) =>
@@ -259,11 +247,7 @@ export function SettingsContractStatusesPage() {
     setRows((current) => current.map((existing) => (existing.id === row.id ? row : existing)));
   }
 
-  async function rename(row: StatusRow, draft: string) {
-    setEditing(null);
-    const displayName = draft.trim();
-    // Nothing to save (or nothing valid): revert per DES-017.
-    if (displayName === "" || displayName === row.displayName) return;
+  async function rename(row: StatusRow, displayName: string) {
     noteRow(row.id, "saving");
     const { data, error } = await api
       .PATCH("/api/v1/contract-statuses/{id}", {
@@ -345,15 +329,13 @@ export function SettingsContractStatusesPage() {
     return false;
   }
 
-  /** Arrow-key reorder from the grip: one position per press (DES-020). */
-  async function moveBy(row: StatusRow, delta: -1 | 1) {
-    if (orderStatus === "saving") return;
-    const index = live.findIndex(({ id }) => id === row.id);
-    const target = index + delta;
-    if (index < 0 || target < 0 || target >= live.length) return;
+  /** One validated move from the grip (arrow key or drop) — commit the
+   * permutation and announce the landing position (DES-020). */
+  async function move(fromIndex: number, toIndex: number) {
+    const row = live[fromIndex]!;
     const ids = live.map(({ id }) => id);
-    ids.splice(index, 1);
-    ids.splice(target, 0, row.id);
+    ids.splice(fromIndex, 1);
+    ids.splice(toIndex, 0, row.id);
     if (await commitOrder(ids)) {
       setAnnouncement(
         intl.formatMessage(
@@ -361,21 +343,10 @@ export function SettingsContractStatusesPage() {
             id: "settings.contractStatuses.moved",
             defaultMessage: "{name} moved to position {position} of {total}.",
           },
-          { name: row.displayName, position: target + 1, total: live.length },
+          { name: row.displayName, position: toIndex + 1, total: live.length },
         ),
       );
     }
-  }
-
-  function drop(event: DragEvent, targetIndex: number) {
-    event.preventDefault();
-    const from = dragFrom.current;
-    dragFrom.current = null;
-    if (from === null || from === targetIndex || orderStatus === "saving") return;
-    const ids = live.map(({ id }) => id);
-    const [moved] = ids.splice(from, 1);
-    ids.splice(targetIndex, 0, moved!);
-    void commitOrder(ids);
   }
 
   async function restore(row: StatusRow) {
@@ -408,97 +379,6 @@ export function SettingsContractStatusesPage() {
     );
   }
 
-  function nameCell(row: StatusRow) {
-    if (editing?.id === row.id) {
-      return (
-        <Input
-          autoFocus
-          value={editing.draft}
-          aria-label={intl.formatMessage(
-            { id: "settings.contractStatuses.renameLabel", defaultMessage: "Rename {name}" },
-            { name: row.displayName },
-          )}
-          className="h-7 w-64 max-w-full"
-          onChange={(event) => setEditing({ id: row.id, draft: event.target.value })}
-          onBlur={() => void rename(row, editing.draft)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") void rename(row, editing.draft);
-            if (event.key === "Escape") setEditing(null);
-          }}
-        />
-      );
-    }
-    return (
-      <button
-        type="button"
-        // In-place rename (DES-017/DES-020): the name IS the editor.
-        onClick={() => setEditing({ id: row.id, draft: row.displayName })}
-        aria-label={intl.formatMessage(
-          { id: "settings.contractStatuses.renameLabel", defaultMessage: "Rename {name}" },
-          { name: row.displayName },
-        )}
-        className="rounded-chip text-base font-medium text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
-      >
-        {row.displayName}
-      </button>
-    );
-  }
-
-  function trailingAction(row: StatusRow) {
-    if (row.archivedAt) {
-      return (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="px-1.5"
-          disabled={rowStatus[row.id] === "saving"}
-          aria-label={intl.formatMessage(
-            { id: "settings.contractStatuses.restore", defaultMessage: "Restore {name}" },
-            { name: row.displayName },
-          )}
-          onClick={() => void restore(row)}
-        >
-          <ArchiveRestore size={16} aria-hidden="true" className="text-muted" />
-        </Button>
-      );
-    }
-    if (PROTECTED_SLUGS.has(row.slug)) {
-      // The lock, not a disabled button (DES-020): protection is a fact
-      // about the row, and the server refuses regardless.
-      return (
-        <span className="flex size-7 items-center justify-center">
-          <Lock
-            size={16}
-            role="img"
-            aria-label={intl.formatMessage(
-              {
-                id: "settings.contractStatuses.locked",
-                defaultMessage: "{name} is system-protected and can't be archived",
-              },
-              { name: row.displayName },
-            )}
-            className="text-muted"
-          />
-        </span>
-      );
-    }
-    return (
-      <Button
-        variant="ghost"
-        size="sm"
-        className="px-1.5"
-        disabled={rowStatus[row.id] === "saving"}
-        aria-label={intl.formatMessage(
-          { id: "settings.contractStatuses.archive", defaultMessage: "Archive {name}" },
-          { name: row.displayName },
-        )}
-        onClick={() => setArchiveTarget(row)}
-      >
-        <Archive size={16} aria-hidden="true" className="text-muted" />
-      </Button>
-    );
-  }
-
   return (
     <>
       <PageTitle
@@ -509,214 +389,32 @@ export function SettingsContractStatusesPage() {
       />
       <div className="flex w-full max-w-(--width-settings-card) flex-col gap-4">
         <ContractsSettingsTabs />
-        <div className="flex flex-col gap-2">
-          <SettingsCard
-            title={
-              <FormattedMessage
-                id="settings.contractStatuses.title"
-                defaultMessage="Contract statuses"
-              />
-            }
-            flush
-            actions={
-              <div className="flex items-center gap-3">
-                {hasArchived && (
-                  <span className="flex items-center gap-2 text-sm text-muted">
-                    <FormattedMessage
-                      id="settings.contractStatuses.showArchived"
-                      defaultMessage="Show archived"
-                    />
-                    <Switch
-                      checked={showArchived}
-                      onCheckedChange={setShowArchived}
-                      aria-label={intl.formatMessage({
-                        id: "settings.contractStatuses.showArchived",
-                        defaultMessage: "Show archived",
-                      })}
-                    />
-                  </span>
-                )}
-                <span className="text-sm whitespace-nowrap text-muted">
-                  <FormattedMessage
-                    id="settings.contractStatuses.count"
-                    defaultMessage="{count, plural, one {# status} other {# statuses}}"
-                    values={{ count: live.length }}
-                  />
-                </span>
-                <StatusNote status={orderStatus} detail={orderError} />
-                <Button
-                  size="sm"
-                  className="px-3 whitespace-nowrap"
-                  onClick={() => {
-                    setAdding(true);
-                    setAddDraft({ name: "", stage: "" });
-                    setAddStatus("idle");
-                    setAddError(undefined);
-                  }}
-                >
-                  <Plus size={16} aria-hidden="true" />
-                  <FormattedMessage
-                    id="settings.contractStatuses.add"
-                    defaultMessage="Add status"
-                  />
-                </Button>
-              </div>
-            }
-          >
-            {/* Keyboard moves are announced here; the row order itself is
-                silent to a reader (WCAG 4.1.3). */}
-            <span aria-live="polite" className="sr-only">
-              {announcement}
-            </span>
-            {/* tabIndex -1: the archive dialog parks focus here when the
-                row it was opened from has left the list. */}
-            <ul ref={listRef} tabIndex={-1}>
-              {live.map((row, index) => (
-                <li
-                  key={row.id}
-                  draggable={editing?.id !== row.id}
-                  onDragStart={() => {
-                    dragFrom.current = index;
-                  }}
-                  onDragOver={(event) => event.preventDefault()}
-                  onDrop={(event) => drop(event, index)}
-                  className="flex h-11 items-center border-b border-border-muted pe-3"
-                >
-                  <span className="flex w-9 shrink-0 justify-center">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="cursor-grab px-1"
-                      disabled={orderStatus === "saving"}
-                      aria-label={intl.formatMessage(
-                        {
-                          id: "settings.contractStatuses.reorder",
-                          defaultMessage:
-                            "Reorder {name}, position {position} of {total}. " +
-                            "Use the arrow keys to move it.",
-                        },
-                        { name: row.displayName, position: index + 1, total: live.length },
-                      )}
-                      onKeyDown={(event) => {
-                        if (event.key === "ArrowUp") {
-                          event.preventDefault();
-                          void moveBy(row, -1);
-                        }
-                        if (event.key === "ArrowDown") {
-                          event.preventDefault();
-                          void moveBy(row, 1);
-                        }
-                      }}
-                    >
-                      <GripVertical size={16} aria-hidden="true" className="text-muted" />
-                    </Button>
-                  </span>
-                  <span className="flex min-w-0 flex-1 items-center gap-2 ps-1">
-                    {nameCell(row)}
-                    {stageBadge(row)}
-                  </span>
-                  <span className="px-3 text-sm whitespace-nowrap text-muted">
-                    <FormattedMessage
-                      id="settings.contractStatuses.inUse"
-                      defaultMessage="{count, plural, one {# contract} other {# contracts}}"
-                      values={{ count: row.inUseCount }}
-                    />
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <StatusNote status={rowStatus[row.id] ?? "idle"} detail={rowError[row.id]} />
-                    {trailingAction(row)}
-                  </span>
-                </li>
-              ))}
-              {adding && (
-                <li className="flex h-11 items-center gap-2 border-b border-border-muted pe-3 ps-9">
-                  <Input
-                    autoFocus
-                    value={addDraft.name}
-                    aria-label={intl.formatMessage({
-                      id: "settings.contractStatuses.addName",
-                      defaultMessage: "New status name",
-                    })}
-                    className="h-7 w-52 max-w-full"
-                    onChange={(event) =>
-                      setAddDraft((current) => ({ ...current, name: event.target.value }))
-                    }
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") void create();
-                      if (event.key === "Escape") setAdding(false);
-                    }}
-                  />
-                  {/* The creation-time immutable dimension (CTR-001): the
-                      stage is picked here, once. */}
-                  <select
-                    value={addDraft.stage}
-                    aria-label={intl.formatMessage({
-                      id: "settings.contractStatuses.addStage",
-                      defaultMessage: "New status stage",
-                    })}
-                    className="h-7 rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
-                    onChange={(event) => {
-                      const stage = event.target.value as Stage | "";
-                      setAddDraft((current) => ({ ...current, stage }));
-                      // Picking a stage answers the "pick a stage"
-                      // refusal — don't leave it standing.
-                      if (stage !== "" && addStatus === "error") {
-                        setAddStatus("idle");
-                        setAddError(undefined);
-                      }
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") void create();
-                      if (event.key === "Escape") setAdding(false);
-                    }}
-                  >
-                    <option value="">
-                      {intl.formatMessage({
-                        id: "settings.contractStatuses.stagePlaceholder",
-                        defaultMessage: "Stage…",
-                      })}
-                    </option>
-                    {STAGES.map((stage) => (
-                      <option key={stage} value={stage}>
-                        {stageLabel(intl, stage)}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="ps-1">
-                    <StatusNote status={addStatus} detail={addError} />
-                  </span>
-                </li>
-              )}
-              {showArchived &&
-                archived.map((row) => (
-                  <li
-                    key={row.id}
-                    className="flex h-11 items-center border-b border-border-muted pe-3"
-                  >
-                    <span className="w-9 shrink-0" aria-hidden="true" />
-                    {/* ST5's archived treatment: identity at half opacity,
-                        a neutral pill, restore in the trailing slot. */}
-                    <span className="flex min-w-0 flex-1 items-center gap-2 ps-1">
-                      <span className="text-base font-medium text-primary opacity-50">
-                        {row.displayName}
-                      </span>
-                      <span className="opacity-50">{stageBadge(row)}</span>
-                      <span className="inline-flex rounded-full bg-status-neutral-bg px-2 py-0.5 text-xs font-semibold text-status-neutral-fg">
-                        <FormattedMessage
-                          id="settings.contractStatuses.archivedPill"
-                          defaultMessage="Archived"
-                        />
-                      </span>
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <StatusNote status={rowStatus[row.id] ?? "idle"} detail={rowError[row.id]} />
-                      {trailingAction(row)}
-                    </span>
-                  </li>
-                ))}
-            </ul>
-          </SettingsCard>
-          <p className="text-sm text-muted">
+        <ListEditor
+          rows={live}
+          archivedRows={archived}
+          title={
+            <FormattedMessage
+              id="settings.contractStatuses.title"
+              defaultMessage="Contract statuses"
+            />
+          }
+          count={
+            <FormattedMessage
+              id="settings.contractStatuses.count"
+              defaultMessage="{count, plural, one {# status} other {# statuses}}"
+              values={{ count: live.length }}
+            />
+          }
+          addLabel={
+            <FormattedMessage id="settings.contractStatuses.add" defaultMessage="Add status" />
+          }
+          onAdd={() => {
+            setAdding(true);
+            setAddDraft({ name: "", stage: "" });
+            setAddStatus("idle");
+            setAddError(undefined);
+          }}
+          help={
             <FormattedMessage
               id="settings.contractStatuses.help"
               defaultMessage={
@@ -724,8 +422,127 @@ export function SettingsContractStatusesPage() {
                 "stage keeps at least one unarchived status."
               }
             />
-          </p>
-        </div>
+          }
+          rowStatus={rowStatus}
+          rowError={rowError}
+          renameLabel={(row) =>
+            intl.formatMessage(
+              { id: "settings.contractStatuses.renameLabel", defaultMessage: "Rename {name}" },
+              { name: row.displayName },
+            )
+          }
+          onRename={(row, displayName) => void rename(row, displayName)}
+          rowDetails={stageBadge}
+          rowMeta={(row) => (
+            <FormattedMessage
+              id="settings.contractStatuses.inUse"
+              defaultMessage="{count, plural, one {# contract} other {# contracts}}"
+              values={{ count: row.inUseCount }}
+            />
+          )}
+          protectedLabel={(row) =>
+            PROTECTED_SLUGS.has(row.slug)
+              ? intl.formatMessage(
+                  {
+                    id: "settings.contractStatuses.locked",
+                    defaultMessage: "{name} is system-protected and can't be archived",
+                  },
+                  { name: row.displayName },
+                )
+              : null
+          }
+          archiveLabel={(row) =>
+            intl.formatMessage(
+              { id: "settings.contractStatuses.archive", defaultMessage: "Archive {name}" },
+              { name: row.displayName },
+            )
+          }
+          onArchive={setArchiveTarget}
+          restoreLabel={(row) =>
+            intl.formatMessage(
+              { id: "settings.contractStatuses.restore", defaultMessage: "Restore {name}" },
+              { name: row.displayName },
+            )
+          }
+          onRestore={(row) => void restore(row)}
+          reorder={{
+            status: orderStatus,
+            detail: orderError,
+            gripLabel: (row, position, total) =>
+              intl.formatMessage(
+                {
+                  id: "settings.contractStatuses.reorder",
+                  defaultMessage:
+                    "Reorder {name}, position {position} of {total}. " +
+                    "Use the arrow keys to move it.",
+                },
+                { name: row.displayName, position, total },
+              ),
+            onMove: (fromIndex, toIndex) => void move(fromIndex, toIndex),
+          }}
+          adding={adding}
+          addRow={
+            <>
+              <Input
+                autoFocus
+                value={addDraft.name}
+                aria-label={intl.formatMessage({
+                  id: "settings.contractStatuses.addName",
+                  defaultMessage: "New status name",
+                })}
+                className="h-7 w-52 max-w-full"
+                onChange={(event) =>
+                  setAddDraft((current) => ({ ...current, name: event.target.value }))
+                }
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") void create();
+                  if (event.key === "Escape") setAdding(false);
+                }}
+              />
+              {/* The creation-time immutable dimension (CTR-001): the
+                  stage is picked here, once. */}
+              <select
+                value={addDraft.stage}
+                aria-label={intl.formatMessage({
+                  id: "settings.contractStatuses.addStage",
+                  defaultMessage: "New status stage",
+                })}
+                className="h-7 rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
+                onChange={(event) => {
+                  const stage = event.target.value as Stage | "";
+                  setAddDraft((current) => ({ ...current, stage }));
+                  // Picking a stage answers the "pick a stage"
+                  // refusal — don't leave it standing.
+                  if (stage !== "" && addStatus === "error") {
+                    setAddStatus("idle");
+                    setAddError(undefined);
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") void create();
+                  if (event.key === "Escape") setAdding(false);
+                }}
+              >
+                <option value="">
+                  {intl.formatMessage({
+                    id: "settings.contractStatuses.stagePlaceholder",
+                    defaultMessage: "Stage…",
+                  })}
+                </option>
+                {STAGES.map((stage) => (
+                  <option key={stage} value={stage}>
+                    {stageLabel(intl, stage)}
+                  </option>
+                ))}
+              </select>
+              <span className="ps-1">
+                <StatusNote status={addStatus} detail={addError} />
+              </span>
+            </>
+          }
+          announcement={announcement}
+          listRef={listRef}
+        />
       </div>
       {archiveTarget && (
         <ArchiveStatusDialog

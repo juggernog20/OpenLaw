@@ -1,41 +1,33 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Contracts · Types (#81), the DES-020 list-editor's reference
- * implementation, from the ST6 frame of settings.pen: the CTR-002
- * taxonomy as 44px rows — grip, in-place rename, usage count, archive —
- * with the `other` row locked, drag or arrow-key reorder, an inline
- * draft row for add, and the SET-003 archive-guard modal (ST8). Every
- * mutation applies immediately on save. Archived rows sit greyed behind
- * the Show-archived filter with restore. The loader is the client half
- * of SET-002's gate; the API's 403 is the real refusal.
+ * Contracts · Types (#81), the DES-020 list-editor's reference pane,
+ * from the ST6 frame of settings.pen: the CTR-002 taxonomy with the
+ * `other` row locked, drag or arrow-key reorder, an inline draft row
+ * for add, and the SET-003 archive-guard modal (ST8) with its
+ * reassignment select. Every mutation applies immediately on save. The
+ * shared anatomy lives in the ListEditor component (extracted with
+ * #83); this pane owns the CTR-002 vocabulary, the API calls, and the
+ * guard dialog. The loader is the client half of SET-002's gate; the
+ * API's 403 is the real refusal.
  */
 
-import { useRef, useState, type DragEvent, type SubmitEvent as FormSubmitEvent } from "react";
+import { useRef, useState, type SubmitEvent as FormSubmitEvent } from "react";
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
-import {
-  Archive,
-  ArchiveRestore,
-  GripVertical,
-  History,
-  Lock,
-  Plus,
-  TriangleAlert,
-} from "lucide-react";
+import { History, TriangleAlert } from "lucide-react";
 import { api } from "../lib/api";
 import { field } from "../lib/forms";
 import { problemDetail } from "../lib/messages";
 import { currentUser, needsSetup } from "../lib/session";
 import { ContractsSettingsTabs } from "../components/contracts-settings-tabs";
+import { ListEditor } from "../components/list-editor";
 import { PageTitle } from "../components/page-title";
-import { SettingsCard } from "../components/settings-card";
 import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Switch } from "../components/ui/switch";
 
 /** The section URL forwards to its first pane (SET-001 deep links). */
 export function settingsContractsIndexLoader() {
@@ -230,20 +222,16 @@ export function SettingsContractTypesPage() {
   const [rowError, setRowError] = useState<Record<string, string | undefined>>({});
   const [orderStatus, setOrderStatus] = useState<FieldStatus>("idle");
   const [orderError, setOrderError] = useState<string | undefined>(undefined);
-  const [showArchived, setShowArchived] = useState(false);
-  const [editing, setEditing] = useState<{ id: string; draft: string } | null>(null);
   const [adding, setAdding] = useState(false);
   const [addStatus, setAddStatus] = useState<FieldStatus>("idle");
   const [addError, setAddError] = useState<string | undefined>(undefined);
   const [archiveTarget, setArchiveTarget] = useState<TypeRow | null>(null);
   const [announcement, setAnnouncement] = useState("");
-  const dragFrom = useRef<number | null>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const createInFlight = useRef(false);
 
   const live = rows.filter((row) => !row.archivedAt).sort(byDisplayOrder);
   const archived = rows.filter((row) => row.archivedAt).sort(byDisplayOrder);
-  const hasArchived = archived.length > 0;
 
   function noteRow(id: string, status: FieldStatus, detail?: string) {
     setRowStatus((current) => ({ ...current, [id]: status }));
@@ -254,11 +242,7 @@ export function SettingsContractTypesPage() {
     setRows((current) => current.map((existing) => (existing.id === row.id ? row : existing)));
   }
 
-  async function rename(row: TypeRow, draft: string) {
-    setEditing(null);
-    const displayName = draft.trim();
-    // Nothing to save (or nothing valid): revert per DES-017.
-    if (displayName === "" || displayName === row.displayName) return;
+  async function rename(row: TypeRow, displayName: string) {
     noteRow(row.id, "saving");
     const { data, error } = await api
       .PATCH("/api/v1/contract-types/{id}", {
@@ -325,15 +309,13 @@ export function SettingsContractTypesPage() {
     return false;
   }
 
-  /** Arrow-key reorder from the grip: one position per press (DES-020). */
-  async function moveBy(row: TypeRow, delta: -1 | 1) {
-    if (orderStatus === "saving") return;
-    const index = live.findIndex(({ id }) => id === row.id);
-    const target = index + delta;
-    if (index < 0 || target < 0 || target >= live.length) return;
+  /** One validated move from the grip (arrow key or drop) — commit the
+   * permutation and announce the landing position (DES-020). */
+  async function move(fromIndex: number, toIndex: number) {
+    const row = live[fromIndex]!;
     const ids = live.map(({ id }) => id);
-    ids.splice(index, 1);
-    ids.splice(target, 0, row.id);
+    ids.splice(fromIndex, 1);
+    ids.splice(toIndex, 0, row.id);
     if (await commitOrder(ids)) {
       setAnnouncement(
         intl.formatMessage(
@@ -341,21 +323,10 @@ export function SettingsContractTypesPage() {
             id: "settings.contractTypes.moved",
             defaultMessage: "{name} moved to position {position} of {total}.",
           },
-          { name: row.displayName, position: target + 1, total: live.length },
+          { name: row.displayName, position: toIndex + 1, total: live.length },
         ),
       );
     }
-  }
-
-  function drop(event: DragEvent, targetIndex: number) {
-    event.preventDefault();
-    const from = dragFrom.current;
-    dragFrom.current = null;
-    if (from === null || from === targetIndex || orderStatus === "saving") return;
-    const ids = live.map(({ id }) => id);
-    const [moved] = ids.splice(from, 1);
-    ids.splice(targetIndex, 0, moved!);
-    void commitOrder(ids);
   }
 
   async function restore(row: TypeRow) {
@@ -371,97 +342,6 @@ export function SettingsContractTypesPage() {
     }
   }
 
-  function nameCell(row: TypeRow) {
-    if (editing?.id === row.id) {
-      return (
-        <Input
-          autoFocus
-          value={editing.draft}
-          aria-label={intl.formatMessage(
-            { id: "settings.contractTypes.renameLabel", defaultMessage: "Rename {name}" },
-            { name: row.displayName },
-          )}
-          className="h-7 w-64 max-w-full"
-          onChange={(event) => setEditing({ id: row.id, draft: event.target.value })}
-          onBlur={() => void rename(row, editing.draft)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") void rename(row, editing.draft);
-            if (event.key === "Escape") setEditing(null);
-          }}
-        />
-      );
-    }
-    return (
-      <button
-        type="button"
-        // In-place rename (DES-017/DES-020): the name IS the editor.
-        onClick={() => setEditing({ id: row.id, draft: row.displayName })}
-        aria-label={intl.formatMessage(
-          { id: "settings.contractTypes.renameLabel", defaultMessage: "Rename {name}" },
-          { name: row.displayName },
-        )}
-        className="rounded-chip text-base font-medium text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
-      >
-        {row.displayName}
-      </button>
-    );
-  }
-
-  function trailingAction(row: TypeRow) {
-    if (row.archivedAt) {
-      return (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="px-1.5"
-          disabled={rowStatus[row.id] === "saving"}
-          aria-label={intl.formatMessage(
-            { id: "settings.contractTypes.restore", defaultMessage: "Restore {name}" },
-            { name: row.displayName },
-          )}
-          onClick={() => void restore(row)}
-        >
-          <ArchiveRestore size={16} aria-hidden="true" className="text-muted" />
-        </Button>
-      );
-    }
-    if (row.slug === "other") {
-      // The lock, not a disabled button (DES-020): protection is a fact
-      // about the row, and the server refuses regardless.
-      return (
-        <span className="flex size-7 items-center justify-center">
-          <Lock
-            size={16}
-            role="img"
-            aria-label={intl.formatMessage(
-              {
-                id: "settings.contractTypes.locked",
-                defaultMessage: "{name} is system-protected and can't be archived",
-              },
-              { name: row.displayName },
-            )}
-            className="text-muted"
-          />
-        </span>
-      );
-    }
-    return (
-      <Button
-        variant="ghost"
-        size="sm"
-        className="px-1.5"
-        disabled={rowStatus[row.id] === "saving"}
-        aria-label={intl.formatMessage(
-          { id: "settings.contractTypes.archive", defaultMessage: "Archive {name}" },
-          { name: row.displayName },
-        )}
-        onClick={() => setArchiveTarget(row)}
-      >
-        <Archive size={16} aria-hidden="true" className="text-muted" />
-      </Button>
-    );
-  }
-
   return (
     <>
       <PageTitle
@@ -472,170 +352,113 @@ export function SettingsContractTypesPage() {
       />
       <div className="flex w-full max-w-(--width-settings-card) flex-col gap-4">
         <ContractsSettingsTabs />
-        <div className="flex flex-col gap-2">
-          <SettingsCard
-            title={
-              <FormattedMessage id="settings.contractTypes.title" defaultMessage="Contract types" />
-            }
-            flush
-            actions={
-              <div className="flex items-center gap-3">
-                {hasArchived && (
-                  <span className="flex items-center gap-2 text-sm text-muted">
-                    <FormattedMessage
-                      id="settings.contractTypes.showArchived"
-                      defaultMessage="Show archived"
-                    />
-                    <Switch
-                      checked={showArchived}
-                      onCheckedChange={setShowArchived}
-                      aria-label={intl.formatMessage({
-                        id: "settings.contractTypes.showArchived",
-                        defaultMessage: "Show archived",
-                      })}
-                    />
-                  </span>
-                )}
-                <span className="text-sm whitespace-nowrap text-muted">
-                  <FormattedMessage
-                    id="settings.contractTypes.count"
-                    defaultMessage="{count, plural, one {# type} other {# types}}"
-                    values={{ count: live.length }}
-                  />
-                </span>
-                <StatusNote status={orderStatus} detail={orderError} />
-                <Button
-                  size="sm"
-                  className="px-3 whitespace-nowrap"
-                  onClick={() => {
-                    setAdding(true);
-                    setAddStatus("idle");
-                    setAddError(undefined);
-                  }}
-                >
-                  <Plus size={16} aria-hidden="true" />
-                  <FormattedMessage id="settings.contractTypes.add" defaultMessage="Add type" />
-                </Button>
-              </div>
-            }
-          >
-            {/* Keyboard moves are announced here; the row order itself is
-              silent to a reader (WCAG 4.1.3). */}
-            <span aria-live="polite" className="sr-only">
-              {announcement}
-            </span>
-            {/* tabIndex -1: the archive dialog parks focus here when the
-              row it was opened from has left the list. */}
-            <ul ref={listRef} tabIndex={-1}>
-              {live.map((row, index) => (
-                <li
-                  key={row.id}
-                  draggable={editing?.id !== row.id}
-                  onDragStart={() => {
-                    dragFrom.current = index;
-                  }}
-                  onDragOver={(event) => event.preventDefault()}
-                  onDrop={(event) => drop(event, index)}
-                  className="flex h-11 items-center border-b border-border-muted pe-3"
-                >
-                  <span className="flex w-9 shrink-0 justify-center">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="cursor-grab px-1"
-                      disabled={orderStatus === "saving"}
-                      aria-label={intl.formatMessage(
-                        {
-                          id: "settings.contractTypes.reorder",
-                          defaultMessage:
-                            "Reorder {name}, position {position} of {total}. " +
-                            "Use the arrow keys to move it.",
-                        },
-                        { name: row.displayName, position: index + 1, total: live.length },
-                      )}
-                      onKeyDown={(event) => {
-                        if (event.key === "ArrowUp") {
-                          event.preventDefault();
-                          void moveBy(row, -1);
-                        }
-                        if (event.key === "ArrowDown") {
-                          event.preventDefault();
-                          void moveBy(row, 1);
-                        }
-                      }}
-                    >
-                      <GripVertical size={16} aria-hidden="true" className="text-muted" />
-                    </Button>
-                  </span>
-                  <span className="min-w-0 flex-1 ps-1">{nameCell(row)}</span>
-                  <span className="px-3 text-sm whitespace-nowrap text-muted">
-                    <FormattedMessage
-                      id="settings.contractTypes.inUse"
-                      defaultMessage="{count, plural, one {# contract} other {# contracts}}"
-                      values={{ count: row.inUseCount }}
-                    />
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <StatusNote status={rowStatus[row.id] ?? "idle"} detail={rowError[row.id]} />
-                    {trailingAction(row)}
-                  </span>
-                </li>
-              ))}
-              {adding && (
-                <li className="flex h-11 items-center border-b border-border-muted pe-3 ps-9">
-                  <Input
-                    autoFocus
-                    aria-label={intl.formatMessage({
-                      id: "settings.contractTypes.addName",
-                      defaultMessage: "New type name",
-                    })}
-                    className="h-7 w-64 max-w-full"
-                    onBlur={(event) => void create(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") void create(event.currentTarget.value);
-                      if (event.key === "Escape") setAdding(false);
-                    }}
-                  />
-                  <span className="ps-3">
-                    <StatusNote status={addStatus} detail={addError} />
-                  </span>
-                </li>
-              )}
-              {showArchived &&
-                archived.map((row) => (
-                  <li
-                    key={row.id}
-                    className="flex h-11 items-center border-b border-border-muted pe-3"
-                  >
-                    <span className="w-9 shrink-0" aria-hidden="true" />
-                    {/* ST5's archived treatment: identity at half opacity,
-                      a neutral pill, restore in the trailing slot. */}
-                    <span className="flex min-w-0 flex-1 items-center gap-2 ps-1">
-                      <span className="text-base font-medium text-primary opacity-50">
-                        {row.displayName}
-                      </span>
-                      <span className="inline-flex rounded-full bg-status-neutral-bg px-2 py-0.5 text-xs font-semibold text-status-neutral-fg">
-                        <FormattedMessage
-                          id="settings.contractTypes.archivedPill"
-                          defaultMessage="Archived"
-                        />
-                      </span>
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <StatusNote status={rowStatus[row.id] ?? "idle"} detail={rowError[row.id]} />
-                      {trailingAction(row)}
-                    </span>
-                  </li>
-                ))}
-            </ul>
-          </SettingsCard>
-          <p className="text-sm text-muted">
+        <ListEditor
+          rows={live}
+          archivedRows={archived}
+          title={
+            <FormattedMessage id="settings.contractTypes.title" defaultMessage="Contract types" />
+          }
+          count={
+            <FormattedMessage
+              id="settings.contractTypes.count"
+              defaultMessage="{count, plural, one {# type} other {# types}}"
+              values={{ count: live.length }}
+            />
+          }
+          addLabel={
+            <FormattedMessage id="settings.contractTypes.add" defaultMessage="Add type" />
+          }
+          onAdd={() => {
+            setAdding(true);
+            setAddStatus("idle");
+            setAddError(undefined);
+          }}
+          help={
             <FormattedMessage
               id="settings.contractTypes.help"
               defaultMessage="Drag to reorder. Archiving a type in use asks for a replacement; Other can't be archived."
             />
-          </p>
-        </div>
+          }
+          rowStatus={rowStatus}
+          rowError={rowError}
+          renameLabel={(row) =>
+            intl.formatMessage(
+              { id: "settings.contractTypes.renameLabel", defaultMessage: "Rename {name}" },
+              { name: row.displayName },
+            )
+          }
+          onRename={(row, displayName) => void rename(row, displayName)}
+          rowMeta={(row) => (
+            <FormattedMessage
+              id="settings.contractTypes.inUse"
+              defaultMessage="{count, plural, one {# contract} other {# contracts}}"
+              values={{ count: row.inUseCount }}
+            />
+          )}
+          protectedLabel={(row) =>
+            row.slug === "other"
+              ? intl.formatMessage(
+                  {
+                    id: "settings.contractTypes.locked",
+                    defaultMessage: "{name} is system-protected and can't be archived",
+                  },
+                  { name: row.displayName },
+                )
+              : null
+          }
+          archiveLabel={(row) =>
+            intl.formatMessage(
+              { id: "settings.contractTypes.archive", defaultMessage: "Archive {name}" },
+              { name: row.displayName },
+            )
+          }
+          onArchive={setArchiveTarget}
+          restoreLabel={(row) =>
+            intl.formatMessage(
+              { id: "settings.contractTypes.restore", defaultMessage: "Restore {name}" },
+              { name: row.displayName },
+            )
+          }
+          onRestore={(row) => void restore(row)}
+          reorder={{
+            status: orderStatus,
+            detail: orderError,
+            gripLabel: (row, position, total) =>
+              intl.formatMessage(
+                {
+                  id: "settings.contractTypes.reorder",
+                  defaultMessage:
+                    "Reorder {name}, position {position} of {total}. " +
+                    "Use the arrow keys to move it.",
+                },
+                { name: row.displayName, position, total },
+              ),
+            onMove: (fromIndex, toIndex) => void move(fromIndex, toIndex),
+          }}
+          adding={adding}
+          addRow={
+            <>
+              <Input
+                autoFocus
+                aria-label={intl.formatMessage({
+                  id: "settings.contractTypes.addName",
+                  defaultMessage: "New type name",
+                })}
+                className="h-7 w-64 max-w-full"
+                onBlur={(event) => void create(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") void create(event.currentTarget.value);
+                  if (event.key === "Escape") setAdding(false);
+                }}
+              />
+              <span className="ps-1">
+                <StatusNote status={addStatus} detail={addError} />
+              </span>
+            </>
+          }
+          announcement={announcement}
+          listRef={listRef}
+        />
       </div>
       {archiveTarget && (
         <ArchiveTypeDialog
