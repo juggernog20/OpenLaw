@@ -17,52 +17,19 @@
  * pre-login Light) stay in 06; this spec proves the destination.
  */
 
-import http from "node:http";
-import { test, expect, type BrowserContext, type Page } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { z } from "zod";
-import { ADMIN, ensureAdminExists, signInAs, switchTheme } from "./helpers.js";
-import { extractLink, mailCountTo, waitForMailTo } from "./mailpit.js";
-
-/**
- * A minimal OIDC issuer for provider registration: registration only
- * runs discovery (plus JWKS at most), so a discovery document that
- * echoes the registered issuer is enough. Listens on every interface —
- * the app reaches it from its container as host.docker.internal
- * (compose.dev.yml maps the name to the host gateway).
- */
-async function startMockIssuer(): Promise<{ issuer: string; close: () => Promise<void> }> {
-  let issuer = "";
-  const server = http.createServer((req, res) => {
-    if (req.url?.startsWith("/.well-known/openid-configuration")) {
-      res.setHeader("content-type", "application/json");
-      res.end(
-        JSON.stringify({
-          issuer,
-          authorization_endpoint: `${issuer}/authorize`,
-          token_endpoint: `${issuer}/token`,
-          jwks_uri: `${issuer}/jwks`,
-          userinfo_endpoint: `${issuer}/userinfo`,
-        }),
-      );
-      return;
-    }
-    if (req.url?.startsWith("/jwks")) {
-      res.setHeader("content-type", "application/json");
-      res.end(JSON.stringify({ keys: [] }));
-      return;
-    }
-    res.statusCode = 404;
-    res.end();
-  });
-  await new Promise<void>((resolve) => server.listen(0, "0.0.0.0", resolve));
-  const address = server.address();
-  if (!address || typeof address === "string") throw new Error("The mock issuer has no port.");
-  issuer = `http://host.docker.internal:${address.port}`;
-  return {
-    issuer,
-    close: () => new Promise((resolve) => server.close(() => resolve())),
-  };
-}
+import {
+  ADMIN,
+  ensureAdminExists,
+  ensureMemberInert,
+  ensureSsoProviderExists,
+  onboardActivatedMember,
+  signInAs,
+  switchTheme,
+  type OnboardedMember,
+} from "./helpers.js";
+import { mailCountTo, waitForMailTo } from "./mailpit.js";
 
 const rootTheme = (page: Page) =>
   page.evaluate(() => document.documentElement.getAttribute("data-theme"));
@@ -186,26 +153,7 @@ test.describe.serial("the settings destination", () => {
     // The pane refuses to switch until a provider is registered, so
     // make sure one exists — through the API; the pane's own provider
     // form is covered at the unit seam.
-    const listed = await page.request.get("/api/v1/auth/sso-providers");
-    expect(listed.ok()).toBe(true);
-    const { providers } = z.object({ providers: z.array(z.unknown()) }).parse(await listed.json());
-    if (providers.length === 0) {
-      const idp = await startMockIssuer();
-      try {
-        const registered = await page.request.post("/api/v1/auth/sso-providers", {
-          data: {
-            providerId: `e2e-idp-${Date.now()}`,
-            issuer: idp.issuer,
-            domain: "sso.example",
-            clientId: "openlaw-e2e",
-            clientSecret: "e2e-client-secret",
-          },
-        });
-        expect(registered.status(), await registered.text()).toBe(201);
-      } finally {
-        await idp.close();
-      }
-    }
+    await ensureSsoProviderExists(page.request);
 
     try {
       // The rail journey: Security is a collapsed group until opened.
@@ -316,29 +264,20 @@ test.describe.serial("the settings destination", () => {
     // A per-run activated staff member, onboarded through the real
     // flows: invite → set-password email → their own sign-in, in a
     // second browser context so their session lives alongside the
-    // Administrator's.
+    // Administrator's. From the invite on the user row exists, so
+    // cleanup must cover every failure — activation included, not just
+    // the journey.
     const email = `e2e-member-${Date.now()}@e2e.example`;
     const password = "their-own-e2e-password";
-    const invited = await page.request.post("/api/v1/auth/invites", {
-      data: { email, displayName: "Riva Member", role: "contributor" },
-    });
-    expect(invited.status()).toBe(201);
-
-    // From here on the user row exists, so cleanup must cover every
-    // failure — activation included, not just the journey.
-    let memberContext: BrowserContext | undefined;
+    let member: OnboardedMember | undefined;
     try {
-      const mail = await waitForMailTo(page.request, email);
-      const link = extractLink(mail.text, "/auth/set-password");
-
-      memberContext = await browser.newContext();
-      const memberPage = await memberContext.newPage();
-      await memberPage.goto(link);
-      await memberPage.getByLabel("New password").fill(password);
-      await memberPage.getByLabel("Confirm password").fill(password);
-      await memberPage.getByRole("button", { name: "Set password" }).click();
-      await expect(memberPage.getByText("Password set")).toBeVisible();
-      await signInAs(memberPage, email, password, "Riva Member");
+      member = await onboardActivatedMember(page.request, browser, {
+        email,
+        displayName: "Riva Member",
+        role: "contributor",
+        password,
+      });
+      const memberPage = member.page;
 
       await page.goto("/settings/users");
       const row = page.getByRole("row", { name: new RegExp(email) });
@@ -376,25 +315,8 @@ test.describe.serial("the settings destination", () => {
       await expect(row.getByText("Active")).toBeVisible();
       await signInAs(memberPage, email, password, "Riva Member");
     } finally {
-      await memberContext?.close();
-      // The per-run member must end every run inert on the never-reset
-      // instance (TECH-018): a still-pending invite (activation failed)
-      // is revoked outright; an activated user cannot be deleted, so
-      // archived is their resting state.
-      const listed = await page.request.get("/api/v1/users");
-      if (listed.ok()) {
-        const { users } = z
-          .object({
-            users: z.array(z.object({ id: z.string(), email: z.string(), status: z.string() })),
-          })
-          .parse(await listed.json());
-        const member = users.find((user) => user.email === email);
-        if (member?.status === "invited") {
-          await page.request.delete(`/api/v1/auth/invites/${member.id}`);
-        } else if (member && member.status !== "archived") {
-          await page.request.post(`/api/v1/users/${member.id}/archive`);
-        }
-      }
+      await member?.context.close();
+      await ensureMemberInert(page.request, email);
     }
   });
 });

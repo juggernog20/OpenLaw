@@ -36,9 +36,9 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arc 1, milestone 5** — the settings destination. M1–M4 are done: the monorepo and CI, the
-authentication chain, the Compose stack a deployer actually runs, and the themed app shell the
-whole product renders inside.
+**Arc 2, milestone 6** — types, statuses, and the field catalog. Arc 1 is done: the monorepo and
+CI, the authentication chain, the Compose stack a deployer actually runs, the themed app shell,
+and the `/settings` destination with its Personal and Organization rails.
 
 ---
 
@@ -81,7 +81,7 @@ follows.
   - The `/`, `Esc`, `?` keyboard contract and the WCAG 2.2 AA floor
   - _Decisions:_ DES-001 to DES-018, TECH-001
 
-- [ ] **M5 — The settings destination**
+- [x] **M5 — The settings destination**
       _Demo:_ An Administrator opens `/settings`, changes their own theme, then switches the organization's
       auth mode and revokes another user's session.
   - `/settings` IA with the Personal and Organization rails; Admin-only Organization access

@@ -73,4 +73,7 @@ ActivityBar, Pill, Avatar) live in this file as local copies per the designs con
    divider, the ST17 Portal-access multi-row pattern; a Sessions card carries
    sign-out-my-other-devices. Grouped this way so the pane fits the 940 frame — five single-row
    cards would overflow it._
-5. **ST3 ships in M18**, not M5 — the toggles wait for the notification engine.
+5. ~~**ST3 ships in M18**, not M5 — the toggles wait for the notification engine.~~ _Confirmed
+   (2026-08-11, #68): the shipped rail's Personal group carries Profile and Appearance only — no
+   Notifications entry, omitted rather than disabled — and the M5 acceptance journey asserts the
+   absence. ST3 stays in the file untouched, waiting for M18._
