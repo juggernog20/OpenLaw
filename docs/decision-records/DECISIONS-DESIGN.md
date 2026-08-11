@@ -1223,6 +1223,50 @@ The chrome is the one region where themes deliberately restructure (Light: singl
 
 Theme files each carry the chrome block; shell components reference only chrome variables plus the tokens that do hold across themes (`bg-inverted`, `text-on-inverted`, `--accent`, avatar pair). Future chrome surfaces (activity bar, panel — DES-016) should extend this group rather than borrow body tokens.
 
+## DES-020: List-editor pattern — the shared anatomy for taxonomy settings panes
+
+- **Status:** Accepted
+- **Date:** 2026-08-11
+
+### Context
+
+SET-001 and SET-003 both reference a "list-editor pattern per DES" that no record had written; the SET-003 addendum schedules it for M6, where the first taxonomy list-editor ships (Contracts → Types, #81). Every taxonomy surface after it — matter types, statuses, request types, the field catalog, approver groups — reuses this one anatomy, so the contract is written once, against the ratified mocks: frame ST6 (the types list) and frame ST8 (the archive-guard modal) in `designs/settings.pen`, with the archived-row treatment inherited from ST5 (Users). The M5 panes were not taxonomy lists; this record does not restyle them.
+
+### Decision
+
+A list-editor is a settings card that edits one ordered taxonomy. Its parts:
+
+**Card anatomy.** The DES-004 settings card: `bg-raised`, `rounded-card`, `border-default`. The `bg-section-header` header strip carries the list title (13px semibold), a row-count caption (12px `text-secondary`, ICU plural), and the primary "Add [thing]" CTA. A help caption (12px `text-secondary`) sits below the card and names the two non-obvious behaviors: reorder by drag, and the archive guard.
+
+**Row anatomy.** Rows are 44px tall, separated by `border-muted`, in four columns: a 36px reorder-handle column (16px `grip-vertical` glyph, `text-secondary`); the display name (13px medium `text-primary`), followed inline by any qualifier pills; a right-aligned usage-count caption (12px `text-secondary`, ICU plural of the owning record noun); and a 44px trailing-action column holding one icon button (16px `archive` glyph). Rows never grow a second line — description and anything richer belong to the type-editor screen (frames ST15/ST16), not the list.
+
+**Lock treatment.** System-protected rows (CTR-002 / MTR-001 `other`, and any row a decision marks unarchivable) swap the trailing archive action for a 16px `lock` glyph — presentational, not a button, with an accessible name stating why ("[Name] is system-protected and can't be archived"). Protection removes archive and hard-delete only; locked rows still rename and reorder. The server refuses the operations regardless of what the client draws.
+
+**Reorder affordance.** The grip is a real button, keyboard-focusable, with an accessible name naming the row. Pointer: native HTML5 drag of the row, commit once on drop. Keyboard: Arrow Up / Arrow Down on the focused grip moves the row one position and commits immediately; moves are announced via a polite live region. Order changes apply immediately on save (SET-003) — no reorder mode, no save button. No drag library; the affordance is small enough to own.
+
+**In-place rename.** The display name is a click-to-edit field per DES-017: activating it swaps in a text input; Enter or blur commits, Escape reverts, empty reverts. Renaming changes the display name only — slugs are derived at creation, immutable, and never rendered in the list-editor.
+
+**Add.** The "Add [thing]" CTA appends an inline draft row at the end of the list with a focused name input: Enter creates (the server derives the slug and appends the display order), Escape discards. No add dialog — creation is one field, and the row _is_ the form.
+
+**Archive guard (the SET-003 modal, frame ST8).** Archiving always goes through the modal: title "Archive [name]"; a `status-warning` strip stating the live-usage count; a reassignment select labeled "Reassign [count] [records] to", required when the count is positive and disabled at zero; the audit caption (11px `text-secondary`, `history` glyph) "The change applies immediately and is recorded in the audit log."; footer with secondary Cancel and a danger "Archive [thing]" CTA. Surfaces with structural minimums (statuses) block instead of reassigning, per SET-003.
+
+**Archived rows.** Archived rows leave the default view. A "Show archived" toggle in the header strip reveals them appended below the live rows in the ST5 archived treatment — identity at 50% opacity, a neutral "Archived" pill, and a restore action in the trailing column. Restore re-activates the row at the end of the display order. Nothing is deleted.
+
+### Recorded normalization points (mock deviations accepted)
+
+1. Buttons render through the shipped Button component (13px text, h-8/h-7, DES-004's contracts.pen normalization); the ST6/ST8 frames' 12px, 25px-tall buttons are frame noise.
+2. ST6's "Default" qualifier pill and its second locked row draw the matters _default-type_ machinery (MTR-001); no decision defines a default contract type, so the Contracts → Types pane renders neither. The pill slot in the row anatomy is what carries over.
+3. ST6 draws no archived-row treatment; the "Show archived" toggle and restore action are inherited from ST5 (Users), which the SET-001 amendment already ratified as the drawn-on archived pattern.
+4. ST8's select renders through the shared form-control treatment (`bg-raised`, DES-004) at the shipped 32px control height, matching the frame.
+
+### Rationale
+
+One written contract keeps five later panes from re-deriving the pattern by eye. The mock alone can't carry it: ST6 draws one state of one pane, while the pattern has to answer rename, add, keyboard reorder, protection, and archived recovery — exactly the questions each later builder would otherwise answer differently.
+
+### Consequences
+
+The Contracts → Types pane (#81) is the reference implementation. Later taxonomy panes (matter types, statuses, fields, request types, approver groups) build to this record and extend it — a statuses pane adds its stage column and blocking guard without reopening the row anatomy. The reassignment select inside the guard modal is the shared bulk-reassign affordance SET-003 promised. When a later surface genuinely can't fit this anatomy, that's a new DES record, not a local deviation.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -1246,3 +1290,4 @@ Theme files each carry the chrome block; shell components reference only chrome 
 | DES-017 | Editing model — per-field inline commit, no page edit mode                                                                                                           | Accepted |
 | DES-018 | Chromatic discipline — status families kept, one severity ramp (grey/yellow/orange/red), uniform light-blue avatars with photo override                              | Accepted |
 | DES-019 | Shell chrome color variables — per-theme chrome mapping, Warm terracotta avatar (amends DES-018)                                                                     | Accepted |
+| DES-020 | List-editor pattern — the shared anatomy for taxonomy settings panes                                                                                                 | Accepted |
