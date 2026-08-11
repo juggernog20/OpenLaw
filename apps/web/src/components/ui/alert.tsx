@@ -26,6 +26,6 @@ const alertVariants = cva("rounded-card px-3 py-2 text-md", {
 export interface AlertProps
   extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof alertVariants> {}
 
-export function Alert({ className, variant, ...props }: AlertProps) {
+export function Alert({ className, variant, ...props }: Readonly<AlertProps>) {
   return <div role="alert" className={cn(alertVariants({ variant }), className)} {...props} />;
 }

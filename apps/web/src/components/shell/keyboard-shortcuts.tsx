@@ -14,10 +14,10 @@ import { Dialog, DialogClose, DialogContent, DialogTitle } from "../ui/dialog";
 export function KeyboardShortcutsDialog({
   open,
   onOpenChange,
-}: {
+}: Readonly<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}) {
+}>) {
   const intl = useIntl();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

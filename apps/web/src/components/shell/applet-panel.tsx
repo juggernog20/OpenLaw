@@ -27,16 +27,16 @@ export function AppletPanel({
   label,
   onClose,
   children,
-}: {
+}: Readonly<{
   id: string;
   /** Accessible name and header title — the active applet's label. */
   label: string;
   onClose: () => void;
   children: ReactNode;
-}) {
+}>) {
   const intl = useIntl();
   return (
-    <aside
+    <aside // NOSONAR — the listener serves DES-010's Esc rule, not interactivity
       id={id}
       aria-label={label}
       // DES-010 says Esc closes the topmost overlay. The panel is a

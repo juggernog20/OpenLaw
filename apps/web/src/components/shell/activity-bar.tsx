@@ -40,7 +40,7 @@ export function ActivityBar({
   panelId,
   onToggle,
   triggerRef,
-}: {
+}: Readonly<{
   applets: readonly Applet[];
   /** The expanded applet, or null when the panel is collapsed. */
   activeId: string | null;
@@ -52,7 +52,7 @@ export function ActivityBar({
    * (DES-010; the panel is not a Radix overlay, so nothing restores
    * focus for it). */
   triggerRef?: (id: string, node: HTMLElement | null) => void;
-}) {
+}>) {
   const intl = useIntl();
   const belowDivider = applets.filter((applet) => applet.group === "below-divider");
   const leading = applets.filter((applet) => applet.group !== "below-divider");
@@ -74,7 +74,7 @@ export function ActivityBar({
         {active ? (
           <span
             aria-hidden="true"
-            className="absolute inset-y-0 start-0 w-(--width-activitybar-indicator) bg-accent"
+            className="absolute inset-y-0 start-0 w-activitybar-indicator bg-accent"
           />
         ) : null}
         <applet.icon size={20} aria-hidden="true" />

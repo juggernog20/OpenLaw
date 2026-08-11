@@ -14,7 +14,7 @@ import { cn } from "../lib/utils";
 export function initialsOf(displayName: string): string {
   const words = displayName.trim().split(/\s+/).filter(Boolean);
   const first = words[0]?.[0] ?? "?";
-  const last = (words.length > 1 ? words[words.length - 1]?.[0] : undefined) ?? "";
+  const last = (words.length > 1 ? words.at(-1)?.[0] : undefined) ?? "";
   return (first + last).toUpperCase();
 }
 
@@ -22,12 +22,12 @@ export function Avatar({
   name,
   image,
   className,
-}: {
+}: Readonly<{
   name: string;
   /** Photo as a data: URI (self-uploaded) or URL (IdP-written). */
   image?: string | null;
   className?: string;
-}) {
+}>) {
   if (image) {
     return (
       <img

@@ -15,14 +15,14 @@ export function PageSubBar({
   subtitle,
   primaryAction,
   actions,
-}: {
+}: Readonly<{
   title: ReactNode;
   subtitle?: ReactNode;
   /** The page's one main action; stays visible below md. */
   primaryAction?: ReactNode;
   /** Secondary actions; hidden below md. */
   actions?: ReactNode;
-}) {
+}>) {
   return (
     // A named region landmark: the bar sits outside <main> (the skip
     // link jumps past it, DES-011 commitment 8), and axe requires all

@@ -9,15 +9,17 @@
 
 import { cn } from "../../lib/utils";
 
-export function Switch(props: {
-  checked: boolean;
-  onCheckedChange: (checked: boolean) => void;
-  disabled?: boolean;
-  /** Accessible name; the visible label usually sits beside the control. */
-  "aria-label"?: string;
-  "aria-labelledby"?: string;
-  "aria-describedby"?: string;
-}) {
+export function Switch(
+  props: Readonly<{
+    checked: boolean;
+    onCheckedChange: (checked: boolean) => void;
+    disabled?: boolean;
+    /** Accessible name; the visible label usually sits beside the control. */
+    "aria-label"?: string;
+    "aria-labelledby"?: string;
+    "aria-describedby"?: string;
+  }>,
+) {
   const { checked, onCheckedChange, disabled, ...aria } = props;
   return (
     <button

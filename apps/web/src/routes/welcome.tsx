@@ -9,12 +9,13 @@
  * onboarding complete, and a completed wizard never shows again.
  */
 
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useState, type ReactNode, type SubmitEvent as FormSubmitEvent } from "react";
 import { redirect, useLoaderData, useNavigate } from "react-router";
-import { FormattedMessage, useIntl } from "react-intl";
+import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { X } from "lucide-react";
 import { api } from "../lib/api";
-import { networkError } from "../lib/messages";
+import { field } from "../lib/forms";
+import { networkError, problemDetail } from "../lib/messages";
 import { currentUser, needsSetup } from "../lib/session";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
@@ -54,13 +55,22 @@ type Step = (typeof STEPS)[number];
 const INVITE_ROLES = ["legal_team_member", "contributor", "administrator"] as const;
 type InviteRole = (typeof INVITE_ROLES)[number];
 
+/** One source for the role wording the invite buttons carry. */
+const ROLE_MESSAGES = defineMessages({
+  legal_team_member: { id: "role.legalTeamMember", defaultMessage: "Legal team member" },
+  contributor: { id: "role.contributor", defaultMessage: "Contributor" },
+  administrator: { id: "role.administrator", defaultMessage: "Administrator" },
+});
+
 /** Selectable option row (aria-pressed carries the state for readers). */
-function OptionButton(props: {
-  selected: boolean;
-  onClick: () => void;
-  title: ReactNode;
-  description: ReactNode;
-}) {
+function OptionButton(
+  props: Readonly<{
+    selected: boolean;
+    onClick: () => void;
+    title: ReactNode;
+    description: ReactNode;
+  }>,
+) {
   return (
     <button
       type="button"
@@ -110,10 +120,6 @@ export function WelcomePage() {
     setStep(next);
   }
 
-  function problemDetail(problem: unknown, fallback: string): string {
-    return (problem as { detail?: string } | undefined)?.detail ?? fallback;
-  }
-
   async function finish() {
     setBusy(true);
     setError(null);
@@ -136,7 +142,7 @@ export function WelcomePage() {
     }
   }
 
-  async function registerProvider(event: FormEvent<HTMLFormElement>) {
+  async function registerProvider(event: FormSubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     setBusy(true);
@@ -144,11 +150,11 @@ export function WelcomePage() {
     try {
       const { data, error: problem } = await api.POST("/api/v1/auth/sso-providers", {
         body: {
-          providerId: String(form.get("providerId") ?? ""),
-          issuer: String(form.get("issuer") ?? ""),
-          domain: String(form.get("idpDomain") ?? ""),
-          clientId: String(form.get("clientId") ?? ""),
-          clientSecret: String(form.get("clientSecret") ?? ""),
+          providerId: field(form, "providerId"),
+          issuer: field(form, "issuer"),
+          domain: field(form, "idpDomain"),
+          clientId: field(form, "clientId"),
+          clientSecret: field(form, "clientSecret"),
         },
       });
       if (data) {
@@ -157,13 +163,11 @@ export function WelcomePage() {
         return;
       }
       setError(
-        problemDetail(
-          problem,
+        problemDetail(problem) ??
           intl.formatMessage({
             id: "welcome.auth.error.register",
             defaultMessage: "The identity provider could not be registered.",
           }),
-        ),
       );
     } catch {
       setError(networkError(intl));
@@ -198,13 +202,11 @@ export function WelcomePage() {
         return;
       }
       setError(
-        problemDetail(
-          problem,
+        problemDetail(problem) ??
           intl.formatMessage({
             id: "welcome.auth.error.mode",
             defaultMessage: "The authentication mode could not be saved.",
           }),
-        ),
       );
     } catch {
       setError(networkError(intl));
@@ -227,13 +229,11 @@ export function WelcomePage() {
       const domainsPut = await api.PUT("/api/v1/auth/allowed-domains", { body: { domains } });
       if (!domainsPut.data) {
         setError(
-          problemDetail(
-            domainsPut.error,
+          problemDetail(domainsPut.error) ??
             intl.formatMessage({
               id: "welcome.portal.error.domains",
               defaultMessage: "The domain allowlist could not be saved.",
             }),
-          ),
         );
         return;
       }
@@ -241,13 +241,11 @@ export function WelcomePage() {
         const toggled = await api.PATCH("/api/v1/auth/portal", { body: { magicLinkEnabled } });
         if (!toggled.data) {
           setError(
-            problemDetail(
-              toggled.error,
+            problemDetail(toggled.error) ??
               intl.formatMessage({
                 id: "welcome.portal.error.toggle",
                 defaultMessage: "The magic-link setting could not be saved.",
               }),
-            ),
           );
           return;
         }
@@ -261,18 +259,18 @@ export function WelcomePage() {
     }
   }
 
-  async function sendInvite(event: FormEvent<HTMLFormElement>) {
+  async function sendInvite(event: FormSubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const fields = new FormData(form);
-    const email = String(fields.get("inviteEmail") ?? "");
+    const email = field(fields, "inviteEmail");
     setBusy(true);
     setError(null);
     try {
       const { data, error: problem } = await api.POST("/api/v1/auth/invites", {
         body: {
           email,
-          displayName: String(fields.get("inviteName") ?? ""),
+          displayName: field(fields, "inviteName"),
           role: inviteRole,
         },
       });
@@ -282,13 +280,11 @@ export function WelcomePage() {
         return;
       }
       setError(
-        problemDetail(
-          problem,
+        problemDetail(problem) ??
           intl.formatMessage({
             id: "welcome.invites.error",
             defaultMessage: "The invite could not be sent.",
           }),
-        ),
       );
     } catch {
       setError(networkError(intl));
@@ -643,22 +639,7 @@ export function WelcomePage() {
                             aria-pressed={inviteRole === role}
                             onClick={() => setInviteRole(role)}
                           >
-                            {role === "legal_team_member" ? (
-                              <FormattedMessage
-                                id="role.legalTeamMember"
-                                defaultMessage="Legal team member"
-                              />
-                            ) : role === "contributor" ? (
-                              <FormattedMessage
-                                id="role.contributor"
-                                defaultMessage="Contributor"
-                              />
-                            ) : (
-                              <FormattedMessage
-                                id="role.administrator"
-                                defaultMessage="Administrator"
-                              />
-                            )}
+                            <FormattedMessage {...ROLE_MESSAGES[role]} />
                           </Button>
                         ))}
                       </div>

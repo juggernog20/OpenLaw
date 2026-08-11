@@ -27,7 +27,7 @@ export function SearchInput() {
           },
           { key: SEARCH_KEY },
         )}
-        className="h-[30px] w-full rounded-button border border-border-on-inverted bg-(--chrome-search-bg) pe-10 ps-3 text-base text-on-inverted placeholder:text-subtle"
+        className="h-7.5 w-full rounded-button border border-border-on-inverted bg-(--chrome-search-bg) pe-10 ps-3 text-base text-on-inverted placeholder:text-subtle"
       />
       <kbd
         aria-hidden="true"

@@ -32,7 +32,10 @@ export interface ShellUser {
   timezone?: string | null;
 }
 
-export function UserMenu({ user, onSignOut }: { user: ShellUser; onSignOut: () => void }) {
+export function UserMenu({
+  user,
+  onSignOut,
+}: Readonly<{ user: ShellUser; onSignOut: () => void }>) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger aria-label={user.displayName} className="rounded-avatar">
