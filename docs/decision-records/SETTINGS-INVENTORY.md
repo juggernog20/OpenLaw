@@ -61,6 +61,11 @@ ActivityBar, Pill, Avatar) live in this file as local copies per the designs con
    send (resend) and trash (revoke) icons in a widened actions column, and its role select is
    flattened to plain text — invites never edit roles per SET-005. Same pass: the Invite-user
    CTA's plus icon moved to 16px (DES-008)._
-4. **ST1 lacks**: TOTP management, sign-out-my-other-devices, and the DES-014 timezone picker
-   (SET-006).
+4. ~~**ST1 lacks**: TOTP management, sign-out-my-other-devices, and the DES-014 timezone picker
+   (SET-006).~~ _Done (2026-08-11, #67): the Profile card gained the timezone field (combobox
+   showing "Use browser timezone", the DES-014 null default); the Password card became
+   "Password & two-factor" with a TOTP status row (drawn enabled: Re-enroll / Turn off) under a
+   divider, the ST17 Portal-access multi-row pattern; a Sessions card carries
+   sign-out-my-other-devices. Grouped this way so the pane fits the 940 frame — five single-row
+   cards would overflow it._
 5. **ST3 ships in M18**, not M5 — the toggles wait for the notification engine.
