@@ -16,14 +16,14 @@ export function UserIdentity({
   email,
   image,
   archived,
-}: {
+}: Readonly<{
   displayName: string;
   /** Omitted on compact surfaces that show the name alone. */
   email?: string;
   /** Photo as a data: URI or URL; omitted where the API sends none. */
   image?: string | null;
   archived?: boolean;
-}) {
+}>) {
   return (
     <div className={cn("flex items-center gap-2.5", archived && "opacity-50")}>
       {/* One avatar treatment everywhere (DES-018): render through

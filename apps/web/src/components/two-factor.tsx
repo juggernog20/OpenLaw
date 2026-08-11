@@ -13,7 +13,7 @@ import { Check, Copy } from "lucide-react";
 import { renderSVG } from "uqr";
 import { Button } from "./ui/button";
 
-export function TotpQr({ totpURI }: { totpURI: string }) {
+export function TotpQr({ totpURI }: Readonly<{ totpURI: string }>) {
   return (
     <>
       {/* The QR stays black-on-white inside the SVG in every theme:
@@ -44,11 +44,11 @@ export function TotpQr({ totpURI }: { totpURI: string }) {
 export function BackupCodes({
   codes,
   children,
-}: {
+}: Readonly<{
   codes: string[];
   /** Extra actions rendered beside the copy button (e.g. a Done link). */
   children?: ReactNode;
-}) {
+}>) {
   const intl = useIntl();
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);

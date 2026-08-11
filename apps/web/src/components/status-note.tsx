@@ -14,12 +14,12 @@ export type FieldStatus = "idle" | "saving" | "saved" | "error";
 export function StatusNote({
   status,
   detail,
-}: {
+}: Readonly<{
   status: FieldStatus;
   /** Server-provided user-visible copy (a problem envelope's `detail`);
    * rendered as-is, so it deliberately bypasses react-intl. */
   detail?: string | null;
-}) {
+}>) {
   return (
     <span
       aria-live="polite"

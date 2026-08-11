@@ -17,7 +17,7 @@ export function SettingsCard({
   flush = false,
   className,
   children,
-}: {
+}: Readonly<{
   title: ReactNode;
   /** Right-aligned header controls (filters, a primary action). */
   actions?: ReactNode;
@@ -25,12 +25,12 @@ export function SettingsCard({
   flush?: boolean;
   className?: string;
   children: ReactNode;
-}) {
+}>) {
   return (
     <Card className={cn("w-full max-w-(--width-settings-card)", className)}>
       <div
         className={cn(
-          "flex h-(--height-section-header) items-center rounded-t-card border-b border-border-default bg-section-header px-4",
+          "flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4",
           actions && "justify-between",
         )}
       >

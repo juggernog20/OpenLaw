@@ -42,14 +42,14 @@ export function TimezonePicker({
   onCommit,
   allowBrowserDefault = false,
   className,
-}: {
+}: Readonly<{
   id: string;
   /** The committed zone; null = use the browser's (with `allowBrowserDefault`). */
   value: string | null;
   onCommit: (zone: string | null) => void;
   allowBrowserDefault?: boolean;
   className?: string;
-}) {
+}>) {
   const intl = useIntl();
   const zones = useMemo(timezoneOptions, []);
   const browserDefaultLabel = intl.formatMessage({
@@ -133,7 +133,7 @@ export function TimezonePicker({
           }
         }}
       />
-      <ul
+      <ul // NOSONAR — a select/datalist cannot search-narrow (DES-014)
         id={listboxId}
         role="listbox"
         aria-label={intl.formatMessage({ id: "timezone.listLabel", defaultMessage: "Timezones" })}

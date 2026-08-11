@@ -9,13 +9,13 @@
  * persists it via the preference endpoint.
  */
 
-import { useIntl, FormattedMessage, defineMessage, type MessageDescriptor } from "react-intl";
-import { THEMES, type Theme } from "../lib/theme";
-import { cn } from "../lib/utils";
+import { FormattedMessage, defineMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { PageTitle } from "../components/page-title";
 import { SettingsCard } from "../components/settings-card";
-import { StatusNote } from "../components/status-note";
 import { useShellTheme } from "../components/shell/theme-context";
+import { StatusNote } from "../components/status-note";
+import { THEMES, type Theme } from "../lib/theme";
+import { cn } from "../lib/utils";
 
 const THEME_LABELS: Record<Theme, MessageDescriptor> = {
   light: defineMessage({ id: "theme.light", defaultMessage: "Light" }),
@@ -30,22 +30,22 @@ const PREVIEWS: Record<Theme, { canvas: string; chrome: string; line1: string; l
   dark: { canvas: "#0D1117", chrome: "#010409", line1: "#30363D", line2: "#21262D" },
 };
 
-function ThemePreview({ theme, selected }: { theme: Theme; selected: boolean }) {
+function ThemePreview({ theme, selected }: Readonly<{ theme: Theme; selected: boolean }>) {
   const preview = PREVIEWS[theme];
   return (
     <span
       aria-hidden="true"
       className={cn(
-        "flex h-[110px] flex-col overflow-hidden rounded-card border",
+        "flex h-27.5 flex-col overflow-hidden rounded-card border",
         selected ? "border-accent ring-1 ring-accent" : "border-border-default",
       )}
       style={{ backgroundColor: preview.canvas }}
     >
-      <span className="h-[18px] shrink-0" style={{ backgroundColor: preview.chrome }} />
+      <span className="h-4.5 shrink-0" style={{ backgroundColor: preview.chrome }} />
       <span className="flex flex-col gap-1.5 p-2.5">
-        <span className="h-2 w-[90px] rounded-xs" style={{ backgroundColor: preview.line1 }} />
-        <span className="h-2 w-[130px] rounded-xs" style={{ backgroundColor: preview.line2 }} />
-        <span className="h-2 w-[110px] rounded-xs" style={{ backgroundColor: preview.line2 }} />
+        <span className="h-2 w-22.5 rounded-xs" style={{ backgroundColor: preview.line1 }} />
+        <span className="h-2 w-32.5 rounded-xs" style={{ backgroundColor: preview.line2 }} />
+        <span className="h-2 w-27.5 rounded-xs" style={{ backgroundColor: preview.line2 }} />
       </span>
     </span>
   );

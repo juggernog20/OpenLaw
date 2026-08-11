@@ -61,10 +61,10 @@ const AVATAR_TYPES = ["image/png", "image/jpeg"];
 
 function RoleLabel({
   role,
-}: {
+}: Readonly<{
   /** The DD-013 enum, as the /me contract types it. */
   role: "administrator" | "legal_team_member" | "contributor" | "business_user";
-}) {
+}>) {
   switch (role) {
     case "administrator":
       return <FormattedMessage id="role.administrator" defaultMessage="Administrator" />;

@@ -22,7 +22,7 @@ export const TEST_AUTH_CONFIG: AuthConfig = {
 export const TEST_ADMIN = {
   email: "blair@example.com",
   displayName: "Blair Wentworth",
-  password: "correct-horse-battery",
+  password: "correct-horse-battery", // NOSONAR — fixture for a throwaway container
 } as const;
 
 type App = Awaited<ReturnType<typeof buildApp>>;

@@ -78,11 +78,11 @@ const ROLE_MESSAGES = defineMessages({
   business_user: { id: "role.businessUser", defaultMessage: "Business user" },
 });
 
-function RoleLabel({ role }: { role: UserRow["role"] }) {
+function RoleLabel({ role }: Readonly<{ role: UserRow["role"] }>) {
   return <FormattedMessage {...ROLE_MESSAGES[role]} />;
 }
 
-function StatusPill({ status }: { status: UserRow["status"] }) {
+function StatusPill({ status }: Readonly<{ status: UserRow["status"] }>) {
   return (
     <span
       className={cn(
@@ -130,11 +130,11 @@ function InviteDialog({
   open,
   onOpenChange,
   onInvited,
-}: {
+}: Readonly<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onInvited: (user: UserRow) => void;
-}) {
+}>) {
   const intl = useIntl();
   const [role, setRole] = useState<InviteRole>("legal_team_member");
   const [busy, setBusy] = useState(false);

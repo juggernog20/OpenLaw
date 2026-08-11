@@ -60,14 +60,16 @@ interface Provider {
 }
 
 /** A mode card from ST17: radio, title, description — one per mode. */
-function ModeOption(props: {
-  mode: AuthMode;
-  selected: boolean;
-  onSelect: () => void;
-  title: ReactNode;
-  description: ReactNode;
-  children?: ReactNode;
-}) {
+function ModeOption(
+  props: Readonly<{
+    mode: AuthMode;
+    selected: boolean;
+    onSelect: () => void;
+    title: ReactNode;
+    description: ReactNode;
+    children?: ReactNode;
+  }>,
+) {
   return (
     <div
       className={cn(
@@ -124,7 +126,7 @@ function changedProviderFields(
   return body;
 }
 
-function FormField(props: { id: string; label: ReactNode; children: ReactNode }) {
+function FormField(props: Readonly<{ id: string; label: ReactNode; children: ReactNode }>) {
   return (
     <div className="flex flex-col gap-1.5">
       <Label htmlFor={props.id}>{props.label}</Label>

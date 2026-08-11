@@ -27,14 +27,14 @@ export function AppShell({
   subbar,
   flush = false,
   children,
-}: {
+}: Readonly<{
   user: ShellUser;
   onSignOut: () => void;
   subbar?: ReactNode;
   /** Edge-to-edge main region for pages that own their gutters (the settings rail). */
   flush?: boolean;
   children: ReactNode;
-}) {
+}>) {
   // Server value first: the loader's /me answer seeds the state, and the
   // effect reconciles the pre-paint mirror with it (#44). Layout effect
   // so a switch repaints in the new theme on the very next frame.
