@@ -9,7 +9,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { eq, orgSettings, sql, users } from "@openlaw/db";
+import { activityLog, asc, eq, orgSettings, sql, users } from "@openlaw/db";
 import {
   signIn,
   signInCookies,
@@ -227,6 +227,44 @@ describe("oidc-mode semantics (break-glass)", () => {
     } finally {
       await enterMode("built_in");
     }
+  });
+});
+
+describe("the DD-017 audit trail (#64)", () => {
+  const settingsRows = () =>
+    harness.db
+      .select()
+      .from(activityLog)
+      .where(eq(activityLog.action, "org_settings.updated"))
+      .orderBy(asc(activityLog.createdAt));
+
+  it("logs a mode switch as an admin_only org_settings entry with the actor", async () => {
+    const before = (await settingsRows()).length;
+    await enterMode("oidc");
+    try {
+      const rows = (await settingsRows()).slice(before);
+      expect(rows).toHaveLength(1);
+      const me = await harness.app.inject({
+        method: "GET",
+        url: "/api/v1/me",
+        cookies: adminCookies,
+      });
+      expect(rows[0]).toMatchObject({
+        entityType: "system",
+        entityId: null,
+        actorId: me.json().user.id,
+        visibility: "admin_only",
+        payload: { field: "authMode", old: "built_in", new: "oidc" },
+      });
+    } finally {
+      await enterMode("built_in");
+    }
+  });
+
+  it("does not log a switch to the mode already in force", async () => {
+    const before = (await settingsRows()).length;
+    await enterMode("built_in");
+    expect(await settingsRows()).toHaveLength(before);
   });
 });
 

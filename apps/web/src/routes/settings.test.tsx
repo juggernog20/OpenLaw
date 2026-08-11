@@ -151,6 +151,21 @@ describe("the settings destination (#62)", () => {
     expect(screen.getByLabelText("Default timezone")).toHaveValue("UTC");
   });
 
+  it("collapses the Security group until it is opened by hand (#64)", async () => {
+    const user = userEvent.setup();
+    stubApi({ signedIn: ADMIN, extra: captureGeneralPatches([]) });
+    renderAt("/settings/general");
+
+    const rail = await screen.findByRole("navigation", { name: "Settings sections" });
+    const disclosure = within(rail).getByRole("button", { name: "Security" });
+    expect(disclosure).toHaveAttribute("aria-expanded", "false");
+    expect(within(rail).queryByRole("link", { name: "Authentication" })).not.toBeInTheDocument();
+
+    await user.click(disclosure);
+    expect(disclosure).toHaveAttribute("aria-expanded", "true");
+    expect(within(rail).getByRole("link", { name: "Authentication" })).toBeVisible();
+  });
+
   it("bounces a non-Administrator off /settings/general to their settings home", async () => {
     stubApi({ signedIn: MEMBER });
     renderAt("/settings/general");

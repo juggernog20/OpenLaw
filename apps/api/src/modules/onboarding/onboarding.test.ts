@@ -8,7 +8,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { orgSettings } from "@openlaw/db";
+import { activityLog, asc, eq, orgSettings } from "@openlaw/db";
 import {
   signInCookies,
   startHarness,
@@ -192,5 +192,52 @@ describe("portal toggle (PATCH /api/v1/auth/portal)", () => {
     expect(
       (await harness.app.inject({ method: "GET", url: "/api/v1/auth/methods" })).json(),
     ).toMatchObject({ magicLinkEnabled: true });
+  });
+
+  it("logs each toggle as an admin_only org_settings entry, skipping no-ops (#64)", async () => {
+    const settingsRows = () =>
+      harness.db
+        .select()
+        .from(activityLog)
+        .where(eq(activityLog.action, "org_settings.updated"))
+        .orderBy(asc(activityLog.createdAt));
+
+    const before = (await settingsRows()).length;
+    const closed = await harness.app.inject({
+      method: "PATCH",
+      url: "/api/v1/auth/portal",
+      cookies: adminCookies,
+      payload: { magicLinkEnabled: false },
+    });
+    expect(closed.statusCode, closed.body).toBe(200);
+    try {
+      const rows = (await settingsRows()).slice(before);
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({
+        entityType: "system",
+        entityId: null,
+        visibility: "admin_only",
+        payload: { field: "magicLinkEnabled", old: true, new: false },
+      });
+      expect(rows[0]!.actorId).not.toBeNull();
+
+      // Repeating the closed state changes nothing, so nothing is logged.
+      const repeat = await harness.app.inject({
+        method: "PATCH",
+        url: "/api/v1/auth/portal",
+        cookies: adminCookies,
+        payload: { magicLinkEnabled: false },
+      });
+      expect(repeat.statusCode, repeat.body).toBe(200);
+      expect(await settingsRows()).toHaveLength(before + 1);
+    } finally {
+      const reopened = await harness.app.inject({
+        method: "PATCH",
+        url: "/api/v1/auth/portal",
+        cookies: adminCookies,
+        payload: { magicLinkEnabled: true },
+      });
+      expect(reopened.statusCode, reopened.body).toBe(200);
+    }
   });
 });

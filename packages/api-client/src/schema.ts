@@ -114,7 +114,8 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    get?: never;
+    /** The registered OIDC identity providers (TECH-008), with their client IDs but never their secrets */
+    get: operations["listSsoProviders"];
     put?: never;
     /** Register a bring-your-own OIDC identity provider (TECH-008); endpoint discovery runs from the issuer, and the response carries the callback URL to paste into the IdP console */
     post: operations["registerSsoProvider"];
@@ -122,6 +123,23 @@ export interface paths {
     options?: never;
     head?: never;
     patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auth/sso-providers/{providerId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Update the registered provider (TECH-008): omitted fields keep their stored values, endpoint discovery re-runs from the issuer, and a failed update leaves the provider untouched */
+    patch: operations["updateSsoProvider"];
     trace?: never;
   };
   "/api/v1/auth/mode": {
@@ -594,6 +612,43 @@ export interface operations {
       };
     };
   };
+  listSsoProviders: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            providers: {
+              id: string;
+              providerId: string;
+              issuer: string;
+              domain: string;
+              clientId: string | null;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   registerSsoProvider: {
     parameters: {
       query?: never;
@@ -616,6 +671,55 @@ export interface operations {
     responses: {
       /** @description Default Response */
       201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            provider: {
+              id: string;
+              providerId: string;
+              issuer: string;
+              domain: string;
+            };
+            callbackUrl: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateSsoProvider: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        providerId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: uri */
+          issuer?: string;
+          domain?: string;
+          clientId?: string;
+          clientSecret?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
         headers: {
           [name: string]: unknown;
         };

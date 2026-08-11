@@ -9,7 +9,7 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { OAuth2Server } from "oauth2-mock-server";
-import { accounts, and, eq, orgSettings, ssoProviders, users } from "@openlaw/db";
+import { accounts, activityLog, and, asc, eq, orgSettings, ssoProviders, users } from "@openlaw/db";
 import {
   signInCookies,
   startHarness,
@@ -359,5 +359,168 @@ describe("runtime BYO-OIDC (POST /api/v1/auth/sso-providers + sso sign-in)", () 
     } finally {
       await harness.db.update(users).set({ archivedAt: null }).where(eq(users.email, email));
     }
+  });
+});
+
+describe("the provider management surface (#64)", () => {
+  async function listProviders(cookies?: Record<string, string>) {
+    return harness.app.inject({ method: "GET", url: "/api/v1/auth/sso-providers", cookies });
+  }
+
+  async function patchProvider(
+    providerId: string,
+    payload: Record<string, unknown>,
+    cookies: Record<string, string> = adminCookies,
+  ) {
+    return harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/auth/sso-providers/${providerId}`,
+      cookies,
+      payload,
+    });
+  }
+
+  it("lists the registered provider for an Administrator, without the secret", async () => {
+    const res = await listProviders(adminCookies);
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().providers).toEqual([
+      {
+        id: expect.any(String),
+        providerId: PROVIDER.providerId,
+        issuer: issuerUrl,
+        domain: PROVIDER.domain,
+        clientId: PROVIDER.clientId,
+      },
+    ]);
+    expect(res.body).not.toContain(PROVIDER.clientSecret);
+  });
+
+  it("is an Administrator-only surface", async () => {
+    expect((await listProviders()).statusCode).toBe(401);
+    const staffCookies = await signInCookies(
+      harness.app,
+      "counsel@acme.example",
+      "casey-sets-her-own",
+    );
+    expect((await listProviders(staffCookies)).statusCode).toBe(403);
+    const write = await patchProvider(PROVIDER.providerId, { clientId: "rogue" }, staffCookies);
+    expect(write.statusCode).toBe(403);
+  });
+
+  it("updates the provider in place, re-running discovery, and sign-in still works", async () => {
+    const res = await patchProvider(PROVIDER.providerId, { clientId: "openlaw-rotated" });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().provider).toMatchObject({
+      providerId: PROVIDER.providerId,
+      issuer: issuerUrl,
+      domain: PROVIDER.domain,
+    });
+    expect(res.json().callbackUrl).toBe("http://localhost/api/auth/sso/callback");
+
+    const listed = await listProviders(adminCookies);
+    expect(listed.json().providers[0]).toMatchObject({ clientId: "openlaw-rotated" });
+
+    // Discovery re-ran and the admin's registration stayed trusted.
+    const [row] = await harness.db
+      .select()
+      .from(ssoProviders)
+      .where(eq(ssoProviders.providerId, PROVIDER.providerId));
+    expect(row!.domainVerified).toBe(true);
+    const oidc = JSON.parse(row!.oidcConfig!) as Record<string, unknown>;
+    expect(oidc.tokenEndpoint).toContain(issuerUrl);
+
+    // The already-linked staffer still signs in through the IdP.
+    const email = "counsel@acme.example";
+    const redeemed = await ssoRoundTrip({ sub: "idp-counsel", email }, { email });
+    expect(sessionCookies(redeemed), "sign-in must survive a provider update").not.toBeNull();
+  });
+
+  it("answers 404 for a provider slug that does not exist", async () => {
+    const res = await patchProvider("never-registered", { clientId: "whatever" });
+    expect(res.statusCode).toBe(404);
+    expect(res.headers["content-type"]).toContain("application/problem+json");
+  });
+
+  it("restores the provider untouched when the new issuer cannot be discovered", async () => {
+    const before = await listProviders(adminCookies);
+    const res = await patchProvider(PROVIDER.providerId, { issuer: "http://127.0.0.1:9" });
+    expect(res.statusCode).toBeGreaterThanOrEqual(400);
+    expect(res.headers["content-type"]).toContain("application/problem+json");
+
+    const after = await listProviders(adminCookies);
+    expect(after.json()).toEqual(before.json());
+    const [row] = await harness.db
+      .select()
+      .from(ssoProviders)
+      .where(eq(ssoProviders.providerId, PROVIDER.providerId));
+    expect(row!.issuer).toBe(issuerUrl);
+    expect(row!.domainVerified).toBe(true);
+  });
+});
+
+describe("the DD-017 audit trail (#64)", () => {
+  const providerRows = (action: string) =>
+    harness.db
+      .select()
+      .from(activityLog)
+      .where(eq(activityLog.action, action))
+      .orderBy(asc(activityLog.createdAt));
+
+  it("logged the registration without carrying credentials", async () => {
+    const rows = await providerRows("sso_provider.registered");
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      entityType: "system",
+      entityId: null,
+      visibility: "admin_only",
+      payload: {
+        providerId: PROVIDER.providerId,
+        issuer: issuerUrl,
+        domain: PROVIDER.domain,
+      },
+    });
+    expect(rows[0]!.actorId).not.toBeNull();
+    expect(JSON.stringify(rows[0]!.payload)).not.toContain(PROVIDER.clientSecret);
+  });
+
+  it("logs an update per changed field, masking the rotated secret", async () => {
+    // Arrange the pre-state inside the test: the expected `old` must
+    // not depend on which test ran before this one.
+    const previousClientId = "openlaw-pre-audit";
+    const seed = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/auth/sso-providers/${PROVIDER.providerId}`,
+      cookies: adminCookies,
+      payload: { clientId: previousClientId },
+    });
+    expect(seed.statusCode, seed.body).toBe(200);
+
+    const before = (await providerRows("sso_provider.updated")).length;
+    const res = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/auth/sso-providers/${PROVIDER.providerId}`,
+      cookies: adminCookies,
+      payload: { clientId: PROVIDER.clientId, clientSecret: "rotated-client-secret" },
+    });
+    expect(res.statusCode, res.body).toBe(200);
+
+    const rows = (await providerRows("sso_provider.updated")).slice(before);
+    expect(rows.map((row) => row.payload)).toEqual(
+      expect.arrayContaining([
+        {
+          providerId: PROVIDER.providerId,
+          field: "clientId",
+          old: previousClientId,
+          new: PROVIDER.clientId,
+        },
+        {
+          providerId: PROVIDER.providerId,
+          field: "clientSecret",
+          old: "[secret]",
+          new: "[secret]",
+        },
+      ]),
+    );
+    expect(JSON.stringify(rows.map((row) => row.payload))).not.toContain("rotated-client-secret");
   });
 });

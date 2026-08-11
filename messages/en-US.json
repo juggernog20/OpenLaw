@@ -296,6 +296,84 @@
   "settings.appearance.theme": {
     "defaultMessage": "Theme"
   },
+  "settings.auth.addDomain": {
+    "defaultMessage": "Add"
+  },
+  "settings.auth.authentication": {
+    "defaultMessage": "Authentication"
+  },
+  "settings.auth.builtIn": {
+    "defaultMessage": "Built-in"
+  },
+  "settings.auth.builtIn.hint": {
+    "defaultMessage": "Staff sign in with email and password. Each user can add two-factor authentication (TOTP) from their profile."
+  },
+  "settings.auth.callback": {
+    "defaultMessage": "Paste this callback URL into your IdP console: {url}"
+  },
+  "settings.auth.clientId": {
+    "defaultMessage": "Client ID"
+  },
+  "settings.auth.clientSecret": {
+    "defaultMessage": "Client secret"
+  },
+  "settings.auth.domain": {
+    "defaultMessage": "Email domain"
+  },
+  "settings.auth.domains": {
+    "defaultMessage": "Allowed email domains"
+  },
+  "settings.auth.issuer": {
+    "defaultMessage": "Issuer URL"
+  },
+  "settings.auth.magicLink": {
+    "defaultMessage": "Magic-link sign-in"
+  },
+  "settings.auth.magicLink.hint": {
+    "defaultMessage": "Business users sign in through emailed magic links — no password or IdP account needed."
+  },
+  "settings.auth.modeCaption": {
+    "defaultMessage": "Switching modes applies immediately and is recorded in the activity log."
+  },
+  "settings.auth.noDomains": {
+    "defaultMessage": "No domains allowed yet — the portal is closed."
+  },
+  "settings.auth.oidc": {
+    "defaultMessage": "Identity provider (OIDC)"
+  },
+  "settings.auth.oidc.hint": {
+    "defaultMessage": "Staff sign in through your identity provider — works with Okta, Microsoft Entra, Google Workspace, Keycloak, and Authentik."
+  },
+  "settings.auth.portal": {
+    "defaultMessage": "Portal access"
+  },
+  "settings.auth.portalLocked": {
+    "defaultMessage": "Magic links are the only portal sign-in method in built-in mode, so they can't be turned off."
+  },
+  "settings.auth.portalOptional": {
+    "defaultMessage": "Turn off to require SSO for everyone. Requesters would then need accounts in your identity provider to reach the portal."
+  },
+  "settings.auth.providerId": {
+    "defaultMessage": "Provider ID"
+  },
+  "settings.auth.registerProvider": {
+    "defaultMessage": "Register provider"
+  },
+  "settings.auth.registerToSwitch": {
+    "defaultMessage": "Register your identity provider to finish the switch."
+  },
+  "settings.auth.removeDomain": {
+    "defaultMessage": "Remove {domain}"
+  },
+  "settings.auth.saveProvider": {
+    "defaultMessage": "Save provider"
+  },
+  "settings.auth.secretHint": {
+    "defaultMessage": "Leave blank to keep the current secret. Paste a new value to rotate."
+  },
+  "settings.auth.sessionsCaption": {
+    "defaultMessage": "The identity provider only authenticates — sessions stay in OpenLaw and remain revocable."
+  },
   "settings.field.error": {
     "defaultMessage": "The change could not be saved. Try again."
   },
@@ -338,6 +416,9 @@
   "settings.group.personal": {
     "defaultMessage": "Personal"
   },
+  "settings.group.security": {
+    "defaultMessage": "Security"
+  },
   "settings.profile.placeholder": {
     "defaultMessage": "Profile settings arrive with their own build."
   },
@@ -346,6 +427,9 @@
   },
   "settings.section.appearance": {
     "defaultMessage": "Appearance"
+  },
+  "settings.section.authentication": {
+    "defaultMessage": "Authentication"
   },
   "settings.section.general": {
     "defaultMessage": "General"

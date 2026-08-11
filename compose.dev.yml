@@ -17,6 +17,11 @@ services:
       # The E2E suite replays sign-in flows from one IP far faster than
       # any human; production keeps better-auth's limits.
       AUTH_RATE_LIMIT: "off"
+    extra_hosts:
+      # The E2E suite registers an OIDC provider against a mock issuer
+      # listening on the host (10-settings.spec.ts); host-gateway gives
+      # Linux engines the name Docker Desktop defines out of the box.
+      - "host.docker.internal:host-gateway"
 
   mailpit:
     # Pinned like every other image: `latest` could change delivery

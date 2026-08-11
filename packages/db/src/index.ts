@@ -49,6 +49,8 @@ export const ADVISORY_LOCK = {
   migrations: 4101001,
   /** Held across the first-run setup check-and-create (TECH-008). */
   firstRunSetup: 4101002,
+  /** Held across an SSO provider update's delete + re-register (TECH-008). */
+  ssoProviderUpdate: 4101003,
 } as const;
 
 /**
