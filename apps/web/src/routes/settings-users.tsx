@@ -39,7 +39,7 @@ import { Switch } from "../components/ui/switch";
 export async function settingsUsersLoader() {
   const user = await currentUser();
   if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
-  if (user.role !== "administrator") return redirect("/settings/appearance");
+  if (user.role !== "administrator") return redirect("/settings/profile");
   const { data } = await api.GET("/api/v1/users");
   if (!data) throw new Error("The user list could not be read.");
   return { users: data.users, selfId: user.id };

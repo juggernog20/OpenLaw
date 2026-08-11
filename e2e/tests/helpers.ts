@@ -124,6 +124,12 @@ export async function switchTheme(
 ): Promise<void> {
   await page.getByRole("banner").getByRole("button", { name: displayName }).click();
   await page.getByRole("menuitem", { name: "Settings" }).click();
+  // The index lands on Profile (#67); Appearance is one rail hop away.
+  await expect(page).toHaveURL(/\/settings\/profile$/);
+  await page
+    .getByRole("navigation", { name: "Settings sections" })
+    .getByRole("link", { name: "Appearance" })
+    .click();
   await expect(page).toHaveURL(/\/settings\/appearance$/);
   const radio = page.getByRole("radio", { name: label });
   if (await radio.isChecked()) return;

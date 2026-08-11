@@ -1005,7 +1005,7 @@
             },
             {
               "type": "frame",
-              "id": "trdkx",
+              "id": "DvEuc",
               "name": "Content",
               "width": "fill_container",
               "height": "fill_container",
@@ -1015,7 +1015,7 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "gXGLS",
+                  "id": "jXTLC",
                   "name": "Profile card",
                   "clip": true,
                   "width": 720,
@@ -1027,7 +1027,7 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "M5OA2",
+                      "id": "SRsXa",
                       "name": "hdr",
                       "width": "fill_container",
                       "height": 38,
@@ -1045,7 +1045,7 @@
                       "children": [
                         {
                           "type": "text",
-                          "id": "W2dHlP",
+                          "id": "k9R2N",
                           "name": "t Profile",
                           "fill": "$text-primary",
                           "content": "Profile",
@@ -1057,7 +1057,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "s3HrS",
+                      "id": "zsmfP",
                       "name": "body",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -1066,7 +1066,7 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "lJMMG",
+                          "id": "X1exoB",
                           "name": "PhotoRow",
                           "width": "fill_container",
                           "justifyContent": "space_between",
@@ -1074,14 +1074,14 @@
                           "children": [
                             {
                               "type": "frame",
-                              "id": "kj1bq",
+                              "id": "KGVyr",
                               "name": "PhotoLeft",
                               "gap": 16,
                               "alignItems": "center",
                               "children": [
                                 {
                                   "type": "frame",
-                                  "id": "K1tFAo",
+                                  "id": "E0Z6Xv",
                                   "name": "Avatar64",
                                   "clip": true,
                                   "width": 64,
@@ -1096,14 +1096,14 @@
                                 },
                                 {
                                   "type": "frame",
-                                  "id": "MxYbW",
+                                  "id": "y8LNR",
                                   "name": "PhotoMeta",
                                   "layout": "vertical",
                                   "gap": 4,
                                   "children": [
                                     {
                                       "type": "text",
-                                      "id": "ZGcMo",
+                                      "id": "nekYO",
                                       "name": "t Profile photo",
                                       "fill": "$text-primary",
                                       "content": "Profile photo",
@@ -1113,7 +1113,7 @@
                                     },
                                     {
                                       "type": "text",
-                                      "id": "mOkyy",
+                                      "id": "mgXZU",
                                       "name": "t JPG or PNG, 1 MB m",
                                       "fill": "$text-secondary",
                                       "content": "JPG or PNG, 1 MB max.",
@@ -1127,7 +1127,7 @@
                             },
                             {
                               "type": "frame",
-                              "id": "u5L1uN",
+                              "id": "buq8K",
                               "name": "Btn Upload",
                               "fill": "$control",
                               "cornerRadius": 6,
@@ -1142,7 +1142,7 @@
                               "children": [
                                 {
                                   "type": "text",
-                                  "id": "TEdca",
+                                  "id": "LoHoN",
                                   "name": "t Upload",
                                   "fill": "$text-primary",
                                   "content": "Upload",
@@ -1156,7 +1156,7 @@
                         },
                         {
                           "type": "frame",
-                          "id": "Yz8zi",
+                          "id": "HnkFe",
                           "name": "Fld Full name",
                           "width": "fill_container",
                           "layout": "vertical",
@@ -1164,7 +1164,7 @@
                           "children": [
                             {
                               "type": "text",
-                              "id": "ZtGq3",
+                              "id": "OQ62K",
                               "name": "t Full name",
                               "fill": "$text-primary",
                               "content": "Full name",
@@ -1174,7 +1174,7 @@
                             },
                             {
                               "type": "frame",
-                              "id": "neqBJ",
+                              "id": "A7yBOO",
                               "name": "Inp",
                               "width": 320,
                               "height": 32,
@@ -1190,7 +1190,7 @@
                               "children": [
                                 {
                                   "type": "text",
-                                  "id": "BcF2V",
+                                  "id": "XeTZH",
                                   "name": "t Blair Wentworth",
                                   "fill": "$text-primary",
                                   "content": "Blair Wentworth",
@@ -1204,7 +1204,7 @@
                         },
                         {
                           "type": "frame",
-                          "id": "Q2HSNw",
+                          "id": "iyKMx",
                           "name": "Fld Email",
                           "width": "fill_container",
                           "layout": "vertical",
@@ -1212,7 +1212,7 @@
                           "children": [
                             {
                               "type": "text",
-                              "id": "V2IgL",
+                              "id": "k6AAnd",
                               "name": "t Email",
                               "fill": "$text-primary",
                               "content": "Email",
@@ -1222,7 +1222,7 @@
                             },
                             {
                               "type": "frame",
-                              "id": "IKepK",
+                              "id": "Q3ZIdF",
                               "name": "Inp",
                               "width": 320,
                               "height": 32,
@@ -1238,7 +1238,7 @@
                               "children": [
                                 {
                                   "type": "text",
-                                  "id": "UcnfH",
+                                  "id": "RQFSx",
                                   "name": "t blair@acme.com",
                                   "fill": "$text-primary",
                                   "content": "blair@acme.com",
@@ -1252,7 +1252,7 @@
                         },
                         {
                           "type": "frame",
-                          "id": "SNZWq",
+                          "id": "hPGwb",
                           "name": "Fld Role",
                           "width": "fill_container",
                           "layout": "vertical",
@@ -1260,7 +1260,7 @@
                           "children": [
                             {
                               "type": "text",
-                              "id": "SfXt2",
+                              "id": "qPBN4",
                               "name": "t Role",
                               "fill": "$text-primary",
                               "content": "Role",
@@ -1270,14 +1270,14 @@
                             },
                             {
                               "type": "frame",
-                              "id": "NahKz",
+                              "id": "SD4YH",
                               "name": "RoleRow",
                               "gap": 8,
                               "alignItems": "center",
                               "children": [
                                 {
                                   "type": "frame",
-                                  "id": "LrmoM",
+                                  "id": "g8bcOg",
                                   "name": "Pill Administrator",
                                   "fill": "$status-neutral-bg",
                                   "cornerRadius": 10,
@@ -1288,7 +1288,7 @@
                                   "children": [
                                     {
                                       "type": "text",
-                                      "id": "rKmPK",
+                                      "id": "lTt4E",
                                       "name": "t Administrator",
                                       "fill": "$status-neutral-fg",
                                       "content": "Administrator",
@@ -1302,10 +1302,79 @@
                             },
                             {
                               "type": "text",
-                              "id": "GeeEg",
+                              "id": "W7cHTV",
                               "name": "t Roles are managed ",
                               "fill": "$text-secondary",
                               "content": "Roles are managed in Organization → Users.",
+                              "fontFamily": "$font",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ew4pj",
+                          "name": "Fld Timezone",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 6,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "l7UAlN",
+                              "name": "t Timezone",
+                              "fill": "$text-primary",
+                              "content": "Timezone",
+                              "fontFamily": "$font",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "NnRjF",
+                              "name": "Inp",
+                              "width": 320,
+                              "height": 32,
+                              "fill": "$raised",
+                              "cornerRadius": 6,
+                              "stroke": "$border",
+                              "strokeWidth": 1,
+                              "padding": [
+                                0,
+                                10
+                              ],
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "bY3Gt",
+                                  "name": "t Use browser timezone",
+                                  "fill": "$text-primary",
+                                  "content": "Use browser timezone",
+                                  "fontFamily": "$font",
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "f51aV",
+                                  "name": "i chevron-down",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "chevron-down",
+                                  "library": "Material Symbols Rounded",
+                                  "fill": "$text-secondary"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "YV7S9",
+                              "name": "t Timezone hint",
+                              "fill": "$text-secondary",
+                              "content": "Dates and times display in this timezone.",
                               "fontFamily": "$font",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -1318,8 +1387,8 @@
                 },
                 {
                   "type": "frame",
-                  "id": "VdHsv",
-                  "name": "Password card",
+                  "id": "gmFOg",
+                  "name": "Password & two-factor card",
                   "clip": true,
                   "width": 720,
                   "fill": "$raised",
@@ -1330,7 +1399,7 @@
                   "children": [
                     {
                       "type": "frame",
-                      "id": "CRZaC",
+                      "id": "deqp2",
                       "name": "hdr",
                       "width": "fill_container",
                       "height": 38,
@@ -1348,10 +1417,10 @@
                       "children": [
                         {
                           "type": "text",
-                          "id": "g8moKG",
-                          "name": "t Password",
+                          "id": "t9SGh",
+                          "name": "t Password & two-factor",
                           "fill": "$text-primary",
-                          "content": "Password",
+                          "content": "Password & two-factor",
                           "fontFamily": "$font",
                           "fontSize": 13,
                           "fontWeight": "600"
@@ -1360,7 +1429,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "DY840",
+                      "id": "plbsG",
                       "name": "body",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -1369,7 +1438,7 @@
                       "children": [
                         {
                           "type": "frame",
-                          "id": "C5vgvr",
+                          "id": "RvmcL",
                           "name": "PwRow",
                           "width": "fill_container",
                           "justifyContent": "space_between",
@@ -1377,7 +1446,7 @@
                           "children": [
                             {
                               "type": "text",
-                              "id": "y8SKi",
+                              "id": "Z8V415",
                               "name": "t Last changed May 2",
                               "fill": "$text-secondary",
                               "content": "Last changed May 2.",
@@ -1387,7 +1456,7 @@
                             },
                             {
                               "type": "frame",
-                              "id": "e6M7P",
+                              "id": "DEvdX",
                               "name": "Btn Change password",
                               "fill": "$control",
                               "cornerRadius": 6,
@@ -1402,10 +1471,203 @@
                               "children": [
                                 {
                                   "type": "text",
-                                  "id": "Ar74o",
+                                  "id": "b7XvV0",
                                   "name": "t Change password",
                                   "fill": "$text-primary",
                                   "content": "Change password",
+                                  "fontFamily": "$font",
+                                  "fontSize": 12,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ii3cq",
+                          "name": "divider",
+                          "width": "fill_container",
+                          "height": 1,
+                          "fill": "$border"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "qyGfC",
+                          "name": "TotpRow",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "z51Vxu",
+                              "name": "t Two-factor is on",
+                              "fill": "$text-secondary",
+                              "content": "Two-factor is on — a code is required when you sign in with your password.",
+                              "fontFamily": "$font",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Fq6VP",
+                              "name": "BtnRow",
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "OmwZV",
+                                  "name": "Btn Re-enroll",
+                                  "fill": "$control",
+                                  "cornerRadius": 6,
+                                  "stroke": "$border",
+                                  "strokeWidth": 1,
+                                  "gap": 6,
+                                  "padding": [
+                                    5,
+                                    12
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "Q9XE3",
+                                      "name": "t Re-enroll",
+                                      "fill": "$text-primary",
+                                      "content": "Re-enroll",
+                                      "fontFamily": "$font",
+                                      "fontSize": 12,
+                                      "fontWeight": "500"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "l5az7D",
+                                  "name": "Btn Turn off two-factor",
+                                  "fill": "$control",
+                                  "cornerRadius": 6,
+                                  "stroke": "$border",
+                                  "strokeWidth": 1,
+                                  "gap": 6,
+                                  "padding": [
+                                    5,
+                                    12
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "J0wspM",
+                                      "name": "t Turn off two-factor",
+                                      "fill": "$text-primary",
+                                      "content": "Turn off two-factor",
+                                      "fontFamily": "$font",
+                                      "fontSize": 12,
+                                      "fontWeight": "500"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "CJBzZ",
+                  "name": "Sessions card",
+                  "clip": true,
+                  "width": 720,
+                  "fill": "$raised",
+                  "cornerRadius": 6,
+                  "stroke": "$border",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "tWcWG",
+                      "name": "hdr",
+                      "width": "fill_container",
+                      "height": 38,
+                      "fill": "$section-header",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "padding": [
+                        0,
+                        16
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "VNCCC",
+                          "name": "t Sessions",
+                          "fill": "$text-primary",
+                          "content": "Sessions",
+                          "fontFamily": "$font",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "OlZP3",
+                      "name": "body",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 16,
+                      "padding": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "rjBhQ",
+                          "name": "SessRow",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "nF0A0",
+                              "name": "t Ends every session",
+                              "fill": "$text-secondary",
+                              "content": "Ends every session except this one.",
+                              "fontFamily": "$font",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "cdqjb",
+                              "name": "Btn Sign out other devices",
+                              "fill": "$control",
+                              "cornerRadius": 6,
+                              "stroke": "$border",
+                              "strokeWidth": 1,
+                              "gap": 6,
+                              "padding": [
+                                5,
+                                12
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "Ohs9f",
+                                  "name": "t Sign out other devices",
+                                  "fill": "$text-primary",
+                                  "content": "Sign out other devices",
                                   "fontFamily": "$font",
                                   "fontSize": 12,
                                   "fontWeight": "500"

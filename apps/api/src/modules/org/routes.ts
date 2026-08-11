@@ -13,12 +13,10 @@ import { orgSettings } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
+import { KNOWN_TIMEZONES } from "../../lib/timezones.js";
 
 /** Locales the UI actually ships (DES-013: one until a second exists). */
 const SHIPPED_LOCALES = ["en-US"] as const;
-
-/** IANA zone names the runtime knows; "UTC" rides along as the seed. */
-const KNOWN_TIMEZONES = new Set<string>([...Intl.supportedValuesOf("timeZone"), "UTC"]);
 
 /**
  * An inline image as a data: URI — the logo has no file store to live in

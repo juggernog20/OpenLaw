@@ -94,27 +94,32 @@ test.describe.serial("the settings destination", () => {
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
 
     // The avatar menu is the way in (SET-001) — and no longer switches
-    // the theme itself.
+    // the theme itself, nor owns two-factor enrolment (#67).
     await page.getByRole("banner").getByRole("button", { name: ADMIN.displayName }).click();
     const menu = page.getByRole("menu");
     await expect(menu.getByRole("menuitemradio")).toHaveCount(0);
+    await expect(menu.getByRole("menuitem", { name: "Two-factor authentication" })).toHaveCount(0);
     await menu.getByRole("menuitem", { name: "Settings" }).click();
 
-    // The index URL forwards to the first live pane.
-    await expect(page).toHaveURL(/\/settings\/appearance$/);
+    // The index URL forwards to the rail's first pane: Profile (#67).
+    await expect(page).toHaveURL(/\/settings\/profile$/);
     await expect(page.getByRole("heading", { level: 1, name: "Settings" })).toBeVisible();
-    await expect(page).toHaveTitle("Appearance · OpenLaw");
+    await expect(page).toHaveTitle("Profile · OpenLaw");
 
     // The rail: the Personal group, and — for the Administrator — the
     // Organization group with its one shipped pane (#63).
     const rail = page.getByRole("navigation", { name: "Settings sections" });
-    await expect(rail.getByRole("link", { name: "Profile" })).toBeVisible();
-    await expect(rail.getByRole("link", { name: "Appearance" })).toHaveAttribute(
+    await expect(rail.getByRole("link", { name: "Profile" })).toHaveAttribute(
       "aria-current",
       "page",
     );
     await expect(rail.getByText("Organization")).toBeVisible();
     await expect(rail.getByRole("link", { name: "General" })).toBeVisible();
+
+    // Appearance is the theme's home, one rail hop away.
+    await rail.getByRole("link", { name: "Appearance" }).click();
+    await expect(page).toHaveURL(/\/settings\/appearance$/);
+    await expect(page).toHaveTitle("Appearance · OpenLaw");
 
     // Picking Warm applies the moment it is chosen — no save ceremony.
     // Await the preference PATCH too, so the reload below cannot race
@@ -134,10 +139,14 @@ test.describe.serial("the settings destination", () => {
     await expect(page.getByRole("radio", { name: "Warm" })).toBeChecked();
     await expect.poll(() => rootTheme(page)).toBe("warm");
 
-    // The stubbed Profile entry routes to its own URL.
+    // Back on Profile, the pane is real now (#67): account surfaces
+    // with email read-only per SET-006.
     await rail.getByRole("link", { name: "Profile" }).click();
     await expect(page).toHaveURL(/\/settings\/profile$/);
     await expect(page).toHaveTitle("Profile · OpenLaw");
+    await expect(page.getByLabel("Full name")).toHaveValue(ADMIN.displayName);
+    await expect(page.getByLabel("Email")).toHaveValue(ADMIN.email);
+    await expect(page.getByRole("button", { name: "Sign out other devices" })).toBeVisible();
   });
 
   test("the General pane commits an org name edit on blur and it survives a reload", async ({

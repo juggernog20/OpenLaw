@@ -18,6 +18,10 @@ export interface AuthenticatedUser {
   displayName: string;
   role: UserRole;
   theme: Theme;
+  /** Avatar as a data: URI, or null for initials (DES-018). */
+  image: string | null;
+  /** IANA zone override; null = use the browser's (DES-014). */
+  timezone: string | null;
 }
 
 export interface AuthenticatedSession {
@@ -42,6 +46,8 @@ export const userColumns = {
   displayName: users.displayName,
   role: users.role,
   theme: users.theme,
+  image: users.image,
+  timezone: users.timezone,
 } as const;
 
 export async function requireAuth(request: FastifyRequest): Promise<void> {
@@ -64,6 +70,8 @@ export async function requireAuth(request: FastifyRequest): Promise<void> {
     displayName: user.displayName,
     role: user.role,
     theme: user.theme,
+    image: user.image,
+    timezone: user.timezone,
   };
   request.session = {
     id: session.session.id,

@@ -40,6 +40,9 @@ export const users = pgTable(
     role: text("role", { enum: USER_ROLES }).notNull().default("business_user"),
     // UI theme preference (#44): follows the user across browsers.
     theme: text("theme", { enum: THEMES }).notNull().default("light"),
+    // Display-timezone override (SET-006, DES-014): an IANA zone name.
+    // NULL = "use browser timezone", the default most users never change.
+    timezone: text("timezone"),
     emailVerified: boolean("email_verified").notNull().default(false),
     image: text("image"),
     // twoFactor-plugin column (nullable per its schema, like the admin

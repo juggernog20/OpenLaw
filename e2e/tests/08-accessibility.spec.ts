@@ -63,7 +63,7 @@ test.describe("accessibility floor", () => {
     await reportAxeViolations(page, testInfo, "home");
   });
 
-  test("settings page: /settings forwards to Appearance; axe scan and title", async ({
+  test("settings page: /settings forwards to Profile; axe scan and title", async ({
     page,
     request,
   }, testInfo) => {
@@ -71,9 +71,14 @@ test.describe("accessibility floor", () => {
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
     await page.goto("/settings");
 
-    await expect(page).toHaveURL(/\/settings\/appearance$/);
-    await expect(page).toHaveTitle("Appearance · OpenLaw");
+    // The index lands on Profile (#67).
+    await expect(page).toHaveURL(/\/settings\/profile$/);
+    await expect(page).toHaveTitle("Profile · OpenLaw");
+    await reportAxeViolations(page, testInfo, "settings-profile");
 
+    // The Appearance pane, the theme's home.
+    await page.goto("/settings/appearance");
+    await expect(page).toHaveTitle("Appearance · OpenLaw");
     await reportAxeViolations(page, testInfo, "settings");
 
     // The Organization · General form (#63), as the Administrator.

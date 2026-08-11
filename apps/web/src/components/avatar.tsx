@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Initials avatar (DES-018): every person gets the same treatment —
- * initials on the uniform light-blue avatar background. Per-person hue
- * hashing is rejected. Weight is the recorded normalization point: the
- * mocks show 700, the type ramp caps at semibold 600.
+ * Avatar (DES-018): the uploaded photo when one exists, otherwise
+ * initials on the uniform light-blue avatar background — every person
+ * gets the same treatment; per-person hue hashing is rejected. Weight
+ * is the recorded normalization point: the mocks show 700, the type
+ * ramp caps at semibold 600.
  */
 
 import { cn } from "../lib/utils";
@@ -17,7 +18,26 @@ export function initialsOf(displayName: string): string {
   return (first + last).toUpperCase();
 }
 
-export function Avatar({ name, className }: { name: string; className?: string }) {
+export function Avatar({
+  name,
+  image,
+  className,
+}: {
+  name: string;
+  /** Photo as a data: URI (self-uploaded) or URL (IdP-written). */
+  image?: string | null;
+  className?: string;
+}) {
+  if (image) {
+    return (
+      <img
+        src={image}
+        alt=""
+        aria-hidden="true"
+        className={cn("size-8 shrink-0 rounded-avatar object-cover", className)}
+      />
+    );
+  }
   return (
     <span
       aria-hidden="true"

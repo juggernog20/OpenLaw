@@ -2,7 +2,7 @@
 
 /**
  * The settings destination (#62, #63) at the route seam: /settings is
- * guarded and lands on the Appearance pane, theme changes apply
+ * guarded and lands on the Profile pane (#67), theme changes apply
  * instantly and persist through the preference endpoint, and the avatar
  * menu links here instead of switching the theme itself. The
  * Organization group renders for Administrators only (SET-002), and its
@@ -74,7 +74,7 @@ describe("the settings destination (#62)", () => {
     await screen.findByRole("heading", { name: "Sign in" });
   });
 
-  it("lands on Appearance with a Personal-only rail", async () => {
+  it("lands on Profile with a Personal-only rail", async () => {
     stubApi({ signedIn: MEMBER });
     renderAt("/settings");
 
@@ -82,9 +82,9 @@ describe("the settings destination (#62)", () => {
 
     const rail = screen.getByRole("navigation", { name: "Settings sections" });
     expect(within(rail).getByText("Personal")).toBeInTheDocument();
-    expect(within(rail).getByRole("link", { name: "Profile" })).toBeVisible();
-    // The index route forwards to Appearance: its rail entry is current.
-    expect(within(rail).getByRole("link", { name: "Appearance" })).toHaveAttribute(
+    expect(within(rail).getByRole("link", { name: "Appearance" })).toBeVisible();
+    // The index route forwards to Profile: its rail entry is current.
+    expect(within(rail).getByRole("link", { name: "Profile" })).toHaveAttribute(
       "aria-current",
       "page",
     );
@@ -92,11 +92,8 @@ describe("the settings destination (#62)", () => {
     // omitted, not disabled (SET-001).
     expect(within(rail).queryByText("Organization")).not.toBeInTheDocument();
 
-    // The pane presents the three themes as radios; the stored theme
-    // reads as checked.
-    expect(screen.getByRole("radio", { name: "Warm" })).toBeChecked();
-    expect(screen.getByRole("radio", { name: "Light" })).not.toBeChecked();
-    expect(screen.getByRole("radio", { name: "Dark" })).not.toBeChecked();
+    // The pane renders the person's own account surfaces.
+    expect(await screen.findByLabelText("Full name")).toHaveValue(MEMBER.displayName);
   });
 
   it("applies a theme choice instantly and persists it via PATCH", async () => {
@@ -128,7 +125,7 @@ describe("the settings destination (#62)", () => {
     await user.click(within(menu).getByRole("menuitem", { name: "Settings" }));
 
     expect(await screen.findByRole("heading", { level: 1, name: "Settings" })).toBeVisible();
-    expect(screen.getByRole("radio", { name: "Warm" })).toBeChecked();
+    expect(await screen.findByLabelText("Full name")).toHaveValue(MEMBER.displayName);
   });
 
   it("shows the Organization group to an Administrator and renders General (#63)", async () => {
@@ -172,8 +169,8 @@ describe("the settings destination (#62)", () => {
     stubApi({ signedIn: MEMBER });
     renderAt("/settings/general");
 
-    // Landed on Appearance — and the rail never teases the group (SET-002).
-    expect(await screen.findByRole("radio", { name: "Warm" })).toBeChecked();
+    // Landed on Profile — and the rail never teases the group (SET-002).
+    expect(await screen.findByLabelText("Full name")).toBeVisible();
     const rail = screen.getByRole("navigation", { name: "Settings sections" });
     expect(within(rail).queryByText("Organization")).not.toBeInTheDocument();
   });
@@ -230,27 +227,19 @@ describe("the settings destination (#62)", () => {
     expect(screen.queryByText("Saved")).not.toBeInTheDocument();
   });
 
-  it("commits a timezone pick the moment it changes", async () => {
+  it("commits a timezone pick the moment an option is chosen", async () => {
     const user = userEvent.setup();
     const patches: unknown[] = [];
     stubApi({ signedIn: ADMIN, extra: captureGeneralPatches(patches) });
     renderAt("/settings/general");
 
+    // The DES-014 picker is a search-narrowed combobox: typing filters
+    // the IANA list, choosing an option commits.
     const timezone = await screen.findByLabelText("Default timezone");
-    await user.selectOptions(timezone, "Europe/Berlin");
+    await user.click(timezone);
+    await user.keyboard("Europe/Berlin");
+    await user.click(await screen.findByRole("option", { name: /Europe\/Berlin/ }));
 
     await waitFor(() => expect(patches).toEqual([{ defaultTimezone: "Europe/Berlin" }]));
-  });
-
-  it("stubs the Profile pane behind its rail entry", async () => {
-    stubApi({ signedIn: MEMBER });
-    renderAt("/settings/profile");
-
-    const rail = await screen.findByRole("navigation", { name: "Settings sections" });
-    expect(within(rail).getByRole("link", { name: "Profile" })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
-    expect(screen.getByText("Profile settings arrive with their own build.")).toBeVisible();
   });
 });

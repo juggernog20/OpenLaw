@@ -66,6 +66,11 @@ ActivityBar, Pill, Avatar) live in this file as local copies per the designs con
    gained a "Show archived" toggle (drawn on, count 7) — no mock had an archived filter, so the
    toggle is the recorded normalization. The self row keeps its role select but carries no row
    actions: self-archive is refused and your own sign-out belongs to Profile (SET-006)._
-4. **ST1 lacks**: TOTP management, sign-out-my-other-devices, and the DES-014 timezone picker
-   (SET-006).
+4. ~~**ST1 lacks**: TOTP management, sign-out-my-other-devices, and the DES-014 timezone picker
+   (SET-006).~~ _Done (2026-08-11, #67): the Profile card gained the timezone field (combobox
+   showing "Use browser timezone", the DES-014 null default); the Password card became
+   "Password & two-factor" with a TOTP status row (drawn enabled: Re-enroll / Turn off) under a
+   divider, the ST17 Portal-access multi-row pattern; a Sessions card carries
+   sign-out-my-other-devices. Grouped this way so the pane fits the 940 frame — five single-row
+   cards would overflow it._
 5. **ST3 ships in M18**, not M5 — the toggles wait for the notification engine.

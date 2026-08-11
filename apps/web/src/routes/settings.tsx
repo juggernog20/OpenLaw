@@ -36,9 +36,9 @@ export async function settingsLoader() {
   return { user };
 }
 
-/** The index URL forwards to the first pane that exists. */
+/** The index URL forwards to the rail's first pane (#67: Profile). */
 export function settingsIndexLoader() {
-  return redirect("/settings/appearance");
+  return redirect("/settings/profile");
 }
 
 interface SettingsSection {

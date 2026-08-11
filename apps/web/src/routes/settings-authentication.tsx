@@ -29,7 +29,7 @@ import { Switch } from "../components/ui/switch";
 export async function settingsAuthenticationLoader() {
   const user = await currentUser();
   if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
-  if (user.role !== "administrator") return redirect("/settings/appearance");
+  if (user.role !== "administrator") return redirect("/settings/profile");
   const [methods, domains, providers] = await Promise.all([
     api.GET("/api/v1/auth/methods"),
     api.GET("/api/v1/auth/allowed-domains"),

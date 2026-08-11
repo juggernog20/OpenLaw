@@ -73,6 +73,14 @@ export interface ApiState {
     role: string;
     /** Defaults to "light" — only the theme tests set it. */
     theme?: string;
+    /** Defaults to null (initials) — only the avatar tests set it. */
+    image?: string | null;
+    /** Defaults to null (browser-detected) — only the timezone tests set it. */
+    timezone?: string | null;
+    /** Defaults to false — only the two-factor tests set it. */
+    twoFactorEnabled?: boolean;
+    /** Defaults to true (a credential account exists) — SSO-only tests unset it. */
+    hasPassword?: boolean;
   } | null;
   needsSetup?: boolean;
   methods?: {
@@ -94,13 +102,53 @@ export function stubApi(state: ApiState) {
     if (call.url.pathname === "/api/v1/me" && call.method === "GET") {
       return state.signedIn
         ? json(200, {
-            user: { ...state.signedIn, theme: state.signedIn.theme ?? "light" },
+            // Only the fields the real endpoint's contract carries — the
+            // stub-only knobs (twoFactorEnabled, hasPassword) stay out.
+            user: {
+              id: state.signedIn.id,
+              email: state.signedIn.email,
+              displayName: state.signedIn.displayName,
+              role: state.signedIn.role,
+              theme: state.signedIn.theme ?? "light",
+              image: state.signedIn.image ?? null,
+              timezone: state.signedIn.timezone ?? null,
+            },
             session: { id: "sess-1", expiresAt: new Date(Date.now() + 60_000).toISOString() },
           })
         : problem(401, "Authentication required.");
     }
     if (call.url.pathname === "/api/v1/auth/setup" && call.method === "GET") {
       return json(200, { needsSetup: state.needsSetup ?? false });
+    }
+    // The Profile pane's loader reads better-auth's own surfaces: the
+    // session (for the two-factor flag) and the linked accounts (for
+    // the password credential and its last-changed stamp).
+    if (call.url.pathname === "/api/auth/get-session" && call.method === "GET") {
+      if (!state.signedIn) return json(200, null);
+      return json(200, {
+        session: { id: "sess-1", expiresAt: new Date(Date.now() + 60_000).toISOString() },
+        user: {
+          id: state.signedIn.id,
+          email: state.signedIn.email,
+          name: state.signedIn.displayName,
+          image: state.signedIn.image ?? null,
+          twoFactorEnabled: state.signedIn.twoFactorEnabled ?? false,
+        },
+      });
+    }
+    if (call.url.pathname === "/api/auth/list-accounts" && call.method === "GET") {
+      if (!state.signedIn) return problem(401, "Authentication required.");
+      if (state.signedIn.hasPassword === false) return json(200, []);
+      return json(200, [
+        {
+          id: "acc-1",
+          providerId: "credential",
+          accountId: state.signedIn.id,
+          createdAt: "2026-05-02T12:00:00Z",
+          updatedAt: "2026-05-02T12:00:00Z",
+          scopes: [],
+        },
+      ]);
     }
     if (call.url.pathname === "/api/v1/auth/methods" && call.method === "GET") {
       const methods = state.methods ?? {

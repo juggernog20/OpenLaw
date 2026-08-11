@@ -10,13 +10,14 @@
  * bounce to their own settings home; the API's 403 is the real refusal.
  */
 
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
 import { currentUser, needsSetup } from "../lib/session";
 import { PageTitle } from "../components/page-title";
 import { StatusNote, type FieldStatus } from "../components/status-note";
+import { TimezonePicker } from "../components/timezone-picker";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
@@ -25,7 +26,7 @@ import { Label } from "../components/ui/label";
 export async function settingsGeneralLoader() {
   const user = await currentUser();
   if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
-  if (user.role !== "administrator") return redirect("/settings/appearance");
+  if (user.role !== "administrator") return redirect("/settings/profile");
   const { data } = await api.GET("/api/v1/org/general");
   if (!data) throw new Error("The organization settings could not be read.");
   return { general: data.general };
@@ -50,18 +51,6 @@ async function patchGeneral(body: {
   return data ? data.general : null;
 }
 
-/** IANA zones with their current GMT offsets, mock-style labels. */
-function timezoneOptions(): { zone: string; label: string }[] {
-  const zones = new Set(["UTC", ...Intl.supportedValuesOf("timeZone")]);
-  const now = new Date();
-  return [...zones].sort().map((zone) => {
-    const offset = new Intl.DateTimeFormat("en-US", { timeZone: zone, timeZoneName: "longOffset" })
-      .formatToParts(now)
-      .find((part) => part.type === "timeZoneName")?.value;
-    return { zone, label: offset && offset !== "GMT" ? `${zone} (${offset})` : zone };
-  });
-}
-
 /** ~256 KB of image; matches the API's cap on the encoded data: URI. */
 const LOGO_BYTE_LIMIT = 256 * 1024;
 const LOGO_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
@@ -82,7 +71,6 @@ export function SettingsGeneralPage() {
     defaultTimezone: "idle",
   });
   const fileInput = useRef<HTMLInputElement>(null);
-  const zones = useMemo(timezoneOptions, []);
 
   async function commit(field: keyof General, body: Parameters<typeof patchGeneral>[0]) {
     setStatus((s) => ({ ...s, [field]: "saving" }));
@@ -221,20 +209,13 @@ export function SettingsGeneralPage() {
               <FormattedMessage id="settings.general.timezone" defaultMessage="Default timezone" />
             </Label>
             <div className="flex items-center gap-2">
-              <select
+              <TimezonePicker
                 id="org-timezone"
-                className={selectClassName}
                 value={saved.defaultTimezone}
-                onChange={(event) =>
-                  void commit("defaultTimezone", { defaultTimezone: event.target.value })
-                }
-              >
-                {zones.map(({ zone, label }) => (
-                  <option key={zone} value={zone}>
-                    {label}
-                  </option>
-                ))}
-              </select>
+                onCommit={(zone) => {
+                  if (zone) void commit("defaultTimezone", { defaultTimezone: zone });
+                }}
+              />
               <StatusNote status={status.defaultTimezone} />
             </div>
             <p className="text-xs text-muted">

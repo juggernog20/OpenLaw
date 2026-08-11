@@ -187,9 +187,37 @@
                         "theme": {
                           "type": "string",
                           "enum": ["light", "warm", "dark"]
+                        },
+                        "image": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "timezone": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
-                      "required": ["id", "email", "displayName", "role", "theme"],
+                      "required": [
+                        "id",
+                        "email",
+                        "displayName",
+                        "role",
+                        "theme",
+                        "image",
+                        "timezone"
+                      ],
                       "additionalProperties": false
                     },
                     "session": {
@@ -230,7 +258,7 @@
     "/api/v1/me/preferences": {
       "patch": {
         "operationId": "updateMyPreferences",
-        "summary": "Update the signed-in user's preferences (theme, #44)",
+        "summary": "Update the signed-in user's preferences (theme #44, timezone SET-006)",
         "tags": ["auth"],
         "requestBody": {
           "required": true,
@@ -242,9 +270,18 @@
                   "theme": {
                     "type": "string",
                     "enum": ["light", "warm", "dark"]
+                  },
+                  "timezone": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
-                },
-                "required": ["theme"]
+                }
               }
             }
           }
@@ -281,9 +318,37 @@
                         "theme": {
                           "type": "string",
                           "enum": ["light", "warm", "dark"]
+                        },
+                        "image": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "timezone": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
-                      "required": ["id", "email", "displayName", "role", "theme"],
+                      "required": [
+                        "id",
+                        "email",
+                        "displayName",
+                        "role",
+                        "theme",
+                        "image",
+                        "timezone"
+                      ],
                       "additionalProperties": false
                     }
                   },
@@ -403,9 +468,37 @@
                         "theme": {
                           "type": "string",
                           "enum": ["light", "warm", "dark"]
+                        },
+                        "image": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "timezone": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
-                      "required": ["id", "email", "displayName", "role", "theme"],
+                      "required": [
+                        "id",
+                        "email",
+                        "displayName",
+                        "role",
+                        "theme",
+                        "image",
+                        "timezone"
+                      ],
                       "additionalProperties": false
                     }
                   },
@@ -544,9 +637,37 @@
                         "theme": {
                           "type": "string",
                           "enum": ["light", "warm", "dark"]
+                        },
+                        "image": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "timezone": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
-                      "required": ["id", "email", "displayName", "role", "theme"],
+                      "required": [
+                        "id",
+                        "email",
+                        "displayName",
+                        "role",
+                        "theme",
+                        "image",
+                        "timezone"
+                      ],
                       "additionalProperties": false
                     }
                   },
@@ -587,9 +708,37 @@
                         "theme": {
                           "type": "string",
                           "enum": ["light", "warm", "dark"]
+                        },
+                        "image": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "timezone": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
-                      "required": ["id", "email", "displayName", "role", "theme"],
+                      "required": [
+                        "id",
+                        "email",
+                        "displayName",
+                        "role",
+                        "theme",
+                        "image",
+                        "timezone"
+                      ],
                       "additionalProperties": false
                     }
                   },
@@ -659,9 +808,37 @@
                         "theme": {
                           "type": "string",
                           "enum": ["light", "warm", "dark"]
+                        },
+                        "image": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "timezone": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
-                      "required": ["id", "email", "displayName", "role", "theme"],
+                      "required": [
+                        "id",
+                        "email",
+                        "displayName",
+                        "role",
+                        "theme",
+                        "image",
+                        "timezone"
+                      ],
                       "additionalProperties": false
                     }
                   },

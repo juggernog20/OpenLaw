@@ -43,6 +43,13 @@
       "when": 1786422732354,
       "tag": "0005_last_active",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786433704100,
+      "tag": "0006_timezone",
+      "breakpoints": true
     }
   ]
 }
