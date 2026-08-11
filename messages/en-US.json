@@ -527,8 +527,14 @@
   "settings.users.active": {
     "defaultMessage": "Active"
   },
+  "settings.users.archive": {
+    "defaultMessage": "Archive {email}"
+  },
   "settings.users.archived": {
     "defaultMessage": "Archived"
+  },
+  "settings.users.changeRole": {
+    "defaultMessage": "{role} — change the role of {email}"
   },
   "settings.users.colActions": {
     "defaultMessage": "Actions"
@@ -575,8 +581,17 @@
   "settings.users.resend": {
     "defaultMessage": "Resend the invite to {email}"
   },
+  "settings.users.restore": {
+    "defaultMessage": "Restore {email}"
+  },
   "settings.users.revoke": {
     "defaultMessage": "Revoke the invite to {email}"
+  },
+  "settings.users.revokeSessions": {
+    "defaultMessage": "Revoke all sessions of {email}"
+  },
+  "settings.users.showArchived": {
+    "defaultMessage": "Show archived"
   },
   "shell.brand": {
     "defaultMessage": "openlaw"

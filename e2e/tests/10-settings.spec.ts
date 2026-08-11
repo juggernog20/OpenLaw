@@ -7,18 +7,21 @@
  * Administrator's rail also carries the Organization group (SET-002),
  * whose General pane commits org identity per field (DES-017) and
  * whose Security group holds the Authentication pane — from which the
- * auth mode itself is switched. The Users pane (#65) lists everyone
- * with pending invites as rows and carries invite/resend/revoke; the
- * invite it creates is revoked again, so the never-reset instance
+ * auth mode itself is switched. The Users pane (#65, #66) lists
+ * everyone with pending invites as rows and carries invite/resend/
+ * revoke plus the people-management half of SET-005: in-place role
+ * edits, session revocation, and the guarded archive with restore —
+ * proven against a second browser signed in as the target. Everything
+ * per-run lands revoked or archived, so the never-reset instance
  * (TECH-018) stays clean. Deeper theme mechanics (chrome colors,
  * pre-login Light) stay in 06; this spec proves the destination.
  */
 
 import http from "node:http";
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type BrowserContext, type Page } from "@playwright/test";
 import { z } from "zod";
 import { ADMIN, ensureAdminExists, signInAs, switchTheme } from "./helpers.js";
-import { mailCountTo, waitForMailTo } from "./mailpit.js";
+import { extractLink, mailCountTo, waitForMailTo } from "./mailpit.js";
 
 /**
  * A minimal OIDC issuer for provider registration: registration only
@@ -300,6 +303,97 @@ test.describe.serial("the settings destination", () => {
           .parse(await listed.json());
         const leftover = users.find((user) => user.email === email);
         if (leftover) await page.request.delete(`/api/v1/auth/invites/${leftover.id}`);
+      }
+    }
+  });
+
+  test("the Users pane edits a role, revokes sessions, archives, and restores (#66)", async ({
+    page,
+    browser,
+  }) => {
+    await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+
+    // A per-run activated staff member, onboarded through the real
+    // flows: invite → set-password email → their own sign-in, in a
+    // second browser context so their session lives alongside the
+    // Administrator's.
+    const email = `e2e-member-${Date.now()}@e2e.example`;
+    const password = "their-own-e2e-password";
+    const invited = await page.request.post("/api/v1/auth/invites", {
+      data: { email, displayName: "Riva Member", role: "contributor" },
+    });
+    expect(invited.status()).toBe(201);
+
+    // From here on the user row exists, so cleanup must cover every
+    // failure — activation included, not just the journey.
+    let memberContext: BrowserContext | undefined;
+    try {
+      const mail = await waitForMailTo(page.request, email);
+      const link = extractLink(mail.text, "/auth/set-password");
+
+      memberContext = await browser.newContext();
+      const memberPage = await memberContext.newPage();
+      await memberPage.goto(link);
+      await memberPage.getByLabel("New password").fill(password);
+      await memberPage.getByLabel("Confirm password").fill(password);
+      await memberPage.getByRole("button", { name: "Set password" }).click();
+      await expect(memberPage.getByText("Password set")).toBeVisible();
+      await signInAs(memberPage, email, password, "Riva Member");
+
+      await page.goto("/settings/users");
+      const row = page.getByRole("row", { name: new RegExp(email) });
+      await expect(row.getByText("Active")).toBeVisible();
+
+      // The in-place role edit commits from the row and survives a
+      // reload (the API's live-guard proof runs at the HTTP seam).
+      await row.getByRole("button", { name: `change the role of ${email}` }).click();
+      await page.getByRole("menuitemradio", { name: "Legal team member" }).click();
+      await expect(row.getByText("Saved")).toBeVisible();
+      await page.reload();
+      await expect(row.getByText("Legal team member")).toBeVisible();
+
+      // Standalone revocation, the lost-laptop case: the member's live
+      // session dies mid-flight and their next navigation lands on login.
+      await row.getByRole("button", { name: `Revoke all sessions of ${email}` }).click();
+      await expect(row.getByText("Saved")).toBeVisible();
+      await memberPage.goto("/settings/appearance");
+      await expect(memberPage).toHaveURL(/\/auth\/login/);
+
+      // Revocation is not archival: the member signs straight back in…
+      await signInAs(memberPage, email, password, "Riva Member");
+
+      // …but archive blocks the door and kills that session in the same
+      // operation, and the row moves behind the Show-archived filter.
+      await row.getByRole("button", { name: `Archive ${email}` }).click();
+      await expect(row).toHaveCount(0);
+      await memberPage.goto("/settings/appearance");
+      await expect(memberPage).toHaveURL(/\/auth\/login/);
+      await page.getByRole("switch", { name: "Show archived" }).click();
+      await expect(row.getByText("Archived")).toBeVisible();
+
+      // Restore reopens the door (SET-003's recovery story).
+      await row.getByRole("button", { name: `Restore ${email}` }).click();
+      await expect(row.getByText("Active")).toBeVisible();
+      await signInAs(memberPage, email, password, "Riva Member");
+    } finally {
+      await memberContext?.close();
+      // The per-run member must end every run inert on the never-reset
+      // instance (TECH-018): a still-pending invite (activation failed)
+      // is revoked outright; an activated user cannot be deleted, so
+      // archived is their resting state.
+      const listed = await page.request.get("/api/v1/users");
+      if (listed.ok()) {
+        const { users } = z
+          .object({
+            users: z.array(z.object({ id: z.string(), email: z.string(), status: z.string() })),
+          })
+          .parse(await listed.json());
+        const member = users.find((user) => user.email === email);
+        if (member?.status === "invited") {
+          await page.request.delete(`/api/v1/auth/invites/${member.id}`);
+        } else if (member && member.status !== "archived") {
+          await page.request.post(`/api/v1/users/${member.id}/archive`);
+        }
       }
     }
   });

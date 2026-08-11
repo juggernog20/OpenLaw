@@ -4,7 +4,7 @@
  * The settings destination (SET-001, #62): one guarded /settings route
  * reached from the avatar menu, a two-group left rail, and a routable
  * URL per pane. The Organization group renders for Administrators only
- * (SET-002) and carries General (#63) and Users (#65) plus the
+ * (SET-002) and carries General (#63) and Users (#65, #66) plus the
  * collapsible Security group with Authentication (#64) — rail entries
  * for unshipped panes are omitted, not disabled.
  * Visual spec: designs/settings.pen per SETTINGS-INVENTORY.md.
