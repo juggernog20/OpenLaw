@@ -141,6 +141,8 @@ describe("the settings destination (#62)", () => {
       "aria-current",
       "page",
     );
+    // Users sits between General and the Security group (#65).
+    expect(within(rail).getByRole("link", { name: "Users" })).toBeVisible();
 
     // The card header, as distinct from the rail's group label.
     const cardHeaders = screen

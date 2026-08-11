@@ -32,6 +32,7 @@ import { metaRoutes } from "./modules/meta/routes.js";
 import { authRoutes } from "./modules/auth/routes.js";
 import { onboardingRoutes } from "./modules/onboarding/routes.js";
 import { orgRoutes } from "./modules/org/routes.js";
+import { usersRoutes } from "./modules/users/routes.js";
 import { authHandler } from "./auth/handler.js";
 import { createAuth, type Auth, type AuthConfig } from "./auth/instance.js";
 import type { AuthenticatedSession, AuthenticatedUser } from "./auth/guards.js";
@@ -219,6 +220,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(authRoutes, { prefix: "/api/v1" });
   await app.register(onboardingRoutes, { prefix: "/api/v1" });
   await app.register(orgRoutes, { prefix: "/api/v1" });
+  await app.register(usersRoutes, { prefix: "/api/v1" });
 
   return app;
 }

@@ -17,6 +17,7 @@ import { SetPasswordPage } from "./routes/set-password";
 import { SettingsLayout, settingsIndexLoader, settingsLoader } from "./routes/settings";
 import { SettingsAppearancePage } from "./routes/settings-appearance";
 import { SettingsGeneralPage, settingsGeneralLoader } from "./routes/settings-general";
+import { SettingsUsersPage, settingsUsersLoader } from "./routes/settings-users";
 import {
   SettingsAuthenticationPage,
   settingsAuthenticationLoader,
@@ -63,6 +64,7 @@ export const routes: RouteObject[] = [
       // SET-002: the loaders bounce non-Administrators; the API's own
       // role gate stands behind them.
       { path: "general", loader: settingsGeneralLoader, element: <SettingsGeneralPage /> },
+      { path: "users", loader: settingsUsersLoader, element: <SettingsUsersPage /> },
       {
         path: "authentication",
         loader: settingsAuthenticationLoader,
