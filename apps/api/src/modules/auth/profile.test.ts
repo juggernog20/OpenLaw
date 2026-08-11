@@ -168,7 +168,7 @@ describe("sign out my other devices (better-auth /revoke-other-sessions)", () =>
 describe("change password (better-auth /change-password)", () => {
   it("changes the password and appends a value-free audit entry", async () => {
     const cookies = await signInCookies();
-    const newPassword = "correct-horse-battery-staple-2";
+    const newPassword = "correct-horse-battery-staple-2"; // gitleaks:allow — test fixture
     const before = (await rowsFor("user.password_changed")).length;
     const res = await harness.app.inject({
       method: "POST",

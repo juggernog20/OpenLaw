@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+#
+# False-positive fingerprints for the gitleaks history scan
+# (.github/workflows/security.yml). One fingerprint per line:
+# commit:file:rule:line, copied from the finding in the job log.
+# Fingerprints pin a commit, so they stay valid for the weekly
+# full-history scan; the line itself also carries a gitleaks:allow
+# marker so future commits touching it are not re-flagged.
+
+# Test fixture: the change-password round-trip's new password, an
+# xkcd-style phrase like the harness admin password. Not a secret.
+fb3c9439823e9d0e824e596d393fb7e96d1e130b:apps/api/src/modules/auth/profile.test.ts:generic-api-key:171
