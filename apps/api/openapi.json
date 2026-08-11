@@ -612,6 +612,110 @@
         }
       }
     },
+    "/api/v1/auth/invites/{userId}/resend": {
+      "post": {
+        "operationId": "resendInvite",
+        "summary": "Re-send a pending invite's set-password email (SET-005)",
+        "tags": ["auth"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "userId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "administrator",
+                            "legal_team_member",
+                            "contributor",
+                            "business_user"
+                          ]
+                        },
+                        "theme": {
+                          "type": "string",
+                          "enum": ["light", "warm", "dark"]
+                        }
+                      },
+                      "required": ["id", "email", "displayName", "role", "theme"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["user"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/invites/{userId}": {
+      "delete": {
+        "operationId": "revokeInvite",
+        "summary": "Revoke a pending invite (SET-005): the row is removed and the emailed set-password link stops working",
+        "tags": ["auth"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "userId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/sso-providers": {
       "post": {
         "operationId": "registerSsoProvider",
@@ -1363,6 +1467,90 @@
                     }
                   },
                   "required": ["general"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "operationId": "listUsers",
+        "summary": "Every user with role, status, and last-active (SET-005); pending invites appear as rows with status `invited`",
+        "tags": ["users"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "users": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "administrator",
+                              "legal_team_member",
+                              "contributor",
+                              "business_user"
+                            ]
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": ["active", "invited", "archived"]
+                          },
+                          "lastActiveAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "email",
+                          "displayName",
+                          "role",
+                          "status",
+                          "lastActiveAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["users"],
                   "additionalProperties": false
                 }
               }

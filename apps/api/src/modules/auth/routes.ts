@@ -13,7 +13,6 @@ import { z } from "zod";
 import {
   accounts,
   ADVISORY_LOCK,
-  and,
   AUTH_MODES,
   eq,
   orgSettings,
@@ -22,6 +21,7 @@ import {
   tryWithAdvisoryLock,
   users,
   USER_ROLES,
+  verifications,
 } from "@openlaw/db";
 import { provisionUser, withTrustedIssuerOrigin } from "../../auth/instance.js";
 import { requireAuth, requireRole, userColumns } from "../../auth/guards.js";
@@ -41,9 +41,11 @@ const UserEnvelope = z.object({ user: UserSchema });
 
 /**
  * Invitable roles: everyone but Business Users, who are JIT-provisioned
- * (DD-010) — invites are the only way these accounts come to exist.
+ * (DD-010) — invites are the only way these accounts come to exist. The
+ * users module reads this to tell a pending invite from a Business User
+ * (both lack account rows; only one was invited).
  */
-const INVITABLE_ROLES = ["administrator", "legal_team_member", "contributor"] as const;
+export const INVITABLE_ROLES = ["administrator", "legal_team_member", "contributor"] as const;
 
 /**
  * A bare DNS name — dot-separated labels, no scheme, port, path, or `@`.
@@ -341,14 +343,16 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
 
       if (existing.length > 0) {
         const user = existing[0]!;
-        // A credential row means they activated; there is nothing to
-        // re-send and the invite must not touch the account.
-        const credential = await app.db
+        // Any account row means they activated — a credential from the
+        // set-password flow, or an SSO subject from signing in through
+        // the IdP. There is nothing to re-send and the invite must not
+        // touch the account.
+        const activated = await app.db
           .select({ id: accounts.id })
           .from(accounts)
-          .where(and(eq(accounts.userId, user.id), eq(accounts.providerId, "credential")))
+          .where(eq(accounts.userId, user.id))
           .limit(1);
-        if (credential.length > 0) {
+        if (activated.length > 0) {
           throw httpError(409, "This user has already activated their account.");
         }
         // Re-sending never changes the account. A different role here is a
@@ -358,6 +362,14 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
           throw httpError(409, "This user already exists with a different role.");
         }
         await sendSetPasswordEmail(email);
+        await recordActivity(app.db, {
+          entityType: "user",
+          entityId: user.id,
+          actorId: request.user.id,
+          action: "user.invite_resent",
+          visibility: "admin_only",
+          payload: { email: user.email },
+        });
         return reply.status(200).send({ user });
       }
 
@@ -376,7 +388,126 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(eq(users.id, created.user.id))
         .limit(1);
       if (!user) throw httpError(500, "The invited user could not be read back.");
+
+      // Logged after the fact: better-auth wrote the row outside any
+      // transaction of ours, so exact atomicity is not on offer here.
+      await recordActivity(app.db, {
+        entityType: "user",
+        entityId: user.id,
+        actorId: request.user.id,
+        action: "user.invited",
+        visibility: "admin_only",
+        payload: { email: user.email, role: user.role },
+      });
       return reply.status(201).send({ user });
+    },
+  );
+
+  /**
+   * Loads the user and proves it is a pending invite: a staff role and
+   * no account row yet. Everything else answers 409 — resending to or
+   * revoking an activated user (or a Business User, who was never
+   * invited) is user management, not invite management.
+   */
+  async function pendingInvite(userId: string) {
+    const [user] = await app.db
+      .select(userColumns)
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    if (!user) throw httpError(404, "No user exists with this id.");
+    const activated = await app.db
+      .select({ id: accounts.id })
+      .from(accounts)
+      .where(eq(accounts.userId, user.id))
+      .limit(1);
+    if (activated.length > 0 || !(INVITABLE_ROLES as readonly string[]).includes(user.role)) {
+      throw httpError(409, "This user is not a pending invite.");
+    }
+    return user;
+  }
+
+  app.post(
+    "/auth/invites/:userId/resend",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "resendInvite",
+        summary: "Re-send a pending invite's set-password email (SET-005)",
+        tags: ["auth"],
+        params: z.object({ userId: z.string() }),
+        response: { 200: UserEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const user = await pendingInvite(request.params.userId);
+      await sendSetPasswordEmail(user.email);
+      await recordActivity(app.db, {
+        entityType: "user",
+        entityId: user.id,
+        actorId: request.user.id,
+        action: "user.invite_resent",
+        visibility: "admin_only",
+        payload: { email: user.email },
+      });
+      return { user };
+    },
+  );
+
+  app.delete(
+    "/auth/invites/:userId",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "revokeInvite",
+        summary:
+          "Revoke a pending invite (SET-005): the row is removed and the " +
+          "emailed set-password link stops working",
+        tags: ["auth"],
+        params: z.object({ userId: z.string() }),
+        response: { 204: z.null(), default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      // The invite never activated, so nothing anywhere attributes to
+      // this user — deleting the row is clean, and it is what kills the
+      // emailed link (the token resolves to a user that no longer
+      // exists). An activation racing this transaction can still write
+      // its credential row first; the cascade removes it, and revocation
+      // winning that race is the intended outcome — the Administrator
+      // said no.
+      await app.db.transaction(async (tx) => {
+        const [user] = await tx
+          .select(userColumns)
+          .from(users)
+          .where(eq(users.id, request.params.userId))
+          .limit(1)
+          .for("update");
+        if (!user) throw httpError(404, "No user exists with this id.");
+        const activated = await tx
+          .select({ id: accounts.id })
+          .from(accounts)
+          .where(eq(accounts.userId, user.id))
+          .limit(1);
+        if (activated.length > 0 || !(INVITABLE_ROLES as readonly string[]).includes(user.role)) {
+          throw httpError(409, "This user is not a pending invite.");
+        }
+        // The set-password tokens go with the row: better-auth keys a
+        // reset verification's value on the plain user id, and leaving
+        // one behind would turn a replay into a foreign-key 500 instead
+        // of a clean invalid-token refusal.
+        await tx.delete(verifications).where(eq(verifications.value, user.id));
+        await tx.delete(users).where(eq(users.id, user.id));
+        await recordActivity(tx, {
+          entityType: "user",
+          entityId: user.id,
+          actorId: request.user.id,
+          action: "user.invite_revoked",
+          visibility: "admin_only",
+          payload: { email: user.email, role: user.role },
+        });
+      });
+      return reply.status(204).send(null);
     },
   );
 

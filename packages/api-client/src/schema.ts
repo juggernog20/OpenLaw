@@ -107,6 +107,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/auth/invites/{userId}/resend": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Re-send a pending invite's set-password email (SET-005) */
+    post: operations["resendInvite"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auth/invites/{userId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Revoke a pending invite (SET-005): the row is removed and the emailed set-password link stops working */
+    delete: operations["revokeInvite"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/auth/sso-providers": {
     parameters: {
       query?: never;
@@ -262,6 +296,23 @@ export interface paths {
     head?: never;
     /** Update the organization's identity; applies immediately (SET-003) and appends one audit entry per changed field */
     patch: operations["updateOrgGeneral"];
+    trace?: never;
+  };
+  "/api/v1/users": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Every user with role, status, and last-active (SET-005); pending invites appear as rows with status `invited` */
+    get: operations["listUsers"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
 }
@@ -600,6 +651,76 @@ export interface operations {
             };
           };
         };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  resendInvite: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            user: {
+              id: string;
+              email: string;
+              displayName: string;
+              /** @enum {string} */
+              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              /** @enum {string} */
+              theme: "light" | "warm" | "dark";
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  revokeInvite: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Problem details (RFC 9457) */
       default: {
@@ -1094,6 +1215,46 @@ export interface operations {
               defaultLocale: "en-US";
               defaultTimezone: string;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listUsers: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            users: {
+              id: string;
+              email: string;
+              displayName: string;
+              /** @enum {string} */
+              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              /** @enum {string} */
+              status: "active" | "invited" | "archived";
+              lastActiveAt: string | null;
+            }[];
           };
         };
       };

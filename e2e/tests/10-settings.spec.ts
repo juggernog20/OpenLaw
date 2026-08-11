@@ -7,7 +7,10 @@
  * Administrator's rail also carries the Organization group (SET-002),
  * whose General pane commits org identity per field (DES-017) and
  * whose Security group holds the Authentication pane — from which the
- * auth mode itself is switched. Deeper theme mechanics (chrome colors,
+ * auth mode itself is switched. The Users pane (#65) lists everyone
+ * with pending invites as rows and carries invite/resend/revoke; the
+ * invite it creates is revoked again, so the never-reset instance
+ * (TECH-018) stays clean. Deeper theme mechanics (chrome colors,
  * pre-login Light) stay in 06; this spec proves the destination.
  */
 
@@ -15,6 +18,7 @@ import http from "node:http";
 import { test, expect, type Page } from "@playwright/test";
 import { z } from "zod";
 import { ADMIN, ensureAdminExists, signInAs, switchTheme } from "./helpers.js";
+import { mailCountTo, waitForMailTo } from "./mailpit.js";
 
 /**
  * A minimal OIDC issuer for provider registration: registration only
@@ -227,6 +231,67 @@ test.describe.serial("the settings destination", () => {
     } finally {
       // Leave the shared instance in built-in mode whatever happened.
       await page.request.patch("/api/v1/auth/mode", { data: { mode: "built_in" } });
+    }
+  });
+
+  test("the Users pane invites a user, resends the invite, and revokes it (#65)", async ({
+    page,
+  }) => {
+    await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+    await page.goto("/settings/general");
+    const rail = page.getByRole("navigation", { name: "Settings sections" });
+    await rail.getByRole("link", { name: "Users" }).click();
+    await expect(page).toHaveURL(/\/settings\/users$/);
+    await expect(page).toHaveTitle("Users · OpenLaw");
+
+    // The Administrator's own row: active, with a real last-active stamp
+    // (they signed in moments ago, so it must read as a relative time).
+    const adminRow = page.getByRole("row", { name: new RegExp(ADMIN.email) });
+    await expect(adminRow.getByText("Active")).toBeVisible();
+    await expect(adminRow.getByText(/\bago\b/)).toBeVisible();
+
+    // Per-run unique (TECH-018 never-reset instance), and revoked again
+    // below so no pending invite accumulates across runs.
+    const email = `e2e-invite-${Date.now()}@e2e.example`;
+    await page.getByRole("button", { name: "Invite user" }).click();
+    const dialog = page.getByRole("dialog", { name: "Invite user" });
+    await dialog.getByLabel("Display name").fill("Pending Invitee");
+    await dialog.getByLabel("Email").fill(email);
+    await dialog.getByRole("button", { name: "Contributor" }).click();
+    await dialog.getByRole("button", { name: "Send invite" }).click();
+
+    try {
+      // The invite is a row, not a fire-and-forget — and it survives a
+      // reload with its role because the list route serves it.
+      const inviteRow = page.getByRole("row", { name: new RegExp(email) });
+      await expect(inviteRow.getByText("Invited")).toBeVisible();
+      await expect(inviteRow.getByText("Contributor")).toBeVisible();
+      await waitForMailTo(page.request, email);
+      await page.reload();
+      await expect(inviteRow.getByText("Invited")).toBeVisible();
+      await expect(inviteRow.getByText("Contributor")).toBeVisible();
+
+      // Resend delivers a second set-password email.
+      await inviteRow.getByRole("button", { name: `Resend the invite to ${email}` }).click();
+      await expect(inviteRow.getByText("Saved")).toBeVisible();
+      await expect.poll(() => mailCountTo(page.request, email)).toBe(2);
+
+      // Revoke removes the row; the dead-link half is proven at the API
+      // seam, where the emailed token is directly in hand.
+      await inviteRow.getByRole("button", { name: `Revoke the invite to ${email}` }).click();
+      await expect(inviteRow).toHaveCount(0);
+    } finally {
+      // A failure above must not strand the pending invite on the
+      // never-reset instance (TECH-018) — revoke through the API
+      // whatever happened; on the happy path there is nothing to find.
+      const listed = await page.request.get("/api/v1/users");
+      if (listed.ok()) {
+        const { users } = z
+          .object({ users: z.array(z.object({ id: z.string(), email: z.string() })) })
+          .parse(await listed.json());
+        const leftover = users.find((user) => user.email === email);
+        if (leftover) await page.request.delete(`/api/v1/auth/invites/${leftover.id}`);
+      }
     }
   });
 });

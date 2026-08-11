@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { eq, sql, users, verifications } from "@openlaw/db";
+import { activityLog, asc, eq, sql, users, verifications } from "@openlaw/db";
 import {
   signIn,
   signInCookies,
@@ -182,5 +182,215 @@ describe("invites (POST /api/v1/auth/invites)", () => {
       .from(users)
       .where(eq(users.email, "direct@example.com"));
     expect(rows).toHaveLength(0);
+  });
+});
+
+/** Invites the address as a Contributor and returns the created user's id. */
+async function invitePending(email: string, displayName: string): Promise<string> {
+  const res = await invite(adminCookies, { email, displayName, role: "contributor" });
+  expect(res.statusCode, res.body).toBe(201);
+  return (res.json() as { user: { id: string } }).user.id;
+}
+
+describe("invite resend (POST /api/v1/auth/invites/:userId/resend, #65)", () => {
+  it("re-emails the set-password link for a pending invite; the fresh token activates", async () => {
+    const userId = await invitePending("riley@example.com", "Riley Novak");
+
+    const res = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/auth/invites/${userId}/resend`,
+      cookies: adminCookies,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect((res.json() as { user: { email: string } }).user.email).toBe("riley@example.com");
+
+    const mail = harness.mailer.messagesTo("riley@example.com");
+    expect(mail).toHaveLength(2);
+    const reset = await setPassword(tokenFrom(mail[1]!.text), "riley-sets-her-own-1");
+    expect(reset.statusCode, reset.body).toBe(200);
+    await signInCookies(harness.app, "riley@example.com", "riley-sets-her-own-1");
+  });
+
+  it("answers 404 for an unknown user id", async () => {
+    const res = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/auth/invites/00000000-0000-7000-8000-000000000000/resend",
+      cookies: adminCookies,
+    });
+    expect(res.statusCode).toBe(404);
+  });
+
+  it("refuses to resend for an activated user as 409", async () => {
+    const [riley] = await harness.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, "riley@example.com"));
+    const res = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/auth/invites/${riley!.id}/resend`,
+      cookies: adminCookies,
+    });
+    expect(res.statusCode).toBe(409);
+  });
+
+  it("is Administrator-only", async () => {
+    const rileyCookies = await signInCookies(
+      harness.app,
+      "riley@example.com",
+      "riley-sets-her-own-1",
+    );
+    const res = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/auth/invites/00000000-0000-7000-8000-000000000000/resend",
+      cookies: rileyCookies,
+    });
+    expect(res.statusCode).toBe(403);
+  });
+});
+
+describe("invite revoke (DELETE /api/v1/auth/invites/:userId, #65)", () => {
+  it("removes the pending invite and its emailed link stops working", async () => {
+    const userId = await invitePending("quinn@example.com", "Quinn Baptiste");
+    const token = tokenFrom(harness.mailer.messagesTo("quinn@example.com")[0]!.text);
+
+    const res = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/auth/invites/${userId}`,
+      cookies: adminCookies,
+    });
+    expect(res.statusCode, res.body).toBe(204);
+
+    const rows = await harness.db.select({ id: users.id }).from(users).where(eq(users.id, userId));
+    expect(rows).toHaveLength(0);
+
+    // The revoked link is dead: setting a password through it fails as a
+    // client error, and the address cannot sign in.
+    const reset = await setPassword(token, "quinn-too-late-1");
+    expect(reset.statusCode).toBeGreaterThanOrEqual(400);
+    expect(reset.statusCode).toBeLessThan(500);
+    const attempt = await signIn(harness.app, "quinn@example.com", "quinn-too-late-1");
+    expect(attempt.statusCode).toBe(401);
+  });
+
+  it("answers 404 for an unknown user id", async () => {
+    const res = await harness.app.inject({
+      method: "DELETE",
+      url: "/api/v1/auth/invites/00000000-0000-7000-8000-000000000000",
+      cookies: adminCookies,
+    });
+    expect(res.statusCode).toBe(404);
+  });
+
+  it("is Administrator-only: a Contributor's revoke bounces as 403 and the invite stays", async () => {
+    const userId = await invitePending("tao@example.com", "Tao Lin");
+    const rileyCookies = await signInCookies(
+      harness.app,
+      "riley@example.com",
+      "riley-sets-her-own-1",
+    );
+    const res = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/auth/invites/${userId}`,
+      cookies: rileyCookies,
+    });
+    expect(res.statusCode).toBe(403);
+    const rows = await harness.db.select({ id: users.id }).from(users).where(eq(users.id, userId));
+    expect(rows).toHaveLength(1);
+  });
+
+  it("refuses to revoke an activated user as 409 — that would be deletion, not revocation", async () => {
+    const [riley] = await harness.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, "riley@example.com"));
+    const res = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/auth/invites/${riley!.id}`,
+      cookies: adminCookies,
+    });
+    expect(res.statusCode).toBe(409);
+    const rows = await harness.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, "riley@example.com"));
+    expect(rows).toHaveLength(1);
+  });
+});
+
+describe("the DD-017 audit trail (#65)", () => {
+  async function entriesFor(action: string) {
+    return harness.db
+      .select()
+      .from(activityLog)
+      .where(eq(activityLog.action, action))
+      .orderBy(asc(activityLog.createdAt));
+  }
+
+  it("logs an invite as user.invited with the actor, email, and role", async () => {
+    const before = (await entriesFor("user.invited")).length;
+    const userId = await invitePending("ash@example.com", "Ash Moreau");
+
+    const entries = await entriesFor("user.invited");
+    expect(entries.length).toBe(before + 1);
+    const entry = entries.at(-1)!;
+    expect(entry).toMatchObject({
+      entityType: "user",
+      entityId: userId,
+      visibility: "admin_only",
+      payload: { email: "ash@example.com", role: "contributor" },
+    });
+    expect(entry.actorId).toBeTruthy();
+  });
+
+  it("logs a resend as user.invite_resent — through the resend route and the invite route alike", async () => {
+    const [ash] = await harness.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, "ash@example.com"));
+    const before = (await entriesFor("user.invite_resent")).length;
+
+    const viaResend = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/auth/invites/${ash!.id}/resend`,
+      cookies: adminCookies,
+    });
+    expect(viaResend.statusCode, viaResend.body).toBe(200);
+
+    const viaInvite = await invite(adminCookies, {
+      email: "ash@example.com",
+      displayName: "Ash Moreau",
+      role: "contributor",
+    });
+    expect(viaInvite.statusCode, viaInvite.body).toBe(200);
+
+    const entries = await entriesFor("user.invite_resent");
+    expect(entries.length).toBe(before + 2);
+    expect(entries.at(-1)).toMatchObject({
+      entityType: "user",
+      entityId: ash!.id,
+      visibility: "admin_only",
+      payload: { email: "ash@example.com" },
+    });
+  });
+
+  it("logs a revoke as user.invite_revoked", async () => {
+    const [ash] = await harness.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, "ash@example.com"));
+    const res = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/auth/invites/${ash!.id}`,
+      cookies: adminCookies,
+    });
+    expect(res.statusCode, res.body).toBe(204);
+
+    const entries = await entriesFor("user.invite_revoked");
+    expect(entries.at(-1)).toMatchObject({
+      entityType: "user",
+      entityId: ash!.id,
+      visibility: "admin_only",
+      payload: { email: "ash@example.com", role: "contributor" },
+    });
   });
 });

@@ -79,6 +79,11 @@ test.describe("accessibility floor", () => {
     await page.goto("/settings/authentication");
     await expect(page).toHaveTitle("Authentication · OpenLaw");
     await reportAxeViolations(page, testInfo, "settings-authentication");
+
+    // The Organization · Users table (#65), as the Administrator.
+    await page.goto("/settings/users");
+    await expect(page).toHaveTitle("Users · OpenLaw");
+    await reportAxeViolations(page, testInfo, "settings-users");
   });
 
   test("reduced motion degrades transitions to instant", async ({ page }) => {

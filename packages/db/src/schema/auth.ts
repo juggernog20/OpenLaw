@@ -54,6 +54,11 @@ export const users = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
+    // "Last active" for the Users list (SET-005): stamped on session
+    // create and refresh, so it survives sign-out and session expiry —
+    // live session rows would regress to "never" the moment they are
+    // deleted. NULL = has never signed in (a pending invite).
+    lastActiveAt: timestamp("last_active_at", { withTimezone: true }),
   },
   (table) => [
     // Unique on lower(email): every write path normalizes to lower case,

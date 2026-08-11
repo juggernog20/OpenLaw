@@ -284,6 +284,9 @@
   "role.administrator": {
     "defaultMessage": "Administrator"
   },
+  "role.businessUser": {
+    "defaultMessage": "Business user"
+  },
   "role.contributor": {
     "defaultMessage": "Contributor"
   },
@@ -437,8 +440,65 @@
   "settings.section.profile": {
     "defaultMessage": "Profile"
   },
+  "settings.section.users": {
+    "defaultMessage": "Users"
+  },
   "settings.title": {
     "defaultMessage": "Settings"
+  },
+  "settings.users.active": {
+    "defaultMessage": "Active"
+  },
+  "settings.users.archived": {
+    "defaultMessage": "Archived"
+  },
+  "settings.users.colActions": {
+    "defaultMessage": "Actions"
+  },
+  "settings.users.colLastActive": {
+    "defaultMessage": "Last active"
+  },
+  "settings.users.colRole": {
+    "defaultMessage": "Role"
+  },
+  "settings.users.colStatus": {
+    "defaultMessage": "Status"
+  },
+  "settings.users.colUser": {
+    "defaultMessage": "User"
+  },
+  "settings.users.count": {
+    "defaultMessage": "{count, plural, one {# user} other {# users}}"
+  },
+  "settings.users.invite": {
+    "defaultMessage": "Invite user"
+  },
+  "settings.users.inviteCancel": {
+    "defaultMessage": "Cancel"
+  },
+  "settings.users.inviteError": {
+    "defaultMessage": "The invite could not be sent."
+  },
+  "settings.users.inviteName": {
+    "defaultMessage": "Display name"
+  },
+  "settings.users.inviteRole": {
+    "defaultMessage": "Role"
+  },
+  "settings.users.inviteSubmit": {
+    "defaultMessage": "Send invite"
+  },
+  "settings.users.inviteTitle": {
+    "defaultMessage": "Invite user"
+  },
+  "settings.users.invited": {
+    "defaultMessage": "Invited"
+  },
+  "settings.users.resend": {
+    "defaultMessage": "Resend the invite to {email}"
+  },
+  "settings.users.revoke": {
+    "defaultMessage": "Revoke the invite to {email}"
   },
   "shell.brand": {
     "defaultMessage": "openlaw"

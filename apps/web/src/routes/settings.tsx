@@ -4,9 +4,9 @@
  * The settings destination (SET-001, #62): one guarded /settings route
  * reached from the avatar menu, a two-group left rail, and a routable
  * URL per pane. The Organization group renders for Administrators only
- * (SET-002) and carries General (#63) plus the collapsible Security
- * group with Authentication (#64) — rail entries for unshipped panes
- * are omitted, not disabled; Users arrives with its own M5 ticket.
+ * (SET-002) and carries General (#63) and Users (#65) plus the
+ * collapsible Security group with Authentication (#64) — rail entries
+ * for unshipped panes are omitted, not disabled.
  * Visual spec: designs/settings.pen per SETTINGS-INVENTORY.md.
  */
 
@@ -19,6 +19,7 @@ import {
   Palette,
   Shield,
   User,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 import { NavLink, Outlet, redirect, useLoaderData, useLocation, useNavigate } from "react-router";
@@ -84,10 +85,10 @@ const PERSONAL_GROUP: SettingsGroup = {
 
 /**
  * The Organization group, hidden entirely from non-Administrators
- * (SET-002's single role check) — absent, not disabled. Users appends
- * here with its own M5 ticket. Security is a collapsible group per the
- * SET-001 amendment: it holds policy about how you get in, and grows
- * (the DD-017 audit-log view lands there in M9).
+ * (SET-002's single role check) — absent, not disabled. Security is a
+ * collapsible group per the SET-001 amendment: it holds policy about
+ * how you get in, and grows (the DD-017 audit-log view lands there in
+ * M9); people-facing actions live in Users (SET-005).
  */
 const ORGANIZATION_GROUP: SettingsGroup = {
   id: "organization",
@@ -98,6 +99,12 @@ const ORGANIZATION_GROUP: SettingsGroup = {
       path: "/settings/general",
       icon: Building2,
       label: defineMessage({ id: "settings.section.general", defaultMessage: "General" }),
+    },
+    {
+      id: "users",
+      path: "/settings/users",
+      icon: Users,
+      label: defineMessage({ id: "settings.section.users", defaultMessage: "Users" }),
     },
   ],
   subgroups: [

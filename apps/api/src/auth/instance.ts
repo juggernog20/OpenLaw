@@ -361,6 +361,40 @@ export function createAuth(db: Db, config: AuthConfig, mailer: Mailer) {
               });
             }
           },
+          // The durable "last active" stamp behind the Users list
+          // (SET-005). Written on session create and refresh rather than
+          // computed from live session rows, which sign-out deletes —
+          // "signed out an hour ago" must not read as "never signed in".
+          // Granularity: every sign-in, plus one refresh per updateAge.
+          // Best-effort by design: the stamp is display data, so a
+          // failed write must never reject the sign-in it rode on.
+          after: async (session) => {
+            try {
+              await db
+                .update(users)
+                .set({ lastActiveAt: new Date() })
+                .where(eq(users.id, session.userId));
+            } catch {
+              // Losing one stamp is invisible; failing a sign-in is not.
+            }
+          },
+        },
+        update: {
+          after: async (session) => {
+            // The adapter's update hook receives a partial row; only a
+            // session-refresh update (it always moves expiresAt) counts
+            // as user activity.
+            if (session.userId && session.expiresAt) {
+              try {
+                await db
+                  .update(users)
+                  .set({ lastActiveAt: new Date() })
+                  .where(eq(users.id, session.userId));
+              } catch {
+                // Same best-effort contract as the create stamp above.
+              }
+            }
+          },
         },
       },
       user: {
