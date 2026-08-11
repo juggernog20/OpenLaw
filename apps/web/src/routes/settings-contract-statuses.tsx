@@ -1,19 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Contracts · Types (#81), the DES-020 list-editor's reference
- * implementation, from the ST6 frame of settings.pen: the CTR-002
- * taxonomy as 44px rows — grip, in-place rename, usage count, archive —
- * with the `other` row locked, drag or arrow-key reorder, an inline
- * draft row for add, and the SET-003 archive-guard modal (ST8). Every
- * mutation applies immediately on save. Archived rows sit greyed behind
- * the Show-archived filter with restore. The loader is the client half
+ * Contracts · Statuses (#82), the DES-020 list-editor extended per the
+ * ST10 frame of settings.pen: the CTR-001 taxonomy as 44px rows — grip,
+ * in-place rename, the stage badge in the qualifier-pill slot, usage
+ * count, archive — with `draft`, `active`, and `expired` locked, drag
+ * or arrow-key reorder, and an inline draft row whose stage is picked
+ * at creation and immutable after. The archive guard blocks at the
+ * CTR-001 floor (every stage keeps one unarchived status) instead of
+ * offering reassignment — SET-003's structural-minimum rule. Every
+ * mutation applies immediately on save. The loader is the client half
  * of SET-002's gate; the API's 403 is the real refusal.
  */
 
-import { useRef, useState, type DragEvent, type SubmitEvent as FormSubmitEvent } from "react";
+import { useRef, useState, type DragEvent } from "react";
 import { redirect, useLoaderData } from "react-router";
-import { FormattedMessage, useIntl } from "react-intl";
+import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import {
   Archive,
   ArchiveRestore,
@@ -24,7 +26,6 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { api } from "../lib/api";
-import { field } from "../lib/forms";
 import { problemDetail } from "../lib/messages";
 import { currentUser, needsSetup } from "../lib/session";
 import { ContractsSettingsTabs } from "../components/contracts-settings-tabs";
@@ -34,50 +35,65 @@ import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
 import { Switch } from "../components/ui/switch";
 
-/** The section URL forwards to its first pane (SET-001 deep links). */
-export function settingsContractsIndexLoader() {
-  return redirect("/settings/contracts/types");
-}
-
-export async function settingsContractTypesLoader() {
+export async function settingsContractStatusesLoader() {
   const user = await currentUser();
   if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
   if (user.role !== "administrator") return redirect("/settings/profile");
-  const { data } = await api.GET("/api/v1/contract-types", {
+  const { data } = await api.GET("/api/v1/contract-statuses", {
     params: { query: { includeArchived: "true" } },
   });
-  if (!data) throw new Error("The contract types could not be read.");
-  return { contractTypes: data.contractTypes };
+  if (!data) throw new Error("The contract statuses could not be read.");
+  return { contractStatuses: data.contractStatuses };
 }
 
-/** One row of GET /contract-types, as the client sees it. */
-interface TypeRow {
+/** The fixed six-stage backbone (CTR-001), in canonical forward order. */
+const STAGES = ["draft", "review", "approval", "signature", "active", "ended"] as const;
+type Stage = (typeof STAGES)[number];
+
+/** The CTR-001 system-protected seeds: no archive, no hard delete. */
+const PROTECTED_SLUGS = new Set(["draft", "active", "expired"]);
+
+/** One row of GET /contract-statuses, as the client sees it. */
+interface StatusRow {
   id: string;
   slug: string;
   displayName: string;
+  stage: Stage;
   displayOrder: number;
   isSystemDefault: boolean;
   archivedAt: string | null;
   inUseCount: number;
 }
 
-const byDisplayOrder = (a: TypeRow, b: TypeRow) => a.displayOrder - b.displayOrder;
+const byDisplayOrder = (a: StatusRow, b: StatusRow) => a.displayOrder - b.displayOrder;
 
-function ArchiveTypeDialog({
+/** The fixed stage names — never sourced from a status label (CTR-001). */
+function stageLabel(intl: IntlShape, stage: Stage): string {
+  return intl.formatMessage(
+    {
+      id: "settings.contractStatuses.stageLabel",
+      defaultMessage:
+        "{stage, select, draft {Draft} review {Review} approval {Approval} " +
+        "signature {Signature} active {Active} ended {Ended} other {Unknown}}",
+    },
+    { stage },
+  );
+}
+
+function ArchiveStatusDialog({
   target,
-  liveTypes,
+  blocked,
   onOpenChange,
   onArchived,
   onArchivedCloseFocus,
 }: Readonly<{
-  target: TypeRow;
-  /** Reassignment candidates: every live type but the target. */
-  liveTypes: TypeRow[];
+  target: StatusRow;
+  /** The CTR-001 floor: the target is its stage's last unarchived status. */
+  blocked: boolean;
   onOpenChange: (open: boolean) => void;
-  onArchived: (row: TypeRow) => void;
+  onArchived: (row: StatusRow) => void;
   /** Where focus lands after a successful archive — the row's archive
    * button unmounts with the row, so the default restore has no home. */
   onArchivedCloseFocus: () => void;
@@ -86,30 +102,26 @@ function ArchiveTypeDialog({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const archived = useRef(false);
-  const candidates = liveTypes.filter((row) => row.id !== target.id);
 
-  async function submit(event: FormSubmitEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const reassignToId = field(new FormData(event.currentTarget), "reassignToId");
+  async function submit() {
     setBusy(true);
     setError(null);
     try {
-      const { data, error: problem } = await api.POST("/api/v1/contract-types/{id}/archive", {
+      const { data, error: problem } = await api.POST("/api/v1/contract-statuses/{id}/archive", {
         params: { path: { id: target.id } },
-        body: reassignToId ? { reassignToId } : {},
       });
       if (data) {
         archived.current = true;
-        onArchived(data.contractType);
+        onArchived(data.contractStatus);
         onOpenChange(false);
       } else {
-        // The API's own refusal (the protected row, a stale target) is
-        // more actionable than any generic line.
+        // The API's own refusal (a protected row, the floor, a stale
+        // list) is more actionable than any generic line.
         setError(
           problemDetail(problem) ??
             intl.formatMessage({
-              id: "settings.contractTypes.archiveError",
-              defaultMessage: "The type could not be archived.",
+              id: "settings.contractStatuses.archiveError",
+              defaultMessage: "The status could not be archived.",
             }),
         );
       }
@@ -117,8 +129,8 @@ function ArchiveTypeDialog({
       // A network-level failure never produces a problem envelope.
       setError(
         intl.formatMessage({
-          id: "settings.contractTypes.archiveError",
-          defaultMessage: "The type could not be archived.",
+          id: "settings.contractStatuses.archiveError",
+          defaultMessage: "The status could not be archived.",
         }),
       );
     } finally {
@@ -138,64 +150,44 @@ function ArchiveTypeDialog({
       >
         <DialogTitle>
           <FormattedMessage
-            id="settings.contractTypes.archiveTitle"
+            id="settings.contractStatuses.archiveTitle"
             defaultMessage="Archive {name}"
             values={{ name: target.displayName }}
           />
         </DialogTitle>
-        <form className="mt-4 flex flex-col gap-4" onSubmit={(event) => void submit(event)}>
+        <div className="mt-4 flex flex-col gap-4">
           <div className="flex items-start gap-2 rounded-card bg-status-warning-bg p-3 text-sm text-status-warning-fg">
             <TriangleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
+            {/* Statuses block at structural minimums instead of offering
+                reassignment (SET-003) — no select here, ever. */}
             <p>
-              <FormattedMessage
-                id="settings.contractTypes.archiveWarning"
-                defaultMessage={
-                  "{count, plural, =0 {{name} is not used by any contracts — it can be " +
-                  "archived without reassignment.} one {{name} is used by # contract. Pick a " +
-                  "replacement type — that contract moves to it when the type is archived.} " +
-                  "other {{name} is used by # contracts. Pick a replacement type — those " +
-                  "contracts move to it when the type is archived.}}"
-                }
-                values={{ name: target.displayName, count: target.inUseCount }}
-              />
+              {blocked ? (
+                <FormattedMessage
+                  id="settings.contractStatuses.archiveBlocked"
+                  defaultMessage={
+                    "{name} is the last unarchived status in its stage — every stage keeps " +
+                    "at least one. Add another status to the stage first."
+                  }
+                  values={{ name: target.displayName }}
+                />
+              ) : (
+                <FormattedMessage
+                  id="settings.contractStatuses.archiveWarning"
+                  defaultMessage={
+                    "{count, plural, =0 {{name} is not used by any contracts.} " +
+                    "one {{name} is used by # contract, which keeps its status until " +
+                    "someone moves it.} other {{name} is used by # contracts, which keep " +
+                    "their status until someone moves them.}}"
+                  }
+                  values={{ name: target.displayName, count: target.inUseCount }}
+                />
+              )}
             </p>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="reassignToId">
-              <FormattedMessage
-                id="settings.contractTypes.reassignLabel"
-                defaultMessage="Reassign {count, plural, =0 {contracts} one {# contract} other {# contracts}} to"
-                values={{ count: target.inUseCount }}
-              />
-            </Label>
-            {/* The affordance is always drawn (ST8); with nothing to
-                move it waits disabled, and the SET-003 requirement arms
-                once contracts exist (M8). */}
-            <select
-              id="reassignToId"
-              name="reassignToId"
-              defaultValue=""
-              disabled={target.inUseCount === 0}
-              required={target.inUseCount > 0}
-              className="h-8 w-full rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50"
-            >
-              <option value="">
-                {intl.formatMessage({
-                  id: "settings.contractTypes.reassignNone",
-                  defaultMessage: "No reassignment",
-                })}
-              </option>
-              {candidates.map((row) => (
-                <option key={row.id} value={row.id}>
-                  {row.displayName}
-                </option>
-              ))}
-            </select>
           </div>
           <p className="flex items-center gap-1.5 text-xs text-muted">
             <History size={16} aria-hidden="true" />
             <FormattedMessage
-              id="settings.contractTypes.auditNote"
+              id="settings.contractStatuses.auditNote"
               defaultMessage="The change applies immediately and is recorded in the audit log."
             />
           </p>
@@ -208,24 +200,29 @@ function ArchiveTypeDialog({
             <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
               <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
             </Button>
-            <Button type="submit" variant="danger" disabled={busy}>
+            <Button
+              type="button"
+              variant="danger"
+              disabled={blocked || busy}
+              onClick={() => void submit()}
+            >
               <FormattedMessage
-                id="settings.contractTypes.archiveSubmit"
-                defaultMessage="Archive type"
+                id="settings.contractStatuses.archiveSubmit"
+                defaultMessage="Archive status"
               />
             </Button>
           </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-export function SettingsContractTypesPage() {
-  const { contractTypes } = useLoaderData<typeof settingsContractTypesLoader>();
+export function SettingsContractStatusesPage() {
+  const { contractStatuses } = useLoaderData<typeof settingsContractStatusesLoader>();
   const intl = useIntl();
 
-  const [rows, setRows] = useState<TypeRow[]>(contractTypes);
+  const [rows, setRows] = useState<StatusRow[]>(contractStatuses);
   const [rowStatus, setRowStatus] = useState<Record<string, FieldStatus>>({});
   const [rowError, setRowError] = useState<Record<string, string | undefined>>({});
   const [orderStatus, setOrderStatus] = useState<FieldStatus>("idle");
@@ -233,9 +230,13 @@ export function SettingsContractTypesPage() {
   const [showArchived, setShowArchived] = useState(false);
   const [editing, setEditing] = useState<{ id: string; draft: string } | null>(null);
   const [adding, setAdding] = useState(false);
+  const [addDraft, setAddDraft] = useState<{ name: string; stage: Stage | "" }>({
+    name: "",
+    stage: "",
+  });
   const [addStatus, setAddStatus] = useState<FieldStatus>("idle");
   const [addError, setAddError] = useState<string | undefined>(undefined);
-  const [archiveTarget, setArchiveTarget] = useState<TypeRow | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<StatusRow | null>(null);
   const [announcement, setAnnouncement] = useState("");
   const dragFrom = useRef<number | null>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -245,42 +246,58 @@ export function SettingsContractTypesPage() {
   const archived = rows.filter((row) => row.archivedAt).sort(byDisplayOrder);
   const hasArchived = archived.length > 0;
 
+  /** The CTR-001 floor, client-side: is this row its stage's last live one? */
+  const lastLiveInStage = (row: StatusRow) =>
+    !live.some((candidate) => candidate.stage === row.stage && candidate.id !== row.id);
+
   function noteRow(id: string, status: FieldStatus, detail?: string) {
     setRowStatus((current) => ({ ...current, [id]: status }));
     setRowError((current) => ({ ...current, [id]: detail }));
   }
 
-  function replaceRow(row: TypeRow) {
+  function replaceRow(row: StatusRow) {
     setRows((current) => current.map((existing) => (existing.id === row.id ? row : existing)));
   }
 
-  async function rename(row: TypeRow, draft: string) {
+  async function rename(row: StatusRow, draft: string) {
     setEditing(null);
     const displayName = draft.trim();
     // Nothing to save (or nothing valid): revert per DES-017.
     if (displayName === "" || displayName === row.displayName) return;
     noteRow(row.id, "saving");
     const { data, error } = await api
-      .PATCH("/api/v1/contract-types/{id}", {
+      .PATCH("/api/v1/contract-statuses/{id}", {
         params: { path: { id: row.id } },
         body: { displayName },
       })
       .catch(() => ({ data: null, error: undefined }));
     if (data) {
-      replaceRow(data.contractType);
+      replaceRow(data.contractStatus);
       noteRow(row.id, "saved");
     } else {
       noteRow(row.id, "error", problemDetail(error));
     }
   }
 
-  async function create(draft: string) {
-    // Enter commits and the input then blurs — a ref, set synchronously,
-    // keeps the pair from posting the same draft twice.
+  async function create() {
+    // Enter can land while a create is already posting — a ref, set
+    // synchronously, keeps a double-tap from posting the draft twice.
     if (createInFlight.current) return;
-    const displayName = draft.trim();
+    const displayName = addDraft.name.trim();
     if (displayName === "") {
       setAdding(false);
+      return;
+    }
+    // The stage is the creation-time immutable dimension (CTR-001):
+    // there is no create without one.
+    if (addDraft.stage === "") {
+      setAddStatus("error");
+      setAddError(
+        intl.formatMessage({
+          id: "settings.contractStatuses.stageMissing",
+          defaultMessage: "Pick a stage for the new status.",
+        }),
+      );
       return;
     }
     createInFlight.current = true;
@@ -288,11 +305,14 @@ export function SettingsContractTypesPage() {
     setAddError(undefined);
     try {
       const { data, error } = await api
-        .POST("/api/v1/contract-types", { body: { displayName } })
+        .POST("/api/v1/contract-statuses", {
+          body: { displayName, stage: addDraft.stage },
+        })
         .catch(() => ({ data: null, error: undefined }));
       if (data) {
-        setRows((current) => [...current, data.contractType]);
+        setRows((current) => [...current, data.contractStatus]);
         setAdding(false);
+        setAddDraft({ name: "", stage: "" });
         setAddStatus("saved");
       } else {
         // Keep the draft row open so the name is not lost to a refusal.
@@ -309,10 +329,10 @@ export function SettingsContractTypesPage() {
     setOrderStatus("saving");
     setOrderError(undefined);
     const { data, error } = await api
-      .PUT("/api/v1/contract-types/order", { body: { ids: orderedIds } })
+      .PUT("/api/v1/contract-statuses/order", { body: { ids: orderedIds } })
       .catch(() => ({ data: null, error: undefined }));
     if (data) {
-      const reordered: TypeRow[] = data.contractTypes;
+      const reordered: StatusRow[] = data.contractStatuses;
       setRows((current) => [
         ...reordered,
         ...current.filter((row) => !reordered.some((moved) => moved.id === row.id)),
@@ -326,7 +346,7 @@ export function SettingsContractTypesPage() {
   }
 
   /** Arrow-key reorder from the grip: one position per press (DES-020). */
-  async function moveBy(row: TypeRow, delta: -1 | 1) {
+  async function moveBy(row: StatusRow, delta: -1 | 1) {
     if (orderStatus === "saving") return;
     const index = live.findIndex(({ id }) => id === row.id);
     const target = index + delta;
@@ -338,7 +358,7 @@ export function SettingsContractTypesPage() {
       setAnnouncement(
         intl.formatMessage(
           {
-            id: "settings.contractTypes.moved",
+            id: "settings.contractStatuses.moved",
             defaultMessage: "{name} moved to position {position} of {total}.",
           },
           { name: row.displayName, position: target + 1, total: live.length },
@@ -358,27 +378,39 @@ export function SettingsContractTypesPage() {
     void commitOrder(ids);
   }
 
-  async function restore(row: TypeRow) {
+  async function restore(row: StatusRow) {
     noteRow(row.id, "saving");
     const { data, error } = await api
-      .POST("/api/v1/contract-types/{id}/restore", { params: { path: { id: row.id } } })
+      .POST("/api/v1/contract-statuses/{id}/restore", { params: { path: { id: row.id } } })
       .catch(() => ({ data: null, error: undefined }));
     if (data) {
-      replaceRow(data.contractType);
+      replaceRow(data.contractStatus);
       noteRow(row.id, "saved");
     } else {
       noteRow(row.id, "error", problemDetail(error));
     }
   }
 
-  function nameCell(row: TypeRow) {
+  /** The ST10 stage badge, in DES-020's qualifier-pill slot. */
+  function stageBadge(row: StatusRow) {
+    return (
+      <span
+        data-testid="stage-badge"
+        className="inline-flex rounded-chip bg-control px-1.5 py-0.5 text-xs font-medium whitespace-nowrap text-muted"
+      >
+        {stageLabel(intl, row.stage)}
+      </span>
+    );
+  }
+
+  function nameCell(row: StatusRow) {
     if (editing?.id === row.id) {
       return (
         <Input
           autoFocus
           value={editing.draft}
           aria-label={intl.formatMessage(
-            { id: "settings.contractTypes.renameLabel", defaultMessage: "Rename {name}" },
+            { id: "settings.contractStatuses.renameLabel", defaultMessage: "Rename {name}" },
             { name: row.displayName },
           )}
           className="h-7 w-64 max-w-full"
@@ -397,7 +429,7 @@ export function SettingsContractTypesPage() {
         // In-place rename (DES-017/DES-020): the name IS the editor.
         onClick={() => setEditing({ id: row.id, draft: row.displayName })}
         aria-label={intl.formatMessage(
-          { id: "settings.contractTypes.renameLabel", defaultMessage: "Rename {name}" },
+          { id: "settings.contractStatuses.renameLabel", defaultMessage: "Rename {name}" },
           { name: row.displayName },
         )}
         className="rounded-chip text-base font-medium text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
@@ -407,7 +439,7 @@ export function SettingsContractTypesPage() {
     );
   }
 
-  function trailingAction(row: TypeRow) {
+  function trailingAction(row: StatusRow) {
     if (row.archivedAt) {
       return (
         <Button
@@ -416,7 +448,7 @@ export function SettingsContractTypesPage() {
           className="px-1.5"
           disabled={rowStatus[row.id] === "saving"}
           aria-label={intl.formatMessage(
-            { id: "settings.contractTypes.restore", defaultMessage: "Restore {name}" },
+            { id: "settings.contractStatuses.restore", defaultMessage: "Restore {name}" },
             { name: row.displayName },
           )}
           onClick={() => void restore(row)}
@@ -425,7 +457,7 @@ export function SettingsContractTypesPage() {
         </Button>
       );
     }
-    if (row.slug === "other") {
+    if (PROTECTED_SLUGS.has(row.slug)) {
       // The lock, not a disabled button (DES-020): protection is a fact
       // about the row, and the server refuses regardless.
       return (
@@ -435,7 +467,7 @@ export function SettingsContractTypesPage() {
             role="img"
             aria-label={intl.formatMessage(
               {
-                id: "settings.contractTypes.locked",
+                id: "settings.contractStatuses.locked",
                 defaultMessage: "{name} is system-protected and can't be archived",
               },
               { name: row.displayName },
@@ -452,7 +484,7 @@ export function SettingsContractTypesPage() {
         className="px-1.5"
         disabled={rowStatus[row.id] === "saving"}
         aria-label={intl.formatMessage(
-          { id: "settings.contractTypes.archive", defaultMessage: "Archive {name}" },
+          { id: "settings.contractStatuses.archive", defaultMessage: "Archive {name}" },
           { name: row.displayName },
         )}
         onClick={() => setArchiveTarget(row)}
@@ -466,8 +498,8 @@ export function SettingsContractTypesPage() {
     <>
       <PageTitle
         title={intl.formatMessage({
-          id: "settings.contractTypes.pageTitle",
-          defaultMessage: "Contract types",
+          id: "settings.contractStatuses.pageTitle",
+          defaultMessage: "Contract statuses",
         })}
       />
       <div className="flex w-full max-w-(--width-settings-card) flex-col gap-4">
@@ -475,7 +507,10 @@ export function SettingsContractTypesPage() {
         <div className="flex flex-col gap-2">
           <SettingsCard
             title={
-              <FormattedMessage id="settings.contractTypes.title" defaultMessage="Contract types" />
+              <FormattedMessage
+                id="settings.contractStatuses.title"
+                defaultMessage="Contract statuses"
+              />
             }
             flush
             actions={
@@ -483,14 +518,14 @@ export function SettingsContractTypesPage() {
                 {hasArchived && (
                   <span className="flex items-center gap-2 text-sm text-muted">
                     <FormattedMessage
-                      id="settings.contractTypes.showArchived"
+                      id="settings.contractStatuses.showArchived"
                       defaultMessage="Show archived"
                     />
                     <Switch
                       checked={showArchived}
                       onCheckedChange={setShowArchived}
                       aria-label={intl.formatMessage({
-                        id: "settings.contractTypes.showArchived",
+                        id: "settings.contractStatuses.showArchived",
                         defaultMessage: "Show archived",
                       })}
                     />
@@ -498,8 +533,8 @@ export function SettingsContractTypesPage() {
                 )}
                 <span className="text-sm whitespace-nowrap text-muted">
                   <FormattedMessage
-                    id="settings.contractTypes.count"
-                    defaultMessage="{count, plural, one {# type} other {# types}}"
+                    id="settings.contractStatuses.count"
+                    defaultMessage="{count, plural, one {# status} other {# statuses}}"
                     values={{ count: live.length }}
                   />
                 </span>
@@ -509,23 +544,27 @@ export function SettingsContractTypesPage() {
                   className="px-3 whitespace-nowrap"
                   onClick={() => {
                     setAdding(true);
+                    setAddDraft({ name: "", stage: "" });
                     setAddStatus("idle");
                     setAddError(undefined);
                   }}
                 >
                   <Plus size={16} aria-hidden="true" />
-                  <FormattedMessage id="settings.contractTypes.add" defaultMessage="Add type" />
+                  <FormattedMessage
+                    id="settings.contractStatuses.add"
+                    defaultMessage="Add status"
+                  />
                 </Button>
               </div>
             }
           >
             {/* Keyboard moves are announced here; the row order itself is
-              silent to a reader (WCAG 4.1.3). */}
+                silent to a reader (WCAG 4.1.3). */}
             <span aria-live="polite" className="sr-only">
               {announcement}
             </span>
             {/* tabIndex -1: the archive dialog parks focus here when the
-              row it was opened from has left the list. */}
+                row it was opened from has left the list. */}
             <ul ref={listRef} tabIndex={-1}>
               {live.map((row, index) => (
                 <li
@@ -546,7 +585,7 @@ export function SettingsContractTypesPage() {
                       disabled={orderStatus === "saving"}
                       aria-label={intl.formatMessage(
                         {
-                          id: "settings.contractTypes.reorder",
+                          id: "settings.contractStatuses.reorder",
                           defaultMessage:
                             "Reorder {name}, position {position} of {total}. " +
                             "Use the arrow keys to move it.",
@@ -567,10 +606,13 @@ export function SettingsContractTypesPage() {
                       <GripVertical size={16} aria-hidden="true" className="text-muted" />
                     </Button>
                   </span>
-                  <span className="min-w-0 flex-1 ps-1">{nameCell(row)}</span>
+                  <span className="flex min-w-0 flex-1 items-center gap-2 ps-1">
+                    {nameCell(row)}
+                    {stageBadge(row)}
+                  </span>
                   <span className="px-3 text-sm whitespace-nowrap text-muted">
                     <FormattedMessage
-                      id="settings.contractTypes.inUse"
+                      id="settings.contractStatuses.inUse"
                       defaultMessage="{count, plural, one {# contract} other {# contracts}}"
                       values={{ count: row.inUseCount }}
                     />
@@ -582,21 +624,56 @@ export function SettingsContractTypesPage() {
                 </li>
               ))}
               {adding && (
-                <li className="flex h-11 items-center border-b border-border-muted pe-3 ps-9">
+                <li className="flex h-11 items-center gap-2 border-b border-border-muted pe-3 ps-9">
                   <Input
                     autoFocus
+                    value={addDraft.name}
                     aria-label={intl.formatMessage({
-                      id: "settings.contractTypes.addName",
-                      defaultMessage: "New type name",
+                      id: "settings.contractStatuses.addName",
+                      defaultMessage: "New status name",
                     })}
-                    className="h-7 w-64 max-w-full"
-                    onBlur={(event) => void create(event.target.value)}
+                    className="h-7 w-52 max-w-full"
+                    onChange={(event) =>
+                      setAddDraft((current) => ({ ...current, name: event.target.value }))
+                    }
                     onKeyDown={(event) => {
-                      if (event.key === "Enter") void create(event.currentTarget.value);
+                      if (event.key === "Enter") void create();
                       if (event.key === "Escape") setAdding(false);
                     }}
                   />
-                  <span className="ps-3">
+                  {/* The creation-time immutable dimension (CTR-001): the
+                      stage is picked here, once. */}
+                  <select
+                    value={addDraft.stage}
+                    aria-label={intl.formatMessage({
+                      id: "settings.contractStatuses.addStage",
+                      defaultMessage: "New status stage",
+                    })}
+                    className="h-7 rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
+                    onChange={(event) =>
+                      setAddDraft((current) => ({
+                        ...current,
+                        stage: event.target.value as Stage | "",
+                      }))
+                    }
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") void create();
+                      if (event.key === "Escape") setAdding(false);
+                    }}
+                  >
+                    <option value="">
+                      {intl.formatMessage({
+                        id: "settings.contractStatuses.stagePlaceholder",
+                        defaultMessage: "Stage…",
+                      })}
+                    </option>
+                    {STAGES.map((stage) => (
+                      <option key={stage} value={stage}>
+                        {stageLabel(intl, stage)}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="ps-1">
                     <StatusNote status={addStatus} detail={addError} />
                   </span>
                 </li>
@@ -609,14 +686,15 @@ export function SettingsContractTypesPage() {
                   >
                     <span className="w-9 shrink-0" aria-hidden="true" />
                     {/* ST5's archived treatment: identity at half opacity,
-                      a neutral pill, restore in the trailing slot. */}
+                        a neutral pill, restore in the trailing slot. */}
                     <span className="flex min-w-0 flex-1 items-center gap-2 ps-1">
                       <span className="text-base font-medium text-primary opacity-50">
                         {row.displayName}
                       </span>
+                      <span className="opacity-50">{stageBadge(row)}</span>
                       <span className="inline-flex rounded-full bg-status-neutral-bg px-2 py-0.5 text-xs font-semibold text-status-neutral-fg">
                         <FormattedMessage
-                          id="settings.contractTypes.archivedPill"
+                          id="settings.contractStatuses.archivedPill"
                           defaultMessage="Archived"
                         />
                       </span>
@@ -631,16 +709,19 @@ export function SettingsContractTypesPage() {
           </SettingsCard>
           <p className="text-sm text-muted">
             <FormattedMessage
-              id="settings.contractTypes.help"
-              defaultMessage="Drag to reorder. Archiving a type in use asks for a replacement; Other can't be archived."
+              id="settings.contractStatuses.help"
+              defaultMessage={
+                "Drag to reorder. Statuses map to a fixed stage picked at creation; every " +
+                "stage keeps at least one unarchived status."
+              }
             />
           </p>
         </div>
       </div>
       {archiveTarget && (
-        <ArchiveTypeDialog
+        <ArchiveStatusDialog
           target={archiveTarget}
-          liveTypes={live}
+          blocked={lastLiveInStage(archiveTarget)}
           onOpenChange={(open) => {
             if (!open) setArchiveTarget(null);
           }}
