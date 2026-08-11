@@ -100,7 +100,8 @@ describe("the Users pane (#65)", () => {
     stubApi({ signedIn: MEMBER });
     renderAt("/settings/users");
 
-    expect(await screen.findByRole("radio", { name: "Light" })).toBeChecked();
+    // Landed on Profile, the settings home for everyone (#67).
+    expect(await screen.findByLabelText("Full name")).toBeVisible();
     const rail = screen.getByRole("navigation", { name: "Settings sections" });
     expect(within(rail).queryByRole("link", { name: "Users" })).not.toBeInTheDocument();
   });

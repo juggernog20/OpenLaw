@@ -140,7 +140,8 @@ describe("the Authentication pane (#64)", () => {
     stubApi({ signedIn: MEMBER });
     renderAt("/settings/authentication");
 
-    expect(await screen.findByRole("radio", { name: "Light" })).toBeChecked();
+    // Landed on Profile, the settings home for everyone (#67).
+    expect(await screen.findByLabelText("Full name")).toBeVisible();
     const rail = screen.getByRole("navigation", { name: "Settings sections" });
     expect(within(rail).queryByText("Security")).not.toBeInTheDocument();
   });

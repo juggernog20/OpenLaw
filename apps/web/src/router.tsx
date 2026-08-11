@@ -22,7 +22,7 @@ import {
   SettingsAuthenticationPage,
   settingsAuthenticationLoader,
 } from "./routes/settings-authentication";
-import { SettingsProfilePage } from "./routes/settings-profile";
+import { SettingsProfilePage, settingsProfileLoader } from "./routes/settings-profile";
 import { SetupPage, setupLoader } from "./routes/setup";
 import { TwoFactorPage } from "./routes/two-factor";
 import { TwoFactorEnrollPage, enrollLoader } from "./routes/two-factor-enroll";
@@ -59,7 +59,7 @@ export const routes: RouteObject[] = [
       // The empty element never renders — the loader always redirects —
       // but its absence would make the router warn on every match.
       { index: true, loader: settingsIndexLoader, element: <></> },
-      { path: "profile", element: <SettingsProfilePage /> },
+      { path: "profile", loader: settingsProfileLoader, element: <SettingsProfilePage /> },
       { path: "appearance", element: <SettingsAppearancePage /> },
       // SET-002: the loaders bounce non-Administrators; the API's own
       // role gate stands behind them.

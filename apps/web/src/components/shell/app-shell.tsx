@@ -10,6 +10,7 @@
 
 import { useCallback, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
 import { api } from "../../lib/api";
+import { configureFormatting } from "../../lib/format";
 import { useGlobalKeys } from "../../lib/keyboard";
 import { cn } from "../../lib/utils";
 import { applyPreferredTheme, type Theme } from "../../lib/theme";
@@ -41,6 +42,16 @@ export function AppShell({
   useLayoutEffect(() => {
     applyPreferredTheme(theme);
   }, [theme]);
+
+  // DES-014's resolution order starts at the stored override; seeding
+  // the helper layer here puts every date the shell renders in the
+  // user's timezone (null falls back to browser-detected inside).
+  // Configured during render — an effect would run after the children
+  // have already formatted their first paint with the wrong zone. The
+  // call is an idempotent module-level assignment, so it is safe here.
+  useMemo(() => {
+    configureFormatting({ timeZone: user.timezone ?? null });
+  }, [user.timezone]);
 
   // The global keyboard contract (DES-010, #45) lives on the shell:
   // pre-login screens have no search input and no overlays to serve.

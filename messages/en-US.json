@@ -2,6 +2,12 @@
   "a11y.skipToContent": {
     "defaultMessage": "Skip to content"
   },
+  "action.cancel": {
+    "defaultMessage": "Cancel"
+  },
+  "action.continue": {
+    "defaultMessage": "Continue"
+  },
   "action.copied": {
     "defaultMessage": "Copied"
   },
@@ -13,6 +19,9 @@
   },
   "action.reload": {
     "defaultMessage": "Reload"
+  },
+  "action.save": {
+    "defaultMessage": "Save"
   },
   "app.pageTitle": {
     "defaultMessage": "{screen} · OpenLaw"
@@ -422,8 +431,77 @@
   "settings.group.security": {
     "defaultMessage": "Security"
   },
-  "settings.profile.placeholder": {
-    "defaultMessage": "Profile settings arrive with their own build."
+  "settings.profile.changePassword": {
+    "defaultMessage": "Change password"
+  },
+  "settings.profile.currentPassword": {
+    "defaultMessage": "Current password"
+  },
+  "settings.profile.email": {
+    "defaultMessage": "Email"
+  },
+  "settings.profile.fullName": {
+    "defaultMessage": "Full name"
+  },
+  "settings.profile.newPassword": {
+    "defaultMessage": "New password"
+  },
+  "settings.profile.password.error": {
+    "defaultMessage": "The password could not be changed. Check your current password and use at least 8 characters."
+  },
+  "settings.profile.passwordChanged": {
+    "defaultMessage": "Last changed {date}."
+  },
+  "settings.profile.passwordSet": {
+    "defaultMessage": "A password is set."
+  },
+  "settings.profile.passwordTwoFactor": {
+    "defaultMessage": "Password & two-factor"
+  },
+  "settings.profile.photo": {
+    "defaultMessage": "Profile photo"
+  },
+  "settings.profile.photoHint": {
+    "defaultMessage": "JPG or PNG, 1 MB max."
+  },
+  "settings.profile.reenroll": {
+    "defaultMessage": "Re-enroll"
+  },
+  "settings.profile.role": {
+    "defaultMessage": "Role"
+  },
+  "settings.profile.roleHint": {
+    "defaultMessage": "Roles are managed in Organization → Users."
+  },
+  "settings.profile.sessions": {
+    "defaultMessage": "Sessions"
+  },
+  "settings.profile.sessionsHint": {
+    "defaultMessage": "Ends every session except this one."
+  },
+  "settings.profile.signOutOthers": {
+    "defaultMessage": "Sign out other devices"
+  },
+  "settings.profile.timezone": {
+    "defaultMessage": "Timezone"
+  },
+  "settings.profile.timezoneHint": {
+    "defaultMessage": "Dates and times display in this timezone."
+  },
+  "settings.profile.twoFactor": {
+    "defaultMessage": "Two-factor authentication"
+  },
+  "settings.profile.twoFactorOff": {
+    "defaultMessage": "Two-factor is off — your password alone signs you in."
+  },
+  "settings.profile.twoFactorOn": {
+    "defaultMessage": "Two-factor is on — a code is required when you sign in with your password."
+  },
+  "settings.profile.upload": {
+    "defaultMessage": "Upload"
+  },
+  "settings.profile.uploadPhoto": {
+    "defaultMessage": "Upload a profile photo"
   },
   "settings.rail.label": {
     "defaultMessage": "Settings sections"
@@ -521,9 +599,6 @@
   "shell.userMenu.settings": {
     "defaultMessage": "Settings"
   },
-  "shell.userMenu.twoFactor": {
-    "defaultMessage": "Two-factor authentication"
-  },
   "shell.workspace": {
     "defaultMessage": "workspace"
   },
@@ -535,6 +610,18 @@
   },
   "theme.warm": {
     "defaultMessage": "Warm"
+  },
+  "timezone.browserDefault": {
+    "defaultMessage": "Use browser timezone"
+  },
+  "timezone.listLabel": {
+    "defaultMessage": "Timezones"
+  },
+  "timezone.noMatches": {
+    "defaultMessage": "No matching timezones."
+  },
+  "timezone.searchPlaceholder": {
+    "defaultMessage": "Search timezones"
   },
   "welcome.auth.builtIn": {
     "defaultMessage": "Built-in sign-in"

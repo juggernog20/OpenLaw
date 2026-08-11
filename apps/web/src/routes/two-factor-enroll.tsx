@@ -11,8 +11,6 @@
 import { useState, type FormEvent } from "react";
 import { Link, redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
-import { Check, Copy } from "lucide-react";
-import { renderSVG } from "uqr";
 import { authClient } from "../lib/auth-client";
 import { networkError } from "../lib/messages";
 import { Alert } from "../components/ui/alert";
@@ -21,6 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { PageTitle } from "../components/page-title";
+import { BackupCodes, TotpQr } from "../components/two-factor";
 
 export async function enrollLoader() {
   const { data } = await authClient.getSession();
@@ -45,7 +44,6 @@ export function TwoFactorEnrollPage() {
   );
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const wrongPassword = () =>
     setError(
@@ -115,22 +113,6 @@ export function TwoFactorEnrollPage() {
       setError(networkError(intl));
     } finally {
       setBusy(false);
-    }
-  }
-
-  async function copyCodes(codes: string[]) {
-    try {
-      await navigator.clipboard.writeText(codes.join("\n"));
-      setCopied(true);
-    } catch {
-      // Clipboard access can be denied (permissions policy, insecure
-      // context); the codes are on screen either way.
-      setError(
-        intl.formatMessage({
-          id: "auth.enroll.error.copy",
-          defaultMessage: "Could not copy the codes. Copy them manually.",
-        }),
-      );
     }
   }
 
@@ -205,27 +187,7 @@ export function TwoFactorEnrollPage() {
 
         {step.name === "verify" && (
           <>
-            {/* The QR stays black-on-white inside the SVG in every theme:
-                scanner contrast is a functional requirement, not a design
-                color, so it deliberately bypasses the token system. */}
-            <div
-              className="mx-auto h-44 w-44"
-              aria-hidden="true"
-              dangerouslySetInnerHTML={{ __html: renderSVG(step.totpURI) }}
-            />
-            <p className="text-sm text-muted">
-              <FormattedMessage
-                id="auth.enroll.manualEntry"
-                defaultMessage="No camera? Enter this secret manually: {secret}"
-                values={{
-                  secret: (
-                    <span className="break-all text-primary">
-                      {new URL(step.totpURI).searchParams.get("secret")}
-                    </span>
-                  ),
-                }}
-              />
-            </p>
+            <TotpQr totpURI={step.totpURI} />
             <form className="flex flex-col gap-4" onSubmit={(e) => void verify(e)}>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="code">
@@ -247,32 +209,13 @@ export function TwoFactorEnrollPage() {
         )}
 
         {step.name === "codes" && (
-          <>
-            <ul className="grid grid-cols-2 gap-x-6 gap-y-1 rounded-card bg-section-header p-4 text-md">
-              {step.backupCodes.map((code) => (
-                <li key={code}>{code}</li>
-              ))}
-            </ul>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="secondary"
-                onClick={() => void copyCodes(step.backupCodes)}
-                aria-live="polite"
-              >
-                {copied ? <Check size={16} /> : <Copy size={16} />}
-                {copied ? (
-                  <FormattedMessage id="action.copied" defaultMessage="Copied" />
-                ) : (
-                  <FormattedMessage id="action.copy" defaultMessage="Copy" />
-                )}
-              </Button>
-              <Button asChild variant="link">
-                <Link to="/">
-                  <FormattedMessage id="action.done" defaultMessage="Done" />
-                </Link>
-              </Button>
-            </div>
-          </>
+          <BackupCodes codes={step.backupCodes}>
+            <Button asChild variant="link">
+              <Link to="/">
+                <FormattedMessage id="action.done" defaultMessage="Done" />
+              </Link>
+            </Button>
+          </BackupCodes>
         )}
 
         {step.name === "enabled" && (
