@@ -26,7 +26,7 @@ import {
   type ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import { OPENLAW_VERSION } from "@openlaw/shared";
-import { PROBLEM_CONTENT_TYPE, type Problem } from "./lib/problem.js";
+import { HttpError, PROBLEM_CONTENT_TYPE, type Problem } from "./lib/problem.js";
 import type { MailerResolver } from "./lib/mailer.js";
 import { metaRoutes } from "./modules/meta/routes.js";
 import { authRoutes } from "./modules/auth/routes.js";
@@ -206,11 +206,17 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
 
     const status = error.statusCode && error.statusCode >= 400 ? error.statusCode : 500;
     if (status >= 500) request.log.error(error, "request failed");
+    // 5xx messages are scrubbed — an unexpected error's text can leak
+    // internals — unless an HttpError opted its client-authored message
+    // in (the 502 test-send reasons). The title stays a stable status
+    // summary either way; the authored copy rides in `detail` only.
+    const expose = status < 500 || (error instanceof HttpError && error.expose);
     const problem: Problem = {
       type: "about:blank",
-      title: status >= 500 ? "Internal server error" : error.message,
+      title:
+        status < 500 ? error.message : status === 502 ? "Bad gateway" : "Internal server error",
       status,
-      detail: status >= 500 ? undefined : error.message,
+      detail: expose ? error.message : undefined,
       instance: request.url,
     };
     return reply

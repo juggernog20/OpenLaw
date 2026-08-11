@@ -161,6 +161,7 @@ export const emailSettingsRoutes: FastifyPluginAsyncZod = async (app) => {
         throw httpError(
           502,
           "The test email could not be sent. SMTP is not configured — save a relay first.",
+          { expose: true },
         );
       }
       try {
@@ -178,7 +179,9 @@ export const emailSettingsRoutes: FastifyPluginAsyncZod = async (app) => {
         // 502: the upstream relay (or its absence) failed us, not the
         // request. The detail is the plain-language reason the wizard
         // shows verbatim.
-        throw httpError(502, `The test email could not be sent. ${describeSendFailure(error)}`);
+        throw httpError(502, `The test email could not be sent. ${describeSendFailure(error)}`, {
+          expose: true,
+        });
       }
       return { delivered: true as const, to: request.user.email };
     },
