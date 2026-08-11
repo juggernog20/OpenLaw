@@ -121,6 +121,11 @@ function statusesApi(calls: StatusCalls, rows = seededStatuses()) {
 
 const statusList = () => screen.getByRole("list");
 
+/** Matches the stage badge by its full accessible text ("Stage: Draft"),
+ * which spans the sr-only prefix and the visible label. */
+const stageBadge = (text: string) => (_: string, element: Element | null) =>
+  element?.textContent === text && element.querySelector(".sr-only") !== null;
+
 describe("the SET-002 gate on the pane", () => {
   it("bounces a Legal Team Member off the URL", async () => {
     stubApi({ signedIn: MEMBER });
@@ -175,9 +180,12 @@ describe("the seeded list (CTR-001)", () => {
       "Ended",
     ];
     for (const [index, badge] of badges.entries()) {
-      expect(within(items[index]!).getByTestId("stage-badge"), `row ${index}`).toHaveTextContent(
-        badge,
-      );
+      // The sr-only "Stage:" prefix is what keeps a Draft/Draft row
+      // unambiguous — to a reader and to this query alike.
+      expect(
+        within(items[index]!).getByText(stageBadge(`Stage: ${badge}`)),
+        `row ${index}`,
+      ).toBeInTheDocument();
     }
     expect(within(items[0]!).getByText("0 contracts")).toBeInTheDocument();
     expect(screen.getByText("8 statuses")).toBeInTheDocument();
@@ -224,7 +232,7 @@ describe("in-place rename (DES-017)", () => {
     expect(await screen.findByText("Saved")).toBeInTheDocument();
     // The stage badge survives the rename untouched.
     const row = screen.getByRole("button", { name: "Rename Ended early" }).closest("li")!;
-    expect(within(row).getByTestId("stage-badge")).toHaveTextContent("Ended");
+    expect(within(row).getByText(stageBadge("Stage: Ended"))).toBeInTheDocument();
   });
 
   it("reverts on Escape without a request", async () => {

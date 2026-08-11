@@ -461,6 +461,9 @@
   "settings.contractStatuses.showArchived": {
     "defaultMessage": "Show archived"
   },
+  "settings.contractStatuses.stageBadgePrefix": {
+    "defaultMessage": "Stage:"
+  },
   "settings.contractStatuses.stageLabel": {
     "defaultMessage": "{stage, select, draft {Draft} review {Review} approval {Approval} signature {Signature} active {Active} ended {Ended} other {Unknown}}"
   },

@@ -391,13 +391,18 @@ export function SettingsContractStatusesPage() {
     }
   }
 
-  /** The ST10 stage badge, in DES-020's qualifier-pill slot. */
+  /** The ST10 stage badge, in DES-020's qualifier-pill slot. The
+   * sr-only prefix keeps a row like Draft/Draft unambiguous to a
+   * reader: the name is the label, the badge is "Stage: Draft". */
   function stageBadge(row: StatusRow) {
     return (
-      <span
-        data-testid="stage-badge"
-        className="inline-flex rounded-chip bg-control px-1.5 py-0.5 text-xs font-medium whitespace-nowrap text-muted"
-      >
+      <span className="inline-flex rounded-chip bg-control px-1.5 py-0.5 text-xs font-medium whitespace-nowrap text-muted">
+        <span className="sr-only">
+          <FormattedMessage
+            id="settings.contractStatuses.stageBadgePrefix"
+            defaultMessage="Stage:"
+          />{" "}
+        </span>
         {stageLabel(intl, row.stage)}
       </span>
     );
