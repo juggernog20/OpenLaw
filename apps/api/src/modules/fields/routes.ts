@@ -108,7 +108,7 @@ function toRow(row: Field) {
 function slugBaseOf(displayName: string): string {
   const base = displayName
     .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
