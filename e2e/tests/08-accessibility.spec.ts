@@ -74,6 +74,11 @@ test.describe("accessibility floor", () => {
     await page.goto("/settings/general");
     await expect(page).toHaveTitle("General · OpenLaw");
     await reportAxeViolations(page, testInfo, "settings-general");
+
+    // The Security · Authentication pane (#64), as the Administrator.
+    await page.goto("/settings/authentication");
+    await expect(page).toHaveTitle("Authentication · OpenLaw");
+    await reportAxeViolations(page, testInfo, "settings-authentication");
   });
 
   test("reduced motion degrades transitions to instant", async ({ page }) => {

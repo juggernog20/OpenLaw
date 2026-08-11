@@ -43,12 +43,18 @@ ActivityBar, Pill, Avatar) live in this file as local copies per the designs con
 
 ## Amendments required (2026-08-10 grill deltas)
 
-1. **Security is a collapsible group** with Authentication as its sub-item (SET-001 amendment); the
+1. ~~**Security is a collapsible group** with Authentication as its sub-item (SET-001 amendment); the
    mock draws Security as a flat rail item whose page body is Authentication. Update the rail
-   treatment; the page content stands.
-2. **ST17 lacks the DD-010 allowed-email-domains editor** — it belongs on the Authentication pane.
+   treatment; the page content stands.~~ _Done (2026-08-11, #64): every rail draws Security with a
+   collapse chevron; ST17/ST18 show it expanded with Authentication active._
+2. ~~**ST17 lacks the DD-010 allowed-email-domains editor** — it belongs on the Authentication pane.
    The mock had drawn it on ST4 instead; that card was removed from ST4 when the General pane
-   shipped (2026-08-11, #63). The ST17 half lands with the Authentication pane build.
+   shipped (2026-08-11, #63). The ST17 half lands with the Authentication pane build.~~ _Done
+   (2026-08-11, #64): the editor sits in the Portal access card on ST17 and ST18. Same pass: ST18
+   gained the Email domain field the register/update routes require, its "Test connection /
+   Connected" affordance became "Save provider / Saved" (no test route exists — a successful save
+   IS the discovery round-trip), and the secret hint dropped its "Stored encrypted" claim, which
+   contradicted the TECH-008 addendum (DB-at-rest storage, encryption flagged for later)._
 3. **ST5 lacks**: the archived-user render state (greyed + inactive, behind an Archived filter),
    in-place role edit, per-user session revocation, and resend/revoke actions on invite rows
    (SET-005).

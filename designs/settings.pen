@@ -783,7 +783,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "HV7LJ",
+                  "id": "uWCDS",
                   "name": "ri Security",
                   "width": "fill_container",
                   "cornerRadius": 6,
@@ -796,7 +796,7 @@
                   "children": [
                     {
                       "type": "icon",
-                      "id": "v6DxxC",
+                      "id": "xXBcU",
                       "name": "i shield",
                       "width": 16,
                       "height": 16,
@@ -806,13 +806,23 @@
                     },
                     {
                       "type": "text",
-                      "id": "rCs5T",
+                      "id": "UFRAQ",
                       "name": "t Security",
                       "fill": "$text-primary",
                       "content": "Security",
                       "fontFamily": "$font",
                       "fontSize": 13,
                       "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "sV0Vu",
+                      "name": "i chevron-right",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
                     }
                   ]
                 },
@@ -2196,7 +2206,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "tXvf1",
+                  "id": "x58IT",
                   "name": "ri Security",
                   "width": "fill_container",
                   "cornerRadius": 6,
@@ -2209,7 +2219,7 @@
                   "children": [
                     {
                       "type": "icon",
-                      "id": "Q57rE",
+                      "id": "Q2iQLR",
                       "name": "i shield",
                       "width": 16,
                       "height": 16,
@@ -2219,13 +2229,23 @@
                     },
                     {
                       "type": "text",
-                      "id": "lYLkW",
+                      "id": "jnNpi",
                       "name": "t Security",
                       "fill": "$text-primary",
                       "content": "Security",
                       "fontFamily": "$font",
                       "fontSize": 13,
                       "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "o5EUK",
+                      "name": "i chevron-right",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
                     }
                   ]
                 },
@@ -3578,7 +3598,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "HJRDY",
+                  "id": "d5MOWj",
                   "name": "ri Security",
                   "width": "fill_container",
                   "cornerRadius": 6,
@@ -3591,7 +3611,7 @@
                   "children": [
                     {
                       "type": "icon",
-                      "id": "WLJbW",
+                      "id": "v0WPhS",
                       "name": "i shield",
                       "width": 16,
                       "height": 16,
@@ -3601,13 +3621,23 @@
                     },
                     {
                       "type": "text",
-                      "id": "FG1vu",
+                      "id": "oSmvp",
                       "name": "t Security",
                       "fill": "$text-primary",
                       "content": "Security",
                       "fontFamily": "$font",
                       "fontSize": 13,
                       "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "vTZXk",
+                      "name": "i chevron-right",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
                     }
                   ]
                 },
@@ -5539,7 +5569,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "ch3bp",
+                  "id": "J4cW2",
                   "name": "ri Security",
                   "width": "fill_container",
                   "cornerRadius": 6,
@@ -5552,7 +5582,7 @@
                   "children": [
                     {
                       "type": "icon",
-                      "id": "Gc4Sw",
+                      "id": "LnGsn",
                       "name": "i shield",
                       "width": 16,
                       "height": 16,
@@ -5562,13 +5592,23 @@
                     },
                     {
                       "type": "text",
-                      "id": "mwa8r",
+                      "id": "K70DPS",
                       "name": "t Security",
                       "fill": "$text-primary",
                       "content": "Security",
                       "fontFamily": "$font",
                       "fontSize": 13,
                       "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "Nfat7",
+                      "name": "i chevron-right",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
                     }
                   ]
                 },
@@ -7269,7 +7309,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "W88s2i",
+                  "id": "d0rWeD",
                   "name": "ri Security",
                   "width": "fill_container",
                   "cornerRadius": 6,
@@ -7282,7 +7322,7 @@
                   "children": [
                     {
                       "type": "icon",
-                      "id": "ZX4St",
+                      "id": "yCqE2",
                       "name": "i shield",
                       "width": 16,
                       "height": 16,
@@ -7292,13 +7332,23 @@
                     },
                     {
                       "type": "text",
-                      "id": "Egey2",
+                      "id": "h5XIOb",
                       "name": "t Security",
                       "fill": "$text-primary",
                       "content": "Security",
                       "fontFamily": "$font",
                       "fontSize": 13,
                       "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "VdiLY",
+                      "name": "i chevron-right",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
                     }
                   ]
                 },
@@ -9745,7 +9795,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "ksnhK",
+                  "id": "ICrMl",
                   "name": "ri Security",
                   "width": "fill_container",
                   "cornerRadius": 6,
@@ -9758,7 +9808,7 @@
                   "children": [
                     {
                       "type": "icon",
-                      "id": "wtxEl",
+                      "id": "E8uQF",
                       "name": "i shield",
                       "width": 16,
                       "height": 16,
@@ -9768,13 +9818,23 @@
                     },
                     {
                       "type": "text",
-                      "id": "UB15Y",
+                      "id": "S5nQYL",
                       "name": "t Security",
                       "fill": "$text-primary",
                       "content": "Security",
                       "fontFamily": "$font",
                       "fontSize": 13,
                       "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "hlwpl",
+                      "name": "i chevron-right",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
                     }
                   ]
                 },
@@ -12010,7 +12070,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "jQTBW",
+                  "id": "F43Usu",
                   "name": "ri Security",
                   "width": "fill_container",
                   "cornerRadius": 6,
@@ -12023,7 +12083,7 @@
                   "children": [
                     {
                       "type": "icon",
-                      "id": "v0mQL0",
+                      "id": "BNDPy",
                       "name": "i shield",
                       "width": 16,
                       "height": 16,
@@ -12033,13 +12093,23 @@
                     },
                     {
                       "type": "text",
-                      "id": "B7uCXK",
+                      "id": "AyqJp",
                       "name": "t Security",
                       "fill": "$text-primary",
                       "content": "Security",
                       "fontFamily": "$font",
                       "fontSize": 13,
                       "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "te0ng",
+                      "name": "i chevron-right",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
                     }
                   ]
                 },
@@ -14576,7 +14646,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "c9jDX",
+                  "id": "Oxywu",
                   "name": "ri Security",
                   "width": "fill_container",
                   "cornerRadius": 6,
@@ -14589,7 +14659,7 @@
                   "children": [
                     {
                       "type": "icon",
-                      "id": "wdPRw",
+                      "id": "AEEKV",
                       "name": "i shield",
                       "width": 16,
                       "height": 16,
@@ -14599,13 +14669,23 @@
                     },
                     {
                       "type": "text",
-                      "id": "QXG0z",
+                      "id": "gM0DQ",
                       "name": "t Security",
                       "fill": "$text-primary",
                       "content": "Security",
                       "fontFamily": "$font",
                       "fontSize": 13,
                       "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "m04ti",
+                      "name": "i chevron-right",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
                     }
                   ]
                 },
@@ -16038,7 +16118,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "HVUtX",
+                  "id": "AV5qO",
                   "name": "ri Security",
                   "width": "fill_container",
                   "cornerRadius": 6,
@@ -16051,7 +16131,7 @@
                   "children": [
                     {
                       "type": "icon",
-                      "id": "NefiM",
+                      "id": "OcrE1",
                       "name": "i shield",
                       "width": 16,
                       "height": 16,
@@ -16061,13 +16141,23 @@
                     },
                     {
                       "type": "text",
-                      "id": "RlJWU",
+                      "id": "gjffV",
                       "name": "t Security",
                       "fill": "$text-primary",
                       "content": "Security",
                       "fontFamily": "$font",
                       "fontSize": 13,
                       "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "KdefE",
+                      "name": "i chevron-right",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
                     }
                   ]
                 },
@@ -18473,7 +18563,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "Bk3de",
+                  "id": "vgKqs",
                   "name": "ri Security",
                   "width": "fill_container",
                   "cornerRadius": 6,
@@ -18486,7 +18576,7 @@
                   "children": [
                     {
                       "type": "icon",
-                      "id": "xeCll",
+                      "id": "u8aPv",
                       "name": "i shield",
                       "width": 16,
                       "height": 16,
@@ -18496,13 +18586,23 @@
                     },
                     {
                       "type": "text",
-                      "id": "wYJd3",
+                      "id": "cGuLB",
                       "name": "t Security",
                       "fill": "$text-primary",
                       "content": "Security",
                       "fontFamily": "$font",
                       "fontSize": 13,
                       "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "MpLo7",
+                      "name": "i chevron-right",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
                     }
                   ]
                 },
@@ -21223,7 +21323,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "y0efT",
+                  "id": "W4UL7m",
                   "name": "ri Security",
                   "width": "fill_container",
                   "cornerRadius": 6,
@@ -21236,7 +21336,7 @@
                   "children": [
                     {
                       "type": "icon",
-                      "id": "Ypz0s",
+                      "id": "HnqfD",
                       "name": "i shield",
                       "width": 16,
                       "height": 16,
@@ -21246,13 +21346,23 @@
                     },
                     {
                       "type": "text",
-                      "id": "sBdkn",
+                      "id": "W2AZn",
                       "name": "t Security",
                       "fill": "$text-primary",
                       "content": "Security",
                       "fontFamily": "$font",
                       "fontSize": 13,
                       "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "RYNO3",
+                      "name": "i chevron-right",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
                     }
                   ]
                 },
@@ -22979,7 +23089,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "SjErB",
+                  "id": "nAH2L",
                   "name": "ri Security",
                   "width": "fill_container",
                   "cornerRadius": 6,
@@ -22992,7 +23102,7 @@
                   "children": [
                     {
                       "type": "icon",
-                      "id": "ab1sG",
+                      "id": "UQeYp",
                       "name": "i shield",
                       "width": 16,
                       "height": 16,
@@ -23002,13 +23112,23 @@
                     },
                     {
                       "type": "text",
-                      "id": "sUVnz",
+                      "id": "SkM9i",
                       "name": "t Security",
                       "fill": "$text-primary",
                       "content": "Security",
                       "fontFamily": "$font",
                       "fontSize": 13,
                       "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "yK4Eg",
+                      "name": "i chevron-right",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
                     }
                   ]
                 },
@@ -24591,7 +24711,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "f5A3pp",
+                  "id": "DouUy",
                   "name": "ri Security",
                   "width": "fill_container",
                   "cornerRadius": 6,
@@ -24604,7 +24724,7 @@
                   "children": [
                     {
                       "type": "icon",
-                      "id": "gDTEx",
+                      "id": "gYdKu",
                       "name": "i shield",
                       "width": 16,
                       "height": 16,
@@ -24614,13 +24734,23 @@
                     },
                     {
                       "type": "text",
-                      "id": "FJ7Ti",
+                      "id": "fIyRT",
                       "name": "t Security",
                       "fill": "$text-primary",
                       "content": "Security",
                       "fontFamily": "$font",
                       "fontSize": 13,
                       "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "BcUCJ",
+                      "name": "i chevron-right",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
                     }
                   ]
                 },
@@ -27134,7 +27264,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "M1ro6",
+                  "id": "Z9Z3uL",
                   "name": "ri Security",
                   "width": "fill_container",
                   "cornerRadius": 6,
@@ -27147,7 +27277,7 @@
                   "children": [
                     {
                       "type": "icon",
-                      "id": "osAwp",
+                      "id": "R2WaWV",
                       "name": "i shield",
                       "width": 16,
                       "height": 16,
@@ -27157,13 +27287,23 @@
                     },
                     {
                       "type": "text",
-                      "id": "NVyXp",
+                      "id": "sORuv",
                       "name": "t Security",
                       "fill": "$text-primary",
                       "content": "Security",
                       "fontFamily": "$font",
                       "fontSize": 13,
                       "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "L3Rwn",
+                      "name": "i chevron-right",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
                     }
                   ]
                 },
@@ -29368,7 +29508,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "JxuCg",
+                  "id": "j3rvd",
                   "name": "ri Security",
                   "width": "fill_container",
                   "cornerRadius": 6,
@@ -29381,7 +29521,7 @@
                   "children": [
                     {
                       "type": "icon",
-                      "id": "v1uipR",
+                      "id": "imeI7",
                       "name": "i shield",
                       "width": 16,
                       "height": 16,
@@ -29391,13 +29531,23 @@
                     },
                     {
                       "type": "text",
-                      "id": "QbSgf",
+                      "id": "YYW1N",
                       "name": "t Security",
                       "fill": "$text-primary",
                       "content": "Security",
                       "fontFamily": "$font",
                       "fontSize": 13,
                       "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "CBKiF",
+                      "name": "i chevron-right",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
                     }
                   ]
                 },
@@ -31756,10 +31906,9 @@
                 },
                 {
                   "type": "frame",
-                  "id": "ereCk",
+                  "id": "G9rUv",
                   "name": "ri Security",
                   "width": "fill_container",
-                  "fill": "$control",
                   "cornerRadius": 6,
                   "gap": 8,
                   "padding": [
@@ -31770,20 +31919,68 @@
                   "children": [
                     {
                       "type": "icon",
-                      "id": "B6KTmH",
+                      "id": "wf7dN",
                       "name": "i shield",
                       "width": 16,
                       "height": 16,
                       "icon": "shield",
                       "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "kFNnH",
+                      "name": "t Security",
+                      "fill": "$text-primary",
+                      "content": "Security",
+                      "fontFamily": "$font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "qC0Ds",
+                      "name": "i chevron-down",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "chevron-down",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "KDgA3",
+                  "name": "ri Authentication",
+                  "width": "fill_container",
+                  "fill": "$control",
+                  "cornerRadius": 6,
+                  "gap": 8,
+                  "padding": [
+                    6,
+                    10,
+                    6,
+                    28
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "Eayt4",
+                      "name": "i key-round",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "key-round",
+                      "library": "lucide",
                       "fill": "$text-primary"
                     },
                     {
                       "type": "text",
-                      "id": "kYHwk",
-                      "name": "t Security",
+                      "id": "dimio",
+                      "name": "t Authentication",
                       "fill": "$text-primary",
-                      "content": "Security",
+                      "content": "Authentication",
                       "fontFamily": "$font",
                       "fontSize": 13,
                       "fontWeight": "600"
@@ -32312,6 +32509,157 @@
                           "fontFamily": "$font",
                           "fontSize": 11,
                           "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "GlGD7",
+                          "name": "divider",
+                          "width": "fill_container",
+                          "height": 1,
+                          "fill": "$border"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "GeVZl",
+                          "name": "Fld Allowed email domains",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 8,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "FPpiW",
+                              "name": "t Allowed email domains",
+                              "fill": "$text-primary",
+                              "content": "Allowed email domains",
+                              "fontFamily": "$font",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "X4hbY",
+                              "name": "addrow",
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "n63zBd",
+                                  "name": "Inp",
+                                  "width": 260,
+                                  "height": 32,
+                                  "fill": "$raised",
+                                  "cornerRadius": 6,
+                                  "stroke": "$border",
+                                  "strokeWidth": 1,
+                                  "padding": [
+                                    0,
+                                    10
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "eXZne",
+                                      "name": "t partners.example",
+                                      "fill": "$text-secondary",
+                                      "content": "partners.example",
+                                      "fontFamily": "$font",
+                                      "fontSize": 13,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "tqspq",
+                                  "name": "Btn Add",
+                                  "fill": "$control",
+                                  "cornerRadius": 6,
+                                  "stroke": "$border",
+                                  "strokeWidth": 1,
+                                  "gap": 6,
+                                  "padding": [
+                                    5,
+                                    12
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "W3VUR",
+                                      "name": "t Add",
+                                      "fill": "$text-primary",
+                                      "content": "Add",
+                                      "fontFamily": "$font",
+                                      "fontSize": 12,
+                                      "fontWeight": "500"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "sBAhb",
+                              "name": "chips",
+                              "gap": 6,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "H5RiD",
+                                  "name": "chip acme.example",
+                                  "fill": "$control",
+                                  "cornerRadius": 10,
+                                  "stroke": "$border",
+                                  "strokeWidth": 1,
+                                  "gap": 4,
+                                  "padding": [
+                                    3,
+                                    8
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "JrxCM",
+                                      "name": "t acme.example",
+                                      "fill": "$text-primary",
+                                      "content": "acme.example",
+                                      "fontFamily": "$font",
+                                      "fontSize": 12,
+                                      "fontWeight": "normal"
+                                    },
+                                    {
+                                      "type": "icon",
+                                      "id": "m7FDhQ",
+                                      "name": "i x",
+                                      "width": 16,
+                                      "height": 16,
+                                      "icon": "x",
+                                      "library": "lucide",
+                                      "fill": "$text-secondary"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "JjpZQ",
+                              "name": "t Empty means closed",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Business users can request magic links only from these domains. An empty list closes the portal to everyone.",
+                              "lineHeight": 1.4,
+                              "fontFamily": "$font",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
                         }
                       ]
                     }
@@ -33104,10 +33452,9 @@
                 },
                 {
                   "type": "frame",
-                  "id": "Xenij",
+                  "id": "nTQ7J",
                   "name": "ri Security",
                   "width": "fill_container",
-                  "fill": "$control",
                   "cornerRadius": 6,
                   "gap": 8,
                   "padding": [
@@ -33118,20 +33465,68 @@
                   "children": [
                     {
                       "type": "icon",
-                      "id": "t9RQT",
+                      "id": "l4cde",
                       "name": "i shield",
                       "width": 16,
                       "height": 16,
                       "icon": "shield",
                       "library": "lucide",
+                      "fill": "$text-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "GlPui",
+                      "name": "t Security",
+                      "fill": "$text-primary",
+                      "content": "Security",
+                      "fontFamily": "$font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "L5uhE7",
+                      "name": "i chevron-down",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "chevron-down",
+                      "library": "lucide",
+                      "fill": "$text-secondary"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "sv4V5",
+                  "name": "ri Authentication",
+                  "width": "fill_container",
+                  "fill": "$control",
+                  "cornerRadius": 6,
+                  "gap": 8,
+                  "padding": [
+                    6,
+                    10,
+                    6,
+                    28
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "Msfrq",
+                      "name": "i key-round",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "key-round",
+                      "library": "lucide",
                       "fill": "$text-primary"
                     },
                     {
                       "type": "text",
-                      "id": "AOJgf",
-                      "name": "t Security",
+                      "id": "e3v9Yh",
+                      "name": "t Authentication",
                       "fill": "$text-primary",
-                      "content": "Security",
+                      "content": "Authentication",
                       "fontFamily": "$font",
                       "fontSize": 13,
                       "fontWeight": "600"
@@ -33571,6 +33966,54 @@
                                         },
                                         {
                                           "type": "frame",
+                                          "id": "IJa4K",
+                                          "name": "Fld Email domain",
+                                          "width": "fill_container",
+                                          "layout": "vertical",
+                                          "gap": 6,
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "S3pQgg",
+                                              "name": "t Email domain",
+                                              "fill": "$text-primary",
+                                              "content": "Email domain",
+                                              "fontFamily": "$font",
+                                              "fontSize": 12,
+                                              "fontWeight": "500"
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "C8j1D",
+                                              "name": "Inp",
+                                              "width": 420,
+                                              "height": 32,
+                                              "fill": "$raised",
+                                              "cornerRadius": 6,
+                                              "stroke": "$border",
+                                              "strokeWidth": 1,
+                                              "padding": [
+                                                0,
+                                                10
+                                              ],
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "VZ0m4",
+                                                  "name": "t acme.example",
+                                                  "fill": "$text-primary",
+                                                  "content": "acme.example",
+                                                  "fontFamily": "$font",
+                                                  "fontSize": 13,
+                                                  "fontWeight": "normal"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "frame",
                                           "id": "sSB0G",
                                           "name": "Fld Client ID",
                                           "width": "fill_container",
@@ -33666,9 +34109,9 @@
                                             {
                                               "type": "text",
                                               "id": "nUEaw",
-                                              "name": "t Stored encrypted. ",
+                                              "name": "t Leave blank to ke",
                                               "fill": "$text-secondary",
-                                              "content": "Stored encrypted. Paste a new value to rotate.",
+                                              "content": "Leave blank to keep the current secret. Paste a new value to rotate.",
                                               "fontFamily": "$font",
                                               "fontSize": 11,
                                               "fontWeight": "normal"
@@ -33685,7 +34128,7 @@
                                             {
                                               "type": "frame",
                                               "id": "JcSTo",
-                                              "name": "Btn Test connection",
+                                              "name": "Btn Save provider",
                                               "fill": "$control",
                                               "cornerRadius": 6,
                                               "stroke": "$border",
@@ -33700,9 +34143,9 @@
                                                 {
                                                   "type": "text",
                                                   "id": "ZRvzK",
-                                                  "name": "t Test connection",
+                                                  "name": "t Save provider",
                                                   "fill": "$text-primary",
-                                                  "content": "Test connection",
+                                                  "content": "Save provider",
                                                   "fontFamily": "$font",
                                                   "fontSize": 12,
                                                   "fontWeight": "500"
@@ -33710,27 +34153,14 @@
                                               ]
                                             },
                                             {
-                                              "type": "frame",
-                                              "id": "oDg1X",
-                                              "name": "pill Connected",
-                                              "fill": "$status-success-bg",
-                                              "cornerRadius": 10,
-                                              "padding": [
-                                                2,
-                                                8
-                                              ],
-                                              "children": [
-                                                {
-                                                  "type": "text",
-                                                  "id": "GmeGK",
-                                                  "name": "t Connected",
-                                                  "fill": "$status-success-fg",
-                                                  "content": "Connected",
-                                                  "fontFamily": "$font",
-                                                  "fontSize": 11,
-                                                  "fontWeight": "600"
-                                                }
-                                              ]
+                                              "type": "text",
+                                              "id": "lu3CC",
+                                              "name": "t Saved",
+                                              "fill": "$text-secondary",
+                                              "content": "Saved",
+                                              "fontFamily": "$font",
+                                              "fontSize": 11,
+                                              "fontWeight": "normal"
                                             }
                                           ]
                                         }
@@ -33888,6 +34318,157 @@
                           "fontFamily": "$font",
                           "fontSize": 11,
                           "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "jwLgk",
+                          "name": "divider",
+                          "width": "fill_container",
+                          "height": 1,
+                          "fill": "$border"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "DV7Nt",
+                          "name": "Fld Allowed email domains",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 8,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "E0nSwM",
+                              "name": "t Allowed email domains",
+                              "fill": "$text-primary",
+                              "content": "Allowed email domains",
+                              "fontFamily": "$font",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "W6tS2",
+                              "name": "addrow",
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "x6MPp7",
+                                  "name": "Inp",
+                                  "width": 260,
+                                  "height": 32,
+                                  "fill": "$raised",
+                                  "cornerRadius": 6,
+                                  "stroke": "$border",
+                                  "strokeWidth": 1,
+                                  "padding": [
+                                    0,
+                                    10
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "lrvjx",
+                                      "name": "t partners.example",
+                                      "fill": "$text-secondary",
+                                      "content": "partners.example",
+                                      "fontFamily": "$font",
+                                      "fontSize": 13,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "oATG4",
+                                  "name": "Btn Add",
+                                  "fill": "$control",
+                                  "cornerRadius": 6,
+                                  "stroke": "$border",
+                                  "strokeWidth": 1,
+                                  "gap": 6,
+                                  "padding": [
+                                    5,
+                                    12
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "HFhvG",
+                                      "name": "t Add",
+                                      "fill": "$text-primary",
+                                      "content": "Add",
+                                      "fontFamily": "$font",
+                                      "fontSize": 12,
+                                      "fontWeight": "500"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "JNHO8",
+                              "name": "chips",
+                              "gap": 6,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "b5E9p",
+                                  "name": "chip acme.example",
+                                  "fill": "$control",
+                                  "cornerRadius": 10,
+                                  "stroke": "$border",
+                                  "strokeWidth": 1,
+                                  "gap": 4,
+                                  "padding": [
+                                    3,
+                                    8
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "GWOIl",
+                                      "name": "t acme.example",
+                                      "fill": "$text-primary",
+                                      "content": "acme.example",
+                                      "fontFamily": "$font",
+                                      "fontSize": 12,
+                                      "fontWeight": "normal"
+                                    },
+                                    {
+                                      "type": "icon",
+                                      "id": "lRPul",
+                                      "name": "i x",
+                                      "width": 16,
+                                      "height": 16,
+                                      "icon": "x",
+                                      "library": "lucide",
+                                      "fill": "$text-secondary"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "hOxgb",
+                              "name": "t Empty means closed",
+                              "fill": "$text-secondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Business users can request magic links only from these domains. An empty list closes the portal to everyone.",
+                              "lineHeight": 1.4,
+                              "fontFamily": "$font",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
                         }
                       ]
                     }

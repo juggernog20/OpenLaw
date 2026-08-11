@@ -4,14 +4,24 @@
  * The settings destination (SET-001, #62): one guarded /settings route
  * reached from the avatar menu, a two-group left rail, and a routable
  * URL per pane. The Organization group renders for Administrators only
- * (SET-002) and carries General (#63) so far — rail entries for
- * unshipped panes are omitted, not disabled; Users and Security arrive
- * with their own M5 tickets. Visual spec: designs/settings.pen per
- * SETTINGS-INVENTORY.md.
+ * (SET-002) and carries General (#63) plus the collapsible Security
+ * group with Authentication (#64) — rail entries for unshipped panes
+ * are omitted, not disabled; Users arrives with its own M5 ticket.
+ * Visual spec: designs/settings.pen per SETTINGS-INVENTORY.md.
  */
 
-import { Building2, Palette, User, type LucideIcon } from "lucide-react";
-import { NavLink, Outlet, redirect, useLoaderData, useNavigate } from "react-router";
+import { useState } from "react";
+import {
+  Building2,
+  ChevronDown,
+  ChevronRight,
+  KeyRound,
+  Palette,
+  Shield,
+  User,
+  type LucideIcon,
+} from "lucide-react";
+import { NavLink, Outlet, redirect, useLoaderData, useLocation, useNavigate } from "react-router";
 import { FormattedMessage, useIntl, defineMessage, type MessageDescriptor } from "react-intl";
 import { authClient } from "../lib/auth-client";
 import { currentUser, needsSetup } from "../lib/session";
@@ -37,10 +47,19 @@ interface SettingsSection {
   label: MessageDescriptor;
 }
 
+/** A collapsible sub-group inside a rail group (SET-001 amendment). */
+interface SettingsSubgroup {
+  id: string;
+  label: MessageDescriptor;
+  icon: LucideIcon;
+  sections: SettingsSection[];
+}
+
 interface SettingsGroup {
   id: string;
   label: MessageDescriptor;
   sections: SettingsSection[];
+  subgroups?: SettingsSubgroup[];
 }
 
 /** The Personal group, visible to every signed-in user. */
@@ -65,8 +84,10 @@ const PERSONAL_GROUP: SettingsGroup = {
 
 /**
  * The Organization group, hidden entirely from non-Administrators
- * (SET-002's single role check) — absent, not disabled. Users and the
- * Security group append here with their own M5 tickets.
+ * (SET-002's single role check) — absent, not disabled. Users appends
+ * here with its own M5 ticket. Security is a collapsible group per the
+ * SET-001 amendment: it holds policy about how you get in, and grows
+ * (the DD-017 audit-log view lands there in M9).
  */
 const ORGANIZATION_GROUP: SettingsGroup = {
   id: "organization",
@@ -79,7 +100,98 @@ const ORGANIZATION_GROUP: SettingsGroup = {
       label: defineMessage({ id: "settings.section.general", defaultMessage: "General" }),
     },
   ],
+  subgroups: [
+    {
+      id: "security",
+      label: defineMessage({ id: "settings.group.security", defaultMessage: "Security" }),
+      icon: Shield,
+      sections: [
+        {
+          id: "authentication",
+          path: "/settings/authentication",
+          icon: KeyRound,
+          label: defineMessage({
+            id: "settings.section.authentication",
+            defaultMessage: "Authentication",
+          }),
+        },
+      ],
+    },
+  ],
 };
+
+function RailEntry({ section, nested }: { section: SettingsSection; nested?: boolean }) {
+  return (
+    <NavLink
+      to={section.path}
+      className={({ isActive }) =>
+        cn(
+          // text-primary beats the global link blue: rail entries
+          // read as chrome, not prose links (ST2).
+          "flex items-center gap-2 rounded-button px-2.5 py-1.5 text-base whitespace-nowrap text-primary",
+          // Sub-group entries indent under their disclosure — but only
+          // in the rail column; the phone strip stays flat.
+          nested && "@3xl/page:pl-8",
+          isActive ? "bg-control font-semibold" : "hover:bg-control",
+        )
+      }
+    >
+      {({ isActive }) => (
+        <>
+          <section.icon
+            size={16}
+            aria-hidden="true"
+            className={isActive ? "text-primary" : "text-muted"}
+          />
+          <FormattedMessage {...section.label} />
+        </>
+      )}
+    </NavLink>
+  );
+}
+
+/**
+ * A collapsible rail group (SET-001 amendment: Security). Collapse is
+ * conditional rendering, not CSS, so it behaves the same in the phone
+ * strip — where the disclosure sits inline as one more chip. A group
+ * holding the active pane starts open; the button then has the say —
+ * but only on the pane where it was pressed, so navigating into the
+ * group can never leave the rail hiding the pane on screen.
+ */
+function RailSubgroup({ subgroup }: { subgroup: SettingsSubgroup }) {
+  const location = useLocation();
+  const containsActive = subgroup.sections.some(
+    (section) =>
+      location.pathname === section.path || location.pathname.startsWith(`${section.path}/`),
+  );
+  const [toggled, setToggled] = useState<{ path: string; open: boolean } | null>(null);
+  const open = toggled?.path === location.pathname ? toggled.open : containsActive;
+  const Chevron = open ? ChevronDown : ChevronRight;
+  const entriesId = `settings-rail-${subgroup.id}`;
+  return (
+    <>
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={entriesId}
+        onClick={() => setToggled({ path: location.pathname, open: !open })}
+        className="flex items-center gap-2 rounded-button px-2.5 py-1.5 text-base whitespace-nowrap text-primary hover:bg-control"
+      >
+        <subgroup.icon size={16} aria-hidden="true" className="text-muted" />
+        <FormattedMessage {...subgroup.label} />
+        <Chevron size={16} aria-hidden="true" className="text-muted" />
+      </button>
+      {/* `contents` keeps the wrapper invisible to both the column and
+          the phone strip's flat flow. */}
+      <div id={entriesId} className="contents">
+        {open &&
+          subgroup.sections.map((section) => (
+            <RailEntry key={section.id} section={section} nested />
+          ))}
+      </div>
+    </>
+  );
+}
 
 /**
  * The settings rail: 240px column from the SettingsRail frame of
@@ -109,29 +221,10 @@ function SettingsRail({ isAdministrator }: { isAdministrator: boolean }) {
             <FormattedMessage {...group.label} />
           </h2>
           {group.sections.map((section) => (
-            <NavLink
-              key={section.id}
-              to={section.path}
-              className={({ isActive }) =>
-                cn(
-                  // text-primary beats the global link blue: rail entries
-                  // read as chrome, not prose links (ST2).
-                  "flex items-center gap-2 rounded-button px-2.5 py-1.5 text-base whitespace-nowrap text-primary",
-                  isActive ? "bg-control font-semibold" : "hover:bg-control",
-                )
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <section.icon
-                    size={16}
-                    aria-hidden="true"
-                    className={isActive ? "text-primary" : "text-muted"}
-                  />
-                  <FormattedMessage {...section.label} />
-                </>
-              )}
-            </NavLink>
+            <RailEntry key={section.id} section={section} />
+          ))}
+          {group.subgroups?.map((subgroup) => (
+            <RailSubgroup key={subgroup.id} subgroup={subgroup} />
           ))}
         </div>
       ))}

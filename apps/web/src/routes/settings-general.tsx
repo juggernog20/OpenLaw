@@ -15,8 +15,8 @@ import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
 import { currentUser, needsSetup } from "../lib/session";
-import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
+import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
@@ -37,29 +37,6 @@ interface General {
   logo: string | null;
   defaultLocale: "en-US";
   defaultTimezone: string;
-}
-
-type FieldStatus = "idle" | "saving" | "saved" | "error";
-
-/** The DES-017 micro-state line, announced politely to readers. */
-function StatusNote({ status }: { status: FieldStatus }) {
-  return (
-    <span
-      aria-live="polite"
-      className={cn("text-xs", status === "error" ? "text-status-danger-fg" : "text-muted")}
-    >
-      {status === "saving" && (
-        <FormattedMessage id="settings.field.saving" defaultMessage="Saving…" />
-      )}
-      {status === "saved" && <FormattedMessage id="settings.field.saved" defaultMessage="Saved" />}
-      {status === "error" && (
-        <FormattedMessage
-          id="settings.field.error"
-          defaultMessage="The change could not be saved. Try again."
-        />
-      )}
-    </span>
-  );
 }
 
 /** One PATCH per committed field (DES-017); resolves to the saved row or null. */
