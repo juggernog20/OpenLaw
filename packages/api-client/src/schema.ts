@@ -51,7 +51,7 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
-    /** Update the signed-in user's preferences (theme, #44) */
+    /** Update the signed-in user's preferences (theme #44, timezone SET-006) */
     patch: operations["updateMyPreferences"];
     trace?: never;
   };
@@ -107,7 +107,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/auth/sso-providers": {
+  "/api/v1/auth/invites/{userId}/resend": {
     parameters: {
       query?: never;
       header?: never;
@@ -116,12 +116,64 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /** Re-send a pending invite's set-password email (SET-005) */
+    post: operations["resendInvite"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auth/invites/{userId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Revoke a pending invite (SET-005): the row is removed and the emailed set-password link stops working */
+    delete: operations["revokeInvite"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auth/sso-providers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The registered OIDC identity providers (TECH-008), with their client IDs but never their secrets */
+    get: operations["listSsoProviders"];
+    put?: never;
     /** Register a bring-your-own OIDC identity provider (TECH-008); endpoint discovery runs from the issuer, and the response carries the callback URL to paste into the IdP console */
     post: operations["registerSsoProvider"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auth/sso-providers/{providerId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Update the registered provider (TECH-008): omitted fields keep their stored values, endpoint discovery re-runs from the issuer, and a failed update leaves the provider untouched */
+    patch: operations["updateSsoProvider"];
     trace?: never;
   };
   "/api/v1/auth/mode": {
@@ -222,6 +274,109 @@ export interface paths {
     put?: never;
     /** Mark first-run onboarding finished (SET-004); idempotent, and never reversed — the wizard is first-run only */
     post: operations["completeOnboarding"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/org/general": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The organization's identity (SET-001 General pane) */
+    get: operations["getOrgGeneral"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Update the organization's identity; applies immediately (SET-003) and appends one audit entry per changed field */
+    patch: operations["updateOrgGeneral"];
+    trace?: never;
+  };
+  "/api/v1/users": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Every user with role, status, and last-active (SET-005); pending invites appear as rows with status `invited` */
+    get: operations["listUsers"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/users/{userId}/role": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Change a user's role in place (SET-005); effective on the target's next request — the guard chain reads the role live */
+    patch: operations["updateUserRole"];
+    trace?: never;
+  };
+  "/api/v1/users/{userId}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Archive a user (SET-005): sign-in is blocked and every live session is revoked in the same operation */
+    post: operations["archiveUser"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/users/{userId}/unarchive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Restore an archived user (SET-003's recovery story): sign-in works again; the sessions archive revoked stay revoked */
+    post: operations["unarchiveUser"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/users/{userId}/revoke-sessions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Revoke every live session of a user (SET-005's lost-laptop case); the account itself is untouched */
+    post: operations["revokeUserSessions"];
     delete?: never;
     options?: never;
     head?: never;
@@ -363,6 +518,8 @@ export interface operations {
               role: "administrator" | "legal_team_member" | "contributor" | "business_user";
               /** @enum {string} */
               theme: "light" | "warm" | "dark";
+              image: string | null;
+              timezone: string | null;
             };
             session: {
               id: string;
@@ -394,7 +551,8 @@ export interface operations {
       content: {
         "application/json": {
           /** @enum {string} */
-          theme: "light" | "warm" | "dark";
+          theme?: "light" | "warm" | "dark";
+          timezone?: string | null;
         };
       };
     };
@@ -414,6 +572,8 @@ export interface operations {
               role: "administrator" | "legal_team_member" | "contributor" | "business_user";
               /** @enum {string} */
               theme: "light" | "warm" | "dark";
+              image: string | null;
+              timezone: string | null;
             };
           };
         };
@@ -493,6 +653,8 @@ export interface operations {
               role: "administrator" | "legal_team_member" | "contributor" | "business_user";
               /** @enum {string} */
               theme: "light" | "warm" | "dark";
+              image: string | null;
+              timezone: string | null;
             };
           };
         };
@@ -577,6 +739,8 @@ export interface operations {
               role: "administrator" | "legal_team_member" | "contributor" | "business_user";
               /** @enum {string} */
               theme: "light" | "warm" | "dark";
+              image: string | null;
+              timezone: string | null;
             };
           };
         };
@@ -596,7 +760,118 @@ export interface operations {
               role: "administrator" | "legal_team_member" | "contributor" | "business_user";
               /** @enum {string} */
               theme: "light" | "warm" | "dark";
+              image: string | null;
+              timezone: string | null;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  resendInvite: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            user: {
+              id: string;
+              email: string;
+              displayName: string;
+              /** @enum {string} */
+              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              /** @enum {string} */
+              theme: "light" | "warm" | "dark";
+              image: string | null;
+              timezone: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  revokeInvite: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listSsoProviders: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            providers: {
+              id: string;
+              providerId: string;
+              issuer: string;
+              domain: string;
+              clientId: string | null;
+            }[];
           };
         };
       };
@@ -633,6 +908,55 @@ export interface operations {
     responses: {
       /** @description Default Response */
       201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            provider: {
+              id: string;
+              providerId: string;
+              issuer: string;
+              domain: string;
+            };
+            callbackUrl: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateSsoProvider: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        providerId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: uri */
+          issuer?: string;
+          domain?: string;
+          clientId?: string;
+          clientSecret?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
         headers: {
           [name: string]: unknown;
         };
@@ -925,6 +1249,292 @@ export interface operations {
             emailConfigured: boolean;
           };
         };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getOrgGeneral: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            general: {
+              name: string;
+              logo: string | null;
+              /** @enum {string} */
+              defaultLocale: "en-US";
+              defaultTimezone: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateOrgGeneral: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name?: string;
+          logo?: string | null;
+          /** @enum {string} */
+          defaultLocale?: "en-US";
+          defaultTimezone?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            general: {
+              name: string;
+              logo: string | null;
+              /** @enum {string} */
+              defaultLocale: "en-US";
+              defaultTimezone: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listUsers: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            users: {
+              id: string;
+              email: string;
+              displayName: string;
+              /** @enum {string} */
+              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              /** @enum {string} */
+              status: "active" | "invited" | "archived";
+              lastActiveAt: string | null;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateUserRole: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            user: {
+              id: string;
+              email: string;
+              displayName: string;
+              /** @enum {string} */
+              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              /** @enum {string} */
+              status: "active" | "invited" | "archived";
+              lastActiveAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  archiveUser: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            user: {
+              id: string;
+              email: string;
+              displayName: string;
+              /** @enum {string} */
+              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              /** @enum {string} */
+              status: "active" | "invited" | "archived";
+              lastActiveAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  unarchiveUser: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            user: {
+              id: string;
+              email: string;
+              displayName: string;
+              /** @enum {string} */
+              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+              /** @enum {string} */
+              status: "active" | "invited" | "archived";
+              lastActiveAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  revokeUserSessions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Problem details (RFC 9457) */
       default: {

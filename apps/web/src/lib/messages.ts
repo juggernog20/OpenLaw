@@ -13,3 +13,14 @@ export function networkError(intl: IntlShape): string {
     defaultMessage: "The server could not be reached. Try again.",
   });
 }
+
+/** The problem envelope's human sentence, when the refusal carried one.
+ * The API's own copy (already-localized policy language like the
+ * last-Administrator floor) always beats a generic line. */
+export function problemDetail(problem: unknown): string | undefined {
+  if (problem && typeof problem === "object" && "detail" in problem) {
+    const { detail } = problem as { detail?: unknown };
+    if (typeof detail === "string") return detail;
+  }
+  return undefined;
+}

@@ -10,6 +10,7 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+  settingsAuditRows,
   signInCookies,
   startHarness,
   TEST_ADMIN,
@@ -151,6 +152,37 @@ describe("allowed-domains validation", () => {
     expect(res.statusCode).toBe(400);
     expect(res.headers["content-type"]).toContain("application/problem+json");
     expect(res.json()).toMatchObject({ status: 400 });
+  });
+});
+
+describe("the DD-017 audit trail (#64)", () => {
+  const settingsRows = () => settingsAuditRows(harness.db);
+
+  it("logs a replacement with the old and new lists", async () => {
+    await setDomains(["before.example"]);
+    const before = (await settingsRows()).length;
+    await setDomains(["after.example", "other.example"]);
+
+    const rows = (await settingsRows()).slice(before);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      entityType: "system",
+      entityId: null,
+      visibility: "admin_only",
+      payload: {
+        field: "allowedEmailDomains",
+        old: ["before.example"],
+        new: ["after.example", "other.example"],
+      },
+    });
+    expect(rows[0]!.actorId).not.toBeNull();
+  });
+
+  it("does not log a replacement that normalises to the stored list", async () => {
+    await setDomains(["same.example"]);
+    const before = (await settingsRows()).length;
+    await setDomains(["Same.Example"]);
+    expect(await settingsRows()).toHaveLength(before);
   });
 });
 

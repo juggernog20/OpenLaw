@@ -43,13 +43,37 @@ ActivityBar, Pill, Avatar) live in this file as local copies per the designs con
 
 ## Amendments required (2026-08-10 grill deltas)
 
-1. **Security is a collapsible group** with Authentication as its sub-item (SET-001 amendment); the
+1. ~~**Security is a collapsible group** with Authentication as its sub-item (SET-001 amendment); the
    mock draws Security as a flat rail item whose page body is Authentication. Update the rail
-   treatment; the page content stands.
-2. **ST17 lacks the DD-010 allowed-email-domains editor** — it belongs on the Authentication pane.
-3. **ST5 lacks**: the archived-user render state (greyed + inactive, behind an Archived filter),
-   in-place role edit, per-user session revocation, and resend/revoke actions on invite rows
-   (SET-005).
-4. **ST1 lacks**: TOTP management, sign-out-my-other-devices, and the DES-014 timezone picker
-   (SET-006).
-5. **ST3 ships in M18**, not M5 — the toggles wait for the notification engine.
+   treatment; the page content stands.~~ _Done (2026-08-11, #64): every rail draws Security with a
+   collapse chevron; ST17/ST18 show it expanded with Authentication active._
+2. ~~**ST17 lacks the DD-010 allowed-email-domains editor** — it belongs on the Authentication pane.
+   The mock had drawn it on ST4 instead; that card was removed from ST4 when the General pane
+   shipped (2026-08-11, #63). The ST17 half lands with the Authentication pane build.~~ _Done
+   (2026-08-11, #64): the editor sits in the Portal access card on ST17 and ST18. Same pass: ST18
+   gained the Email domain field the register/update routes require, its "Test connection /
+   Connected" affordance became "Save provider / Saved" (no test route exists — a successful save
+   IS the discovery round-trip), and the secret hint dropped its "Stored encrypted" claim, which
+   contradicted the TECH-008 addendum (DB-at-rest storage, encryption flagged for later)._
+3. ~~**ST5 lacks**: the archived-user render state (greyed + inactive, behind an Archived filter),
+   in-place role edit, and per-user session revocation (SET-005) — these land with #66. Resend
+   /revoke actions on invite rows~~ _Invite part done (2026-08-11, #65): the invite row carries
+   send (resend) and trash (revoke) icons in a widened actions column, and its role select is
+   flattened to plain text — invites never edit roles per SET-005. Same pass: the Invite-user
+   CTA's plus icon moved to 16px (DES-008)._ _Remainder done (2026-08-11, #66): active rows gained
+   a log-out (revoke sessions) icon beside archive; a greyed archived row (identity and role at
+   50% opacity, neutral "Archived" pill, archive-restore action) sits at the bottom; the header
+   gained a "Show archived" toggle (drawn on, count 7) — no mock had an archived filter, so the
+   toggle is the recorded normalization. The self row keeps its role select but carries no row
+   actions: self-archive is refused and your own sign-out belongs to Profile (SET-006)._
+4. ~~**ST1 lacks**: TOTP management, sign-out-my-other-devices, and the DES-014 timezone picker
+   (SET-006).~~ _Done (2026-08-11, #67): the Profile card gained the timezone field (combobox
+   showing "Use browser timezone", the DES-014 null default); the Password card became
+   "Password & two-factor" with a TOTP status row (drawn enabled: Re-enroll / Turn off) under a
+   divider, the ST17 Portal-access multi-row pattern; a Sessions card carries
+   sign-out-my-other-devices. Grouped this way so the pane fits the 940 frame — five single-row
+   cards would overflow it._
+5. ~~**ST3 ships in M18**, not M5 — the toggles wait for the notification engine.~~ _Confirmed
+   (2026-08-11, #68): the shipped rail's Personal group carries Profile and Appearance only — no
+   Notifications entry, omitted rather than disabled — and the M5 acceptance journey asserts the
+   absence. ST3 stays in the file untouched, waiting for M18._

@@ -8,13 +8,17 @@
  */
 
 import { NavLink } from "react-router";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import { cn } from "../../lib/utils";
 import { destinations } from "./destinations";
 
 export function TopNav() {
+  const intl = useIntl();
   return (
-    <nav className="hidden h-(--height-nav) shrink-0 items-center gap-2 border-b border-(--chrome-nav-border) bg-(--chrome-nav-bg) px-4 md:flex">
+    <nav
+      aria-label={intl.formatMessage({ id: "shell.nav.primary", defaultMessage: "Primary" })}
+      className="hidden h-(--height-nav) shrink-0 items-center gap-2 border-b border-(--chrome-nav-border) bg-(--chrome-nav-bg) px-4 md:flex"
+    >
       {destinations.map((destination) => (
         <NavLink
           key={destination.id}

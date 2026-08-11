@@ -29,6 +29,34 @@
       "when": 1786394362045,
       "tag": "0003_smtp",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1786397299991,
+      "tag": "0004_activity_log",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1786397314294,
+      "tag": "0005_org_general",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786422732354,
+      "tag": "0006_last_active",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1786433704100,
+      "tag": "0007_timezone",
+      "breakpoints": true
     }
   ]
 }

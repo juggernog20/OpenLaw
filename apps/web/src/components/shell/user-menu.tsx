@@ -2,23 +2,22 @@
 
 /**
  * Header user menu: the avatar is the trigger; the menu carries the
- * account surfaces (theme, two-factor enrolment, sign out). The
- * trigger's accessible name is the person's display name — the visible
- * face is only the initials.
+ * account surfaces (settings, sign out). The trigger's accessible name
+ * is the person's display name — the visible face is the photo or the
+ * initials. Theme switching moved to the Appearance pane at /settings
+ * (#62); two-factor enrolment moved to the Profile pane (SET-006, #67).
  */
 
-import { LogOut, ShieldCheck } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import { Link } from "react-router";
-import { FormattedMessage, useIntl, defineMessage, type MessageDescriptor } from "react-intl";
-import { isTheme, THEMES, type Theme } from "../../lib/theme";
+import { FormattedMessage } from "react-intl";
+import type { Theme } from "../../lib/theme";
 import { Avatar } from "../avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
@@ -27,30 +26,20 @@ export interface ShellUser {
   displayName: string;
   email: string;
   theme: Theme;
+  /** Avatar photo (DES-018); absent or null renders initials. */
+  image?: string | null;
+  /** IANA zone override; null/absent = browser-detected (DES-014). */
+  timezone?: string | null;
 }
-
-const THEME_LABELS: Record<Theme, MessageDescriptor> = {
-  light: defineMessage({ id: "theme.light", defaultMessage: "Light" }),
-  warm: defineMessage({ id: "theme.warm", defaultMessage: "Warm" }),
-  dark: defineMessage({ id: "theme.dark", defaultMessage: "Dark" }),
-};
 
 export function UserMenu({
   user,
-  theme,
-  onThemeChange,
   onSignOut,
-}: {
-  user: ShellUser;
-  theme: Theme;
-  onThemeChange: (theme: Theme) => void;
-  onSignOut: () => void;
-}) {
-  const intl = useIntl();
+}: Readonly<{ user: ShellUser; onSignOut: () => void }>) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger aria-label={user.displayName} className="rounded-avatar">
-        <Avatar name={user.displayName} />
+        <Avatar name={user.displayName} image={user.image} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
@@ -58,30 +47,10 @@ export function UserMenu({
           <span className="block text-sm text-muted">{user.email}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuLabel className="text-sm text-muted">
-          <FormattedMessage id="shell.userMenu.theme" defaultMessage="Theme" />
-        </DropdownMenuLabel>
-        <DropdownMenuRadioGroup
-          value={theme}
-          // Radix hands back a plain string; the guard narrows it.
-          onValueChange={(value) => {
-            if (isTheme(value)) onThemeChange(value);
-          }}
-        >
-          {THEMES.map((option) => (
-            <DropdownMenuRadioItem key={option} value={option}>
-              {intl.formatMessage(THEME_LABELS[option])}
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
-        <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link to="/auth/two-factor/enroll">
-            <ShieldCheck size={16} aria-hidden="true" />
-            <FormattedMessage
-              id="shell.userMenu.twoFactor"
-              defaultMessage="Two-factor authentication"
-            />
+          <Link to="/settings">
+            <Settings size={16} aria-hidden="true" />
+            <FormattedMessage id="shell.userMenu.settings" defaultMessage="Settings" />
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={onSignOut}>

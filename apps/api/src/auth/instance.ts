@@ -20,6 +20,12 @@ import { uuidv7 } from "uuidv7";
 import { eq, schema, ssoProviders, users, type Db } from "@openlaw/db";
 import type { MailerResolver } from "../lib/mailer.js";
 import { getOrgSettings, isEmailDomainAllowed } from "../lib/org-settings.js";
+import { createProfileAuditHook } from "./audit.js";
+
+/** The slice of the app's pino logger the auth instance needs. */
+export interface AuthLogger {
+  warn: (context: Record<string, unknown>, message: string) => void;
+}
 
 export interface AuthConfig {
   secret: string;
@@ -35,6 +41,138 @@ export interface AuthConfig {
 
 /** OWASP-recommended Argon2id parameters (19 MiB, t=2, p=1). */
 const ARGON2 = { memoryCost: 19456, timeCost: 2, parallelism: 1 };
+
+/** The endpoint context better-auth's session reader demands; the
+ * before-hook's context satisfies it. */
+type AuthHookContext = Parameters<typeof getSessionFromCtx>[0];
+
+/** The email a sign-in body carries; a missing or non-string one becomes
+ * "", which matches no account and no allowed domain. */
+function bodyEmail(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+const AVATAR_PATTERN = /^data:image\/(png|jpeg);base64,[A-Za-z0-9+/]+={0,2}$/;
+
+/**
+ * better-auth's own /update-user validates nothing beyond "is a string",
+ * so the Profile pane's contract (SET-006; the mock promises "JPG or
+ * PNG, 1 MB max") is enforced here — the one door every update-user call
+ * passes through. The avatar cap bounds the users row, like the org
+ * logo's (SET-001).
+ */
+function assertProfileUpdate(body: { name?: unknown; image?: unknown }): void {
+  const { name, image } = body;
+  if (name !== undefined && (typeof name !== "string" || !name.trim() || name.length > 200)) {
+    throw new APIError("BAD_REQUEST", { message: "Display name must be 1–200 characters." });
+  }
+  if (
+    image !== undefined &&
+    image !== null &&
+    (typeof image !== "string" || image.length > 1_400_000 || !AVATAR_PATTERN.test(image))
+  ) {
+    throw new APIError("BAD_REQUEST", {
+      message: "Avatar must be a PNG or JPEG data: URI of at most 1 MB.",
+    });
+  }
+}
+
+/**
+ * SSO provider management is an Administrator-only surface. The plugin's
+ * own endpoints only demand *a* session, which in OpenLaw would let any
+ * Business User stand up an IdP for a domain or read provider configs
+ * (client secret included) — provider management is authorization, not
+ * just authentication. Gating in the hook covers the raw HTTP path and
+ * our typed route alike (the route forwards the admin's headers).
+ * Sign-in and callback paths stay open — they are the login flow itself.
+ */
+const SSO_MANAGEMENT_PATHS = new Set([
+  "/sso/register",
+  "/sso/update-provider",
+  "/sso/delete-provider",
+  "/sso/get-provider",
+  "/sso/providers",
+  "/sso/request-domain-verification",
+  "/sso/verify-domain",
+]);
+
+async function assertAdministrator(ctx: AuthHookContext): Promise<void> {
+  const session = await getSessionFromCtx(ctx);
+  const role = (session?.user as { role?: string } | undefined)?.role;
+  if (role !== "administrator") {
+    throw new APIError("FORBIDDEN", {
+      message: "Only Administrators can manage SSO providers.",
+    });
+  }
+}
+
+/**
+ * Auth-mode semantics (TECH-008): in `oidc` mode the IdP is the front
+ * door, so password sign-in closes — except for Administrators, whose
+ * break-glass is never disabled (a broken or misconfigured IdP must not
+ * lock the org out of the install that configures it). Unknown emails
+ * get the same refusal as non-administrators, so the response never
+ * reveals whether an account exists. The lookup is by our lowercased
+ * email column; sign-in bodies arrive in whatever case the user typed.
+ */
+async function assertPasswordSignIn(db: Db, email: string): Promise<void> {
+  const settings = await getOrgSettings(db);
+  if (settings.authMode !== "oidc") return;
+  const [account] = await db
+    .select({ role: users.role })
+    .from(users)
+    .where(eq(users.email, email.toLowerCase()))
+    .limit(1);
+  if (account?.role !== "administrator") {
+    throw new APIError("FORBIDDEN", {
+      message: "Password sign-in is disabled while single sign-on is required.",
+    });
+  }
+}
+
+const MAGIC_LINK_PATHS = new Set(["/sign-in/magic-link", "/magic-link/verify"]);
+
+/**
+ * Policy holds on better-auth's own magic-link paths, not just our typed
+ * route — direct calls meet the same rules. Guarding verify as well as
+ * issuance means flipping the toggle off takes effect immediately,
+ * including for links already in flight; domains are not re-checked at
+ * verify because a redeemable token can only have been issued through
+ * the allowlist, moments earlier (5-min TTL) — JIT creation re-checks in
+ * the databaseHook regardless.
+ *
+ * Resolves true when issuance was denied by the allowlist: the caller
+ * mirrors the endpoint's success shape for it, so responses never reveal
+ * whether a domain is allowlisted.
+ */
+async function magicLinkDenied(
+  db: Db,
+  resolveMailer: MailerResolver,
+  path: string,
+  email: string,
+): Promise<boolean> {
+  const settings = await getOrgSettings(db);
+  if (!settings.magicLinkEnabled) {
+    throw new APIError("FORBIDDEN", { message: "Magic-link sign-in is disabled." });
+  }
+  if (path !== "/sign-in/magic-link") return false;
+  // An instance with no resolved mailer cannot issue at all, so refuse
+  // uniformly here — ahead of the allowlist branch below. Were this
+  // check missing, the send would throw for allowlisted addresses only,
+  // and the denied branch's mimicked success would become a reliable
+  // allowlist oracle. Verify is deliberately left alone: a token in
+  // flight was issued while mail still worked, and refusing it would
+  // strand a link the requester already holds.
+  const { mailer } = await resolveMailer();
+  if (!mailer.configured) {
+    throw new APIError("FORBIDDEN", {
+      message:
+        "Sign-in links are unavailable: this instance cannot send email. " +
+        "Contact your administrator.",
+    });
+  }
+  return !isEmailDomainAllowed(email, settings.allowedEmailDomains);
+}
 
 /**
  * Runs `fn` with the issuer's origin temporarily added to better-auth's
@@ -69,7 +207,12 @@ export async function withTrustedIssuerOrigin<T>(
 // The resolver, not a fixed mailer (#37): every send resolves the
 // current configuration, so an SMTP relay saved through the wizard is
 // used by the very next email with no restart.
-export function createAuth(db: Db, config: AuthConfig, resolveMailer: MailerResolver) {
+export function createAuth(
+  db: Db,
+  config: AuthConfig,
+  resolveMailer: MailerResolver,
+  logger: AuthLogger,
+) {
   return betterAuth({
     appName: "OpenLaw",
     baseURL: config.baseUrl,
@@ -246,95 +389,31 @@ export function createAuth(db: Db, config: AuthConfig, resolveMailer: MailerReso
       }),
     ],
     hooks: {
+      // One door per policy: the dispatch below says which paths each
+      // guard owns, and the guards above say what they enforce and why.
       before: createAuthMiddleware(async (ctx) => {
-        // SSO provider management is an Administrator-only surface. The
-        // plugin's own endpoints only demand *a* session, which in
-        // OpenLaw would let any Business User stand up an IdP for a
-        // domain or read provider configs (client secret included) —
-        // provider management is authorization, not just authentication.
-        // Gating here covers the raw HTTP path and our typed route alike
-        // (the route forwards the admin's headers). Sign-in and callback
-        // paths stay open — they are the login flow itself.
-        const SSO_MANAGEMENT_PATHS = [
-          "/sso/register",
-          "/sso/update-provider",
-          "/sso/delete-provider",
-          "/sso/get-provider",
-          "/sso/providers",
-          "/sso/request-domain-verification",
-          "/sso/verify-domain",
-        ];
-        if (SSO_MANAGEMENT_PATHS.includes(ctx.path)) {
-          const session = await getSessionFromCtx(ctx);
-          const role = (session?.user as { role?: string } | undefined)?.role;
-          if (role !== "administrator") {
-            throw new APIError("FORBIDDEN", {
-              message: "Only Administrators can manage SSO providers.",
-            });
-          }
+        if (ctx.path === "/update-user") {
+          assertProfileUpdate((ctx.body ?? {}) as { name?: unknown; image?: unknown });
           return;
         }
-
-        // Auth-mode semantics (TECH-008): in `oidc` mode the IdP is the
-        // front door, so password sign-in closes — except for
-        // Administrators, whose break-glass is never disabled (a broken
-        // or misconfigured IdP must not lock the org out of the install
-        // that configures it). Unknown emails get the same refusal as
-        // non-administrators, so the response never reveals whether an
-        // account exists. The lookup is by our lowercased email column;
-        // sign-in bodies arrive in whatever case the user typed.
+        if (SSO_MANAGEMENT_PATHS.has(ctx.path)) {
+          await assertAdministrator(ctx);
+          return;
+        }
         if (ctx.path === "/sign-in/email") {
-          const settings = await getOrgSettings(db);
-          if (settings.authMode !== "oidc") return;
-          const email = typeof ctx.body?.email === "string" ? ctx.body.email.toLowerCase() : "";
-          const [account] = await db
-            .select({ role: users.role })
-            .from(users)
-            .where(eq(users.email, email))
-            .limit(1);
-          if (account?.role !== "administrator") {
-            throw new APIError("FORBIDDEN", {
-              message: "Password sign-in is disabled while single sign-on is required.",
-            });
-          }
+          await assertPasswordSignIn(db, bodyEmail(ctx.body?.email));
           return;
         }
-
-        // Policy holds on better-auth's own magic-link paths, not just our
-        // typed route — direct calls meet the same rules. Guarding verify
-        // as well as issuance means flipping the toggle off takes effect
-        // immediately, including for links already in flight; domains are
-        // not re-checked at verify because a redeemable token can only have
-        // been issued through the allowlist, moments earlier (5-min TTL) —
-        // JIT creation re-checks in the databaseHook below regardless. The
-        // denied branch mirrors the endpoint's success shape so responses
-        // never reveal whether a domain is allowlisted.
-        if (ctx.path !== "/sign-in/magic-link" && ctx.path !== "/magic-link/verify") return;
-        const settings = await getOrgSettings(db);
-        if (!settings.magicLinkEnabled) {
-          throw new APIError("FORBIDDEN", { message: "Magic-link sign-in is disabled." });
-        }
-        if (ctx.path !== "/sign-in/magic-link") return;
-        // An instance with no resolved mailer cannot issue at all, so
-        // refuse uniformly here — ahead of the allowlist branch below.
-        // Were this check missing, the send would throw for allowlisted
-        // addresses only, and the denied branch's mimicked success would
-        // become a reliable allowlist oracle. Verify is deliberately left
-        // alone: a token in flight was issued while mail still worked, and
-        // refusing it would strand a link the requester already holds.
-        const { mailer } = await resolveMailer();
-        if (!mailer.configured) {
-          throw new APIError("FORBIDDEN", {
-            message:
-              "Sign-in links are unavailable: this instance cannot send email. " +
-              "Contact your administrator.",
-          });
-        }
-        const email = typeof ctx.body?.email === "string" ? ctx.body.email : "";
-        if (!isEmailDomainAllowed(email, settings.allowedEmailDomains)) {
+        if (
+          MAGIC_LINK_PATHS.has(ctx.path) &&
+          (await magicLinkDenied(db, resolveMailer, ctx.path, bodyEmail(ctx.body?.email)))
+        ) {
           return ctx.json({ status: true });
         }
       }),
+      // DD-017 audit entries for the profile mutations better-auth owns
+      // (SET-006) — see ./audit.ts for what is recorded and why here.
+      after: createProfileAuditHook(db),
     },
     databaseHooks: {
       session: {
@@ -365,6 +444,43 @@ export function createAuth(db: Db, config: AuthConfig, resolveMailer: MailerReso
                 message: "This account has been archived.",
                 code: "USER_ARCHIVED",
               });
+            }
+          },
+          // The durable "last active" stamp behind the Users list
+          // (SET-005). Written on session create and refresh rather than
+          // computed from live session rows, which sign-out deletes —
+          // "signed out an hour ago" must not read as "never signed in".
+          // Granularity: every sign-in, plus one refresh per updateAge.
+          // Best-effort by design: the stamp is display data, so a
+          // failed write must never reject the sign-in it rode on.
+          after: async (session) => {
+            try {
+              await db
+                .update(users)
+                .set({ lastActiveAt: new Date() })
+                .where(eq(users.id, session.userId));
+            } catch (error) {
+              // Losing one stamp is invisible; failing a sign-in is not.
+              // Logged so a persistent failure is not equally invisible.
+              logger.warn({ err: error, userId: session.userId }, "last-active stamp failed");
+            }
+          },
+        },
+        update: {
+          after: async (session) => {
+            // The adapter's update hook receives a partial row; only a
+            // session-refresh update (it always moves expiresAt) counts
+            // as user activity.
+            if (session.userId && session.expiresAt) {
+              try {
+                await db
+                  .update(users)
+                  .set({ lastActiveAt: new Date() })
+                  .where(eq(users.id, session.userId));
+              } catch (error) {
+                // Same best-effort contract as the create stamp above.
+                logger.warn({ err: error, userId: session.userId }, "last-active stamp failed");
+              }
             }
           },
         },

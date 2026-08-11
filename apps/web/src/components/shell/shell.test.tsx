@@ -65,7 +65,7 @@ describe("app shell chrome", () => {
     expect(screen.getByRole("link", { name: "Skip to content" })).toHaveAttribute("href", "#main");
   });
 
-  it("opens the user menu: two-factor entry point and sign out", async () => {
+  it("opens the user menu: settings entry point and sign out", async () => {
     const user = userEvent.setup();
     // Stateful on purpose: once sign-out lands, the session probe must
     // answer 401 or the login guard would bounce right back to home.
@@ -89,9 +89,11 @@ describe("app shell chrome", () => {
     await user.click(within(header).getByRole("button", { name: MEMBER.displayName }));
 
     const menu = await screen.findByRole("menu");
+    expect(within(menu).getByRole("menuitem", { name: "Settings" })).toBeInTheDocument();
+    // Two-factor management moved to the Profile pane (SET-006, #67).
     expect(
-      within(menu).getByRole("menuitem", { name: "Two-factor authentication" }),
-    ).toBeInTheDocument();
+      within(menu).queryByRole("menuitem", { name: "Two-factor authentication" }),
+    ).not.toBeInTheDocument();
 
     await user.click(within(menu).getByRole("menuitem", { name: "Sign out" }));
     expect(await screen.findByRole("heading", { name: "Sign in" })).toBeInTheDocument();

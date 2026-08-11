@@ -7,7 +7,7 @@
  */
 
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
-import { createDb, orgSettings, runMigrations, type Db } from "@openlaw/db";
+import { activityLog, asc, createDb, eq, orgSettings, runMigrations, type Db } from "@openlaw/db";
 import { buildApp } from "../app.js";
 import type { AuthConfig } from "../auth/instance.js";
 import {
@@ -27,7 +27,7 @@ export const TEST_AUTH_CONFIG: AuthConfig = {
 export const TEST_ADMIN = {
   email: "blair@example.com",
   displayName: "Blair Wentworth",
-  password: "correct-horse-battery",
+  password: "correct-horse-battery", // NOSONAR — fixture for a throwaway container
 } as const;
 
 type App = Awaited<ReturnType<typeof buildApp>>;
@@ -97,6 +97,16 @@ export class CapturingMailer implements Mailer {
   messagesTo(email: string): MailMessage[] {
     return this.messages.filter((m) => m.to === email);
   }
+}
+
+/** The org_settings audit rows, oldest first — the DD-017 assertion
+ * every settings-pane suite makes. */
+export function settingsAuditRows(db: Db) {
+  return db
+    .select()
+    .from(activityLog)
+    .where(eq(activityLog.action, "org_settings.updated"))
+    .orderBy(asc(activityLog.createdAt));
 }
 
 /** The from-address the harness's env-pinned default reports. */

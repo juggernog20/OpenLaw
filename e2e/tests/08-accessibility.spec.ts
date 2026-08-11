@@ -15,11 +15,17 @@
 
 import { test, expect, type Page, type TestInfo } from "@playwright/test";
 import { AxeBuilder } from "@axe-core/playwright";
+import { z } from "zod";
 import { ADMIN, ensureAdminExists, signInAs } from "./helpers.js";
 
 /** Scans the page and reports violations without failing the run. */
-async function reportAxeViolations(page: Page, testInfo: TestInfo, label: string): Promise<void> {
-  const results = await new AxeBuilder({ page }).analyze();
+async function reportAxeViolations(
+  page: Page,
+  testInfo: TestInfo,
+  label: string,
+  options: { disableRules?: string[] } = {},
+): Promise<void> {
+  const results = await new AxeBuilder({ page }).disableRules(options.disableRules ?? []).analyze();
   await testInfo.attach(`axe-${label}`, {
     body: JSON.stringify(results.violations, null, 2),
     contentType: "application/json",
@@ -55,6 +61,70 @@ test.describe("accessibility floor", () => {
     await expect(page).toHaveTitle("Home · OpenLaw");
 
     await reportAxeViolations(page, testInfo, "home");
+  });
+
+  test("settings page: /settings forwards to Profile; axe scan and title on every pane, plus a seeded archived row", async ({
+    page,
+    request,
+  }, testInfo) => {
+    await ensureAdminExists(request);
+    await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+    await page.goto("/settings");
+
+    // The index lands on Profile (#67).
+    await expect(page).toHaveURL(/\/settings\/profile$/);
+    await expect(page).toHaveTitle("Profile · OpenLaw");
+    await reportAxeViolations(page, testInfo, "settings-profile");
+
+    // The Appearance pane, the theme's home.
+    await page.goto("/settings/appearance");
+    await expect(page).toHaveTitle("Appearance · OpenLaw");
+    await reportAxeViolations(page, testInfo, "settings-appearance");
+
+    // The Organization · General form (#63), as the Administrator.
+    await page.goto("/settings/general");
+    await expect(page).toHaveTitle("General · OpenLaw");
+    await reportAxeViolations(page, testInfo, "settings-general");
+
+    // The Security · Authentication pane (#64), as the Administrator.
+    await page.goto("/settings/authentication");
+    await expect(page).toHaveTitle("Authentication · OpenLaw");
+    await reportAxeViolations(page, testInfo, "settings-authentication");
+
+    // The Organization · Users table (#65), as the Administrator.
+    await page.goto("/settings/users");
+    await expect(page).toHaveTitle("Users · OpenLaw");
+    await reportAxeViolations(page, testInfo, "settings-users");
+
+    // The archived view (#66) scans against its own seed, so it can
+    // never silently skip: a per-run invite is archived (a pending
+    // invite archives fine — the guard chain only bars activated
+    // states), scanned, and revoked again so the never-reset instance
+    // (TECH-018) keeps nothing.
+    const email = `axe-archived-${Date.now()}@example.com`;
+    const invited = await page.request.post("/api/v1/auth/invites", {
+      data: { email, displayName: "Axe Archived", role: "contributor" },
+    });
+    expect(invited.status()).toBe(201);
+    const { user } = z.object({ user: z.object({ id: z.string() }) }).parse(await invited.json());
+    try {
+      const archived = await page.request.post(`/api/v1/users/${user.id}/archive`);
+      expect(archived.ok()).toBe(true);
+
+      await page.reload();
+      await page.getByRole("switch", { name: "Show archived" }).click();
+      await expect(page.getByText(email)).toBeVisible();
+      // Contrast is exempted here on purpose: archived rows render in
+      // the SET-005 greyed inactive treatment, and WCAG 1.4.3 exempts
+      // text in inactive components from its minima — axe cannot know
+      // the dimming is the meaning. The default view above still scans
+      // contrast in full.
+      await reportAxeViolations(page, testInfo, "settings-users-archived", {
+        disableRules: ["color-contrast"],
+      });
+    } finally {
+      await page.request.delete(`/api/v1/auth/invites/${user.id}`);
+    }
   });
 
   test("reduced motion degrades transitions to instant", async ({ page }) => {

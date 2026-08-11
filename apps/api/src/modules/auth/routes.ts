@@ -13,7 +13,6 @@ import { z } from "zod";
 import {
   accounts,
   ADVISORY_LOCK,
-  and,
   AUTH_MODES,
   eq,
   orgSettings,
@@ -22,11 +21,14 @@ import {
   tryWithAdvisoryLock,
   users,
   USER_ROLES,
+  verifications,
 } from "@openlaw/db";
 import { provisionUser, withTrustedIssuerOrigin } from "../../auth/instance.js";
 import { requireAuth, requireRole, userColumns } from "../../auth/guards.js";
+import { recordActivity } from "../../lib/activity.js";
 import { getOrgSettings, isEmailDomainAllowed } from "../../lib/org-settings.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
+import { TimezoneSchema } from "../../lib/timezones.js";
 
 const UserSchema = z.object({
   id: z.string(),
@@ -34,15 +36,19 @@ const UserSchema = z.object({
   displayName: z.string(),
   role: z.enum(USER_ROLES),
   theme: z.enum(THEMES),
+  image: z.string().nullable(),
+  timezone: z.string().nullable(),
 });
 
 const UserEnvelope = z.object({ user: UserSchema });
 
 /**
  * Invitable roles: everyone but Business Users, who are JIT-provisioned
- * (DD-010) — invites are the only way these accounts come to exist.
+ * (DD-010) — invites are the only way these accounts come to exist. The
+ * users module reads this to tell a pending invite from a Business User
+ * (both lack account rows; only one was invited).
  */
-const INVITABLE_ROLES = ["administrator", "legal_team_member", "contributor"] as const;
+export const INVITABLE_ROLES = ["administrator", "legal_team_member", "contributor"] as const;
 
 /**
  * A bare DNS name — dot-separated labels, no scheme, port, path, or `@`.
@@ -62,6 +68,41 @@ const SessionSchema = z.object({
   id: z.string(),
   expiresAt: z.iso.datetime(),
 });
+
+const ProviderSchema = z.object({
+  id: z.string(),
+  providerId: z.string(),
+  issuer: z.string(),
+  domain: z.string(),
+});
+
+/**
+ * The stored OIDC client config (better-auth keeps it as JSON text on
+ * the provider row, discovery endpoints included). Only the fields this
+ * module reads are typed; the secret never leaves the API. A row whose
+ * JSON is unreadable reads as empty, so one corrupt provider cannot
+ * fail the whole listing — the update handler's credential check then
+ * asks the Administrator to repair it.
+ */
+function oidcConfigOf(row: { oidcConfig: string | null }): {
+  clientId?: string;
+  clientSecret?: string;
+} {
+  if (!row.oidcConfig) return {};
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(row.oidcConfig);
+  } catch {
+    return {};
+  }
+  const config = z
+    .object({ clientId: z.string().optional(), clientSecret: z.string().optional() })
+    .loose()
+    .safeParse(parsed);
+  return config.success
+    ? { clientId: config.data.clientId, clientSecret: config.data.clientSecret }
+    : {};
+}
 
 /** Translates a better-auth APIError into our problem envelope. */
 function relayAuthError(error: unknown): never {
@@ -86,13 +127,23 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async (request) => ({
-      user: request.user,
-      session: {
-        id: request.session.id,
-        expiresAt: request.session.expiresAt.toISOString(),
-      },
-    }),
+    async (request) => {
+      // The guard leaves the avatar out of its per-request projection —
+      // a data: URI can reach ~1.4 MB. /me is the one route that returns
+      // it, so it loads the column itself.
+      const [row] = await app.db
+        .select({ image: users.image })
+        .from(users)
+        .where(eq(users.id, request.user.id))
+        .limit(1);
+      return {
+        user: { ...request.user, image: row?.image ?? null },
+        session: {
+          id: request.session.id,
+          expiresAt: request.session.expiresAt.toISOString(),
+        },
+      };
+    },
   );
 
   app.patch(
@@ -101,21 +152,60 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireAuth,
       schema: {
         operationId: "updateMyPreferences",
-        summary: "Update the signed-in user's preferences (theme, #44)",
+        summary: "Update the signed-in user's preferences (theme #44, timezone SET-006)",
         tags: ["auth"],
-        body: z.object({ theme: z.enum(THEMES) }),
+        body: z
+          .object({
+            theme: z.enum(THEMES),
+            // null clears the override back to "use browser timezone"
+            // (DES-014's default, which most users never leave).
+            timezone: TimezoneSchema.nullable(),
+          })
+          .partial()
+          .refine((body) => Object.keys(body).length > 0, "At least one preference is required."),
         response: { 200: UserEnvelope, default: problemResponse },
       },
     },
     async (request) => {
-      const [user] = await app.db
-        .update(users)
-        .set({ theme: request.body.theme, updatedAt: new Date() })
-        .where(eq(users.id, request.user.id))
-        .returning(userColumns);
-      // requireAuth just loaded this user, so the row exists; a vanished
-      // row here means the account was deleted mid-request.
-      if (!user) throw httpError(401, "Authentication required.");
+      // Mutation and audit entries commit together (SET-003/DD-017):
+      // every settings change is recorded, or it does not land. The old
+      // values are lock-read inside the transaction — the guard's
+      // earlier read could be stale under a concurrent PATCH.
+      const user = await app.db.transaction(async (tx) => {
+        const [current] = await tx
+          .select(userColumns)
+          .from(users)
+          .where(eq(users.id, request.user.id))
+          .for("update");
+        // requireAuth just loaded this user, so the row exists; a vanished
+        // row here means the account was deleted mid-request.
+        if (!current) throw httpError(401, "Authentication required.");
+        const patch = request.body;
+        const changed = (["theme", "timezone"] as const).filter(
+          (field) => patch[field] !== undefined && patch[field] !== current[field],
+        );
+        if (changed.length === 0) return current;
+        const [row] = await tx
+          .update(users)
+          .set({
+            ...Object.fromEntries(changed.map((field) => [field, patch[field]])),
+            updatedAt: new Date(),
+          })
+          .where(eq(users.id, request.user.id))
+          .returning(userColumns);
+        if (!row) throw httpError(401, "Authentication required.");
+        for (const field of changed) {
+          await recordActivity(tx, {
+            entityType: "user",
+            entityId: row.id,
+            actorId: row.id,
+            action: `user.${field}_changed`,
+            visibility: "admin_only",
+            payload: { field, old: current[field], new: row[field] },
+          });
+        }
+        return row;
+      });
       return { user };
     },
   );
@@ -283,14 +373,16 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
 
       if (existing.length > 0) {
         const user = existing[0]!;
-        // A credential row means they activated; there is nothing to
-        // re-send and the invite must not touch the account.
-        const credential = await app.db
+        // Any account row means they activated — a credential from the
+        // set-password flow, or an SSO subject from signing in through
+        // the IdP. There is nothing to re-send and the invite must not
+        // touch the account.
+        const activated = await app.db
           .select({ id: accounts.id })
           .from(accounts)
-          .where(and(eq(accounts.userId, user.id), eq(accounts.providerId, "credential")))
+          .where(eq(accounts.userId, user.id))
           .limit(1);
-        if (credential.length > 0) {
+        if (activated.length > 0) {
           throw httpError(409, "This user has already activated their account.");
         }
         // Re-sending never changes the account. A different role here is a
@@ -300,6 +392,14 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
           throw httpError(409, "This user already exists with a different role.");
         }
         await sendSetPasswordEmail(email);
+        await recordActivity(app.db, {
+          entityType: "user",
+          entityId: user.id,
+          actorId: request.user.id,
+          action: "user.invite_resent",
+          visibility: "admin_only",
+          payload: { email: user.email },
+        });
         return reply.status(200).send({ user });
       }
 
@@ -318,7 +418,126 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(eq(users.id, created.user.id))
         .limit(1);
       if (!user) throw httpError(500, "The invited user could not be read back.");
+
+      // Logged after the fact: better-auth wrote the row outside any
+      // transaction of ours, so exact atomicity is not on offer here.
+      await recordActivity(app.db, {
+        entityType: "user",
+        entityId: user.id,
+        actorId: request.user.id,
+        action: "user.invited",
+        visibility: "admin_only",
+        payload: { email: user.email, role: user.role },
+      });
       return reply.status(201).send({ user });
+    },
+  );
+
+  /**
+   * Loads the user and proves it is a pending invite: a staff role and
+   * no account row yet. Everything else answers 409 — resending to or
+   * revoking an activated user (or a Business User, who was never
+   * invited) is user management, not invite management.
+   */
+  async function pendingInvite(userId: string) {
+    const [user] = await app.db
+      .select(userColumns)
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    if (!user) throw httpError(404, "No user exists with this id.");
+    const activated = await app.db
+      .select({ id: accounts.id })
+      .from(accounts)
+      .where(eq(accounts.userId, user.id))
+      .limit(1);
+    if (activated.length > 0 || !(INVITABLE_ROLES as readonly string[]).includes(user.role)) {
+      throw httpError(409, "This user is not a pending invite.");
+    }
+    return user;
+  }
+
+  app.post(
+    "/auth/invites/:userId/resend",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "resendInvite",
+        summary: "Re-send a pending invite's set-password email (SET-005)",
+        tags: ["auth"],
+        params: z.object({ userId: z.string() }),
+        response: { 200: UserEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const user = await pendingInvite(request.params.userId);
+      await sendSetPasswordEmail(user.email);
+      await recordActivity(app.db, {
+        entityType: "user",
+        entityId: user.id,
+        actorId: request.user.id,
+        action: "user.invite_resent",
+        visibility: "admin_only",
+        payload: { email: user.email },
+      });
+      return { user };
+    },
+  );
+
+  app.delete(
+    "/auth/invites/:userId",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "revokeInvite",
+        summary:
+          "Revoke a pending invite (SET-005): the row is removed and the " +
+          "emailed set-password link stops working",
+        tags: ["auth"],
+        params: z.object({ userId: z.string() }),
+        response: { 204: z.null(), default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      // The invite never activated, so nothing anywhere attributes to
+      // this user — deleting the row is clean, and it is what kills the
+      // emailed link (the token resolves to a user that no longer
+      // exists). An activation racing this transaction can still write
+      // its credential row first; the cascade removes it, and revocation
+      // winning that race is the intended outcome — the Administrator
+      // said no.
+      await app.db.transaction(async (tx) => {
+        const [user] = await tx
+          .select(userColumns)
+          .from(users)
+          .where(eq(users.id, request.params.userId))
+          .limit(1)
+          .for("update");
+        if (!user) throw httpError(404, "No user exists with this id.");
+        const activated = await tx
+          .select({ id: accounts.id })
+          .from(accounts)
+          .where(eq(accounts.userId, user.id))
+          .limit(1);
+        if (activated.length > 0 || !(INVITABLE_ROLES as readonly string[]).includes(user.role)) {
+          throw httpError(409, "This user is not a pending invite.");
+        }
+        // The set-password tokens go with the row: better-auth keys a
+        // reset verification's value on the plain user id, and leaving
+        // one behind would turn a replay into a foreign-key 500 instead
+        // of a clean invalid-token refusal.
+        await tx.delete(verifications).where(eq(verifications.value, user.id));
+        await tx.delete(users).where(eq(users.id, user.id));
+        await recordActivity(tx, {
+          entityType: "user",
+          entityId: user.id,
+          actorId: request.user.id,
+          action: "user.invite_revoked",
+          visibility: "admin_only",
+          payload: { email: user.email, role: user.role },
+        });
+      });
+      return reply.status(204).send(null);
     },
   );
 
@@ -401,10 +620,209 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         });
       if (!provider) throw httpError(500, "The registered provider could not be read back.");
 
+      // Logged after the fact: the row itself was written by better-auth
+      // outside any transaction of ours, so exact atomicity is not on
+      // offer here. Credentials never enter the payload.
+      await recordActivity(app.db, {
+        entityType: "system",
+        actorId: request.user.id,
+        action: "sso_provider.registered",
+        visibility: "admin_only",
+        payload: { providerId: provider.providerId, issuer: provider.issuer, domain },
+      });
+
       return reply.status(201).send({
         provider,
         callbackUrl: registered.redirectURI,
       });
+    },
+  );
+
+  app.get(
+    "/auth/sso-providers",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "listSsoProviders",
+        summary:
+          "The registered OIDC identity providers (TECH-008), with their " +
+          "client IDs but never their secrets",
+        tags: ["auth"],
+        response: {
+          200: z.object({
+            providers: z.array(ProviderSchema.extend({ clientId: z.string().nullable() })),
+          }),
+          default: problemResponse,
+        },
+      },
+    },
+    async () => {
+      const rows = await app.db.select().from(ssoProviders).orderBy(ssoProviders.createdAt);
+      return {
+        providers: rows.map((row) => ({
+          id: row.id,
+          providerId: row.providerId,
+          issuer: row.issuer,
+          domain: row.domain,
+          clientId: oidcConfigOf(row).clientId ?? null,
+        })),
+      };
+    },
+  );
+
+  app.patch(
+    "/auth/sso-providers/:providerId",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "updateSsoProvider",
+        summary:
+          "Update the registered provider (TECH-008): omitted fields keep " +
+          "their stored values, endpoint discovery re-runs from the " +
+          "issuer, and a failed update leaves the provider untouched",
+        tags: ["auth"],
+        params: z.object({ providerId: z.string() }),
+        body: z
+          .object({
+            issuer: z.url().optional(),
+            /** Email domain(s) the IdP serves; comma-separated for several. */
+            domain: z.string().min(1).optional(),
+            clientId: z.string().min(1).optional(),
+            /** Omitted = keep the stored secret; present = rotate it. */
+            clientSecret: z.string().min(1).optional(),
+          })
+          .refine((body) => Object.values(body).some((value) => value !== undefined), {
+            message: "Provide at least one field to change.",
+          }),
+        response: {
+          200: z.object({
+            provider: ProviderSchema,
+            /** The stable redirect URL to paste into the IdP console. */
+            callbackUrl: z.string(),
+          }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => {
+      // better-auth has no update endpoint, and registering over an
+      // existing slug is refused — so an update is delete + re-register
+      // (which re-runs discovery against the possibly-new issuer). The
+      // advisory lock makes that sequence a cross-process critical
+      // section, so two concurrent updates cannot interleave their
+      // deletes and registrations; a caller that cannot take the lock
+      // has raced another update and answers 409.
+      const outcome = await tryWithAdvisoryLock(
+        app.db,
+        ADVISORY_LOCK.ssoProviderUpdate,
+        async () => {
+          const [existing] = await app.db
+            .select()
+            .from(ssoProviders)
+            .where(eq(ssoProviders.providerId, request.params.providerId))
+            .limit(1);
+          if (!existing) throw httpError(404, "No identity provider is registered under this ID.");
+          const stored = oidcConfigOf(existing);
+          const clientId = request.body.clientId ?? stored.clientId;
+          const clientSecret = request.body.clientSecret ?? stored.clientSecret;
+          // A row whose stored config lost its credentials cannot fall
+          // back to empty strings — that would re-register a provider
+          // no IdP will ever accept.
+          if (!clientId || !clientSecret) {
+            throw httpError(
+              400,
+              "The stored provider is missing client credentials — provide clientId and " +
+                "clientSecret to repair it.",
+            );
+          }
+          const merged = {
+            providerId: existing.providerId,
+            issuer: request.body.issuer ?? existing.issuer,
+            domain: (request.body.domain ?? existing.domain).toLowerCase(),
+            clientId,
+            clientSecret,
+          };
+
+          // The deleted row is put back verbatim if registration fails,
+          // so a typo does not cost the org its working provider. (A
+          // process crash between the delete and the restore can still
+          // lose the row — the lock bounds concurrency, not crashes.)
+          await app.db.delete(ssoProviders).where(eq(ssoProviders.id, existing.id));
+          let registered: { redirectURI: string };
+          try {
+            registered = await withTrustedIssuerOrigin(app.auth, merged.issuer, () =>
+              app.auth.api.registerSSOProvider({
+                body: {
+                  providerId: merged.providerId,
+                  issuer: merged.issuer,
+                  domain: merged.domain,
+                  oidcConfig: { clientId: merged.clientId, clientSecret: merged.clientSecret },
+                },
+                headers: fromNodeHeaders(request.headers),
+              }),
+            );
+          } catch (error) {
+            try {
+              await app.db.insert(ssoProviders).values(existing);
+            } catch (restoreError) {
+              // The registration error is the one the caller can act
+              // on; a failed restore must not replace it.
+              request.log.error({ err: restoreError }, "sso provider restore failed");
+            }
+            relayAuthError(error);
+          }
+
+          const [provider] = await app.db
+            .update(ssoProviders)
+            .set({ domainVerified: true, updatedAt: new Date() })
+            .where(eq(ssoProviders.providerId, merged.providerId))
+            .returning({
+              id: ssoProviders.id,
+              providerId: ssoProviders.providerId,
+              issuer: ssoProviders.issuer,
+              domain: ssoProviders.domain,
+            });
+          if (!provider) throw httpError(500, "The updated provider could not be read back.");
+
+          const changes: { field: string; old: unknown; new: unknown }[] = [];
+          if (provider.issuer !== existing.issuer) {
+            changes.push({ field: "issuer", old: existing.issuer, new: provider.issuer });
+          }
+          if (provider.domain !== existing.domain) {
+            changes.push({ field: "domain", old: existing.domain, new: provider.domain });
+          }
+          if (request.body.clientId !== undefined && request.body.clientId !== stored.clientId) {
+            // jsonb drops undefined keys; null survives and states
+            // "there was no previous value".
+            changes.push({
+              field: "clientId",
+              old: stored.clientId ?? null,
+              new: request.body.clientId,
+            });
+          }
+          // A provided secret counts as rotated — equality with the
+          // stored one is not worth checking, and the value never
+          // appears anywhere.
+          if (request.body.clientSecret !== undefined) {
+            changes.push({ field: "clientSecret", old: "[secret]", new: "[secret]" });
+          }
+          for (const change of changes) {
+            await recordActivity(app.db, {
+              entityType: "system",
+              actorId: request.user.id,
+              action: "sso_provider.updated",
+              visibility: "admin_only",
+              payload: { providerId: provider.providerId, ...change },
+            });
+          }
+
+          return { provider, callbackUrl: registered.redirectURI };
+        },
+      );
+      if (!outcome.acquired) {
+        throw httpError(409, "Another provider update is in progress. Try again.");
+      }
+      return outcome.result;
     },
   );
 
@@ -450,13 +868,33 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       // A plain column flip: enforcement reads org_settings on every
       // sign-in decision, so the switch takes effect immediately — and
       // ONLY at sign-in. Live sessions survive in both directions;
-      // archival and revocation are the tools for ending them.
-      const [row] = await app.db
-        .update(orgSettings)
-        .set({ authMode: request.body.mode, updatedAt: new Date() })
-        .returning({ mode: orgSettings.authMode });
-      if (!row) throw httpError(500, "org_settings has no row to update.");
-      return { mode: row.mode };
+      // archival and revocation are the tools for ending them. The flip
+      // and its DD-017 entry commit together, old value lock-read so a
+      // concurrent switch cannot make the audit trail lie.
+      const mode = await app.db.transaction(async (tx) => {
+        const [current] = await tx
+          .select({ id: orgSettings.id, authMode: orgSettings.authMode })
+          .from(orgSettings)
+          .limit(1)
+          .for("update");
+        if (!current) throw httpError(500, "org_settings has no row to update.");
+        if (current.authMode === request.body.mode) return current.authMode;
+        const [row] = await tx
+          .update(orgSettings)
+          .set({ authMode: request.body.mode, updatedAt: new Date() })
+          .where(eq(orgSettings.id, current.id))
+          .returning({ mode: orgSettings.authMode });
+        if (!row) throw httpError(500, "org_settings has no row to update.");
+        await recordActivity(tx, {
+          entityType: "system",
+          actorId: request.user.id,
+          action: "org_settings.updated",
+          visibility: "admin_only",
+          payload: { field: "authMode", old: current.authMode, new: row.mode },
+        });
+        return row.mode;
+      });
+      return { mode };
     },
   );
 
@@ -503,12 +941,31 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       // collapse; the policy check is case-insensitive anyway, so the
       // stored list is just its canonical spelling.
       const domains = [...new Set(request.body.domains.map((domain) => domain.toLowerCase()))];
-      const [row] = await app.db
-        .update(orgSettings)
-        .set({ allowedEmailDomains: domains, updatedAt: new Date() })
-        .returning({ domains: orgSettings.allowedEmailDomains });
-      if (!row) throw httpError(500, "org_settings has no row to update.");
-      return { domains: row.domains };
+      const stored = await app.db.transaction(async (tx) => {
+        const [current] = await tx
+          .select({ id: orgSettings.id, domains: orgSettings.allowedEmailDomains })
+          .from(orgSettings)
+          .limit(1)
+          .for("update");
+        if (!current) throw httpError(500, "org_settings has no row to update.");
+        // Order counts as change: the stored list is the canonical one.
+        if (JSON.stringify(current.domains) === JSON.stringify(domains)) return current.domains;
+        const [row] = await tx
+          .update(orgSettings)
+          .set({ allowedEmailDomains: domains, updatedAt: new Date() })
+          .where(eq(orgSettings.id, current.id))
+          .returning({ domains: orgSettings.allowedEmailDomains });
+        if (!row) throw httpError(500, "org_settings has no row to update.");
+        await recordActivity(tx, {
+          entityType: "system",
+          actorId: request.user.id,
+          action: "org_settings.updated",
+          visibility: "admin_only",
+          payload: { field: "allowedEmailDomains", old: current.domains, new: row.domains },
+        });
+        return row.domains;
+      });
+      return { domains: stored };
     },
   );
 
@@ -530,12 +987,36 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
-      const [row] = await app.db
-        .update(orgSettings)
-        .set({ magicLinkEnabled: request.body.magicLinkEnabled })
-        .returning({ magicLinkEnabled: orgSettings.magicLinkEnabled });
-      if (!row) throw httpError(500, "org_settings has no row to update.");
-      return { magicLinkEnabled: row.magicLinkEnabled };
+      const magicLinkEnabled = await app.db.transaction(async (tx) => {
+        const [current] = await tx
+          .select({ id: orgSettings.id, magicLinkEnabled: orgSettings.magicLinkEnabled })
+          .from(orgSettings)
+          .limit(1)
+          .for("update");
+        if (!current) throw httpError(500, "org_settings has no row to update.");
+        if (current.magicLinkEnabled === request.body.magicLinkEnabled) {
+          return current.magicLinkEnabled;
+        }
+        const [row] = await tx
+          .update(orgSettings)
+          .set({ magicLinkEnabled: request.body.magicLinkEnabled, updatedAt: new Date() })
+          .where(eq(orgSettings.id, current.id))
+          .returning({ magicLinkEnabled: orgSettings.magicLinkEnabled });
+        if (!row) throw httpError(500, "org_settings has no row to update.");
+        await recordActivity(tx, {
+          entityType: "system",
+          actorId: request.user.id,
+          action: "org_settings.updated",
+          visibility: "admin_only",
+          payload: {
+            field: "magicLinkEnabled",
+            old: current.magicLinkEnabled,
+            new: row.magicLinkEnabled,
+          },
+        });
+        return row.magicLinkEnabled;
+      });
+      return { magicLinkEnabled };
     },
   );
 

@@ -7,10 +7,18 @@
  */
 
 import { api } from "./api";
+import { configureFormatting } from "./format";
 
 export async function currentUser() {
   const { data, response } = await api.GET("/api/v1/me");
-  if (data) return data.user;
+  if (data) {
+    // DES-014 seeding lives here, not in a component: render must stay
+    // pure, and every guarded route resolves this loader before its
+    // first component formats a date. A timezone change re-runs it via
+    // the pane's revalidation.
+    configureFormatting({ timeZone: data.user.timezone ?? null });
+    return data.user;
+  }
   if (response.status === 401) return null;
   throw new Error(`The session check failed with status ${response.status}.`);
 }

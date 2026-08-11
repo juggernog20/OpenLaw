@@ -2,6 +2,12 @@
   "a11y.skipToContent": {
     "defaultMessage": "Skip to content"
   },
+  "action.cancel": {
+    "defaultMessage": "Cancel"
+  },
+  "action.continue": {
+    "defaultMessage": "Continue"
+  },
   "action.copied": {
     "defaultMessage": "Copied"
   },
@@ -13,6 +19,9 @@
   },
   "action.reload": {
     "defaultMessage": "Reload"
+  },
+  "action.save": {
+    "defaultMessage": "Save"
   },
   "app.pageTitle": {
     "defaultMessage": "{screen} · OpenLaw"
@@ -284,17 +293,329 @@
   "role.administrator": {
     "defaultMessage": "Administrator"
   },
+  "role.businessUser": {
+    "defaultMessage": "Business user"
+  },
   "role.contributor": {
     "defaultMessage": "Contributor"
   },
   "role.legalTeamMember": {
     "defaultMessage": "Legal team member"
   },
+  "settings.appearance.caption": {
+    "defaultMessage": "Theme is a personal preference — it doesn't affect other users."
+  },
+  "settings.appearance.theme": {
+    "defaultMessage": "Theme"
+  },
+  "settings.auth.addDomain": {
+    "defaultMessage": "Add"
+  },
+  "settings.auth.authentication": {
+    "defaultMessage": "Authentication"
+  },
+  "settings.auth.builtIn": {
+    "defaultMessage": "Built-in"
+  },
+  "settings.auth.builtIn.hint": {
+    "defaultMessage": "Staff sign in with email and password. Each user can add two-factor authentication (TOTP) from their profile."
+  },
+  "settings.auth.callback": {
+    "defaultMessage": "Paste this callback URL into your IdP console: {url}"
+  },
+  "settings.auth.clientId": {
+    "defaultMessage": "Client ID"
+  },
+  "settings.auth.clientSecret": {
+    "defaultMessage": "Client secret"
+  },
+  "settings.auth.domain": {
+    "defaultMessage": "Email domain"
+  },
+  "settings.auth.domainPlaceholder": {
+    "defaultMessage": "acme.example"
+  },
+  "settings.auth.domains": {
+    "defaultMessage": "Allowed email domains"
+  },
+  "settings.auth.issuer": {
+    "defaultMessage": "Issuer URL"
+  },
+  "settings.auth.issuerPlaceholder": {
+    "defaultMessage": "https://idp.example.com"
+  },
+  "settings.auth.magicLink": {
+    "defaultMessage": "Magic-link sign-in"
+  },
+  "settings.auth.magicLink.hint": {
+    "defaultMessage": "Business users sign in through emailed magic links — no password or IdP account needed."
+  },
+  "settings.auth.modeCaption": {
+    "defaultMessage": "Switching modes applies immediately and is recorded in the activity log."
+  },
+  "settings.auth.noDomains": {
+    "defaultMessage": "No domains allowed yet — the portal is closed."
+  },
+  "settings.auth.oidc": {
+    "defaultMessage": "Identity provider (OIDC)"
+  },
+  "settings.auth.oidc.hint": {
+    "defaultMessage": "Staff sign in through your identity provider — works with Okta, Microsoft Entra, Google Workspace, Keycloak, and Authentik."
+  },
+  "settings.auth.portal": {
+    "defaultMessage": "Portal access"
+  },
+  "settings.auth.portalLocked": {
+    "defaultMessage": "Magic links are the only portal sign-in method in built-in mode, so they can't be turned off."
+  },
+  "settings.auth.portalOptional": {
+    "defaultMessage": "Turn off to require SSO for everyone. Requesters would then need accounts in your identity provider to reach the portal."
+  },
+  "settings.auth.providerId": {
+    "defaultMessage": "Provider ID"
+  },
+  "settings.auth.providerIdPlaceholder": {
+    "defaultMessage": "okta"
+  },
+  "settings.auth.registerProvider": {
+    "defaultMessage": "Register provider"
+  },
+  "settings.auth.registerToSwitch": {
+    "defaultMessage": "Register your identity provider to finish the switch."
+  },
+  "settings.auth.removeDomain": {
+    "defaultMessage": "Remove {domain}"
+  },
+  "settings.auth.saveProvider": {
+    "defaultMessage": "Save provider"
+  },
+  "settings.auth.secret.hint": {
+    "defaultMessage": "Leave blank to keep the current secret. Paste a new value to rotate."
+  },
+  "settings.auth.secretPlaceholder": {
+    "defaultMessage": "••••••••••••••••"
+  },
+  "settings.auth.sessionsCaption": {
+    "defaultMessage": "The identity provider only authenticates — sessions stay in OpenLaw and remain revocable."
+  },
+  "settings.field.error": {
+    "defaultMessage": "The change could not be saved. Try again."
+  },
+  "settings.field.saved": {
+    "defaultMessage": "Saved"
+  },
+  "settings.field.saving": {
+    "defaultMessage": "Saving…"
+  },
+  "settings.general.locale": {
+    "defaultMessage": "Default locale"
+  },
+  "settings.general.locale.enUS": {
+    "defaultMessage": "English (United States)"
+  },
+  "settings.general.locale.hint": {
+    "defaultMessage": "English (United States) is the only available locale for now."
+  },
+  "settings.general.logo": {
+    "defaultMessage": "Logo"
+  },
+  "settings.general.name": {
+    "defaultMessage": "Organization name"
+  },
+  "settings.general.organization": {
+    "defaultMessage": "Organization"
+  },
+  "settings.general.timezone": {
+    "defaultMessage": "Default timezone"
+  },
+  "settings.general.timezone.hint": {
+    "defaultMessage": "Used for the daily digest and date displays until a user signs in."
+  },
+  "settings.general.upload": {
+    "defaultMessage": "Upload"
+  },
+  "settings.general.uploadLogo": {
+    "defaultMessage": "Upload a logo"
+  },
+  "settings.group.organization": {
+    "defaultMessage": "Organization"
+  },
+  "settings.group.personal": {
+    "defaultMessage": "Personal"
+  },
+  "settings.group.security": {
+    "defaultMessage": "Security"
+  },
+  "settings.profile.changePassword": {
+    "defaultMessage": "Change password"
+  },
+  "settings.profile.currentPassword": {
+    "defaultMessage": "Current password"
+  },
+  "settings.profile.email": {
+    "defaultMessage": "Email"
+  },
+  "settings.profile.fullName": {
+    "defaultMessage": "Full name"
+  },
+  "settings.profile.newPassword": {
+    "defaultMessage": "New password"
+  },
+  "settings.profile.password.error": {
+    "defaultMessage": "The password could not be changed. Check your current password and use at least 8 characters."
+  },
+  "settings.profile.passwordChanged": {
+    "defaultMessage": "Last changed {date}."
+  },
+  "settings.profile.passwordRevokesSessions": {
+    "defaultMessage": "Saving signs you out on your other devices."
+  },
+  "settings.profile.passwordSet": {
+    "defaultMessage": "A password is set."
+  },
+  "settings.profile.passwordTwoFactor": {
+    "defaultMessage": "Password & two-factor"
+  },
+  "settings.profile.photo": {
+    "defaultMessage": "Profile photo"
+  },
+  "settings.profile.photo.hint": {
+    "defaultMessage": "JPG or PNG, 1 MB max."
+  },
+  "settings.profile.reenroll": {
+    "defaultMessage": "Re-enroll"
+  },
+  "settings.profile.role": {
+    "defaultMessage": "Role"
+  },
+  "settings.profile.role.hint": {
+    "defaultMessage": "Roles are managed in Organization → Users."
+  },
+  "settings.profile.sessions": {
+    "defaultMessage": "Sessions"
+  },
+  "settings.profile.sessions.hint": {
+    "defaultMessage": "Ends every session except this one."
+  },
+  "settings.profile.signOutOthers": {
+    "defaultMessage": "Sign out other devices"
+  },
+  "settings.profile.timezone": {
+    "defaultMessage": "Timezone"
+  },
+  "settings.profile.timezone.hint": {
+    "defaultMessage": "Dates and times display in this timezone."
+  },
+  "settings.profile.twoFactor": {
+    "defaultMessage": "Two-factor authentication"
+  },
+  "settings.profile.twoFactorOff": {
+    "defaultMessage": "Two-factor is off — your password alone signs you in."
+  },
+  "settings.profile.twoFactorOn": {
+    "defaultMessage": "Two-factor is on — a code is required when you sign in with your password."
+  },
+  "settings.profile.upload": {
+    "defaultMessage": "Upload"
+  },
+  "settings.profile.uploadPhoto": {
+    "defaultMessage": "Upload a profile photo"
+  },
+  "settings.rail.label": {
+    "defaultMessage": "Settings sections"
+  },
+  "settings.section.appearance": {
+    "defaultMessage": "Appearance"
+  },
+  "settings.section.authentication": {
+    "defaultMessage": "Authentication"
+  },
+  "settings.section.general": {
+    "defaultMessage": "General"
+  },
+  "settings.section.profile": {
+    "defaultMessage": "Profile"
+  },
+  "settings.section.users": {
+    "defaultMessage": "Users"
+  },
+  "settings.title": {
+    "defaultMessage": "Settings"
+  },
+  "settings.users.active": {
+    "defaultMessage": "Active"
+  },
+  "settings.users.archive": {
+    "defaultMessage": "Archive {email}"
+  },
+  "settings.users.archived": {
+    "defaultMessage": "Archived"
+  },
+  "settings.users.changeRole": {
+    "defaultMessage": "{role} — change the role of {email}"
+  },
+  "settings.users.colActions": {
+    "defaultMessage": "Actions"
+  },
+  "settings.users.colLastActive": {
+    "defaultMessage": "Last active"
+  },
+  "settings.users.colRole": {
+    "defaultMessage": "Role"
+  },
+  "settings.users.colStatus": {
+    "defaultMessage": "Status"
+  },
+  "settings.users.colUser": {
+    "defaultMessage": "User"
+  },
+  "settings.users.count": {
+    "defaultMessage": "{count, plural, one {# user} other {# users}}"
+  },
+  "settings.users.invite": {
+    "defaultMessage": "Invite user"
+  },
+  "settings.users.inviteError": {
+    "defaultMessage": "The invite could not be sent."
+  },
+  "settings.users.inviteName": {
+    "defaultMessage": "Display name"
+  },
+  "settings.users.inviteRole": {
+    "defaultMessage": "Role"
+  },
+  "settings.users.inviteSubmit": {
+    "defaultMessage": "Send invite"
+  },
+  "settings.users.inviteTitle": {
+    "defaultMessage": "Invite user"
+  },
+  "settings.users.invited": {
+    "defaultMessage": "Invited"
+  },
+  "settings.users.resend": {
+    "defaultMessage": "Resend the invite to {email}"
+  },
+  "settings.users.restore": {
+    "defaultMessage": "Restore {email}"
+  },
+  "settings.users.revoke": {
+    "defaultMessage": "Revoke the invite to {email}"
+  },
+  "settings.users.revokeSessions": {
+    "defaultMessage": "Revoke all sessions of {email}"
+  },
+  "settings.users.showArchived": {
+    "defaultMessage": "Show archived"
+  },
   "shell.brand": {
     "defaultMessage": "openlaw"
   },
   "shell.nav.open": {
     "defaultMessage": "Open navigation"
+  },
+  "shell.nav.primary": {
+    "defaultMessage": "Primary"
   },
   "shell.nav.title": {
     "defaultMessage": "Navigation"
@@ -305,11 +626,8 @@
   "shell.search.placeholder": {
     "defaultMessage": "Type {key} to search"
   },
-  "shell.userMenu.theme": {
-    "defaultMessage": "Theme"
-  },
-  "shell.userMenu.twoFactor": {
-    "defaultMessage": "Two-factor authentication"
+  "shell.userMenu.settings": {
+    "defaultMessage": "Settings"
   },
   "shell.workspace": {
     "defaultMessage": "workspace"
@@ -322,6 +640,18 @@
   },
   "theme.warm": {
     "defaultMessage": "Warm"
+  },
+  "timezone.browserDefault": {
+    "defaultMessage": "Use browser timezone"
+  },
+  "timezone.listLabel": {
+    "defaultMessage": "Timezones"
+  },
+  "timezone.noMatches": {
+    "defaultMessage": "No matching timezones."
+  },
+  "timezone.searchPlaceholder": {
+    "defaultMessage": "Search timezones"
   },
   "welcome.auth.builtIn": {
     "defaultMessage": "Built-in sign-in"

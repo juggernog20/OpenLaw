@@ -124,6 +124,10 @@ Organization-wide settings. Exactly one row, seeded by the migration that create
 | `auth_mode`                | text (enum) | `built_in` \| `oidc` per **TECH-008**; seeded `built_in`                                              |
 | `magic_link_enabled`       | boolean     | DD-010's portal floor; host-closable where SSO-only is policy. Seeded `true`                          |
 | `allowed_email_domains`    | jsonb       | lower-cased domain strings gating magic-link issuance + JIT provisioning. Empty = nobody; seeded `[]` |
+| `name`                     | text        | org identity per **SET-001** (General pane); seeded `''` until an Administrator names the org         |
+| `logo`                     | text        | org logo as a `data:` URI; NULL until one is uploaded                                                 |
+| `default_locale`           | text        | BCP 47 tag; the display locale until per-user locales exist (**DES-013**); seeded `en-US`             |
+| `default_timezone`         | text        | IANA zone name; the display timezone until a user sets their own (**DES-014**); seeded `UTC`          |
 | `created_at`, `updated_at` | timestamptz |                                                                                                       |
 
 No `archived_at`: the row is neither creatable nor deletable, only edited.

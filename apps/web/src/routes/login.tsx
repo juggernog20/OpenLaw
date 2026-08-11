@@ -11,11 +11,12 @@
  * dead affordance.
  */
 
-import { useState, type FormEvent } from "react";
+import { useState, type SubmitEvent as FormSubmitEvent } from "react";
 import { redirect, useLoaderData, useNavigate, useSearchParams } from "react-router";
-import { FormattedMessage, useIntl } from "react-intl";
+import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
+import { field } from "../lib/forms";
 import { networkError } from "../lib/messages";
 import { currentUser, needsSetup } from "../lib/session";
 import { Alert } from "../components/ui/alert";
@@ -24,6 +25,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { PageTitle } from "../components/page-title";
+
+const PAGE_TITLES = defineMessages({
+  login: { id: "auth.login.title", defaultMessage: "Sign in" },
+  magic: { id: "auth.magic.title", defaultMessage: "Get a sign-in link" },
+  magicSent: { id: "auth.magicSent.title", defaultMessage: "Check your email" },
+});
 
 export async function loginLoader() {
   if (await currentUser()) return redirect("/");
@@ -65,7 +72,7 @@ export function LoginPage() {
     setView(next);
   }
 
-  async function submitPassword(event: FormEvent<HTMLFormElement>) {
+  async function submitPassword(event: FormSubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     setBusy(true);
@@ -73,7 +80,7 @@ export function LoginPage() {
     try {
       const res = await authClient.signIn.email({
         email,
-        password: String(form.get("password") ?? ""),
+        password: field(form, "password"),
       });
       if (res.error) {
         // 401 is the deliberately unrevealing wrong-credentials answer;
@@ -104,7 +111,7 @@ export function LoginPage() {
     }
   }
 
-  async function submitMagicLink(event: FormEvent<HTMLFormElement>) {
+  async function submitMagicLink(event: FormSubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setError(null);
@@ -161,13 +168,8 @@ export function LoginPage() {
 
   // The magic-link views swap the visible heading; the document
   // title follows it (DES-011).
-  const pageTitleMessage =
-    view === "magicSent"
-      ? { id: "auth.magicSent.title", defaultMessage: "Check your email" }
-      : view === "magic"
-        ? { id: "auth.magic.title", defaultMessage: "Get a sign-in link" }
-        : { id: "auth.login.title", defaultMessage: "Sign in" };
-  const pageTitle = <PageTitle title={intl.formatMessage(pageTitleMessage)} />;
+  const pageTitleKey = view === "magicSent" || view === "magic" ? view : "login";
+  const pageTitle = <PageTitle title={intl.formatMessage(PAGE_TITLES[pageTitleKey])} />;
 
   if (view === "magicSent") {
     return (

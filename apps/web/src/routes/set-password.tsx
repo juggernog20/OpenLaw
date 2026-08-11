@@ -8,10 +8,11 @@
  * is required here.
  */
 
-import { useState, type FormEvent } from "react";
+import { useState, type SubmitEvent as FormSubmitEvent } from "react";
 import { Link, useSearchParams } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { authClient } from "../lib/auth-client";
+import { field } from "../lib/forms";
 import { networkError } from "../lib/messages";
 import { Alert } from "../components/ui/alert";
 import { Button } from "../components/ui/button";
@@ -28,12 +29,12 @@ export function SetPasswordPage() {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormSubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!token) return;
     const form = new FormData(event.currentTarget);
-    const newPassword = String(form.get("password") ?? "");
-    if (newPassword !== String(form.get("confirm") ?? "")) {
+    const newPassword = field(form, "password");
+    if (newPassword !== field(form, "confirm")) {
       setError(
         intl.formatMessage({
           id: "auth.setPassword.error.mismatch",

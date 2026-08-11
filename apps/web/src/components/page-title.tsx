@@ -9,7 +9,7 @@
 
 import { useIntl } from "react-intl";
 
-export function PageTitle({ title }: { title: string }) {
+export function PageTitle({ title }: Readonly<{ title: string }>) {
   const intl = useIntl();
   return (
     <title>

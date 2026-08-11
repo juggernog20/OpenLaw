@@ -158,6 +158,8 @@
   --width-activitybar-indicator: 3px; /* active-applet strip on the bar's leading edge (DES-016, #47) */
   --width-panel: 320px; /* expanded applet panel per DES-016 */
   --height-confidential-banner: 36px; /* per DES-009 */
+  --height-section-header: 38px; /* settings-card header strip (ST1/ST4 mocks) */
+  --width-settings-card: 45rem; /* settings-card max width (ST1/ST4 mocks) */
 
   /* ------------------------------------------------------------------ *
    * Focus ring — the default keyboard-focus treatment (M4 spec, #40).  *

@@ -10,12 +10,14 @@ import { fileURLToPath } from "node:url";
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
+import * as activitySchema from "./schema/activity.js";
 import * as authSchema from "./schema/auth.js";
 import * as orgSchema from "./schema/org.js";
 
+export * from "./schema/activity.js";
 export * from "./schema/auth.js";
 export * from "./schema/org.js";
-export const schema = { ...authSchema, ...orgSchema };
+export const schema = { ...activitySchema, ...authSchema, ...orgSchema };
 
 // Query operators re-exported so consumers use this package's drizzle-orm
 // instance — a second copy (peer-variant split) makes SQL types incompatible.
@@ -47,6 +49,8 @@ export const ADVISORY_LOCK = {
   migrations: 4101001,
   /** Held across the first-run setup check-and-create (TECH-008). */
   firstRunSetup: 4101002,
+  /** Held across an SSO provider update's delete + re-register (TECH-008). */
+  ssoProviderUpdate: 4101003,
 } as const;
 
 /**

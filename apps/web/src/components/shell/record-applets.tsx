@@ -23,11 +23,11 @@ import type { Applet, PanelApplet } from "./applets";
 export function RecordApplets({
   applets,
   children,
-}: {
+}: Readonly<{
   applets: readonly Applet[];
   /** The record's own content, beside the panel. */
   children: ReactNode;
-}) {
+}>) {
   const intl = useIntl();
   const panelId = useId();
   const [expandedId, setExpandedId] = useState<string | null>(null);
