@@ -443,15 +443,16 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    get?: never;
+    /** One contract type — the read behind the type editor (#84) */
+    get: operations["getContractType"];
     put?: never;
     post?: never;
     /** Hard-delete a contract type; `other` refuses (CTR-002), and once contracts exist (M8) an in-use type will refuse too */
     delete: operations["deleteContractType"];
     options?: never;
     head?: never;
-    /** Rename a contract type's display name (DES-017 in-place rename); the slug never changes, and even `other` may rename */
-    patch: operations["renameContractType"];
+    /** Rename a contract type's display name (DES-017 in-place rename) or edit its description (#84); the slug never changes, and even `other` may rename */
+    patch: operations["updateContractType"];
     trace?: never;
   };
   "/api/v1/contract-types/order": {
@@ -499,6 +500,59 @@ export interface paths {
     put?: never;
     /** Restore an archived contract type (SET-003's recovery story) to the end of the display order */
     post: operations["restoreContractType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contract-types/{id}/fields": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One contract type's attached fields in per-type order (CTR-016) — the type editor's Attached fields card */
+    get: operations["listAttachedFields"];
+    put?: never;
+    /** Attach a catalog field to a contract type: contract-scoped and global fields only (CTR-016), appended to the per-type order, optional from the start unless isRequired says otherwise */
+    post: operations["attachField"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contract-types/{id}/fields/{fieldId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Detach a field from a contract type: the join row goes, the catalog definition and stored values stay (MTR-014) */
+    delete: operations["detachField"];
+    options?: never;
+    head?: never;
+    /** Set an attachment's required flag: per attachment, so a field can be required for NDAs and optional elsewhere (CTR-016); hard enforcement arrives with contract records (M8) */
+    patch: operations["setAttachedFieldRequired"];
+    trace?: never;
+  };
+  "/api/v1/contract-types/{id}/fields/order": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Apply a full permutation of one type's attached fields (SET-003 immediate apply); per-type orders renumber from 1 */
+    put: operations["reorderAttachedFields"];
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -1935,6 +1989,7 @@ export interface operations {
               id: string;
               slug: string;
               displayName: string;
+              description: string | null;
               displayOrder: number;
               isSystemDefault: boolean;
               archivedAt: string | null;
@@ -1980,6 +2035,49 @@ export interface operations {
               id: string;
               slug: string;
               displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getContractType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contractType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
               displayOrder: number;
               isSystemDefault: boolean;
               archivedAt: string | null;
@@ -2028,7 +2126,7 @@ export interface operations {
       };
     };
   };
-  renameContractType: {
+  updateContractType: {
     parameters: {
       query?: never;
       header?: never;
@@ -2040,7 +2138,8 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": {
-          displayName: string;
+          displayName?: string;
+          description?: string | null;
         };
       };
     };
@@ -2056,6 +2155,7 @@ export interface operations {
               id: string;
               slug: string;
               displayName: string;
+              description: string | null;
               displayOrder: number;
               isSystemDefault: boolean;
               archivedAt: string | null;
@@ -2101,6 +2201,7 @@ export interface operations {
               id: string;
               slug: string;
               displayName: string;
+              description: string | null;
               displayOrder: number;
               isSystemDefault: boolean;
               archivedAt: string | null;
@@ -2148,6 +2249,7 @@ export interface operations {
               id: string;
               slug: string;
               displayName: string;
+              description: string | null;
               displayOrder: number;
               isSystemDefault: boolean;
               archivedAt: string | null;
@@ -2189,11 +2291,270 @@ export interface operations {
               id: string;
               slug: string;
               displayName: string;
+              description: string | null;
               displayOrder: number;
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listAttachedFields: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            attachedFields: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              moduleScope: "contract" | "global";
+              displayOrder: number;
+              isRequired: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  attachField: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          fieldId: string;
+          isRequired?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            attachedField: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              moduleScope: "contract" | "global";
+              displayOrder: number;
+              isRequired: boolean;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  detachField: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        fieldId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setAttachedFieldRequired: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        fieldId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          isRequired: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            attachedField: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              moduleScope: "contract" | "global";
+              displayOrder: number;
+              isRequired: boolean;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  reorderAttachedFields: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          fieldIds: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            attachedFields: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              moduleScope: "contract" | "global";
+              displayOrder: number;
+              isRequired: boolean;
+            }[];
           };
         };
       };

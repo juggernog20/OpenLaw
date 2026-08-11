@@ -515,3 +515,98 @@ describe("archive and restore (values retained by rule — MTR-014)", () => {
     expect(res.statusCode, res.body).toBe(404);
   });
 });
+
+describe("the armed attachment seams (#84)", () => {
+  /** A live contract type's id, via the types route. */
+  const typeIdBySlug = async (slug: string): Promise<string> => {
+    const res = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/contract-types",
+      cookies: adminCookies,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    const row = (res.json().contractTypes as { id: string; slug: string }[]).find(
+      (candidate) => candidate.slug === slug,
+    );
+    expect(row, slug).toBeDefined();
+    return row!.id;
+  };
+
+  const attachTo = async (typeId: string, fieldId: string) => {
+    const res = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contract-types/${typeId}/fields`,
+      cookies: adminCookies,
+      payload: { fieldId },
+    });
+    expect(res.statusCode, res.body).toBe(201);
+  };
+
+  it("counts type attachments as usage, per field", async () => {
+    const row = await createdField({
+      displayName: "Attachment counted",
+      moduleScope: "contract",
+      fieldType: "text",
+      fieldTag: "legal",
+    });
+    expect(row.inUseCount).toBe(0);
+
+    const nda = await typeIdBySlug("nda");
+    const msa = await typeIdBySlug("msa");
+    await attachTo(nda, row.id);
+    await attachTo(msa, row.id);
+
+    const counted = (await listFields()).find((candidate) => candidate.id === row.id);
+    expect(counted!.inUseCount).toBe(2);
+
+    const detach = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/contract-types/${msa}/fields/${row.id}`,
+      cookies: adminCookies,
+    });
+    expect(detach.statusCode, detach.body).toBe(204);
+    const recounted = (await listFields()).find((candidate) => candidate.id === row.id);
+    expect(recounted!.inUseCount).toBe(1);
+  });
+
+  it("records the real usage count when an attached field is archived", async () => {
+    const row = await createdField({
+      displayName: "Archived while attached",
+      moduleScope: "contract",
+      fieldType: "text",
+      fieldTag: "legal",
+    });
+    await attachTo(await typeIdBySlug("nda"), row.id);
+
+    const res = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/fields/${row.id}/archive`,
+      cookies: adminCookies,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    const entries = await activityEntries(["field.archived"]);
+    expect(entries.at(-1)!.payload).toMatchObject({
+      slug: "archived_while_attached",
+      inUseCount: 1,
+    });
+  });
+
+  it("still narrows global → contract while contract types attach the field — the guard counts other modules only", async () => {
+    const row = await createdField({
+      displayName: "Narrow while attached",
+      moduleScope: "global",
+      fieldType: "text",
+      fieldTag: "legal",
+    });
+    await attachTo(await typeIdBySlug("nda"), row.id);
+
+    const res = await harness.app.inject({
+      method: "PUT",
+      url: `/api/v1/fields/${row.id}/scope`,
+      cookies: adminCookies,
+      payload: { moduleScope: "contract" },
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().field.moduleScope).toBe("contract");
+  });
+});

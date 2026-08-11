@@ -2250,6 +2250,16 @@
                           "displayName": {
                             "type": "string"
                           },
+                          "description": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "displayOrder": {
                             "type": "integer",
                             "minimum": -9007199254740991,
@@ -2280,6 +2290,7 @@
                           "id",
                           "slug",
                           "displayName",
+                          "description",
                           "displayOrder",
                           "isSystemDefault",
                           "archivedAt",
@@ -2349,6 +2360,16 @@
                         "displayName": {
                           "type": "string"
                         },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "displayOrder": {
                           "type": "integer",
                           "minimum": -9007199254740991,
@@ -2379,6 +2400,7 @@
                         "id",
                         "slug",
                         "displayName",
+                        "description",
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
@@ -2407,9 +2429,110 @@
       }
     },
     "/api/v1/contract-types/{id}": {
+      "get": {
+        "operationId": "getContractType",
+        "summary": "One contract type — the read behind the type editor (#84)",
+        "tags": ["contract-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "contractType": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["contractType"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
       "patch": {
-        "operationId": "renameContractType",
-        "summary": "Rename a contract type's display name (DES-017 in-place rename); the slug never changes, and even `other` may rename",
+        "operationId": "updateContractType",
+        "summary": "Rename a contract type's display name (DES-017 in-place rename) or edit its description (#84); the slug never changes, and even `other` may rename",
         "tags": ["contract-types"],
         "requestBody": {
           "required": true,
@@ -2422,9 +2545,20 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 100
+                  },
+                  "description": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 },
-                "required": ["displayName"]
+                "additionalProperties": false
               }
             }
           }
@@ -2459,6 +2593,16 @@
                         "displayName": {
                           "type": "string"
                         },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "displayOrder": {
                           "type": "integer",
                           "minimum": -9007199254740991,
@@ -2489,6 +2633,7 @@
                         "id",
                         "slug",
                         "displayName",
+                        "description",
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
@@ -2593,6 +2738,16 @@
                           "displayName": {
                             "type": "string"
                           },
+                          "description": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "displayOrder": {
                             "type": "integer",
                             "minimum": -9007199254740991,
@@ -2623,6 +2778,7 @@
                           "id",
                           "slug",
                           "displayName",
+                          "description",
                           "displayOrder",
                           "isSystemDefault",
                           "archivedAt",
@@ -2701,6 +2857,16 @@
                         "displayName": {
                           "type": "string"
                         },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "displayOrder": {
                           "type": "integer",
                           "minimum": -9007199254740991,
@@ -2731,6 +2897,7 @@
                         "id",
                         "slug",
                         "displayName",
+                        "description",
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
@@ -2793,6 +2960,16 @@
                         "displayName": {
                           "type": "string"
                         },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "displayOrder": {
                           "type": "integer",
                           "minimum": -9007199254740991,
@@ -2823,6 +3000,7 @@
                         "id",
                         "slug",
                         "displayName",
+                        "description",
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
@@ -2832,6 +3010,483 @@
                     }
                   },
                   "required": ["contractType"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contract-types/{id}/fields": {
+      "get": {
+        "operationId": "listAttachedFields",
+        "summary": "One contract type's attached fields in per-type order (CTR-016) — the type editor's Attached fields card",
+        "tags": ["contract-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "attachedFields": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "fieldId": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "fieldType": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "long_text",
+                              "number",
+                              "date",
+                              "boolean",
+                              "single_select",
+                              "multi_select",
+                              "user",
+                              "entity"
+                            ]
+                          },
+                          "moduleScope": {
+                            "type": "string",
+                            "enum": ["contract", "global"]
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "isRequired": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "fieldId",
+                          "slug",
+                          "displayName",
+                          "fieldType",
+                          "moduleScope",
+                          "displayOrder",
+                          "isRequired"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["attachedFields"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "attachField",
+        "summary": "Attach a catalog field to a contract type: contract-scoped and global fields only (CTR-016), appended to the per-type order, optional from the start unless isRequired says otherwise",
+        "tags": ["contract-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fieldId": {
+                    "type": "string"
+                  },
+                  "isRequired": {
+                    "type": "boolean"
+                  }
+                },
+                "required": ["fieldId"]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "attachedField": {
+                      "type": "object",
+                      "properties": {
+                        "fieldId": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "fieldType": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "long_text",
+                            "number",
+                            "date",
+                            "boolean",
+                            "single_select",
+                            "multi_select",
+                            "user",
+                            "entity"
+                          ]
+                        },
+                        "moduleScope": {
+                          "type": "string",
+                          "enum": ["contract", "global"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isRequired": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "fieldId",
+                        "slug",
+                        "displayName",
+                        "fieldType",
+                        "moduleScope",
+                        "displayOrder",
+                        "isRequired"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["attachedField"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contract-types/{id}/fields/{fieldId}": {
+      "patch": {
+        "operationId": "setAttachedFieldRequired",
+        "summary": "Set an attachment's required flag: per attachment, so a field can be required for NDAs and optional elsewhere (CTR-016); hard enforcement arrives with contract records (M8)",
+        "tags": ["contract-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "isRequired": {
+                    "type": "boolean"
+                  }
+                },
+                "required": ["isRequired"]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "fieldId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "attachedField": {
+                      "type": "object",
+                      "properties": {
+                        "fieldId": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "fieldType": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "long_text",
+                            "number",
+                            "date",
+                            "boolean",
+                            "single_select",
+                            "multi_select",
+                            "user",
+                            "entity"
+                          ]
+                        },
+                        "moduleScope": {
+                          "type": "string",
+                          "enum": ["contract", "global"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isRequired": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "fieldId",
+                        "slug",
+                        "displayName",
+                        "fieldType",
+                        "moduleScope",
+                        "displayOrder",
+                        "isRequired"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["attachedField"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "detachField",
+        "summary": "Detach a field from a contract type: the join row goes, the catalog definition and stored values stay (MTR-014)",
+        "tags": ["contract-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "fieldId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contract-types/{id}/fields/order": {
+      "put": {
+        "operationId": "reorderAttachedFields",
+        "summary": "Apply a full permutation of one type's attached fields (SET-003 immediate apply); per-type orders renumber from 1",
+        "tags": ["contract-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fieldIds": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": ["fieldIds"]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "attachedFields": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "fieldId": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "fieldType": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "long_text",
+                              "number",
+                              "date",
+                              "boolean",
+                              "single_select",
+                              "multi_select",
+                              "user",
+                              "entity"
+                            ]
+                          },
+                          "moduleScope": {
+                            "type": "string",
+                            "enum": ["contract", "global"]
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "isRequired": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "fieldId",
+                          "slug",
+                          "displayName",
+                          "fieldType",
+                          "moduleScope",
+                          "displayOrder",
+                          "isRequired"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["attachedFields"],
                   "additionalProperties": false
                 }
               }
