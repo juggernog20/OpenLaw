@@ -38,6 +38,7 @@
   /* Brand */
   --accent: #f78166;
   --cta-primary: #1f883d;
+  --cta-danger: #cf222e;
 
   /* Status — paired bg + fg */
   --status-success-bg: #dafbe1;

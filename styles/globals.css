@@ -57,6 +57,7 @@
    * ------------------------------------------------------------------ */
   --color-accent: var(--accent);
   --color-cta-primary: var(--cta-primary);
+  --color-cta-danger: var(--cta-danger);
 
   /* ------------------------------------------------------------------ *
    * Status — paired bg + fg, 8 families.                               *

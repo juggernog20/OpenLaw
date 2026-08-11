@@ -418,6 +418,93 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/contract-types": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The contract-type taxonomy in display order (CTR-002); archived rows only with includeArchived=true */
+    get: operations["listContractTypes"];
+    put?: never;
+    /** Add a contract type: the slug is derived here, once, and is immutable after creation; the row appends to the display order */
+    post: operations["createContractType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contract-types/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Hard-delete a contract type; `other` refuses (CTR-002), and once contracts exist (M8) an in-use type will refuse too */
+    delete: operations["deleteContractType"];
+    options?: never;
+    head?: never;
+    /** Rename a contract type's display name (DES-017 in-place rename); the slug never changes, and even `other` may rename */
+    patch: operations["renameContractType"];
+    trace?: never;
+  };
+  "/api/v1/contract-types/order": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs */
+    put: operations["reorderContractTypes"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contract-types/{id}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Archive a contract type (SET-003 guarded): it leaves pickers and the default list; nothing is deleted; `other` refuses */
+    post: operations["archiveContractType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contract-types/{id}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Restore an archived contract type (SET-003's recovery story) to the end of the display order */
+    post: operations["restoreContractType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1639,6 +1726,301 @@ export interface operations {
             /** @enum {boolean} */
             delivered: true;
             to: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listContractTypes: {
+    parameters: {
+      query?: {
+        includeArchived?: "true" | "false";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contractTypes: {
+              id: string;
+              slug: string;
+              displayName: string;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createContractType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contractType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteContractType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  renameContractType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contractType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  reorderContractTypes: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          ids: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contractTypes: {
+              id: string;
+              slug: string;
+              displayName: string;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  archiveContractType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          reassignToId?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contractType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  restoreContractType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contractType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
           };
         };
       };

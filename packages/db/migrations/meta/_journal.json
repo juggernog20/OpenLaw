@@ -57,6 +57,13 @@
       "when": 1786433704100,
       "tag": "0007_timezone",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1786470787772,
+      "tag": "0008_contract_types",
+      "breakpoints": true
     }
   ]
 }

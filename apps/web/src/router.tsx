@@ -16,6 +16,11 @@ import { LoginPage, loginLoader } from "./routes/login";
 import { SetPasswordPage } from "./routes/set-password";
 import { SettingsLayout, settingsIndexLoader, settingsLoader } from "./routes/settings";
 import { SettingsAppearancePage } from "./routes/settings-appearance";
+import {
+  SettingsContractTypesPage,
+  settingsContractsIndexLoader,
+  settingsContractTypesLoader,
+} from "./routes/settings-contract-types";
 import { SettingsGeneralPage, settingsGeneralLoader } from "./routes/settings-general";
 import { SettingsUsersPage, settingsUsersLoader } from "./routes/settings-users";
 import {
@@ -69,6 +74,14 @@ export const routes: RouteObject[] = [
         path: "authentication",
         loader: settingsAuthenticationLoader,
         element: <SettingsAuthenticationPage />,
+      },
+      // The section URL forwards to its first pane, so the rail's
+      // Contracts entry and deep links share one canonical address.
+      { path: "contracts", loader: settingsContractsIndexLoader, element: <></> },
+      {
+        path: "contracts/types",
+        loader: settingsContractTypesLoader,
+        element: <SettingsContractTypesPage />,
       },
     ],
   },

@@ -398,6 +398,72 @@
   "settings.auth.sessionsCaption": {
     "defaultMessage": "The identity provider only authenticates — sessions stay in OpenLaw and remain revocable."
   },
+  "settings.contractTypes.add": {
+    "defaultMessage": "Add type"
+  },
+  "settings.contractTypes.addName": {
+    "defaultMessage": "New type name"
+  },
+  "settings.contractTypes.archive": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.contractTypes.archiveError": {
+    "defaultMessage": "The type could not be archived."
+  },
+  "settings.contractTypes.archiveSubmit": {
+    "defaultMessage": "Archive type"
+  },
+  "settings.contractTypes.archiveTitle": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.contractTypes.archiveWarning": {
+    "defaultMessage": "{count, plural, =0 {{name} is not used by any contracts — it can be archived without reassignment.} one {{name} is used by # contract. Pick a replacement type — that contract moves to it when the type is archived.} other {{name} is used by # contracts. Pick a replacement type — those contracts move to it when the type is archived.}}"
+  },
+  "settings.contractTypes.archivedPill": {
+    "defaultMessage": "Archived"
+  },
+  "settings.contractTypes.auditNote": {
+    "defaultMessage": "The change applies immediately and is recorded in the audit log."
+  },
+  "settings.contractTypes.count": {
+    "defaultMessage": "{count, plural, one {# type} other {# types}}"
+  },
+  "settings.contractTypes.help": {
+    "defaultMessage": "Drag to reorder. Archiving a type in use asks for a replacement; Other can't be archived."
+  },
+  "settings.contractTypes.inUse": {
+    "defaultMessage": "{count, plural, one {# contract} other {# contracts}}"
+  },
+  "settings.contractTypes.locked": {
+    "defaultMessage": "{name} is system-protected and can't be archived"
+  },
+  "settings.contractTypes.moved": {
+    "defaultMessage": "{name} moved to position {position} of {total}."
+  },
+  "settings.contractTypes.pageTitle": {
+    "defaultMessage": "Contract types"
+  },
+  "settings.contractTypes.reassignLabel": {
+    "defaultMessage": "Reassign {count, plural, =0 {contracts} one {# contract} other {# contracts}} to"
+  },
+  "settings.contractTypes.reassignNone": {
+    "defaultMessage": "No reassignment"
+  },
+  "settings.contractTypes.renameLabel": {
+    "defaultMessage": "Rename {name}"
+  },
+  "settings.contractTypes.reorder": {
+    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
+  },
+  "settings.contractTypes.restore": {
+    "defaultMessage": "Restore {name}"
+  },
+  "settings.contractTypes.showArchived": {
+    "defaultMessage": "Show archived"
+  },
+  "settings.contractTypes.title": {
+    "defaultMessage": "Contract types"
+  },
   "settings.field.error": {
     "defaultMessage": "The change could not be saved. Try again."
   },
@@ -529,6 +595,9 @@
   },
   "settings.section.authentication": {
     "defaultMessage": "Authentication"
+  },
+  "settings.section.contracts": {
+    "defaultMessage": "Contracts"
   },
   "settings.section.general": {
     "defaultMessage": "General"

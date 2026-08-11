@@ -24,6 +24,7 @@ const buttonVariants = cva(
           "bg-cta-primary font-semibold text-on-cta hover:brightness-95 active:brightness-90",
         secondary:
           "border border-border-default bg-control font-medium text-primary hover:brightness-95 active:brightness-90",
+        danger: "bg-cta-danger font-semibold text-on-cta hover:brightness-95 active:brightness-90",
         ghost: "font-medium text-primary hover:bg-control",
         link: "font-medium text-link underline-offset-4 hover:underline",
       },
