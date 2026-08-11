@@ -363,7 +363,9 @@ export function typeFieldRoutes(config: TypeFieldRoutesConfig): FastifyPluginAsy
           const type = await lockedType(tx, request.params.id);
           const [detached] = await tx
             .delete(joinTable)
-            .where(and(eq(joinTable.typeId, type.id), eq(joinTable.fieldId, request.params.fieldId)))
+            .where(
+              and(eq(joinTable.typeId, type.id), eq(joinTable.fieldId, request.params.fieldId)),
+            )
             .returning();
           if (!detached) throw httpError(404, "This field is not attached to this type.");
           const [field] = await tx

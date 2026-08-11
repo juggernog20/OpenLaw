@@ -12,7 +12,16 @@
  * are hidden everywhere; stored values are always retained (MTR-014).
  */
 
-import { boolean, check, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  check,
+  integer,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { uuidPk } from "./helpers.js";
 

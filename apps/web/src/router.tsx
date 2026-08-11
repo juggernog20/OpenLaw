@@ -33,6 +33,15 @@ import {
   settingsContractsIndexLoader,
   settingsContractTypesLoader,
 } from "./routes/settings-contract-types";
+import {
+  SettingsMatterTypeEditorPage,
+  settingsMatterTypeEditorLoader,
+} from "./routes/settings-matter-type-editor";
+import {
+  SettingsMatterTypesPage,
+  settingsMattersIndexLoader,
+  settingsMatterTypesLoader,
+} from "./routes/settings-matter-types";
 import { SettingsGeneralPage, settingsGeneralLoader } from "./routes/settings-general";
 import { SettingsUsersPage, settingsUsersLoader } from "./routes/settings-users";
 import {
@@ -87,8 +96,20 @@ export const routes: RouteObject[] = [
         loader: settingsAuthenticationLoader,
         element: <SettingsAuthenticationPage />,
       },
-      // The section URL forwards to its first pane, so the rail's
-      // Contracts entry and deep links share one canonical address.
+      // Each section URL forwards to its first pane, so the rail's
+      // entries and deep links share one canonical address.
+      { path: "matters", loader: settingsMattersIndexLoader, element: <></> },
+      {
+        path: "matters/types",
+        loader: settingsMatterTypesLoader,
+        element: <SettingsMatterTypesPage />,
+      },
+      {
+        // #85: each type row opens its own editor screen (ST15).
+        path: "matters/types/:typeId",
+        loader: settingsMatterTypeEditorLoader,
+        element: <SettingsMatterTypeEditorPage />,
+      },
       { path: "contracts", loader: settingsContractsIndexLoader, element: <></> },
       {
         path: "contracts/types",
