@@ -30,6 +30,7 @@ import { HttpError, PROBLEM_CONTENT_TYPE, type Problem } from "./lib/problem.js"
 import type { MailerResolver } from "./lib/mailer.js";
 import { metaRoutes } from "./modules/meta/routes.js";
 import { authRoutes } from "./modules/auth/routes.js";
+import { contractStatusesRoutes } from "./modules/contract-statuses/routes.js";
 import { contractTypesRoutes } from "./modules/contract-types/routes.js";
 import { onboardingRoutes } from "./modules/onboarding/routes.js";
 import { orgRoutes } from "./modules/org/routes.js";
@@ -236,6 +237,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(usersRoutes, { prefix: "/api/v1" });
   await app.register(emailSettingsRoutes, { prefix: "/api/v1" });
   await app.register(contractTypesRoutes, { prefix: "/api/v1" });
+  await app.register(contractStatusesRoutes, { prefix: "/api/v1" });
 
   return app;
 }
