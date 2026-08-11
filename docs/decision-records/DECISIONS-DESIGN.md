@@ -1302,6 +1302,42 @@ The alternative was forcing the catalog into the plain anatomy (losing the type/
 
 `apps/web/src/components/list-editor.tsx` carries the pattern; the Types (#81) and Statuses (#82) panes were refactored onto it with their test suites unchanged. Later taxonomy panes choose: plain anatomy (inline add, optional reorder) or the table variant (columns, dialog editor) — both are this one component. The M22 Matters → Fields pane reuses the fields pane's table variant with the scope picker widened to `matter`.
 
+## DES-022: The type-editor screen — identity card plus attachment table (extends DES-020)
+
+- **Status:** Accepted
+- **Date:** 2026-08-12
+
+### Context
+
+DES-020 pins the taxonomy list row to one line and sends "description and anything richer" to the type-editor screen (frames ST15/ST16 in `designs/settings.pen`). #84 builds the first one — Contracts → Types → a type's own screen, where CTR-016 field attachments live. Like DES-021, this record writes the screen's anatomy down once: the matters type editor (ST15, M22) and the request-type editor (ST14, M19) are the same shape.
+
+### Decision
+
+A type editor is its own routed URL under its list pane (`…/types/:id`), keeping the section tab strip, with a breadcrumb return — a 16px `arrow-left` glyph and "All [things]" (12px medium, `text-secondary`) — linking back to the list. Below it, two cards side by side, wrapping to a stack when the slot is narrow (intrinsic wrap, no viewport breakpoint — DES-012):
+
+**The identity card** (fixed 560px): a DES-004 settings card titled with the display name. Display name and description are DES-017 commit-on-confirm inputs — blur/Enter commits, Escape reverts, micro-states beside the field. The slug renders as a read-only input in `text-secondary` with an 11px caption stating why it never changes. A 12px usage caption ("N [records] use this type.") closes the card.
+
+**The attachment card** (flexible): a flush DES-004 card in the DES-021 table variant — an 11px semibold column-header strip ("Field", "Required"), then DES-020's 44px rows: the reorder grip (per-type order is real order — CTR-016), the field's display name (13px medium) with its type as an inline 12px `text-secondary` caption, the scope riding the caption only when it is `global` ("Single select · global"), a 16px checkbox in the Required column, and a 16px `x` detach button in the trailing column. Detach runs no guard modal: the removal semantics are detach-and-retain (values keyed by slug survive, MTR-014), which the help caption below the card states — "Drag to reorder. Required fields are enforced at creation and re-type; detaching a field keeps stored values."
+
+**The required checkbox** is the CTA-filled 16px box the frame draws (checked: `cta` fill, white check; unchecked: `bg-raised`, default border), a Radix checkbox with its hit area expanded to DES-011's 24px floor without growing the drawn box.
+
+**Attach** is a footer-row secondary button ("Attach field", `plus` glyph) opening a menu of the catalog's live, unattached fields for this module's scopes, each with the same name-plus-caption line as the rows. Choosing one attaches immediately (SET-003), optional by default.
+
+### Recorded normalization points (ST16 deviations accepted)
+
+1. The frame's 14px glyphs (grip, arrow, plus) render at 16 — DES-008's ramp floors at 16. The 12px check inside the 16px checkbox stays: control-internal, not a standalone icon.
+2. Buttons render through the shipped Button component (DES-004's normalization), not the frame's 12px text.
+3. ST16 draws no attach picker; the menu is this record's addition — creation here is one choice, so a menu, not a dialog (DES-021's dialog rule is for multi-dimension creation).
+4. ST16 draws no empty state; an empty attachment list renders one quiet caption row.
+
+### Rationale
+
+The list row stays one line only because this screen exists; writing its anatomy with the first implementation keeps ST14/ST15 from re-deriving it — the same bet DES-020 and DES-021 made, one screen shape later.
+
+### Consequences
+
+`/settings/contracts/types/:id` (#84) is the reference implementation, reached from a pencil icon button in the list row's trailing actions (the DES-021 slot; here it navigates instead of opening a dialog, because the editor is a screen). The M22 matters editor and M19 request-type editor reuse this shape with their own vocabulary.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -1327,3 +1363,4 @@ The alternative was forcing the catalog into the plain anatomy (losing the type/
 | DES-019 | Shell chrome color variables — per-theme chrome mapping, Warm terracotta avatar (amends DES-018)                                                                     | Accepted |
 | DES-020 | List-editor pattern — the shared anatomy for taxonomy settings panes                                                                                                 | Accepted |
 | DES-021 | List-editor table variant and the field-editor dialog (extends DES-020)                                                                                              | Accepted |
+| DES-022 | The type-editor screen — identity card plus attachment table (extends DES-020)                                                                                       | Accepted |

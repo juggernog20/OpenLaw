@@ -287,6 +287,12 @@
   "keys.title": {
     "defaultMessage": "Keyboard shortcuts"
   },
+  "listEditor.archivedPill": {
+    "defaultMessage": "Archived"
+  },
+  "listEditor.showArchived": {
+    "defaultMessage": "Show archived"
+  },
   "nav.home": {
     "defaultMessage": "Home"
   },
@@ -398,6 +404,144 @@
   "settings.auth.sessionsCaption": {
     "defaultMessage": "The identity provider only authenticates — sessions stay in OpenLaw and remain revocable."
   },
+  "settings.contractFields.add": {
+    "defaultMessage": "Add field"
+  },
+  "settings.contractFields.addTitle": {
+    "defaultMessage": "Add field"
+  },
+  "settings.contractFields.aiPromptHelp": {
+    "defaultMessage": "Contract analysis extracts this field with the prompt. Leave empty to skip it."
+  },
+  "settings.contractFields.aiPromptLabel": {
+    "defaultMessage": "AI prompt"
+  },
+  "settings.contractFields.archive": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.contractFields.archiveError": {
+    "defaultMessage": "The field could not be archived."
+  },
+  "settings.contractFields.archiveSubmit": {
+    "defaultMessage": "Archive field"
+  },
+  "settings.contractFields.archiveTitle": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.contractFields.archiveWarning": {
+    "defaultMessage": "{count, plural, =0 {{name} is not used by any records. The definition is kept and the field can be restored.} one {{name} holds values on # record — they are kept, hidden until the field is restored.} other {{name} holds values on # records — they are kept, hidden until the field is restored.}}"
+  },
+  "settings.contractFields.auditNote": {
+    "defaultMessage": "The change applies immediately and is recorded in the audit log."
+  },
+  "settings.contractFields.count": {
+    "defaultMessage": "{count, plural, one {# field} other {# fields}}"
+  },
+  "settings.contractFields.createError": {
+    "defaultMessage": "The field could not be created."
+  },
+  "settings.contractFields.createSubmit": {
+    "defaultMessage": "Add field"
+  },
+  "settings.contractFields.descriptionHelp": {
+    "defaultMessage": "Shown as help text wherever the field renders."
+  },
+  "settings.contractFields.descriptionLabel": {
+    "defaultMessage": "Description"
+  },
+  "settings.contractFields.edit": {
+    "defaultMessage": "Edit {name}"
+  },
+  "settings.contractFields.editError": {
+    "defaultMessage": "The field could not be saved."
+  },
+  "settings.contractFields.editSubmit": {
+    "defaultMessage": "Save"
+  },
+  "settings.contractFields.editTitle": {
+    "defaultMessage": "Edit {name}"
+  },
+  "settings.contractFields.fieldColumn": {
+    "defaultMessage": "Field"
+  },
+  "settings.contractFields.hasPrompt": {
+    "defaultMessage": "{name} has an AI extraction prompt"
+  },
+  "settings.contractFields.help": {
+    "defaultMessage": "Field type is immutable after creation. Archiving a field keeps stored values. Global fields are shared with Matters — the sparkle marks fields with an AI extraction prompt."
+  },
+  "settings.contractFields.nameLabel": {
+    "defaultMessage": "Name"
+  },
+  "settings.contractFields.nameMissing": {
+    "defaultMessage": "Name the field."
+  },
+  "settings.contractFields.noPrompt": {
+    "defaultMessage": "No AI prompt"
+  },
+  "settings.contractFields.optionsHelp": {
+    "defaultMessage": "One option per line, in display order."
+  },
+  "settings.contractFields.optionsLabel": {
+    "defaultMessage": "Options"
+  },
+  "settings.contractFields.optionsMissing": {
+    "defaultMessage": "Add at least one option, one per line."
+  },
+  "settings.contractFields.pageTitle": {
+    "defaultMessage": "Fields"
+  },
+  "settings.contractFields.promptColumn": {
+    "defaultMessage": "AI prompt"
+  },
+  "settings.contractFields.renameLabel": {
+    "defaultMessage": "Rename {name}"
+  },
+  "settings.contractFields.restore": {
+    "defaultMessage": "Restore {name}"
+  },
+  "settings.contractFields.scopeCaption": {
+    "defaultMessage": "Contract and global fields"
+  },
+  "settings.contractFields.scopeColumn": {
+    "defaultMessage": "Scope"
+  },
+  "settings.contractFields.scopeLabel": {
+    "defaultMessage": "{scope, select, contract {Contract} global {Global} other {Unknown}}"
+  },
+  "settings.contractFields.scopePrefix": {
+    "defaultMessage": "Scope:"
+  },
+  "settings.contractFields.tagColumn": {
+    "defaultMessage": "Tag"
+  },
+  "settings.contractFields.tagLabel": {
+    "defaultMessage": "{tag, select, business {Business} legal {Legal} other {Unknown}}"
+  },
+  "settings.contractFields.tagPrefix": {
+    "defaultMessage": "Tag:"
+  },
+  "settings.contractFields.title": {
+    "defaultMessage": "Fields"
+  },
+  "settings.contractFields.typeColumn": {
+    "defaultMessage": "Type"
+  },
+  "settings.contractFields.typeImmutable": {
+    "defaultMessage": "The field type is immutable after creation."
+  },
+  "settings.contractFields.typeLabel": {
+    "defaultMessage": "{type, select, text {Text} long_text {Long text} number {Number} date {Date} boolean {Boolean} single_select {Single select} multi_select {Multi select} user {User} entity {Entity} other {Unknown}}"
+  },
+  "settings.contractFields.typeMissing": {
+    "defaultMessage": "Pick a type for the new field."
+  },
+  "settings.contractFields.typePlaceholder": {
+    "defaultMessage": "Type…"
+  },
+  "settings.contractFields.typePrefix": {
+    "defaultMessage": "Type:"
+  },
   "settings.contractStatuses.add": {
     "defaultMessage": "Add status"
   },
@@ -424,9 +568,6 @@
   },
   "settings.contractStatuses.archiveWarning": {
     "defaultMessage": "{count, plural, =0 {{name} is not used by any contracts.} one {{name} is used by # contract, which keeps its status until someone moves it.} other {{name} is used by # contracts, which keep their status until someone moves them.}}"
-  },
-  "settings.contractStatuses.archivedPill": {
-    "defaultMessage": "Archived"
   },
   "settings.contractStatuses.auditNote": {
     "defaultMessage": "The change applies immediately and is recorded in the audit log."
@@ -458,9 +599,6 @@
   "settings.contractStatuses.restore": {
     "defaultMessage": "Restore {name}"
   },
-  "settings.contractStatuses.showArchived": {
-    "defaultMessage": "Show archived"
-  },
   "settings.contractStatuses.stageBadgePrefix": {
     "defaultMessage": "Stage:"
   },
@@ -475,6 +613,63 @@
   },
   "settings.contractStatuses.title": {
     "defaultMessage": "Contract statuses"
+  },
+  "settings.contractTypeEditor.allAttached": {
+    "defaultMessage": "Every catalog field is attached."
+  },
+  "settings.contractTypeEditor.allTypes": {
+    "defaultMessage": "All types"
+  },
+  "settings.contractTypeEditor.attach": {
+    "defaultMessage": "Attach field"
+  },
+  "settings.contractTypeEditor.attachedFields": {
+    "defaultMessage": "Attached fields"
+  },
+  "settings.contractTypeEditor.description": {
+    "defaultMessage": "Description"
+  },
+  "settings.contractTypeEditor.detach": {
+    "defaultMessage": "Detach {name}"
+  },
+  "settings.contractTypeEditor.detached": {
+    "defaultMessage": "{name} detached."
+  },
+  "settings.contractTypeEditor.displayName": {
+    "defaultMessage": "Display name"
+  },
+  "settings.contractTypeEditor.empty": {
+    "defaultMessage": "No fields are attached to this type."
+  },
+  "settings.contractTypeEditor.fieldColumn": {
+    "defaultMessage": "Field"
+  },
+  "settings.contractTypeEditor.globalCaption": {
+    "defaultMessage": "{type} · global"
+  },
+  "settings.contractTypeEditor.help": {
+    "defaultMessage": "Drag to reorder. Required fields are enforced at creation and re-type; detaching a field keeps stored values."
+  },
+  "settings.contractTypeEditor.inUse": {
+    "defaultMessage": "{count, plural, one {# contract uses this type.} other {# contracts use this type.}}"
+  },
+  "settings.contractTypeEditor.moved": {
+    "defaultMessage": "{name} moved to position {position} of {total}."
+  },
+  "settings.contractTypeEditor.reorder": {
+    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
+  },
+  "settings.contractTypeEditor.requiredColumn": {
+    "defaultMessage": "Required"
+  },
+  "settings.contractTypeEditor.requiredFor": {
+    "defaultMessage": "{name} required"
+  },
+  "settings.contractTypeEditor.slug": {
+    "defaultMessage": "Slug"
+  },
+  "settings.contractTypeEditor.slugNote": {
+    "defaultMessage": "Slug is immutable — it keys templates, approval rules, and the API."
   },
   "settings.contractTypes.add": {
     "defaultMessage": "Add type"
@@ -497,14 +692,14 @@
   "settings.contractTypes.archiveWarning": {
     "defaultMessage": "{count, plural, =0 {{name} is not used by any contracts — it can be archived without reassignment.} one {{name} is used by # contract. Pick a replacement type — that contract moves to it when the type is archived.} other {{name} is used by # contracts. Pick a replacement type — those contracts move to it when the type is archived.}}"
   },
-  "settings.contractTypes.archivedPill": {
-    "defaultMessage": "Archived"
-  },
   "settings.contractTypes.auditNote": {
     "defaultMessage": "The change applies immediately and is recorded in the audit log."
   },
   "settings.contractTypes.count": {
     "defaultMessage": "{count, plural, one {# type} other {# types}}"
+  },
+  "settings.contractTypes.edit": {
+    "defaultMessage": "Edit {name}"
   },
   "settings.contractTypes.help": {
     "defaultMessage": "Drag to reorder. Archiving a type in use asks for a replacement; Other can't be archived."
@@ -536,11 +731,11 @@
   "settings.contractTypes.restore": {
     "defaultMessage": "Restore {name}"
   },
-  "settings.contractTypes.showArchived": {
-    "defaultMessage": "Show archived"
-  },
   "settings.contractTypes.title": {
     "defaultMessage": "Contract types"
+  },
+  "settings.contracts.tab.fields": {
+    "defaultMessage": "Fields"
   },
   "settings.contracts.tab.statuses": {
     "defaultMessage": "Statuses"

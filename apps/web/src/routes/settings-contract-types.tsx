@@ -13,9 +13,9 @@
  */
 
 import { useRef, useState, type SubmitEvent as FormSubmitEvent } from "react";
-import { redirect, useLoaderData } from "react-router";
+import { redirect, useLoaderData, useNavigate } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
-import { History, TriangleAlert } from "lucide-react";
+import { History, Pencil, TriangleAlert } from "lucide-react";
 import { api } from "../lib/api";
 import { field } from "../lib/forms";
 import { problemDetail } from "../lib/messages";
@@ -216,6 +216,7 @@ function ArchiveTypeDialog({
 export function SettingsContractTypesPage() {
   const { contractTypes } = useLoaderData<typeof settingsContractTypesLoader>();
   const intl = useIntl();
+  const navigate = useNavigate();
 
   const [rows, setRows] = useState<TypeRow[]>(contractTypes);
   const [rowStatus, setRowStatus] = useState<Record<string, FieldStatus>>({});
@@ -392,6 +393,22 @@ export function SettingsContractTypesPage() {
               defaultMessage="{count, plural, one {# contract} other {# contracts}}"
               values={{ count: row.inUseCount }}
             />
+          )}
+          rowActions={(row) => (
+            // #84: the row's own editor screen (ST16) — fields attach
+            // there, and the description lives there, not in the list.
+            <Button
+              variant="ghost"
+              size="sm"
+              className="px-1.5"
+              aria-label={intl.formatMessage(
+                { id: "settings.contractTypes.edit", defaultMessage: "Edit {name}" },
+                { name: row.displayName },
+              )}
+              onClick={() => void navigate(`/settings/contracts/types/${row.id}`)}
+            >
+              <Pencil size={16} aria-hidden="true" className="text-muted" />
+            </Button>
           )}
           protectedLabel={(row) =>
             row.slug === "other"
