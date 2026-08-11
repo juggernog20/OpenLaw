@@ -333,7 +333,9 @@ export function ListEditor<Row extends ListEditorRow>({
                   <span className="text-base font-medium text-primary opacity-50">
                     {row.displayName}
                   </span>
-                  {rowDetails && <span className="flex items-center gap-2 opacity-50">{rowDetails(row)}</span>}
+                  {rowDetails && (
+                    <span className="flex items-center gap-2 opacity-50">{rowDetails(row)}</span>
+                  )}
                   <span className="inline-flex rounded-full bg-status-neutral-bg px-2 py-0.5 text-xs font-semibold text-status-neutral-fg">
                     <FormattedMessage id="listEditor.archivedPill" defaultMessage="Archived" />
                   </span>

@@ -365,9 +365,7 @@ export function SettingsContractTypesPage() {
               values={{ count: live.length }}
             />
           }
-          addLabel={
-            <FormattedMessage id="settings.contractTypes.add" defaultMessage="Add type" />
-          }
+          addLabel={<FormattedMessage id="settings.contractTypes.add" defaultMessage="Add type" />}
           onAdd={() => {
             setAdding(true);
             setAddStatus("idle");

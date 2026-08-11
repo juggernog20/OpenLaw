@@ -220,7 +220,16 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
 
         const [created] = await tx
           .insert(fields)
-          .values({ slug, displayName, description, moduleScope, fieldType, options, fieldTag, aiPrompt })
+          .values({
+            slug,
+            displayName,
+            description,
+            moduleScope,
+            fieldType,
+            options,
+            fieldTag,
+            aiPrompt,
+          })
           .returning();
         await recordActivity(tx, {
           entityType: "system",
