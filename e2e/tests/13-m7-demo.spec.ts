@@ -6,8 +6,10 @@
  * registers the company's UK subsidiary with its full identity card;
  * it appears in the registry, ordered by legal name, showing name,
  * type, jurisdiction, and status. A second journey proves ENT-004: a
- * Business User's nav carries no Entities item, the URL bounces them
- * home, and the API's 403 stands behind the bounce. ("Selectable as
+ * Contributor's nav carries no Entities item, the URL bounces them
+ * home, and the API's 403 stands behind the bounce. (A Business User
+ * is refused the same way, but cannot exist yet — portal accounts
+ * arrive with intake, and invites stop at Contributor.) ("Selectable as
  * the signing entity on a contract" — the demo sentence's other half —
  * is asserted in M8's spec, when a contract form exists to select it
  * on.) Per-run entities are archived afterwards, so the never-reset
@@ -167,41 +169,43 @@ test.describe.serial("M7 demo path", () => {
     }
   });
 
-  test("a Business User has no Entities module at all (ENT-004)", async ({ page, browser }) => {
+  test("a Contributor has no Entities module at all (ENT-004)", async ({ page, browser }) => {
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
 
-    const email = `e2e-m7-business-${Date.now()}@e2e.example`;
+    const email = `e2e-m7-contributor-${Date.now()}@e2e.example`;
     let member: OnboardedMember | undefined;
     try {
       member = await onboardActivatedMember(page.request, browser, {
         email,
-        displayName: "Bao Business",
-        role: "business_user",
+        displayName: "Casey Contributor",
+        role: "contributor",
         password: "their-own-e2e-password",
       });
-      const businessPage = member.page;
+      const contributorPage = member.page;
 
       // No Entities nav item — absent, not disabled.
-      await businessPage.goto("/");
-      const nav = businessPage.getByRole("navigation", { name: "Primary" });
+      await contributorPage.goto("/");
+      const nav = contributorPage.getByRole("navigation", { name: "Primary" });
       await expect(nav.getByRole("link", { name: "Home" })).toBeVisible();
       await expect(nav.getByRole("link", { name: "Entities" })).toHaveCount(0);
 
       // The URL bounces them home.
-      await businessPage.goto("/entities");
-      await expect(businessPage).toHaveURL(/\/$/);
+      await contributorPage.goto("/entities");
+      await expect(contributorPage).toHaveURL(/\/$/);
 
       // The client bounce is convenience; the API's refusal is real —
-      // on the list, the picker read, and the write.
-      for (const [method, path] of [
-        ["get", "/api/v1/entities"],
-        ["get", "/api/v1/entities/types"],
-        ["post", "/api/v1/entities"],
-      ] as const) {
-        const refused = await businessPage.request[method](path);
-        expect(refused.status(), `${method.toUpperCase()} ${path} must refuse a Business User`).toBe(
-          403,
-        );
+      // on the list, the picker read, and the write. The write carries
+      // a shape-valid body: validation answers before the role guard,
+      // and the refusal under test is the guard's.
+      const refusals = [
+        contributorPage.request.get("/api/v1/entities"),
+        contributorPage.request.get("/api/v1/entities/types"),
+        contributorPage.request.post("/api/v1/entities", {
+          data: { legalName: "Sneaky Ltd", entityTypeId: "any" },
+        }),
+      ];
+      for (const refused of await Promise.all(refusals)) {
+        expect(refused.status(), "the registry must refuse a Contributor").toBe(403);
       }
     } finally {
       await member?.context.close();

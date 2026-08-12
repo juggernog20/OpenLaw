@@ -29,12 +29,14 @@ test.describe("application shell", () => {
     await expect(header.getByText("openlaw")).toBeVisible();
     await expect(header.getByRole("searchbox", { name: "Search" })).toBeVisible();
 
-    // Nav renders from the destination registry: Home only, current.
+    // Nav renders from the destination registry — Home and, for
+    // Member+, the M7 Entities registry — with the current one marked.
     const nav = page.getByRole("navigation");
     const links = nav.getByRole("link");
-    await expect(links).toHaveCount(1);
+    await expect(links).toHaveCount(2);
     await expect(links.first()).toHaveAttribute("aria-current", "page");
     await expect(links.first()).toContainText("Home");
+    await expect(links.nth(1)).toContainText("Entities");
 
     // Sub-bar carries the page title as the page's single h1.
     await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
