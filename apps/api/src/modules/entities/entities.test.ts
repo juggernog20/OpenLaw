@@ -243,21 +243,24 @@ describe("GET /entities/types — the Member+ picker source", () => {
       payload: {},
     });
     expect(archived.statusCode, archived.body).toBe(200);
-    const res = await harness.app.inject({
-      method: "GET",
-      url: "/api/v1/entities/types",
-      cookies: memberCookies,
-    });
-    expect(res.statusCode, res.body).toBe(200);
-    expect(res.json().entityTypes.some((row: { slug: string }) => row.slug === "branch")).toBe(
-      false,
-    );
-    const restored = await harness.app.inject({
-      method: "POST",
-      url: `/api/v1/entity-types/${branch.id}/restore`,
-      cookies: adminCookies,
-    });
-    expect(restored.statusCode, restored.body).toBe(200);
+    try {
+      const res = await harness.app.inject({
+        method: "GET",
+        url: "/api/v1/entities/types",
+        cookies: memberCookies,
+      });
+      expect(res.statusCode, res.body).toBe(200);
+      expect(res.json().entityTypes.some((row: { slug: string }) => row.slug === "branch")).toBe(
+        false,
+      );
+    } finally {
+      const restored = await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/entity-types/${branch.id}/restore`,
+        cookies: adminCookies,
+      });
+      expect(restored.statusCode, restored.body).toBe(200);
+    }
   });
 });
 
@@ -339,20 +342,23 @@ describe("POST /entities — registration", () => {
       payload: {},
     });
     expect(archived.statusCode, archived.body).toBe(200);
-    const toArchived = await register(adminCookies, {
-      legalName: "Archived Type Ltd",
-      entityTypeId: partnership.id,
-    });
-    expect(toArchived.statusCode, toArchived.body).toBe(400);
-    const restored = await harness.app.inject({
-      method: "POST",
-      url: `/api/v1/entity-types/${partnership.id}/restore`,
-      cookies: adminCookies,
-    });
-    expect(restored.statusCode, restored.body).toBe(200);
-    expect(
-      (await listEntities(adminCookies, true)).some((row) => row.legalName === "Archived Type Ltd"),
-    ).toBe(false);
+    try {
+      const toArchived = await register(adminCookies, {
+        legalName: "Archived Type Ltd",
+        entityTypeId: partnership.id,
+      });
+      expect(toArchived.statusCode, toArchived.body).toBe(400);
+      expect(
+        (await listEntities(adminCookies, true)).some((row) => row.legalName === "Archived Type Ltd"),
+      ).toBe(false);
+    } finally {
+      const restored = await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/entity-types/${partnership.id}/restore`,
+        cookies: adminCookies,
+      });
+      expect(restored.statusCode, restored.body).toBe(200);
+    }
   });
 
   it("rejects a status outside the fixed ENT-001 enum", async () => {

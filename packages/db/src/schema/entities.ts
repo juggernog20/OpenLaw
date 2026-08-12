@@ -52,8 +52,8 @@ export const entities = pgTable(
   },
   (table) => [
     // The registry's one read shape: the list (and the M8 picker seam)
-    // orders by legal name.
-    index("entities_legal_name_idx").on(table.legalName),
+    // orders by case-insensitive legal name, then created_at.
+    index("entities_legal_name_idx").on(sql`lower(${table.legalName})`, table.createdAt),
     check(
       "entities_status_check",
       sql`${table.status} in ('active', 'dormant', 'dissolved', 'divested')`,

@@ -17,7 +17,7 @@ import type { Role } from "../../lib/roles";
 import { cn } from "../../lib/utils";
 import { destinationsFor } from "./destinations";
 
-export function NavDrawer({ role }: Readonly<{ role: Role }>) {
+export function NavDrawer({ role }: { role: Role }) {
   const intl = useIntl();
   const [open, setOpen] = useState(false);
   const destinations = destinationsFor(role);

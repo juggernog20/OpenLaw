@@ -651,7 +651,7 @@ describe("the SET-003 archive guard over the registry (#100)", () => {
     expect((await typeBySlug("other")).archivedAt).toBeNull();
   });
 
-  it("writes the reassignment and the archive to the activity log in one transaction", async () => {
+  it("writes the archive payload with per-entity reassignment rows", async () => {
     const rows = await auditRows();
     const archivedTrust = rows.find(
       (row) =>

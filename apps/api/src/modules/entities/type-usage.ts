@@ -37,16 +37,17 @@ export const entityTypeUsage: TaxonomyUsage = {
     // why the type changed. Legal Only, like every registry action
     // (ENT-004); the admin-side story is the system-level
     // `entity_type.archived` entry the archive route writes.
-    for (const row of moved) {
-      await recordActivity(tx, {
-        entityType: "entity",
+    await recordActivity(
+      tx,
+      moved.map((row) => ({
+        entityType: "entity" as const,
         entityId: row.id,
         actorId,
-        action: "entity.type_reassigned",
-        visibility: "legal_only",
+        action: "entity.type_reassigned" as const,
+        visibility: "legal_only" as const,
         payload: { legalName: row.legalName, from: from.displayName, to: to.displayName },
-      });
-    }
+      })),
+    );
     return moved.length;
   },
 };

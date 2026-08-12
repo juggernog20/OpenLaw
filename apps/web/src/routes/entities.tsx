@@ -29,6 +29,7 @@ import {
   type EntityStatus,
   type EntityTypeOption,
 } from "../lib/entities";
+import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
 import { problemDetail } from "../lib/messages";
 import { isMemberPlus } from "../lib/roles";
 import { currentUser, needsSetup } from "../lib/session";
@@ -159,13 +160,13 @@ export function EntitiesPage() {
               {listError}
             </p>
           )}
-          <Label id="entities-show-archived-label">
+          <Label htmlFor="entities-show-archived">
             <FormattedMessage id="entities.showArchived" defaultMessage="Show archived" />
           </Label>
           <Switch
+            id="entities-show-archived"
             checked={showArchived}
             onCheckedChange={(next) => void toggleArchived(next)}
-            aria-labelledby="entities-show-archived-label"
           />
         </div>
         {rows.length === 0 ? (
@@ -315,15 +316,6 @@ function RegistryTable({
     </div>
   );
 }
-
-/** The shared form-control look (ST8 normalization, C10 field spec). */
-const CONTROL_CLASS =
-  "h-8 w-full rounded-button border border-border-default bg-raised px-2 text-sm " +
-  "text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link";
-
-const TEXTAREA_CLASS =
-  "min-h-16 w-full rounded-button border border-border-default bg-raised p-2 text-sm " +
-  "text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link";
 
 /** The identity card the register form collects (ENT-001): legal name
  * and type required, the rest optional. */
@@ -482,7 +474,7 @@ function RegisterEntityDialog({
                 className={CONTROL_CLASS}
                 onChange={(event) => set("status", event.target.value as EntityStatus)}
               >
-                {ENTITY_STATUSES.map((status) => (
+                {ENTITY_STATUSES.map((status: EntityStatus) => (
                   <option key={status} value={status}>
                     {statusLabel(intl, status)}
                   </option>

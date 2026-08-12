@@ -14,19 +14,21 @@ export function Switch(
     checked: boolean;
     onCheckedChange: (checked: boolean) => void;
     disabled?: boolean;
+    id?: string;
     /** Accessible name; the visible label usually sits beside the control. */
     "aria-label"?: string;
     "aria-labelledby"?: string;
     "aria-describedby"?: string;
   }>,
 ) {
-  const { checked, onCheckedChange, disabled, ...aria } = props;
+  const { checked, onCheckedChange, disabled, id, ...aria } = props;
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
       disabled={disabled}
+      id={id}
       onClick={() => onCheckedChange(!checked)}
       className={cn(
         "relative h-5 w-9 shrink-0 rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:cursor-not-allowed disabled:opacity-60",

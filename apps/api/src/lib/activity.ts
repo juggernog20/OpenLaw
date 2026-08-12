@@ -74,13 +74,22 @@ export interface ActivityEntry {
 
 /** Appends one entry. Append-only: nothing in application code ever
  * updates or deletes activity_log rows (corrections are new entries). */
-export async function recordActivity(db: ActivityWriter, entry: ActivityEntry): Promise<void> {
-  await db.insert(activityLog).values({
-    entityType: entry.entityType,
-    entityId: entry.entityId ?? null,
-    actorId: entry.actorId ?? null,
-    action: entry.action,
-    visibility: entry.visibility,
-    payload: entry.payload ?? {},
-  });
+export async function recordActivity(db: ActivityWriter, entry: ActivityEntry): Promise<void>;
+/** Appends multiple entries in one write. */
+export async function recordActivity(db: ActivityWriter, entries: ActivityEntry[]): Promise<void>;
+export async function recordActivity(
+  db: ActivityWriter,
+  entryOrEntries: ActivityEntry | ActivityEntry[],
+): Promise<void> {
+  const entries = Array.isArray(entryOrEntries) ? entryOrEntries : [entryOrEntries];
+  await db.insert(activityLog).values(
+    entries.map((entry) => ({
+      entityType: entry.entityType,
+      entityId: entry.entityId ?? null,
+      actorId: entry.actorId ?? null,
+      action: entry.action,
+      visibility: entry.visibility,
+      payload: entry.payload ?? {},
+    })),
+  );
 }

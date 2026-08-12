@@ -30,6 +30,7 @@ import {
   type EntityStatus,
   type EntityTypeOption,
 } from "../lib/entities";
+import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
 import { problemDetail } from "../lib/messages";
 import { isMemberPlus } from "../lib/roles";
 import { currentUser, needsSetup } from "../lib/session";
@@ -66,17 +67,6 @@ type TextFieldKey =
   | "registeredAddress";
 
 type FieldKey = TextFieldKey | "entityTypeId" | "status" | "formedOn";
-
-/** The shared form-control look (ST8 normalization, C10 field spec). */
-const CONTROL_CLASS =
-  "h-8 w-full rounded-button border border-border-default bg-raised px-2 text-sm " +
-  "text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link " +
-  "disabled:cursor-not-allowed disabled:opacity-60";
-
-const TEXTAREA_CLASS =
-  "min-h-16 w-full rounded-button border border-border-default bg-raised p-2 text-sm " +
-  "text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link " +
-  "disabled:cursor-not-allowed disabled:opacity-60";
 
 export function EntityRecordPage() {
   const { user, entity, entityTypes } = useLoaderData<typeof entityRecordLoader>();
@@ -334,7 +324,7 @@ export function EntityRecordPage() {
                     void commit("status", { status: event.target.value as EntityStatus })
                   }
                 >
-                  {ENTITY_STATUSES.map((status) => (
+                  {ENTITY_STATUSES.map((status: EntityStatus) => (
                     <option key={status} value={status}>
                       {statusLabel(intl, status)}
                     </option>

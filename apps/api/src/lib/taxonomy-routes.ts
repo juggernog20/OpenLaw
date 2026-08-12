@@ -48,7 +48,7 @@ export interface TaxonomyUsage {
   ): Promise<number>;
 }
 
-export interface TaxonomyRoutesConfig {
+interface TaxonomyRoutesBase {
   table: TaxonomyTable;
   /** URL segment under /api/v1, e.g. `contract-types`. */
   path: string;
@@ -69,13 +69,19 @@ export interface TaxonomyRoutesConfig {
   /** What uses a type once records exist, both grammatical numbers —
    * the guard refusals pluralize by count. */
   recordNoun: { singular: string; plural: string };
-  /** The milestone whose records arm `usage` (M8 / M22); omit once armed. */
-  recordsMilestone?: string;
-  /** The module's live-usage counter and reassignment mover. Absent
-   * until the module's record milestone lands: counts read zero and
-   * the SET-003 guard stays dormant — `recordsMilestone` names when. */
-  usage?: TaxonomyUsage;
 }
+
+export type TaxonomyRoutesConfig =
+  | (TaxonomyRoutesBase & {
+      /** The milestone whose records arm `usage` (M8 / M22). */
+      recordsMilestone: string;
+      usage?: never;
+    })
+  | (TaxonomyRoutesBase & {
+      recordsMilestone?: never;
+      /** The module's live-usage counter and reassignment mover. */
+      usage: TaxonomyUsage;
+    });
 
 const TaxonomyRowSchema = z.object({
   id: z.string(),
@@ -425,7 +431,7 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
 
           // The SET-003 guard number, read under the target's row lock —
           // the record routes lock the same row before writing their
-          // type column, so the count can't move underneath the guard.
+          // type column, serializing creation of new references.
           const inUseCount = (await usageCounts(tx, [target.id])).get(target.id) ?? 0;
           if (inUseCount > 0 && !reassignTo) {
             throw httpError(

@@ -181,6 +181,33 @@ describe("the /entities destination", () => {
     expect(await within(dialog).findByRole("alert")).toHaveTextContent("Pick an entity type.");
   });
 
+  it("surfaces a refused registration, keeps the dialog open, and preserves the draft", async () => {
+    stubApi({
+      signedIn: ADMIN,
+      extra: registryApi([], (call) => {
+        return problem(400, "The entity type must be a live type.");
+      }),
+    });
+    renderAt("/entities");
+    const user = userEvent.setup();
+    await screen.findByRole("heading", { name: "No entities yet" });
+    await user.click(screen.getAllByRole("button", { name: "Register entity" })[0]!);
+    const dialog = await screen.findByRole("dialog");
+
+    await user.type(within(dialog).getByLabelText("Legal name"), "Refused Ltd");
+    await user.selectOptions(within(dialog).getByLabelText("Entity type"), "t-corp");
+    await user.type(within(dialog).getByLabelText("Formation jurisdiction"), "England");
+    await user.click(within(dialog).getByRole("button", { name: "Register" }));
+
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+      "The entity type must be a live type.",
+    );
+    expect(within(dialog).getByRole("dialog")).toBeInTheDocument();
+    expect(within(dialog).getByLabelText("Legal name")).toHaveValue("Refused Ltd");
+    expect(within(dialog).getByLabelText("Entity type")).toHaveValue("t-corp");
+    expect(within(dialog).getByLabelText("Formation jurisdiction")).toHaveValue("England");
+  });
+
   it("links each row to its record page", async () => {
     stubApi({
       signedIn: MEMBER,

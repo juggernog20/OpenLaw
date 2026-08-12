@@ -17,5 +17,6 @@ CREATE TABLE "entities" (
 --> statement-breakpoint
 ALTER TABLE "activity_log" DROP CONSTRAINT "activity_log_entity_type_check";--> statement-breakpoint
 ALTER TABLE "entities" ADD CONSTRAINT "entities_entity_type_id_entity_types_id_fk" FOREIGN KEY ("entity_type_id") REFERENCES "public"."entity_types"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "entities_legal_name_idx" ON "entities" USING btree ("legal_name");--> statement-breakpoint
-ALTER TABLE "activity_log" ADD CONSTRAINT "activity_log_entity_type_check" CHECK ("activity_log"."entity_type" in ('matter', 'contract', 'document', 'request', 'user', 'entity', 'system'));
+CREATE INDEX "entities_legal_name_idx" ON "entities" USING btree (lower("legal_name"), "created_at");--> statement-breakpoint
+ALTER TABLE "activity_log" ADD CONSTRAINT "activity_log_entity_type_check" CHECK ("activity_log"."entity_type" in ('matter', 'contract', 'document', 'request', 'user', 'entity', 'system')) NOT VALID;--> statement-breakpoint
+ALTER TABLE "activity_log" VALIDATE CONSTRAINT "activity_log_entity_type_check";

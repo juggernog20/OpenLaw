@@ -13,7 +13,7 @@ import type { Role } from "../../lib/roles";
 import { cn } from "../../lib/utils";
 import { destinationsFor } from "./destinations";
 
-export function TopNav({ role }: Readonly<{ role: Role }>) {
+export function TopNav({ role }: { role: Role }) {
   const intl = useIntl();
   const destinations = destinationsFor(role);
   return (
