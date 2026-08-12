@@ -5992,7 +5992,7 @@
     "/api/v1/fields/{id}/scope": {
       "put": {
         "operationId": "setFieldScope",
-        "summary": "Move a field's scope (CTR-016): promotion to global is always safe (values stay keyed by slug); narrowing back is refused while another module attaches the field",
+        "summary": "Move a field's scope (CTR-016): promotion to global is always safe (values stay keyed by slug); any move into a module is refused while another module attaches the field",
         "tags": ["fields"],
         "requestBody": {
           "required": true,

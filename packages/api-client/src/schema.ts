@@ -830,7 +830,7 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    /** Move a field's scope (CTR-016): promotion to global is always safe (values stay keyed by slug); narrowing back is refused while another module attaches the field */
+    /** Move a field's scope (CTR-016): promotion to global is always safe (values stay keyed by slug); any move into a module is refused while another module attaches the field */
     put: operations["setFieldScope"];
     post?: never;
     delete?: never;
