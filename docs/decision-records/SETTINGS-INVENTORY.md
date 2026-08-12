@@ -82,7 +82,8 @@ ActivityBar, Pill, Avatar) live in this file as local copies per the designs con
 ## Amendments (2026-08-12, M6 acceptance sweep, #86)
 
 Every M6 frame shipped: ST6 (#85), ST8 (the guard dialog in #81/#82/#85), ST10 (#82), ST11 (#83),
-ST15 (#85), ST16 (#84). The sweep's deltas:
+ST15 (#85), ST16 (#84) — and ST19, added by this sweep, records the pane that had shipped without
+a frame (#81). The sweep's deltas:
 
 1. **The file had no Contracts · Types frame** — the DES-020 reference pane (#81) shipped from
    ST6's anatomy with the CTR-002 vocabulary. **ST19 was added in this sweep** to close the gap:
