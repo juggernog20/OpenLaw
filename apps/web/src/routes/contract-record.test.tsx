@@ -4,10 +4,12 @@
  * The /contracts/:number record page (M8), through the real route table
  * with the standard fetch stub: Member+ lands on the record at its
  * number-based address, edits a field in place (DES-017 — blur commits
- * one PATCH, Escape commits none), sets the Owner, status, priority,
- * and risk from their selects, works the Team card, archives the record
- * (every input freezes, the sub-bar action flips), and restores it. The
- * activity bar mounts with the applet set that exists before M9.
+ * one PATCH, Escape commits none), sets the Owner, the signing entity,
+ * status, priority, and risk from their selects, works the Team card,
+ * archives the record (every input freezes, the sub-bar action flips),
+ * and restores it. The signing-entity picker reads the M7 registry,
+ * which never lists an archived entity. The activity bar mounts with
+ * the applet set that exists before M9.
  * Contributors are bounced home; unauthenticated visitors land on login.
  */
 
@@ -68,6 +70,51 @@ const OPTIONS = {
   users: PEOPLE,
 };
 
+/** The M7 registry, as its Member+ list answers it — the seam the
+ * signing-entity picker reads (CTR-011). Archived entities never appear
+ * here, so the picker never offers one. */
+const REGISTRY = [
+  {
+    id: "e-meridian",
+    legalName: "Meridian Bio, Inc.",
+    entityTypeId: "et-corp",
+    entityTypeName: "Corporation",
+    jurisdiction: "Delaware",
+    formedOn: null,
+    registrationNumber: null,
+    taxId: null,
+    registeredAgent: null,
+    registeredAddress: null,
+    status: "active",
+    archivedAt: null,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+  },
+  {
+    id: "e-uk",
+    legalName: "Meridian Bio UK Ltd",
+    entityTypeId: "et-corp",
+    entityTypeName: "Corporation",
+    jurisdiction: "England and Wales",
+    formedOn: null,
+    registrationNumber: null,
+    taxId: null,
+    registeredAgent: null,
+    registeredAddress: null,
+    status: "active",
+    archivedAt: null,
+    createdAt: "2026-01-02T00:00:00.000Z",
+    updatedAt: "2026-01-02T00:00:00.000Z",
+  },
+];
+
+/** One registry entity as the contract record names it: the id and the
+ * legal name that goes on the paper, nothing else of the card. */
+function signingEntity(id: unknown) {
+  const found = REGISTRY.find((entry) => entry.id === id);
+  return found ? { id: found.id, legalName: found.legalName } : null;
+}
+
 /** One person as a row on the record renders them. */
 function person(id: string, role?: string) {
   const found = PEOPLE.find((entry) => entry.id === id)!;
@@ -92,6 +139,8 @@ function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
     stage: "draft",
     // Unassigned until someone takes it (CTR-004).
     manager: null,
+    // Which of ours signs is not known yet (CTR-011).
+    entity: null,
     priority: "medium",
     risk: null,
     description: "Three-year platform engagement.",
@@ -102,7 +151,7 @@ function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
   };
 }
 
-/** The record loader's two reads plus the mutations under test. The
+/** The record loader's three reads plus the mutations under test. The
  * record is stateful: mutations answer with the row they produce, and
  * later GETs answer the latest row. */
 function recordApi(
@@ -119,6 +168,9 @@ function recordApi(
     if (call.url.pathname === "/api/v1/contracts/options" && call.method === "GET") {
       return json(200, OPTIONS);
     }
+    if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
+      return json(200, { entities: REGISTRY });
+    }
     if (call.url.pathname === "/api/v1/contracts/42" && call.method === "GET") {
       return json(200, { contract: row, team });
     }
@@ -132,14 +184,22 @@ function recordApi(
               manager: typeof body.managerId === "string" ? person(body.managerId) : null,
             }
           : {};
+      const signatory =
+        "entityId" in body
+          ? {
+              entity: signingEntity(body.entityId),
+            }
+          : {};
       row = {
         ...row,
         ...body,
         ...owner,
+        ...signatory,
         ...(status ? { statusName: status.displayName, stage: status.stage } : {}),
       };
-      // The stored FK never rides the row back — the joined person does.
+      // The stored FKs never ride the row back — the joined rows do.
       delete (row as Record<string, unknown>).managerId;
+      delete (row as Record<string, unknown>).entityId;
       return json(200, { contract: row });
     }
     if (call.url.pathname === "/api/v1/contracts/42/team" && call.method === "POST") {
@@ -332,12 +392,59 @@ describe("the /contracts/:number record page", () => {
     ).toBeInTheDocument();
   });
 
+  it("sets our signing entity from the registry and clears it again", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const entity = await screen.findByLabelText("Our entity");
+    // Which of ours signs is not known when the record is born (CTR-011).
+    expect(entity).toHaveValue("");
+    await user.selectOptions(entity, "e-uk");
+    await waitFor(() => expect(api.patches).toEqual([{ entityId: "e-uk" }]));
+    expect(entity).toHaveValue("e-uk");
+
+    await user.selectOptions(entity, "");
+    await waitFor(() => expect(api.patches).toEqual([{ entityId: "e-uk" }, { entityId: null }]));
+    expect(entity).toHaveValue("");
+  });
+
+  it("offers the live registry only — an archived entity is never on the list", async () => {
+    stubApi({ signedIn: MEMBER, extra: recordApi(contractRow()).handler });
+    renderAt("/contracts/42");
+
+    const entity = (await screen.findByLabelText("Our entity")) as HTMLSelectElement;
+    expect([...entity.options].map((option) => option.textContent)).toEqual([
+      "Not known yet",
+      "Meridian Bio, Inc.",
+      "Meridian Bio UK Ltd",
+    ]);
+  });
+
+  it("keeps a signing entity the registry no longer lists selectable as itself", async () => {
+    // The entity signed, then left the registry. The record still names
+    // who signed it, so the picker must not drop the answer it holds.
+    const closed = { id: "e-closed", legalName: "Closing Branch GmbH" };
+    stubApi({ signedIn: MEMBER, extra: recordApi(contractRow({ entity: closed })).handler });
+    renderAt("/contracts/42");
+
+    const entity = await screen.findByLabelText("Our entity");
+    expect(entity).toHaveValue("e-closed");
+    expect(
+      within(entity as HTMLElement).getByRole("option", { name: "Closing Branch GmbH" }),
+    ).toBeInTheDocument();
+  });
+
   it("shows the API's refusal beside the field when a commit fails", async () => {
     stubApi({
       signedIn: MEMBER,
       extra: (call) => {
         if (call.url.pathname === "/api/v1/contracts/options" && call.method === "GET") {
           return json(200, OPTIONS);
+        }
+        if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
+          return json(200, { entities: REGISTRY });
         }
         if (call.url.pathname === "/api/v1/contracts/42" && call.method === "GET") {
           return json(200, { contract: contractRow(), team: [person("u1", "creator")] });
@@ -437,6 +544,9 @@ describe("the /contracts/:number record page", () => {
         if (call.url.pathname === "/api/v1/contracts/options" && call.method === "GET") {
           return json(200, OPTIONS);
         }
+        if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
+          return json(200, { entities: REGISTRY });
+        }
         if (call.url.pathname === "/api/v1/contracts/42" && call.method === "GET") {
           return json(200, { contract: contractRow(), team: [person("u1", "creator")] });
         }
@@ -464,7 +574,15 @@ describe("the /contracts/:number record page", () => {
     await user.click(await screen.findByRole("button", { name: "Archive" }));
     await waitFor(() => expect(api.posts).toEqual(["archive"]));
     expect(screen.getByText(/This contract is archived/)).toBeInTheDocument();
-    for (const label of ["Title", "Owner", "Status", "Priority", "Risk", "Description"]) {
+    for (const label of [
+      "Title",
+      "Owner",
+      "Our entity",
+      "Status",
+      "Priority",
+      "Risk",
+      "Description",
+    ]) {
       expect(screen.getByLabelText(label)).toBeDisabled();
     }
     // The team freezes with everything else.

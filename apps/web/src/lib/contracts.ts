@@ -4,8 +4,9 @@
  * The contracts vocabulary shared by the list (/contracts) and the
  * record page (/contracts/:number): the row shape the API answers, the
  * C-### reference (CTR-003), the DES-018 severity ramp behind priority
- * and risk, the stage-keyed status pill, and the CTR-004 people —
- * the Owner and the contract team's roles.
+ * and risk, the stage-keyed status pill, the CTR-004 people — the Owner
+ * and the contract team's roles — and CTR-011's our side, the Entity
+ * that signs.
  *
  * The severity ramp's pill colors are not here yet: M8/1 edits priority
  * and risk as selects, and no surface renders them as pills. The ramp's
@@ -39,6 +40,34 @@ type OptionsResponse =
 export type ContractTypeOption = OptionsResponse["contractTypes"][number];
 export type ContractStatusOption = OptionsResponse["contractStatuses"][number];
 export type UserOption = OptionsResponse["users"][number];
+
+/**
+ * One choice in the signing-entity picker (CTR-011): the id it commits
+ * and the legal name it shows. It is the record's own saved shape, so
+ * an entity already on a contract is offered back without translation.
+ */
+export type SigningEntityOption = NonNullable<ContractRow["entity"]>;
+
+/** The M7 registry's Member+ list — the picker's source. It answers
+ * full identity cards, ordered by legal name, with archived entities
+ * left out; the picker narrows each row to the two columns it shows. */
+type RegistryResponse =
+  paths["/api/v1/entities"]["get"]["responses"]["200"]["content"]["application/json"];
+export type RegistryEntity = RegistryResponse["entities"][number];
+
+/**
+ * What the picker offers: the live registry, plus the entity the record
+ * already holds when the registry no longer lists it. An entity
+ * archived after it signed stays on the record — dropping it would let
+ * the select lie about what the contract says.
+ */
+export function signingEntityOptions(
+  registry: readonly RegistryEntity[],
+  saved: ContractRow["entity"],
+): SigningEntityOption[] {
+  const live = registry.map((entity) => ({ id: entity.id, legalName: entity.legalName }));
+  return saved && !live.some((option) => option.id === saved.id) ? [saved, ...live] : live;
+}
 
 /** Guards a level list literal so it can't drift from the API's enum:
  * `Exclude<SeverityLevel, U[number]>` resolves to `never` only when

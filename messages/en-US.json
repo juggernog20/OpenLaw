@@ -269,6 +269,9 @@
   "contracts.empty.title": {
     "defaultMessage": "No contracts yet"
   },
+  "contracts.entityUnknown": {
+    "defaultMessage": "Not known yet"
+  },
   "contracts.form.createError": {
     "defaultMessage": "The contract could not be created."
   },
@@ -277,6 +280,9 @@
   },
   "contracts.form.draftNote": {
     "defaultMessage": "New contracts start in Draft. Set everything else on the record."
+  },
+  "contracts.form.entity": {
+    "defaultMessage": "Our entity"
   },
   "contracts.form.owner": {
     "defaultMessage": "Owner"

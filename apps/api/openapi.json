@@ -5545,6 +5545,26 @@
                               }
                             ]
                           },
+                          "entity": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "legalName": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["id", "legalName"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "priority": {
                             "type": "string",
                             "enum": ["low", "medium", "high", "critical"]
@@ -5603,6 +5623,7 @@
                           "statusName",
                           "stage",
                           "manager",
+                          "entity",
                           "priority",
                           "risk",
                           "description",
@@ -5729,6 +5750,26 @@
                             }
                           ]
                         },
+                        "entity": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "legalName": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["id", "legalName"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "priority": {
                           "type": "string",
                           "enum": ["low", "medium", "high", "critical"]
@@ -5787,6 +5828,7 @@
                         "statusName",
                         "stage",
                         "manager",
+                        "entity",
                         "priority",
                         "risk",
                         "description",
@@ -5932,7 +5974,7 @@
     "/api/v1/contracts/{number}": {
       "get": {
         "operationId": "getContract",
-        "summary": "One contract by its CTR-003 number, with its Owner and its working group — the record page's read; archived contracts answer too, so restore stays reachable",
+        "summary": "One contract by its CTR-003 number, with its Owner, its signing entity, and its working group — the record page's read; archived contracts answer too, so restore stays reachable",
         "tags": ["contracts"],
         "parameters": [
           {
@@ -6017,6 +6059,26 @@
                             }
                           ]
                         },
+                        "entity": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "legalName": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["id", "legalName"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "priority": {
                           "type": "string",
                           "enum": ["low", "medium", "high", "critical"]
@@ -6075,6 +6137,7 @@
                         "statusName",
                         "stage",
                         "manager",
+                        "entity",
                         "priority",
                         "risk",
                         "description",
@@ -6138,7 +6201,7 @@
       },
       "patch": {
         "operationId": "updateContract",
-        "summary": "Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, priority, risk, or the status — any live status may follow any other (CTR-001). Never on an archived contract",
+        "summary": "Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, or the status — any live status may follow any other (CTR-001). Never on an archived contract",
         "tags": ["contracts"],
         "requestBody": {
           "required": true,
@@ -6164,6 +6227,16 @@
                     ]
                   },
                   "managerId": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "entityId": {
                     "anyOf": [
                       {
                         "type": "string"
@@ -6280,6 +6353,26 @@
                             }
                           ]
                         },
+                        "entity": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "legalName": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["id", "legalName"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "priority": {
                           "type": "string",
                           "enum": ["low", "medium", "high", "critical"]
@@ -6338,6 +6431,7 @@
                         "statusName",
                         "stage",
                         "manager",
+                        "entity",
                         "priority",
                         "risk",
                         "description",
@@ -6649,6 +6743,26 @@
                             }
                           ]
                         },
+                        "entity": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "legalName": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["id", "legalName"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "priority": {
                           "type": "string",
                           "enum": ["low", "medium", "high", "critical"]
@@ -6707,6 +6821,7 @@
                         "statusName",
                         "stage",
                         "manager",
+                        "entity",
                         "priority",
                         "risk",
                         "description",
@@ -6824,6 +6939,26 @@
                             }
                           ]
                         },
+                        "entity": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "legalName": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["id", "legalName"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "priority": {
                           "type": "string",
                           "enum": ["low", "medium", "high", "critical"]
@@ -6882,6 +7017,7 @@
                         "statusName",
                         "stage",
                         "manager",
+                        "entity",
                         "priority",
                         "risk",
                         "description",

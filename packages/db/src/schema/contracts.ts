@@ -27,6 +27,7 @@ import { check, index, integer, pgTable, text, timestamp, uniqueIndex } from "dr
 import { users } from "./auth.js";
 import { contractStatuses } from "./contract-statuses.js";
 import { contractTypes } from "./contract-types.js";
+import { entities } from "./entities.js";
 import { uuidPk } from "./helpers.js";
 
 /**
@@ -62,6 +63,13 @@ export const contracts = pgTable(
      * column keeps the `manager_id` name the matter sibling uses
      * (MTR-003), so one query shape serves both records. */
     managerId: text("manager_id").references(() => users.id),
+    /** CTR-011's our side of the contract: which of our own Entities
+     * signs it. NULL until known — a contract is often recorded before
+     * anyone decides which subsidiary is on the paper. Their side is
+     * the `contract_counterparties` join, which lands with its own
+     * ticket. No cascade: an entity is soft-deleted, never dropped, so
+     * a signed contract can never lose the name that signed it. */
+    entityId: text("entity_id").references(() => entities.id),
     /** CTR-005: not null, `medium` until someone says otherwise. */
     priority: text("priority", { enum: SEVERITY_LEVELS }).notNull().default("medium"),
     /** CTR-005: NULL = not yet assessed, which is not the same as low. */
@@ -92,6 +100,9 @@ export const contracts = pgTable(
     // "What is on my desk" — the Owner filter the list offers, and the
     // guard that answers whether a departing person still owns work.
     index("contracts_manager_idx").on(table.managerId),
+    // `entity_id` carries no index yet: nothing in M8 reads contracts by
+    // the entity that signs them. The roll-up that will (ENT-007, M27)
+    // brings its own, per the incremental-schema doctrine.
     check(
       "contracts_priority_check",
       sql`${table.priority} in ('low', 'medium', 'high', 'critical')`,

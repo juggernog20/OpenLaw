@@ -127,6 +127,13 @@
       "when": 1786569621470,
       "tag": "0017_contract_team",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1786572699619,
+      "tag": "0018_contract_signing_entity",
+      "breakpoints": true
     }
   ]
 }

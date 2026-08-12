@@ -103,6 +103,8 @@ interface ContractRow {
   stage: string;
   /** The Owner (CTR-004); null = unassigned, which reads as triage. */
   manager: Person | null;
+  /** Our side (CTR-011); null = which of ours signs is not known yet. */
+  entity: { id: string; legalName: string } | null;
   priority: string;
   risk: string | null;
   description: string | null;
@@ -166,6 +168,29 @@ const newContract = async (title: string, typeSlug = "nda"): Promise<ContractRow
   const res = await createContract(adminCookies, { title, contractTypeId: type.id });
   expect(res.statusCode, res.body).toBe(201);
   return res.json().contract;
+};
+
+/** Registers one of our entities, requiring success — the M7 registry
+ * is where the signing-entity picker reads from (CTR-011). */
+const newEntity = async (legalName: string): Promise<{ id: string; legalName: string }> => {
+  const types = await harness.app.inject({
+    method: "GET",
+    url: "/api/v1/entities/types",
+    cookies: memberCookies,
+  });
+  expect(types.statusCode, types.body).toBe(200);
+  const corporation = (types.json().entityTypes as Option[]).find(
+    (row) => row.slug === "corporation",
+  );
+  expect(corporation).toBeDefined();
+  const res = await harness.app.inject({
+    method: "POST",
+    url: "/api/v1/entities",
+    cookies: adminCookies,
+    payload: { legalName, entityTypeId: corporation!.id },
+  });
+  expect(res.statusCode, res.body).toBe(201);
+  return res.json().entity;
 };
 
 const getContract = (cookies: Record<string, string>, number: number | string) =>
@@ -1041,6 +1066,100 @@ describe("the contract team (CTR-004)", () => {
         role: "watcher",
       });
     }
+  });
+});
+
+describe("the signing entity (CTR-011)", () => {
+  it("is born empty, because which of ours signs is often decided later", async () => {
+    const contract = await newContract("Entity starts empty");
+    expect(contract.entity).toBeNull();
+    const read = await getContract(memberCookies, contract.number);
+    expect(read.json().contract.entity).toBeNull();
+  });
+
+  it("takes a live entity from the registry and clears back to empty", async () => {
+    const contract = await newContract("Entity round trip");
+    const meridian = await newEntity("Meridian Bio, Inc.");
+
+    const signed = await patchContract(memberCookies, contract.number, { entityId: meridian.id });
+    expect(signed.statusCode, signed.body).toBe(200);
+    expect(signed.json().contract.entity).toEqual({
+      id: meridian.id,
+      legalName: "Meridian Bio, Inc.",
+    });
+    // The record read answers with it too, not just the write.
+    const read = await getContract(memberCookies, contract.number);
+    expect(read.json().contract.entity.id).toBe(meridian.id);
+
+    const cleared = await patchContract(memberCookies, contract.number, { entityId: null });
+    expect(cleared.statusCode, cleared.body).toBe(200);
+    expect(cleared.json().contract.entity).toBeNull();
+  });
+
+  it("refuses an unknown id and an archived entity as 400", async () => {
+    const contract = await newContract("Entity refusals");
+    const unknown = await patchContract(adminCookies, contract.number, { entityId: "no-such-id" });
+    expect(unknown.statusCode, unknown.body).toBe(400);
+
+    // An archived entity is out of the registry list and out of the
+    // picker, so nothing new may be signed by it.
+    const dissolved = await newEntity("Dissolved Holdings Ltd");
+    const archived = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entities/${dissolved.id}/archive`,
+      cookies: adminCookies,
+    });
+    expect(archived.statusCode, archived.body).toBe(200);
+    const refused = await patchContract(adminCookies, contract.number, { entityId: dissolved.id });
+    expect(refused.statusCode, refused.body).toBe(400);
+    expect(refused.json().detail).toBe("The signing entity must be a live entity.");
+
+    const read = await getContract(adminCookies, contract.number);
+    expect(read.json().contract.entity).toBeNull();
+  });
+
+  it("keeps naming an entity archived after it signed", async () => {
+    const contract = await newContract("Entity archived after signing");
+    const closing = await newEntity("Closing Branch GmbH");
+    const signed = await patchContract(adminCookies, contract.number, { entityId: closing.id });
+    expect(signed.statusCode, signed.body).toBe(200);
+
+    const archived = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entities/${closing.id}/archive`,
+      cookies: adminCookies,
+    });
+    expect(archived.statusCode, archived.body).toBe(200);
+
+    // Nothing is rewritten: the record still names who signed. The
+    // registry is where an entity's standing is read, not the contract.
+    const read = await getContract(adminCookies, contract.number);
+    expect(read.json().contract.entity).toEqual({
+      id: closing.id,
+      legalName: "Closing Branch GmbH",
+    });
+  });
+
+  it("writes the change with before and after legal names, and nothing when it repeats", async () => {
+    const contract = await newContract("Entity audit");
+    const parent = await newEntity("Audit Parent Corp");
+    await patchContract(adminCookies, contract.number, { entityId: parent.id });
+    await patchContract(adminCookies, contract.number, { entityId: null });
+
+    const changes = (await auditRowsFor(contract.id))
+      .filter((row) => row.action === "contract.updated")
+      .map((row) => (row.payload as { changed: Record<string, unknown> }).changed.entity);
+    expect(changes).toEqual([
+      { from: null, to: "Audit Parent Corp" },
+      { from: "Audit Parent Corp", to: null },
+    ]);
+
+    // Setting the entity a contract already has changes nothing, so no
+    // misleading from==to entry is written.
+    await patchContract(adminCookies, contract.number, { entityId: null });
+    expect(
+      (await auditRowsFor(contract.id)).filter((row) => row.action === "contract.updated"),
+    ).toHaveLength(2);
   });
 });
 
