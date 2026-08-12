@@ -42,7 +42,8 @@ export type ActivityAction =
   | "user.unarchived"
   | "user.sessions_revoked"
   | "org_settings.updated"
-  | `contract_type.${"created" | "renamed" | "reordered" | "archived" | "restored" | "deleted"}`
+  | `contract_type.${"created" | "renamed" | "updated" | "reordered" | "archived" | "restored" | "deleted"}`
+  | `contract_type_field.${"attached" | "detached" | "reordered" | "required_changed"}`
   | `contract_status.${"created" | "renamed" | "reordered" | "archived" | "restored" | "deleted"}`
   | `field.${"created" | "updated" | "promoted" | "narrowed" | "archived" | "restored"}`
   | "sso_provider.registered"

@@ -21,6 +21,7 @@ const ContractTypeSchema = z.object({
   id: z.string(),
   slug: z.string(),
   displayName: z.string(),
+  description: z.string().nullable(),
   displayOrder: z.number().int(),
   isSystemDefault: z.boolean(),
   archivedAt: z.iso.datetime().nullable(),
@@ -32,6 +33,7 @@ const ContractTypeEnvelope = z.object({ contractType: ContractTypeSchema });
 const ContractTypeListEnvelope = z.object({ contractTypes: z.array(ContractTypeSchema) });
 
 const DisplayNameSchema = z.string().trim().min(1).max(100);
+const DescriptionSchema = z.string().trim().max(500);
 
 /**
  * No contracts exist until M8, so every type's live-usage count is zero.
@@ -46,6 +48,7 @@ function toRow(row: ContractType) {
     id: row.id,
     slug: row.slug,
     displayName: row.displayName,
+    description: row.description,
     displayOrder: row.displayOrder,
     isSystemDefault: row.isSystemDefault,
     archivedAt: row.archivedAt?.toISOString() ?? null,
@@ -105,6 +108,29 @@ export const contractTypesRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
+  app.get(
+    "/contract-types/:id",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "getContractType",
+        summary: "One contract type — the read behind the type editor (#84)",
+        tags: ["contract-types"],
+        params: z.object({ id: z.string() }),
+        response: { 200: ContractTypeEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const [row] = await app.db
+        .select()
+        .from(contractTypes)
+        .where(eq(contractTypes.id, request.params.id))
+        .limit(1);
+      if (!row) throw httpError(404, "No contract type exists with this id.");
+      return { contractType: toRow(row) };
+    },
+  );
+
   app.post(
     "/contract-types",
     {
@@ -158,35 +184,69 @@ export const contractTypesRoutes: FastifyPluginAsyncZod = async (app) => {
     {
       preHandler: requireRole("administrator"),
       schema: {
-        operationId: "renameContractType",
+        operationId: "updateContractType",
         summary:
           "Rename a contract type's display name (DES-017 in-place " +
-          "rename); the slug never changes, and even `other` may rename",
+          "rename) or edit its description (#84); the slug never " +
+          "changes, and even `other` may rename",
         tags: ["contract-types"],
         params: z.object({ id: z.string() }),
-        body: z.object({ displayName: DisplayNameSchema }),
+        // Strict: slug immutability is an explicit refusal, not a strip.
+        body: z.strictObject({
+          displayName: DisplayNameSchema.optional(),
+          description: DescriptionSchema.nullable().optional(),
+        }),
         response: { 200: ContractTypeEnvelope, default: problemResponse },
       },
     },
     async (request) => {
-      const displayName = request.body.displayName.trim();
+      const body = request.body;
       const row = await app.db.transaction(async (tx) => {
         const target = await lockedType(tx, request.params.id);
-        // Renaming to the current name changes nothing — answer with the
-        // row and write no misleading from==to audit entry.
-        if (target.displayName === displayName) return target;
+
+        const patch: Partial<ContractType> = {};
+        const displayName = body.displayName?.trim();
+        if (displayName !== undefined && displayName !== target.displayName) {
+          patch.displayName = displayName;
+        }
+        const description =
+          body.description !== undefined ? body.description?.trim() || null : undefined;
+        if (description !== undefined && description !== target.description) {
+          patch.description = description;
+        }
+        // Nothing changed: answer with the row and write no misleading
+        // from==to audit entry.
+        if (Object.keys(patch).length === 0) return target;
+
         const [updated] = await tx
           .update(contractTypes)
-          .set({ displayName })
+          .set(patch)
           .where(eq(contractTypes.id, target.id))
           .returning();
-        await recordActivity(tx, {
-          entityType: "system",
-          actorId: request.user.id,
-          action: "contract_type.renamed",
-          visibility: "admin_only",
-          payload: { slug: target.slug, from: target.displayName, to: displayName },
-        });
+        // A rename stays its own audit verb — the M9 viewer narrates
+        // "renamed" rather than a generic edit; other columns share one
+        // `updated` entry with the fields-route changed map.
+        if (patch.displayName !== undefined) {
+          await recordActivity(tx, {
+            entityType: "system",
+            actorId: request.user.id,
+            action: "contract_type.renamed",
+            visibility: "admin_only",
+            payload: { slug: target.slug, from: target.displayName, to: patch.displayName },
+          });
+        }
+        if (patch.description !== undefined) {
+          await recordActivity(tx, {
+            entityType: "system",
+            actorId: request.user.id,
+            action: "contract_type.updated",
+            visibility: "admin_only",
+            payload: {
+              slug: target.slug,
+              changed: { description: { from: target.description, to: patch.description } },
+            },
+          });
+        }
         return updated!;
       });
       return { contractType: toRow(row) };
