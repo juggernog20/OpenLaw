@@ -16,7 +16,15 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, asc, eq, inArray, users } from "@openlaw/db";
+import {
+  activityLog,
+  asc,
+  contractCounterparties,
+  counterparties,
+  eq,
+  inArray,
+  users,
+} from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -105,6 +113,9 @@ interface ContractRow {
   manager: Person | null;
   /** Our side (CTR-011); null = which of ours signs is not known yet. */
   entity: { id: string; legalName: string } | null;
+  /** Their side, reduced to the one name a list row shows (CTR-011);
+   * null = nobody is recorded on the other side yet. */
+  primaryCounterparty: { id: string; name: string } | null;
   priority: string;
   risk: string | null;
   description: string | null;
@@ -113,6 +124,14 @@ interface ContractRow {
 
 interface TeamMember extends Person {
   role: string;
+}
+
+/** One party on the other side, as the record read answers it. */
+interface RecordCounterparty {
+  id: string;
+  name: string;
+  jurisdiction: string | null;
+  isPrimary: boolean;
 }
 
 interface Option {
@@ -222,6 +241,57 @@ const removeTeamMember = (
     cookies,
   });
 
+const addCounterparty = (
+  cookies: Record<string, string>,
+  number: number,
+  payload: Record<string, unknown>,
+) =>
+  harness.app.inject({
+    method: "POST",
+    url: `/api/v1/contracts/${number}/counterparties`,
+    cookies,
+    payload,
+  });
+
+const removeCounterparty = (
+  cookies: Record<string, string>,
+  number: number,
+  counterpartyId: string,
+) =>
+  harness.app.inject({
+    method: "DELETE",
+    url: `/api/v1/contracts/${number}/counterparties/${counterpartyId}`,
+    cookies,
+  });
+
+const setPrimaryCounterparty = (
+  cookies: Record<string, string>,
+  number: number,
+  counterpartyId: string,
+) =>
+  harness.app.inject({
+    method: "POST",
+    url: `/api/v1/contracts/${number}/counterparties/${counterpartyId}/primary`,
+    cookies,
+  });
+
+/** The record read's party list, requiring success. */
+const counterpartiesOf = async (number: number): Promise<RecordCounterparty[]> => {
+  const res = await getContract(adminCookies, number);
+  expect(res.statusCode, res.body).toBe(200);
+  return res.json().counterparties;
+};
+
+/** Puts a named counterparty on a contract, requiring success. */
+const putCounterpartyOn = async (number: number, name: string): Promise<RecordCounterparty> => {
+  const res = await addCounterparty(adminCookies, number, { name });
+  expect(res.statusCode, res.body).toBe(201);
+  const parties = res.json().counterparties as RecordCounterparty[];
+  const party = parties.find((row) => row.name === name);
+  expect(party, name).toBeDefined();
+  return party!;
+};
+
 const patchContract = (
   cookies: Record<string, string>,
   number: number,
@@ -245,6 +315,9 @@ const contractAuditRows = () =>
         "contract.status_changed",
         "contract.team_added",
         "contract.team_removed",
+        "contract.counterparty_added",
+        "contract.counterparty_removed",
+        "contract.counterparty_primary_changed",
         "contract.archived",
         "contract.restored",
       ]),
@@ -269,6 +342,19 @@ describe("the Member+ access floor on contract surfaces", () => {
         method: "PATCH",
         url: "/api/v1/contracts/99999",
         payload: { title: "Ghost NDA" },
+      }),
+      harness.app.inject({
+        method: "POST",
+        url: "/api/v1/contracts/99999/counterparties",
+        payload: { name: "Ghost Counterparty Ltd" },
+      }),
+      harness.app.inject({
+        method: "DELETE",
+        url: "/api/v1/contracts/99999/counterparties/any",
+      }),
+      harness.app.inject({
+        method: "POST",
+        url: "/api/v1/contracts/99999/counterparties/any/primary",
       }),
       harness.app.inject({ method: "POST", url: "/api/v1/contracts/99999/archive" }),
       harness.app.inject({ method: "POST", url: "/api/v1/contracts/99999/restore" }),
@@ -296,6 +382,22 @@ describe("the Member+ access floor on contract surfaces", () => {
           url: "/api/v1/contracts/99999",
           cookies,
           payload: { title: "Sneaky rename" },
+        }),
+        harness.app.inject({
+          method: "POST",
+          url: "/api/v1/contracts/99999/counterparties",
+          cookies,
+          payload: { name: "Sneaky Counterparty Ltd" },
+        }),
+        harness.app.inject({
+          method: "DELETE",
+          url: "/api/v1/contracts/99999/counterparties/any",
+          cookies,
+        }),
+        harness.app.inject({
+          method: "POST",
+          url: "/api/v1/contracts/99999/counterparties/any/primary",
+          cookies,
         }),
         harness.app.inject({ method: "POST", url: "/api/v1/contracts/99999/archive", cookies }),
         harness.app.inject({ method: "POST", url: "/api/v1/contracts/99999/restore", cookies }),
@@ -1160,6 +1262,305 @@ describe("the signing entity (CTR-011)", () => {
     expect(
       (await auditRowsFor(contract.id)).filter((row) => row.action === "contract.updated"),
     ).toHaveLength(2);
+  });
+});
+
+describe("the counterparties (CTR-011)", () => {
+  it("puts an unknown name on the contract, creating the record with just that name", async () => {
+    const contract = await newContract("Inline counterparty creation");
+    const res = await addCounterparty(memberCookies, contract.number, {
+      name: "  Helix Labs GmbH  ",
+    });
+    expect(res.statusCode, res.body).toBe(201);
+    // The name is trimmed, and nothing else about the organization is
+    // invented — enrichment is later and optional (CTR-011).
+    expect(res.json().counterparties).toEqual([
+      { id: expect.any(String), name: "Helix Labs GmbH", jurisdiction: null, isPrimary: true },
+    ]);
+    // The first party on a contract is its primary, and the row the
+    // list draws says so without a second read.
+    expect(res.json().contract.primaryCounterparty).toEqual({
+      id: (res.json().counterparties as RecordCounterparty[])[0]!.id,
+      name: "Helix Labs GmbH",
+    });
+  });
+
+  it("reuses the record it already holds for a name, whatever the casing", async () => {
+    const first = await newContract("Reuse by name, first");
+    const second = await newContract("Reuse by name, second");
+    const original = await putCounterpartyOn(first.number, "Orion Cloud Ltd");
+
+    // The same organization, typed by someone who does not shift-key.
+    const again = await addCounterparty(adminCookies, second.number, { name: "orion cloud ltd" });
+    expect(again.statusCode, again.body).toBe(201);
+    expect((again.json().counterparties as RecordCounterparty[])[0]!.id).toBe(original.id);
+
+    // One row, not two: the typeahead must never end up offering the
+    // same organization twice.
+    const rows = await harness.db
+      .select({ id: counterparties.id })
+      .from(counterparties)
+      .where(eq(counterparties.name, "Orion Cloud Ltd"));
+    expect(rows).toHaveLength(1);
+  });
+
+  it("adds a counterparty it already holds by id, and refuses a second copy of it", async () => {
+    const contract = await newContract("Add by id");
+    const held = await putCounterpartyOn(contract.number, "Northwind Trading BV");
+    const other = await newContract("Add by id, elsewhere");
+
+    const picked = await addCounterparty(adminCookies, other.number, { counterpartyId: held.id });
+    expect(picked.statusCode, picked.body).toBe(201);
+
+    const twice = await addCounterparty(adminCookies, other.number, { counterpartyId: held.id });
+    expect(twice.statusCode, twice.body).toBe(409);
+    expect(twice.json().detail).toBe("That counterparty is already on this contract.");
+    expect(await counterpartiesOf(other.number)).toHaveLength(1);
+  });
+
+  it("holds two or more parties, with exactly one primary at all times", async () => {
+    const contract = await newContract("Tripartite novation");
+    const first = await putCounterpartyOn(contract.number, "Alpha Assignor SA");
+    const second = await putCounterpartyOn(contract.number, "Beta Assignee Oy");
+    const third = await putCounterpartyOn(contract.number, "Gamma Guarantor Ltd");
+
+    const parties = await counterpartiesOf(contract.number);
+    expect(parties).toHaveLength(3);
+    // The primary leads the list, so the record never makes a reader
+    // hunt for the name it is filed under.
+    expect(parties[0]!.id).toBe(first.id);
+    expect(parties.filter((party) => party.isPrimary)).toHaveLength(1);
+    // The parties who joined after take no flag with them.
+    for (const id of [second.id, third.id]) {
+      expect(parties.find((party) => party.id === id)!.isPrimary).toBe(false);
+    }
+  });
+
+  it("moves the primary to another party, and refuses to move it onto itself", async () => {
+    const contract = await newContract("Primary moves");
+    const first = await putCounterpartyOn(contract.number, "First Party Ltd");
+    const second = await putCounterpartyOn(contract.number, "Second Party Ltd");
+
+    const moved = await setPrimaryCounterparty(memberCookies, contract.number, second.id);
+    expect(moved.statusCode, moved.body).toBe(200);
+    expect(moved.json().contract.primaryCounterparty).toEqual({
+      id: second.id,
+      name: "Second Party Ltd",
+    });
+    const parties = moved.json().counterparties as RecordCounterparty[];
+    expect(parties.filter((party) => party.isPrimary).map((party) => party.id)).toEqual([
+      second.id,
+    ]);
+
+    const again = await setPrimaryCounterparty(memberCookies, contract.number, second.id);
+    expect(again.statusCode, again.body).toBe(409);
+    expect(again.json().detail).toBe("That counterparty is already the primary.");
+
+    // The one it was taken from is still on the contract, unflagged.
+    expect((await counterpartiesOf(contract.number)).find((row) => row.id === first.id)).toEqual(
+      expect.objectContaining({ isPrimary: false }),
+    );
+  });
+
+  it("promotes the next party when the primary is taken off — never zero-primary", async () => {
+    const contract = await newContract("Primary leaves");
+    const leaving = await putCounterpartyOn(contract.number, "Leaving Party Ltd");
+    const staying = await putCounterpartyOn(contract.number, "Staying Party Ltd");
+    const third = await putCounterpartyOn(contract.number, "Third Party Ltd");
+
+    const removed = await removeCounterparty(memberCookies, contract.number, leaving.id);
+    expect(removed.statusCode, removed.body).toBe(200);
+    // The party who joined next takes the flag — the record's own
+    // order, not an arbitrary one.
+    expect(removed.json().contract.primaryCounterparty).toEqual({
+      id: staying.id,
+      name: "Staying Party Ltd",
+    });
+    const parties = removed.json().counterparties as RecordCounterparty[];
+    expect(parties.map((party) => party.id).sort()).toEqual([staying.id, third.id].sort());
+    expect(parties.filter((party) => party.isPrimary)).toHaveLength(1);
+  });
+
+  it("leaves no primary only when no party is left", async () => {
+    const contract = await newContract("Last party out");
+    const only = await putCounterpartyOn(contract.number, "Only Party Ltd");
+
+    const removed = await removeCounterparty(adminCookies, contract.number, only.id);
+    expect(removed.statusCode, removed.body).toBe(200);
+    expect(removed.json().counterparties).toEqual([]);
+    expect(removed.json().contract.primaryCounterparty).toBeNull();
+
+    // The organization itself survives — it is only off this contract.
+    const [record] = await harness.db
+      .select({ id: counterparties.id })
+      .from(counterparties)
+      .where(eq(counterparties.id, only.id));
+    expect(record).toBeDefined();
+  });
+
+  it("refuses a body naming both an id and a name, or neither, as 400", async () => {
+    const contract = await newContract("Counterparty body shapes");
+    const held = await putCounterpartyOn(contract.number, "Both Ways Ltd");
+    const other = await newContract("Counterparty body shapes, elsewhere");
+
+    for (const payload of [
+      { counterpartyId: held.id, name: "Both Ways Ltd" },
+      {},
+      { name: "   " },
+      // Strict bodies: an unknown key is a client bug, not a silent strip.
+      { name: "Extra Keys Ltd", jurisdiction: "Delaware" },
+    ]) {
+      const res = await addCounterparty(adminCookies, other.number, payload);
+      expect(res.statusCode, JSON.stringify(payload)).toBe(400);
+    }
+    expect(await counterpartiesOf(other.number)).toEqual([]);
+  });
+
+  it("refuses an unknown id, an archived counterparty, and an absent party", async () => {
+    const contract = await newContract("Counterparty refusals");
+    const unknown = await addCounterparty(adminCookies, contract.number, {
+      counterpartyId: "no-such-id",
+    });
+    expect(unknown.statusCode, unknown.body).toBe(400);
+
+    // A counterparty is soft-deleted, so it leaves the typeahead and
+    // nothing new may be signed with it. M8 gives that no screen, so
+    // the state is set directly here.
+    const gone = await putCounterpartyOn(contract.number, "Dissolved Partner Ltd");
+    await harness.db
+      .update(counterparties)
+      .set({ archivedAt: new Date() })
+      .where(eq(counterparties.id, gone.id));
+    const other = await newContract("Counterparty refusals, elsewhere");
+    const refused = await addCounterparty(adminCookies, other.number, {
+      counterpartyId: gone.id,
+    });
+    expect(refused.statusCode, refused.body).toBe(400);
+    expect(refused.json().detail).toBe("The counterparty must be a live counterparty.");
+
+    // It stays on the contract it was already on: leaving the typeahead
+    // does not undo a party that signed.
+    expect((await counterpartiesOf(contract.number)).map((row) => row.id)).toEqual([gone.id]);
+
+    for (const res of await Promise.all([
+      removeCounterparty(adminCookies, other.number, gone.id),
+      setPrimaryCounterparty(adminCookies, other.number, gone.id),
+    ])) {
+      expect(res.statusCode, res.body).toBe(404);
+      expect(res.json().detail).toBe("That counterparty is not on this contract.");
+    }
+  });
+
+  it("refuses every counterparty write on an archived contract as 409", async () => {
+    const contract = await newContract("Frozen counterparties");
+    const party = await putCounterpartyOn(contract.number, "Frozen Party Ltd");
+    const second = await putCounterpartyOn(contract.number, "Frozen Second Ltd");
+    expect((await archiveContract(adminCookies, contract.number)).statusCode).toBe(200);
+
+    for (const res of await Promise.all([
+      addCounterparty(adminCookies, contract.number, { name: "Too Late Ltd" }),
+      removeCounterparty(adminCookies, contract.number, party.id),
+      setPrimaryCounterparty(adminCookies, contract.number, second.id),
+    ])) {
+      expect(res.statusCode, res.body).toBe(409);
+    }
+    // An archived record reads as facts, so the read still answers.
+    expect(await counterpartiesOf(contract.number)).toHaveLength(2);
+  });
+
+  it("shows the primary counterparty on the contracts list row", async () => {
+    const contract = await newContract("Listed by its counterparty");
+    await putCounterpartyOn(contract.number, "Listed Party Ltd");
+
+    const row = (await listContracts(memberCookies)).find((entry) => entry.id === contract.id);
+    expect(row!.primaryCounterparty).toEqual({
+      id: expect.any(String),
+      name: "Listed Party Ltd",
+    });
+    // A contract with nobody recorded on the other side answers null,
+    // not an empty string or a placeholder name.
+    const bare = await newContract("Nobody on the other side");
+    expect(
+      (await listContracts(memberCookies)).find((entry) => entry.id === bare.id)!
+        .primaryCounterparty,
+    ).toBeNull();
+  });
+
+  it("refuses a second primary at the database, whatever the caller believes", async () => {
+    const contract = await newContract("Two primaries refused");
+    await putCounterpartyOn(contract.number, "Structural First Ltd");
+    const second = await putCounterpartyOn(contract.number, "Structural Second Ltd");
+
+    // The routes keep the invariant (CTR-011); the partial unique index
+    // is the backstop that makes a broken one unwritable.
+    await expect(
+      harness.db
+        .update(contractCounterparties)
+        .set({ isPrimary: true })
+        .where(eq(contractCounterparties.counterpartyId, second.id)),
+    ).rejects.toThrow();
+  });
+
+  it("writes an activity row for the add, the removal, and the promotion", async () => {
+    const contract = await newContract("Counterparty audit");
+    const first = await putCounterpartyOn(contract.number, "Audit First Ltd");
+    const second = await putCounterpartyOn(contract.number, "Audit Second Ltd");
+    expect(
+      (await setPrimaryCounterparty(adminCookies, contract.number, second.id)).statusCode,
+    ).toBe(200);
+    expect((await removeCounterparty(adminCookies, contract.number, second.id)).statusCode).toBe(
+      200,
+    );
+
+    const entries = (await auditRowsFor(contract.id))
+      .filter((row) => row.action.startsWith("contract.counterparty"))
+      .map((row) => ({ action: row.action, payload: row.payload }));
+    expect(entries).toEqual([
+      {
+        action: "contract.counterparty_added",
+        payload: expect.objectContaining({
+          counterparty: "Audit First Ltd",
+          isPrimary: true,
+          // The organization was born with this add, which is what the
+          // M9 viewer needs to say "(new)".
+          created: true,
+        }),
+      },
+      {
+        action: "contract.counterparty_added",
+        payload: expect.objectContaining({ counterparty: "Audit Second Ltd", isPrimary: false }),
+      },
+      {
+        action: "contract.counterparty_primary_changed",
+        payload: expect.objectContaining({ from: "Audit First Ltd", to: "Audit Second Ltd" }),
+      },
+      {
+        action: "contract.counterparty_removed",
+        payload: expect.objectContaining({ counterparty: "Audit Second Ltd", wasPrimary: true }),
+      },
+      // Removing the primary promotes the next party, and nobody asked
+      // for that — so the log says it rather than leave it implied.
+      {
+        action: "contract.counterparty_primary_changed",
+        payload: expect.objectContaining({ from: "Audit Second Ltd", to: "Audit First Ltd" }),
+      },
+    ]);
+    expect(first.isPrimary).toBe(true);
+  });
+
+  it("records an existing counterparty as picked, not created", async () => {
+    const held = await newContract("Picked, not created");
+    const party = await putCounterpartyOn(held.number, "Already Known Ltd");
+    const contract = await newContract("Picked, not created — elsewhere");
+    expect(
+      (await addCounterparty(adminCookies, contract.number, { counterpartyId: party.id }))
+        .statusCode,
+    ).toBe(201);
+
+    const [entry] = (await auditRowsFor(contract.id)).filter(
+      (row) => row.action === "contract.counterparty_added",
+    );
+    expect(entry!.payload).toMatchObject({ counterparty: "Already Known Ltd", created: false });
   });
 });
 

@@ -242,6 +242,9 @@
   "contracts.column.actions": {
     "defaultMessage": "Actions"
   },
+  "contracts.column.counterparty": {
+    "defaultMessage": "Counterparty"
+  },
   "contracts.column.owner": {
     "defaultMessage": "Owner"
   },
@@ -260,6 +263,27 @@
   "contracts.count": {
     "defaultMessage": "{count, plural, one {# contract} other {# contracts}}"
   },
+  "contracts.counterparty.busy": {
+    "defaultMessage": "One change at a time. Wait for the last one to save."
+  },
+  "contracts.counterparty.empty": {
+    "defaultMessage": "Nobody is recorded on the other side yet."
+  },
+  "contracts.counterparty.hint": {
+    "defaultMessage": "Type an unknown name to create it. Add its details later."
+  },
+  "contracts.counterparty.makePrimary": {
+    "defaultMessage": "Make primary"
+  },
+  "contracts.counterparty.primary": {
+    "defaultMessage": "Primary"
+  },
+  "contracts.counterparty.remove": {
+    "defaultMessage": "Take {name} off the contract"
+  },
+  "contracts.counterpartyNone": {
+    "defaultMessage": "None recorded"
+  },
   "contracts.create": {
     "defaultMessage": "Create contract"
   },
@@ -271,6 +295,9 @@
   },
   "contracts.entityUnknown": {
     "defaultMessage": "Not known yet"
+  },
+  "contracts.form.counterparties": {
+    "defaultMessage": "Counterparties"
   },
   "contracts.form.createError": {
     "defaultMessage": "The contract could not be created."
@@ -394,6 +421,21 @@
   },
   "contracts.title": {
     "defaultMessage": "Contracts"
+  },
+  "counterparty.picker.create": {
+    "defaultMessage": "Create \"{name}\""
+  },
+  "counterparty.picker.listLabel": {
+    "defaultMessage": "Counterparty matches"
+  },
+  "counterparty.picker.noMatches": {
+    "defaultMessage": "No counterparties to add."
+  },
+  "counterparty.picker.placeholder": {
+    "defaultMessage": "Find or create a counterparty"
+  },
+  "counterparty.picker.searching": {
+    "defaultMessage": "Searching…"
   },
   "dialog.close": {
     "defaultMessage": "Close"

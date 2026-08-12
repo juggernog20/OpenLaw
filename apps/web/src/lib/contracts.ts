@@ -5,8 +5,8 @@
  * record page (/contracts/:number): the row shape the API answers, the
  * C-### reference (CTR-003), the DES-018 severity ramp behind priority
  * and risk, the stage-keyed status pill, the CTR-004 people — the Owner
- * and the contract team's roles — and CTR-011's our side, the Entity
- * that signs.
+ * and the contract team's roles — and CTR-011's two sides: our Entity
+ * that signs, and their Counterparties.
  *
  * The severity ramp's pill colors are not here yet: M8/1 edits priority
  * and risk as selects, and no surface renders them as pills. The ramp's
@@ -31,6 +31,15 @@ export type SeverityLevel = ContractRow["priority"];
  * they hold (CTR-004's compound key). */
 export type ContractTeamMember = RecordResponse["team"][number];
 export type ContractTeamRole = ContractTeamMember["role"];
+
+/**
+ * One party on the other side (CTR-011), as the record draws them: the
+ * name, the jurisdiction that tells two same-named organizations apart,
+ * and the flag saying which one the contract is listed under. The API
+ * answers them primary first, so the record renders the order it is
+ * given.
+ */
+export type ContractCounterparty = RecordResponse["counterparties"][number];
 
 /** The live types, statuses, and people the create dialog and the
  * record's pickers read (the settings surfaces stay Administrator-only,

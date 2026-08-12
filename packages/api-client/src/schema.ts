@@ -829,7 +829,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** One contract by its CTR-003 number, with its Owner, its signing entity, and its working group — the record page's read; archived contracts answer too, so restore stays reachable */
+    /** One contract by its CTR-003 number, with its Owner, its signing entity, its counterparties, and its working group — the record page's read; archived contracts answer too, so restore stays reachable */
     get: operations["getContract"];
     put?: never;
     post?: never;
@@ -874,6 +874,57 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/contracts/{number}/counterparties": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Put a counterparty on the contract (CTR-011) — either one we already hold, by id, or an unknown name, which is created with just that name in the same transaction. A name we already hold is reused, never duplicated. The first party on a contract becomes its primary */
+    post: operations["addContractCounterparty"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/counterparties/{counterpartyId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Take a counterparty off the contract (CTR-011). Removing the primary passes the flag to the party who joined next, so a contract with counterparties always has one; the counterparty record itself is untouched and stays on its other contracts */
+    delete: operations["removeContractCounterparty"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/counterparties/{counterpartyId}/primary": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Name which counterparty the contract is listed under (CTR-011). There is no route to clear the flag: the primary moves to another party or it stays where it is */
+    post: operations["setPrimaryContractCounterparty"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contracts/{number}/archive": {
     parameters: {
       query?: never;
@@ -902,6 +953,23 @@ export interface paths {
     put?: never;
     /** Restore an archived contract (archive's recovery story): it rejoins the list and becomes editable again */
     post: operations["restoreContract"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/counterparties": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Find counterparties by name — the shared typeahead's read (CTR-011), reused by contract intake. Archived counterparties are never offered; an empty query answers the first names alphabetically, so an unprompted typeahead still opens onto something */
+    get: operations["searchCounterparties"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -3949,6 +4017,10 @@ export interface operations {
                 id: string;
                 legalName: string;
               } | null;
+              primaryCounterparty: {
+                id: string;
+                name: string;
+              } | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
@@ -4015,6 +4087,10 @@ export interface operations {
               entity: {
                 id: string;
                 legalName: string;
+              } | null;
+              primaryCounterparty: {
+                id: string;
+                name: string;
               } | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
@@ -4128,6 +4204,10 @@ export interface operations {
                 id: string;
                 legalName: string;
               } | null;
+              primaryCounterparty: {
+                id: string;
+                name: string;
+              } | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
@@ -4145,6 +4225,12 @@ export interface operations {
               archived: boolean;
               /** @enum {string} */
               role: "member" | "watcher" | "creator" | "contributor";
+            }[];
+            counterparties: {
+              id: string;
+              name: string;
+              jurisdiction: string | null;
+              isPrimary: boolean;
             }[];
           };
         };
@@ -4210,6 +4296,10 @@ export interface operations {
               entity: {
                 id: string;
                 legalName: string;
+              } | null;
+              primaryCounterparty: {
+                id: string;
+                name: string;
               } | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
@@ -4325,6 +4415,231 @@ export interface operations {
       };
     };
   };
+  addContractCounterparty: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          counterpartyId?: string;
+          name?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contract: {
+              id: string;
+              number: number;
+              title: string;
+              contractTypeId: string;
+              contractTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              entity: {
+                id: string;
+                legalName: string;
+              } | null;
+              primaryCounterparty: {
+                id: string;
+                name: string;
+              } | null;
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              description: string | null;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+            counterparties: {
+              id: string;
+              name: string;
+              jurisdiction: string | null;
+              isPrimary: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  removeContractCounterparty: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        counterpartyId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contract: {
+              id: string;
+              number: number;
+              title: string;
+              contractTypeId: string;
+              contractTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              entity: {
+                id: string;
+                legalName: string;
+              } | null;
+              primaryCounterparty: {
+                id: string;
+                name: string;
+              } | null;
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              description: string | null;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+            counterparties: {
+              id: string;
+              name: string;
+              jurisdiction: string | null;
+              isPrimary: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setPrimaryContractCounterparty: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        counterpartyId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contract: {
+              id: string;
+              number: number;
+              title: string;
+              contractTypeId: string;
+              contractTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              entity: {
+                id: string;
+                legalName: string;
+              } | null;
+              primaryCounterparty: {
+                id: string;
+                name: string;
+              } | null;
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              description: string | null;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+            counterparties: {
+              id: string;
+              name: string;
+              jurisdiction: string | null;
+              isPrimary: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   archiveContract: {
     parameters: {
       query?: never;
@@ -4362,6 +4677,10 @@ export interface operations {
               entity: {
                 id: string;
                 legalName: string;
+              } | null;
+              primaryCounterparty: {
+                id: string;
+                name: string;
               } | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
@@ -4425,6 +4744,10 @@ export interface operations {
                 id: string;
                 legalName: string;
               } | null;
+              primaryCounterparty: {
+                id: string;
+                name: string;
+              } | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
@@ -4435,6 +4758,43 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  searchCounterparties: {
+    parameters: {
+      query?: {
+        query?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            counterparties: {
+              id: string;
+              name: string;
+              jurisdiction: string | null;
+            }[];
           };
         };
       };

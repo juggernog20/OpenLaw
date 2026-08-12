@@ -2,14 +2,15 @@
 
 /**
  * The Contracts destination (M8), reduced to what the contract record
- * carries so far: the list (reference, title, type, status, Owner —
- * ordered newest reference first by the API, each row opening its
- * record page at `/contracts/<number>`), the create dialog that takes a
- * title and a type, an empty state that says what the module is, and
- * the show-archived toggle with a row-level restore. The C1 mock's
- * remaining columns — counterparty, risk, value, expiry — join with the
- * tickets that add those fields to the record. The loader is the client
- * half of the Member+ gate; the API's 403 is the real refusal.
+ * carries so far: the list (reference, title, primary counterparty,
+ * type, status, Owner — ordered newest reference first by the API, each
+ * row opening its record page at `/contracts/<number>`), the create
+ * dialog that takes a title and a type, an empty state that says what
+ * the module is, and the show-archived toggle with a row-level restore.
+ * The C1 mock's remaining columns — risk, value, expiry — join with the
+ * tickets that add those fields to the record. The destination is
+ * Member+ only (DD-013): the loader is the client half of that gate,
+ * and the API's 403 is the real refusal.
  */
 
 import { useState } from "react";
@@ -249,6 +250,12 @@ function ContractsTable({
             <th scope="col" className="px-4 py-2 text-start font-medium">
               <FormattedMessage id="contracts.column.title" defaultMessage="Title" />
             </th>
+            {/* Their side, where the C1 mock draws it: straight after
+                the title, because "who is this with" is the second
+                thing a reader scans for. */}
+            <th scope="col" className="w-44 px-4 py-2 text-start font-medium">
+              <FormattedMessage id="contracts.column.counterparty" defaultMessage="Counterparty" />
+            </th>
             <th scope="col" className="w-32 px-4 py-2 text-start font-medium">
               <FormattedMessage id="contracts.column.type" defaultMessage="Type" />
             </th>
@@ -288,6 +295,23 @@ function ContractsTable({
                     </span>
                   )}
                 </span>
+              </td>
+              <td className="px-4 py-2.5 text-sm">
+                {row.primaryCounterparty ? (
+                  // One name per row: the primary is what a list can
+                  // show, and the record holds the rest (CTR-011).
+                  // The width rides the cell's own content, not the
+                  // column hint: a table cell grows to fit, so a long
+                  // name needs something to be truncated against.
+                  <span className="block w-44 truncate">{row.primaryCounterparty.name}</span>
+                ) : (
+                  <span className="text-muted">
+                    <FormattedMessage
+                      id="contracts.counterpartyNone"
+                      defaultMessage="None recorded"
+                    />
+                  </span>
+                )}
               </td>
               <td className="px-4 py-2.5 text-sm text-muted">{row.contractTypeName}</td>
               <td className="px-4 py-2.5">
