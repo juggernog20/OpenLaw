@@ -12,9 +12,7 @@
 
 import { House, Landmark, type LucideIcon } from "lucide-react";
 import { defineMessage, type MessageDescriptor } from "react-intl";
-
-/** Member+ (DD-013): the access floor for most legal-side surfaces. */
-export const MEMBER_PLUS_ROLES = ["administrator", "legal_team_member"] as const;
+import { MEMBER_PLUS_ROLES, type Role } from "../../lib/roles";
 
 export interface Destination {
   id: string;
@@ -22,7 +20,7 @@ export interface Destination {
   icon: LucideIcon;
   label: MessageDescriptor;
   /** Roles that see this destination; absent = every signed-in role. */
-  roles?: readonly string[];
+  roles?: readonly Role[];
 }
 
 export const destinations: Destination[] = [
@@ -44,7 +42,7 @@ export const destinations: Destination[] = [
 ];
 
 /** The destinations a signed-in role gets to see (ENT-004 et al.). */
-export function destinationsFor(role: string): Destination[] {
+export function destinationsFor(role: Role): Destination[] {
   return destinations.filter(
     (destination) => !destination.roles || destination.roles.includes(role),
   );

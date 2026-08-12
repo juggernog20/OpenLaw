@@ -19,6 +19,7 @@ import { Building2, Landmark, Plus } from "lucide-react";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import { problemDetail } from "../lib/messages";
+import { isMemberPlus } from "../lib/roles";
 import { currentUser, needsSetup } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
@@ -60,9 +61,7 @@ export async function entitiesLoader() {
   if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
   // ENT-004: Contributors and Business Users get nothing — not a
   // disabled surface, no surface. The API's 403 stands behind this.
-  if (user.role !== "administrator" && user.role !== "legal_team_member") {
-    return redirect("/");
-  }
+  if (!isMemberPlus(user.role)) return redirect("/");
   const [list, types] = await Promise.all([
     api.GET("/api/v1/entities"),
     api.GET("/api/v1/entities/types"),

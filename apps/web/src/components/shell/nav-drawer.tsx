@@ -13,10 +13,11 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Menu } from "lucide-react";
 import { NavLink } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
+import type { Role } from "../../lib/roles";
 import { cn } from "../../lib/utils";
 import { destinationsFor } from "./destinations";
 
-export function NavDrawer({ role }: Readonly<{ role: string }>) {
+export function NavDrawer({ role }: Readonly<{ role: Role }>) {
   const intl = useIntl();
   const [open, setOpen] = useState(false);
   const destinations = destinationsFor(role);

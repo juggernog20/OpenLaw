@@ -11,6 +11,7 @@
 import { LogOut, Settings } from "lucide-react";
 import { Link } from "react-router";
 import { FormattedMessage } from "react-intl";
+import type { Role } from "../../lib/roles";
 import type { Theme } from "../../lib/theme";
 import { Avatar } from "../avatar";
 import {
@@ -26,7 +27,7 @@ export interface ShellUser {
   displayName: string;
   email: string;
   /** DD-013 role; the nav draws only this role's destinations. */
-  role: string;
+  role: Role;
   theme: Theme;
   /** Avatar photo (DES-018); absent or null renders initials. */
   image?: string | null;

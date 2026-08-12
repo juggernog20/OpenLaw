@@ -212,6 +212,7 @@ describe("GET /entities/types — the Member+ picker source", () => {
       url: "/api/v1/entities/types",
       cookies: memberCookies,
     });
+    expect(res.statusCode, res.body).toBe(200);
     expect(res.json().entityTypes.some((row: { slug: string }) => row.slug === "branch")).toBe(
       false,
     );
@@ -368,12 +369,23 @@ describe("GET /entities — the list and picker seam", () => {
   });
 
   it("refuses to archive an already-archived entity as 409, and 404s an unknown id", async () => {
-    const all = await listEntities(adminCookies, true);
-    const archivedRow = all.find((row) => row.legalName === "Soon Archived Ltd");
-    expect(archivedRow).toBeDefined();
+    // Self-contained: this test registers and archives its own row.
+    const corporation = await typeOptionBySlug("corporation");
+    const created = await register(adminCookies, {
+      legalName: "Twice Archived Ltd",
+      entityTypeId: corporation.id,
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const id = created.json().entity.id;
+    const first = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entities/${id}/archive`,
+      cookies: adminCookies,
+    });
+    expect(first.statusCode, first.body).toBe(200);
     const again = await harness.app.inject({
       method: "POST",
-      url: `/api/v1/entities/${archivedRow!.id}/archive`,
+      url: `/api/v1/entities/${id}/archive`,
       cookies: adminCookies,
     });
     expect(again.statusCode, again.body).toBe(409);
