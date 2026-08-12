@@ -25,6 +25,8 @@ import {
 export interface ShellUser {
   displayName: string;
   email: string;
+  /** DD-013 role; the nav draws only this role's destinations. */
+  role: string;
   theme: Theme;
   /** Avatar photo (DES-018); absent or null renders initials. */
   image?: string | null;

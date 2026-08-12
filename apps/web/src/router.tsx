@@ -9,6 +9,7 @@
 
 import type { RouteObject } from "react-router";
 import { AuthLayout } from "./routes/auth-layout";
+import { EntitiesPage, entitiesLoader } from "./routes/entities";
 import { RouteErrorPage } from "./routes/error-page";
 import { HomePage, homeLoader } from "./routes/home";
 import { LinkExpiredPage } from "./routes/link-expired";
@@ -67,6 +68,15 @@ export const routes: RouteObject[] = [
     errorElement: <RouteErrorPage />,
     // Guards run before first paint; a blank canvas beats a flash of the
     // wrong screen.
+    hydrateFallbackElement: <></>,
+  },
+  {
+    // The M7 Entities registry (ENT-001); its loader admits Member+
+    // only (ENT-004) and bounces everyone else home.
+    path: "/entities",
+    loader: entitiesLoader,
+    element: <EntitiesPage />,
+    errorElement: <RouteErrorPage />,
     hydrateFallbackElement: <></>,
   },
   {
