@@ -10,20 +10,43 @@
  * Administrators only — and every mutation appends to the activity
  * log (DD-017) inside the same transaction. Each table's `other` row
  * is system-protected here, not just in the UI: archive and delete
- * refuse it regardless of what a client sends.
+ * refuse it regardless of what a client sends. In-use counts are per
+ * mount: a module whose record milestone has landed arms `usage`
+ * (entities, #100) and gets genuine counts plus the live SET-003
+ * guard; the others read zero until theirs does.
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { asc, contractTypes, entityTypes, eq, isNull, matterTypes } from "@openlaw/db";
 import { requireRole } from "../auth/guards.js";
-import { recordActivity, type TaxonomyActionPrefix } from "./activity.js";
+import { recordActivity, type ActivityWriter, type TaxonomyActionPrefix } from "./activity.js";
 import { HttpError, httpError, problemResponse } from "./problem.js";
 import { freeSlug } from "./slug.js";
 
 /** The taxonomy tables are one shape by construction (`taxonomyColumns`). */
 export type TaxonomyTable = typeof contractTypes | typeof matterTypes | typeof entityTypes;
 export type TaxonomyRow = TaxonomyTable["$inferSelect"];
+
+/**
+ * The SET-003 live-usage machinery, supplied by a module once its record
+ * milestone lands (entities first, #100). `counts` answers the guard
+ * number — how many records reference each type. `reassign` moves every
+ * referencing record to the target — archived records included, so a
+ * later restore never resurrects a reference to an archived type
+ * (ENT-009) — and writes each moved record's own DD-017 feed entry.
+ * Both run on the caller's executor: the archive route passes its
+ * transaction, so the move, the audit rows, and the archive commit or
+ * roll back together, serialized by the type-row lock the record
+ * routes also take before writing.
+ */
+export interface TaxonomyUsage {
+  counts(db: ActivityWriter, ids: string[]): Promise<Map<string, number>>;
+  reassign(
+    tx: ActivityWriter,
+    move: { from: TaxonomyRow; to: TaxonomyRow; actorId: string },
+  ): Promise<number>;
+}
 
 export interface TaxonomyRoutesConfig {
   table: TaxonomyTable;
@@ -43,10 +66,15 @@ export interface TaxonomyRoutesConfig {
   decision: string;
   /** DD-017 action prefix, e.g. `contract_type`. */
   actionPrefix: TaxonomyActionPrefix;
-  /** The milestone whose records arm the in-use counts (M8 / M22). */
-  recordsMilestone: string;
-  /** What uses a type once records exist, e.g. `contracts`. */
-  recordNoun: string;
+  /** What uses a type once records exist, both grammatical numbers —
+   * the guard refusals pluralize by count. */
+  recordNoun: { singular: string; plural: string };
+  /** The milestone whose records arm `usage` (M8 / M22); omit once armed. */
+  recordsMilestone?: string;
+  /** The module's live-usage counter and reassignment mover. Absent
+   * until the module's record milestone lands: counts read zero and
+   * the SET-003 guard stays dormant — `recordsMilestone` names when. */
+  usage?: TaxonomyUsage;
 }
 
 const TaxonomyRowSchema = z.object({
@@ -64,16 +92,7 @@ const TaxonomyRowSchema = z.object({
 const DisplayNameSchema = z.string().trim().min(1).max(100);
 const DescriptionSchema = z.string().trim().max(500);
 
-/**
- * No records exist until each module's record milestone (M8 contracts,
- * M22 matters), so every type's live-usage count is zero. The record
- * milestone replaces this with a real count over its `*_type_id`
- * column, which also arms the SET-003 rule that an in-use archive
- * requires a reassignment target.
- */
-const IN_USE_COUNT = 0;
-
-function toRow(row: TaxonomyRow) {
+function toRow(row: TaxonomyRow, counts: Map<string, number>) {
   return {
     id: row.id,
     slug: row.slug,
@@ -82,7 +101,7 @@ function toRow(row: TaxonomyRow) {
     displayOrder: row.displayOrder,
     isSystemDefault: row.isSystemDefault,
     archivedAt: row.archivedAt?.toISOString() ?? null,
-    inUseCount: IN_USE_COUNT,
+    inUseCount: counts.get(row.id) ?? 0,
   };
 }
 
@@ -108,6 +127,21 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
       return row;
     }
 
+    /** The SET-003 guard numbers — zero for every id until `usage` arms. */
+    async function usageCounts(db: ActivityWriter, ids: string[]): Promise<Map<string, number>> {
+      if (!config.usage || ids.length === 0) return new Map();
+      return config.usage.counts(db, ids);
+    }
+
+    /** One row as its envelope value, with its live count. */
+    async function rowJson(row: TaxonomyRow) {
+      return toRow(row, await usageCounts(app.db, [row.id]));
+    }
+
+    /** "3 entities" / "1 entity" — the guard refusals' count phrase. */
+    const inUsePhrase = (count: number) =>
+      `${count} ${count === 1 ? config.recordNoun.singular : config.recordNoun.plural}`;
+
     app.get(
       `/${path}`,
       {
@@ -128,7 +162,11 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
           .from(table)
           .where(request.query.includeArchived === "true" ? undefined : isNull(table.archivedAt))
           .orderBy(asc(table.displayOrder), asc(table.createdAt));
-        return { [config.keyPlural]: rows.map(toRow) };
+        const counts = await usageCounts(
+          app.db,
+          rows.map((row) => row.id),
+        );
+        return { [config.keyPlural]: rows.map((row) => toRow(row, counts)) };
       },
     );
 
@@ -151,7 +189,7 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
           .where(eq(table.id, request.params.id))
           .limit(1);
         if (!row) throw httpError(404, `No ${noun} exists with this id.`);
-        return { [config.keySingular]: toRow(row) };
+        return { [config.keySingular]: await rowJson(row) };
       },
     );
 
@@ -200,7 +238,7 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
           });
           return created!;
         });
-        return reply.status(201).send({ [config.keySingular]: toRow(row) });
+        return reply.status(201).send({ [config.keySingular]: await rowJson(row) });
       },
     );
 
@@ -274,7 +312,7 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
           }
           return updated!;
         });
-        return { [config.keySingular]: toRow(row) };
+        return { [config.keySingular]: await rowJson(row) };
       },
     );
 
@@ -334,7 +372,11 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
           });
           return reordered;
         });
-        return { [config.keyPlural]: rows.map(toRow) };
+        const counts = await usageCounts(
+          app.db,
+          rows.map((row) => row.id),
+        );
+        return { [config.keyPlural]: rows.map((row) => toRow(row, counts)) };
       },
     );
 
@@ -344,9 +386,12 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
         preHandler: requireRole("administrator"),
         schema: {
           operationId: `archive${config.idSingular}`,
-          summary:
-            `Archive ${aNoun} (SET-003 guarded): it leaves pickers ` +
-            "and the default list; nothing is deleted; `other` refuses",
+          summary: config.usage
+            ? `Archive ${aNoun} (SET-003 guarded): a type still used by ` +
+              `${config.recordNoun.plural} requires a reassignment target, ` +
+              `which takes them; nothing is deleted; \`other\` refuses`
+            : `Archive ${aNoun} (SET-003 guarded): it leaves pickers ` +
+              "and the default list; nothing is deleted; `other` refuses",
           tags: [config.tag],
           params: z.object({ id: z.string() }),
           body: z.object({ reassignToId: z.string().optional() }),
@@ -376,9 +421,28 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
             if (!reassignTo || reassignTo.archivedAt) {
               throw httpError(400, `The reassignment target must be a live ${noun}.`);
             }
-            // Nothing to move until records exist (the record milestone);
-            // accepting and validating the target now keeps the request
-            // shape stable.
+          }
+
+          // The SET-003 guard number, read under the target's row lock —
+          // the record routes lock the same row before writing their
+          // type column, so the count can't move underneath the guard.
+          const inUseCount = (await usageCounts(tx, [target.id])).get(target.id) ?? 0;
+          if (inUseCount > 0 && !reassignTo) {
+            throw httpError(
+              409,
+              `This ${noun} is used by ${inUsePhrase(inUseCount)}. ` +
+                "Pick a reassignment target to archive it.",
+            );
+          }
+          if (inUseCount > 0 && reassignTo) {
+            // Every referencing record moves to the target — archived
+            // records included (ENT-009) — each with its own DD-017
+            // feed entry, atomically with the archive below.
+            await config.usage!.reassign(tx, {
+              from: target,
+              to: reassignTo,
+              actorId: request.user.id,
+            });
           }
 
           const [updated] = await tx
@@ -394,13 +458,13 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
             payload: {
               slug: target.slug,
               displayName: target.displayName,
-              inUseCount: IN_USE_COUNT,
+              inUseCount,
               reassignedTo: reassignTo?.slug ?? null,
             },
           });
           return updated!;
         });
-        return { [config.keySingular]: toRow(row) };
+        return { [config.keySingular]: await rowJson(row) };
       },
     );
 
@@ -443,7 +507,7 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
           });
           return updated!;
         });
-        return { [config.keySingular]: toRow(row) };
+        return { [config.keySingular]: await rowJson(row) };
       },
     );
 
@@ -453,9 +517,11 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
         preHandler: requireRole("administrator"),
         schema: {
           operationId: `delete${config.idSingular}`,
-          summary:
-            `Hard-delete ${aNoun}; \`other\` refuses (${config.decision}), and ` +
-            `once ${config.recordNoun} exist (${config.recordsMilestone}) an in-use type will refuse too`,
+          summary: config.usage
+            ? `Hard-delete ${aNoun}; \`other\` refuses (${config.decision}), ` +
+              `and so does a type still used by ${config.recordNoun.plural}`
+            : `Hard-delete ${aNoun}; \`other\` refuses (${config.decision}), and ` +
+              `once ${config.recordNoun.plural} exist (${config.recordsMilestone}) an in-use type will refuse too`,
           tags: [config.tag],
           params: z.object({ id: z.string() }),
           // z.undefined() = a bodyless 204; z.null() would advertise a
@@ -468,6 +534,16 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
           const target = await lockedType(tx, request.params.id);
           if (target.slug === "other") {
             throw httpError(409, "The Other type is system-protected and can't be deleted.");
+          }
+          // An in-use type refuses cleanly — the records' FK would refuse
+          // anyway, as a bare 500. Archive with a reassignment is the way.
+          const inUseCount = (await usageCounts(tx, [target.id])).get(target.id) ?? 0;
+          if (inUseCount > 0) {
+            throw httpError(
+              409,
+              `This ${noun} is used by ${inUsePhrase(inUseCount)} and can't be ` +
+                "deleted. Archive it with a reassignment target instead.",
+            );
           }
           await tx.delete(table).where(eq(table.id, target.id));
           await recordActivity(tx, {

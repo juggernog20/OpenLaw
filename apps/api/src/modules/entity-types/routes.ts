@@ -6,11 +6,15 @@
  * ENT-001 vocabulary — the fourth instance of #85's one machinery,
  * configuration, not a copy. The `other` row is system-protected;
  * every mutation is Administrator-only and audit-logged (DD-017) —
- * see the factory for the behavior set.
+ * see the factory for the behavior set. This is the first mount whose
+ * record milestone has landed (M7), so `usage` is armed: the in-use
+ * counts are genuine queries over the registry and the SET-003 archive
+ * guard is live (#100).
  */
 
 import { entityTypes } from "@openlaw/db";
 import { taxonomyRoutes } from "../../lib/taxonomy-routes.js";
+import { entityTypeUsage } from "../entities/type-usage.js";
 
 export const entityTypesRoutes = taxonomyRoutes({
   table: entityTypes,
@@ -23,6 +27,6 @@ export const entityTypesRoutes = taxonomyRoutes({
   noun: "entity type",
   decision: "ENT-001",
   actionPrefix: "entity_type",
-  recordsMilestone: "M7",
-  recordNoun: "entities",
+  recordNoun: { singular: "entity", plural: "entities" },
+  usage: entityTypeUsage,
 });

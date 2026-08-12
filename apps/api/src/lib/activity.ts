@@ -53,8 +53,10 @@ export type ActivityAction =
   // The registry record's own feed (M7): create and archive from #98,
   // the record surface's verbs from #99. A status change keeps its own
   // verb — status is the fixed code-branching enum (ENT-001), so the M9
-  // viewer narrates "status changed" rather than a generic edit.
-  | `entity.${"created" | "updated" | "status_changed" | "archived" | "restored"}`
+  // viewer narrates "status changed" rather than a generic edit. A type
+  // reassignment (#100) keeps its own verb too: the entity moved because
+  // an Administrator archived its type, not because someone edited it.
+  | `entity.${"created" | "updated" | "status_changed" | "type_reassigned" | "archived" | "restored"}`
   | "sso_provider.registered"
   | "sso_provider.updated";
 

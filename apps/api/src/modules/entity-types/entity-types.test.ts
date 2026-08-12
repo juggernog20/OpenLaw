@@ -496,6 +496,189 @@ describe("DELETE /entity-types/:id", () => {
   });
 });
 
+describe("the SET-003 archive guard over the registry (#100)", () => {
+  interface EntityRow {
+    id: string;
+    legalName: string;
+    entityTypeId: string;
+  }
+
+  const createType = async (displayName: string): Promise<TypeRow> => {
+    const res = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/entity-types",
+      cookies: adminCookies,
+      payload: { displayName },
+    });
+    expect(res.statusCode, res.body).toBe(201);
+    return res.json().entityType;
+  };
+
+  const registerEntity = async (legalName: string, entityTypeId: string): Promise<EntityRow> => {
+    const res = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/entities",
+      cookies: adminCookies,
+      payload: { legalName, entityTypeId },
+    });
+    expect(res.statusCode, res.body).toBe(201);
+    return res.json().entity;
+  };
+
+  const registryRows = async (): Promise<EntityRow[]> => {
+    const res = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/entities?includeArchived=true",
+      cookies: adminCookies,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    return res.json().entities;
+  };
+
+  let trust: TypeRow;
+  let foundation: TypeRow;
+  let acme: EntityRow;
+  let globex: EntityRow;
+
+  beforeAll(async () => {
+    trust = await createType("Trust");
+    foundation = await createType("Foundation");
+    acme = await registerEntity("Acme Trust", trust.id);
+    globex = await registerEntity("Globex Trust", trust.id);
+    // One of the two is archived: the guard must count and move it too —
+    // restore must never resurrect a reference to an archived type.
+    const archived = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entities/${globex.id}/archive`,
+      cookies: adminCookies,
+    });
+    expect(archived.statusCode, archived.body).toBe(200);
+  });
+
+  it("answers the live usage count in the list read", async () => {
+    expect((await typeBySlug("trust")).inUseCount).toBe(2);
+    expect((await typeBySlug("foundation")).inUseCount).toBe(0);
+  });
+
+  it("refuses to archive an in-use type without a target, reporting the count", async () => {
+    const res = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entity-types/${trust.id}/archive`,
+      cookies: adminCookies,
+      payload: {},
+    });
+    expect(res.statusCode, res.body).toBe(409);
+    expect(res.headers["content-type"]).toContain("application/problem+json");
+    expect(res.json().detail).toContain("2 entities");
+    expect((await typeBySlug("trust")).archivedAt).toBeNull();
+  });
+
+  it("refuses to hard-delete an in-use type as 409", async () => {
+    const res = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/entity-types/${trust.id}`,
+      cookies: adminCookies,
+    });
+    expect(res.statusCode, res.body).toBe(409);
+    expect((await listTypes(true)).some((row) => row.slug === "trust")).toBe(true);
+  });
+
+  it("guards a type used only by an archived entity — the reference is still real", async () => {
+    const ghost = await createType("Ghost");
+    const haunted = await registerEntity("Haunted Holdings", ghost.id);
+    const archived = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entities/${haunted.id}/archive`,
+      cookies: adminCookies,
+    });
+    expect(archived.statusCode, archived.body).toBe(200);
+
+    const refuse = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entity-types/${ghost.id}/archive`,
+      cookies: adminCookies,
+      payload: {},
+    });
+    expect(refuse.statusCode, refuse.body).toBe(409);
+    expect(refuse.json().detail).toContain("1 entity");
+    const noDelete = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/entity-types/${ghost.id}`,
+      cookies: adminCookies,
+    });
+    expect(noDelete.statusCode, noDelete.body).toBe(409);
+  });
+
+  it("archives with a target: every referencing entity moves, archived rows included", async () => {
+    const res = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entity-types/${trust.id}/archive`,
+      cookies: adminCookies,
+      payload: { reassignToId: foundation.id },
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().entityType.archivedAt).not.toBeNull();
+    expect(res.json().entityType.inUseCount).toBe(0);
+
+    const rows = await registryRows();
+    expect(rows.find((row) => row.id === acme.id)!.entityTypeId).toBe(foundation.id);
+    expect(rows.find((row) => row.id === globex.id)!.entityTypeId).toBe(foundation.id);
+    expect((await typeBySlug("foundation")).inUseCount).toBe(2);
+  });
+
+  it("still archives an unused type without the guard", async () => {
+    const shelf = await createType("Shelf");
+    const res = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entity-types/${shelf.id}/archive`,
+      cookies: adminCookies,
+      payload: {},
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().entityType.archivedAt).not.toBeNull();
+  });
+
+  it("protects `other` regardless — in use or not", async () => {
+    const other = await typeBySlug("other");
+    await registerEntity("Otherwise Ltd", other.id);
+    const res = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entity-types/${other.id}/archive`,
+      cookies: adminCookies,
+      payload: { reassignToId: foundation.id },
+    });
+    expect(res.statusCode, res.body).toBe(409);
+    expect((await typeBySlug("other")).archivedAt).toBeNull();
+  });
+
+  it("writes the reassignment and the archive to the activity log in one transaction", async () => {
+    const rows = await auditRows();
+    const archivedTrust = rows.find(
+      (row) =>
+        row.action === "entity_type.archived" &&
+        (row.payload as { slug?: string }).slug === "trust",
+    );
+    expect(archivedTrust?.payload).toMatchObject({
+      slug: "trust",
+      inUseCount: 2,
+      reassignedTo: "foundation",
+    });
+
+    const moves = await harness.db
+      .select()
+      .from(activityLog)
+      .where(eq(activityLog.action, "entity.type_reassigned"))
+      .orderBy(asc(activityLog.createdAt));
+    expect(moves.map((row) => row.entityId).sort()).toEqual([acme.id, globex.id].sort());
+    for (const move of moves) {
+      expect(move.visibility).toBe("legal_only");
+      expect(move.payload).toMatchObject({ from: "Trust", to: "Foundation" });
+    }
+    const legalNames = moves.map((row) => (row.payload as { legalName?: string }).legalName);
+    expect(legalNames.sort()).toEqual(["Acme Trust", "Globex Trust"].sort());
+  });
+});
+
 describe("the DD-017 audit trail", () => {
   it("records every mutation kind under the entity_type namespace", async () => {
     const me = await harness.app.inject({

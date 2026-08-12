@@ -816,7 +816,7 @@ export interface paths {
     get: operations["getEntityType"];
     put?: never;
     post?: never;
-    /** Hard-delete an entity type; `other` refuses (ENT-001), and once entities exist (M7) an in-use type will refuse too */
+    /** Hard-delete an entity type; `other` refuses (ENT-001), and so does a type still used by entities */
     delete: operations["deleteEntityType"];
     options?: never;
     head?: never;
@@ -850,7 +850,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Archive an entity type (SET-003 guarded): it leaves pickers and the default list; nothing is deleted; `other` refuses */
+    /** Archive an entity type (SET-003 guarded): a type still used by entities requires a reassignment target, which takes them; nothing is deleted; `other` refuses */
     post: operations["archiveEntityType"];
     delete?: never;
     options?: never;
