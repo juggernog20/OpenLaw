@@ -13,7 +13,7 @@
  */
 
 import { useState } from "react";
-import { redirect, useNavigate, useLoaderData, type LoaderFunctionArgs } from "react-router";
+import { redirect, useNavigate, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { Building2, Landmark, Plus } from "lucide-react";
 import { api } from "../lib/api";
@@ -55,7 +55,7 @@ interface EntityTypeOption {
   displayName: string;
 }
 
-export async function entitiesLoader(_args: LoaderFunctionArgs) {
+export async function entitiesLoader() {
   const user = await currentUser();
   if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
   // ENT-004: Contributors and Business Users get nothing — not a
