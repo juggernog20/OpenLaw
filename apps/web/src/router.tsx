@@ -17,6 +17,10 @@ import { SetPasswordPage } from "./routes/set-password";
 import { SettingsLayout, settingsIndexLoader, settingsLoader } from "./routes/settings";
 import { SettingsAppearancePage } from "./routes/settings-appearance";
 import {
+  SettingsContractStatusesPage,
+  settingsContractStatusesLoader,
+} from "./routes/settings-contract-statuses";
+import {
   SettingsContractTypesPage,
   settingsContractsIndexLoader,
   settingsContractTypesLoader,
@@ -82,6 +86,11 @@ export const routes: RouteObject[] = [
         path: "contracts/types",
         loader: settingsContractTypesLoader,
         element: <SettingsContractTypesPage />,
+      },
+      {
+        path: "contracts/statuses",
+        loader: settingsContractStatusesLoader,
+        element: <SettingsContractStatusesPage />,
       },
     ],
   },

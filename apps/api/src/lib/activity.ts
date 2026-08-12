@@ -43,6 +43,7 @@ export type ActivityAction =
   | "user.sessions_revoked"
   | "org_settings.updated"
   | `contract_type.${"created" | "renamed" | "reordered" | "archived" | "restored" | "deleted"}`
+  | `contract_status.${"created" | "renamed" | "reordered" | "archived" | "restored" | "deleted"}`
   | "sso_provider.registered"
   | "sso_provider.updated";
 
