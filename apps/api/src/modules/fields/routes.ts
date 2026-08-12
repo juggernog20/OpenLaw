@@ -25,13 +25,11 @@ import {
   count,
   eq,
   fields,
-  FIELD_MODULE_SCOPES,
   FIELD_TAGS,
   FIELD_TYPES,
   inArray,
   isNull,
   matterTypeFields,
-  sql,
   type Field,
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
@@ -49,14 +47,13 @@ const OPEN_SCOPES = ["contract", "global"] as const;
 const ScopeSchema = z.enum(OPEN_SCOPES);
 const FieldTypeSchema = z.enum(FIELD_TYPES);
 const FieldTagSchema = z.enum(FIELD_TAGS);
-const FieldModuleScopeSchema = z.enum(FIELD_MODULE_SCOPES);
 
 const FieldSchema = z.object({
   id: z.string(),
   slug: z.string(),
   displayName: z.string(),
   description: z.string().nullable(),
-  moduleScope: FieldModuleScopeSchema,
+  moduleScope: ScopeSchema,
   fieldType: FieldTypeSchema,
   options: z.array(z.string()).nullable(),
   fieldTag: FieldTagSchema,
@@ -87,7 +84,7 @@ function toRow(row: Field, inUseCount: number) {
     slug: row.slug,
     displayName: row.displayName,
     description: row.description,
-    moduleScope: row.moduleScope,
+    moduleScope: row.moduleScope as (typeof OPEN_SCOPES)[number],
     fieldType: row.fieldType,
     options: row.options ?? null,
     fieldTag: row.fieldTag,
@@ -249,12 +246,6 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
       }
 
       const row = await app.db.transaction(async (tx) => {
-        // Acquire an advisory lock to serialize slug derivation across
-        // concurrent transactions, preventing duplicate slugs from racing
-        // through the uniqueness check.
-        await tx.execute(
-          sql`SELECT pg_advisory_xact_lock(hashtext('fields'))`,
-        );
         // The slug derives from the full row set — archived rows still
         // hold their slugs (restore brings them back), so the scan
         // includes them.
@@ -319,10 +310,6 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
       const body = request.body;
       const row = await app.db.transaction(async (tx) => {
         const target = await lockedField(tx, request.params.id);
-
-        if (target.archivedAt) {
-          throw httpError(409, "Archived fields cannot be edited — restore the field first.");
-        }
 
         const patch: Partial<Field> = {};
         /** from → to per changed column, for the one audit entry. */
@@ -404,15 +391,9 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
               "detach it there first, then narrow the scope.",
           );
         }
-        // When promoting from contract to global, clear the AI prompt
-        // (AI prompts live on contract-scoped fields only).
-        const patch: Partial<Field> = { moduleScope };
-        if (target.moduleScope === "contract" && moduleScope === "global" && target.aiPrompt) {
-          patch.aiPrompt = null;
-        }
         const [updated] = await tx
           .update(fields)
-          .set(patch)
+          .set({ moduleScope })
           .where(eq(fields.id, target.id))
           .returning();
         await recordActivity(tx, {

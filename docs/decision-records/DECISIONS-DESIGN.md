@@ -1279,11 +1279,6 @@ The M6 build diverged from four clauses above. The build stands; the superseded 
 - **Status:** Accepted
 - **Date:** 2026-08-12
 
-## DES-021: List-editor table variant and the field-editor dialog (extends DES-020)
-
-- **Status:** Accepted
-- **Date:** 2026-08-12
-
 ### Context
 
 DES-020's consequences clause: a taxonomy surface that genuinely can't fit the written anatomy gets a new DES record, not a local deviation. The Fields catalog pane (#83, frame ST11 in `designs/settings.pen`) is that surface, twice over. Its rows carry four data dimensions beyond the name (type, scope, tag, AI-prompt marker) where DES-020's row holds one qualifier pill; its catalog is unordered (`fields` has no display order — per-type attachment order rules rendering, CTR-016), so the reorder affordance has no meaning; and creating a field sets seven dimensions, two of them immutable, which DES-020's one-input inline add row cannot carry. This record writes down how the anatomy stretches, once, for every later multi-dimension taxonomy (request types, approver groups if they grow columns).

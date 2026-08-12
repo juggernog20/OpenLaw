@@ -3081,7 +3081,7 @@
                           },
                           "moduleScope": {
                             "type": "string",
-                            "enum": ["matter", "contract", "entity", "global"]
+                            "enum": ["contract", "global"]
                           },
                           "displayOrder": {
                             "type": "integer",
@@ -3192,7 +3192,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["matter", "contract", "entity", "global"]
+                          "enum": ["contract", "global"]
                         },
                         "displayOrder": {
                           "type": "integer",
@@ -3309,7 +3309,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["matter", "contract", "entity", "global"]
+                          "enum": ["contract", "global"]
                         },
                         "displayOrder": {
                           "type": "integer",
@@ -3462,7 +3462,7 @@
                           },
                           "moduleScope": {
                             "type": "string",
-                            "enum": ["matter", "contract", "entity", "global"]
+                            "enum": ["contract", "global"]
                           },
                           "displayOrder": {
                             "type": "integer",
@@ -4374,7 +4374,7 @@
                           },
                           "moduleScope": {
                             "type": "string",
-                            "enum": ["matter", "contract", "entity", "global"]
+                            "enum": ["global"]
                           },
                           "displayOrder": {
                             "type": "integer",
@@ -4485,7 +4485,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["matter", "contract", "entity", "global"]
+                          "enum": ["global"]
                         },
                         "displayOrder": {
                           "type": "integer",
@@ -4602,7 +4602,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["matter", "contract", "entity", "global"]
+                          "enum": ["global"]
                         },
                         "displayOrder": {
                           "type": "integer",
@@ -4755,7 +4755,7 @@
                           },
                           "moduleScope": {
                             "type": "string",
-                            "enum": ["matter", "contract", "entity", "global"]
+                            "enum": ["global"]
                           },
                           "displayOrder": {
                             "type": "integer",
@@ -5506,7 +5506,7 @@
                           },
                           "moduleScope": {
                             "type": "string",
-                            "enum": ["matter", "contract", "entity", "global"]
+                            "enum": ["contract", "global"]
                           },
                           "fieldType": {
                             "type": "string",
@@ -5696,7 +5696,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["matter", "contract", "entity", "global"]
+                          "enum": ["contract", "global"]
                         },
                         "fieldType": {
                           "type": "string",
@@ -5893,7 +5893,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["matter", "contract", "entity", "global"]
+                          "enum": ["contract", "global"]
                         },
                         "fieldType": {
                           "type": "string",
@@ -6053,7 +6053,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["matter", "contract", "entity", "global"]
+                          "enum": ["contract", "global"]
                         },
                         "fieldType": {
                           "type": "string",
@@ -6196,7 +6196,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["matter", "contract", "entity", "global"]
+                          "enum": ["contract", "global"]
                         },
                         "fieldType": {
                           "type": "string",
@@ -6339,7 +6339,7 @@
                         },
                         "moduleScope": {
                           "type": "string",
-                          "enum": ["matter", "contract", "entity", "global"]
+                          "enum": ["contract", "global"]
                         },
                         "fieldType": {
                           "type": "string",

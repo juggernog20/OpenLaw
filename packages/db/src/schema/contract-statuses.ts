@@ -12,13 +12,16 @@
  */
 
 import {
+  boolean,
   check,
+  integer,
   pgTable,
   text,
+  timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import { taxonomyBaseColumns } from "./helpers.js";
+import { uuidPk } from "./helpers.js";
 
 /**
  * The fixed six-stage backbone (CTR-001), in canonical forward order.
@@ -38,9 +41,26 @@ export type ContractStage = (typeof CONTRACT_STAGES)[number];
 export const contractStatuses = pgTable(
   "contract_statuses",
   {
-    ...taxonomyBaseColumns(),
+    id: uuidPk(),
+    /** Machine identity, derived from the name at creation; never changes. */
+    slug: text("slug").notNull(),
+    displayName: text("display_name").notNull(),
     /** The stage this status maps to; picked at creation, immutable after. */
     stage: text("stage", { enum: CONTRACT_STAGES }).notNull(),
+    /** Picker and list position, 1-based; reorder rewrites the live rows. */
+    displayOrder: integer("display_order").notNull(),
+    /** True for the eight CTR-001 seed rows; user-created rows are false. */
+    isSystemDefault: boolean("is_system_default").notNull().default(false),
+    /** SET-003 soft delete: NULL = live; a timestamp = archived, out of
+     * pickers and the default list, nothing lost. */
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    // Application code owns every write here, so $onUpdate keeps the
+    // audit trail honest for writers that forget to set it (org.ts note).
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
   },
   (table) => [
     uniqueIndex("contract_statuses_slug_unique").on(table.slug),

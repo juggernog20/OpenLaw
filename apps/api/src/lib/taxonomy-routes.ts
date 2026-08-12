@@ -15,7 +15,7 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { asc, contractTypes, eq, isNull, matterTypes, sql } from "@openlaw/db";
+import { asc, contractTypes, eq, isNull, matterTypes } from "@openlaw/db";
 import { requireRole } from "../auth/guards.js";
 import { recordActivity, type TaxonomyActionPrefix } from "./activity.js";
 import { HttpError, httpError, problemResponse } from "./problem.js";
@@ -169,12 +169,6 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
       async (request, reply) => {
         const displayName = request.body.displayName.trim();
         const row = await app.db.transaction(async (tx) => {
-          // Acquire an advisory lock to serialize slug and display-order
-          // derivation across concurrent transactions, preventing duplicate
-          // slugs from racing through the uniqueness check.
-          await tx.execute(
-            sql`SELECT pg_advisory_xact_lock(hashtext(${table}))`,
-          );
           // Slug and order derive from the full row set — archived rows
           // still hold their slugs (restore brings them back) and their
           // display orders, so both scans include them.
@@ -360,7 +354,7 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
         const { reassignToId } = request.body;
         const row = await app.db.transaction(async (tx) => {
           const target = await lockedType(tx, request.params.id);
-          if (target.isSystemDefault) {
+          if (target.slug === "other") {
             throw httpError(409, "The Other type is system-protected and can't be archived.");
           }
           if (target.archivedAt) throw httpError(409, `This ${noun} is already archived.`);
@@ -469,14 +463,8 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
       async (request, reply) => {
         await app.db.transaction(async (tx) => {
           const target = await lockedType(tx, request.params.id);
-          if (target.isSystemDefault) {
+          if (target.slug === "other") {
             throw httpError(409, "The Other type is system-protected and can't be deleted.");
-          }
-          // Require archived status before hard deletion: live/in-use types
-          // must not be silently deleted. An in-use count guard will be
-          // added when the underlying data becomes available (record milestone).
-          if (!target.archivedAt) {
-            throw httpError(409, `This ${noun} must be archived before deletion.`);
           }
           await tx.delete(table).where(eq(table.id, target.id));
           await recordActivity(tx, {

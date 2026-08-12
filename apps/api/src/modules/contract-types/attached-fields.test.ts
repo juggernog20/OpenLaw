@@ -135,7 +135,7 @@ const attachmentAuditRows = () =>
         "contract_type_field.required_changed",
       ]),
     )
-    .orderBy(asc(activityLog.createdAt), asc(activityLog.id));
+    .orderBy(asc(activityLog.createdAt));
 
 describe("the single-type read behind the editor", () => {
   it("returns one type with its description, null until one is written", async () => {

@@ -18,6 +18,7 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
+  and,
   asc,
   contractStatuses,
   CONTRACT_STAGES,
@@ -28,7 +29,6 @@ import {
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
-import { freeSlug } from "../../lib/slug.js";
 
 const StageSchema = z.enum(CONTRACT_STAGES);
 
@@ -71,46 +71,21 @@ function toRow(row: ContractStatus) {
   };
 }
 
+/** `"On hold"` → `on_hold`; anything left empty becomes `status`. */
+function slugBaseOf(displayName: string): string {
+  const base = displayName
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return base || "status";
+}
 
 export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
   type Tx = Parameters<Parameters<typeof app.db.transaction>[0]>[0];
 
-  /**
-   * Locks and returns all live rows of the target's stage in a deterministic
-   * order (by id), so concurrent mutations serialize consistently. Returns
-   * the target and the full locked set.
-   */
-  async function lockedStage(tx: Tx, id: string): Promise<{
-    target: ContractStatus;
-    liveInStage: ContractStatus[];
-  }> {
-    const liveInStage = await tx
-      .select()
-      .from(contractStatuses)
-      .where(isNull(contractStatuses.archivedAt))
-      .orderBy(asc(contractStatuses.id))
-      .for("update");
-    const target = liveInStage.find((row) => row.id === id);
-    if (!target) {
-      // Check if the id exists but is archived
-      const [archived] = await tx
-        .select()
-        .from(contractStatuses)
-        .where(eq(contractStatuses.id, id))
-        .limit(1);
-      if (archived) {
-        // It's archived, so we need to lock just that one for operations that work on archived rows
-        return { target: archived, liveInStage: liveInStage.filter((row) => row.stage === archived.stage) };
-      }
-      throw httpError(404, "No contract status exists with this id.");
-    }
-    return {
-      target,
-      liveInStage: liveInStage.filter((row) => row.stage === target.stage),
-    };
-  }
-
-  /** Locks and returns one row, or 404s — for operations that don't need stage locking. */
+  /** Locks and returns one row, or 404s — every :id mutation starts here. */
   async function lockedStatus(tx: Tx, id: string): Promise<ContractStatus> {
     const [row] = await tx
       .select()
@@ -124,9 +99,16 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
 
   /**
    * The CTR-001 floor: would removing `target` from the live list leave
-   * its stage with no unarchived status? Takes an already-locked set.
+   * its stage with no unarchived status? Locks every live row of the
+   * stage, so two concurrent removals of a stage's last two statuses
+   * serialize instead of both passing the check.
    */
-  function breaksStageFloor(target: ContractStatus, liveInStage: ContractStatus[]): boolean {
+  async function breaksStageFloor(tx: Tx, target: ContractStatus): Promise<boolean> {
+    const liveInStage = await tx
+      .select({ id: contractStatuses.id })
+      .from(contractStatuses)
+      .where(and(eq(contractStatuses.stage, target.stage), isNull(contractStatuses.archivedAt)))
+      .for("update");
     return !liveInStage.some((row) => row.id !== target.id);
   }
 
@@ -185,11 +167,10 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
           .select({ slug: contractStatuses.slug, displayOrder: contractStatuses.displayOrder })
           .from(contractStatuses)
           .for("update");
-        const slug = freeSlug(
-          displayName,
-          "status",
-          new Set(existing.map((candidate) => candidate.slug)),
-        );
+        const taken = new Set(existing.map((candidate) => candidate.slug));
+        const base = slugBaseOf(displayName);
+        let slug = base;
+        for (let suffix = 2; taken.has(slug); suffix += 1) slug = `${base}_${suffix}`;
         const displayOrder =
           existing.reduce((top, candidate) => Math.max(top, candidate.displayOrder), 0) + 1;
 
@@ -199,7 +180,6 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
           .returning();
         await recordActivity(tx, {
           entityType: "system",
-          entityId: created!.id,
           actorId: request.user.id,
           action: "contract_status.created",
           visibility: "admin_only",
@@ -243,7 +223,6 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
           .returning();
         await recordActivity(tx, {
           entityType: "system",
-          entityId: target.id,
           actorId: request.user.id,
           action: "contract_status.renamed",
           visibility: "admin_only",
@@ -333,7 +312,7 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const row = await app.db.transaction(async (tx) => {
-        const { target, liveInStage } = await lockedStage(tx, request.params.id);
+        const target = await lockedStatus(tx, request.params.id);
         if (PROTECTED_SLUGS.has(target.slug)) {
           throw httpError(
             409,
@@ -341,7 +320,7 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
           );
         }
         if (target.archivedAt) throw httpError(409, "This contract status is already archived.");
-        if (breaksStageFloor(target, liveInStage)) {
+        if (await breaksStageFloor(tx, target)) {
           throw httpError(
             409,
             `${target.displayName} is the last unarchived status in its stage — ` +
@@ -356,7 +335,6 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
           .returning();
         await recordActivity(tx, {
           entityType: "system",
-          entityId: target.id,
           actorId: request.user.id,
           action: "contract_status.archived",
           visibility: "admin_only",
@@ -405,7 +383,6 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
           .returning();
         await recordActivity(tx, {
           entityType: "system",
-          entityId: target.id,
           actorId: request.user.id,
           action: "contract_status.restored",
           visibility: "admin_only",
@@ -436,7 +413,7 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request, reply) => {
       await app.db.transaction(async (tx) => {
-        const { target, liveInStage } = await lockedStage(tx, request.params.id);
+        const target = await lockedStatus(tx, request.params.id);
         if (PROTECTED_SLUGS.has(target.slug)) {
           throw httpError(
             409,
@@ -445,7 +422,7 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         // An archived row is already outside the live set, so deleting
         // it can't break the floor; a live row must leave a stage-mate.
-        if (!target.archivedAt && breaksStageFloor(target, liveInStage)) {
+        if (!target.archivedAt && (await breaksStageFloor(tx, target))) {
           throw httpError(
             409,
             `${target.displayName} is the last unarchived status in its stage — ` +
@@ -455,7 +432,6 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
         await tx.delete(contractStatuses).where(eq(contractStatuses.id, target.id));
         await recordActivity(tx, {
           entityType: "system",
-          entityId: target.id,
           actorId: request.user.id,
           action: "contract_status.deleted",
           visibility: "admin_only",

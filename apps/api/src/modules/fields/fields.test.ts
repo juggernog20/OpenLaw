@@ -137,24 +137,18 @@ describe("the SET-002 gate", () => {
 });
 
 describe("the seeded catalog (CTR-008 core fields)", () => {
-  it("verifies the three seeded contract core fields by slug", async () => {
+  it("lists the three contract core fields, each carrying a default prompt", async () => {
     const rows = await listFields();
+    const seeds = rows.filter((row) => row.inUseCount === 0).map((row) => row.slug);
+    expect(seeds).toEqual(["governing_law", "jurisdiction", "our_position"]);
+
     const bySlug = new Map(rows.map((row) => [row.slug, row]));
-
-    // Select the three known seed slugs
-    const seedSlugs = ["governing_law", "jurisdiction", "our_position"];
-    const seeds = seedSlugs.map((slug) => bySlug.get(slug)).filter(Boolean);
-    expect(seeds.map((s) => s!.slug)).toEqual(seedSlugs);
-
-    // Assert shared seed properties
-    for (const slug of seedSlugs) {
+    for (const slug of ["governing_law", "jurisdiction", "our_position"]) {
       const seed = bySlug.get(slug)!;
       expect(seed.moduleScope, slug).toBe("contract");
       expect(seed.aiPrompt, slug).toBeTruthy();
       expect(seed.archivedAt, slug).toBeNull();
     }
-
-    // Assert per-seed field specifics
     expect(bySlug.get("governing_law")!.fieldType).toBe("text");
     expect(bySlug.get("governing_law")!.fieldTag).toBe("legal");
     expect(bySlug.get("jurisdiction")!.fieldType).toBe("text");

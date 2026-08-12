@@ -2486,7 +2486,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "matter" | "contract" | "entity" | "global";
+              moduleScope: "contract" | "global";
               displayOrder: number;
               isRequired: boolean;
             }[];
@@ -2545,7 +2545,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "matter" | "contract" | "entity" | "global";
+              moduleScope: "contract" | "global";
               displayOrder: number;
               isRequired: boolean;
             };
@@ -2634,7 +2634,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "matter" | "contract" | "entity" | "global";
+              moduleScope: "contract" | "global";
               displayOrder: number;
               isRequired: boolean;
             };
@@ -2692,7 +2692,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "matter" | "contract" | "entity" | "global";
+              moduleScope: "contract" | "global";
               displayOrder: number;
               isRequired: boolean;
             }[];
@@ -3088,7 +3088,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "matter" | "contract" | "entity" | "global";
+              moduleScope: "global";
               displayOrder: number;
               isRequired: boolean;
             }[];
@@ -3147,7 +3147,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "matter" | "contract" | "entity" | "global";
+              moduleScope: "global";
               displayOrder: number;
               isRequired: boolean;
             };
@@ -3236,7 +3236,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "matter" | "contract" | "entity" | "global";
+              moduleScope: "global";
               displayOrder: number;
               isRequired: boolean;
             };
@@ -3294,7 +3294,7 @@ export interface operations {
                 | "user"
                 | "entity";
               /** @enum {string} */
-              moduleScope: "matter" | "contract" | "entity" | "global";
+              moduleScope: "global";
               displayOrder: number;
               isRequired: boolean;
             }[];
@@ -3639,7 +3639,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "matter" | "contract" | "entity" | "global";
+              moduleScope: "contract" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -3718,7 +3718,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "matter" | "contract" | "entity" | "global";
+              moduleScope: "contract" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -3786,7 +3786,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "matter" | "contract" | "entity" | "global";
+              moduleScope: "contract" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -3850,7 +3850,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "matter" | "contract" | "entity" | "global";
+              moduleScope: "contract" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -3907,7 +3907,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "matter" | "contract" | "entity" | "global";
+              moduleScope: "contract" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
@@ -3964,7 +3964,7 @@ export interface operations {
               displayName: string;
               description: string | null;
               /** @enum {string} */
-              moduleScope: "matter" | "contract" | "entity" | "global";
+              moduleScope: "contract" | "global";
               /** @enum {string} */
               fieldType:
                 | "text"
