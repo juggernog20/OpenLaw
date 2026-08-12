@@ -349,7 +349,9 @@ describe("POST /entities — registration", () => {
       });
       expect(toArchived.statusCode, toArchived.body).toBe(400);
       expect(
-        (await listEntities(adminCookies, true)).some((row) => row.legalName === "Archived Type Ltd"),
+        (await listEntities(adminCookies, true)).some(
+          (row) => row.legalName === "Archived Type Ltd",
+        ),
       ).toBe(false);
     } finally {
       const restored = await harness.app.inject({

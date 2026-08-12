@@ -12,9 +12,9 @@
  * Entities nav item at all.
  */
 
-import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { describe, expect, it } from "vitest";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const ADMIN = {
@@ -184,9 +184,7 @@ describe("the /entities destination", () => {
   it("surfaces a refused registration, keeps the dialog open, and preserves the draft", async () => {
     stubApi({
       signedIn: ADMIN,
-      extra: registryApi([], (call) => {
-        return problem(400, "The entity type must be a live type.");
-      }),
+      extra: registryApi([], () => problem(400, "The entity type must be a live type.")),
     });
     renderAt("/entities");
     const user = userEvent.setup();
@@ -269,7 +267,7 @@ describe("the /entities destination", () => {
     // Toggling back off keeps the restored entity in the working list.
     await user.click(screen.getByRole("switch", { name: "Show archived" }));
     await waitFor(
-      () => expect(screen.getAllByRole("row").length).toBe(3), // header + two live rows
+      () => expect(screen.getAllByRole("row")).toHaveLength(3), // header + two live rows
     );
     expect(screen.getByText("Mistake Ltd")).toBeInTheDocument();
   });
