@@ -60,7 +60,6 @@ export interface TaxonomyPaneMessages {
   help: MessageDescriptor;
   renameLabel: MessageDescriptor;
   inUse: MessageDescriptor;
-  edit: MessageDescriptor;
   locked: MessageDescriptor;
   archive: MessageDescriptor;
   restore: MessageDescriptor;
@@ -76,6 +75,18 @@ export interface TaxonomyPaneMessages {
   auditNote: MessageDescriptor;
   archiveError: MessageDescriptor;
   archiveSubmit: MessageDescriptor;
+}
+
+/**
+ * The per-row editor affordance: the screen URL and its "Edit {name}"
+ * label travel together, so a mount either has a working edit action or
+ * none — never a labelled button with nowhere to go. Modules without an
+ * editor screen (entity types — no per-type field attachments per
+ * ENT-001) omit the pair.
+ */
+export interface TaxonomyPaneEditor {
+  path: (row: TaxonomyPaneRow) => string;
+  label: MessageDescriptor;
 }
 
 const byDisplayOrder = (a: TaxonomyPaneRow, b: TaxonomyPaneRow) => a.displayOrder - b.displayOrder;
@@ -211,15 +222,15 @@ function ArchiveTypeDialog({
 export function TaxonomyTypesPane({
   initialRows,
   tabs,
-  editPath,
+  editor,
   api,
   messages,
 }: Readonly<{
   initialRows: TaxonomyPaneRow[];
   /** The module's section head (title + tab strip). */
   tabs: ReactNode;
-  /** Each row's editor screen URL. */
-  editPath: (row: TaxonomyPaneRow) => string;
+  /** Each row's editor screen and label; omit for modules without one. */
+  editor?: TaxonomyPaneEditor;
   api: TaxonomyPaneApi;
   messages: TaxonomyPaneMessages;
 }>) {
@@ -370,19 +381,22 @@ export function TaxonomyTypesPane({
           rowMeta={(row) => (
             <FormattedMessage {...messages.inUse} values={{ count: row.inUseCount }} />
           )}
-          rowActions={(row) => (
-            // Each row's own editor screen — fields attach there, and
-            // the description lives there, not in the list.
-            <Button
-              variant="ghost"
-              size="sm"
-              className="px-1.5"
-              aria-label={intl.formatMessage(messages.edit, { name: row.displayName })}
-              onClick={() => void navigate(editPath(row))}
-            >
-              <Pencil size={16} aria-hidden="true" className="text-muted" />
-            </Button>
-          )}
+          rowActions={
+            editor &&
+            ((row) => (
+              // Each row's own editor screen — fields attach there,
+              // and the description lives there, not in the list.
+              <Button
+                variant="ghost"
+                size="sm"
+                className="px-1.5"
+                aria-label={intl.formatMessage(editor.label, { name: row.displayName })}
+                onClick={() => void navigate(editor.path(row))}
+              >
+                <Pencil size={16} aria-hidden="true" className="text-muted" />
+              </Button>
+            ))
+          }
           protectedLabel={(row) =>
             row.slug === "other"
               ? intl.formatMessage(messages.locked, { name: row.displayName })

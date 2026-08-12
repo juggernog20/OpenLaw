@@ -138,7 +138,7 @@ export function SettingsMatterTypesPage() {
     <TaxonomyTypesPane
       initialRows={matterTypes}
       tabs={<MattersSettingsTabs />}
-      editPath={(row) => `/settings/matters/types/${row.id}`}
+      editor={{ path: (row) => `/settings/matters/types/${row.id}`, label: MESSAGES.edit }}
       api={PANE_API}
       messages={MESSAGES}
     />
