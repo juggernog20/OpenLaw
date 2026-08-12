@@ -95,9 +95,7 @@ test.describe.serial("M6 demo path", () => {
     await ensureAdminExists(request);
   });
 
-  test("add a type, rename a status, define a field, attach it — one journey", async ({
-    page,
-  }) => {
+  test("add a type, rename a status, define a field, attach it — one journey", async ({ page }) => {
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
 
     // Known starting state on the never-reset instance (TECH-018): a
