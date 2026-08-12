@@ -111,7 +111,7 @@ every later module reuses, so it is slower than it looks and pays for itself thr
   - The shared `fields` catalog with module scopes plus a global tier; per-type attachment and required flags
   - _Decisions:_ CTR-001, CTR-002, CTR-016, MTR-014
 
-- [ ] **M7 — Entities, minimal**
+- [x] **M7 — Entities, minimal**
       _Demo:_ An Administrator registers the company's UK subsidiary; it becomes selectable as the signing
       entity on a contract.
   - The registry core only: entity record, type, name, jurisdiction — enough to answer "which of ours signs"
