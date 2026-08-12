@@ -57,6 +57,10 @@ export type ActivityAction =
   // reassignment (#100) keeps its own verb too: the entity moved because
   // an Administrator archived its type, not because someone edited it.
   | `entity.${"created" | "updated" | "status_changed" | "type_reassigned" | "archived" | "restored"}`
+  // The contract record's own feed (M8). A status change keeps its own
+  // verb: surfaces branch on the stage behind the status (CTR-001), so
+  // the M9 viewer narrates "status changed" rather than a generic edit.
+  | `contract.${"created" | "updated" | "status_changed" | "archived" | "restored"}`
   | "sso_provider.registered"
   | "sso_provider.updated";
 

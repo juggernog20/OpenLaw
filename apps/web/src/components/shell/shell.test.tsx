@@ -41,19 +41,20 @@ describe("app shell chrome", () => {
   });
 
   it("renders the nav from the destination registry, filtered to the signed-in role", async () => {
-    // Member+ gets every registered destination (Home, then the M7
-    // Entities registry), with the current one marked.
+    // Member+ gets every registered destination (Home, the M8 contract
+    // record, then the M7 Entities registry), with the current one
+    // marked.
     stubApi({ signedIn: MEMBER });
     renderAt("/");
 
     const nav = await screen.findByRole("navigation");
     const links = within(nav).getAllByRole("link");
-    expect(links.map((link) => link.textContent)).toEqual(["Home", "Entities"]);
+    expect(links.map((link) => link.textContent)).toEqual(["Home", "Contracts", "Entities"]);
     expect(links[0]).toHaveAttribute("aria-current", "page");
     expect(links[1]).not.toHaveAttribute("aria-current");
   });
 
-  it("draws a Business User no Entities destination at all (ENT-004)", async () => {
+  it("draws a Business User no Member+ destination at all (ENT-004)", async () => {
     stubApi({
       signedIn: { id: "u9", email: "bao@example.com", displayName: "Bao B", role: "business_user" },
     });

@@ -9,6 +9,8 @@
 
 import type { RouteObject } from "react-router";
 import { AuthLayout } from "./routes/auth-layout";
+import { ContractRecordPage, contractRecordLoader } from "./routes/contract-record";
+import { ContractsPage, contractsLoader } from "./routes/contracts";
 import { EntitiesPage, entitiesLoader } from "./routes/entities";
 import { EntityRecordPage, entityRecordLoader } from "./routes/entity-record";
 import { RouteErrorPage } from "./routes/error-page";
@@ -69,6 +71,24 @@ export const routes: RouteObject[] = [
     errorElement: <RouteErrorPage />,
     // Guards run before first paint; a blank canvas beats a flash of the
     // wrong screen.
+    hydrateFallbackElement: <></>,
+  },
+  {
+    // The M8 Contracts destination; its loader admits Member+ only and
+    // bounces everyone else home.
+    path: "/contracts",
+    loader: contractsLoader,
+    element: <ContractsPage />,
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <></>,
+  },
+  {
+    // One contract's record page, addressed by its CTR-003 number —
+    // the reference people quote is what the URL carries.
+    path: "/contracts/:contractNumber",
+    loader: contractRecordLoader,
+    element: <ContractRecordPage />,
+    errorElement: <RouteErrorPage />,
     hydrateFallbackElement: <></>,
   },
   {

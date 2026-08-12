@@ -125,8 +125,13 @@ export function ActivityBar({
         <>
           {/* The group flows right after the leading slots, per the
               matters.pen frames — no mt-auto: pinning it to the bar's
-              bottom edge was the superseded V12/V13 treatment. */}
-          <Toolbar.Separator className="h-px w-6 shrink-0 bg-border-muted" />
+              bottom edge was the superseded V12/V13 treatment. A rule
+              separates two groups, so a page offering only the
+              below-divider group (the M8 contract record, before the
+              chat and history applets exist) draws no rule. */}
+          {leading.length > 0 ? (
+            <Toolbar.Separator className="h-px w-6 shrink-0 bg-border-muted" />
+          ) : null}
           {belowDivider.map(slot)}
         </>
       ) : null}
