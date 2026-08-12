@@ -50,6 +50,9 @@ export type ActivityAction =
   | `${TypeFieldActionPrefix}.${"attached" | "detached" | "reordered" | "required_changed"}`
   | `contract_status.${"created" | "renamed" | "reordered" | "archived" | "restored" | "deleted"}`
   | `field.${"created" | "updated" | "promoted" | "narrowed" | "archived" | "restored"}`
+  // The registry record's own feed (M7 ships create plus the archive
+  // cleanup seam; #99 adds the update/restore verbs with their routes).
+  | `entity.${"created" | "archived"}`
   | "sso_provider.registered"
   | "sso_provider.updated";
 
