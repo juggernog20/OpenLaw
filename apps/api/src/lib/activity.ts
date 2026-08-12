@@ -50,9 +50,11 @@ export type ActivityAction =
   | `${TypeFieldActionPrefix}.${"attached" | "detached" | "reordered" | "required_changed"}`
   | `contract_status.${"created" | "renamed" | "reordered" | "archived" | "restored" | "deleted"}`
   | `field.${"created" | "updated" | "promoted" | "narrowed" | "archived" | "restored"}`
-  // The registry record's own feed (M7 ships create plus the archive
-  // cleanup seam; #99 adds the update/restore verbs with their routes).
-  | `entity.${"created" | "archived"}`
+  // The registry record's own feed (M7): create and archive from #98,
+  // the record surface's verbs from #99. A status change keeps its own
+  // verb — status is the fixed code-branching enum (ENT-001), so the M9
+  // viewer narrates "status changed" rather than a generic edit.
+  | `entity.${"created" | "updated" | "status_changed" | "archived" | "restored"}`
   | "sso_provider.registered"
   | "sso_provider.updated";
 

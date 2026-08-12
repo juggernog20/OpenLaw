@@ -8,9 +8,13 @@
  * the codebase; Contributors, Business Users, and unauthenticated
  * requests get nothing (ENT-004). The list is the seam the M8
  * signing-entity picker consumes: ordered by legal name, archived rows
- * excluded unless asked for. Every mutation appends to the activity
- * log in the same transaction (DD-017). Update and restore, and every
- * record-page surface, are #99.
+ * excluded unless asked for. The record surface (#99) adds the single
+ * read behind the record page (archived rows answer too — restore
+ * needs to see them), update for correcting any identity-card field —
+ * the status only within the fixed ENT-001 enum, the type only to a
+ * live one, and never on an archived record — and restore, archive's
+ * recovery story. Every mutation appends to the activity log in the
+ * same transaction (DD-017).
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -146,6 +150,35 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
+  app.get(
+    "/entities/:id",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "getEntity",
+        summary:
+          "One entity's full ENT-001 identity card — the record page's " +
+          "read; archived entities answer too, so restore stays reachable",
+        tags: ["entities"],
+        params: z.object({ id: z.string() }),
+        response: {
+          200: z.object({ entity: EntityRowSchema }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => {
+      const [row] = await app.db
+        .select({ entity: entities, entityTypeName: entityTypes.displayName })
+        .from(entities)
+        .innerJoin(entityTypes, eq(entities.entityTypeId, entityTypes.id))
+        .where(eq(entities.id, request.params.id))
+        .limit(1);
+      if (!row) throw httpError(404, "No entity exists with this id.");
+      return { entity: toRow(row.entity, row.entityTypeName) };
+    },
+  );
+
   app.post(
     "/entities",
     {
@@ -226,6 +259,156 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
+  app.patch(
+    "/entities/:id",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "updateEntity",
+        summary:
+          "Correct any identity-card field in place (DES-017 per-field " +
+          "commits): the status only within the fixed ENT-001 enum, the " +
+          "type only to a live one, never on an archived entity",
+        tags: ["entities"],
+        params: z.object({ id: z.string() }),
+        // Strict: an unknown key is a client bug, not a silent strip.
+        body: z.strictObject({
+          legalName: LegalNameSchema.optional(),
+          entityTypeId: z.string().optional(),
+          jurisdiction: CardTextSchema.nullable().optional(),
+          formedOn: z.iso.date().nullable().optional(),
+          registrationNumber: CardTextSchema.nullable().optional(),
+          taxId: CardTextSchema.nullable().optional(),
+          registeredAgent: CardTextSchema.nullable().optional(),
+          registeredAddress: AddressSchema.nullable().optional(),
+          status: z.enum(ENTITY_STATUSES).optional(),
+        }),
+        response: {
+          200: z.object({ entity: EntityRowSchema }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => {
+      const body = request.body;
+      const { row, entityTypeName } = await app.db.transaction(async (tx) => {
+        const [target] = await tx
+          .select()
+          .from(entities)
+          .where(eq(entities.id, request.params.id))
+          .limit(1)
+          .for("update");
+        if (!target) throw httpError(404, "No entity exists with this id.");
+        if (target.archivedAt) {
+          throw httpError(409, "This entity is archived. Restore it before editing.");
+        }
+
+        const [currentType] = await tx
+          .select({ displayName: entityTypes.displayName })
+          .from(entityTypes)
+          .where(eq(entityTypes.id, target.entityTypeId))
+          .limit(1);
+        let typeName = currentType!.displayName;
+
+        const patch: Partial<Entity> = {};
+        /** The DD-017 changed map — old and new values per corrected
+         * field, feeding the M9 viewer's narration. */
+        const changed: Record<string, { from: unknown; to: unknown }> = {};
+
+        const legalName = body.legalName?.trim();
+        if (legalName !== undefined && legalName !== target.legalName) {
+          patch.legalName = legalName;
+          changed.legalName = { from: target.legalName, to: legalName };
+        }
+
+        if (body.entityTypeId !== undefined && body.entityTypeId !== target.entityTypeId) {
+          // Lock the type row so a concurrent archive can't slip between
+          // the check and the update (same seam as registration).
+          const [entityType] = await tx
+            .select({
+              id: entityTypes.id,
+              displayName: entityTypes.displayName,
+              archivedAt: entityTypes.archivedAt,
+            })
+            .from(entityTypes)
+            .where(eq(entityTypes.id, body.entityTypeId))
+            .limit(1)
+            .for("update");
+          if (!entityType || entityType.archivedAt) {
+            throw httpError(400, "The entity type must be a live entity type.");
+          }
+          patch.entityTypeId = entityType.id;
+          changed.entityType = { from: typeName, to: entityType.displayName };
+          typeName = entityType.displayName;
+        }
+
+        // Free-text card scalars: blank normalizes to NULL, same as
+        // registration; null clears deliberately.
+        for (const key of [
+          "jurisdiction",
+          "registrationNumber",
+          "taxId",
+          "registeredAgent",
+          "registeredAddress",
+        ] as const) {
+          const value = body[key];
+          if (value === undefined) continue;
+          const next = value?.trim() || null;
+          if (next !== target[key]) {
+            patch[key] = next;
+            changed[key] = { from: target[key], to: next };
+          }
+        }
+
+        if (body.formedOn !== undefined && body.formedOn !== target.formedOn) {
+          patch.formedOn = body.formedOn;
+          changed.formedOn = { from: target.formedOn, to: body.formedOn };
+        }
+
+        // The status keeps its own audit verb (surfaces branch on it,
+        // ENT-001) — it rides the same UPDATE but not the changed map.
+        const statusChange =
+          body.status !== undefined && body.status !== target.status
+            ? { from: target.status, to: body.status }
+            : undefined;
+        if (statusChange) patch.status = statusChange.to;
+
+        // Nothing changed: answer with the row and write no misleading
+        // from==to audit entry.
+        if (Object.keys(patch).length === 0) return { row: target, entityTypeName: typeName };
+
+        const [updated] = await tx
+          .update(entities)
+          .set(patch)
+          .where(eq(entities.id, target.id))
+          .returning();
+        const legalNameNow = updated!.legalName;
+        if (Object.keys(changed).length > 0) {
+          await recordActivity(tx, {
+            entityType: "entity",
+            entityId: target.id,
+            actorId: request.user.id,
+            action: "entity.updated",
+            visibility: "legal_only",
+            payload: { legalName: legalNameNow, changed },
+          });
+        }
+        if (statusChange) {
+          await recordActivity(tx, {
+            entityType: "entity",
+            entityId: target.id,
+            actorId: request.user.id,
+            action: "entity.status_changed",
+            visibility: "legal_only",
+            payload: { legalName: legalNameNow, ...statusChange },
+          });
+        }
+        return { row: updated!, entityTypeName: typeName };
+      });
+      return { entity: toRow(row, entityTypeName) };
+    },
+  );
+
   app.post(
     "/entities/:id/archive",
     {
@@ -265,6 +448,58 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
           entityId: target.id,
           actorId: request.user.id,
           action: "entity.archived",
+          visibility: "legal_only",
+          payload: { legalName: target.legalName },
+        });
+        const [entityType] = await tx
+          .select({ displayName: entityTypes.displayName })
+          .from(entityTypes)
+          .where(eq(entityTypes.id, target.entityTypeId))
+          .limit(1);
+        return { row: updated!, entityTypeName: entityType!.displayName };
+      });
+      return { entity: toRow(row, entityTypeName) };
+    },
+  );
+
+  app.post(
+    "/entities/:id/restore",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "restoreEntity",
+        summary:
+          "Restore an archived entity (archive's recovery story, " +
+          "ENT-001): it rejoins the list and the M8 picker",
+        tags: ["entities"],
+        params: z.object({ id: z.string() }),
+        response: {
+          200: z.object({ entity: EntityRowSchema }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => {
+      const { row, entityTypeName } = await app.db.transaction(async (tx) => {
+        const [target] = await tx
+          .select()
+          .from(entities)
+          .where(eq(entities.id, request.params.id))
+          .limit(1)
+          .for("update");
+        if (!target) throw httpError(404, "No entity exists with this id.");
+        if (!target.archivedAt) throw httpError(409, "This entity is not archived.");
+
+        const [updated] = await tx
+          .update(entities)
+          .set({ archivedAt: null })
+          .where(eq(entities.id, target.id))
+          .returning();
+        await recordActivity(tx, {
+          entityType: "entity",
+          entityId: target.id,
+          actorId: request.user.id,
+          action: "entity.restored",
           visibility: "legal_only",
           payload: { legalName: target.legalName },
         });
