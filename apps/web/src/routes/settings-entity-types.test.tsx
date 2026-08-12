@@ -15,7 +15,7 @@
 import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const ADMIN = {
   id: "u1",
@@ -211,6 +211,76 @@ describe("the entity endpoints behind the shared machinery", () => {
     expect(within(dialog).getByRole("combobox", { name: /^Reassign entities to$/ })).toBeDisabled();
     await user.click(within(dialog).getByRole("button", { name: "Archive type" }));
     await waitFor(() => expect(calls.archives).toEqual([{ id: "t4", body: {} }]));
+  });
+});
+
+describe("the SET-003 guard with live counts (#100)", () => {
+  /** Branch carries a real registry count — the guard is armed. */
+  function typesInUse() {
+    return seededTypes().map((row) => (row.slug === "branch" ? { ...row, inUseCount: 3 } : row));
+  }
+
+  it("shows the live usage count on the row", async () => {
+    stubApi({ signedIn: ADMIN, extra: typesApi(newCalls(), typesInUse()) });
+    renderAt("/settings/entities/types");
+    await screen.findByText("Branch");
+    const rows = within(typeList()).getAllByRole("listitem");
+    const branchRow = rows.find((row) => within(row).queryByText("Branch"))!;
+    expect(within(branchRow).getByText("3 entities")).toBeInTheDocument();
+  });
+
+  it("requires a reassignment target for an in-use type and sends the pick", async () => {
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: typesApi(calls, typesInUse()) });
+    renderAt("/settings/entities/types");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Archive Branch" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "Archive Branch" });
+    expect(
+      within(dialog).getByText(
+        "Branch is used by 3 entities. Pick a replacement type — those entities " +
+          "move to it when the type is archived.",
+      ),
+    ).toBeInTheDocument();
+    const select = within(dialog).getByRole("combobox", { name: "Reassign 3 entities to" });
+    expect(select).toBeEnabled();
+    expect(select).toBeRequired();
+    // Every live type but the target is a candidate.
+    expect(
+      within(select)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["No reassignment", "Corporation", "LLC", "Partnership", "Other"]);
+
+    await user.selectOptions(select, "Corporation");
+    await user.click(within(dialog).getByRole("button", { name: "Archive type" }));
+    await waitFor(() =>
+      expect(calls.archives).toEqual([{ id: "t4", body: { reassignToId: "t1" } }]),
+    );
+  });
+
+  it("surfaces the API's refusal detail in the dialog", async () => {
+    const calls = newCalls();
+    const detail =
+      "This entity type is used by 3 entities. Pick a reassignment target to archive it.";
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call: StubCall) =>
+        call.method === "POST" && call.url.pathname.endsWith("/archive")
+          ? problem(409, detail)
+          : typesApi(calls, typesInUse())(call),
+    });
+    renderAt("/settings/entities/types");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Archive Branch" }));
+    const dialog = await screen.findByRole("dialog", { name: "Archive Branch" });
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", { name: "Reassign 3 entities to" }),
+      "Corporation",
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Archive type" }));
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(detail);
   });
 });
 
