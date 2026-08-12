@@ -12,6 +12,7 @@
 
 import { useState } from "react";
 import {
+  Briefcase,
   Building2,
   ChevronDown,
   ChevronRight,
@@ -129,9 +130,15 @@ const ORGANIZATION_GROUP: SettingsGroup = {
         },
       ],
     },
-    // Contracts points at its first pane; Statuses and Fields join as
-    // tabs inside the section as their M6 tickets land (SET-001 order:
-    // Matters slots in before Contracts with its milestone).
+    // Each module section points at its first pane; more panes join as
+    // tabs inside the section as their tickets land. Matters sits
+    // before Contracts per the SET-001 rail order.
+    {
+      id: "matters",
+      path: "/settings/matters/types",
+      icon: Briefcase,
+      label: defineMessage({ id: "settings.section.matters", defaultMessage: "Matters" }),
+    },
     {
       id: "contracts",
       path: "/settings/contracts/types",

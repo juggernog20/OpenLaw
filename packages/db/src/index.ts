@@ -16,6 +16,8 @@ import * as contractStatusesSchema from "./schema/contract-statuses.js";
 import * as contractTypeFieldsSchema from "./schema/contract-type-fields.js";
 import * as contractTypesSchema from "./schema/contract-types.js";
 import * as fieldsSchema from "./schema/fields.js";
+import * as matterTypeFieldsSchema from "./schema/matter-type-fields.js";
+import * as matterTypesSchema from "./schema/matter-types.js";
 import * as orgSchema from "./schema/org.js";
 
 export * from "./schema/activity.js";
@@ -24,6 +26,8 @@ export * from "./schema/contract-statuses.js";
 export * from "./schema/contract-type-fields.js";
 export * from "./schema/contract-types.js";
 export * from "./schema/fields.js";
+export * from "./schema/matter-type-fields.js";
+export * from "./schema/matter-types.js";
 export * from "./schema/org.js";
 export const schema = {
   ...activitySchema,
@@ -32,6 +36,8 @@ export const schema = {
   ...contractTypeFieldsSchema,
   ...contractTypesSchema,
   ...fieldsSchema,
+  ...matterTypeFieldsSchema,
+  ...matterTypesSchema,
   ...orgSchema,
 };
 

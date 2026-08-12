@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The Contracts settings section head (ST10): the section title and the
- * pane tab strip shared by every Contracts pane. Tabs are routed links,
- * not stateful tabs — each pane is its own URL (SET-001 deep links).
- * Fields and Approver groups join the strip as their tickets land, the
- * same way Statuses joined with #82.
+ * The Contracts settings section head (ST10) on the shared
+ * SettingsSectionTabs anatomy (#85). Fields and Approver groups join
+ * the strip as their tickets land, the same way Statuses joined with
+ * #82.
  */
 
-import { NavLink } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
-import { cn } from "../lib/utils";
+import { SettingsSectionTabs } from "./settings-section-tabs";
 
 const TABS = [
   {
@@ -30,34 +28,13 @@ const TABS = [
 export function ContractsSettingsTabs() {
   const intl = useIntl();
   return (
-    <div className="flex flex-col gap-2">
-      <h2 className="text-lg font-semibold text-primary">
-        <FormattedMessage id="settings.contracts.title" defaultMessage="Contracts" />
-      </h2>
-      <nav
-        aria-label={intl.formatMessage({
-          id: "settings.contracts.tabsLabel",
-          defaultMessage: "Contracts panes",
-        })}
-        className="flex border-b border-border-default"
-      >
-        {TABS.map((tab) => (
-          <NavLink
-            key={tab.path}
-            to={tab.path}
-            className={({ isActive }) =>
-              cn(
-                "flex h-9 items-center px-3 text-base whitespace-nowrap",
-                isActive
-                  ? "-mb-px border-b-2 border-accent font-semibold text-primary"
-                  : "text-muted hover:text-primary",
-              )
-            }
-          >
-            {tab.label}
-          </NavLink>
-        ))}
-      </nav>
-    </div>
+    <SettingsSectionTabs
+      title={<FormattedMessage id="settings.contracts.title" defaultMessage="Contracts" />}
+      tabsLabel={intl.formatMessage({
+        id: "settings.contracts.tabsLabel",
+        defaultMessage: "Contracts panes",
+      })}
+      tabs={TABS}
+    />
   );
 }

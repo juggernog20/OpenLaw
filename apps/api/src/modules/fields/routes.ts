@@ -29,11 +29,13 @@ import {
   FIELD_TYPES,
   inArray,
   isNull,
+  matterTypeFields,
   type Field,
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
+import { freeSlug } from "../../lib/slug.js";
 
 /**
  * The scopes this pane's catalog holds and its picker offers (CTR-016):
@@ -58,8 +60,9 @@ const FieldSchema = z.object({
   aiPrompt: z.string().nullable(),
   archivedAt: z.iso.datetime().nullable(),
   /** Records holding a value plus type attachments — the SET-003 guard
-   * number. Contract-type attachments count since #84; records holding
-   * values join with the contract record milestone (M8). */
+   * number. Contract-type attachments count since #84 and matter-type
+   * attachments since #85; records holding values join with the record
+   * milestones (M8, M22). */
   inUseCount: z.number().int(),
 });
 
@@ -91,17 +94,6 @@ function toRow(row: Field, inUseCount: number) {
   };
 }
 
-/** `"Renewal term"` → `renewal_term`; anything left empty becomes `field`. */
-function slugBaseOf(displayName: string): string {
-  const base = displayName
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-  return base || "field";
-}
-
 /** Options must be present on select types, absent elsewhere, unique. */
 function checkOptions(fieldType: string, options: string[] | undefined): string[] | null {
   if (!SELECT_TYPES.has(fieldType)) {
@@ -131,16 +123,29 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
 
   type Reader = Tx | typeof app.db;
 
-  /** Contract-type attachments per field (#84) — the live half of the
-   * SET-003 guard number until contracts hold values (M8). */
+  /** The per-module attachment joins, each owned by its scope: the
+   * contract join counts since #84, the matter join since #85; the
+   * entity join adds itself here with M27. */
+  const MODULE_JOINS = [
+    { moduleScope: "contract", joinTable: contractTypeFields },
+    { moduleScope: "matter", joinTable: matterTypeFields },
+  ] as const;
+
+  /** Type attachments per field across every module join — the live
+   * half of the SET-003 guard number until records hold values
+   * (M8, M22). */
   async function attachmentCounts(db: Reader, fieldIds: string[]): Promise<Map<string, number>> {
-    if (fieldIds.length === 0) return new Map();
-    const rows = await db
-      .select({ fieldId: contractTypeFields.fieldId, tally: count() })
-      .from(contractTypeFields)
-      .where(inArray(contractTypeFields.fieldId, fieldIds))
-      .groupBy(contractTypeFields.fieldId);
-    return new Map(rows.map((row) => [row.fieldId, row.tally]));
+    const tally = new Map<string, number>();
+    if (fieldIds.length === 0) return tally;
+    for (const { joinTable } of MODULE_JOINS) {
+      const rows = await db
+        .select({ fieldId: joinTable.fieldId, tally: count() })
+        .from(joinTable)
+        .where(inArray(joinTable.fieldId, fieldIds))
+        .groupBy(joinTable.fieldId);
+      for (const row of rows) tally.set(row.fieldId, (tally.get(row.fieldId) ?? 0) + row.tally);
+    }
+    return tally;
   }
 
   async function inUseCountOf(db: Reader, fieldId: string): Promise<number> {
@@ -149,18 +154,25 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
 
   /**
    * The CTR-016 narrowing guard's number: attachments in modules other
-   * than the narrow target's own. Only the contract join exists this
-   * milestone, so narrowing to `contract` can never be blocked by it;
-   * the matter and entity joins add their counts with M22/M27, and this
-   * function is where they join the sum.
+   * than the narrow target's own. Each module's join counts against
+   * every other module's narrow, so a global field attached to matter
+   * types refuses to narrow to `contract` (and vice versa).
    */
   async function attachmentsOutsideModule(
     db: Reader,
     fieldId: string,
     targetScope: string,
   ): Promise<number> {
-    if (targetScope === "contract") return 0;
-    return inUseCountOf(db, fieldId);
+    let outside = 0;
+    for (const { moduleScope, joinTable } of MODULE_JOINS) {
+      if (moduleScope === targetScope) continue;
+      const [row] = await db
+        .select({ tally: count() })
+        .from(joinTable)
+        .where(eq(joinTable.fieldId, fieldId));
+      outside += row?.tally ?? 0;
+    }
+    return outside;
   }
 
   app.get(
@@ -238,10 +250,11 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         // hold their slugs (restore brings them back), so the scan
         // includes them.
         const existing = await tx.select({ slug: fields.slug }).from(fields).for("update");
-        const taken = new Set(existing.map((candidate) => candidate.slug));
-        const base = slugBaseOf(displayName);
-        let slug = base;
-        for (let suffix = 2; taken.has(slug); suffix += 1) slug = `${base}_${suffix}`;
+        const slug = freeSlug(
+          displayName,
+          "field",
+          new Set(existing.map((candidate) => candidate.slug)),
+        );
 
         const [created] = await tx
           .insert(fields)
@@ -351,8 +364,8 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "setFieldScope",
         summary:
           "Move a field's scope (CTR-016): promotion to global is always " +
-          "safe (values stay keyed by slug); narrowing back is refused " +
-          "while another module attaches the field",
+          "safe (values stay keyed by slug); any move into a module is " +
+          "refused while another module attaches the field",
         tags: ["fields"],
         params: z.object({ id: z.string() }),
         body: z.object({ moduleScope: ScopeSchema }),
@@ -366,11 +379,15 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         // Moving to the current scope changes nothing — answer with the
         // row and write no misleading from==to audit entry.
         if (target.moduleScope === moduleScope) return target;
-        const narrowing = target.moduleScope === "global";
-        if (narrowing && (await attachmentsOutsideModule(tx, target.id, moduleScope)) > 0) {
+        // Any move into a module is guarded, whatever the current scope:
+        // a db-planted matter row moving to `contract` must answer for
+        // its matter attachments the same way a global row does. Only
+        // promotion to global is unconditionally safe.
+        const intoModule = moduleScope !== "global";
+        if (intoModule && (await attachmentsOutsideModule(tx, target.id, moduleScope)) > 0) {
           throw httpError(
             409,
-            `${target.displayName} is attached outside the contract module — ` +
+            `${target.displayName} is attached outside the ${moduleScope} module — ` +
               "detach it there first, then narrow the scope.",
           );
         }
@@ -382,7 +399,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         await recordActivity(tx, {
           entityType: "system",
           actorId: request.user.id,
-          action: narrowing ? "field.narrowed" : "field.promoted",
+          action: intoModule ? "field.narrowed" : "field.promoted",
           visibility: "admin_only",
           payload: { slug: target.slug, from: target.moduleScope, to: moduleScope },
         });
