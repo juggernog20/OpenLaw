@@ -1,23 +1,34 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The Entities registry (ENT-001/ENT-004, #98), per the EN3 frame of
- * entities.pen reduced to the M7 registry subset: the list (legal name,
- * type, jurisdiction, status — ordered by legal name by the API), the
- * register dialog carrying the full identity card, and an empty state
- * that says what the registry is. The M27 surfaces the mock also draws
- * (view switcher, filters, obligations column, the record page) are not
+ * The Entities registry (ENT-001/ENT-004, #98/#99), per the EN3 frame
+ * of entities.pen reduced to the M7 registry subset: the list (legal
+ * name, type, jurisdiction, status — ordered by legal name by the API,
+ * each row opening its record page), the register dialog carrying the
+ * full identity card, an empty state that says what the registry is,
+ * and the show-archived toggle that reveals archived entities with a
+ * row-level restore (#99 — archiving is for data mistakes, so the way
+ * back sits right where the mistake surfaces). The M27 surfaces the
+ * mock also draws (view switcher, filters, obligations column) are not
  * built. The loader is the client half of ENT-004's gate — Member+
  * only; the API's 403 is the real refusal. M27 grows this destination
  * into the full module.
  */
 
 import { useState } from "react";
-import { redirect, useNavigate, useLoaderData } from "react-router";
-import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
+import { Link, redirect, useNavigate, useLoaderData } from "react-router";
+import { FormattedMessage, useIntl } from "react-intl";
 import { Building2, Landmark, Plus } from "lucide-react";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
+import {
+  ENTITY_STATUSES,
+  STATUS_PILL,
+  statusLabel,
+  type EntityRow,
+  type EntityStatus,
+  type EntityTypeOption,
+} from "../lib/entities";
 import { problemDetail } from "../lib/messages";
 import { isMemberPlus } from "../lib/roles";
 import { currentUser, needsSetup } from "../lib/session";
@@ -28,33 +39,7 @@ import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-
-/** The fixed ENT-001 status enum — code branches on it, so it is a
- * constant here, not a fetched list. */
-const ENTITY_STATUSES = ["active", "dormant", "dissolved", "divested"] as const;
-type EntityStatus = (typeof ENTITY_STATUSES)[number];
-
-/** One row of GET /entities, as the client sees it. */
-interface EntityRow {
-  id: string;
-  legalName: string;
-  entityTypeId: string;
-  entityTypeName: string;
-  jurisdiction: string | null;
-  formedOn: string | null;
-  registrationNumber: string | null;
-  taxId: string | null;
-  registeredAgent: string | null;
-  registeredAddress: string | null;
-  status: EntityStatus;
-  archivedAt: string | null;
-}
-
-interface EntityTypeOption {
-  id: string;
-  slug: string;
-  displayName: string;
-}
+import { Switch } from "../components/ui/switch";
 
 export async function entitiesLoader() {
   const user = await currentUser();
@@ -68,28 +53,6 @@ export async function entitiesLoader() {
   ]);
   if (!list.data || !types.data) throw new Error("The registry could not be read.");
   return { user, entities: list.data.entities, entityTypes: types.data.entityTypes };
-}
-
-/** EN3's status pills: active=success, dormant=warning, divested=
- * neutral (the mock's three); dissolved takes the danger pair — the
- * one terminal-negative state the mock has no row for. */
-const STATUS_PILL: Record<EntityStatus, string> = {
-  active: "bg-status-success-bg text-status-success-fg",
-  dormant: "bg-status-warning-bg text-status-warning-fg",
-  dissolved: "bg-status-danger-bg text-status-danger-fg",
-  divested: "bg-badge-count-bg text-badge-count-fg",
-};
-
-function statusLabel(intl: IntlShape, status: EntityStatus): string {
-  return intl.formatMessage(
-    {
-      id: "entities.statusLabel",
-      defaultMessage:
-        "{status, select, active {Active} dormant {Dormant} dissolved {Dissolved} " +
-        "divested {Divested} other {Unknown}}",
-    },
-    { status },
-  );
 }
 
 /** The list's resting order — the API's ordering, mirrored for rows
@@ -107,10 +70,60 @@ export function EntitiesPage() {
   const navigate = useNavigate();
   const [rows, setRows] = useState<EntityRow[]>(entities as EntityRow[]);
   const [registerOpen, setRegisterOpen] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
+  const [listError, setListError] = useState<string | null>(null);
+
+  /** The working registry — archived rows never count (they are data
+   * mistakes, not entities), whichever view is showing. */
+  const liveCount = rows.filter((row) => row.archivedAt === null).length;
 
   async function signOut() {
     await authClient.signOut();
     void navigate("/auth/login", { replace: true });
+  }
+
+  /** #99's show-archived toggle re-reads the list either way — the
+   * archived rows only exist server-side, and coming back should not
+   * trust a stale working list either. */
+  async function toggleArchived(next: boolean) {
+    setListError(null);
+    const { data } = await api
+      .GET(
+        "/api/v1/entities",
+        next ? { params: { query: { includeArchived: "true" as const } } } : {},
+      )
+      .catch(() => ({ data: undefined }));
+    if (!data) {
+      setListError(
+        intl.formatMessage({
+          id: "entities.listError",
+          defaultMessage: "The registry could not be read. Try again.",
+        }),
+      );
+      return;
+    }
+    setRows(data.entities as EntityRow[]);
+    setShowArchived(next);
+  }
+
+  /** Row-level restore, offered in the archived view (#99). */
+  async function restoreRow(row: EntityRow) {
+    setListError(null);
+    const { data, error } = await api
+      .POST("/api/v1/entities/{id}/restore", { params: { path: { id: row.id } } })
+      .catch(() => ({ data: undefined, error: undefined }));
+    if (!data) {
+      setListError(
+        problemDetail(error) ??
+          intl.formatMessage({
+            id: "entities.restoreError",
+            defaultMessage: "The entity could not be restored.",
+          }),
+      );
+      return;
+    }
+    const restored = data.entity as EntityRow;
+    setRows((current) => current.map((existing) => (existing.id === row.id ? restored : existing)));
   }
 
   const registerButton = (
@@ -131,7 +144,7 @@ export function EntitiesPage() {
             <FormattedMessage
               id="entities.count"
               defaultMessage="{count, plural, one {# entity} other {# entities}}"
-              values={{ count: rows.length }}
+              values={{ count: liveCount }}
             />
           }
           primaryAction={registerButton}
@@ -139,11 +152,32 @@ export function EntitiesPage() {
       }
     >
       <PageTitle title={intl.formatMessage({ id: "entities.title", defaultMessage: "Entities" })} />
-      {rows.length === 0 ? (
-        <EmptyRegistry onRegister={() => setRegisterOpen(true)} />
-      ) : (
-        <RegistryTable rows={rows} />
-      )}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-end gap-2">
+          {listError && (
+            <p role="alert" className="text-xs text-status-danger-fg">
+              {listError}
+            </p>
+          )}
+          <Label id="entities-show-archived-label">
+            <FormattedMessage id="entities.showArchived" defaultMessage="Show archived" />
+          </Label>
+          <Switch
+            checked={showArchived}
+            onCheckedChange={(next) => void toggleArchived(next)}
+            aria-labelledby="entities-show-archived-label"
+          />
+        </div>
+        {rows.length === 0 ? (
+          <EmptyRegistry onRegister={() => setRegisterOpen(true)} />
+        ) : (
+          <RegistryTable
+            rows={rows}
+            showArchived={showArchived}
+            onRestore={(row) => void restoreRow(row)}
+          />
+        )}
+      </div>
       {registerOpen && (
         <RegisterEntityDialog
           entityTypes={entityTypes}
@@ -183,9 +217,19 @@ function EmptyRegistry({ onRegister }: Readonly<{ onRegister: () => void }>) {
   );
 }
 
-/** EN3's table, reduced to the M7 columns: name, type, jurisdiction,
- * status. The API orders the rows; this renders them. */
-function RegistryTable({ rows }: Readonly<{ rows: EntityRow[] }>) {
+/** EN3's table, reduced to the M7 columns: name (opening the record
+ * page, #99), type, jurisdiction, status. The API orders the rows;
+ * this renders them. The archived view adds an Archived pill and a
+ * row-level restore. */
+function RegistryTable({
+  rows,
+  showArchived,
+  onRestore,
+}: Readonly<{
+  rows: EntityRow[];
+  showArchived: boolean;
+  onRestore: (row: EntityRow) => void;
+}>) {
   const intl = useIntl();
   return (
     <div className="overflow-x-auto rounded-card border border-border-default bg-raised">
@@ -204,15 +248,32 @@ function RegistryTable({ rows }: Readonly<{ rows: EntityRow[] }>) {
             <th scope="col" className="w-28 px-4 py-2 text-start font-medium">
               <FormattedMessage id="entities.column.status" defaultMessage="Status" />
             </th>
+            {showArchived && (
+              <th scope="col" className="w-24 px-4 py-2 text-end font-medium">
+                <span className="sr-only">
+                  <FormattedMessage id="entities.column.actions" defaultMessage="Actions" />
+                </span>
+              </th>
+            )}
           </tr>
         </thead>
         <tbody>
           {rows.map((row) => (
             <tr key={row.id} className="border-t border-border-default">
               <td className="px-4 py-2.5">
-                <span className="flex items-center gap-2.5 font-medium text-primary">
+                <span className="flex items-center gap-2.5">
                   <Building2 size={16} aria-hidden="true" className="shrink-0 text-muted" />
-                  {row.legalName}
+                  <Link
+                    to={`/entities/${row.id}`}
+                    className="rounded-chip font-medium text-primary hover:text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+                  >
+                    {row.legalName}
+                  </Link>
+                  {row.archivedAt !== null && (
+                    <span className="inline-flex rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
+                      <FormattedMessage id="entities.archivedPill" defaultMessage="Archived" />
+                    </span>
+                  )}
                 </span>
               </td>
               <td className="px-4 py-2.5 text-sm text-muted">{row.entityTypeName}</td>
@@ -230,6 +291,23 @@ function RegistryTable({ rows }: Readonly<{ rows: EntityRow[] }>) {
                   {statusLabel(intl, row.status)}
                 </span>
               </td>
+              {showArchived && (
+                <td className="px-4 py-2.5 text-end">
+                  {row.archivedAt !== null && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      aria-label={intl.formatMessage(
+                        { id: "entities.restoreRow", defaultMessage: "Restore {name}" },
+                        { name: row.legalName },
+                      )}
+                      onClick={() => onRestore(row)}
+                    >
+                      <FormattedMessage id="entities.record.restore" defaultMessage="Restore" />
+                    </Button>
+                  )}
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
