@@ -16,6 +16,32 @@ import { LoginPage, loginLoader } from "./routes/login";
 import { SetPasswordPage } from "./routes/set-password";
 import { SettingsLayout, settingsIndexLoader, settingsLoader } from "./routes/settings";
 import { SettingsAppearancePage } from "./routes/settings-appearance";
+import {
+  SettingsContractFieldsPage,
+  settingsContractFieldsLoader,
+} from "./routes/settings-contract-fields";
+import {
+  SettingsContractStatusesPage,
+  settingsContractStatusesLoader,
+} from "./routes/settings-contract-statuses";
+import {
+  SettingsContractTypeEditorPage,
+  settingsContractTypeEditorLoader,
+} from "./routes/settings-contract-type-editor";
+import {
+  SettingsContractTypesPage,
+  settingsContractsIndexLoader,
+  settingsContractTypesLoader,
+} from "./routes/settings-contract-types";
+import {
+  SettingsMatterTypeEditorPage,
+  settingsMatterTypeEditorLoader,
+} from "./routes/settings-matter-type-editor";
+import {
+  SettingsMatterTypesPage,
+  settingsMattersIndexLoader,
+  settingsMatterTypesLoader,
+} from "./routes/settings-matter-types";
 import { SettingsGeneralPage, settingsGeneralLoader } from "./routes/settings-general";
 import { SettingsUsersPage, settingsUsersLoader } from "./routes/settings-users";
 import {
@@ -69,6 +95,42 @@ export const routes: RouteObject[] = [
         path: "authentication",
         loader: settingsAuthenticationLoader,
         element: <SettingsAuthenticationPage />,
+      },
+      // Each section URL forwards to its first pane, so the rail's
+      // entries and deep links share one canonical address.
+      { path: "matters", loader: settingsMattersIndexLoader, element: <></> },
+      {
+        path: "matters/types",
+        loader: settingsMatterTypesLoader,
+        element: <SettingsMatterTypesPage />,
+      },
+      {
+        // #85: each type row opens its own editor screen (ST15).
+        path: "matters/types/:typeId",
+        loader: settingsMatterTypeEditorLoader,
+        element: <SettingsMatterTypeEditorPage />,
+      },
+      { path: "contracts", loader: settingsContractsIndexLoader, element: <></> },
+      {
+        path: "contracts/types",
+        loader: settingsContractTypesLoader,
+        element: <SettingsContractTypesPage />,
+      },
+      {
+        // #84: each type row opens its own editor screen (ST16).
+        path: "contracts/types/:typeId",
+        loader: settingsContractTypeEditorLoader,
+        element: <SettingsContractTypeEditorPage />,
+      },
+      {
+        path: "contracts/statuses",
+        loader: settingsContractStatusesLoader,
+        element: <SettingsContractStatusesPage />,
+      },
+      {
+        path: "contracts/fields",
+        loader: settingsContractFieldsLoader,
+        element: <SettingsContractFieldsPage />,
       },
     ],
   },

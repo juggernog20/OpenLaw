@@ -30,6 +30,12 @@ import { HttpError, PROBLEM_CONTENT_TYPE, type Problem } from "./lib/problem.js"
 import type { MailerResolver } from "./lib/mailer.js";
 import { metaRoutes } from "./modules/meta/routes.js";
 import { authRoutes } from "./modules/auth/routes.js";
+import { contractStatusesRoutes } from "./modules/contract-statuses/routes.js";
+import { contractTypesRoutes } from "./modules/contract-types/routes.js";
+import { attachedFieldsRoutes } from "./modules/contract-types/attached-fields.js";
+import { matterTypesRoutes } from "./modules/matter-types/routes.js";
+import { matterAttachedFieldsRoutes } from "./modules/matter-types/attached-fields.js";
+import { fieldsRoutes } from "./modules/fields/routes.js";
 import { onboardingRoutes } from "./modules/onboarding/routes.js";
 import { orgRoutes } from "./modules/org/routes.js";
 import { usersRoutes } from "./modules/users/routes.js";
@@ -234,6 +240,12 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(orgRoutes, { prefix: "/api/v1" });
   await app.register(usersRoutes, { prefix: "/api/v1" });
   await app.register(emailSettingsRoutes, { prefix: "/api/v1" });
+  await app.register(contractTypesRoutes, { prefix: "/api/v1" });
+  await app.register(attachedFieldsRoutes, { prefix: "/api/v1" });
+  await app.register(matterTypesRoutes, { prefix: "/api/v1" });
+  await app.register(matterAttachedFieldsRoutes, { prefix: "/api/v1" });
+  await app.register(contractStatusesRoutes, { prefix: "/api/v1" });
+  await app.register(fieldsRoutes, { prefix: "/api/v1" });
 
   return app;
 }

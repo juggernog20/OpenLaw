@@ -57,6 +57,48 @@
       "when": 1786433704100,
       "tag": "0007_timezone",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1786470787772,
+      "tag": "0008_contract_types",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1786477894274,
+      "tag": "0009_contract_statuses",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1786481436354,
+      "tag": "0010_fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1786482049932,
+      "tag": "0011_type_editor",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1786483851677,
+      "tag": "0012_matter_types",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1786530235592,
+      "tag": "0013_type_field_field_id_indexes",
+      "breakpoints": true
     }
   ]
 }

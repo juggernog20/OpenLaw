@@ -51,6 +51,7 @@
   /* Brand */
   --accent: #c97b5c;
   --cta-primary: #5c7a4a;
+  --cta-danger: #a05540;
 
   /* Status — paired bg + fg */
   --status-success-bg: #e5eddc;

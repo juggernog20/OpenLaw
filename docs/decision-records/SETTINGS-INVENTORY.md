@@ -29,6 +29,7 @@ ActivityBar, Pill, Avatar) live in this file as local copies per the designs con
 | ST16  | `gQmoP`  | Contracts settings · Type editor         | M6       |
 | ST17  | `svBem`  | Organization · Security (Authentication) | M5       |
 | ST18  | `vpr5X`  | Organization · Security · OIDC           | M5       |
+| ST19  | `BWmsJ`  | Contracts settings · Types               | M6       |
 
 ## What the mocks already got right
 
@@ -77,3 +78,29 @@ ActivityBar, Pill, Avatar) live in this file as local copies per the designs con
    (2026-08-11, #68): the shipped rail's Personal group carries Profile and Appearance only — no
    Notifications entry, omitted rather than disabled — and the M5 acceptance journey asserts the
    absence. ST3 stays in the file untouched, waiting for M18._
+
+## Amendments (2026-08-12, M6 acceptance sweep, #86)
+
+Every M6 frame shipped: ST6 (#85), ST8 (the guard dialog in #81/#82/#85), ST10 (#82), ST11 (#83),
+ST15 (#85), ST16 (#84) — and ST19, added by this sweep, records the pane that had shipped without
+a frame (#81). The sweep's deltas:
+
+1. **The file had no Contracts · Types frame** — the DES-020 reference pane (#81) shipped from
+   ST6's anatomy with the CTR-002 vocabulary. **ST19 was added in this sweep** to close the gap:
+   the Contracts rail entry active, the Contracts section head with the three shipped tabs
+   (Types / Statuses / Fields — no Templates), the eight CTR-002 seed rows with Other locked, no
+   Default pill (no decision defines a default contract type — DES-020 normalization point 2),
+   and the trailing pencil-plus-archive pair the build added (see 2).
+2. **Trailing row actions**: every shipped list row carries a pencil edit button before archive —
+   it navigates to the type-editor screen (DES-022) on the Types panes and opens the field-editor
+   dialog (DES-021) on Fields. ST6/ST10/ST11 draw only the archive (or lock) glyph; ST19 draws
+   the shipped pair. Recorded in the DES-020 amendment; the older frames are not redrawn.
+3. **The help caption below the card** (DES-020 card anatomy) is drawn on no frame; every shipped
+   pane renders it. Decisions win over the mocks — the frames are not redrawn.
+4. **ST6's Advisory row draws a "Default" pill and a second lock** that did not ship: MTR-001
+   protects only `other`, and no default-type affordance exists. The shipped Matters · Types pane
+   (#85) locks Other alone and renders no pill. The row stays drawn as-is; M22 either builds the
+   machinery or strikes it from the frame.
+5. **ST8's reassignment select** shipped with a third outcome beside reassign and block: in-use
+   rows with no live reassignment candidate disable the select and the danger CTA with an
+   explanatory line (DES-020 amendment 3). The frame stands; it draws the reassign case.

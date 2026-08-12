@@ -28,6 +28,10 @@ export type ActivityWriter = Db | Parameters<Parameters<Db["transaction"]>[0]>[0
  * slugs. The template arm covers the preference route, which builds its
  * slug from the changed field name.
  */
+/** The taxonomy tables' audit namespaces (#85: one machinery each). */
+export type TaxonomyActionPrefix = "contract_type" | "matter_type";
+export type TypeFieldActionPrefix = "contract_type_field" | "matter_type_field";
+
 export type ActivityAction =
   | `user.${"theme" | "timezone" | "display_name" | "avatar"}_changed`
   | "user.invited"
@@ -42,6 +46,10 @@ export type ActivityAction =
   | "user.unarchived"
   | "user.sessions_revoked"
   | "org_settings.updated"
+  | `${TaxonomyActionPrefix}.${"created" | "renamed" | "updated" | "reordered" | "archived" | "restored" | "deleted"}`
+  | `${TypeFieldActionPrefix}.${"attached" | "detached" | "reordered" | "required_changed"}`
+  | `contract_status.${"created" | "renamed" | "reordered" | "archived" | "restored" | "deleted"}`
+  | `field.${"created" | "updated" | "promoted" | "narrowed" | "archived" | "restored"}`
   | "sso_provider.registered"
   | "sso_provider.updated";
 

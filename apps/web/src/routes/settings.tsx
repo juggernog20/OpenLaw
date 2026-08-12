@@ -12,9 +12,11 @@
 
 import { useState } from "react";
 import {
+  Briefcase,
   Building2,
   ChevronDown,
   ChevronRight,
+  FilePen,
   KeyRound,
   Palette,
   Shield,
@@ -59,15 +61,21 @@ interface SettingsSubgroup {
 interface SettingsGroup {
   id: string;
   label: MessageDescriptor;
-  sections: SettingsSection[];
-  subgroups?: SettingsSubgroup[];
+  /** Rail order is the mock's order (SET-001): sections and collapsible
+   * sub-groups interleave, so entries carry both in one list. */
+  entries: (SettingsSection | SettingsSubgroup)[];
+}
+
+/** The one structural difference: a sub-group nests sections. */
+function isSubgroup(entry: SettingsSection | SettingsSubgroup): entry is SettingsSubgroup {
+  return "sections" in entry;
 }
 
 /** The Personal group, visible to every signed-in user. */
 const PERSONAL_GROUP: SettingsGroup = {
   id: "personal",
   label: defineMessage({ id: "settings.group.personal", defaultMessage: "Personal" }),
-  sections: [
+  entries: [
     {
       id: "profile",
       path: "/settings/profile",
@@ -93,7 +101,7 @@ const PERSONAL_GROUP: SettingsGroup = {
 const ORGANIZATION_GROUP: SettingsGroup = {
   id: "organization",
   label: defineMessage({ id: "settings.group.organization", defaultMessage: "Organization" }),
-  sections: [
+  entries: [
     {
       id: "general",
       path: "/settings/general",
@@ -106,8 +114,6 @@ const ORGANIZATION_GROUP: SettingsGroup = {
       icon: Users,
       label: defineMessage({ id: "settings.section.users", defaultMessage: "Users" }),
     },
-  ],
-  subgroups: [
     {
       id: "security",
       label: defineMessage({ id: "settings.group.security", defaultMessage: "Security" }),
@@ -123,6 +129,21 @@ const ORGANIZATION_GROUP: SettingsGroup = {
           }),
         },
       ],
+    },
+    // Each module section points at its first pane; more panes join as
+    // tabs inside the section as their tickets land. Matters sits
+    // before Contracts per the SET-001 rail order.
+    {
+      id: "matters",
+      path: "/settings/matters/types",
+      icon: Briefcase,
+      label: defineMessage({ id: "settings.section.matters", defaultMessage: "Matters" }),
+    },
+    {
+      id: "contracts",
+      path: "/settings/contracts/types",
+      icon: FilePen,
+      label: defineMessage({ id: "settings.section.contracts", defaultMessage: "Contracts" }),
     },
   ],
 };
@@ -227,12 +248,13 @@ function SettingsRail({ isAdministrator }: { isAdministrator: boolean }) {
           <h2 className="hidden px-2.5 pt-2.5 pb-1 text-xs font-semibold text-muted @3xl/page:block">
             <FormattedMessage {...group.label} />
           </h2>
-          {group.sections.map((section) => (
-            <RailEntry key={section.id} section={section} />
-          ))}
-          {group.subgroups?.map((subgroup) => (
-            <RailSubgroup key={subgroup.id} subgroup={subgroup} />
-          ))}
+          {group.entries.map((entry) =>
+            isSubgroup(entry) ? (
+              <RailSubgroup key={entry.id} subgroup={entry} />
+            ) : (
+              <RailEntry key={entry.id} section={entry} />
+            ),
+          )}
         </div>
       ))}
     </nav>
