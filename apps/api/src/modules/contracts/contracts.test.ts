@@ -44,6 +44,13 @@ const BUSINESS = {
 let harness: TestHarness;
 let adminCookies: Record<string, string>;
 let memberCookies: Record<string, string>;
+/** Fixture email → user id, for the owner and team routes. */
+const userIds = new Map<string, string>();
+const idOf = (fixture: { email: string }): string => {
+  const id = userIds.get(fixture.email);
+  expect(id, fixture.email).toBeDefined();
+  return id!;
+};
 
 beforeAll(async () => {
   harness = await startHarness();
@@ -61,7 +68,14 @@ beforeAll(async () => {
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, user.id));
+    userIds.set(fixture.email, user.id);
   }
+  const [admin] = await harness.db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, ADMIN.email))
+    .limit(1);
+  userIds.set(ADMIN.email, admin!.id);
   adminCookies = await signInCookies(harness.app, ADMIN.email, ADMIN.password);
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
 }, 120_000);
@@ -69,6 +83,14 @@ beforeAll(async () => {
 afterAll(async () => {
   await harness.stop();
 });
+
+/** A person as every contract surface renders them (CTR-004). */
+interface Person {
+  id: string;
+  displayName: string;
+  image: string | null;
+  archived: boolean;
+}
 
 interface ContractRow {
   id: string;
@@ -79,10 +101,16 @@ interface ContractRow {
   statusId: string;
   statusName: string;
   stage: string;
+  /** The Owner (CTR-004); null = unassigned, which reads as triage. */
+  manager: Person | null;
   priority: string;
   risk: string | null;
   description: string | null;
   archivedAt: string | null;
+}
+
+interface TeamMember extends Person {
+  role: string;
 }
 
 interface Option {
@@ -143,6 +171,32 @@ const newContract = async (title: string, typeSlug = "nda"): Promise<ContractRow
 const getContract = (cookies: Record<string, string>, number: number | string) =>
   harness.app.inject({ method: "GET", url: `/api/v1/contracts/${number}`, cookies });
 
+/** The record read's team roster, requiring success. */
+const teamOf = async (number: number): Promise<TeamMember[]> => {
+  const res = await getContract(adminCookies, number);
+  expect(res.statusCode, res.body).toBe(200);
+  return res.json().team;
+};
+
+const addTeamMember = (
+  cookies: Record<string, string>,
+  number: number,
+  payload: Record<string, unknown>,
+) =>
+  harness.app.inject({ method: "POST", url: `/api/v1/contracts/${number}/team`, cookies, payload });
+
+const removeTeamMember = (
+  cookies: Record<string, string>,
+  number: number,
+  userId: string,
+  role: string,
+) =>
+  harness.app.inject({
+    method: "DELETE",
+    url: `/api/v1/contracts/${number}/team/${userId}/${role}`,
+    cookies,
+  });
+
 const patchContract = (
   cookies: Record<string, string>,
   number: number,
@@ -164,6 +218,8 @@ const contractAuditRows = () =>
         "contract.created",
         "contract.updated",
         "contract.status_changed",
+        "contract.team_added",
+        "contract.team_removed",
         "contract.archived",
         "contract.restored",
       ]),
@@ -701,6 +757,315 @@ describe("archive and restore", () => {
 
     expect((await archiveContract(adminCookies, 999_999)).statusCode).toBe(404);
     expect((await restoreContract(adminCookies, 999_999)).statusCode).toBe(404);
+  });
+});
+
+describe("the Owner (CTR-004)", () => {
+  it("is born unassigned, which reads as triage rather than missing data", async () => {
+    const contract = await newContract("Owner starts empty");
+    expect(contract.manager).toBeNull();
+    const read = await getContract(memberCookies, contract.number);
+    expect(read.json().contract.manager).toBeNull();
+  });
+
+  it("takes a Member+ user and clears back to unassigned", async () => {
+    const contract = await newContract("Owner round trip");
+    const assigned = await patchContract(memberCookies, contract.number, {
+      managerId: idOf(MEMBER),
+    });
+    expect(assigned.statusCode, assigned.body).toBe(200);
+    expect(assigned.json().contract.manager).toMatchObject({
+      id: idOf(MEMBER),
+      displayName: MEMBER.displayName,
+      archived: false,
+    });
+
+    const cleared = await patchContract(memberCookies, contract.number, { managerId: null });
+    expect(cleared.statusCode, cleared.body).toBe(200);
+    expect(cleared.json().contract.manager).toBeNull();
+  });
+
+  it("rides the list, so a Legal Team Member can scan who runs what", async () => {
+    const contract = await newContract("Owner on the list");
+    await patchContract(adminCookies, contract.number, { managerId: idOf(ADMIN) });
+    const row = (await listContracts(memberCookies)).find((entry) => entry.id === contract.id);
+    expect(row?.manager?.displayName).toBe(ADMIN.displayName);
+  });
+
+  it("refuses an unknown user, one who cannot open a contract, and one who left, as 400", async () => {
+    const contract = await newContract("Owner refusals");
+    const unknown = await patchContract(adminCookies, contract.number, { managerId: "no-such-id" });
+    expect(unknown.statusCode, unknown.body).toBe(400);
+
+    // Contract surfaces are Member+ (DD-013): an Owner who cannot open
+    // the record cannot run it.
+    for (const fixture of [CONTRIBUTOR, BUSINESS]) {
+      const refused = await patchContract(adminCookies, contract.number, {
+        managerId: idOf(fixture),
+      });
+      expect(refused.statusCode, refused.body).toBe(400);
+    }
+
+    // An archived person has left (SET-005): they may still appear on
+    // records they already ran, but nothing new lands on them.
+    const archived = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/users/${idOf(MEMBER)}/archive`,
+      cookies: adminCookies,
+    });
+    expect(archived.statusCode, archived.body).toBe(200);
+    try {
+      const toDeparted = await patchContract(adminCookies, contract.number, {
+        managerId: idOf(MEMBER),
+      });
+      expect(toDeparted.statusCode, toDeparted.body).toBe(400);
+    } finally {
+      const restored = await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/users/${idOf(MEMBER)}/unarchive`,
+        cookies: adminCookies,
+      });
+      expect(restored.statusCode, restored.body).toBe(200);
+      // Archiving revoked every session; the suite's member signs back in.
+      memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
+    }
+
+    const read = await getContract(adminCookies, contract.number);
+    expect(read.json().contract.manager).toBeNull();
+  });
+
+  it("writes the change with before and after names, and nothing when it repeats", async () => {
+    const contract = await newContract("Owner audit");
+    await patchContract(adminCookies, contract.number, { managerId: idOf(MEMBER) });
+    await patchContract(adminCookies, contract.number, { managerId: null });
+
+    const changes = (await auditRowsFor(contract.id))
+      .filter((row) => row.action === "contract.updated")
+      .map((row) => (row.payload as { changed: Record<string, unknown> }).changed.owner);
+    expect(changes).toEqual([
+      { from: null, to: MEMBER.displayName },
+      { from: MEMBER.displayName, to: null },
+    ]);
+
+    // Setting the Owner a contract already has changes nothing, so no
+    // misleading from==to entry is written.
+    await patchContract(adminCookies, contract.number, { managerId: null });
+    expect(
+      (await auditRowsFor(contract.id)).filter((row) => row.action === "contract.updated"),
+    ).toHaveLength(2);
+  });
+});
+
+describe("the contract team (CTR-004)", () => {
+  it("records the creating user with the creator role, so provenance survives", async () => {
+    const created = await createContract(memberCookies, {
+      title: "Creator recorded",
+      contractTypeId: (await typeBySlug("nda")).id,
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    expect(await teamOf(created.json().contract.number)).toEqual([
+      expect.objectContaining({
+        id: idOf(MEMBER),
+        displayName: MEMBER.displayName,
+        role: "creator",
+      }),
+    ]);
+  });
+
+  it("adds and removes a member with a role", async () => {
+    const contract = await newContract("Team round trip");
+    const added = await addTeamMember(memberCookies, contract.number, {
+      userId: idOf(MEMBER),
+      role: "watcher",
+    });
+    expect(added.statusCode, added.body).toBe(201);
+    expect(added.json().team.map((row: TeamMember) => [row.id, row.role])).toEqual([
+      [idOf(ADMIN), "creator"],
+      [idOf(MEMBER), "watcher"],
+    ]);
+
+    const removed = await removeTeamMember(memberCookies, contract.number, idOf(MEMBER), "watcher");
+    expect(removed.statusCode, removed.body).toBe(200);
+    expect(removed.json().team.map((row: TeamMember) => row.id)).toEqual([idOf(ADMIN)]);
+  });
+
+  it("lets one person hold two roles, and keys removal to the role", async () => {
+    const contract = await newContract("Two roles");
+    for (const role of ["member", "watcher"]) {
+      const added = await addTeamMember(adminCookies, contract.number, {
+        userId: idOf(MEMBER),
+        role,
+      });
+      expect(added.statusCode, added.body).toBe(201);
+    }
+    expect(
+      (await teamOf(contract.number))
+        .filter((row) => row.id === idOf(MEMBER))
+        .map((row) => row.role)
+        .sort(),
+    ).toEqual(["member", "watcher"]);
+
+    // Removal names the role, not just the person: dropping the watcher
+    // leaves the member row standing.
+    const removed = await removeTeamMember(adminCookies, contract.number, idOf(MEMBER), "watcher");
+    expect(removed.statusCode, removed.body).toBe(200);
+    expect(
+      (await teamOf(contract.number))
+        .filter((row) => row.id === idOf(MEMBER))
+        .map((row) => row.role),
+    ).toEqual(["member"]);
+  });
+
+  it("admits a Contributor as a team member — external counsel are contributors", async () => {
+    const contract = await newContract("External counsel");
+    const added = await addTeamMember(adminCookies, contract.number, {
+      userId: idOf(CONTRIBUTOR),
+      role: "contributor",
+    });
+    expect(added.statusCode, added.body).toBe(201);
+    expect((await teamOf(contract.number)).some((row) => row.id === idOf(CONTRIBUTOR))).toBe(true);
+  });
+
+  it("refuses a repeat of the same role, an unknown user, an unknown role, and a stray key", async () => {
+    const contract = await newContract("Team refusals");
+    const first = await addTeamMember(adminCookies, contract.number, {
+      userId: idOf(MEMBER),
+      role: "member",
+    });
+    expect(first.statusCode, first.body).toBe(201);
+    // The compound key already holds this exact row.
+    const repeat = await addTeamMember(adminCookies, contract.number, {
+      userId: idOf(MEMBER),
+      role: "member",
+    });
+    expect(repeat.statusCode, repeat.body).toBe(409);
+
+    const unknownUser = await addTeamMember(adminCookies, contract.number, {
+      userId: "no-such-id",
+      role: "member",
+    });
+    expect(unknownUser.statusCode, unknownUser.body).toBe(400);
+
+    const unknownRole = await addTeamMember(adminCookies, contract.number, {
+      userId: idOf(MEMBER),
+      role: "owner",
+    });
+    expect(unknownRole.statusCode, unknownRole.body).toBe(400);
+
+    // Strict bodies: an unknown key is a client bug, not a silent strip.
+    const stray = await addTeamMember(adminCookies, contract.number, {
+      userId: idOf(MEMBER),
+      role: "member",
+      isPrimary: true,
+    });
+    expect(stray.statusCode, stray.body).toBe(400);
+  });
+
+  it("keeps the creator row: it cannot be added by hand or removed", async () => {
+    const contract = await newContract("Creator is provenance");
+    const byHand = await addTeamMember(adminCookies, contract.number, {
+      userId: idOf(MEMBER),
+      role: "creator",
+    });
+    expect(byHand.statusCode, byHand.body).toBe(400);
+
+    const removed = await removeTeamMember(adminCookies, contract.number, idOf(ADMIN), "creator");
+    expect(removed.statusCode, removed.body).toBe(409);
+    expect((await teamOf(contract.number)).map((row) => row.role)).toEqual(["creator"]);
+  });
+
+  it("404s an unknown contract and a role nobody holds", async () => {
+    const contract = await newContract("Team 404s");
+    expect(
+      (await addTeamMember(adminCookies, 999_999, { userId: idOf(MEMBER), role: "member" }))
+        .statusCode,
+    ).toBe(404);
+    expect((await removeTeamMember(adminCookies, 999_999, idOf(MEMBER), "member")).statusCode).toBe(
+      404,
+    );
+    expect(
+      (await removeTeamMember(adminCookies, contract.number, idOf(MEMBER), "watcher")).statusCode,
+    ).toBe(404);
+  });
+
+  it("freezes on an archived contract, like every other write", async () => {
+    const contract = await newContract("Frozen team");
+    const added = await addTeamMember(adminCookies, contract.number, {
+      userId: idOf(MEMBER),
+      role: "member",
+    });
+    expect(added.statusCode, added.body).toBe(201);
+    expect((await archiveContract(adminCookies, contract.number)).statusCode).toBe(200);
+
+    const whileArchived = await addTeamMember(adminCookies, contract.number, {
+      userId: idOf(MEMBER),
+      role: "watcher",
+    });
+    expect(whileArchived.statusCode, whileArchived.body).toBe(409);
+    expect(
+      (await removeTeamMember(adminCookies, contract.number, idOf(MEMBER), "member")).statusCode,
+    ).toBe(409);
+  });
+
+  it("refuses a Contributor and a Business User on the team routes as 403", async () => {
+    const contract = await newContract("Team access floor");
+    for (const fixture of [CONTRIBUTOR, BUSINESS]) {
+      const cookies = await signInCookies(harness.app, fixture.email, fixture.password);
+      const attempts = [
+        addTeamMember(cookies, contract.number, { userId: idOf(MEMBER), role: "member" }),
+        removeTeamMember(cookies, contract.number, idOf(ADMIN), "creator"),
+      ];
+      for (const res of await Promise.all(attempts)) {
+        expect(res.statusCode, `${fixture.email}: ${res.body}`).toBe(403);
+      }
+    }
+    expect((await teamOf(contract.number)).map((row) => row.role)).toEqual(["creator"]);
+  });
+
+  it("writes its own activity row per change, naming the person and the role", async () => {
+    const contract = await newContract("Team audit");
+    await addTeamMember(memberCookies, contract.number, { userId: idOf(MEMBER), role: "watcher" });
+    await removeTeamMember(memberCookies, contract.number, idOf(MEMBER), "watcher");
+
+    const rows = await auditRowsFor(contract.id);
+    expect(rows.map((row) => row.action)).toEqual([
+      "contract.created",
+      "contract.team_added",
+      "contract.team_removed",
+    ]);
+    for (const row of rows.slice(1)) {
+      expect(row.visibility).toBe("legal_only");
+      expect(row.payload).toMatchObject({
+        number: contract.number,
+        member: MEMBER.displayName,
+        role: "watcher",
+      });
+    }
+  });
+});
+
+describe("GET /contracts/options — the Owner and team picker source", () => {
+  it("answers with the live people a Member+ surface can assign", async () => {
+    const res = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/contracts/options",
+      cookies: memberCookies,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    const people = res.json().users as (Person & { role: string })[];
+    // Everyone who can be put on a team is offered — the Owner guard
+    // narrows to Member+ on the write, and the client filters the pick.
+    expect(people.map((row) => row.id)).toEqual(
+      expect.arrayContaining([idOf(ADMIN), idOf(MEMBER), idOf(CONTRIBUTOR)]),
+    );
+    expect(people.find((row) => row.id === idOf(MEMBER))).toMatchObject({
+      displayName: MEMBER.displayName,
+      role: "legal_team_member",
+      archived: false,
+    });
+    // Alphabetical by name, so the picker reads the same every visit.
+    const names = people.map((row) => row.displayName);
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
   });
 });
 

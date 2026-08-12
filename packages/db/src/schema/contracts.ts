@@ -4,11 +4,11 @@
  * The contract record core (M8/1): the workspace for work whose
  * deliverable is a signed document. Only the columns this milestone
  * step reads land here, per the incremental-schema doctrine (TECH-014)
- * — `number`, `title`, the type and status FKs, `priority`, `risk`,
- * `description`, timestamps, and the soft-delete stamp. Owner and team,
- * parties, value, and custom fields arrive with the tickets that read
- * them; term, confidentiality, parent, and matter linking arrive with
- * their own milestones. SCHEMA.md is the naming reference, never a
+ * — `number`, `title`, the type and status FKs, `manager_id`,
+ * `priority`, `risk`, `description`, timestamps, and the soft-delete
+ * stamp. Parties, value, and custom fields arrive with the tickets that
+ * read them; term, confidentiality, parent, and matter linking arrive
+ * with their own milestones. SCHEMA.md is the naming reference, never a
  * migration to transcribe.
  *
  * `number` is CTR-003's global reference: a dedicated Postgres identity
@@ -24,6 +24,7 @@
 
 import { sql } from "drizzle-orm";
 import { check, index, integer, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { users } from "./auth.js";
 import { contractStatuses } from "./contract-statuses.js";
 import { contractTypes } from "./contract-types.js";
 import { uuidPk } from "./helpers.js";
@@ -55,6 +56,12 @@ export const contracts = pgTable(
     statusId: text("status_id")
       .notNull()
       .references(() => contractStatuses.id),
+    /** CTR-004's single accountable person, labelled **Owner** in the
+     * UI. NULL = unassigned, which reads as triage — a real state a
+     * contract sits in until someone takes it, not missing data. The
+     * column keeps the `manager_id` name the matter sibling uses
+     * (MTR-003), so one query shape serves both records. */
+    managerId: text("manager_id").references(() => users.id),
     /** CTR-005: not null, `medium` until someone says otherwise. */
     priority: text("priority", { enum: SEVERITY_LEVELS }).notNull().default("medium"),
     /** CTR-005: NULL = not yet assessed, which is not the same as low. */
@@ -82,6 +89,9 @@ export const contracts = pgTable(
     // many contracts hold this type, or this status.
     index("contracts_contract_type_idx").on(table.contractTypeId),
     index("contracts_status_idx").on(table.statusId),
+    // "What is on my desk" — the Owner filter the list offers, and the
+    // guard that answers whether a departing person still owns work.
+    index("contracts_manager_idx").on(table.managerId),
     check(
       "contracts_priority_check",
       sql`${table.priority} in ('low', 'medium', 'high', 'critical')`,

@@ -1,11 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The contract record core routes (M8/1): list, create, the record
- * read, the DES-017 per-field update, archive, and restore, plus the
- * Member+ picker read the create dialog needs (the contract-types and
- * contract-statuses settings surfaces stay Administrator-only per
- * SET-002).
+ * The contract record routes (M8): list, create, the record read, the
+ * DES-017 per-field update, archive, restore, and the contract team,
+ * plus the Member+ picker read the create dialog and the record's
+ * pickers need (the contract-types and contract-statuses settings
+ * surfaces stay Administrator-only per SET-002).
+ *
+ * The people are CTR-004's. The Owner is a field — one nullable FK,
+ * `manager_id`, labelled "Owner" on every surface — so it commits
+ * through the same per-field PATCH as the rest and rides
+ * `contract.updated`. The team is a compound-key join on (contract,
+ * person, role), so one person may hold two roles at once, and it has
+ * its own routes and its own audit verbs.
  *
  * Every route is addressed by the contract's CTR-003 number, not its
  * id: the number is the reference a Legal Team Member speaks, links,
@@ -31,12 +38,17 @@ import {
   asc,
   contractStatuses,
   contracts,
+  contractTeam,
   contractTypes,
   CONTRACT_STAGES,
+  CONTRACT_TEAM_ROLES,
   desc,
   eq,
   isNull,
   SEVERITY_LEVELS,
+  sql,
+  users,
+  USER_ROLES,
   type Contract,
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
@@ -49,7 +61,29 @@ const requireMember = requireRole("administrator", "legal_team_member");
 /** The protected CTR-001 seed every contract is born on. */
 const DRAFT_STATUS_SLUG = "draft";
 
+/** Contract surfaces are Member+ (DD-013), so only a Member+ user can
+ * be the Owner: an Owner who cannot open the record cannot run it. */
+const OWNER_ROLES = ["administrator", "legal_team_member"] as const;
+
+/** The `creator` row is provenance, not membership: the server writes it
+ * once at creation, and nothing after that adds or drops it. */
+const CREATOR_ROLE = "creator";
+
 const SeveritySchema = z.enum(SEVERITY_LEVELS);
+
+/** A person as every contract surface renders them: name and face, plus
+ * the SET-005 archived flag the shared identity component greys on. */
+const PersonSchema = z.object({
+  id: z.string(),
+  displayName: z.string(),
+  image: z.string().nullable(),
+  archived: z.boolean(),
+});
+
+/** One `contract_team` row, read back as the person plus their role.
+ * The compound key means the same person can appear twice, under two
+ * roles — that is membership, not a duplicate. */
+const TeamMemberSchema = PersonSchema.extend({ role: z.enum(CONTRACT_TEAM_ROLES) });
 
 const ContractRowSchema = z.object({
   id: z.string(),
@@ -64,6 +98,9 @@ const ContractRowSchema = z.object({
   statusName: z.string(),
   /** Derived from the status, never stored; code branches on this. */
   stage: z.enum(CONTRACT_STAGES),
+  /** CTR-004's single accountable person, labelled "Owner" in the UI.
+   * NULL = unassigned, which reads as triage, not as missing data. */
+  manager: PersonSchema.nullable(),
   priority: SeveritySchema,
   /** NULL = not yet assessed, which is not the same as low (CTR-005). */
   risk: SeveritySchema.nullable(),
@@ -74,6 +111,11 @@ const ContractRowSchema = z.object({
 });
 
 const ContractEnvelope = z.object({ contract: ContractRowSchema });
+/** The record page's read: the contract and its working group. The team
+ * rides here rather than on the row, because only the record renders it
+ * — the list would carry a join it never draws. */
+const ContractRecordEnvelope = ContractEnvelope.extend({ team: z.array(TeamMemberSchema) });
+const TeamEnvelope = z.object({ team: z.array(TeamMemberSchema) });
 
 /** The Member+ readable slice of a contract type. */
 const TypeOptionSchema = z.object({
@@ -86,18 +128,48 @@ const TypeOptionSchema = z.object({
  * and the fixed stage behind it. */
 const StatusOptionSchema = TypeOptionSchema.extend({ stage: z.enum(CONTRACT_STAGES) });
 
+/** The Member+ readable slice of a person: enough to draw a picker
+ * entry, plus the role the Owner filter reads. Archived people are left
+ * out entirely — this list exists to be assigned from. */
+const UserOptionSchema = PersonSchema.extend({ role: z.enum(USER_ROLES) });
+
 const TitleSchema = z.string().trim().min(1).max(200);
 const DescriptionSchema = z.string().trim().max(10_000);
 /** The number is the path, so it is an integer or it is not a contract. */
 const NumberParams = z.object({ number: z.coerce.number().int().positive() });
 
+/** A user row as the person shape, or null when nobody is joined. */
+interface JoinedPerson {
+  id: string;
+  displayName: string;
+  image: string | null;
+  archivedAt: Date | null;
+}
+
+function toPerson(person: JoinedPerson) {
+  return {
+    id: person.id,
+    displayName: person.displayName,
+    image: person.image,
+    // SET-005: an archived person stays on the record and renders greyed
+    // — removing them would rewrite history to hide a departure.
+    archived: person.archivedAt !== null,
+  };
+}
+
+/** `toPerson` for the outer join, where nobody is a real answer. */
+function toPersonOrNull(person: JoinedPerson | null) {
+  return person ? toPerson(person) : null;
+}
+
 /** The joined shape every route answers with — the stored row plus the
- * two display names and the derived stage. */
+ * two display names, the derived stage, and the Owner. */
 interface ContractContext {
   row: Contract;
   contractTypeName: string;
   statusName: string;
   stage: (typeof CONTRACT_STAGES)[number];
+  manager: JoinedPerson | null;
 }
 
 function toRow(context: ContractContext) {
@@ -111,6 +183,7 @@ function toRow(context: ContractContext) {
     statusId: row.statusId,
     statusName: context.statusName,
     stage: context.stage,
+    manager: toPersonOrNull(context.manager),
     priority: row.priority,
     risk: row.risk,
     description: row.description,
@@ -125,7 +198,8 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
   type Executor = typeof app.db | Tx;
 
   /** The one read shape: the contract with its type name, status label,
-   * and derived stage. */
+   * derived stage, and Owner. The Owner joins outward — unassigned is a
+   * real state (CTR-004), so a contract without one still reads. */
   const selectContracts = (db: Executor) =>
     db
       .select({
@@ -133,10 +207,59 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         contractTypeName: contractTypes.displayName,
         statusName: contractStatuses.displayName,
         stage: contractStatuses.stage,
+        manager: {
+          id: users.id,
+          displayName: users.displayName,
+          image: users.image,
+          archivedAt: users.archivedAt,
+        },
       })
       .from(contracts)
       .innerJoin(contractTypes, eq(contracts.contractTypeId, contractTypes.id))
-      .innerJoin(contractStatuses, eq(contracts.statusId, contractStatuses.id));
+      .innerJoin(contractStatuses, eq(contracts.statusId, contractStatuses.id))
+      .leftJoin(users, eq(contracts.managerId, users.id));
+
+  /** The working group on one contract, alphabetical by name so the
+   * roster reads the same on every visit; a person holding two roles
+   * appears once per role. */
+  const selectTeam = async (db: Executor, contractId: string) => {
+    const rows = await db
+      .select({
+        id: users.id,
+        displayName: users.displayName,
+        image: users.image,
+        archivedAt: users.archivedAt,
+        role: contractTeam.role,
+      })
+      .from(contractTeam)
+      .innerJoin(users, eq(contractTeam.userId, users.id))
+      .where(eq(contractTeam.contractId, contractId))
+      .orderBy(asc(sql`lower(${users.displayName})`), asc(contractTeam.role));
+    return rows.map((row) => ({ ...toPerson(row), role: row.role }));
+  };
+
+  /**
+   * Locks one live user by id and returns them, or refuses. `roles`
+   * narrows the answer — the Owner must be Member+, a team member may be
+   * anyone, including the Contributor who is external counsel (MTR-006).
+   * The lock stops a concurrent archive slipping between check and write.
+   */
+  async function lockedUser(tx: Tx, userId: string, roles: readonly string[], refusal: string) {
+    const [person] = await tx
+      .select({
+        id: users.id,
+        displayName: users.displayName,
+        image: users.image,
+        archivedAt: users.archivedAt,
+        role: users.role,
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1)
+      .for("update");
+    if (!person || person.archivedAt || !roles.includes(person.role)) throw httpError(400, refusal);
+    return person;
+  }
 
   /**
    * Locks one contract by number and returns it with its display
@@ -151,6 +274,16 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       .for("update", { of: contracts });
     if (!target) throw httpError(404, "No contract exists with this number.");
     return target;
+  }
+
+  /** `lockedContract` for the write paths that refuse a frozen record —
+   * an archived contract reads as facts until it is restored. */
+  async function editableContract(tx: Tx, number: number): Promise<ContractContext> {
+    const current = await lockedContract(tx, number);
+    if (current.row.archivedAt) {
+      throw httpError(409, "This contract is archived. Restore it before editing.");
+    }
+    return current;
   }
 
   app.get(
@@ -187,21 +320,23 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "listContractOptions",
         summary:
-          "The live contract types and statuses in display order — the " +
-          "create dialog's and the record's Member+ picker source (the " +
-          "settings surfaces stay Administrator-only per SET-002)",
+          "The live contract types and statuses in display order, and " +
+          "the live people the Owner and team pickers offer — the create " +
+          "dialog's and the record's Member+ picker source (the settings " +
+          "surfaces stay Administrator-only per SET-002)",
         tags: ["contracts"],
         response: {
           200: z.object({
             contractTypes: z.array(TypeOptionSchema),
             contractStatuses: z.array(StatusOptionSchema),
+            users: z.array(UserOptionSchema),
           }),
           default: problemResponse,
         },
       },
     },
     async () => {
-      const [types, statuses] = await Promise.all([
+      const [types, statuses, people] = await Promise.all([
         app.db
           .select({
             id: contractTypes.id,
@@ -221,8 +356,25 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           .from(contractStatuses)
           .where(isNull(contractStatuses.archivedAt))
           .orderBy(asc(contractStatuses.displayOrder), asc(contractStatuses.createdAt)),
+        // Everyone assignable to a team; the client narrows the Owner
+        // pick to Member+, and the write guard is the real refusal.
+        app.db
+          .select({
+            id: users.id,
+            displayName: users.displayName,
+            image: users.image,
+            archivedAt: users.archivedAt,
+            role: users.role,
+          })
+          .from(users)
+          .where(isNull(users.archivedAt))
+          .orderBy(asc(sql`lower(${users.displayName})`)),
       ]);
-      return { contractTypes: types, contractStatuses: statuses };
+      return {
+        contractTypes: types,
+        contractStatuses: statuses,
+        users: people.map((person) => ({ ...toPerson(person), role: person.role })),
+      };
     },
   );
 
@@ -233,11 +385,12 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "getContract",
         summary:
-          "One contract by its CTR-003 number — the record page's read; " +
-          "archived contracts answer too, so restore stays reachable",
+          "One contract by its CTR-003 number, with its Owner and its " +
+          "working group — the record page's read; archived contracts " +
+          "answer too, so restore stays reachable",
         tags: ["contracts"],
         params: NumberParams,
-        response: { 200: ContractEnvelope, default: problemResponse },
+        response: { 200: ContractRecordEnvelope, default: problemResponse },
       },
     },
     async (request) => {
@@ -245,7 +398,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(eq(contracts.number, request.params.number))
         .limit(1);
       if (!row) throw httpError(404, "No contract exists with this number.");
-      return { contract: toRow(row) };
+      return { contract: toRow(row), team: await selectTeam(app.db, row.row.id) };
     },
   );
 
@@ -307,6 +460,15 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           .insert(contracts)
           .values({ title: title.trim(), contractTypeId: contractType.id, statusId: draft.id })
           .returning();
+        // Provenance, written once and never again (CTR-004): who made
+        // this record survives every later owner change. It is part of
+        // creation, so `contract.created` records it — no separate team
+        // row for something nobody chose.
+        await tx.insert(contractTeam).values({
+          contractId: row!.id,
+          userId: request.user.id,
+          role: CREATOR_ROLE,
+        });
         await recordActivity(tx, {
           entityType: "contract",
           entityId: row!.id,
@@ -325,6 +487,8 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           contractTypeName: contractType.displayName,
           statusName: draft.displayName,
           stage: draft.stage,
+          // A new contract is unassigned; the Owner is set on the record.
+          manager: null,
         };
       });
       return reply.status(201).send({ contract: toRow(created) });
@@ -339,15 +503,18 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "updateContract",
         summary:
           "Commit one field of a contract in place (DES-017 per-field " +
-          "commits): title, description, priority, risk, or the status — " +
-          "any live status may follow any other (CTR-001). Never on an " +
-          "archived contract",
+          "commits): title, description, the Owner, priority, risk, or " +
+          "the status — any live status may follow any other (CTR-001). " +
+          "Never on an archived contract",
         tags: ["contracts"],
         params: NumberParams,
         // Strict: an unknown key is a client bug, not a silent strip.
         body: z.strictObject({
           title: TitleSchema.optional(),
           description: DescriptionSchema.nullable().optional(),
+          /** CTR-004's Owner. `null` clears it back to unassigned —
+           * a real state (triage), not an absent field. */
+          managerId: z.string().nullable().optional(),
           priority: SeveritySchema.optional(),
           risk: SeveritySchema.nullable().optional(),
           statusId: z.string().optional(),
@@ -358,11 +525,8 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const body = request.body;
       const updated = await app.db.transaction(async (tx) => {
-        const current = await lockedContract(tx, request.params.number);
+        const current = await editableContract(tx, request.params.number);
         const target = current.row;
-        if (target.archivedAt) {
-          throw httpError(409, "This contract is archived. Restore it before editing.");
-        }
 
         const patch: Partial<Contract> = {};
         /** The DD-017 changed map — old and new values per edited
@@ -382,6 +546,26 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             patch.description = next;
             changed.description = { from: target.description, to: next };
           }
+        }
+
+        // The Owner is a person, so the audit map carries names, not
+        // ids — the M9 viewer narrates "Owner changed from X to Y".
+        let manager = current.manager;
+        if (body.managerId !== undefined && body.managerId !== target.managerId) {
+          manager =
+            body.managerId === null
+              ? null
+              : await lockedUser(
+                  tx,
+                  body.managerId,
+                  OWNER_ROLES,
+                  "The Owner must be a live Administrator or Legal Team Member.",
+                );
+          patch.managerId = manager?.id ?? null;
+          changed.owner = {
+            from: current.manager?.displayName ?? null,
+            to: manager?.displayName ?? null,
+          };
         }
 
         if (body.priority !== undefined && body.priority !== target.priority) {
@@ -458,9 +642,135 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             payload: { number: row!.number, title: row!.title, ...statusChange },
           });
         }
-        return { row: row!, contractTypeName: current.contractTypeName, statusName, stage };
+        return {
+          row: row!,
+          contractTypeName: current.contractTypeName,
+          statusName,
+          stage,
+          manager,
+        };
       });
       return { contract: toRow(updated) };
+    },
+  );
+
+  app.post(
+    "/contracts/:number/team",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "addContractTeamMember",
+        summary:
+          "Put a person on the contract team under a role (CTR-004). The " +
+          "key is contract + person + role, so the same person may hold " +
+          "two roles; the `creator` role is the server's to write",
+        tags: ["contracts"],
+        params: NumberParams,
+        // Strict: an unknown key is a client bug, not a silent strip.
+        body: z.strictObject({
+          userId: z.string(),
+          role: z.enum(CONTRACT_TEAM_ROLES),
+        }),
+        response: { 201: TeamEnvelope, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      const { userId, role } = request.body;
+      const team = await app.db.transaction(async (tx) => {
+        const current = await editableContract(tx, request.params.number);
+        if (role === CREATOR_ROLE) {
+          throw httpError(400, "The creator is recorded when the contract is created.");
+        }
+        // Anyone live may join a team — external counsel participate as
+        // `contributor` (MTR-006), and a Business User can be a watcher.
+        const person = await lockedUser(tx, userId, USER_ROLES, "That is not a person we can add.");
+
+        // The compound key is the check: an insert that conflicts wrote
+        // nothing, so an empty return is "they already hold that role" —
+        // one statement, and two concurrent adds cannot both land.
+        const inserted = await tx
+          .insert(contractTeam)
+          .values({ contractId: current.row.id, userId: person.id, role })
+          .onConflictDoNothing()
+          .returning();
+        if (inserted.length === 0) throw httpError(409, "This person already holds that role.");
+        await recordActivity(tx, {
+          entityType: "contract",
+          entityId: current.row.id,
+          actorId: request.user.id,
+          action: "contract.team_added",
+          visibility: "legal_only",
+          payload: {
+            number: current.row.number,
+            title: current.row.title,
+            member: person.displayName,
+            role,
+          },
+        });
+        return selectTeam(tx, current.row.id);
+      });
+      return reply.status(201).send({ team });
+    },
+  );
+
+  app.delete(
+    "/contracts/:number/team/:userId/:role",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "removeContractTeamMember",
+        summary:
+          "Take one role off the contract team (CTR-004). The role is " +
+          "part of the address, so dropping a watcher leaves that same " +
+          "person's member row standing; `creator` is provenance and stays",
+        tags: ["contracts"],
+        params: NumberParams.extend({
+          userId: z.string(),
+          role: z.enum(CONTRACT_TEAM_ROLES),
+        }),
+        response: { 200: TeamEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const { userId, role } = request.params;
+      const team = await app.db.transaction(async (tx) => {
+        const current = await editableContract(tx, request.params.number);
+        if (role === CREATOR_ROLE) {
+          throw httpError(409, "The creator stays on the record — it is who made it.");
+        }
+        const [removed] = await tx
+          .delete(contractTeam)
+          .where(
+            and(
+              eq(contractTeam.contractId, current.row.id),
+              eq(contractTeam.userId, userId),
+              eq(contractTeam.role, role),
+            ),
+          )
+          .returning();
+        if (!removed) throw httpError(404, "Nobody holds that role on this contract.");
+
+        const [person] = await tx
+          .select({ displayName: users.displayName })
+          .from(users)
+          .where(eq(users.id, userId))
+          .limit(1);
+        await recordActivity(tx, {
+          entityType: "contract",
+          entityId: current.row.id,
+          actorId: request.user.id,
+          action: "contract.team_removed",
+          visibility: "legal_only",
+          payload: {
+            number: current.row.number,
+            title: current.row.title,
+            member: person?.displayName ?? userId,
+            role,
+          },
+        });
+        return selectTeam(tx, current.row.id);
+      });
+      return { team };
     },
   );
 

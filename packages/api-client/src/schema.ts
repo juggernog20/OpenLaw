@@ -812,7 +812,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The live contract types and statuses in display order — the create dialog's and the record's Member+ picker source (the settings surfaces stay Administrator-only per SET-002) */
+    /** The live contract types and statuses in display order, and the live people the Owner and team pickers offer — the create dialog's and the record's Member+ picker source (the settings surfaces stay Administrator-only per SET-002) */
     get: operations["listContractOptions"];
     put?: never;
     post?: never;
@@ -829,15 +829,49 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** One contract by its CTR-003 number — the record page's read; archived contracts answer too, so restore stays reachable */
+    /** One contract by its CTR-003 number, with its Owner and its working group — the record page's read; archived contracts answer too, so restore stays reachable */
     get: operations["getContract"];
     put?: never;
     post?: never;
     delete?: never;
     options?: never;
     head?: never;
-    /** Commit one field of a contract in place (DES-017 per-field commits): title, description, priority, risk, or the status — any live status may follow any other (CTR-001). Never on an archived contract */
+    /** Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, priority, risk, or the status — any live status may follow any other (CTR-001). Never on an archived contract */
     patch: operations["updateContract"];
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/team": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Put a person on the contract team under a role (CTR-004). The key is contract + person + role, so the same person may hold two roles; the `creator` role is the server's to write */
+    post: operations["addContractTeamMember"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/team/{userId}/{role}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Take one role off the contract team (CTR-004). The role is part of the address, so dropping a watcher leaves that same person's member row standing; `creator` is provenance and stays */
+    delete: operations["removeContractTeamMember"];
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   "/api/v1/contracts/{number}/archive": {
@@ -3905,6 +3939,12 @@ export interface operations {
               statusName: string;
               /** @enum {string} */
               stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
@@ -3962,6 +4002,12 @@ export interface operations {
               statusName: string;
               /** @enum {string} */
               stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
@@ -4014,6 +4060,14 @@ export interface operations {
               /** @enum {string} */
               stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
             }[];
+            users: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+              /** @enum {string} */
+              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+            }[];
           };
         };
       };
@@ -4056,6 +4110,12 @@ export interface operations {
               statusName: string;
               /** @enum {string} */
               stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
@@ -4066,6 +4126,14 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+            team: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+              /** @enum {string} */
+              role: "member" | "watcher" | "creator" | "contributor";
+            }[];
           };
         };
       };
@@ -4094,6 +4162,7 @@ export interface operations {
         "application/json": {
           title?: string;
           description?: string | null;
+          managerId?: string | null;
           /** @enum {string} */
           priority?: "low" | "medium" | "high" | "critical";
           risk?: ("low" | "medium" | "high" | "critical") | null;
@@ -4119,6 +4188,12 @@ export interface operations {
               statusName: string;
               /** @enum {string} */
               stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
@@ -4129,6 +4204,96 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  addContractTeamMember: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          userId: string;
+          /** @enum {string} */
+          role: "member" | "watcher" | "creator" | "contributor";
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            team: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+              /** @enum {string} */
+              role: "member" | "watcher" | "creator" | "contributor";
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  removeContractTeamMember: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+        userId: string;
+        role: "member" | "watcher" | "creator" | "contributor";
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            team: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              archived: boolean;
+              /** @enum {string} */
+              role: "member" | "watcher" | "creator" | "contributor";
+            }[];
           };
         };
       };
@@ -4171,6 +4336,12 @@ export interface operations {
               statusName: string;
               /** @enum {string} */
               stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
@@ -4223,6 +4394,12 @@ export interface operations {
               statusName: string;
               /** @enum {string} */
               stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;

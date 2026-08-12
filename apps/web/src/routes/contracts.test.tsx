@@ -37,7 +37,19 @@ const OPTIONS = {
     { id: "s-draft", slug: "draft", displayName: "Draft", stage: "draft" },
     { id: "s-active", slug: "active", displayName: "Active", stage: "active" },
   ],
+  users: [
+    {
+      id: "u2",
+      displayName: "Nadia Counsel",
+      image: null,
+      archived: false,
+      role: "legal_team_member",
+    },
+  ],
 };
+
+/** The Owner as a list row carries them (CTR-004). */
+const OWNER = { id: "u2", displayName: "Nadia Counsel", image: null, archived: false };
 
 function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
   return {
@@ -49,6 +61,8 @@ function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
     statusId: "s-draft",
     statusName: "Draft",
     stage: "draft",
+    // Unassigned until someone takes it (CTR-004).
+    manager: null,
     priority: "medium",
     risk: null,
     description: null,
@@ -118,6 +132,16 @@ describe("the /contracts destination", () => {
     ).toHaveAttribute("href", "/contracts/42");
     expect(within(row).getByText("MSA")).toBeInTheDocument();
     expect(within(row).getByText("Draft")).toBeInTheDocument();
+    // Unassigned is a state the list states, not a blank cell (CTR-004).
+    expect(within(row).getByText("Unassigned")).toBeInTheDocument();
+  });
+
+  it("names the Owner on the row, so the list answers who runs what", async () => {
+    stubApi({ signedIn: MEMBER, extra: listApi([contractRow({ manager: OWNER })]).handler });
+    renderAt("/contracts");
+
+    const row = await screen.findByRole("row", { name: /Acme master services agreement/ });
+    expect(within(row).getByText("Nadia Counsel")).toBeInTheDocument();
   });
 
   it("pitches the module when nothing exists yet", async () => {

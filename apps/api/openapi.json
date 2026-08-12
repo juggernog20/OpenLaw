@@ -5512,6 +5512,39 @@
                             "type": "string",
                             "enum": ["draft", "review", "approval", "signature", "active", "ended"]
                           },
+                          "manager": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "displayName": {
+                                    "type": "string"
+                                  },
+                                  "image": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "archived": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": ["id", "displayName", "image", "archived"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "priority": {
                             "type": "string",
                             "enum": ["low", "medium", "high", "critical"]
@@ -5569,6 +5602,7 @@
                           "statusId",
                           "statusName",
                           "stage",
+                          "manager",
                           "priority",
                           "risk",
                           "description",
@@ -5662,6 +5696,39 @@
                           "type": "string",
                           "enum": ["draft", "review", "approval", "signature", "active", "ended"]
                         },
+                        "manager": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "archived": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": ["id", "displayName", "image", "archived"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "priority": {
                           "type": "string",
                           "enum": ["low", "medium", "high", "critical"]
@@ -5719,6 +5786,7 @@
                         "statusId",
                         "statusName",
                         "stage",
+                        "manager",
                         "priority",
                         "risk",
                         "description",
@@ -5751,7 +5819,7 @@
     "/api/v1/contracts/options": {
       "get": {
         "operationId": "listContractOptions",
-        "summary": "The live contract types and statuses in display order — the create dialog's and the record's Member+ picker source (the settings surfaces stay Administrator-only per SET-002)",
+        "summary": "The live contract types and statuses in display order, and the live people the Owner and team pickers offer — the create dialog's and the record's Member+ picker source (the settings surfaces stay Administrator-only per SET-002)",
         "tags": ["contracts"],
         "responses": {
           "200": {
@@ -5802,9 +5870,47 @@
                         "required": ["id", "slug", "displayName", "stage"],
                         "additionalProperties": false
                       }
+                    },
+                    "users": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "image": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "archived": {
+                            "type": "boolean"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "administrator",
+                              "legal_team_member",
+                              "contributor",
+                              "business_user"
+                            ]
+                          }
+                        },
+                        "required": ["id", "displayName", "image", "archived", "role"],
+                        "additionalProperties": false
+                      }
                     }
                   },
-                  "required": ["contractTypes", "contractStatuses"],
+                  "required": ["contractTypes", "contractStatuses", "users"],
                   "additionalProperties": false
                 }
               }
@@ -5826,7 +5932,7 @@
     "/api/v1/contracts/{number}": {
       "get": {
         "operationId": "getContract",
-        "summary": "One contract by its CTR-003 number — the record page's read; archived contracts answer too, so restore stays reachable",
+        "summary": "One contract by its CTR-003 number, with its Owner and its working group — the record page's read; archived contracts answer too, so restore stays reachable",
         "tags": ["contracts"],
         "parameters": [
           {
@@ -5878,6 +5984,39 @@
                           "type": "string",
                           "enum": ["draft", "review", "approval", "signature", "active", "ended"]
                         },
+                        "manager": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "archived": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": ["id", "displayName", "image", "archived"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "priority": {
                           "type": "string",
                           "enum": ["low", "medium", "high", "critical"]
@@ -5935,6 +6074,7 @@
                         "statusId",
                         "statusName",
                         "stage",
+                        "manager",
                         "priority",
                         "risk",
                         "description",
@@ -5943,9 +6083,42 @@
                         "updatedAt"
                       ],
                       "additionalProperties": false
+                    },
+                    "team": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "image": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "archived": {
+                            "type": "boolean"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": ["member", "watcher", "creator", "contributor"]
+                          }
+                        },
+                        "required": ["id", "displayName", "image", "archived", "role"],
+                        "additionalProperties": false
+                      }
                     }
                   },
-                  "required": ["contract"],
+                  "required": ["contract", "team"],
                   "additionalProperties": false
                 }
               }
@@ -5965,7 +6138,7 @@
       },
       "patch": {
         "operationId": "updateContract",
-        "summary": "Commit one field of a contract in place (DES-017 per-field commits): title, description, priority, risk, or the status — any live status may follow any other (CTR-001). Never on an archived contract",
+        "summary": "Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, priority, risk, or the status — any live status may follow any other (CTR-001). Never on an archived contract",
         "tags": ["contracts"],
         "requestBody": {
           "required": true,
@@ -5984,6 +6157,16 @@
                       {
                         "type": "string",
                         "maxLength": 10000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "managerId": {
+                    "anyOf": [
+                      {
+                        "type": "string"
                       },
                       {
                         "type": "null"
@@ -6064,6 +6247,39 @@
                           "type": "string",
                           "enum": ["draft", "review", "approval", "signature", "active", "ended"]
                         },
+                        "manager": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "archived": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": ["id", "displayName", "image", "archived"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "priority": {
                           "type": "string",
                           "enum": ["low", "medium", "high", "critical"]
@@ -6121,6 +6337,7 @@
                         "statusId",
                         "statusName",
                         "stage",
+                        "manager",
                         "priority",
                         "risk",
                         "description",
@@ -6132,6 +6349,200 @@
                     }
                   },
                   "required": ["contract"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contracts/{number}/team": {
+      "post": {
+        "operationId": "addContractTeamMember",
+        "summary": "Put a person on the contract team under a role (CTR-004). The key is contract + person + role, so the same person may hold two roles; the `creator` role is the server's to write",
+        "tags": ["contracts"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": ["member", "watcher", "creator", "contributor"]
+                  }
+                },
+                "required": ["userId", "role"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "team": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "image": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "archived": {
+                            "type": "boolean"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": ["member", "watcher", "creator", "contributor"]
+                          }
+                        },
+                        "required": ["id", "displayName", "image", "archived", "role"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["team"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contracts/{number}/team/{userId}/{role}": {
+      "delete": {
+        "operationId": "removeContractTeamMember",
+        "summary": "Take one role off the contract team (CTR-004). The role is part of the address, so dropping a watcher leaves that same person's member row standing; `creator` is provenance and stays",
+        "tags": ["contracts"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "userId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["member", "watcher", "creator", "contributor"]
+            },
+            "in": "path",
+            "name": "role",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "team": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "image": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "archived": {
+                            "type": "boolean"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": ["member", "watcher", "creator", "contributor"]
+                          }
+                        },
+                        "required": ["id", "displayName", "image", "archived", "role"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["team"],
                   "additionalProperties": false
                 }
               }
@@ -6205,6 +6616,39 @@
                           "type": "string",
                           "enum": ["draft", "review", "approval", "signature", "active", "ended"]
                         },
+                        "manager": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "archived": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": ["id", "displayName", "image", "archived"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "priority": {
                           "type": "string",
                           "enum": ["low", "medium", "high", "critical"]
@@ -6262,6 +6706,7 @@
                         "statusId",
                         "statusName",
                         "stage",
+                        "manager",
                         "priority",
                         "risk",
                         "description",
@@ -6346,6 +6791,39 @@
                           "type": "string",
                           "enum": ["draft", "review", "approval", "signature", "active", "ended"]
                         },
+                        "manager": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "archived": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": ["id", "displayName", "image", "archived"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "priority": {
                           "type": "string",
                           "enum": ["low", "medium", "high", "critical"]
@@ -6403,6 +6881,7 @@
                         "statusId",
                         "statusName",
                         "stage",
+                        "manager",
                         "priority",
                         "risk",
                         "description",
