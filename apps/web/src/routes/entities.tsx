@@ -68,7 +68,7 @@ export function EntitiesPage() {
   const { user, entities, entityTypes } = useLoaderData<typeof entitiesLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
-  const [rows, setRows] = useState<EntityRow[]>(entities as EntityRow[]);
+  const [rows, setRows] = useState<EntityRow[]>(entities);
   const [registerOpen, setRegisterOpen] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
@@ -102,7 +102,7 @@ export function EntitiesPage() {
       );
       return;
     }
-    setRows(data.entities as EntityRow[]);
+    setRows(data.entities);
     setShowArchived(next);
   }
 
@@ -122,7 +122,7 @@ export function EntitiesPage() {
       );
       return;
     }
-    const restored = data.entity as EntityRow;
+    const restored = data.entity;
     setRows((current) => current.map((existing) => (existing.id === row.id ? restored : existing)));
   }
 
@@ -416,7 +416,7 @@ function RegisterEntityDialog({
       );
       return;
     }
-    onRegistered(data.entity as EntityRow);
+    onRegistered(data.entity);
     onOpenChange(false);
   }
 

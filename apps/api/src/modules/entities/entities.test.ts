@@ -588,14 +588,19 @@ describe("PATCH /entities/:id — correcting the identity card", () => {
       payload: {},
     });
     expect(archivedType.statusCode, archivedType.body).toBe(200);
-    const toArchived = await patchEntity(adminCookies, id, { entityTypeId: partnership.id });
-    expect(toArchived.statusCode, toArchived.body).toBe(400);
-    const restored = await harness.app.inject({
-      method: "POST",
-      url: `/api/v1/entity-types/${partnership.id}/restore`,
-      cookies: adminCookies,
-    });
-    expect(restored.statusCode, restored.body).toBe(200);
+    try {
+      const toArchived = await patchEntity(adminCookies, id, { entityTypeId: partnership.id });
+      expect(toArchived.statusCode, toArchived.body).toBe(400);
+    } finally {
+      // Restore the seeded type even when the assertion fails — later
+      // tests read the full seed vocabulary from the picker.
+      const restored = await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/entity-types/${partnership.id}/restore`,
+        cookies: adminCookies,
+      });
+      expect(restored.statusCode, restored.body).toBe(200);
+    }
 
     // None of the refusals dirtied the record.
     const read = await getEntity(adminCookies, id);

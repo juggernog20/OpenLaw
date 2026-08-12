@@ -15,7 +15,7 @@
 import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const ADMIN = {
   id: "u1",
@@ -245,6 +245,63 @@ describe("the /entities destination", () => {
       () => expect(screen.getAllByRole("row").length).toBe(3), // header + two live rows
     );
     expect(screen.getByText("Mistake Ltd")).toBeInTheDocument();
+  });
+
+  it("surfaces a failed restore as the API's refusal and keeps the row archived", async () => {
+    const archived = entityRow({
+      id: "e2",
+      legalName: "Mistake Ltd",
+      archivedAt: "2026-08-10T00:00:00.000Z",
+    });
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
+          return json(200, { entities: [archived] });
+        }
+        if (call.url.pathname === "/api/v1/entities/types" && call.method === "GET") {
+          return json(200, { entityTypes: TYPE_OPTIONS });
+        }
+        if (call.url.pathname === "/api/v1/entities/e2/restore" && call.method === "POST") {
+          return problem(409, "This entity is not archived.");
+        }
+        return undefined;
+      },
+    });
+    renderAt("/entities");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("switch", { name: "Show archived" }));
+    await user.click(await screen.findByRole("button", { name: "Restore Mistake Ltd" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("This entity is not archived.");
+    expect(screen.getByText("Archived")).toBeInTheDocument();
+  });
+
+  it("reports a failed archived-list read and leaves the toggle off", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
+          if (call.url.searchParams.get("includeArchived") === "true") {
+            return problem(500, "Something broke.");
+          }
+          return json(200, { entities: [entityRow({ id: "e1" })] });
+        }
+        if (call.url.pathname === "/api/v1/entities/types" && call.method === "GET") {
+          return json(200, { entityTypes: TYPE_OPTIONS });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/entities");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("switch", { name: "Show archived" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The registry could not be read. Try again.",
+    );
+    expect(screen.getByRole("switch", { name: "Show archived" })).not.toBeChecked();
   });
 
   it("bounces a Contributor home and draws them no Entities nav item", async () => {

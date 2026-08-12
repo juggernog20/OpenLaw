@@ -14,7 +14,7 @@
 import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const MEMBER = {
   id: "u2",
@@ -190,6 +190,47 @@ describe("the /entities/:entityId record page", () => {
     // The sub-bar pill follows the saved status.
     const subbar = screen.getByRole("region", { name: "Aldgate Holdings Ltd" });
     expect(within(subbar).getByText("Dormant")).toBeInTheDocument();
+  });
+
+  it("shows the API's refusal beside the field when a commit fails", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/entities/e1" && call.method === "GET") {
+          return json(200, { entity: entityRow() });
+        }
+        if (call.url.pathname === "/api/v1/entities/types" && call.method === "GET") {
+          return json(200, { entityTypes: TYPE_OPTIONS });
+        }
+        if (call.url.pathname === "/api/v1/entities/e1" && call.method === "PATCH") {
+          return problem(400, "The entity type must be a live entity type.");
+        }
+        return undefined;
+      },
+    });
+    renderAt("/entities/e1");
+    const user = userEvent.setup();
+
+    await user.selectOptions(await screen.findByLabelText("Entity type"), "t-llc");
+    expect(
+      await screen.findByText("The entity type must be a live entity type."),
+    ).toBeInTheDocument();
+    // The select still shows the saved truth — nothing was adopted.
+    expect(screen.getByLabelText("Entity type")).toHaveValue("t-corp");
+  });
+
+  it("keeps a saved type that the picker read no longer offers selectable as itself", async () => {
+    const api = recordApi(entityRow({ entityTypeId: "t-archived", entityTypeName: "Partnership" }));
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/entities/e1");
+
+    const select = await screen.findByLabelText("Entity type");
+    expect(select).toHaveValue("t-archived");
+    // The archived type renders by its display name (ENT-008 keeps it
+    // out of the picker read, but the record must not lie about it).
+    expect(
+      within(select as HTMLElement).getByRole("option", { name: "Partnership" }),
+    ).toBeInTheDocument();
   });
 
   it("archives the record — fields freeze and the action flips — then restores it", async () => {

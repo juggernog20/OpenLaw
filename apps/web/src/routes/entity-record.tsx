@@ -84,11 +84,9 @@ export function EntityRecordPage() {
   const navigate = useNavigate();
 
   /** The saved record — the server's truth after the last commit. */
-  const [saved, setSaved] = useState<EntityRow>(entity as EntityRow);
-  const [drafts, setDrafts] = useState<Record<TextFieldKey, string>>(() =>
-    textDrafts(entity as EntityRow),
-  );
-  const [formedOnDraft, setFormedOnDraft] = useState((entity as EntityRow).formedOn ?? "");
+  const [saved, setSaved] = useState<EntityRow>(entity);
+  const [drafts, setDrafts] = useState<Record<TextFieldKey, string>>(() => textDrafts(entity));
+  const [formedOnDraft, setFormedOnDraft] = useState(entity.formedOn ?? "");
   const [fieldStatus, setFieldStatus] = useState<Partial<Record<FieldKey, FieldStatus>>>({});
   const [fieldError, setFieldError] = useState<Partial<Record<FieldKey, string | undefined>>>({});
   const [archiveStatus, setArchiveStatus] = useState<FieldStatus>("idle");
@@ -113,17 +111,22 @@ export function EntityRecordPage() {
   }
 
   /** One PATCH per committed field (DES-017): success adopts the
-   * server's row wholesale, so every draft resets to saved truth. */
+   * server's row as saved truth but resets only the committed field's
+   * draft — another field's in-progress edit is not this commit's to
+   * discard. */
   async function commit(key: FieldKey, body: Record<string, unknown>) {
     note(key, "saving");
     const { data, error } = await api
       .PATCH("/api/v1/entities/{id}", { params: { path: { id: saved.id } }, body })
       .catch(() => ({ data: undefined, error: undefined }));
     if (data) {
-      const row = data.entity as EntityRow;
+      const row = data.entity;
       setSaved(row);
-      setDrafts(textDrafts(row));
-      setFormedOnDraft(row.formedOn ?? "");
+      if (key === "formedOn") {
+        setFormedOnDraft(row.formedOn ?? "");
+      } else if (key !== "entityTypeId" && key !== "status") {
+        setDrafts((current) => ({ ...current, [key]: textDrafts(row)[key] }));
+      }
       note(key, "saved");
     } else {
       note(key, "error", problemDetail(error));
@@ -131,6 +134,9 @@ export function EntityRecordPage() {
   }
 
   function commitText(key: TextFieldKey) {
+    // Enter already committed this draft and the PATCH is in flight —
+    // the blur that follows must not send a duplicate.
+    if (fieldStatus[key] === "saving") return;
     const draft = drafts[key].trim();
     const savedValue = key === "legalName" ? saved.legalName : (saved[key] ?? "");
     if (draft === savedValue || (key === "legalName" && draft === "")) {
@@ -149,6 +155,7 @@ export function EntityRecordPage() {
   }
 
   function commitFormedOn() {
+    if (fieldStatus.formedOn === "saving") return;
     const draft = formedOnDraft;
     if (draft === (saved.formedOn ?? "")) return;
     void commit("formedOn", { formedOn: draft || null });
@@ -163,7 +170,10 @@ export function EntityRecordPage() {
         : api.POST("/api/v1/entities/{id}/archive", { params: { path: { id: saved.id } } })
     ).catch(() => ({ data: undefined, error: undefined }));
     if (data) {
-      const row = data.entity as EntityRow;
+      // A record-level action: the card re-reads as saved truth, so
+      // every draft resets — an in-progress edit on a record being
+      // archived is deliberately discarded, and a restore starts clean.
+      const row = data.entity;
       setSaved(row);
       setDrafts(textDrafts(row));
       setFormedOnDraft(row.formedOn ?? "");

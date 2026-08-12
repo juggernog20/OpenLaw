@@ -8,34 +8,29 @@
  */
 
 import type { IntlShape } from "react-intl";
+import type { paths } from "@openlaw/api-client";
+
+/** One row of the entities API, aliased to the generated client schema
+ * so a contract change surfaces as a compile error here, not as a
+ * runtime surprise in a route. */
+export type EntityRow =
+  paths["/api/v1/entities/{id}"]["get"]["responses"]["200"]["content"]["application/json"]["entity"];
+
+export type EntityStatus = EntityRow["status"];
 
 /** The fixed ENT-001 status enum — code branches on it, so it is a
- * constant here, not a fetched list. */
-export const ENTITY_STATUSES = ["active", "dormant", "dissolved", "divested"] as const;
-export type EntityStatus = (typeof ENTITY_STATUSES)[number];
-
-/** One row of the entities API, as the client sees it. */
-export interface EntityRow {
-  id: string;
-  legalName: string;
-  entityTypeId: string;
-  entityTypeName: string;
-  jurisdiction: string | null;
-  formedOn: string | null;
-  registrationNumber: string | null;
-  taxId: string | null;
-  registeredAgent: string | null;
-  registeredAddress: string | null;
-  status: EntityStatus;
-  archivedAt: string | null;
-}
+ * constant here, not a fetched list. Typed against the generated row,
+ * so it can't drift from the API's enum. */
+export const ENTITY_STATUSES = [
+  "active",
+  "dormant",
+  "dissolved",
+  "divested",
+] as const satisfies readonly EntityStatus[];
 
 /** One option of GET /entities/types, the Member+ picker read (ENT-008). */
-export interface EntityTypeOption {
-  id: string;
-  slug: string;
-  displayName: string;
-}
+export type EntityTypeOption =
+  paths["/api/v1/entities/types"]["get"]["responses"]["200"]["content"]["application/json"]["entityTypes"][number];
 
 /** EN3/EN5's status pills: active=success, dormant=warning, divested=
  * neutral (the mock's three); dissolved takes the danger pair — the
