@@ -4,6 +4,7 @@
 
 import { useLayoutEffect } from "react";
 import { Outlet } from "react-router";
+import { FormattedMessage } from "react-intl";
 import { SkipLink } from "../components/skip-link";
 import { setDocumentTheme } from "../lib/theme";
 
@@ -21,7 +22,9 @@ export function AuthLayout() {
       <SkipLink />
       <main id="main" className="flex flex-1 items-center justify-center px-page-x py-page-y">
         <div className="w-full max-w-sm">
-          <p className="mb-6 text-center text-lg font-semibold">OpenLaw</p>
+          <p className="mb-6 text-center text-lg font-semibold">
+            <FormattedMessage id="auth.brand" defaultMessage="OpenLaw" />
+          </p>
           <Outlet />
         </div>
       </main>

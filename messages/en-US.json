@@ -38,6 +38,9 @@
   "auth.backToSignIn": {
     "defaultMessage": "Back to sign-in"
   },
+  "auth.brand": {
+    "defaultMessage": "OpenLaw"
+  },
   "auth.enroll.codesHint": {
     "defaultMessage": "Two-factor authentication is on. Save these backup codes somewhere safe — each works once, and they are shown only now."
   },
@@ -1178,11 +1181,20 @@
   "welcome.auth.field.domain": {
     "defaultMessage": "Email domain"
   },
+  "welcome.auth.field.domainPlaceholder": {
+    "defaultMessage": "acme.example"
+  },
   "welcome.auth.field.issuer": {
     "defaultMessage": "Issuer URL"
   },
+  "welcome.auth.field.issuerPlaceholder": {
+    "defaultMessage": "https://idp.example.com"
+  },
   "welcome.auth.field.providerId": {
     "defaultMessage": "Provider ID"
+  },
+  "welcome.auth.field.providerIdPlaceholder": {
+    "defaultMessage": "okta"
   },
   "welcome.auth.oidc": {
     "defaultMessage": "Single sign-on (OIDC)"
@@ -1235,11 +1247,17 @@
   "welcome.email.field.from": {
     "defaultMessage": "From address"
   },
+  "welcome.email.field.fromPlaceholder": {
+    "defaultMessage": "OpenLaw '<'openlaw@example.com'>'"
+  },
   "welcome.email.field.url": {
     "defaultMessage": "SMTP relay URL"
   },
   "welcome.email.field.url.hint": {
     "defaultMessage": "Starts with smtp:// or smtps://; credentials go in the URL. It is stored, never shown again."
+  },
+  "welcome.email.field.urlPlaceholder": {
+    "defaultMessage": "smtp://user:password@mail.example.com:587"
   },
   "welcome.email.replace": {
     "defaultMessage": "Replace relay"
