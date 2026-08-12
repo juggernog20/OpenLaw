@@ -5,6 +5,10 @@
  * record page (/contracts/:number): the row shape the API answers, the
  * C-### reference (CTR-003), the DES-018 severity ramp behind priority
  * and risk, and the stage-keyed status pill.
+ *
+ * The severity ramp's pill colors are not here yet: M8/1 edits priority
+ * and risk as selects, and no surface renders them as pills. The ramp's
+ * `Record<SeverityLevel, string>` lands with the surface that draws it.
  */
 
 import type { IntlShape } from "react-intl";
@@ -45,17 +49,6 @@ export const SEVERITY_LEVELS = exhaustiveSeverityList([
   "high",
   "critical",
 ] as const);
-
-/** The DES-018 ramp by value, not by callsite choice: low = neutral
- * grey, medium = warning yellow, high = severe orange, critical =
- * danger red. Priority and risk share it, so "how bad" reads the same
- * across every column. */
-export const SEVERITY_PILL: Record<SeverityLevel, string> = {
-  low: "bg-status-neutral-bg text-status-neutral-fg",
-  medium: "bg-status-warning-bg text-status-warning-fg",
-  high: "bg-status-severe-bg text-status-severe-fg",
-  critical: "bg-status-danger-bg text-status-danger-fg",
-};
 
 /**
  * The status pill's family, keyed to the fixed stage rather than the
