@@ -429,7 +429,7 @@
     "defaultMessage": "Archive {name}"
   },
   "settings.contractFields.archiveWarning": {
-    "defaultMessage": "{count, plural, =0 {{name} is not used by any records. The definition is kept and the field can be restored.} one {{name} holds values on # record — they are kept, hidden until the field is restored.} other {{name} holds values on # records — they are kept, hidden until the field is restored.}}"
+    "defaultMessage": "{count, plural, =0 {{name} is not attached to any type. The definition is kept and the field can be restored.} one {{name} is attached to # type — the attachment is kept, hidden until the field is restored.} other {{name} is attached to # types — the attachments are kept, hidden until the field is restored.}}"
   },
   "settings.contractFields.auditNote": {
     "defaultMessage": "The change applies immediately and is recorded in the audit log."
@@ -623,6 +623,9 @@
   "settings.contractTypeEditor.attach": {
     "defaultMessage": "Attach field"
   },
+  "settings.contractTypeEditor.attached": {
+    "defaultMessage": "{name} attached."
+  },
   "settings.contractTypeEditor.attachedFields": {
     "defaultMessage": "Attached fields"
   },
@@ -808,6 +811,9 @@
   },
   "settings.matterTypeEditor.attach": {
     "defaultMessage": "Attach field"
+  },
+  "settings.matterTypeEditor.attached": {
+    "defaultMessage": "{name} attached."
   },
   "settings.matterTypeEditor.attachedFields": {
     "defaultMessage": "Attached fields"

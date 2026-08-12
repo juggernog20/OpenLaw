@@ -404,7 +404,7 @@ describe("the archive guard (retention, never reassignment)", () => {
     const dialog = await screen.findByRole("dialog", { name: "Archive Our position" });
     expect(
       within(dialog).getByText(
-        "Our position is not used by any records. The definition is kept and the field " +
+        "Our position is not attached to any type. The definition is kept and the field " +
           "can be restored.",
       ),
     ).toBeInTheDocument();
@@ -419,6 +419,25 @@ describe("the archive guard (retention, never reassignment)", () => {
       expect(screen.queryByRole("button", { name: "Rename Our position" })).not.toBeInTheDocument(),
     );
     expect(screen.getByText("2 fields")).toBeInTheDocument();
+  });
+
+  it("labels an in-use field's count as type attachments, not records", async () => {
+    // Records don't exist until M8/M22 — the count is attachments only,
+    // and the dialog must say so.
+    const calls = newCalls();
+    const rows = seededFields().map((row) => (row.id === "f3" ? { ...row, inUseCount: 3 } : row));
+    stubApi({ signedIn: ADMIN, extra: fieldsApi(calls, rows) });
+    renderAt("/settings/contracts/fields");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Archive Our position" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "Archive Our position" });
+    expect(
+      within(dialog).getByText(
+        "Our position is attached to 3 types — the attachments are kept, hidden until " +
+          "the field is restored.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("reveals archived rows greyed with a pill and restores them", async () => {

@@ -68,6 +68,7 @@ const MESSAGES = defineMessages({
   detach: { id: "settings.contractTypeEditor.detach", defaultMessage: "Detach {name}" },
   detached: { id: "settings.contractTypeEditor.detached", defaultMessage: "{name} detached." },
   attach: { id: "settings.contractTypeEditor.attach", defaultMessage: "Attach field" },
+  attached: { id: "settings.contractTypeEditor.attached", defaultMessage: "{name} attached." },
   allAttached: {
     id: "settings.contractTypeEditor.allAttached",
     defaultMessage: "Every catalog field is attached.",
