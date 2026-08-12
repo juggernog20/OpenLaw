@@ -516,7 +516,15 @@ export function WelcomePage() {
                             defaultMessage="Provider ID"
                           />
                         </Label>
-                        <Input id="providerId" name="providerId" required placeholder="okta" />
+                        <Input
+                          id="providerId"
+                          name="providerId"
+                          required
+                          placeholder={intl.formatMessage({
+                            id: "welcome.auth.field.providerIdPlaceholder",
+                            defaultMessage: "okta",
+                          })}
+                        />
                       </div>
                       <div className="flex flex-col gap-1.5">
                         <Label htmlFor="issuer">
@@ -530,7 +538,10 @@ export function WelcomePage() {
                           name="issuer"
                           type="url"
                           required
-                          placeholder="https://idp.example.com"
+                          placeholder={intl.formatMessage({
+                            id: "welcome.auth.field.issuerPlaceholder",
+                            defaultMessage: "https://idp.example.com",
+                          })}
                         />
                       </div>
                       <div className="flex flex-col gap-1.5">
@@ -544,7 +555,10 @@ export function WelcomePage() {
                           id="idpDomain"
                           name="idpDomain"
                           required
-                          placeholder="acme.example"
+                          placeholder={intl.formatMessage({
+                            id: "welcome.auth.field.domainPlaceholder",
+                            defaultMessage: "acme.example",
+                          })}
                         />
                       </div>
                       <div className="flex flex-col gap-1.5">
@@ -644,7 +658,10 @@ export function WelcomePage() {
                             addDomain();
                           }
                         }}
-                        placeholder="acme.example"
+                        placeholder={intl.formatMessage({
+                          id: "welcome.auth.field.domainPlaceholder",
+                          defaultMessage: "acme.example",
+                        })}
                       />
                       <Button type="button" variant="secondary" onClick={addDomain}>
                         <FormattedMessage id="welcome.portal.add" defaultMessage="Add" />
@@ -791,7 +808,10 @@ export function WelcomePage() {
                             name="smtpUrl"
                             autoComplete="off"
                             required
-                            placeholder="smtp://user:password@mail.example.com:587"
+                            placeholder={intl.formatMessage({
+                              id: "welcome.email.field.urlPlaceholder",
+                              defaultMessage: "smtp://user:password@mail.example.com:587",
+                            })}
                           />
                           <p className="text-sm text-muted">
                             <FormattedMessage
@@ -812,7 +832,13 @@ export function WelcomePage() {
                             name="smtpFrom"
                             autoComplete="off"
                             required
-                            placeholder="OpenLaw <openlaw@example.com>"
+                            placeholder={intl.formatMessage({
+                              id: "welcome.email.field.fromPlaceholder",
+                              // ICU MessageFormat parses bare `<...>` as a
+                              // rich-text tag; escape the angle brackets so
+                              // the literal placeholder text survives.
+                              defaultMessage: "OpenLaw '<'openlaw@example.com'>'",
+                            })}
                           />
                         </div>
                         <div className="flex items-center gap-2">
