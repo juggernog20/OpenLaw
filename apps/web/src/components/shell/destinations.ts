@@ -10,7 +10,7 @@
  * convention as the settings rail, SET-002).
  */
 
-import { House, Landmark, type LucideIcon } from "lucide-react";
+import { House, Landmark, Signature, type LucideIcon } from "lucide-react";
 import { defineMessage, type MessageDescriptor } from "react-intl";
 import { MEMBER_PLUS_ROLES, type Role } from "../../lib/roles";
 
@@ -29,6 +29,15 @@ export const destinations: Destination[] = [
     path: "/",
     icon: House,
     label: defineMessage({ id: "nav.home", defaultMessage: "Home" }),
+  },
+  {
+    // The M8 contract record. Member+ only; Contributor record-level
+    // access waits for the DD-015 permission grid.
+    id: "contracts",
+    path: "/contracts",
+    icon: Signature,
+    label: defineMessage({ id: "nav.contracts", defaultMessage: "Contracts" }),
+    roles: MEMBER_PLUS_ROLES,
   },
   {
     // The M7 registry core; M27 grows this same destination into the

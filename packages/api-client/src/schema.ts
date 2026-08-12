@@ -787,6 +787,93 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/contracts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The contract list, newest reference first: number, title, type, and status; archived contracts only with includeArchived=true */
+    get: operations["listContracts"];
+    put?: never;
+    /** Create a contract from a title and a live type; the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward */
+    post: operations["createContract"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/options": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The live contract types and statuses in display order — the create dialog's and the record's Member+ picker source (the settings surfaces stay Administrator-only per SET-002) */
+    get: operations["listContractOptions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One contract by its CTR-003 number — the record page's read; archived contracts answer too, so restore stays reachable */
+    get: operations["getContract"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Commit one field of a contract in place (DES-017 per-field commits): title, description, priority, risk, or the status — any live status may follow any other (CTR-001). Never on an archived contract */
+    patch: operations["updateContract"];
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Archive a contract (soft delete, for mistakes and imports — not the same as ending it): it leaves the default list and freezes; nothing is deleted, and restore is the way back */
+    post: operations["archiveContract"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Restore an archived contract (archive's recovery story): it rejoins the list and becomes editable again */
+    post: operations["restoreContract"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/entity-types": {
     parameters: {
       query?: never;
@@ -3775,6 +3862,376 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listContracts: {
+    parameters: {
+      query?: {
+        includeArchived?: "true" | "false";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contracts: {
+              id: string;
+              number: number;
+              title: string;
+              contractTypeId: string;
+              contractTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              description: string | null;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createContract: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          title: string;
+          contractTypeId: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contract: {
+              id: string;
+              number: number;
+              title: string;
+              contractTypeId: string;
+              contractTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              description: string | null;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listContractOptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contractTypes: {
+              id: string;
+              slug: string;
+              displayName: string;
+            }[];
+            contractStatuses: {
+              id: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getContract: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contract: {
+              id: string;
+              number: number;
+              title: string;
+              contractTypeId: string;
+              contractTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              description: string | null;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateContract: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          title?: string;
+          description?: string | null;
+          /** @enum {string} */
+          priority?: "low" | "medium" | "high" | "critical";
+          risk?: ("low" | "medium" | "high" | "critical") | null;
+          statusId?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contract: {
+              id: string;
+              number: number;
+              title: string;
+              contractTypeId: string;
+              contractTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              description: string | null;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  archiveContract: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contract: {
+              id: string;
+              number: number;
+              title: string;
+              contractTypeId: string;
+              contractTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              description: string | null;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  restoreContract: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contract: {
+              id: string;
+              number: number;
+              title: string;
+              contractTypeId: string;
+              contractTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              description: string | null;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
             };
           };
         };

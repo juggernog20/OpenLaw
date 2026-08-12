@@ -233,20 +233,119 @@
   "auth.twoFactor.useTotp": {
     "defaultMessage": "Use your authenticator app"
   },
+  "contracts.applet.settings": {
+    "defaultMessage": "Contract settings"
+  },
+  "contracts.archivedPill": {
+    "defaultMessage": "Archived"
+  },
+  "contracts.column.actions": {
+    "defaultMessage": "Actions"
+  },
+  "contracts.column.reference": {
+    "defaultMessage": "Reference"
+  },
+  "contracts.column.status": {
+    "defaultMessage": "Status"
+  },
+  "contracts.column.title": {
+    "defaultMessage": "Title"
+  },
+  "contracts.column.type": {
+    "defaultMessage": "Type"
+  },
+  "contracts.count": {
+    "defaultMessage": "{count, plural, one {# contract} other {# contracts}}"
+  },
+  "contracts.create": {
+    "defaultMessage": "Create contract"
+  },
+  "contracts.empty.body": {
+    "defaultMessage": "A contract is the workspace for work that ends in a signed document. Create one when a deal starts; it takes a reference you can quote in email."
+  },
+  "contracts.empty.title": {
+    "defaultMessage": "No contracts yet"
+  },
+  "contracts.form.createError": {
+    "defaultMessage": "The contract could not be created."
+  },
+  "contracts.form.description": {
+    "defaultMessage": "Description"
+  },
+  "contracts.form.draftNote": {
+    "defaultMessage": "New contracts start in Draft. Set everything else on the record."
+  },
+  "contracts.form.priority": {
+    "defaultMessage": "Priority"
+  },
+  "contracts.form.risk": {
+    "defaultMessage": "Risk"
+  },
+  "contracts.form.status": {
+    "defaultMessage": "Status"
+  },
+  "contracts.form.submit": {
+    "defaultMessage": "Create"
+  },
+  "contracts.form.title": {
+    "defaultMessage": "Create contract"
+  },
+  "contracts.form.titleField": {
+    "defaultMessage": "Title"
+  },
+  "contracts.form.titleMissing": {
+    "defaultMessage": "Name the contract."
+  },
+  "contracts.form.type": {
+    "defaultMessage": "Contract type"
+  },
+  "contracts.form.typeMissing": {
+    "defaultMessage": "Pick a contract type."
+  },
+  "contracts.form.typePlaceholder": {
+    "defaultMessage": "Type…"
+  },
+  "contracts.listError": {
+    "defaultMessage": "The contract list could not be read. Try again."
+  },
+  "contracts.record.archive": {
+    "defaultMessage": "Archive"
+  },
+  "contracts.record.archivedNote": {
+    "defaultMessage": "This contract is archived — it is out of the contract list. Restore it to edit."
+  },
+  "contracts.record.documentTitle": {
+    "defaultMessage": "{reference} {title}"
+  },
+  "contracts.record.restore": {
+    "defaultMessage": "Restore"
+  },
+  "contracts.record.section": {
+    "defaultMessage": "Contract"
+  },
+  "contracts.reference": {
+    "defaultMessage": "C-{number}"
+  },
+  "contracts.restoreError": {
+    "defaultMessage": "The contract could not be restored."
+  },
+  "contracts.restoreRow": {
+    "defaultMessage": "Restore {title}"
+  },
+  "contracts.riskUnassessed": {
+    "defaultMessage": "Not assessed"
+  },
+  "contracts.severityLabel": {
+    "defaultMessage": "{level, select, low {Low} medium {Medium} high {High} critical {Critical} other {Unknown}}"
+  },
+  "contracts.showArchived": {
+    "defaultMessage": "Show archived"
+  },
+  "contracts.title": {
+    "defaultMessage": "Contracts"
+  },
   "dialog.close": {
     "defaultMessage": "Close"
-  },
-  "error.body": {
-    "defaultMessage": "The page could not load. Reload to try again."
-  },
-  "error.network": {
-    "defaultMessage": "The server could not be reached. Try again."
-  },
-  "error.pageTitle": {
-    "defaultMessage": "Something went wrong"
-  },
-  "error.title": {
-    "defaultMessage": "Something went wrong."
   },
   "entities.archivedPill": {
     "defaultMessage": "Archived"
@@ -353,6 +452,18 @@
   "entities.title": {
     "defaultMessage": "Entities"
   },
+  "error.body": {
+    "defaultMessage": "The page could not load. Reload to try again."
+  },
+  "error.network": {
+    "defaultMessage": "The server could not be reached. Try again."
+  },
+  "error.pageTitle": {
+    "defaultMessage": "Something went wrong"
+  },
+  "error.title": {
+    "defaultMessage": "Something went wrong."
+  },
   "format.deadline.overdue": {
     "defaultMessage": "{days, plural, one {# day} other {# days}} overdue"
   },
@@ -400,6 +511,9 @@
   },
   "listEditor.showArchived": {
     "defaultMessage": "Show archived"
+  },
+  "nav.contracts": {
+    "defaultMessage": "Contracts"
   },
   "nav.entities": {
     "defaultMessage": "Entities"

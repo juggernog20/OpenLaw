@@ -15,6 +15,7 @@ import * as authSchema from "./schema/auth.js";
 import * as contractStatusesSchema from "./schema/contract-statuses.js";
 import * as contractTypeFieldsSchema from "./schema/contract-type-fields.js";
 import * as contractTypesSchema from "./schema/contract-types.js";
+import * as contractsSchema from "./schema/contracts.js";
 import * as entitiesSchema from "./schema/entities.js";
 import * as entityTypesSchema from "./schema/entity-types.js";
 import * as fieldsSchema from "./schema/fields.js";
@@ -27,6 +28,7 @@ export * from "./schema/auth.js";
 export * from "./schema/contract-statuses.js";
 export * from "./schema/contract-type-fields.js";
 export * from "./schema/contract-types.js";
+export * from "./schema/contracts.js";
 export * from "./schema/entities.js";
 export * from "./schema/entity-types.js";
 export * from "./schema/fields.js";
@@ -39,6 +41,7 @@ export const schema = {
   ...contractStatusesSchema,
   ...contractTypeFieldsSchema,
   ...contractTypesSchema,
+  ...contractsSchema,
   ...entitiesSchema,
   ...entityTypesSchema,
   ...fieldsSchema,
