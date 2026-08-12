@@ -101,7 +101,7 @@ follows.
 Contracts, up to the point where one exists and can be found. This arc builds the configuration machinery
 every later module reuses, so it is slower than it looks and pays for itself three times over.
 
-- [ ] **M6 — Types, statuses, and the field catalog**
+- [x] **M6 — Types, statuses, and the field catalog**
       _Demo:_ An Administrator adds a contract type, renames a status without breaking anything, defines a
       custom field, and attaches it to that type.
   - The configurable-taxonomy machinery: add / rename / reorder / archive, protected seed rows
