@@ -96,7 +96,10 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
           "includeArchived=true",
         tags: ["entities"],
         querystring: z.object({ includeArchived: z.enum(["true", "false"]).optional() }),
-        response: { 200: z.object({ entities: z.array(EntityRowSchema) }), default: problemResponse },
+        response: {
+          200: z.object({ entities: z.array(EntityRowSchema) }),
+          default: problemResponse,
+        },
       },
     },
     async (request) => {
@@ -104,9 +107,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         .select({ entity: entities, entityTypeName: entityTypes.displayName })
         .from(entities)
         .innerJoin(entityTypes, eq(entities.entityTypeId, entityTypes.id))
-        .where(
-          request.query.includeArchived === "true" ? undefined : isNull(entities.archivedAt),
-        )
+        .where(request.query.includeArchived === "true" ? undefined : isNull(entities.archivedAt))
         // Case-insensitive: "iMobile Ltd" files under I, wherever the
         // default collation would put it. Creation order breaks ties.
         .orderBy(asc(sql`lower(${entities.legalName})`), asc(entities.createdAt));
@@ -178,7 +179,11 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         // Lock the type row so a concurrent archive can't slip between
         // the check and the insert.
         const [entityType] = await tx
-          .select({ id: entityTypes.id, displayName: entityTypes.displayName, archivedAt: entityTypes.archivedAt })
+          .select({
+            id: entityTypes.id,
+            displayName: entityTypes.displayName,
+            archivedAt: entityTypes.archivedAt,
+          })
           .from(entityTypes)
           .where(eq(entityTypes.id, body.entityTypeId))
           .limit(1)

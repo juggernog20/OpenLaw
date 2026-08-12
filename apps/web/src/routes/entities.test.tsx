@@ -80,8 +80,19 @@ describe("the /entities destination", () => {
     stubApi({
       signedIn: MEMBER,
       extra: registryApi([
-        entityRow({ id: "e1", legalName: "Aldgate GmbH", entityTypeName: "LLC", status: "active", jurisdiction: "Germany" }),
-        entityRow({ id: "e2", legalName: "Aldgate Holdings Ltd", jurisdiction: "England & Wales", status: "dormant" }),
+        entityRow({
+          id: "e1",
+          legalName: "Aldgate GmbH",
+          entityTypeName: "LLC",
+          status: "active",
+          jurisdiction: "Germany",
+        }),
+        entityRow({
+          id: "e2",
+          legalName: "Aldgate Holdings Ltd",
+          jurisdiction: "England & Wales",
+          status: "dormant",
+        }),
         entityRow({ id: "e3", legalName: "Gresham Analytics Ltd", status: "divested" }),
       ]),
     });
@@ -134,10 +145,7 @@ describe("the /entities destination", () => {
     const dialog = await screen.findByRole("dialog");
     await user.type(within(dialog).getByLabelText("Legal name"), "Aldgate UK Ltd");
     await user.selectOptions(within(dialog).getByLabelText("Entity type"), "t-corp");
-    await user.type(
-      within(dialog).getByLabelText("Formation jurisdiction"),
-      "England & Wales",
-    );
+    await user.type(within(dialog).getByLabelText("Formation jurisdiction"), "England & Wales");
     await user.click(within(dialog).getByRole("button", { name: "Register" }));
 
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());

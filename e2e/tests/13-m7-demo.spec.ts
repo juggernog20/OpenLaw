@@ -111,8 +111,7 @@ test.describe.serial("M7 demo path", () => {
         .fill("1 Gresham Street, London EC2V 7BX, United Kingdom");
       const created = page.waitForResponse(
         (response) =>
-          response.url().includes("/api/v1/entities") &&
-          response.request().method() === "POST",
+          response.url().includes("/api/v1/entities") && response.request().method() === "POST",
       );
       await dialog.getByRole("button", { name: "Register", exact: true }).click();
       expect((await created).ok()).toBe(true);

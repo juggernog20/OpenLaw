@@ -314,9 +314,7 @@ describe("POST /entities — registration", () => {
     });
     expect(restored.statusCode, restored.body).toBe(200);
     expect(
-      (await listEntities(adminCookies, true)).some(
-        (row) => row.legalName === "Archived Type Ltd",
-      ),
+      (await listEntities(adminCookies, true)).some((row) => row.legalName === "Archived Type Ltd"),
     ).toBe(false);
   });
 
