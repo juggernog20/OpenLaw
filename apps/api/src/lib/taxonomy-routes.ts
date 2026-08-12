@@ -4,25 +4,25 @@
  * The configurable-taxonomy machinery (#85: one machinery, every type
  * table): list, add, rename, reorder, archive with the SET-003 guard,
  * restore, and hard delete, instantiated per module — contract types
- * (CTR-002) and matter types (MTR-001) mount the same routes with
- * their own tables, vocabulary, and audit actions. Everything sits
- * behind SET-002's single role gate — Administrators only — and every
- * mutation appends to the activity log (DD-017) inside the same
- * transaction. Each table's `other` row is system-protected here, not
- * just in the UI: archive and delete refuse it regardless of what a
- * client sends.
+ * (CTR-002), matter types (MTR-001), and entity types (ENT-001) mount
+ * the same routes with their own tables, vocabulary, and audit
+ * actions. Everything sits behind SET-002's single role gate —
+ * Administrators only — and every mutation appends to the activity
+ * log (DD-017) inside the same transaction. Each table's `other` row
+ * is system-protected here, not just in the UI: archive and delete
+ * refuse it regardless of what a client sends.
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { asc, contractTypes, eq, isNull, matterTypes } from "@openlaw/db";
+import { asc, contractTypes, entityTypes, eq, isNull, matterTypes } from "@openlaw/db";
 import { requireRole } from "../auth/guards.js";
 import { recordActivity, type TaxonomyActionPrefix } from "./activity.js";
 import { HttpError, httpError, problemResponse } from "./problem.js";
 import { freeSlug } from "./slug.js";
 
 /** The taxonomy tables are one shape by construction (`taxonomyColumns`). */
-export type TaxonomyTable = typeof contractTypes | typeof matterTypes;
+export type TaxonomyTable = typeof contractTypes | typeof matterTypes | typeof entityTypes;
 export type TaxonomyRow = TaxonomyTable["$inferSelect"];
 
 export interface TaxonomyRoutesConfig {
@@ -92,6 +92,9 @@ function toRow(row: TaxonomyRow) {
  */
 export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsyncZod {
   const { table, path, noun } = config;
+  // "a contract type", but "an entity type" — the indefinite article
+  // rides the noun into every generated summary.
+  const aNoun = `${/^[aeiou]/i.test(noun) ? "an" : "a"} ${noun}`;
   const RowEnvelope = z.object({ [config.keySingular]: TaxonomyRowSchema });
   const ListEnvelope = z.object({ [config.keyPlural]: z.array(TaxonomyRowSchema) });
 
@@ -159,7 +162,7 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
         schema: {
           operationId: `create${config.idSingular}`,
           summary:
-            `Add a ${noun}: the slug is derived here, once, and is ` +
+            `Add ${aNoun}: the slug is derived here, once, and is ` +
             "immutable after creation; the row appends to the display order",
           tags: [config.tag],
           body: z.object({ displayName: DisplayNameSchema }),
@@ -208,7 +211,7 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
         schema: {
           operationId: `update${config.idSingular}`,
           summary:
-            `Rename a ${noun}'s display name (DES-017 in-place ` +
+            `Rename ${aNoun}'s display name (DES-017 in-place ` +
             "rename) or edit its description; the slug never " +
             "changes, and even `other` may rename",
           tags: [config.tag],
@@ -342,7 +345,7 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
         schema: {
           operationId: `archive${config.idSingular}`,
           summary:
-            `Archive a ${noun} (SET-003 guarded): it leaves pickers ` +
+            `Archive ${aNoun} (SET-003 guarded): it leaves pickers ` +
             "and the default list; nothing is deleted; `other` refuses",
           tags: [config.tag],
           params: z.object({ id: z.string() }),
@@ -451,7 +454,7 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
         schema: {
           operationId: `delete${config.idSingular}`,
           summary:
-            `Hard-delete a ${noun}; \`other\` refuses (${config.decision}), and ` +
+            `Hard-delete ${aNoun}; \`other\` refuses (${config.decision}), and ` +
             `once ${config.recordNoun} exist (${config.recordsMilestone}) an in-use type will refuse too`,
           tags: [config.tag],
           params: z.object({ id: z.string() }),

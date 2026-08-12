@@ -29,7 +29,7 @@ export type ActivityWriter = Db | Parameters<Parameters<Db["transaction"]>[0]>[0
  * slug from the changed field name.
  */
 /** The taxonomy tables' audit namespaces (#85: one machinery each). */
-export type TaxonomyActionPrefix = "contract_type" | "matter_type";
+export type TaxonomyActionPrefix = "contract_type" | "matter_type" | "entity_type";
 export type TypeFieldActionPrefix = "contract_type_field" | "matter_type_field";
 
 export type ActivityAction =
