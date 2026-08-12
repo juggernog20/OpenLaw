@@ -9,8 +9,12 @@
  * by legal name and hides archived rows unless asked, the type-picker
  * read answers Member+ where /entity-types itself refuses them, and
  * every mutation lands in the activity log in the same transaction
- * (DD-017). Asserted at the HTTP seam plus direct activity_log reads —
- * the log has no read routes until M9.
+ * (DD-017). The record surface (#99): the single read behind the
+ * record page answers archived rows too, update corrects any identity
+ * card field — status only within the fixed ENT-001 enum, the type
+ * only to a live one, never on an archived record — and restore is
+ * archive's recovery story. Asserted at the HTTP seam plus direct
+ * activity_log reads — the log has no read routes until M9.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -117,8 +121,25 @@ const entityAuditRows = () =>
   harness.db
     .select()
     .from(activityLog)
-    .where(inArray(activityLog.action, ["entity.created", "entity.archived"]))
+    .where(
+      inArray(activityLog.action, [
+        "entity.created",
+        "entity.updated",
+        "entity.status_changed",
+        "entity.archived",
+        "entity.restored",
+      ]),
+    )
     .orderBy(asc(activityLog.createdAt));
+
+const getEntity = (cookies: Record<string, string>, id: string) =>
+  harness.app.inject({ method: "GET", url: `/api/v1/entities/${id}`, cookies });
+
+const patchEntity = (
+  cookies: Record<string, string>,
+  id: string,
+  payload: Record<string, unknown>,
+) => harness.app.inject({ method: "PATCH", url: `/api/v1/entities/${id}`, cookies, payload });
 
 describe("the ENT-004 access floor", () => {
   it("refuses an unauthenticated request as 401 on every route", async () => {
@@ -130,7 +151,14 @@ describe("the ENT-004 access floor", () => {
         url: "/api/v1/entities",
         payload: { legalName: "Ghost Ltd", entityTypeId: "any" },
       }),
+      harness.app.inject({ method: "GET", url: "/api/v1/entities/no-such-id" }),
+      harness.app.inject({
+        method: "PATCH",
+        url: "/api/v1/entities/no-such-id",
+        payload: { legalName: "Ghost Ltd" },
+      }),
       harness.app.inject({ method: "POST", url: "/api/v1/entities/no-such-id/archive" }),
+      harness.app.inject({ method: "POST", url: "/api/v1/entities/no-such-id/restore" }),
     ];
     for (const res of await Promise.all(attempts)) {
       expect(res.statusCode, res.body).toBe(401);
@@ -149,7 +177,15 @@ describe("the ENT-004 access floor", () => {
           cookies,
           payload: { legalName: "Sneaky Ltd", entityTypeId: "any" },
         }),
+        harness.app.inject({ method: "GET", url: "/api/v1/entities/no-such-id", cookies }),
+        harness.app.inject({
+          method: "PATCH",
+          url: "/api/v1/entities/no-such-id",
+          cookies,
+          payload: { legalName: "Sneaky Rename Ltd" },
+        }),
         harness.app.inject({ method: "POST", url: "/api/v1/entities/no-such-id/archive", cookies }),
+        harness.app.inject({ method: "POST", url: "/api/v1/entities/no-such-id/restore", cookies }),
       ];
       for (const res of await Promise.all(attempts)) {
         expect(res.statusCode, `${fixture.email}: ${res.body}`).toBe(403);
@@ -392,6 +428,320 @@ describe("GET /entities — the list and picker seam", () => {
     const missing = await harness.app.inject({
       method: "POST",
       url: "/api/v1/entities/no-such-id/archive",
+      cookies: adminCookies,
+    });
+    expect(missing.statusCode, missing.body).toBe(404);
+  });
+});
+
+describe("GET /entities/:id — the record page's read", () => {
+  it("answers a Legal Team Member with the full identity card, joined type name included", async () => {
+    const llc = await typeOptionBySlug("llc");
+    const created = await register(adminCookies, {
+      legalName: "Record Read GmbH",
+      entityTypeId: llc.id,
+      jurisdiction: "Germany",
+      formedOn: "2021-06-01",
+      status: "dormant",
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const id = created.json().entity.id;
+
+    const res = await getEntity(memberCookies, id);
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().entity).toMatchObject({
+      id,
+      legalName: "Record Read GmbH",
+      entityTypeId: llc.id,
+      entityTypeName: "LLC",
+      jurisdiction: "Germany",
+      formedOn: "2021-06-01",
+      status: "dormant",
+      archivedAt: null,
+    });
+  });
+
+  it("answers an archived entity too — the restore surface needs to see it", async () => {
+    const corporation = await typeOptionBySlug("corporation");
+    const created = await register(adminCookies, {
+      legalName: "Archived Readable Ltd",
+      entityTypeId: corporation.id,
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const id = created.json().entity.id;
+    const archived = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entities/${id}/archive`,
+      cookies: adminCookies,
+    });
+    expect(archived.statusCode, archived.body).toBe(200);
+
+    const res = await getEntity(memberCookies, id);
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().entity.archivedAt).not.toBeNull();
+  });
+
+  it("404s an unknown id as problem+json", async () => {
+    const res = await getEntity(memberCookies, "no-such-id");
+    expect(res.statusCode, res.body).toBe(404);
+    expect(res.headers["content-type"]).toContain("application/problem+json");
+  });
+});
+
+describe("PATCH /entities/:id — correcting the identity card", () => {
+  it("lets a Legal Team Member correct every card field, including the type", async () => {
+    const corporation = await typeOptionBySlug("corporation");
+    const llc = await typeOptionBySlug("llc");
+    const created = await register(adminCookies, {
+      legalName: "Old Name Ltd",
+      entityTypeId: corporation.id,
+      jurisdiction: "Scotland",
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const id = created.json().entity.id;
+
+    const res = await patchEntity(memberCookies, id, {
+      legalName: "New Name LLC",
+      entityTypeId: llc.id,
+      jurisdiction: "Delaware",
+      formedOn: "2018-01-15",
+      registrationNumber: "DE-7781",
+      taxId: "98-7654321",
+      registeredAgent: "Corporate Agents Inc",
+      registeredAddress: "1209 Orange Street, Wilmington, DE",
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().entity).toMatchObject({
+      id,
+      legalName: "New Name LLC",
+      entityTypeId: llc.id,
+      entityTypeName: "LLC",
+      jurisdiction: "Delaware",
+      formedOn: "2018-01-15",
+      registrationNumber: "DE-7781",
+      taxId: "98-7654321",
+      registeredAgent: "Corporate Agents Inc",
+      registeredAddress: "1209 Orange Street, Wilmington, DE",
+    });
+    // The correction survives the round trip.
+    const read = await getEntity(memberCookies, id);
+    expect(read.json().entity.legalName).toBe("New Name LLC");
+  });
+
+  it("clears an optional card field with null and trims blank strings to null", async () => {
+    const corporation = await typeOptionBySlug("corporation");
+    const created = await register(adminCookies, {
+      legalName: "Clearable Ltd",
+      entityTypeId: corporation.id,
+      jurisdiction: "Ireland",
+      taxId: "IE 1234567",
+      formedOn: "2020-02-02",
+    });
+    const id = created.json().entity.id;
+
+    const res = await patchEntity(adminCookies, id, {
+      jurisdiction: null,
+      taxId: "   ",
+      formedOn: null,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().entity).toMatchObject({ jurisdiction: null, taxId: null, formedOn: null });
+  });
+
+  it("sets the status within the fixed enum and rejects anything outside it", async () => {
+    const corporation = await typeOptionBySlug("corporation");
+    const created = await register(adminCookies, {
+      legalName: "Status Cycle Ltd",
+      entityTypeId: corporation.id,
+    });
+    const id = created.json().entity.id;
+
+    for (const status of ["dormant", "dissolved", "divested", "active"]) {
+      const res = await patchEntity(adminCookies, id, { status });
+      expect(res.statusCode, res.body).toBe(200);
+      expect(res.json().entity.status).toBe(status);
+    }
+    const rejected = await patchEntity(adminCookies, id, { status: "liquidated" });
+    expect(rejected.statusCode, rejected.body).toBe(400);
+    expect(rejected.headers["content-type"]).toContain("application/problem+json");
+  });
+
+  it("rejects a blank legal name, an unknown type, and an archived type as 400", async () => {
+    const corporation = await typeOptionBySlug("corporation");
+    const created = await register(adminCookies, {
+      legalName: "Well Formed Ltd",
+      entityTypeId: corporation.id,
+    });
+    const id = created.json().entity.id;
+
+    const blankName = await patchEntity(adminCookies, id, { legalName: "   " });
+    expect(blankName.statusCode, blankName.body).toBe(400);
+
+    const unknownType = await patchEntity(adminCookies, id, { entityTypeId: "no-such-type" });
+    expect(unknownType.statusCode, unknownType.body).toBe(400);
+
+    const partnership = await typeOptionBySlug("partnership");
+    const archivedType = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entity-types/${partnership.id}/archive`,
+      cookies: adminCookies,
+      payload: {},
+    });
+    expect(archivedType.statusCode, archivedType.body).toBe(200);
+    try {
+      const toArchived = await patchEntity(adminCookies, id, { entityTypeId: partnership.id });
+      expect(toArchived.statusCode, toArchived.body).toBe(400);
+    } finally {
+      // Restore the seeded type even when the assertion fails — later
+      // tests read the full seed vocabulary from the picker.
+      const restored = await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/entity-types/${partnership.id}/restore`,
+        cookies: adminCookies,
+      });
+      expect(restored.statusCode, restored.body).toBe(200);
+    }
+
+    // None of the refusals dirtied the record.
+    const read = await getEntity(adminCookies, id);
+    expect(read.json().entity).toMatchObject({
+      legalName: "Well Formed Ltd",
+      entityTypeId: corporation.id,
+    });
+  });
+
+  it("refuses to edit an archived entity as 409 — restore first", async () => {
+    const corporation = await typeOptionBySlug("corporation");
+    const created = await register(adminCookies, {
+      legalName: "Frozen Ltd",
+      entityTypeId: corporation.id,
+    });
+    const id = created.json().entity.id;
+    const archived = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entities/${id}/archive`,
+      cookies: adminCookies,
+    });
+    expect(archived.statusCode, archived.body).toBe(200);
+
+    const res = await patchEntity(adminCookies, id, { legalName: "Thawed Ltd" });
+    expect(res.statusCode, res.body).toBe(409);
+    const read = await getEntity(adminCookies, id);
+    expect(read.json().entity.legalName).toBe("Frozen Ltd");
+  });
+
+  it("404s an unknown id", async () => {
+    const res = await patchEntity(adminCookies, "no-such-id", { legalName: "Nobody Ltd" });
+    expect(res.statusCode, res.body).toBe(404);
+  });
+
+  it("writes entity.updated with the changed map, and entity.status_changed for the status, atomically", async () => {
+    const corporation = await typeOptionBySlug("corporation");
+    const llc = await typeOptionBySlug("llc");
+    const created = await register(adminCookies, {
+      legalName: "Audited Edits Ltd",
+      entityTypeId: corporation.id,
+      jurisdiction: "England & Wales",
+    });
+    const id = created.json().entity.id;
+
+    const res = await patchEntity(memberCookies, id, {
+      jurisdiction: "England",
+      entityTypeId: llc.id,
+      status: "dormant",
+    });
+    expect(res.statusCode, res.body).toBe(200);
+
+    const rows = (await entityAuditRows()).filter((row) => row.entityId === id);
+    const updated = rows.find((row) => row.action === "entity.updated");
+    expect(updated?.visibility).toBe("legal_only");
+    expect(updated?.payload).toMatchObject({
+      legalName: "Audited Edits Ltd",
+      changed: {
+        jurisdiction: { from: "England & Wales", to: "England" },
+        entityType: { from: "Corporation", to: "LLC" },
+      },
+    });
+    const statusChanged = rows.find((row) => row.action === "entity.status_changed");
+    expect(statusChanged?.visibility).toBe("legal_only");
+    expect(statusChanged?.payload).toMatchObject({
+      legalName: "Audited Edits Ltd",
+      from: "active",
+      to: "dormant",
+    });
+  });
+
+  it("writes no audit entry when nothing actually changed", async () => {
+    const corporation = await typeOptionBySlug("corporation");
+    const created = await register(adminCookies, {
+      legalName: "No Op Ltd",
+      entityTypeId: corporation.id,
+      status: "active",
+    });
+    const id = created.json().entity.id;
+
+    const res = await patchEntity(adminCookies, id, {
+      legalName: "No Op Ltd",
+      status: "active",
+      jurisdiction: null,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+
+    const rows = (await entityAuditRows()).filter((row) => row.entityId === id);
+    expect(rows.map((row) => row.action)).toEqual(["entity.created"]);
+  });
+});
+
+describe("POST /entities/:id/restore — archive's recovery story", () => {
+  it("returns an archived entity to the working list", async () => {
+    const corporation = await typeOptionBySlug("corporation");
+    const created = await register(adminCookies, {
+      legalName: "Back From Archive Ltd",
+      entityTypeId: corporation.id,
+    });
+    const id = created.json().entity.id;
+    const archived = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entities/${id}/archive`,
+      cookies: adminCookies,
+    });
+    expect(archived.statusCode, archived.body).toBe(200);
+    expect((await listEntities(memberCookies)).some((row) => row.id === id)).toBe(false);
+
+    const res = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entities/${id}/restore`,
+      cookies: memberCookies,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().entity.archivedAt).toBeNull();
+    expect((await listEntities(memberCookies)).some((row) => row.id === id)).toBe(true);
+
+    // The DD-017 trail carries the restore, keyed to the record.
+    const rows = (await entityAuditRows()).filter((row) => row.entityId === id);
+    const restored = rows.find((row) => row.action === "entity.restored");
+    expect(restored?.visibility).toBe("legal_only");
+    expect(restored?.payload).toMatchObject({ legalName: "Back From Archive Ltd" });
+  });
+
+  it("refuses to restore a live entity as 409, and 404s an unknown id", async () => {
+    const corporation = await typeOptionBySlug("corporation");
+    const created = await register(adminCookies, {
+      legalName: "Never Archived Ltd",
+      entityTypeId: corporation.id,
+    });
+    const id = created.json().entity.id;
+
+    const live = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entities/${id}/restore`,
+      cookies: adminCookies,
+    });
+    expect(live.statusCode, live.body).toBe(409);
+
+    const missing = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/entities/no-such-id/restore",
       cookies: adminCookies,
     });
     expect(missing.statusCode, missing.body).toBe(404);

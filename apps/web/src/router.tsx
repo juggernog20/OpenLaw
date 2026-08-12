@@ -10,6 +10,7 @@
 import type { RouteObject } from "react-router";
 import { AuthLayout } from "./routes/auth-layout";
 import { EntitiesPage, entitiesLoader } from "./routes/entities";
+import { EntityRecordPage, entityRecordLoader } from "./routes/entity-record";
 import { RouteErrorPage } from "./routes/error-page";
 import { HomePage, homeLoader } from "./routes/home";
 import { LinkExpiredPage } from "./routes/link-expired";
@@ -76,6 +77,15 @@ export const routes: RouteObject[] = [
     path: "/entities",
     loader: entitiesLoader,
     element: <EntitiesPage />,
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <></>,
+  },
+  {
+    // #99: one entity's record page — the identity card with DES-017
+    // per-field edits, archive, and restore. Member+ only (ENT-004).
+    path: "/entities/:entityId",
+    loader: entityRecordLoader,
+    element: <EntityRecordPage />,
     errorElement: <RouteErrorPage />,
     hydrateFallbackElement: <></>,
   },

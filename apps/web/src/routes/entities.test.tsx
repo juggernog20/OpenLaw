@@ -1,19 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The /entities destination (ENT-001/ENT-004, #98), through the real
- * route table with the standard fetch stub: Member+ lands on the
- * registry (nav item drawn, list rendered in the API's order), the
- * empty registry explains itself and offers the register action, the
- * register dialog posts the identity card and the new row joins the
- * list, and Contributors and Business Users are bounced home with no
+ * The /entities destination (ENT-001/ENT-004, #98/#99), through the
+ * real route table with the standard fetch stub: Member+ lands on the
+ * registry (nav item drawn, list rendered in the API's order, each row
+ * linking to its record page), the empty registry explains itself and
+ * offers the register action, the register dialog posts the identity
+ * card and the new row joins the list, the show-archived toggle
+ * re-reads the list with archived rows and offers a row-level restore
+ * (#99), and Contributors and Business Users are bounced home with no
  * Entities nav item at all.
  */
 
 import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const ADMIN = {
   id: "u1",
@@ -177,6 +179,129 @@ describe("the /entities destination", () => {
     await user.type(within(dialog).getByLabelText("Legal name"), "Aldgate UK Ltd");
     await user.click(within(dialog).getByRole("button", { name: "Register" }));
     expect(await within(dialog).findByRole("alert")).toHaveTextContent("Pick an entity type.");
+  });
+
+  it("links each row to its record page", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: registryApi([entityRow({ id: "e1", legalName: "Aldgate GmbH" })]),
+    });
+    renderAt("/entities");
+
+    const table = await screen.findByRole("table");
+    expect(within(table).getByRole("link", { name: "Aldgate GmbH" })).toHaveAttribute(
+      "href",
+      "/entities/e1",
+    );
+  });
+
+  it("reveals archived entities behind the show-archived toggle and restores one from its row", async () => {
+    const live = entityRow({ id: "e1", legalName: "Aldgate GmbH" });
+    const archived = entityRow({
+      id: "e2",
+      legalName: "Mistake Ltd",
+      archivedAt: "2026-08-10T00:00:00.000Z",
+    });
+    let restored = false;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
+          const all = call.url.searchParams.get("includeArchived") === "true";
+          const current = restored ? { ...archived, archivedAt: null } : archived;
+          return json(200, { entities: all || restored ? [live, current] : [live] }); // restored rows rejoin the working list
+        }
+        if (call.url.pathname === "/api/v1/entities/types" && call.method === "GET") {
+          return json(200, { entityTypes: TYPE_OPTIONS });
+        }
+        if (call.url.pathname === "/api/v1/entities/e2/restore" && call.method === "POST") {
+          restored = true;
+          return json(200, { entity: { ...archived, archivedAt: null } });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/entities");
+    const user = userEvent.setup();
+
+    // The working list hides the archived entity.
+    const table = await screen.findByRole("table");
+    expect(within(table).queryByText("Mistake Ltd")).not.toBeInTheDocument();
+
+    // The toggle reveals it, marked as archived, with restore on offer.
+    await user.click(screen.getByRole("switch", { name: "Show archived" }));
+    expect(await screen.findByText("Mistake Ltd")).toBeInTheDocument();
+    expect(screen.getByText("Archived")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Restore Mistake Ltd" }));
+    // Restored: the pill and the row action leave; the row stays listed.
+    await waitFor(() => expect(screen.queryByText("Archived")).not.toBeInTheDocument());
+    expect(screen.getByText("Mistake Ltd")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Restore Mistake Ltd" })).not.toBeInTheDocument();
+
+    // Toggling back off keeps the restored entity in the working list.
+    await user.click(screen.getByRole("switch", { name: "Show archived" }));
+    await waitFor(
+      () => expect(screen.getAllByRole("row").length).toBe(3), // header + two live rows
+    );
+    expect(screen.getByText("Mistake Ltd")).toBeInTheDocument();
+  });
+
+  it("surfaces a failed restore as the API's refusal and keeps the row archived", async () => {
+    const archived = entityRow({
+      id: "e2",
+      legalName: "Mistake Ltd",
+      archivedAt: "2026-08-10T00:00:00.000Z",
+    });
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
+          return json(200, { entities: [archived] });
+        }
+        if (call.url.pathname === "/api/v1/entities/types" && call.method === "GET") {
+          return json(200, { entityTypes: TYPE_OPTIONS });
+        }
+        if (call.url.pathname === "/api/v1/entities/e2/restore" && call.method === "POST") {
+          return problem(409, "This entity is not archived.");
+        }
+        return undefined;
+      },
+    });
+    renderAt("/entities");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("switch", { name: "Show archived" }));
+    await user.click(await screen.findByRole("button", { name: "Restore Mistake Ltd" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("This entity is not archived.");
+    expect(screen.getByText("Archived")).toBeInTheDocument();
+  });
+
+  it("reports a failed archived-list read and leaves the toggle off", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
+          if (call.url.searchParams.get("includeArchived") === "true") {
+            return problem(500, "Something broke.");
+          }
+          return json(200, { entities: [entityRow({ id: "e1" })] });
+        }
+        if (call.url.pathname === "/api/v1/entities/types" && call.method === "GET") {
+          return json(200, { entityTypes: TYPE_OPTIONS });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/entities");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("switch", { name: "Show archived" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The registry could not be read. Try again.",
+    );
+    expect(screen.getByRole("switch", { name: "Show archived" })).not.toBeChecked();
   });
 
   it("bounces a Contributor home and draws them no Entities nav item", async () => {
