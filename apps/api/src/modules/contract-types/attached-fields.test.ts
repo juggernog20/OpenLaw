@@ -505,7 +505,7 @@ describe("attachments whose field is archived", () => {
 });
 
 describe("the DD-017 activity trail", () => {
-  it("wrote one entry per attachment mutation, in vocabulary", async () => {
+  it("records every attachment mutation in vocabulary, admin-only, with the actor", async () => {
     const entries = await attachmentAuditRows();
     const actions = entries.map((entry) => entry.action);
     expect(actions).toContain("contract_type_field.attached");
@@ -526,6 +526,67 @@ describe("the DD-017 activity trail", () => {
       (entry) => entry.action === "contract_type_field.reordered",
     )!;
     expect(reorderedEntry.payload).toMatchObject({ typeSlug: "nda" });
+  });
+
+  it("writes exactly one entry per mutation — a duplicate write fails the count", async () => {
+    // A fresh type isolates the count from every mutation the suite ran
+    // above: filter the trail by this type's slug and the numbers are
+    // exact, whatever runs before.
+    const created = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/contract-types",
+      cookies: adminCookies,
+      payload: { displayName: "Audit Count Probe" },
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const probe = created.json().contractType as TypeRow;
+
+    const mkField = async (displayName: string) => {
+      const res = await harness.app.inject({
+        method: "POST",
+        url: "/api/v1/fields",
+        cookies: adminCookies,
+        payload: { displayName, moduleScope: "contract", fieldType: "text", fieldTag: "business" },
+      });
+      expect(res.statusCode, res.body).toBe(201);
+      return res.json().field as { id: string; slug: string };
+    };
+    const first = await mkField("Audit probe one");
+    const second = await mkField("Audit probe two");
+
+    expect((await attach(probe.id, { fieldId: first.id })).statusCode).toBe(201);
+    expect((await attach(probe.id, { fieldId: second.id })).statusCode).toBe(201);
+    const reordered = await harness.app.inject({
+      method: "PUT",
+      url: `/api/v1/contract-types/${probe.id}/fields/order`,
+      cookies: adminCookies,
+      payload: { fieldIds: [second.id, first.id] },
+    });
+    expect(reordered.statusCode, reordered.body).toBe(200);
+    const required = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/contract-types/${probe.id}/fields/${first.id}`,
+      cookies: adminCookies,
+      payload: { isRequired: true },
+    });
+    expect(required.statusCode, required.body).toBe(200);
+    const detached = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/contract-types/${probe.id}/fields/${second.id}`,
+      cookies: adminCookies,
+    });
+    expect(detached.statusCode, detached.body).toBe(204);
+
+    const mine = (await attachmentAuditRows()).filter(
+      (entry) => (entry.payload as { typeSlug?: string }).typeSlug === probe.slug,
+    );
+    const tally = (action: string) =>
+      mine.filter((entry) => entry.action === `contract_type_field.${action}`).length;
+    expect(tally("attached")).toBe(2);
+    expect(tally("reordered")).toBe(1);
+    expect(tally("required_changed")).toBe(1);
+    expect(tally("detached")).toBe(1);
+    expect(mine).toHaveLength(5);
   });
 });
 

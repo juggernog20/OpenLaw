@@ -73,6 +73,7 @@ const MESSAGES = defineMessages({
   detach: { id: "settings.matterTypeEditor.detach", defaultMessage: "Detach {name}" },
   detached: { id: "settings.matterTypeEditor.detached", defaultMessage: "{name} detached." },
   attach: { id: "settings.matterTypeEditor.attach", defaultMessage: "Attach field" },
+  attached: { id: "settings.matterTypeEditor.attached", defaultMessage: "{name} attached." },
   allAttached: {
     id: "settings.matterTypeEditor.allAttached",
     defaultMessage: "Every global field is attached.",

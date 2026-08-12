@@ -13,7 +13,7 @@
 import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const ADMIN = {
   id: "u1",
@@ -314,6 +314,54 @@ describe("the attached-fields card (ST16 right)", () => {
     await waitFor(() => expect(calls.attaches).toEqual([{ fieldId: "f3" }]));
     const rows = within(screen.getByRole("list")).getAllByRole("listitem");
     expect(within(rows[2]!).getByText("Our position")).toBeInTheDocument();
+  });
+
+  it("surfaces the server detail when an attach conflicts, without adding the row", async () => {
+    const calls = newCalls();
+    const base = editorApi(calls);
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call: StubCall) =>
+        call.url.pathname === "/api/v1/contract-types/t1/fields" && call.method === "POST"
+          ? problem(409, "Our position is already attached.")
+          : base(call),
+    });
+    renderAt("/settings/contracts/types/t1");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Attach field" }));
+    await user.click(within(await screen.findByRole("menu")).getByText("Our position"));
+
+    expect(await screen.findByText("Our position is already attached.")).toBeInTheDocument();
+    expect(within(screen.getByRole("list")).getAllByRole("listitem")).toHaveLength(2);
+  });
+
+  it("keeps the order and surfaces the detail when a reorder is refused", async () => {
+    const calls = newCalls();
+    const base = editorApi(calls);
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call: StubCall) =>
+        call.url.pathname === "/api/v1/contract-types/t1/fields/order" && call.method === "PUT"
+          ? problem(400, "The order must include every attached field.")
+          : base(call),
+    });
+    renderAt("/settings/contracts/types/t1");
+    const user = userEvent.setup();
+
+    const grip = await screen.findByRole("button", {
+      name: "Reorder Governing law, position 1 of 2. Use the arrow keys to move it.",
+    });
+    grip.focus();
+    await user.keyboard("{ArrowDown}");
+
+    expect(
+      await screen.findByText("The order must include every attached field."),
+    ).toBeInTheDocument();
+    const rows = within(screen.getByRole("list")).getAllByRole("listitem");
+    expect(within(rows[0]!).getByText("Governing law")).toBeInTheDocument();
+    // The failed save leaves the grip focusable for a retry (DES-011).
+    expect(grip).not.toBeDisabled();
   });
 });
 

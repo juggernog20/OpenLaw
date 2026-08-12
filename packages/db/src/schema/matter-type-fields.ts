@@ -12,7 +12,7 @@
  * Hard enforcement of `is_required` arrives with M22.
  */
 
-import { pgTable, primaryKey, text } from "drizzle-orm/pg-core";
+import { index, pgTable, primaryKey, text } from "drizzle-orm/pg-core";
 import { matterTypes } from "./matter-types.js";
 import { typeFieldColumns } from "./fields.js";
 
@@ -26,7 +26,12 @@ export const matterTypeFields = pgTable(
       .references(() => matterTypes.id, { onDelete: "cascade" }),
     ...typeFieldColumns(),
   },
-  (table) => [primaryKey({ columns: [table.typeId, table.fieldId] })],
+  (table) => [
+    primaryKey({ columns: [table.typeId, table.fieldId] }),
+    // The PK leads with the type id; the catalog's per-field counts and
+    // the fields FK checks look up by field id alone.
+    index("matter_type_fields_field_id_idx").on(table.fieldId),
+  ],
 );
 
 export type MatterTypeField = typeof matterTypeFields.$inferSelect;
