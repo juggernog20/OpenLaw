@@ -12,11 +12,13 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
 import * as activitySchema from "./schema/activity.js";
 import * as authSchema from "./schema/auth.js";
+import * as contractCounterpartiesSchema from "./schema/contract-counterparties.js";
 import * as contractStatusesSchema from "./schema/contract-statuses.js";
 import * as contractTeamSchema from "./schema/contract-team.js";
 import * as contractTypeFieldsSchema from "./schema/contract-type-fields.js";
 import * as contractTypesSchema from "./schema/contract-types.js";
 import * as contractsSchema from "./schema/contracts.js";
+import * as counterpartiesSchema from "./schema/counterparties.js";
 import * as entitiesSchema from "./schema/entities.js";
 import * as entityTypesSchema from "./schema/entity-types.js";
 import * as fieldsSchema from "./schema/fields.js";
@@ -26,11 +28,13 @@ import * as orgSchema from "./schema/org.js";
 
 export * from "./schema/activity.js";
 export * from "./schema/auth.js";
+export * from "./schema/contract-counterparties.js";
 export * from "./schema/contract-statuses.js";
 export * from "./schema/contract-team.js";
 export * from "./schema/contract-type-fields.js";
 export * from "./schema/contract-types.js";
 export * from "./schema/contracts.js";
+export * from "./schema/counterparties.js";
 export * from "./schema/entities.js";
 export * from "./schema/entity-types.js";
 export * from "./schema/fields.js";
@@ -40,11 +44,13 @@ export * from "./schema/org.js";
 export const schema = {
   ...activitySchema,
   ...authSchema,
+  ...contractCounterpartiesSchema,
   ...contractStatusesSchema,
   ...contractTeamSchema,
   ...contractTypeFieldsSchema,
   ...contractTypesSchema,
   ...contractsSchema,
+  ...counterpartiesSchema,
   ...entitiesSchema,
   ...entityTypesSchema,
   ...fieldsSchema,
@@ -61,6 +67,7 @@ export {
   count,
   desc,
   eq,
+  ilike,
   inArray,
   isNotNull,
   isNull,

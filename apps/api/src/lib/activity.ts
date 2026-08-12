@@ -63,7 +63,12 @@ export type ActivityAction =
   // Team changes keep their own verbs too — putting a person on a
   // contract is not an edit of a field, and the M9 viewer names them
   // (CTR-004). The Owner is a field, so it rides `contract.updated`.
-  | `contract.${"created" | "updated" | "status_changed" | "team_added" | "team_removed" | "archived" | "restored"}`
+  // The counterparties are the same shape as the team and for the same
+  // reason (CTR-011): a party joining or leaving the other side is not
+  // an edit of a field. The primary change is its own verb because it
+  // also happens on its own — removing the primary promotes the next
+  // party, and the log has to say so rather than leave it implied.
+  | `contract.${"created" | "updated" | "status_changed" | "team_added" | "team_removed" | "counterparty_added" | "counterparty_removed" | "counterparty_primary_changed" | "archived" | "restored"}`
   | "sso_provider.registered"
   | "sso_provider.updated";
 

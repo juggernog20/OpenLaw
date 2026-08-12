@@ -3,8 +3,9 @@
 /**
  * The /contracts destination (M8/1), through the real route table with
  * the standard fetch stub: Member+ lands on the list, which shows each
- * contract's C-### reference, title, type, and status and links to the
- * record by number; the create dialog takes a title and a type and
+ * contract's C-### reference, title, primary counterparty, type, and
+ * status and links to the record by number; the create dialog takes a
+ * title and a type and
  * adds the created contract to the list; the show-archived toggle
  * re-reads the list and offers a row-level restore. Contributors are
  * bounced home; unauthenticated visitors land on login.
@@ -63,6 +64,8 @@ function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
     stage: "draft",
     // Unassigned until someone takes it (CTR-004).
     manager: null,
+    // Nobody is recorded on the other side yet (CTR-011).
+    primaryCounterparty: null,
     priority: "medium",
     risk: null,
     description: null,
@@ -134,6 +137,23 @@ describe("the /contracts destination", () => {
     expect(within(row).getByText("Draft")).toBeInTheDocument();
     // Unassigned is a state the list states, not a blank cell (CTR-004).
     expect(within(row).getByText("Unassigned")).toBeInTheDocument();
+    // So is nobody on the other side yet (CTR-011).
+    expect(within(row).getByText("None recorded")).toBeInTheDocument();
+  });
+
+  it("names the primary counterparty on the row, so the list answers who it is with", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: listApi([
+        contractRow({ primaryCounterparty: { id: "cp-orion", name: "Orion Cloud Ltd" } }),
+      ]).handler,
+    });
+    renderAt("/contracts");
+
+    // One name per row: the primary is what a list can show, and the
+    // record holds the rest of a tripartite deal (CTR-011).
+    const row = await screen.findByRole("row", { name: /Acme master services agreement/ });
+    expect(within(row).getByText("Orion Cloud Ltd")).toBeInTheDocument();
   });
 
   it("names the Owner on the row, so the list answers who runs what", async () => {

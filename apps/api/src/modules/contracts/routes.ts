@@ -20,7 +20,18 @@
  * and rides `contract.updated`. The picker reads the registry's own
  * Member+ list, which already leaves archived entities out; the write
  * refuses one, so nothing new is signed by an entity that has left.
- * Their side — the counterparties — lands with its own ticket.
+ *
+ * Their side is CTR-011's `contract_counterparties` join: N parties on
+ * one contract, exactly one of them primary. That invariant is this
+ * file's to keep, and it holds in one direction only — a contract with
+ * counterparties always has a primary. The first party added takes the
+ * flag; removing the holder passes it to the next; the last one out
+ * takes it with them. Every one of those paths runs under the contract
+ * row's lock, so two Legal Team Members cannot both promote. A name
+ * with no record behind it becomes one in the same transaction that
+ * puts it on the contract, which is what keeps intake friction near
+ * zero — and the same transaction refuses to make a second record for a
+ * name we already hold.
  *
  * Every route is addressed by the contract's CTR-003 number, not its
  * id: the number is the reference a Legal Team Member speaks, links,
@@ -44,16 +55,19 @@ import { z } from "zod";
 import {
   and,
   asc,
+  contractCounterparties,
   contractStatuses,
   contracts,
   contractTeam,
   contractTypes,
+  counterparties,
   CONTRACT_STAGES,
   CONTRACT_TEAM_ROLES,
   desc,
   entities,
   eq,
   isNull,
+  ne,
   SEVERITY_LEVELS,
   sql,
   users,
@@ -105,6 +119,22 @@ const SigningEntitySchema = z.object({
   legalName: z.string(),
 });
 
+/** Their side, as a list needs it (CTR-011): one name per contract. The
+ * primary is the party the contracts list column and the record name
+ * first. NULL means nobody is recorded on the other side yet. */
+const PrimaryCounterpartySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+});
+
+/** One party on the record, with the jurisdiction that tells two
+ * same-named organizations apart and the flag that says which one the
+ * list shows. */
+const CounterpartySchema = PrimaryCounterpartySchema.extend({
+  jurisdiction: z.string().nullable(),
+  isPrimary: z.boolean(),
+});
+
 const ContractRowSchema = z.object({
   id: z.string(),
   /** CTR-003's immutable global reference, rendered C-###. */
@@ -126,6 +156,11 @@ const ContractRowSchema = z.object({
    * is a field of the record, and a field rides the row the per-field
    * PATCH answers with — the same place `description` sits. */
   entity: SigningEntitySchema.nullable(),
+  /** CTR-011's their side, reduced to the one name a row can show: the
+   * primary counterparty. The C1 mock draws it as a list column, so it
+   * rides the row every route answers with. The full party list is the
+   * record's, and rides the record envelope. */
+  primaryCounterparty: PrimaryCounterpartySchema.nullable(),
   priority: SeveritySchema,
   /** NULL = not yet assessed, which is not the same as low (CTR-005). */
   risk: SeveritySchema.nullable(),
@@ -136,11 +171,21 @@ const ContractRowSchema = z.object({
 });
 
 const ContractEnvelope = z.object({ contract: ContractRowSchema });
-/** The record page's read: the contract and its working group. The team
- * rides here rather than on the row, because only the record renders it
- * — the list would carry a join it never draws. */
-const ContractRecordEnvelope = ContractEnvelope.extend({ team: z.array(TeamMemberSchema) });
+/** The record page's read: the contract, its working group, and every
+ * party on the other side. Both lists ride here rather than on the row,
+ * because only the record renders them — the list would carry joins it
+ * never draws. */
+const ContractRecordEnvelope = ContractEnvelope.extend({
+  team: z.array(TeamMemberSchema),
+  counterparties: z.array(CounterpartySchema),
+});
 const TeamEnvelope = z.object({ team: z.array(TeamMemberSchema) });
+/** What every counterparty write answers with. The contract rides along
+ * because the party list decides the row's `primaryCounterparty`, and a
+ * caller that only got the list back would have to guess it. */
+const CounterpartiesEnvelope = ContractEnvelope.extend({
+  counterparties: z.array(CounterpartySchema),
+});
 
 /** The Member+ readable slice of a contract type. */
 const TypeOptionSchema = z.object({
@@ -159,6 +204,8 @@ const StatusOptionSchema = TypeOptionSchema.extend({ stage: z.enum(CONTRACT_STAG
 const UserOptionSchema = PersonSchema.extend({ role: z.enum(USER_ROLES) });
 
 const TitleSchema = z.string().trim().min(1).max(200);
+/** CTR-011's inline creation writes exactly this and nothing else. */
+const CounterpartyNameSchema = z.string().trim().min(1).max(200);
 const DescriptionSchema = z.string().trim().max(10_000);
 /** The number is the path, so it is an integer or it is not a contract. */
 const NumberParams = z.object({ number: z.coerce.number().int().positive() });
@@ -194,9 +241,22 @@ interface JoinedEntity {
   legalName: string;
 }
 
+/** The primary counterparty as the outer join answers it, where nobody
+ * recorded yet is a real answer (CTR-011). */
+interface JoinedCounterparty {
+  id: string;
+  name: string;
+}
+
+/** One party on the record, ordered and flagged as the record draws it. */
+interface RecordCounterparty extends JoinedCounterparty {
+  jurisdiction: string | null;
+  isPrimary: boolean;
+}
+
 /** The joined shape every route answers with — the stored row plus the
- * two display names, the derived stage, the Owner, and the entity that
- * signs. */
+ * two display names, the derived stage, the Owner, the entity that
+ * signs, and the party the other side is named by. */
 interface ContractContext {
   row: Contract;
   contractTypeName: string;
@@ -204,6 +264,7 @@ interface ContractContext {
   stage: (typeof CONTRACT_STAGES)[number];
   manager: JoinedPerson | null;
   entity: JoinedEntity | null;
+  primaryCounterparty: JoinedCounterparty | null;
 }
 
 function toRow(context: ContractContext) {
@@ -219,6 +280,7 @@ function toRow(context: ContractContext) {
     stage: context.stage,
     manager: toPersonOrNull(context.manager),
     entity: context.entity,
+    primaryCounterparty: context.primaryCounterparty,
     priority: row.priority,
     risk: row.risk,
     description: row.description,
@@ -233,9 +295,13 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
   type Executor = typeof app.db | Tx;
 
   /** The one read shape: the contract with its type name, status label,
-   * derived stage, Owner, and signing entity. Both people-and-parties
-   * joins go outward — unassigned (CTR-004) and not-yet-known (CTR-011)
-   * are real states, so a contract missing either still reads. */
+   * derived stage, Owner, signing entity, and primary counterparty. All
+   * three people-and-parties joins go outward — unassigned (CTR-004),
+   * not-yet-known, and nobody-recorded-yet (CTR-011) are real states, so
+   * a contract missing any of them still reads. The primary join is
+   * keyed on the flag as well as the contract, so at most one party row
+   * can meet each contract row: that is the one-primary invariant read
+   * back out. */
   const selectContracts = (db: Executor) =>
     db
       .select({
@@ -253,12 +319,24 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           id: entities.id,
           legalName: entities.legalName,
         },
+        primaryCounterparty: {
+          id: counterparties.id,
+          name: counterparties.name,
+        },
       })
       .from(contracts)
       .innerJoin(contractTypes, eq(contracts.contractTypeId, contractTypes.id))
       .innerJoin(contractStatuses, eq(contracts.statusId, contractStatuses.id))
       .leftJoin(users, eq(contracts.managerId, users.id))
-      .leftJoin(entities, eq(contracts.entityId, entities.id));
+      .leftJoin(entities, eq(contracts.entityId, entities.id))
+      .leftJoin(
+        contractCounterparties,
+        and(
+          eq(contractCounterparties.contractId, contracts.id),
+          eq(contractCounterparties.isPrimary, true),
+        ),
+      )
+      .leftJoin(counterparties, eq(contractCounterparties.counterpartyId, counterparties.id));
 
   /** The working group on one contract, alphabetical by name so the
    * roster reads the same on every visit; a person holding two roles
@@ -278,6 +356,123 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       .orderBy(asc(sql`lower(${users.displayName})`), asc(contractTeam.role));
     return rows.map((row) => ({ ...toPerson(row), role: row.role }));
   };
+
+  /**
+   * The other side of one contract (CTR-011), primary first and then
+   * alphabetical. The primary leads because it is the party the record
+   * and the list name, and a reader should not have to hunt for it.
+   * Archived counterparties stay in the answer: a party that signed is
+   * a fact of the contract, and leaving the typeahead does not undo it.
+   */
+  const selectCounterparties = async (
+    db: Executor,
+    contractId: string,
+  ): Promise<RecordCounterparty[]> =>
+    db
+      .select({
+        id: counterparties.id,
+        name: counterparties.name,
+        jurisdiction: counterparties.jurisdiction,
+        isPrimary: contractCounterparties.isPrimary,
+      })
+      .from(contractCounterparties)
+      .innerJoin(counterparties, eq(contractCounterparties.counterpartyId, counterparties.id))
+      .where(eq(contractCounterparties.contractId, contractId))
+      .orderBy(desc(contractCounterparties.isPrimary), asc(sql`lower(${counterparties.name})`));
+
+  /** The row's `primaryCounterparty` derived from the party list a write
+   * path just produced — the same answer the list query's flag-keyed
+   * join gives the read paths, without a second round trip. */
+  function primaryOf(parties: readonly RecordCounterparty[]): JoinedCounterparty | null {
+    const primary = parties.find((party) => party.isPrimary);
+    return primary ? { id: primary.id, name: primary.name } : null;
+  }
+
+  /**
+   * Reads the parties back and answers the whole envelope, so a write
+   * path never has to assemble the row and the list itself. Called at
+   * the end of every counterparty mutation, inside its transaction.
+   */
+  async function counterpartiesEnvelope(tx: Tx, context: ContractContext) {
+    const parties = await selectCounterparties(tx, context.row.id);
+    return {
+      contract: toRow({ ...context, primaryCounterparty: primaryOf(parties) }),
+      counterparties: parties,
+    };
+  }
+
+  /**
+   * CTR-011's inline creation: a typed name becomes a counterparty
+   * record. It answers the record we already hold under that name
+   * before it makes a new one, so the typeahead cannot leave two rows
+   * behind for one organization — the client filters the same names out
+   * of its create affordance, and this is the refusal that holds when
+   * two clients disagree.
+   *
+   * The advisory lock is transaction-scoped and keyed on the name, so
+   * two Legal Team Members typing the same unknown name onto two
+   * different contracts at the same moment take turns: the first
+   * creates, the second finds. Locking the contract row cannot do this
+   * — they are on different contracts — and a unique constraint on the
+   * name would be a permanent ruling that two organizations may never
+   * share one, which is not ours to make here.
+   */
+  async function findOrCreateCounterparty(tx: Tx, rawName: string) {
+    const name = rawName.trim();
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(lower(${name})))`);
+    const [existing] = await tx
+      .select({ id: counterparties.id, name: counterparties.name })
+      .from(counterparties)
+      .where(
+        and(
+          isNull(counterparties.archivedAt),
+          // Matched case-insensitively on the name index's own
+          // expression: "helix labs gmbh" is the organization already
+          // filed as "Helix Labs GmbH", not a second one.
+          sql`lower(${counterparties.name}) = lower(${name})`,
+        ),
+      )
+      .orderBy(asc(counterparties.createdAt))
+      .limit(1);
+    if (existing) return { party: existing, born: false };
+
+    const [created] = await tx
+      .insert(counterparties)
+      .values({ name })
+      .returning({ id: counterparties.id, name: counterparties.name });
+    return { party: created!, born: true };
+  }
+
+  /**
+   * Moves the primary flag onto one party of one contract: demote the
+   * holder, then promote the named row. The order is not a style — the
+   * partial unique index behind the invariant refuses a second primary,
+   * so promoting first would be refused by the database.
+   *
+   * The caller holds the contract row's lock, which is what makes the
+   * two statements one decision (CTR-011: the application enforces this).
+   */
+  async function promotePrimary(tx: Tx, contractId: string, counterpartyId: string) {
+    await tx
+      .update(contractCounterparties)
+      .set({ isPrimary: false })
+      .where(
+        and(
+          eq(contractCounterparties.contractId, contractId),
+          eq(contractCounterparties.isPrimary, true),
+          ne(contractCounterparties.counterpartyId, counterpartyId),
+        ),
+      );
+    await tx
+      .update(contractCounterparties)
+      .set({ isPrimary: true })
+      .where(
+        and(
+          eq(contractCounterparties.contractId, contractId),
+          eq(contractCounterparties.counterpartyId, counterpartyId),
+        ),
+      );
+  }
 
   /**
    * Locks one live user by id and returns them, or refuses. `roles`
@@ -427,8 +622,9 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "getContract",
         summary:
           "One contract by its CTR-003 number, with its Owner, its " +
-          "signing entity, and its working group — the record page's " +
-          "read; archived contracts answer too, so restore stays reachable",
+          "signing entity, its counterparties, and its working group — " +
+          "the record page's read; archived contracts answer too, so " +
+          "restore stays reachable",
         tags: ["contracts"],
         params: NumberParams,
         response: { 200: ContractRecordEnvelope, default: problemResponse },
@@ -439,7 +635,11 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(eq(contracts.number, request.params.number))
         .limit(1);
       if (!row) throw httpError(404, "No contract exists with this number.");
-      return { contract: toRow(row), team: await selectTeam(app.db, row.row.id) };
+      const [team, parties] = await Promise.all([
+        selectTeam(app.db, row.row.id),
+        selectCounterparties(app.db, row.row.id),
+      ]);
+      return { contract: toRow(row), team, counterparties: parties };
     },
   );
 
@@ -528,10 +728,12 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           contractTypeName: contractType.displayName,
           statusName: draft.displayName,
           stage: draft.stage,
-          // A new contract is unassigned, and which of ours signs is
-          // not known yet; both are set on the record afterwards.
+          // A new contract is unassigned, which of ours signs is not
+          // known yet, and nobody is recorded on the other side; all
+          // three are set on the record afterwards.
           manager: null,
           entity: null,
+          primaryCounterparty: null,
         };
       });
       return reply.status(201).send({ contract: toRow(created) });
@@ -730,6 +932,9 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           stage,
           manager,
           entity,
+          // No field of this PATCH touches the other side — the
+          // counterparties have their own routes.
+          primaryCounterparty: current.primaryCounterparty,
         };
       });
       return { contract: toRow(updated) };
@@ -853,6 +1058,254 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         return selectTeam(tx, current.row.id);
       });
       return { team };
+    },
+  );
+
+  app.post(
+    "/contracts/:number/counterparties",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "addContractCounterparty",
+        summary:
+          "Put a counterparty on the contract (CTR-011) — either one we " +
+          "already hold, by id, or an unknown name, which is created " +
+          "with just that name in the same transaction. A name we " +
+          "already hold is reused, never duplicated. The first party on " +
+          "a contract becomes its primary",
+        tags: ["contracts"],
+        params: NumberParams,
+        // Strict: an unknown key is a client bug, not a silent strip.
+        body: z
+          .strictObject({
+            counterpartyId: z.string().optional(),
+            /** CTR-011's inline creation: a name and nothing else. */
+            name: CounterpartyNameSchema.optional(),
+          })
+          // One or the other. Both together is a client that has not
+          // decided whether it is picking or creating, and neither is a
+          // request with no counterparty in it.
+          .refine(
+            (body) => (body.counterpartyId === undefined) !== (body.name === undefined),
+            "Name a counterparty by id or by name, not both.",
+          ),
+        response: { 201: CounterpartiesEnvelope, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      const { counterpartyId, name } = request.body;
+      const result = await app.db.transaction(async (tx) => {
+        const current = await editableContract(tx, request.params.number);
+
+        let party: JoinedCounterparty;
+        let born = false;
+        if (counterpartyId !== undefined) {
+          // Lock the counterparty row so a concurrent archive cannot
+          // slip between the check and the insert.
+          const [existing] = await tx
+            .select({
+              id: counterparties.id,
+              name: counterparties.name,
+              archivedAt: counterparties.archivedAt,
+            })
+            .from(counterparties)
+            .where(eq(counterparties.id, counterpartyId))
+            .limit(1)
+            .for("update");
+          if (!existing || existing.archivedAt) {
+            throw httpError(400, "The counterparty must be a live counterparty.");
+          }
+          party = { id: existing.id, name: existing.name };
+        } else {
+          const found = await findOrCreateCounterparty(tx, name!);
+          party = found.party;
+          born = found.born;
+        }
+
+        // Under the contract row's lock, so this read and the insert
+        // that follows are one decision: two Legal Team Members adding
+        // the first party at once cannot both see an empty contract.
+        const held = await tx
+          .select({
+            counterpartyId: contractCounterparties.counterpartyId,
+          })
+          .from(contractCounterparties)
+          .where(eq(contractCounterparties.contractId, current.row.id));
+        if (held.some((row) => row.counterpartyId === party.id)) {
+          throw httpError(409, "That counterparty is already on this contract.");
+        }
+
+        // CTR-011's invariant, in its simplest half: the first party on
+        // a contract is its primary, because a contract with parties
+        // and no primary is a contract no list can draw.
+        const isPrimary = held.length === 0;
+        await tx.insert(contractCounterparties).values({
+          contractId: current.row.id,
+          counterpartyId: party.id,
+          isPrimary,
+        });
+        await recordActivity(tx, {
+          entityType: "contract",
+          entityId: current.row.id,
+          actorId: request.user.id,
+          action: "contract.counterparty_added",
+          visibility: "legal_only",
+          payload: {
+            number: current.row.number,
+            title: current.row.title,
+            counterparty: party.name,
+            isPrimary,
+            // Whether the organization itself was born here — the M9
+            // viewer says "added Helix Labs GmbH (new)" only for this.
+            created: born,
+          },
+        });
+        return counterpartiesEnvelope(tx, current);
+      });
+      return reply.status(201).send(result);
+    },
+  );
+
+  app.delete(
+    "/contracts/:number/counterparties/:counterpartyId",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "removeContractCounterparty",
+        summary:
+          "Take a counterparty off the contract (CTR-011). Removing the " +
+          "primary passes the flag to the party who joined next, so a " +
+          "contract with counterparties always has one; the counterparty " +
+          "record itself is untouched and stays on its other contracts",
+        tags: ["contracts"],
+        params: NumberParams.extend({ counterpartyId: z.string() }),
+        response: { 200: CounterpartiesEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const { counterpartyId } = request.params;
+      const result = await app.db.transaction(async (tx) => {
+        const current = await editableContract(tx, request.params.number);
+        const [removed] = await tx
+          .delete(contractCounterparties)
+          .where(
+            and(
+              eq(contractCounterparties.contractId, current.row.id),
+              eq(contractCounterparties.counterpartyId, counterpartyId),
+            ),
+          )
+          .returning();
+        if (!removed) throw httpError(404, "That counterparty is not on this contract.");
+
+        const [party] = await tx
+          .select({ name: counterparties.name })
+          .from(counterparties)
+          .where(eq(counterparties.id, counterpartyId))
+          .limit(1);
+        const removedName = party?.name ?? counterpartyId;
+
+        // The other half of CTR-011's invariant: the primary leaving
+        // must hand the flag on, never drop it. The party who joined
+        // next takes it — the record's own order, not an arbitrary one.
+        // The last party out takes the flag with them, which is the one
+        // state with no primary and no parties either.
+        let promotedName: string | undefined;
+        if (removed.isPrimary) {
+          const [next] = await tx
+            .select({ id: counterparties.id, name: counterparties.name })
+            .from(contractCounterparties)
+            .innerJoin(counterparties, eq(contractCounterparties.counterpartyId, counterparties.id))
+            .where(eq(contractCounterparties.contractId, current.row.id))
+            .orderBy(asc(contractCounterparties.createdAt), asc(sql`lower(${counterparties.name})`))
+            .limit(1);
+          if (next) {
+            await promotePrimary(tx, current.row.id, next.id);
+            promotedName = next.name;
+          }
+        }
+
+        const audit = { number: current.row.number, title: current.row.title };
+        await recordActivity(tx, {
+          entityType: "contract",
+          entityId: current.row.id,
+          actorId: request.user.id,
+          action: "contract.counterparty_removed",
+          visibility: "legal_only",
+          payload: { ...audit, counterparty: removedName, wasPrimary: removed.isPrimary },
+        });
+        // The promotion is its own entry: nobody asked for it, so the
+        // log has to say it happened rather than leave it implied by a
+        // removal two lines above.
+        if (promotedName !== undefined) {
+          await recordActivity(tx, {
+            entityType: "contract",
+            entityId: current.row.id,
+            actorId: request.user.id,
+            action: "contract.counterparty_primary_changed",
+            visibility: "legal_only",
+            payload: { ...audit, from: removedName, to: promotedName },
+          });
+        }
+        return counterpartiesEnvelope(tx, current);
+      });
+      return result;
+    },
+  );
+
+  app.post(
+    "/contracts/:number/counterparties/:counterpartyId/primary",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "setPrimaryContractCounterparty",
+        summary:
+          "Name which counterparty the contract is listed under " +
+          "(CTR-011). There is no route to clear the flag: the primary " +
+          "moves to another party or it stays where it is",
+        tags: ["contracts"],
+        params: NumberParams.extend({ counterpartyId: z.string() }),
+        response: { 200: CounterpartiesEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const { counterpartyId } = request.params;
+      const result = await app.db.transaction(async (tx) => {
+        const current = await editableContract(tx, request.params.number);
+        const [target] = await tx
+          .select({
+            id: counterparties.id,
+            name: counterparties.name,
+            isPrimary: contractCounterparties.isPrimary,
+          })
+          .from(contractCounterparties)
+          .innerJoin(counterparties, eq(contractCounterparties.counterpartyId, counterparties.id))
+          .where(
+            and(
+              eq(contractCounterparties.contractId, current.row.id),
+              eq(contractCounterparties.counterpartyId, counterpartyId),
+            ),
+          )
+          .limit(1);
+        if (!target) throw httpError(404, "That counterparty is not on this contract.");
+        if (target.isPrimary) throw httpError(409, "That counterparty is already the primary.");
+
+        await promotePrimary(tx, current.row.id, target.id);
+        await recordActivity(tx, {
+          entityType: "contract",
+          entityId: current.row.id,
+          actorId: request.user.id,
+          action: "contract.counterparty_primary_changed",
+          visibility: "legal_only",
+          payload: {
+            number: current.row.number,
+            title: current.row.title,
+            from: current.primaryCounterparty?.name ?? null,
+            to: target.name,
+          },
+        });
+        return counterpartiesEnvelope(tx, current);
+      });
+      return result;
     },
   );
 

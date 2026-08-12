@@ -8,8 +8,11 @@
  * status, priority, and risk from their selects, works the Team card,
  * archives the record (every input freezes, the sub-bar action flips),
  * and restores it. The signing-entity picker reads the M7 registry,
- * which never lists an archived entity. The activity bar mounts with
- * the applet set that exists before M9.
+ * which never lists an archived entity. The counterparty typeahead
+ * searches the book, commits an existing organization by id and an
+ * unknown name by name, never offers to create a name the search
+ * already answered with, and moves the primary. The activity bar mounts
+ * with the applet set that exists before M9.
  * Contributors are bounced home; unauthenticated visitors land on login.
  */
 
@@ -141,6 +144,8 @@ function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
     manager: null,
     // Which of ours signs is not known yet (CTR-011).
     entity: null,
+    // Nobody is recorded on the other side yet (CTR-011).
+    primaryCounterparty: null,
     priority: "medium",
     risk: null,
     description: "Three-year platform engagement.",
@@ -151,18 +156,47 @@ function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
   };
 }
 
+/** The counterparties the shared search answers with — the book the
+ * typeahead reads (CTR-011). */
+const BOOK = [
+  { id: "cp-helix", name: "Helix Labs GmbH", jurisdiction: "Germany" },
+  { id: "cp-orion", name: "Orion Cloud Ltd", jurisdiction: null },
+  { id: "cp-the-helix", name: "The Helix Group Ltd", jurisdiction: null },
+];
+
+/** One party on the record, as the API answers it. */
+function party(id: string, isPrimary: boolean) {
+  const found = BOOK.find((entry) => entry.id === id)!;
+  return { id: found.id, name: found.name, jurisdiction: found.jurisdiction, isPrimary };
+}
+
 /** The record loader's three reads plus the mutations under test. The
  * record is stateful: mutations answer with the row they produce, and
  * later GETs answer the latest row. */
 function recordApi(
   initial: Record<string, unknown>,
   initialTeam: Record<string, unknown>[] = [person("u1", "creator")],
+  initialParties: ReturnType<typeof party>[] = [],
 ) {
   let row = initial;
   let team = initialTeam;
+  let parties = initialParties;
   const patches: unknown[] = [];
   const posts: string[] = [];
   const teamCalls: string[] = [];
+  const counterpartyCalls: string[] = [];
+  const searches: (string | null)[] = [];
+
+  /** The API answers the row's primary alongside the party list, so the
+   * stub keeps the two in step the way the server does. */
+  const partiesEnvelope = () => {
+    const primary = parties.find((entry) => entry.isPrimary);
+    row = {
+      ...row,
+      primaryCounterparty: primary ? { id: primary.id, name: primary.name } : null,
+    };
+    return { contract: row, counterparties: parties };
+  };
   const statusById = new Map(OPTIONS.contractStatuses.map((status) => [status.id, status]));
   const handler = (call: StubCall): Response | undefined => {
     if (call.url.pathname === "/api/v1/contracts/options" && call.method === "GET") {
@@ -171,8 +205,57 @@ function recordApi(
     if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
       return json(200, { entities: REGISTRY });
     }
+    if (call.url.pathname === "/api/v1/counterparties" && call.method === "GET") {
+      const term = call.url.searchParams.get("query");
+      searches.push(term);
+      return json(200, {
+        counterparties: BOOK.filter(
+          (entry) => !term || entry.name.toLowerCase().includes(term.toLowerCase()),
+        ),
+      });
+    }
     if (call.url.pathname === "/api/v1/contracts/42" && call.method === "GET") {
-      return json(200, { contract: row, team });
+      return json(200, { contract: row, team, counterparties: parties });
+    }
+    if (call.url.pathname === "/api/v1/contracts/42/counterparties" && call.method === "POST") {
+      const body = call.body as { counterpartyId?: string; name?: string };
+      counterpartyCalls.push(
+        body.counterpartyId ? `add ${body.counterpartyId}` : `new ${body.name}`,
+      );
+      const found =
+        BOOK.find((entry) => entry.id === body.counterpartyId) ??
+        BOOK.find((entry) => entry.name.toLowerCase() === body.name?.toLowerCase());
+      const added = found
+        ? { ...found, isPrimary: parties.length === 0 }
+        : {
+            id: `cp-new-${parties.length}`,
+            name: body.name!,
+            jurisdiction: null,
+            isPrimary: parties.length === 0,
+          };
+      parties = [...parties, added];
+      return json(201, partiesEnvelope());
+    }
+    const partyPath = /^\/api\/v1\/contracts\/42\/counterparties\/([^/]+)(\/primary)?$/.exec(
+      call.url.pathname,
+    );
+    if (partyPath && call.method === "DELETE") {
+      const [, counterpartyId] = partyPath;
+      counterpartyCalls.push(`remove ${counterpartyId}`);
+      const left = parties.filter((entry) => entry.id !== counterpartyId);
+      // The API never leaves a contract with parties and no primary.
+      parties = left.some((entry) => entry.isPrimary)
+        ? left
+        : left.map((entry, index) => ({ ...entry, isPrimary: index === 0 }));
+      return json(200, partiesEnvelope());
+    }
+    if (partyPath?.[2] && call.method === "POST") {
+      const [, counterpartyId] = partyPath;
+      counterpartyCalls.push(`primary ${counterpartyId}`);
+      parties = parties.map((entry) => ({ ...entry, isPrimary: entry.id === counterpartyId }));
+      // Primary first, as the API orders the list.
+      parties = [...parties].sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary));
+      return json(200, partiesEnvelope());
     }
     if (call.url.pathname === "/api/v1/contracts/42" && call.method === "PATCH") {
       patches.push(call.body);
@@ -227,7 +310,7 @@ function recordApi(
     }
     return undefined;
   };
-  return { handler, patches, posts, teamCalls };
+  return { handler, patches, posts, teamCalls, counterpartyCalls, searches };
 }
 
 describe("the /contracts/:number record page", () => {
@@ -436,6 +519,194 @@ describe("the /contracts/:number record page", () => {
     ).toBeInTheDocument();
   });
 
+  it("commits an existing counterparty by id, so the typeahead never duplicates it", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    expect(
+      await screen.findByText("Nobody is recorded on the other side yet."),
+    ).toBeInTheDocument();
+    const picker = screen.getByLabelText("Counterparties");
+    await user.click(picker);
+    await user.type(picker, "Helix");
+
+    // Contains, not starts-with — both Helix organizations are offered.
+    await screen.findByRole("option", { name: /Helix Labs GmbH/ });
+    const listbox = screen.getByRole("listbox", { name: "Counterparty matches" });
+    const options = within(listbox).getAllByRole("option");
+    expect(options.map((option) => option.textContent)).toEqual([
+      "Helix Labs GmbHGermany",
+      "The Helix Group Ltd",
+      'Create "Helix"',
+    ]);
+
+    await user.click(screen.getByRole("option", { name: /Helix Labs GmbH/ }));
+    // The id goes over the wire, not the name: picking one we hold can
+    // never make a second record for it (CTR-011).
+    await waitFor(() => expect(api.counterpartyCalls).toEqual(["add cp-helix"]));
+    expect(screen.getByText("Helix Labs GmbH")).toBeInTheDocument();
+    // The first party on a contract is its primary.
+    expect(screen.getByText("Primary")).toBeInTheDocument();
+    // The input clears itself, ready for the next party.
+    expect(picker).toHaveValue("");
+  });
+
+  it("creates an unknown name inline, and withholds the offer for a name it found", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const picker = await screen.findByLabelText("Counterparties");
+    await user.click(picker);
+    await user.type(picker, "Vertex Materials SA");
+    await user.click(await screen.findByRole("option", { name: 'Create "Vertex Materials SA"' }));
+
+    await waitFor(() => expect(api.counterpartyCalls).toEqual(["new Vertex Materials SA"]));
+    expect(screen.getByText("Vertex Materials SA")).toBeInTheDocument();
+
+    // A name the search answers with exactly is not a new organization,
+    // so creating it is never offered.
+    await user.type(picker, "orion cloud ltd");
+    await waitFor(() =>
+      expect(screen.getByRole("option", { name: "Orion Cloud Ltd" })).toBeInTheDocument(),
+    );
+    expect(screen.queryByRole("option", { name: /^Create/ })).not.toBeInTheDocument();
+  });
+
+  it("walks the list with the arrow keys and commits the active row with Enter", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const picker = await screen.findByLabelText("Counterparties");
+    await user.click(picker);
+    await user.type(picker, "Helix");
+    await screen.findByRole("option", { name: /Helix Labs GmbH/ });
+
+    // The combobox names its active row for a screen reader, and the
+    // arrows are what move it.
+    await user.keyboard("{ArrowDown}");
+    await waitFor(() =>
+      expect(picker).toHaveAttribute(
+        "aria-activedescendant",
+        screen.getByRole("option", { name: "The Helix Group Ltd" }).id,
+      ),
+    );
+    await user.keyboard("{Enter}");
+    await waitFor(() => expect(api.counterpartyCalls).toEqual(["add cp-the-helix"]));
+  });
+
+  it("closes the list on Escape without committing anything", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const picker = await screen.findByLabelText("Counterparties");
+    await user.click(picker);
+    await user.type(picker, "Helix");
+    await screen.findByRole("option", { name: /Helix Labs GmbH/ });
+
+    await user.keyboard("{Escape}");
+    expect(picker).toHaveAttribute("aria-expanded", "false");
+    expect(picker).toHaveValue("");
+    expect(api.counterpartyCalls).toEqual([]);
+  });
+
+  it("never offers a counterparty the record already names", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: recordApi(contractRow(), undefined, [party("cp-helix", true)]).handler,
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const picker = await screen.findByLabelText("Counterparties");
+    await user.click(picker);
+    await user.type(picker, "Helix");
+    await screen.findByRole("option", { name: "The Helix Group Ltd" });
+    expect(screen.queryByRole("option", { name: /Helix Labs GmbH/ })).not.toBeInTheDocument();
+
+    // Nor is creating it offered under its own exact name: it is one we
+    // hold, so a second record for it must never be invited — even
+    // though this record already names it and the list is empty.
+    await user.clear(picker);
+    await user.type(picker, "Helix Labs GmbH");
+    expect(await screen.findByText("No counterparties to add.")).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: /^Create/ })).not.toBeInTheDocument();
+  });
+
+  it("moves the primary to another party, and takes a party off the contract", async () => {
+    const api = recordApi(contractRow(), undefined, [
+      party("cp-helix", true),
+      party("cp-orion", false),
+    ]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    // The primary leads the list and carries the only Primary marker.
+    expect(await screen.findByText("Primary")).toBeInTheDocument();
+    // Only the party that is not primary is offered the promotion.
+    expect(screen.getAllByRole("button", { name: "Make primary" })).toHaveLength(1);
+
+    await user.click(screen.getByRole("button", { name: "Make primary" }));
+    await waitFor(() => expect(api.counterpartyCalls).toEqual(["primary cp-orion"]));
+    await waitFor(() => expect(screen.getByText("Saved")).toBeInTheDocument());
+    // Still exactly one primary, and it is the other party now.
+    const rows = screen.getAllByRole("listitem");
+    expect(rows[0]!.textContent).toContain("Orion Cloud Ltd");
+    expect(rows[0]!.textContent).toContain("Primary");
+
+    await user.click(screen.getByRole("button", { name: "Take Helix Labs GmbH off the contract" }));
+    await waitFor(() =>
+      expect(api.counterpartyCalls).toEqual(["primary cp-orion", "remove cp-helix"]),
+    );
+    expect(screen.queryByText("Helix Labs GmbH")).not.toBeInTheDocument();
+  });
+
+  it("shows the API's refusal beside the counterparties when a write is turned down", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/contracts/options" && call.method === "GET") {
+          return json(200, OPTIONS);
+        }
+        if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
+          return json(200, { entities: REGISTRY });
+        }
+        if (call.url.pathname === "/api/v1/counterparties" && call.method === "GET") {
+          return json(200, { counterparties: BOOK });
+        }
+        if (call.url.pathname === "/api/v1/contracts/42" && call.method === "GET") {
+          return json(200, {
+            contract: contractRow(),
+            team: [person("u1", "creator")],
+            counterparties: [],
+          });
+        }
+        if (call.url.pathname === "/api/v1/contracts/42/counterparties" && call.method === "POST") {
+          return problem(409, "That counterparty is already on this contract.");
+        }
+        return undefined;
+      },
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const picker = await screen.findByLabelText("Counterparties");
+    await user.click(picker);
+    await user.type(picker, "Orion");
+    await user.click(await screen.findByRole("option", { name: "Orion Cloud Ltd" }));
+    expect(
+      await screen.findByText("That counterparty is already on this contract."),
+    ).toBeInTheDocument();
+  });
+
   it("shows the API's refusal beside the field when a commit fails", async () => {
     stubApi({
       signedIn: MEMBER,
@@ -447,7 +718,11 @@ describe("the /contracts/:number record page", () => {
           return json(200, { entities: REGISTRY });
         }
         if (call.url.pathname === "/api/v1/contracts/42" && call.method === "GET") {
-          return json(200, { contract: contractRow(), team: [person("u1", "creator")] });
+          return json(200, {
+            contract: contractRow(),
+            team: [person("u1", "creator")],
+            counterparties: [],
+          });
         }
         if (call.url.pathname === "/api/v1/contracts/42" && call.method === "PATCH") {
           return problem(400, "The status must be a live contract status.");
@@ -548,7 +823,11 @@ describe("the /contracts/:number record page", () => {
           return json(200, { entities: REGISTRY });
         }
         if (call.url.pathname === "/api/v1/contracts/42" && call.method === "GET") {
-          return json(200, { contract: contractRow(), team: [person("u1", "creator")] });
+          return json(200, {
+            contract: contractRow(),
+            team: [person("u1", "creator")],
+            counterparties: [],
+          });
         }
         if (call.url.pathname === "/api/v1/contracts/42/team" && call.method === "POST") {
           return problem(409, "This person already holds that role.");
@@ -566,7 +845,11 @@ describe("the /contracts/:number record page", () => {
   });
 
   it("archives the record — every input freezes and the action flips — then restores it", async () => {
-    const api = recordApi(contractRow(), [person("u1", "creator"), person("u2", "member")]);
+    const api = recordApi(
+      contractRow(),
+      [person("u1", "creator"), person("u2", "member")],
+      [party("cp-helix", true), party("cp-orion", false)],
+    );
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42");
     const user = userEvent.setup();
@@ -578,6 +861,7 @@ describe("the /contracts/:number record page", () => {
       "Title",
       "Owner",
       "Our entity",
+      "Counterparties",
       "Status",
       "Priority",
       "Risk",
@@ -585,6 +869,13 @@ describe("the /contracts/:number record page", () => {
     ]) {
       expect(screen.getByLabelText(label)).toBeDisabled();
     }
+    // The counterparties freeze too — the parties still read, but
+    // nothing about them can be changed.
+    expect(screen.getByText("Helix Labs GmbH")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Make primary" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Take Helix Labs GmbH off the contract/ }),
+    ).not.toBeInTheDocument();
     // The team freezes with everything else.
     expect(screen.getByRole("button", { name: "Add team member" })).toBeDisabled();
     expect(

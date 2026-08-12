@@ -134,6 +134,13 @@
       "when": 1786572699619,
       "tag": "0018_contract_signing_entity",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1786575433642,
+      "tag": "0019_counterparties",
+      "breakpoints": true
     }
   ]
 }

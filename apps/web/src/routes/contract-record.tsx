@@ -17,12 +17,15 @@
  * which role — so it takes a dialog, which is the compound-edit case
  * DES-017 carves out of the inline rule.
  *
- * Our side of the contract is CTR-011's: the Entity that signs, picked
- * from the M7 registry and labelled "Our entity" as the C2 mock draws
- * it. It commits like every other field. The picker reads the
- * registry's own Member+ list, so an archived entity is never offered;
- * one already saved on the record stays selectable as itself. Their
- * side — the counterparties — lands with its own ticket.
+ * Both sides of the contract are CTR-011's, and they sit side by side
+ * in the Contract card, labelled as the C2 mock labels them. "Our
+ * entity" is the Entity that signs, picked from the M7 registry.
+ * "Counterparties" is theirs: the party list, primary first, with the
+ * shared typeahead under it. The mock draws the counterparty as one
+ * read-only name in a hero meta strip that DES-017 removed with the
+ * page-level Edit toggle it belonged to, so it lands here with the
+ * other fields instead — the same move the Owner and the signing entity
+ * already made.
  *
  * This is the first production mount of the DES-016 record activity
  * bar. Its applet set is limited to what exists before M9: chat
@@ -51,6 +54,7 @@ import { authClient } from "../lib/auth-client";
 import {
   ADDABLE_TEAM_ROLES,
   contractReference,
+  type ContractCounterparty,
   riskLabel,
   severityLabel,
   SEVERITY_LEVELS,
@@ -72,6 +76,7 @@ import { AppShell } from "../components/shell/app-shell";
 import { RecordApplets } from "../components/shell/record-applets";
 import type { Applet } from "../components/shell/applets";
 import { Avatar } from "../components/avatar";
+import { CounterpartyPicker, type CounterpartyPick } from "../components/counterparty-picker";
 import { PageTitle } from "../components/page-title";
 import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Button } from "../components/ui/button";
@@ -103,6 +108,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     user,
     contract: record.data.contract,
     team: record.data.team,
+    counterparties: record.data.counterparties,
     contractStatuses: options.data.contractStatuses,
     users: options.data.users,
     entities: registry.data.entities,
@@ -111,9 +117,10 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
 
 /** The fields that commit as free text (DES-017); the Owner, our
  * signing entity, the status, priority, and risk have their own
- * selects. */
+ * selects, and the counterparties have their own routes. */
 type TextFieldKey = "title" | "description";
-type FieldKey = TextFieldKey | "managerId" | "entityId" | "statusId" | "priority" | "risk";
+type FieldKey =
+  TextFieldKey | "managerId" | "entityId" | "counterparties" | "statusId" | "priority" | "risk";
 
 /** The one applet the record offers before M9 — SET-001's deep link to
  * the contract configuration behind this record. */
@@ -137,7 +144,7 @@ export function ContractRecordPage() {
 }
 
 function ContractRecord() {
-  const { user, contract, team, contractStatuses, users, entities } =
+  const { user, contract, team, counterparties, contractStatuses, users, entities } =
     useLoaderData<typeof contractRecordLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
@@ -145,6 +152,8 @@ function ContractRecord() {
   /** The saved record — the server's truth after the last commit. */
   const [saved, setSaved] = useState<ContractRow>(contract);
   const [roster, setRoster] = useState<ContractTeamMember[]>(team);
+  /** The other side (CTR-011), primary first as the API orders it. */
+  const [parties, setParties] = useState<ContractCounterparty[]>(counterparties);
   const [drafts, setDrafts] = useState<Record<TextFieldKey, string>>(() => textDrafts(contract));
   const [fieldStatus, setFieldStatus] = useState<Partial<Record<FieldKey, FieldStatus>>>({});
   const [fieldError, setFieldError] = useState<Partial<Record<FieldKey, string | undefined>>>({});
@@ -459,6 +468,22 @@ function ContractRecord() {
                     />
                   </div>
                 </div>
+                {/* Their side, next to ours: the two never blur
+                    (CONTEXT.md), and the record reads them together. */}
+                <CounterpartiesField
+                  contractNumber={saved.number}
+                  parties={parties}
+                  frozen={archived}
+                  status={fieldStatus.counterparties ?? "idle"}
+                  error={fieldError.counterparties}
+                  onStatus={(next, detail) => note("counterparties", next, detail)}
+                  onChange={(row, next) => {
+                    // The primary decides what the list column and the
+                    // record hero show, so the row moves with the party.
+                    setSaved(row);
+                    setParties(next);
+                  }}
+                />
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="contract-status">
                     <FormattedMessage id="contracts.form.status" defaultMessage="Status" />
@@ -893,6 +918,209 @@ function AddTeamMemberDialog({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * The other side of the contract (CTR-011), as one field of the record:
+ * the parties it names, primary first, and the shared typeahead that
+ * adds another. Only the primary reaches the contracts list, so the
+ * record is where a tripartite deal is recorded honestly instead of
+ * living in the description.
+ *
+ * Every write here answers with the contract row as well as the party
+ * list, because moving the primary changes what the row says — the
+ * caller adopts both or the two drift apart.
+ */
+function CounterpartiesField({
+  contractNumber,
+  parties,
+  frozen,
+  status,
+  error,
+  onStatus,
+  onChange,
+}: Readonly<{
+  /** CTR-003's reference — the address every contract route takes. */
+  contractNumber: number;
+  parties: readonly ContractCounterparty[];
+  /** The record is archived: it reads as facts until it is restored. */
+  frozen: boolean;
+  status: FieldStatus;
+  error: string | undefined;
+  onStatus: (status: FieldStatus, detail?: string) => void;
+  onChange: (contract: ContractRow, parties: ContractCounterparty[]) => void;
+}>) {
+  const intl = useIntl();
+  /**
+   * One write at a time: a second, launched mid-flight, would race the
+   * first, and the loser's party list would overwrite the winner's.
+   * The gate is a ref, not the state below, because two clicks in one
+   * tick read the same state and would both pass — the ref is written
+   * before the request goes out. The state exists only to render the
+   * row controls as standing down.
+   */
+  const inFlight = useRef(false);
+  const [busy, setBusy] = useState(false);
+  /** A removal unmounts the row that held focus, so focus has to be put
+   * somewhere deliberate — the picker, which is where the next thing a
+   * Legal Team Member does starts (DES-010's return-focus rule). */
+  const picker = useRef<HTMLInputElement>(null);
+
+  /** One counterparty write, whichever it was: they all answer with the
+   * contract row and the party list, and they all report through the
+   * same field micro-state (DES-017). */
+  async function write(
+    call: Promise<{
+      data?: { contract: ContractRow; counterparties: ContractCounterparty[] };
+      error?: unknown;
+    }>,
+  ) {
+    if (inFlight.current) {
+      // A refused pick has to say so. Dropping it in silence would look
+      // exactly like a pick that landed and then vanished.
+      onStatus(
+        "error",
+        intl.formatMessage({
+          id: "contracts.counterparty.busy",
+          defaultMessage: "One change at a time. Wait for the last one to save.",
+        }),
+      );
+      return;
+    }
+    inFlight.current = true;
+    setBusy(true);
+    onStatus("saving");
+    const { data, error: problem } = await call
+      .catch(() => ({ data: undefined, error: undefined }))
+      .finally(() => {
+        inFlight.current = false;
+        setBusy(false);
+      });
+    if (!data) {
+      onStatus("error", problemDetail(problem));
+      return;
+    }
+    onChange(data.contract, data.counterparties);
+    onStatus("saved");
+  }
+
+  function add(pick: CounterpartyPick) {
+    void write(
+      api.POST("/api/v1/contracts/{number}/counterparties", {
+        params: { path: { number: contractNumber } },
+        body: pick,
+      }),
+    );
+  }
+
+  async function remove(party: ContractCounterparty) {
+    await write(
+      api.DELETE("/api/v1/contracts/{number}/counterparties/{counterpartyId}", {
+        params: { path: { number: contractNumber, counterpartyId: party.id } },
+      }),
+    );
+    picker.current?.focus();
+  }
+
+  function makePrimary(party: ContractCounterparty) {
+    void write(
+      api.POST("/api/v1/contracts/{number}/counterparties/{counterpartyId}/primary", {
+        params: { path: { number: contractNumber, counterpartyId: party.id } },
+      }),
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5 @2xl/page:col-span-2">
+      <div className="flex items-center gap-2">
+        <Label htmlFor="contract-counterparty">
+          <FormattedMessage id="contracts.form.counterparties" defaultMessage="Counterparties" />
+        </Label>
+        <StatusNote status={status} detail={error} />
+      </div>
+      {parties.length > 0 && (
+        <ul className="flex flex-col rounded-button border border-border-default">
+          {parties.map((party) => (
+            <li
+              key={party.id}
+              className="flex h-9 items-center gap-2 border-b border-border-default px-2.5 last:border-b-0"
+            >
+              <span className="truncate text-base">{party.name}</span>
+              {/* The disambiguator: two organizations do share a name. */}
+              {party.jurisdiction && (
+                <span className="shrink-0 text-xs text-muted">{party.jurisdiction}</span>
+              )}
+              {party.isPrimary && (
+                <span className="inline-flex shrink-0 rounded-pill bg-status-neutral-bg px-2 py-0.5 text-xs font-medium text-status-neutral-fg">
+                  <FormattedMessage id="contracts.counterparty.primary" defaultMessage="Primary" />
+                </span>
+              )}
+              <span className="ms-auto flex shrink-0 items-center gap-1">
+                {/* There is no control to un-name a primary: the flag
+                    moves to another party or it stays (CTR-011). */}
+                {!party.isPrimary && !frozen && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={busy}
+                    onClick={() => makePrimary(party)}
+                  >
+                    <FormattedMessage
+                      id="contracts.counterparty.makePrimary"
+                      defaultMessage="Make primary"
+                    />
+                  </Button>
+                )}
+                {!frozen && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    disabled={busy}
+                    aria-label={intl.formatMessage(
+                      {
+                        id: "contracts.counterparty.remove",
+                        defaultMessage: "Take {name} off the contract",
+                      },
+                      { name: party.name },
+                    )}
+                    onClick={() => void remove(party)}
+                  >
+                    <X size={16} aria-hidden="true" />
+                  </Button>
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {parties.length === 0 && (
+        <p className="text-base text-muted">
+          <FormattedMessage
+            id="contracts.counterparty.empty"
+            defaultMessage="Nobody is recorded on the other side yet."
+          />
+        </p>
+      )}
+      {/* Only the archived record freezes the picker. A write in flight
+          must not take the focus and the half-typed name with it —
+          `write` refuses a second one on its own. */}
+      <CounterpartyPicker
+        id="contract-counterparty"
+        ref={picker}
+        disabled={frozen}
+        exclude={parties.map((party) => party.id)}
+        onPick={add}
+      />
+      {/* The C10 mock's own line, put in the imperative DES-015 asks
+          for and kept where the affordance now lives. */}
+      <p className="text-xs text-muted">
+        <FormattedMessage
+          id="contracts.counterparty.hint"
+          defaultMessage="Type an unknown name to create it. Add its details later."
+        />
+      </p>
+    </div>
   );
 }
 
