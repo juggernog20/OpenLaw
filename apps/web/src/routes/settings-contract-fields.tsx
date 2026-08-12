@@ -590,17 +590,20 @@ function ArchiveFieldDialog({
         <div className="mt-4 flex flex-col gap-4">
           <div className="flex items-start gap-2 rounded-card bg-status-warning-bg p-3 text-sm text-status-warning-fg">
             <TriangleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
-            {/* Fields never reassign and never block: stored values are
-                retained by rule (MTR-014), which is the whole message. */}
+            {/* Fields never reassign and never block: everything is
+                retained by rule (MTR-014), which is the whole message.
+                The count is type attachments until the record
+                milestones (M8, M22) add records holding values — the
+                copy revisits then. */}
             <p>
               <FormattedMessage
                 id="settings.contractFields.archiveWarning"
                 defaultMessage={
-                  "{count, plural, =0 {{name} is not used by any records. The definition " +
-                  "is kept and the field can be restored.} one {{name} holds values on " +
-                  "# record — they are kept, hidden until the field is restored.} " +
-                  "other {{name} holds values on # records — they are kept, hidden " +
-                  "until the field is restored.}}"
+                  "{count, plural, =0 {{name} is not attached to any type. The definition " +
+                  "is kept and the field can be restored.} one {{name} is attached to " +
+                  "# type — the attachment is kept, hidden until the field is restored.} " +
+                  "other {{name} is attached to # types — the attachments are kept, " +
+                  "hidden until the field is restored.}}"
                 }
                 values={{ name: target.displayName, count: target.inUseCount }}
               />

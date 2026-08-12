@@ -12,7 +12,7 @@
  * milestone (M8).
  */
 
-import { pgTable, primaryKey, text } from "drizzle-orm/pg-core";
+import { index, pgTable, primaryKey, text } from "drizzle-orm/pg-core";
 import { contractTypes } from "./contract-types.js";
 import { typeFieldColumns } from "./fields.js";
 
@@ -26,7 +26,12 @@ export const contractTypeFields = pgTable(
       .references(() => contractTypes.id, { onDelete: "cascade" }),
     ...typeFieldColumns(),
   },
-  (table) => [primaryKey({ columns: [table.typeId, table.fieldId] })],
+  (table) => [
+    primaryKey({ columns: [table.typeId, table.fieldId] }),
+    // The PK leads with the type id; the catalog's per-field counts and
+    // the fields FK checks look up by field id alone.
+    index("contract_type_fields_field_id_idx").on(table.fieldId),
+  ],
 );
 
 export type ContractTypeField = typeof contractTypeFields.$inferSelect;

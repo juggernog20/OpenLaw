@@ -105,6 +105,8 @@ export interface TypeEditorMessages {
   detach: MessageDescriptor;
   detached: MessageDescriptor;
   attach: MessageDescriptor;
+  /** The aria-live confirmation after a successful attach. */
+  attached: MessageDescriptor;
   allAttached: MessageDescriptor;
   empty: MessageDescriptor;
   reorder: MessageDescriptor;
@@ -239,6 +241,9 @@ export function TypeEditorScreen({
     if (data) {
       setRows((current) => [...current, data]);
       setAttachStatus("saved");
+      // The new row lands below the menu, out of a reader's view —
+      // announce it like detach and reorder do (WCAG 4.1.3).
+      setAnnouncement(intl.formatMessage(messages.attached, { name: field.displayName }));
     } else {
       setAttachStatus("error");
       setAttachError(detail);
@@ -500,7 +505,12 @@ export function TypeEditorScreen({
               <div className="flex items-center gap-2 px-4 py-2.5">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="secondary" size="sm" disabled={attachable.length === 0}>
+                    {/* Not disabled when the catalog is exhausted: Radix
+                        returns focus here when the menu closes, and a
+                        disabled trigger drops it to the body after the
+                        last attach (DES-011). The empty state renders
+                        inside the menu instead. */}
+                    <Button variant="secondary" size="sm">
                       <Plus size={16} aria-hidden="true" />
                       <FormattedMessage {...messages.attach} />
                     </Button>
@@ -512,6 +522,11 @@ export function TypeEditorScreen({
                         <span className="text-sm text-muted">{fieldCaption(field)}</span>
                       </DropdownMenuItem>
                     ))}
+                    {attachable.length === 0 && (
+                      <div className="px-3 py-2 text-sm text-muted">
+                        <FormattedMessage {...messages.allAttached} />
+                      </div>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
                 <StatusNote status={attachStatus} detail={attachError} />

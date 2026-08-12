@@ -1,0 +1,2 @@
+CREATE INDEX "contract_type_fields_field_id_idx" ON "contract_type_fields" USING btree ("field_id");--> statement-breakpoint
+CREATE INDEX "matter_type_fields_field_id_idx" ON "matter_type_fields" USING btree ("field_id");

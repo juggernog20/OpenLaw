@@ -435,6 +435,57 @@ describe("the DD-017 audit trail", () => {
     expect(attachedEntry?.payload).toMatchObject({ typeSlug: "employment" });
   });
 
+  it("writes exactly one entry per mutation — a duplicate write fails the count", async () => {
+    // A fresh type isolates the count from every mutation the suite ran
+    // above: filter the trail by this type's slug and the numbers are
+    // exact, whatever runs before.
+    const created = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/matter-types",
+      cookies: adminCookies,
+      payload: { displayName: "Audit Count Probe" },
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const probe = created.json().matterType as TypeRow;
+
+    const first = await createField("Audit probe one", "global");
+    const second = await createField("Audit probe two", "global");
+
+    expect((await attach(probe.id, { fieldId: first.id })).statusCode).toBe(201);
+    expect((await attach(probe.id, { fieldId: second.id })).statusCode).toBe(201);
+    const reordered = await harness.app.inject({
+      method: "PUT",
+      url: `/api/v1/matter-types/${probe.id}/fields/order`,
+      cookies: adminCookies,
+      payload: { fieldIds: [second.id, first.id] },
+    });
+    expect(reordered.statusCode, reordered.body).toBe(200);
+    const required = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/matter-types/${probe.id}/fields/${first.id}`,
+      cookies: adminCookies,
+      payload: { isRequired: true },
+    });
+    expect(required.statusCode, required.body).toBe(200);
+    const detached = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/matter-types/${probe.id}/fields/${second.id}`,
+      cookies: adminCookies,
+    });
+    expect(detached.statusCode, detached.body).toBe(204);
+
+    const mine = (await attachmentAuditRows()).filter(
+      (entry) => (entry.payload as { typeSlug?: string }).typeSlug === probe.slug,
+    );
+    const tally = (action: string) =>
+      mine.filter((entry) => entry.action === `matter_type_field.${action}`).length;
+    expect(tally("attached")).toBe(2);
+    expect(tally("reordered")).toBe(1);
+    expect(tally("required_changed")).toBe(1);
+    expect(tally("detached")).toBe(1);
+    expect(mine).toHaveLength(5);
+  });
+
   it("does not log a required change to the current value", async () => {
     const employment = await typeBySlug("employment");
     const [first] = await listAttached(employment.id);
