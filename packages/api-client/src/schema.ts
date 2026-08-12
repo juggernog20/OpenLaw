@@ -425,7 +425,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The contract-type taxonomy in display order (CTR-002); archived rows only with includeArchived=true */
+    /** The contract type taxonomy in display order (CTR-002); archived rows only with includeArchived=true */
     get: operations["listContractTypes"];
     put?: never;
     /** Add a contract type: the slug is derived here, once, and is immutable after creation; the row appends to the display order */
@@ -443,7 +443,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** One contract type — the read behind the type editor (#84) */
+    /** One contract type — the read behind the type editor */
     get: operations["getContractType"];
     put?: never;
     post?: never;
@@ -451,7 +451,7 @@ export interface paths {
     delete: operations["deleteContractType"];
     options?: never;
     head?: never;
-    /** Rename a contract type's display name (DES-017 in-place rename) or edit its description (#84); the slug never changes, and even `other` may rename */
+    /** Rename a contract type's display name (DES-017 in-place rename) or edit its description; the slug never changes, and even `other` may rename */
     patch: operations["updateContractType"];
     trace?: never;
   };
@@ -513,11 +513,11 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** One contract type's attached fields in per-type order (CTR-016) — the type editor's Attached fields card */
-    get: operations["listAttachedFields"];
+    /** One contract type's attached fields in per-type order — the type editor's Attached fields card */
+    get: operations["listContractTypeFields"];
     put?: never;
     /** Attach a catalog field to a contract type: contract-scoped and global fields only (CTR-016), appended to the per-type order, optional from the start unless isRequired says otherwise */
-    post: operations["attachField"];
+    post: operations["attachContractTypeField"];
     delete?: never;
     options?: never;
     head?: never;
@@ -535,11 +535,11 @@ export interface paths {
     put?: never;
     post?: never;
     /** Detach a field from a contract type: the join row goes, the catalog definition and stored values stay (MTR-014) */
-    delete: operations["detachField"];
+    delete: operations["detachContractTypeField"];
     options?: never;
     head?: never;
-    /** Set an attachment's required flag: per attachment, so a field can be required for NDAs and optional elsewhere (CTR-016); hard enforcement arrives with contract records (M8) */
-    patch: operations["setAttachedFieldRequired"];
+    /** Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard enforcement arrives with the record milestone (M8) */
+    patch: operations["setContractTypeFieldRequired"];
     trace?: never;
   };
   "/api/v1/contract-types/{id}/fields/order": {
@@ -551,7 +551,148 @@ export interface paths {
     };
     get?: never;
     /** Apply a full permutation of one type's attached fields (SET-003 immediate apply); per-type orders renumber from 1 */
-    put: operations["reorderAttachedFields"];
+    put: operations["reorderContractTypeFields"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matter-types": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The matter type taxonomy in display order (MTR-001); archived rows only with includeArchived=true */
+    get: operations["listMatterTypes"];
+    put?: never;
+    /** Add a matter type: the slug is derived here, once, and is immutable after creation; the row appends to the display order */
+    post: operations["createMatterType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matter-types/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One matter type — the read behind the type editor */
+    get: operations["getMatterType"];
+    put?: never;
+    post?: never;
+    /** Hard-delete a matter type; `other` refuses (MTR-001), and once matters exist (M22) an in-use type will refuse too */
+    delete: operations["deleteMatterType"];
+    options?: never;
+    head?: never;
+    /** Rename a matter type's display name (DES-017 in-place rename) or edit its description; the slug never changes, and even `other` may rename */
+    patch: operations["updateMatterType"];
+    trace?: never;
+  };
+  "/api/v1/matter-types/order": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs */
+    put: operations["reorderMatterTypes"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matter-types/{id}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Archive a matter type (SET-003 guarded): it leaves pickers and the default list; nothing is deleted; `other` refuses */
+    post: operations["archiveMatterType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matter-types/{id}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Restore an archived matter type (SET-003's recovery story) to the end of the display order */
+    post: operations["restoreMatterType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matter-types/{id}/fields": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One matter type's attached fields in per-type order — the type editor's Attached fields card */
+    get: operations["listMatterTypeFields"];
+    put?: never;
+    /** Attach a catalog field to a matter type: global fields only until M22 opens the matter scope (MTR-011), appended to the per-type order, optional from the start unless isRequired says otherwise */
+    post: operations["attachMatterTypeField"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matter-types/{id}/fields/{fieldId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Detach a field from a matter type: the join row goes, the catalog definition and stored values stay (MTR-014) */
+    delete: operations["detachMatterTypeField"];
+    options?: never;
+    head?: never;
+    /** Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard enforcement arrives with the record milestone (M22) */
+    patch: operations["setMatterTypeFieldRequired"];
+    trace?: never;
+  };
+  "/api/v1/matter-types/{id}/fields/order": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Apply a full permutation of one type's attached fields (SET-003 immediate apply); per-type orders renumber from 1 */
+    put: operations["reorderMatterTypeFields"];
     post?: never;
     delete?: never;
     options?: never;
@@ -689,7 +830,7 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    /** Move a field's scope (CTR-016): promotion to global is always safe (values stay keyed by slug); narrowing back is refused while another module attaches the field */
+    /** Move a field's scope (CTR-016): promotion to global is always safe (values stay keyed by slug); any move into a module is refused while another module attaches the field */
     put: operations["setFieldScope"];
     post?: never;
     delete?: never;
@@ -2311,7 +2452,7 @@ export interface operations {
       };
     };
   };
-  listAttachedFields: {
+  listContractTypeFields: {
     parameters: {
       query?: never;
       header?: never;
@@ -2363,7 +2504,7 @@ export interface operations {
       };
     };
   };
-  attachField: {
+  attachContractTypeField: {
     parameters: {
       query?: never;
       header?: never;
@@ -2422,7 +2563,7 @@ export interface operations {
       };
     };
   };
-  detachField: {
+  detachContractTypeField: {
     parameters: {
       query?: never;
       header?: never;
@@ -2452,7 +2593,7 @@ export interface operations {
       };
     };
   };
-  setAttachedFieldRequired: {
+  setContractTypeFieldRequired: {
     parameters: {
       query?: never;
       header?: never;
@@ -2511,7 +2652,7 @@ export interface operations {
       };
     };
   };
-  reorderAttachedFields: {
+  reorderContractTypeFields: {
     parameters: {
       query?: never;
       header?: never;
@@ -2552,6 +2693,608 @@ export interface operations {
                 | "entity";
               /** @enum {string} */
               moduleScope: "contract" | "global";
+              displayOrder: number;
+              isRequired: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listMatterTypes: {
+    parameters: {
+      query?: {
+        includeArchived?: "true" | "false";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterTypes: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createMatterType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getMatterType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteMatterType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateMatterType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName?: string;
+          description?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  reorderMatterTypes: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          ids: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterTypes: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  archiveMatterType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          reassignToId?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  restoreMatterType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listMatterTypeFields: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            attachedFields: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              moduleScope: "global";
+              displayOrder: number;
+              isRequired: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  attachMatterTypeField: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          fieldId: string;
+          isRequired?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            attachedField: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              moduleScope: "global";
+              displayOrder: number;
+              isRequired: boolean;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  detachMatterTypeField: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        fieldId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setMatterTypeFieldRequired: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        fieldId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          isRequired: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            attachedField: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              moduleScope: "global";
+              displayOrder: number;
+              isRequired: boolean;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  reorderMatterTypeFields: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          fieldIds: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            attachedFields: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              /** @enum {string} */
+              moduleScope: "global";
               displayOrder: number;
               isRequired: boolean;
             }[];
