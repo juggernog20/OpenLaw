@@ -119,9 +119,7 @@ describe("the /entities/:entityId record page", () => {
     expect(screen.getByLabelText("Formed on")).toHaveValue("2014-03-12");
     expect(screen.getByLabelText("Registration no.")).toHaveValue("08841201");
     expect(screen.getByLabelText("Tax ID")).toHaveValue("GB 927 4801 33");
-    expect(screen.getByLabelText("Registered agent")).toHaveValue(
-      "Aldgate Corporate Services Ltd",
-    );
+    expect(screen.getByLabelText("Registered agent")).toHaveValue("Aldgate Corporate Services Ltd");
     expect(screen.getByLabelText("Registered address")).toHaveValue(
       "1 Gresham Street, London EC2V 7BX, United Kingdom",
     );

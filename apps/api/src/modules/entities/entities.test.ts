@@ -135,8 +135,11 @@ const entityAuditRows = () =>
 const getEntity = (cookies: Record<string, string>, id: string) =>
   harness.app.inject({ method: "GET", url: `/api/v1/entities/${id}`, cookies });
 
-const patchEntity = (cookies: Record<string, string>, id: string, payload: Record<string, unknown>) =>
-  harness.app.inject({ method: "PATCH", url: `/api/v1/entities/${id}`, cookies, payload });
+const patchEntity = (
+  cookies: Record<string, string>,
+  id: string,
+  payload: Record<string, unknown>,
+) => harness.app.inject({ method: "PATCH", url: `/api/v1/entities/${id}`, cookies, payload });
 
 describe("the ENT-004 access floor", () => {
   it("refuses an unauthenticated request as 401 on every route", async () => {

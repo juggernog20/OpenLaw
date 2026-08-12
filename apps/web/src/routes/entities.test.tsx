@@ -241,8 +241,8 @@ describe("the /entities destination", () => {
 
     // Toggling back off keeps the restored entity in the working list.
     await user.click(screen.getByRole("switch", { name: "Show archived" }));
-    await waitFor(() =>
-      expect(screen.getAllByRole("row").length).toBe(3), // header + two live rows
+    await waitFor(
+      () => expect(screen.getAllByRole("row").length).toBe(3), // header + two live rows
     );
     expect(screen.getByText("Mistake Ltd")).toBeInTheDocument();
   });

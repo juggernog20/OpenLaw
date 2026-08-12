@@ -17,13 +17,7 @@
  */
 
 import { useState, type ReactNode } from "react";
-import {
-  Link,
-  redirect,
-  useLoaderData,
-  useNavigate,
-  type LoaderFunctionArgs,
-} from "react-router";
+import { Link, redirect, useLoaderData, useNavigate, type LoaderFunctionArgs } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Archive, ArchiveRestore, Building2, ChevronRight } from "lucide-react";
 import { api } from "../lib/api";
@@ -91,7 +85,9 @@ export function EntityRecordPage() {
 
   /** The saved record — the server's truth after the last commit. */
   const [saved, setSaved] = useState<EntityRow>(entity as EntityRow);
-  const [drafts, setDrafts] = useState<Record<TextFieldKey, string>>(() => textDrafts(entity as EntityRow));
+  const [drafts, setDrafts] = useState<Record<TextFieldKey, string>>(() =>
+    textDrafts(entity as EntityRow),
+  );
   const [formedOnDraft, setFormedOnDraft] = useState((entity as EntityRow).formedOn ?? "");
   const [fieldStatus, setFieldStatus] = useState<Partial<Record<FieldKey, FieldStatus>>>({});
   const [fieldError, setFieldError] = useState<Partial<Record<FieldKey, string | undefined>>>({});
@@ -161,9 +157,10 @@ export function EntityRecordPage() {
   async function archiveOrRestore() {
     setArchiveStatus("saving");
     setArchiveError(undefined);
-    const { data, error } = await (archived
-      ? api.POST("/api/v1/entities/{id}/restore", { params: { path: { id: saved.id } } })
-      : api.POST("/api/v1/entities/{id}/archive", { params: { path: { id: saved.id } } })
+    const { data, error } = await (
+      archived
+        ? api.POST("/api/v1/entities/{id}/restore", { params: { path: { id: saved.id } } })
+        : api.POST("/api/v1/entities/{id}/archive", { params: { path: { id: saved.id } } })
     ).catch(() => ({ data: undefined, error: undefined }));
     if (data) {
       const row = data.entity as EntityRow;
@@ -190,9 +187,7 @@ export function EntityRecordPage() {
           id={controlId}
           value={drafts[key]}
           disabled={archived}
-          onChange={(event) =>
-            setDrafts((current) => ({ ...current, [key]: event.target.value }))
-          }
+          onChange={(event) => setDrafts((current) => ({ ...current, [key]: event.target.value }))}
           onBlur={() => commitText(key)}
           onKeyDown={(event) => {
             if (event.key === "Enter") commitText(key);
@@ -294,20 +289,25 @@ export function EntityRecordPage() {
                   value={saved.entityTypeId}
                   className={CONTROL_CLASS}
                   disabled={archived}
-                  onChange={(event) => void commit("entityTypeId", { entityTypeId: event.target.value })}
+                  onChange={(event) =>
+                    void commit("entityTypeId", { entityTypeId: event.target.value })
+                  }
                 >
                   {/* The saved type may be archived and so absent from the
                       picker read (ENT-008) — keep it selectable as itself. */}
-                  {!entityTypes.some((option: EntityTypeOption) => option.id === saved.entityTypeId) && (
-                    <option value={saved.entityTypeId}>{saved.entityTypeName}</option>
-                  )}
+                  {!entityTypes.some(
+                    (option: EntityTypeOption) => option.id === saved.entityTypeId,
+                  ) && <option value={saved.entityTypeId}>{saved.entityTypeName}</option>}
                   {entityTypes.map((option: EntityTypeOption) => (
                     <option key={option.id} value={option.id}>
                       {option.displayName}
                     </option>
                   ))}
                 </select>
-                <StatusNote status={fieldStatus.entityTypeId ?? "idle"} detail={fieldError.entityTypeId} />
+                <StatusNote
+                  status={fieldStatus.entityTypeId ?? "idle"}
+                  detail={fieldError.entityTypeId}
+                />
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
@@ -320,7 +320,9 @@ export function EntityRecordPage() {
                   value={saved.status}
                   className={CONTROL_CLASS}
                   disabled={archived}
-                  onChange={(event) => void commit("status", { status: event.target.value as EntityStatus })}
+                  onChange={(event) =>
+                    void commit("status", { status: event.target.value as EntityStatus })
+                  }
                 >
                   {ENTITY_STATUSES.map((status) => (
                     <option key={status} value={status}>
