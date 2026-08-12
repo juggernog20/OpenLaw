@@ -31,6 +31,9 @@ const buttonVariants = cva(
       size: {
         default: "h-8 px-3",
         sm: "h-7 px-2",
+        // Icon-only: 24×24 is DES-011's minimum hit target, so a 16px
+        // glyph carries 4px of padding rather than being its own target.
+        icon: "size-6",
       },
     },
     defaultVariants: {
@@ -43,6 +46,11 @@ const buttonVariants = cva(
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   asChild?: boolean;
+  /** React 19 passes a function component's ref straight through props,
+   * so no forwardRef wrapper is needed — the type just has to say so.
+   * Callers that move focus by hand (a destructive row action clearing
+   * the element that held it) need this. */
+  ref?: React.Ref<HTMLButtonElement>;
 }
 
 export function Button({

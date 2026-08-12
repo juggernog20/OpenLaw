@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The Contracts destination (M8/1), reduced to what the contract record
- * core carries: the list (reference, title, type, status — ordered
- * newest reference first by the API, each row opening its record page
- * at `/contracts/<number>`), the create dialog that takes a title and a
- * type, an empty state that says what the module is, and the
- * show-archived toggle with a row-level restore. Owner, primary
- * counterparty, and value join the list with the tickets that add
- * those columns to the record. The loader is the client half of the
- * Member+ gate; the API's 403 is the real refusal.
+ * The Contracts destination (M8), reduced to what the contract record
+ * carries so far: the list (reference, title, type, status, Owner —
+ * ordered newest reference first by the API, each row opening its
+ * record page at `/contracts/<number>`), the create dialog that takes a
+ * title and a type, an empty state that says what the module is, and
+ * the show-archived toggle with a row-level restore. The C1 mock's
+ * remaining columns — counterparty, risk, value, expiry — join with the
+ * tickets that add those fields to the record. The loader is the client
+ * half of the Member+ gate; the API's 403 is the real refusal.
  */
 
 import { useState } from "react";
 import { Link, redirect, useLoaderData, useNavigate } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
-import { FileText, Plus, Signature } from "lucide-react";
+import { FilePen, FileText, Plus } from "lucide-react";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import {
@@ -30,6 +30,7 @@ import { isMemberPlus } from "../lib/roles";
 import { currentUser, needsSetup } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
+import { Avatar } from "../components/avatar";
 import { PageTitle } from "../components/page-title";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
@@ -190,11 +191,14 @@ export function ContractsPage() {
   );
 }
 
-/** The module's pitch, for the first visit. */
+/** The module's pitch, for the first visit. The C17 mock's second route
+ * in — convert an intake request from the Inbox — waits for intake
+ * (M20/M21), so the first visit is offered the one door that exists. */
 function EmptyContracts({ onCreate }: Readonly<{ onCreate: () => void }>) {
   return (
     <div className="flex flex-col items-center gap-4 rounded-card border border-border-default bg-raised px-6 py-16 text-center">
-      <Signature size={24} aria-hidden="true" className="text-subtle" />
+      {/* The destination's own glyph, as the C17 mock and the nav draw it. */}
+      <FilePen size={24} aria-hidden="true" className="text-subtle" />
       <div className="flex flex-col gap-1">
         <h2 className="text-md font-semibold">
           <FormattedMessage id="contracts.empty.title" defaultMessage="No contracts yet" />
@@ -251,6 +255,9 @@ function ContractsTable({
             <th scope="col" className="w-44 px-4 py-2 text-start font-medium">
               <FormattedMessage id="contracts.column.status" defaultMessage="Status" />
             </th>
+            <th scope="col" className="w-48 px-4 py-2 text-start font-medium">
+              <FormattedMessage id="contracts.column.owner" defaultMessage="Owner" />
+            </th>
             {showArchived && (
               <th scope="col" className="w-24 px-4 py-2 text-end font-medium">
                 <span className="sr-only">
@@ -289,6 +296,26 @@ function ContractsTable({
                 >
                   {row.statusName}
                 </span>
+              </td>
+              <td className="px-4 py-2.5">
+                {row.manager ? (
+                  <span
+                    className={`flex min-w-0 items-center gap-2 ${row.manager.archived ? "opacity-50" : ""}`}
+                  >
+                    <Avatar
+                      name={row.manager.displayName}
+                      image={row.manager.image}
+                      className="size-6"
+                    />
+                    <span className="truncate text-sm">{row.manager.displayName}</span>
+                  </span>
+                ) : (
+                  // Unassigned is a real state — the contract is in
+                  // triage until someone takes it (CTR-004).
+                  <span className="text-sm text-muted">
+                    <FormattedMessage id="contracts.ownerUnassigned" defaultMessage="Unassigned" />
+                  </span>
+                )}
               </td>
               {showArchived && (
                 <td className="px-4 py-2.5 text-end">

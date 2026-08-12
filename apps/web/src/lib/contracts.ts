@@ -4,7 +4,8 @@
  * The contracts vocabulary shared by the list (/contracts) and the
  * record page (/contracts/:number): the row shape the API answers, the
  * C-### reference (CTR-003), the DES-018 severity ramp behind priority
- * and risk, and the stage-keyed status pill.
+ * and risk, the stage-keyed status pill, and the CTR-004 people —
+ * the Owner and the contract team's roles.
  *
  * The severity ramp's pill colors are not here yet: M8/1 edits priority
  * and risk as selects, and no surface renders them as pills. The ramp's
@@ -17,18 +18,27 @@ import type { paths } from "@openlaw/api-client";
 /** One contract as the API answers it, aliased to the generated client
  * schema so a contract change surfaces as a compile error here, not as
  * a runtime surprise in a route. */
-export type ContractRow =
-  paths["/api/v1/contracts/{number}"]["get"]["responses"]["200"]["content"]["application/json"]["contract"];
+type RecordResponse =
+  paths["/api/v1/contracts/{number}"]["get"]["responses"]["200"]["content"]["application/json"];
+export type ContractRow = RecordResponse["contract"];
 
 export type ContractStage = ContractRow["stage"];
 export type SeverityLevel = ContractRow["priority"];
 
-/** The live types and statuses the create dialog and the status select
- * read (the settings surfaces stay Administrator-only, SET-002). */
+/** One `contract_team` row as the record renders it — the person and
+ * the one role this row records. The same person appears once per role
+ * they hold (CTR-004's compound key). */
+export type ContractTeamMember = RecordResponse["team"][number];
+export type ContractTeamRole = ContractTeamMember["role"];
+
+/** The live types, statuses, and people the create dialog and the
+ * record's pickers read (the settings surfaces stay Administrator-only,
+ * SET-002). */
 type OptionsResponse =
   paths["/api/v1/contracts/options"]["get"]["responses"]["200"]["content"]["application/json"];
 export type ContractTypeOption = OptionsResponse["contractTypes"][number];
 export type ContractStatusOption = OptionsResponse["contractStatuses"][number];
+export type UserOption = OptionsResponse["users"][number];
 
 /** Guards a level list literal so it can't drift from the API's enum:
  * `Exclude<SeverityLevel, U[number]>` resolves to `never` only when
@@ -94,4 +104,38 @@ export function riskLabel(intl: IntlShape, level: SeverityLevel | null): string 
   return level === null
     ? intl.formatMessage({ id: "contracts.riskUnassessed", defaultMessage: "Not assessed" })
     : severityLabel(intl, level);
+}
+
+/** Guards the role list against drift from the API's enum, the same way
+ * the severity ramp is guarded above. */
+function exhaustiveRoleList<U extends readonly ContractTeamRole[]>(
+  roles: Exclude<ContractTeamRole, U[number]> extends never ? U : never,
+): U {
+  return roles;
+}
+
+/** CTR-004's role enum, in the order the roster and the picker read. */
+export const CONTRACT_TEAM_ROLES = exhaustiveRoleList([
+  "member",
+  "watcher",
+  "contributor",
+  "creator",
+] as const);
+
+/** What the add-member picker offers. `creator` is provenance: the
+ * server writes that row at creation, and nothing adds it by hand. */
+export const ADDABLE_TEAM_ROLES: readonly ContractTeamRole[] = CONTRACT_TEAM_ROLES.filter(
+  (role) => role !== "creator",
+);
+
+export function teamRoleLabel(intl: IntlShape, role: ContractTeamRole): string {
+  return intl.formatMessage(
+    {
+      id: "contracts.teamRole",
+      defaultMessage:
+        "{role, select, member {Member} watcher {Watcher} creator {Creator} " +
+        "contributor {Contributor} other {Unknown}}",
+    },
+    { role },
+  );
 }

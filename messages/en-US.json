@@ -242,6 +242,9 @@
   "contracts.column.actions": {
     "defaultMessage": "Actions"
   },
+  "contracts.column.owner": {
+    "defaultMessage": "Owner"
+  },
   "contracts.column.reference": {
     "defaultMessage": "Reference"
   },
@@ -274,6 +277,9 @@
   },
   "contracts.form.draftNote": {
     "defaultMessage": "New contracts start in Draft. Set everything else on the record."
+  },
+  "contracts.form.owner": {
+    "defaultMessage": "Owner"
   },
   "contracts.form.priority": {
     "defaultMessage": "Priority"
@@ -308,6 +314,9 @@
   "contracts.listError": {
     "defaultMessage": "The contract list could not be read. Try again."
   },
+  "contracts.ownerUnassigned": {
+    "defaultMessage": "Unassigned"
+  },
   "contracts.record.archive": {
     "defaultMessage": "Archive"
   },
@@ -340,6 +349,42 @@
   },
   "contracts.showArchived": {
     "defaultMessage": "Show archived"
+  },
+  "contracts.team.add": {
+    "defaultMessage": "Add team member"
+  },
+  "contracts.team.addError": {
+    "defaultMessage": "That person could not be added."
+  },
+  "contracts.team.empty": {
+    "defaultMessage": "Nobody is on this contract yet."
+  },
+  "contracts.team.person": {
+    "defaultMessage": "Person"
+  },
+  "contracts.team.personMissing": {
+    "defaultMessage": "Pick a person."
+  },
+  "contracts.team.personPlaceholder": {
+    "defaultMessage": "Person…"
+  },
+  "contracts.team.remove": {
+    "defaultMessage": "Take {name} off the team as {role, select, member {Member} watcher {Watcher} creator {Creator} contributor {Contributor} other {Unknown}}"
+  },
+  "contracts.team.removeError": {
+    "defaultMessage": "That person could not be taken off the team."
+  },
+  "contracts.team.role": {
+    "defaultMessage": "Role"
+  },
+  "contracts.team.section": {
+    "defaultMessage": "Team"
+  },
+  "contracts.team.submit": {
+    "defaultMessage": "Add"
+  },
+  "contracts.teamRole": {
+    "defaultMessage": "{role, select, member {Member} watcher {Watcher} creator {Creator} contributor {Contributor} other {Unknown}}"
   },
   "contracts.title": {
     "defaultMessage": "Contracts"

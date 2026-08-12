@@ -60,7 +60,10 @@ export type ActivityAction =
   // The contract record's own feed (M8). A status change keeps its own
   // verb: surfaces branch on the stage behind the status (CTR-001), so
   // the M9 viewer narrates "status changed" rather than a generic edit.
-  | `contract.${"created" | "updated" | "status_changed" | "archived" | "restored"}`
+  // Team changes keep their own verbs too — putting a person on a
+  // contract is not an edit of a field, and the M9 viewer names them
+  // (CTR-004). The Owner is a field, so it rides `contract.updated`.
+  | `contract.${"created" | "updated" | "status_changed" | "team_added" | "team_removed" | "archived" | "restored"}`
   | "sso_provider.registered"
   | "sso_provider.updated";
 

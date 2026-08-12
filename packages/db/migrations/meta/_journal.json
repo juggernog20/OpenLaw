@@ -120,6 +120,13 @@
       "when": 1786566014456,
       "tag": "0016_contracts",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1786569621470,
+      "tag": "0017_contract_team",
+      "breakpoints": true
     }
   ]
 }

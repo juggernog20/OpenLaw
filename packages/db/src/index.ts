@@ -13,6 +13,7 @@ import pg from "pg";
 import * as activitySchema from "./schema/activity.js";
 import * as authSchema from "./schema/auth.js";
 import * as contractStatusesSchema from "./schema/contract-statuses.js";
+import * as contractTeamSchema from "./schema/contract-team.js";
 import * as contractTypeFieldsSchema from "./schema/contract-type-fields.js";
 import * as contractTypesSchema from "./schema/contract-types.js";
 import * as contractsSchema from "./schema/contracts.js";
@@ -26,6 +27,7 @@ import * as orgSchema from "./schema/org.js";
 export * from "./schema/activity.js";
 export * from "./schema/auth.js";
 export * from "./schema/contract-statuses.js";
+export * from "./schema/contract-team.js";
 export * from "./schema/contract-type-fields.js";
 export * from "./schema/contract-types.js";
 export * from "./schema/contracts.js";
@@ -39,6 +41,7 @@ export const schema = {
   ...activitySchema,
   ...authSchema,
   ...contractStatusesSchema,
+  ...contractTeamSchema,
   ...contractTypeFieldsSchema,
   ...contractTypesSchema,
   ...contractsSchema,
