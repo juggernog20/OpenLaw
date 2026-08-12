@@ -19,6 +19,7 @@ import { useRef, useState } from "react";
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { History, Pencil, Sparkles, TriangleAlert } from "lucide-react";
+import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { problemDetail } from "../lib/messages";
 import { currentUser, needsSetup } from "../lib/session";
@@ -67,20 +68,9 @@ type Scope = (typeof SCOPES)[number];
 const TAGS = ["business", "legal"] as const;
 type Tag = (typeof TAGS)[number];
 
-/** One row of GET /fields, as the client sees it. */
-interface FieldRow {
-  id: string;
-  slug: string;
-  displayName: string;
-  description: string | null;
-  moduleScope: Scope;
-  fieldType: FieldType;
-  options: string[] | null;
-  fieldTag: Tag;
-  aiPrompt: string | null;
-  archivedAt: string | null;
-  inUseCount: number;
-}
+/** One row of GET /fields — uses the generated client schema type. */
+type FieldRow =
+  paths["/api/v1/fields"]["get"]["responses"]["200"]["content"]["application/json"]["fields"][number];
 
 function typeLabel(intl: IntlShape, fieldType: FieldType): string {
   return intl.formatMessage(
@@ -95,7 +85,7 @@ function typeLabel(intl: IntlShape, fieldType: FieldType): string {
   );
 }
 
-function scopeLabel(intl: IntlShape, scope: Scope): string {
+function scopeLabel(intl: IntlShape, scope: FieldRow["moduleScope"]): string {
   return intl.formatMessage(
     {
       id: "settings.contractFields.scopeLabel",
@@ -152,7 +142,9 @@ function draftOf(target: FieldRow | null): EditorDraft {
     name: target.displayName,
     description: target.description ?? "",
     fieldType: target.fieldType,
-    scope: target.moduleScope,
+    // The endpoint backing this pane only ever returns contract/global
+    // fields (CTR-016), so the wider moduleScope enum narrows safely here.
+    scope: target.moduleScope === "global" ? "global" : "contract",
     tag: target.fieldTag,
     optionsText: (target.options ?? []).join("\n"),
     aiPrompt: target.aiPrompt ?? "",
@@ -199,13 +191,17 @@ function FieldEditorDialog({
 
   async function create() {
     const options = parseOptions(draft.optionsText);
+    if (draft.fieldType === "") {
+      refuse("Field type is required.");
+      return false;
+    }
     const { data, error: problem } = await api
       .POST("/api/v1/fields", {
         body: {
           displayName: draft.name.trim(),
           description: draft.description.trim() || undefined,
           moduleScope: draft.scope,
-          fieldType: draft.fieldType as FieldType,
+          fieldType: draft.fieldType,
           fieldTag: draft.tag,
           options: isSelect ? options : undefined,
           aiPrompt: promptable && draft.aiPrompt.trim() ? draft.aiPrompt.trim() : undefined,
@@ -246,7 +242,7 @@ function FieldEditorDialog({
         );
         return false;
       }
-      latest = data.field as FieldRow;
+      latest = data.field;
       onRowChanged(latest);
     }
 
@@ -279,7 +275,7 @@ function FieldEditorDialog({
       );
       return false;
     }
-    onRowChanged(data.field as FieldRow);
+    onRowChanged(data.field);
     return true;
   }
 
@@ -544,7 +540,7 @@ function ArchiveFieldDialog({
       });
       if (data) {
         archived.current = true;
-        onArchived(data.field as FieldRow);
+        onArchived(data.field);
         onOpenChange(false);
       } else {
         // The API's own refusal (already archived, a stale list) is
@@ -642,7 +638,7 @@ export function SettingsContractFieldsPage() {
   const { fields } = useLoaderData<typeof settingsContractFieldsLoader>();
   const intl = useIntl();
 
-  const [rows, setRows] = useState<FieldRow[]>(fields as FieldRow[]);
+  const [rows, setRows] = useState<FieldRow[]>(fields);
   const [rowStatus, setRowStatus] = useState<Record<string, FieldStatus>>({});
   const [rowError, setRowError] = useState<Record<string, string | undefined>>({});
   /** The editor dialog: closed, create mode, or an edit target. */
@@ -673,7 +669,7 @@ export function SettingsContractFieldsPage() {
       })
       .catch(() => ({ data: null, error: undefined }));
     if (data) {
-      replaceRow(data.field as FieldRow);
+      replaceRow(data.field);
       noteRow(row.id, "saved");
     } else {
       noteRow(row.id, "error", problemDetail(error));
@@ -686,7 +682,7 @@ export function SettingsContractFieldsPage() {
       .POST("/api/v1/fields/{id}/restore", { params: { path: { id: row.id } } })
       .catch(() => ({ data: null, error: undefined }));
     if (data) {
-      replaceRow(data.field as FieldRow);
+      replaceRow(data.field);
       noteRow(row.id, "saved");
     } else {
       noteRow(row.id, "error", problemDetail(error));

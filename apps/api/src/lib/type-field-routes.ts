@@ -23,6 +23,7 @@ import {
   contractTypeFields,
   eq,
   fields,
+  FIELD_MODULE_SCOPES,
   FIELD_TYPES,
   isNotNull,
   isNull,
@@ -76,7 +77,7 @@ export function typeFieldRoutes(config: TypeFieldRoutesConfig): FastifyPluginAsy
     slug: z.string(),
     displayName: z.string(),
     fieldType: z.enum(FIELD_TYPES),
-    moduleScope: z.enum(config.attachableScopes),
+    moduleScope: z.enum(FIELD_MODULE_SCOPES),
     displayOrder: z.number().int(),
     isRequired: z.boolean(),
   });

@@ -265,6 +265,9 @@ export function TypeEditorScreen({
   }
 
   async function toggleRequired(row: AttachedFieldRow, isRequired: boolean) {
+    // Reject re-entry when the row is already saving, matching the grip
+    // and Attach trigger patterns (aria-disabled without disabled).
+    if (rowStatus[row.fieldId] === "saving") return;
     noteRow(row.fieldId, "saving");
     const { data, detail } = await api
       .setRequired(saved.id, row.fieldId, isRequired)
@@ -469,7 +472,7 @@ export function TypeEditorScreen({
                     <span className="flex w-24 items-center px-3">
                       <Checkbox
                         checked={row.isRequired}
-                        disabled={rowStatus[row.fieldId] === "saving"}
+                        aria-disabled={rowStatus[row.fieldId] === "saving"}
                         aria-label={intl.formatMessage(messages.requiredFor, {
                           name: row.displayName,
                         })}

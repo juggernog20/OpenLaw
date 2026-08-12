@@ -103,7 +103,7 @@ const auditRows = () =>
         "contract_status.deleted",
       ]),
     )
-    .orderBy(asc(activityLog.createdAt));
+    .orderBy(asc(activityLog.createdAt), asc(activityLog.id));
 
 describe("the SET-002 role gate", () => {
   it("refuses an unauthenticated request as 401", async () => {

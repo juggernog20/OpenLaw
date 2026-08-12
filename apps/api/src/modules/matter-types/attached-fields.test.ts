@@ -137,25 +137,61 @@ const attachmentAuditRows = () =>
         "matter_type_field.required_changed",
       ]),
     )
-    .orderBy(asc(activityLog.createdAt));
+    .orderBy(asc(activityLog.createdAt), asc(activityLog.id));
 
 describe("the SET-002 role gate", () => {
-  it("refuses a Legal Team Member on the attachment surface", async () => {
-    const cookies = await harnessSignInCookies(harness.app, MEMBER.email, MEMBER.password);
+  it("refuses an unauthenticated request as 401", async () => {
     const employment = await typeBySlug("employment");
-    const read = await harness.app.inject({
+    const res = await harness.app.inject({
       method: "GET",
       url: `/api/v1/matter-types/${employment.id}/fields`,
-      cookies,
     });
-    expect(read.statusCode, read.body).toBe(403);
-    const write = await harness.app.inject({
-      method: "POST",
-      url: `/api/v1/matter-types/${employment.id}/fields`,
-      cookies,
-      payload: { fieldId: "any" },
-    });
-    expect(write.statusCode, write.body).toBe(403);
+    expect(res.statusCode).toBe(401);
+  });
+
+  it("refuses a Legal Team Member as 403 problem+json, on read and every write", async () => {
+    const cookies = await harnessSignInCookies(harness.app, MEMBER.email, MEMBER.password);
+    const employment = await typeBySlug("employment");
+    // { fieldId: "any" } is intentionally invalid — authorization must run before body validation.
+    const attempts = [
+      harness.app.inject({
+        method: "GET",
+        url: `/api/v1/matter-types/${employment.id}`,
+        cookies,
+      }),
+      harness.app.inject({
+        method: "GET",
+        url: `/api/v1/matter-types/${employment.id}/fields`,
+        cookies,
+      }),
+      harness.app.inject({
+        method: "POST",
+        url: `/api/v1/matter-types/${employment.id}/fields`,
+        cookies,
+        payload: { fieldId: "any" },
+      }),
+      harness.app.inject({
+        method: "PATCH",
+        url: `/api/v1/matter-types/${employment.id}/fields/any`,
+        cookies,
+        payload: { isRequired: false },
+      }),
+      harness.app.inject({
+        method: "PUT",
+        url: `/api/v1/matter-types/${employment.id}/fields/order`,
+        cookies,
+        payload: { fieldIds: ["any"] },
+      }),
+      harness.app.inject({
+        method: "DELETE",
+        url: `/api/v1/matter-types/${employment.id}/fields/any`,
+        cookies,
+      }),
+    ];
+    for (const attempt of await Promise.all(attempts)) {
+      expect(attempt.statusCode).toBe(403);
+      expect(attempt.headers["content-type"]).toContain("application/problem+json");
+    }
     expect(await listAttached(employment.id)).toEqual([]);
   });
 });

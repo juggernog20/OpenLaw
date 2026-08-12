@@ -12,20 +12,16 @@ export const uuidPk = () =>
     .$defaultFn(() => uuidv7());
 
 /**
- * The one taxonomy column set (MTR-001, mirrored by CTR-002): every
- * configurable-taxonomy table — matter types, contract types — is this
- * exact shape, which is what lets one machinery serve them all. Slugs
- * are derived at creation and immutable; display names are
- * presentation; the `other` row of each table is system-protected in
- * application code.
+ * The shared taxonomy base columns (identity, ordering, system-default
+ * marker, archive, and audit timestamps): contract types, matter types,
+ * and contract statuses all include these. Each table adds its own
+ * domain-specific columns on top.
  */
-export const taxonomyColumns = () => ({
+export const taxonomyBaseColumns = () => ({
   id: uuidPk(),
   /** Machine identity, derived from the name at creation; never changes. */
   slug: text("slug").notNull(),
   displayName: text("display_name").notNull(),
-  /** Shown in the type editor; NULL = the type has no description. */
-  description: text("description"),
   /** Picker and list position, 1-based; reorder rewrites the live rows. */
   displayOrder: integer("display_order").notNull(),
   /** True for the seed rows; user-created rows are false. */
@@ -40,4 +36,17 @@ export const taxonomyColumns = () => ({
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date()),
+});
+
+/**
+ * The full taxonomy column set (MTR-001, mirrored by CTR-002): every
+ * configurable-taxonomy table that carries a description — matter types,
+ * contract types — is this shape, which is what lets one machinery serve
+ * them all. The `other` row of each table is system-protected in
+ * application code.
+ */
+export const taxonomyColumns = () => ({
+  ...taxonomyBaseColumns(),
+  /** Shown in the type editor; NULL = the type has no description. */
+  description: text("description"),
 });

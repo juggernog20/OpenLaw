@@ -16,8 +16,8 @@
  * this component owns the anatomy.
  */
 
-import { useRef, useState, type DragEvent, type ReactNode, type RefObject } from "react";
-import { FormattedMessage, useIntl } from "react-intl";
+import { useId, useRef, useState, type DragEvent, type ReactNode, type RefObject } from "react";
+import { FormattedMessage } from "react-intl";
 import { Archive, ArchiveRestore, GripVertical, Lock, Plus } from "lucide-react";
 import { SettingsCard } from "./settings-card";
 import { StatusNote, type FieldStatus } from "./status-note";
@@ -123,7 +123,7 @@ export function ListEditor<Row extends ListEditorRow>({
   announcement = "",
   listRef,
 }: Readonly<ListEditorProps<Row>>) {
-  const intl = useIntl();
+  const showArchivedLabelId = useId();
   const [showArchived, setShowArchived] = useState(false);
   const [editing, setEditing] = useState<{ id: string; draft: string } | null>(null);
   const dragFrom = useRef<number | null>(null);
@@ -233,14 +233,13 @@ export function ListEditor<Row extends ListEditorRow>({
             )}
             {hasArchived && (
               <span className="flex items-center gap-2 text-sm text-muted">
-                <FormattedMessage id="listEditor.showArchived" defaultMessage="Show archived" />
+                <span id={showArchivedLabelId}>
+                  <FormattedMessage id="listEditor.showArchived" defaultMessage="Show archived" />
+                </span>
                 <Switch
                   checked={showArchived}
                   onCheckedChange={setShowArchived}
-                  aria-label={intl.formatMessage({
-                    id: "listEditor.showArchived",
-                    defaultMessage: "Show archived",
-                  })}
+                  aria-labelledby={showArchivedLabelId}
                 />
               </span>
             )}
