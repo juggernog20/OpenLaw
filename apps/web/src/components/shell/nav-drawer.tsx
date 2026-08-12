@@ -13,12 +13,14 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Menu } from "lucide-react";
 import { NavLink } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
+import type { Role } from "../../lib/roles";
 import { cn } from "../../lib/utils";
-import { destinations } from "./destinations";
+import { destinationsFor } from "./destinations";
 
-export function NavDrawer() {
+export function NavDrawer({ role }: { role: Role }) {
   const intl = useIntl();
   const [open, setOpen] = useState(false);
+  const destinations = destinationsFor(role);
 
   // DES-012's one cliff, mirrored from CSS: crossing up into md while
   // the drawer is open (tablet rotation, window resize) closes it —

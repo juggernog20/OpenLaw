@@ -9,6 +9,8 @@
 
 import type { RouteObject } from "react-router";
 import { AuthLayout } from "./routes/auth-layout";
+import { EntitiesPage, entitiesLoader } from "./routes/entities";
+import { EntityRecordPage, entityRecordLoader } from "./routes/entity-record";
 import { RouteErrorPage } from "./routes/error-page";
 import { HomePage, homeLoader } from "./routes/home";
 import { LinkExpiredPage } from "./routes/link-expired";
@@ -33,6 +35,11 @@ import {
   settingsContractsIndexLoader,
   settingsContractTypesLoader,
 } from "./routes/settings-contract-types";
+import {
+  SettingsEntityTypesPage,
+  settingsEntitiesIndexLoader,
+  settingsEntityTypesLoader,
+} from "./routes/settings-entity-types";
 import {
   SettingsMatterTypeEditorPage,
   settingsMatterTypeEditorLoader,
@@ -62,6 +69,24 @@ export const routes: RouteObject[] = [
     errorElement: <RouteErrorPage />,
     // Guards run before first paint; a blank canvas beats a flash of the
     // wrong screen.
+    hydrateFallbackElement: <></>,
+  },
+  {
+    // The M7 Entities registry (ENT-001); its loader admits Member+
+    // only (ENT-004) and bounces everyone else home.
+    path: "/entities",
+    loader: entitiesLoader,
+    element: <EntitiesPage />,
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <></>,
+  },
+  {
+    // #99: one entity's record page — the identity card with DES-017
+    // per-field edits, archive, and restore. Member+ only (ENT-004).
+    path: "/entities/:entityId",
+    loader: entityRecordLoader,
+    element: <EntityRecordPage />,
+    errorElement: <RouteErrorPage />,
     hydrateFallbackElement: <></>,
   },
   {
@@ -131,6 +156,14 @@ export const routes: RouteObject[] = [
         path: "contracts/fields",
         loader: settingsContractFieldsLoader,
         element: <SettingsContractFieldsPage />,
+      },
+      { path: "entities", loader: settingsEntitiesIndexLoader, element: <></> },
+      {
+        // #97: no per-type editor screen — entity-scoped fields render
+        // on every entity (ENT-001), so nothing attaches per type.
+        path: "entities/types",
+        loader: settingsEntityTypesLoader,
+        element: <SettingsEntityTypesPage />,
       },
     ],
   },

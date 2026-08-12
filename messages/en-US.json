@@ -248,6 +248,111 @@
   "error.title": {
     "defaultMessage": "Something went wrong."
   },
+  "entities.archivedPill": {
+    "defaultMessage": "Archived"
+  },
+  "entities.column.actions": {
+    "defaultMessage": "Actions"
+  },
+  "entities.column.jurisdiction": {
+    "defaultMessage": "Jurisdiction"
+  },
+  "entities.column.legalName": {
+    "defaultMessage": "Legal name"
+  },
+  "entities.column.status": {
+    "defaultMessage": "Status"
+  },
+  "entities.column.type": {
+    "defaultMessage": "Type"
+  },
+  "entities.count": {
+    "defaultMessage": "{count, plural, one {# entity} other {# entities}}"
+  },
+  "entities.empty.body": {
+    "defaultMessage": "The registry holds your own corporate entities — subsidiaries, holding companies, and branches. Register them with their legal details, and contracts pick the signing entity from this list."
+  },
+  "entities.empty.title": {
+    "defaultMessage": "No entities yet"
+  },
+  "entities.form.formedOn": {
+    "defaultMessage": "Formed on"
+  },
+  "entities.form.jurisdiction": {
+    "defaultMessage": "Formation jurisdiction"
+  },
+  "entities.form.legalName": {
+    "defaultMessage": "Legal name"
+  },
+  "entities.form.nameMissing": {
+    "defaultMessage": "Name the entity — its registered legal name."
+  },
+  "entities.form.registerError": {
+    "defaultMessage": "The entity could not be registered."
+  },
+  "entities.form.registeredAddress": {
+    "defaultMessage": "Registered address"
+  },
+  "entities.form.registeredAgent": {
+    "defaultMessage": "Registered agent"
+  },
+  "entities.form.registrationNumber": {
+    "defaultMessage": "Registration no."
+  },
+  "entities.form.status": {
+    "defaultMessage": "Status"
+  },
+  "entities.form.submit": {
+    "defaultMessage": "Register"
+  },
+  "entities.form.taxId": {
+    "defaultMessage": "Tax ID"
+  },
+  "entities.form.title": {
+    "defaultMessage": "Register entity"
+  },
+  "entities.form.type": {
+    "defaultMessage": "Entity type"
+  },
+  "entities.form.typeMissing": {
+    "defaultMessage": "Pick an entity type."
+  },
+  "entities.form.typePlaceholder": {
+    "defaultMessage": "Type…"
+  },
+  "entities.listError": {
+    "defaultMessage": "The registry could not be read. Try again."
+  },
+  "entities.record.archive": {
+    "defaultMessage": "Archive"
+  },
+  "entities.record.archivedNote": {
+    "defaultMessage": "This entity is archived — it is out of the registry list. Restore it to edit."
+  },
+  "entities.record.registry": {
+    "defaultMessage": "Registry"
+  },
+  "entities.record.restore": {
+    "defaultMessage": "Restore"
+  },
+  "entities.register": {
+    "defaultMessage": "Register entity"
+  },
+  "entities.restoreError": {
+    "defaultMessage": "The entity could not be restored."
+  },
+  "entities.restoreRow": {
+    "defaultMessage": "Restore {name}"
+  },
+  "entities.showArchived": {
+    "defaultMessage": "Show archived"
+  },
+  "entities.statusLabel": {
+    "defaultMessage": "{status, select, active {Active} dormant {Dormant} dissolved {Dissolved} divested {Divested} other {Unknown}}"
+  },
+  "entities.title": {
+    "defaultMessage": "Entities"
+  },
   "format.deadline.overdue": {
     "defaultMessage": "{days, plural, one {# day} other {# days}} overdue"
   },
@@ -295,6 +400,9 @@
   },
   "listEditor.showArchived": {
     "defaultMessage": "Show archived"
+  },
+  "nav.entities": {
+    "defaultMessage": "Entities"
   },
   "nav.home": {
     "defaultMessage": "Home"
@@ -758,6 +866,78 @@
   "settings.contracts.title": {
     "defaultMessage": "Contracts"
   },
+  "settings.entities.tab.types": {
+    "defaultMessage": "Types"
+  },
+  "settings.entities.tabsLabel": {
+    "defaultMessage": "Entities panes"
+  },
+  "settings.entities.title": {
+    "defaultMessage": "Entities"
+  },
+  "settings.entityTypes.add": {
+    "defaultMessage": "Add type"
+  },
+  "settings.entityTypes.addName": {
+    "defaultMessage": "New type name"
+  },
+  "settings.entityTypes.archive": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.entityTypes.archiveError": {
+    "defaultMessage": "The type could not be archived."
+  },
+  "settings.entityTypes.archiveSubmit": {
+    "defaultMessage": "Archive type"
+  },
+  "settings.entityTypes.archiveTitle": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.entityTypes.archiveWarning": {
+    "defaultMessage": "{count, plural, =0 {{name} is not used by any entities — it can be archived without reassignment.} one {{name} is used by # entity. Pick a replacement type — that entity moves to it when the type is archived.} other {{name} is used by # entities. Pick a replacement type — those entities move to it when the type is archived.}}"
+  },
+  "settings.entityTypes.auditNote": {
+    "defaultMessage": "The change applies immediately and is recorded in the audit log."
+  },
+  "settings.entityTypes.count": {
+    "defaultMessage": "{count, plural, one {# type} other {# types}}"
+  },
+  "settings.entityTypes.help": {
+    "defaultMessage": "Drag to reorder. Archiving a type in use asks for a replacement; Other can't be archived."
+  },
+  "settings.entityTypes.inUse": {
+    "defaultMessage": "{count, plural, one {# entity} other {# entities}}"
+  },
+  "settings.entityTypes.locked": {
+    "defaultMessage": "{name} is system-protected and can't be archived"
+  },
+  "settings.entityTypes.moved": {
+    "defaultMessage": "{name} moved to position {position} of {total}."
+  },
+  "settings.entityTypes.noCandidates": {
+    "defaultMessage": "No other active type can take its entities. Add or restore another type first."
+  },
+  "settings.entityTypes.pageTitle": {
+    "defaultMessage": "Entity types"
+  },
+  "settings.entityTypes.reassignLabel": {
+    "defaultMessage": "Reassign {count, plural, =0 {entities} one {# entity} other {# entities}} to"
+  },
+  "settings.entityTypes.reassignNone": {
+    "defaultMessage": "No reassignment"
+  },
+  "settings.entityTypes.renameLabel": {
+    "defaultMessage": "Rename {name}"
+  },
+  "settings.entityTypes.reorder": {
+    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
+  },
+  "settings.entityTypes.restore": {
+    "defaultMessage": "Restore {name}"
+  },
+  "settings.entityTypes.title": {
+    "defaultMessage": "Entity types"
+  },
   "settings.field.error": {
     "defaultMessage": "The change could not be saved. Try again."
   },
@@ -1027,6 +1207,9 @@
   },
   "settings.section.contracts": {
     "defaultMessage": "Contracts"
+  },
+  "settings.section.entities": {
+    "defaultMessage": "Entities"
   },
   "settings.section.general": {
     "defaultMessage": "General"

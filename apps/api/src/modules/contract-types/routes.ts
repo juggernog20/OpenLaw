@@ -23,5 +23,5 @@ export const contractTypesRoutes = taxonomyRoutes({
   decision: "CTR-002",
   actionPrefix: "contract_type",
   recordsMilestone: "M8",
-  recordNoun: "contracts",
+  recordNoun: { singular: "contract", plural: "contracts" },
 });

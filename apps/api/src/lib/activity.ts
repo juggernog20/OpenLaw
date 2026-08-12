@@ -29,7 +29,7 @@ export type ActivityWriter = Db | Parameters<Parameters<Db["transaction"]>[0]>[0
  * slug from the changed field name.
  */
 /** The taxonomy tables' audit namespaces (#85: one machinery each). */
-export type TaxonomyActionPrefix = "contract_type" | "matter_type";
+export type TaxonomyActionPrefix = "contract_type" | "matter_type" | "entity_type";
 export type TypeFieldActionPrefix = "contract_type_field" | "matter_type_field";
 
 export type ActivityAction =
@@ -50,6 +50,13 @@ export type ActivityAction =
   | `${TypeFieldActionPrefix}.${"attached" | "detached" | "reordered" | "required_changed"}`
   | `contract_status.${"created" | "renamed" | "reordered" | "archived" | "restored" | "deleted"}`
   | `field.${"created" | "updated" | "promoted" | "narrowed" | "archived" | "restored"}`
+  // The registry record's own feed (M7): create and archive from #98,
+  // the record surface's verbs from #99. A status change keeps its own
+  // verb — status is the fixed code-branching enum (ENT-001), so the M9
+  // viewer narrates "status changed" rather than a generic edit. A type
+  // reassignment (#100) keeps its own verb too: the entity moved because
+  // an Administrator archived its type, not because someone edited it.
+  | `entity.${"created" | "updated" | "status_changed" | "type_reassigned" | "archived" | "restored"}`
   | "sso_provider.registered"
   | "sso_provider.updated";
 
@@ -67,13 +74,22 @@ export interface ActivityEntry {
 
 /** Appends one entry. Append-only: nothing in application code ever
  * updates or deletes activity_log rows (corrections are new entries). */
-export async function recordActivity(db: ActivityWriter, entry: ActivityEntry): Promise<void> {
-  await db.insert(activityLog).values({
-    entityType: entry.entityType,
-    entityId: entry.entityId ?? null,
-    actorId: entry.actorId ?? null,
-    action: entry.action,
-    visibility: entry.visibility,
-    payload: entry.payload ?? {},
-  });
+export async function recordActivity(db: ActivityWriter, entry: ActivityEntry): Promise<void>;
+/** Appends multiple entries in one write. */
+export async function recordActivity(db: ActivityWriter, entries: ActivityEntry[]): Promise<void>;
+export async function recordActivity(
+  db: ActivityWriter,
+  entryOrEntries: ActivityEntry | ActivityEntry[],
+): Promise<void> {
+  const entries = Array.isArray(entryOrEntries) ? entryOrEntries : [entryOrEntries];
+  await db.insert(activityLog).values(
+    entries.map((entry) => ({
+      entityType: entry.entityType,
+      entityId: entry.entityId ?? null,
+      actorId: entry.actorId ?? null,
+      action: entry.action,
+      visibility: entry.visibility,
+      payload: entry.payload ?? {},
+    })),
+  );
 }

@@ -139,7 +139,7 @@ export function SettingsContractTypesPage() {
     <TaxonomyTypesPane
       initialRows={contractTypes}
       tabs={<ContractsSettingsTabs />}
-      editPath={(row) => `/settings/contracts/types/${row.id}`}
+      editor={{ path: (row) => `/settings/contracts/types/${row.id}`, label: MESSAGES.edit }}
       api={PANE_API}
       messages={MESSAGES}
     />

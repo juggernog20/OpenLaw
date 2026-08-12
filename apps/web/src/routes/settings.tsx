@@ -18,6 +18,7 @@ import {
   ChevronRight,
   FilePen,
   KeyRound,
+  Landmark,
   Palette,
   Shield,
   User,
@@ -132,7 +133,8 @@ const ORGANIZATION_GROUP: SettingsGroup = {
     },
     // Each module section points at its first pane; more panes join as
     // tabs inside the section as their tickets land. Matters sits
-    // before Contracts per the SET-001 rail order.
+    // before Contracts, and Entities after Contracts (Intake, between
+    // them, is unshipped and so omitted), per the SET-001 rail order.
     {
       id: "matters",
       path: "/settings/matters/types",
@@ -144,6 +146,12 @@ const ORGANIZATION_GROUP: SettingsGroup = {
       path: "/settings/contracts/types",
       icon: FilePen,
       label: defineMessage({ id: "settings.section.contracts", defaultMessage: "Contracts" }),
+    },
+    {
+      id: "entities",
+      path: "/settings/entities/types",
+      icon: Landmark,
+      label: defineMessage({ id: "settings.section.entities", defaultMessage: "Entities" }),
     },
   ],
 };

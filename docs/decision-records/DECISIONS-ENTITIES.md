@@ -91,6 +91,26 @@ _None — queue cleared 2026-08-06 (ENT-001 through ENT-007)._
 - **Decision** — The entity page shows Contracts and Matters tabs listing referencing records (`contracts.entity_id` per CTR-011; matters via `entity`-scoped fields), counts in tab labels — pure queries, no stored counters. Restricted records render per the MTR-015 convention. Per-entity analytics belong to the dashboards capability (DD-005) later.
 - **Consequences** — None schema-side.
 
+## ENT-008 — The registry surface owns a Member+ entity-type read
+
+- **Status** — Accepted
+- **Date** — 2026-08-12
+- **Context** — The register form is Member+ (ENT-004), but `GET /entity-types` — like every settings taxonomy read — is Administrator-only (SET-002). The form needs the type vocabulary from somewhere a Legal Team Member can read.
+- **Decision** — The entities module carries its own picker read: `GET /api/v1/entities/types`, Member+ guarded, answering the live types (id, slug, display name) in display order. Archived types stay out, matching SET-003 picker semantics. The settings surface and the shared taxonomy machinery stay Administrator-only and untouched.
+- **Rationale** — Permissions split by surface, not by table: the same vocabulary is settings data when configured (Administrator) and picker data when used (Member+). A read on the consuming surface keeps SET-002's single role gate intact instead of poking a role exception into the taxonomy factory.
+- **Alternatives considered** — Loosening `GET /entity-types` to Member+ (breaks SET-002's uniform gate and leaks settings metadata — archived rows, system flags, usage counts); embedding the types in the registry list response (couples two reads that change independently).
+- **Consequences** — Later Member+ forms over admin-configured taxonomies (the matter and contract type pickers on their record forms) repeat this pattern on their own surfaces.
+
+## ENT-009 — The type archive guard counts and moves every referencing entity, archived included
+
+- **Status** — Accepted
+- **Date** — 2026-08-12
+- **Context** — SET-003's guard needs a counting rule for entity types (#100): does an archived entity's type reference count toward the in-use number, and does it move on reassignment? SET-003 says "live-usage count" without fixing which set "live" means.
+- **Decision** — The guard counts **every entity referencing the type, archived entities included**, and reassignment moves that same set. The refusal count, the moved set, and the set the `entities.entity_type_id` FK protects on hard delete are one set. Hard delete of an in-use type refuses with the same count (a clean 409, where the FK alone would answer a bare 500). Each moved entity gets its own activity entry under a dedicated verb, `entity.type_reassigned` (Legal Only, in the archive transaction per DD-017), alongside the Administrator-side `entity_type.archived` entry carrying the count and the target.
+- **Rationale** — One counting rule everywhere: if only live entities counted, a type referenced solely by archived entities would pass the guard and then hit the FK on delete. And restore must never resurrect a reference to an archived type — archiving an entity is recoverable (a mistake, not history), so its type reference is as real as a live one. The dedicated activity verb lets the M9 feed narrate _why_ the type changed (an Administrator archived the old type) instead of a generic edit.
+- **Alternatives considered** — Counting live entities only and leaving archived ones on the old type (splits the counted set from the FK set; restore brings back an archived-type reference); folding the move into `entity.updated` (loses the causal narration).
+- **Consequences** — The dialog's "used by N entities" can exceed the visible registry list when archived entities reference the type — correct, and self-explaining once the archived toggle is on. Contract and matter types inherit the same semantics when their record milestones arm their counters (M8, M22).
+
 ## Index of decisions
 
 | #       | Decision                                                                               | Status   |
@@ -102,3 +122,5 @@ _None — queue cleared 2026-08-06 (ENT-001 through ENT-007)._
 | ENT-005 | Statutory documents: entity-owned documents, no seeded folders                         | Accepted |
 | ENT-006 | Compliance calendar: recurring obligations, blank-start, human-confirmed roll-forward  | Accepted |
 | ENT-007 | Roll-ups: linked-records tabs with query-derived counts                                | Accepted |
+| ENT-008 | The registry surface owns a Member+ entity-type read                                   | Accepted |
+| ENT-009 | The type archive guard counts and moves every referencing entity, archived included    | Accepted |
