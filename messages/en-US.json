@@ -713,6 +713,9 @@
   "settings.contractTypes.moved": {
     "defaultMessage": "{name} moved to position {position} of {total}."
   },
+  "settings.contractTypes.noCandidates": {
+    "defaultMessage": "No other active type can take its contracts. Add or restore another type first."
+  },
   "settings.contractTypes.pageTitle": {
     "defaultMessage": "Contract types"
   },
@@ -895,6 +898,9 @@
   },
   "settings.matterTypes.moved": {
     "defaultMessage": "{name} moved to position {position} of {total}."
+  },
+  "settings.matterTypes.noCandidates": {
+    "defaultMessage": "No other active type can take its matters. Add or restore another type first."
   },
   "settings.matterTypes.pageTitle": {
     "defaultMessage": "Matter types"

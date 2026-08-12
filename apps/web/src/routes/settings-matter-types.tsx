@@ -85,6 +85,10 @@ const MESSAGES = defineMessages({
     defaultMessage: "Reassign {count, plural, =0 {matters} one {# matter} other {# matters}} to",
   },
   reassignNone: { id: "settings.matterTypes.reassignNone", defaultMessage: "No reassignment" },
+  noCandidates: {
+    id: "settings.matterTypes.noCandidates",
+    defaultMessage: "No other active type can take its matters. Add or restore another type first.",
+  },
   auditNote: {
     id: "settings.matterTypes.auditNote",
     defaultMessage: "The change applies immediately and is recorded in the audit log.",

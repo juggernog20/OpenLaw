@@ -16,6 +16,7 @@ import { useRef, useState, type ReactNode, type SubmitEvent as FormSubmitEvent }
 import { useNavigate } from "react-router";
 import { FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { History, Pencil, TriangleAlert } from "lucide-react";
+import type { ApiResult } from "../lib/api-result";
 import { field } from "../lib/forms";
 import { ListEditor } from "./list-editor";
 import { PageTitle } from "./page-title";
@@ -36,19 +37,13 @@ export interface TaxonomyPaneRow {
   inUseCount: number;
 }
 
-/** A mutation's outcome: the row (or rows), or the problem's detail. */
-export interface TaxonomyPaneResult<T> {
-  data?: T;
-  detail?: string;
-}
-
 /** The API seam each module's pane implements over its own routes. */
 export interface TaxonomyPaneApi {
-  create(displayName: string): Promise<TaxonomyPaneResult<TaxonomyPaneRow>>;
-  rename(id: string, displayName: string): Promise<TaxonomyPaneResult<TaxonomyPaneRow>>;
-  reorder(ids: string[]): Promise<TaxonomyPaneResult<TaxonomyPaneRow[]>>;
-  archive(id: string, reassignToId?: string): Promise<TaxonomyPaneResult<TaxonomyPaneRow>>;
-  restore(id: string): Promise<TaxonomyPaneResult<TaxonomyPaneRow>>;
+  create(displayName: string): Promise<ApiResult<TaxonomyPaneRow>>;
+  rename(id: string, displayName: string): Promise<ApiResult<TaxonomyPaneRow>>;
+  reorder(ids: string[]): Promise<ApiResult<TaxonomyPaneRow[]>>;
+  archive(id: string, reassignToId?: string): Promise<ApiResult<TaxonomyPaneRow>>;
+  restore(id: string): Promise<ApiResult<TaxonomyPaneRow>>;
 }
 
 /**
@@ -75,6 +70,9 @@ export interface TaxonomyPaneMessages {
   archiveWarning: MessageDescriptor;
   reassignLabel: MessageDescriptor;
   reassignNone: MessageDescriptor;
+  /** Why archive is blocked when in-use rows have no live type to
+   * take them — the last live type cannot leave. */
+  noCandidates: MessageDescriptor;
   auditNote: MessageDescriptor;
   archiveError: MessageDescriptor;
   archiveSubmit: MessageDescriptor;
@@ -107,6 +105,10 @@ function ArchiveTypeDialog({
   const [error, setError] = useState<string | null>(null);
   const archived = useRef(false);
   const candidates = liveTypes.filter((row) => row.id !== target.id);
+  // In-use rows need a reassignment target; with no other live type the
+  // form can never pass, so say why instead of letting native
+  // validation refuse a select whose only option is empty.
+  const blocked = target.inUseCount > 0 && candidates.length === 0;
 
   async function submit(event: FormSubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -166,8 +168,8 @@ function ArchiveTypeDialog({
               id="reassignToId"
               name="reassignToId"
               defaultValue=""
-              disabled={target.inUseCount === 0}
-              required={target.inUseCount > 0}
+              disabled={target.inUseCount === 0 || blocked}
+              required={target.inUseCount > 0 && !blocked}
               className="h-8 w-full rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50"
             >
               <option value="">{intl.formatMessage(messages.reassignNone)}</option>
@@ -182,6 +184,11 @@ function ArchiveTypeDialog({
             <History size={16} aria-hidden="true" />
             <FormattedMessage {...messages.auditNote} />
           </p>
+          {blocked && (
+            <p className="text-xs text-status-danger-fg">
+              <FormattedMessage {...messages.noCandidates} />
+            </p>
+          )}
           {error && (
             <p role="alert" className="text-xs text-status-danger-fg">
               {error}
@@ -191,7 +198,7 @@ function ArchiveTypeDialog({
             <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
               <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
             </Button>
-            <Button type="submit" variant="danger" disabled={busy}>
+            <Button type="submit" variant="danger" disabled={busy || blocked}>
               <FormattedMessage {...messages.archiveSubmit} />
             </Button>
           </div>

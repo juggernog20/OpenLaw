@@ -364,8 +364,8 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "setFieldScope",
         summary:
           "Move a field's scope (CTR-016): promotion to global is always " +
-          "safe (values stay keyed by slug); narrowing back is refused " +
-          "while another module attaches the field",
+          "safe (values stay keyed by slug); any move into a module is " +
+          "refused while another module attaches the field",
         tags: ["fields"],
         params: z.object({ id: z.string() }),
         body: z.object({ moduleScope: ScopeSchema }),
@@ -379,8 +379,12 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         // Moving to the current scope changes nothing — answer with the
         // row and write no misleading from==to audit entry.
         if (target.moduleScope === moduleScope) return target;
-        const narrowing = target.moduleScope === "global";
-        if (narrowing && (await attachmentsOutsideModule(tx, target.id, moduleScope)) > 0) {
+        // Any move into a module is guarded, whatever the current scope:
+        // a db-planted matter row moving to `contract` must answer for
+        // its matter attachments the same way a global row does. Only
+        // promotion to global is unconditionally safe.
+        const intoModule = moduleScope !== "global";
+        if (intoModule && (await attachmentsOutsideModule(tx, target.id, moduleScope)) > 0) {
           throw httpError(
             409,
             `${target.displayName} is attached outside the ${moduleScope} module — ` +
@@ -395,7 +399,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         await recordActivity(tx, {
           entityType: "system",
           actorId: request.user.id,
-          action: narrowing ? "field.narrowed" : "field.promoted",
+          action: intoModule ? "field.narrowed" : "field.promoted",
           visibility: "admin_only",
           payload: { slug: target.slug, from: target.moduleScope, to: moduleScope },
         });

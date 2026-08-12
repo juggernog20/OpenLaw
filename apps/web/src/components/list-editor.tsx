@@ -279,7 +279,11 @@ export function ListEditor<Row extends ListEditorRow>({
                     variant="ghost"
                     size="sm"
                     className="cursor-grab px-1"
-                    disabled={reorder.status === "saving"}
+                    // aria-disabled, not disabled: a disabled grip
+                    // drops keyboard focus mid-reorder (DES-011);
+                    // `moveBy` already refuses while a save is in
+                    // flight.
+                    aria-disabled={reorder.status === "saving"}
                     aria-label={reorder.gripLabel(row, index + 1, rows.length)}
                     onKeyDown={(event) => {
                       if (event.key === "ArrowUp") {

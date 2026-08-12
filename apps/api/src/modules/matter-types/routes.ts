@@ -21,7 +21,6 @@ export const matterTypesRoutes = taxonomyRoutes({
   keySingular: "matterType",
   keyPlural: "matterTypes",
   noun: "matter type",
-  nounPlural: "matter types",
   decision: "MTR-001",
   actionPrefix: "matter_type",
   recordsMilestone: "M22",

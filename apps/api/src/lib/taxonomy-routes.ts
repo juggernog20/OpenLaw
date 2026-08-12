@@ -37,9 +37,8 @@ export interface TaxonomyRoutesConfig {
   /** Response envelope keys, e.g. `contractType` / `contractTypes`. */
   keySingular: string;
   keyPlural: string;
-  /** Prose vocabulary, e.g. `contract type` / `contract types`. */
+  /** Prose vocabulary, e.g. `contract type`. */
   noun: string;
-  nounPlural: string;
   /** The decision that fixed this taxonomy (CTR-002 / MTR-001). */
   decision: string;
   /** DD-017 action prefix, e.g. `contract_type`. */

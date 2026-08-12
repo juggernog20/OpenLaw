@@ -20,7 +20,6 @@ export const contractTypesRoutes = taxonomyRoutes({
   keySingular: "contractType",
   keyPlural: "contractTypes",
   noun: "contract type",
-  nounPlural: "contract types",
   decision: "CTR-002",
   actionPrefix: "contract_type",
   recordsMilestone: "M8",

@@ -85,6 +85,11 @@ const MESSAGES = defineMessages({
       "Reassign {count, plural, =0 {contracts} one {# contract} other {# contracts}} to",
   },
   reassignNone: { id: "settings.contractTypes.reassignNone", defaultMessage: "No reassignment" },
+  noCandidates: {
+    id: "settings.contractTypes.noCandidates",
+    defaultMessage:
+      "No other active type can take its contracts. Add or restore another type first.",
+  },
   auditNote: {
     id: "settings.contractTypes.auditNote",
     defaultMessage: "The change applies immediately and is recorded in the audit log.",

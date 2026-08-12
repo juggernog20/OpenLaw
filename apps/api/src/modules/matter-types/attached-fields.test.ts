@@ -16,7 +16,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, asc, eq, fields, inArray, users } from "@openlaw/db";
+import { activityLog, asc, eq, fields, inArray, matterTypeFields, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies as harnessSignInCookies,
@@ -346,6 +346,43 @@ describe("the CTR-016 narrowing guard counts matter attachments (#85)", () => {
     const retry = await harness.app.inject({
       method: "PUT",
       url: `/api/v1/fields/${outside.id}/scope`,
+      cookies: adminCookies,
+      payload: { moduleScope: "contract" },
+    });
+    expect(retry.statusCode, retry.body).toBe(200);
+  });
+
+  it("refuses moving an attached matter-scoped field to contract as 409", async () => {
+    const litigation = await typeBySlug("litigation");
+    // The catalog offers no matter scope until M22 and the attach route
+    // refuses matter-scoped fields, so plant both rows directly — the
+    // guard must hold even for state the API cannot create yet.
+    const [planted] = await harness.db
+      .insert(fields)
+      .values({
+        slug: "court_docket",
+        displayName: "Court docket",
+        moduleScope: "matter",
+        fieldType: "text",
+        fieldTag: "legal",
+      })
+      .returning();
+    await harness.db
+      .insert(matterTypeFields)
+      .values({ typeId: litigation.id, fieldId: planted!.id, displayOrder: 99 });
+
+    const moved = await harness.app.inject({
+      method: "PUT",
+      url: `/api/v1/fields/${planted!.id}/scope`,
+      cookies: adminCookies,
+      payload: { moduleScope: "contract" },
+    });
+    expect(moved.statusCode, moved.body).toBe(409);
+
+    await harness.db.delete(matterTypeFields).where(eq(matterTypeFields.fieldId, planted!.id));
+    const retry = await harness.app.inject({
+      method: "PUT",
+      url: `/api/v1/fields/${planted!.id}/scope`,
       cookies: adminCookies,
       payload: { moduleScope: "contract" },
     });

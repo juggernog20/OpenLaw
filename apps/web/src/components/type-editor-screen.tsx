@@ -32,7 +32,7 @@ import {
 } from "./ui/dropdown-menu";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import type { TaxonomyPaneResult } from "./taxonomy-types-pane";
+import type { ApiResult } from "../lib/api-result";
 
 /** The single-type read behind the editor, as the client sees it. */
 export interface EditorTypeRow {
@@ -79,15 +79,15 @@ export interface TypeEditorApi {
   update(
     id: string,
     body: { displayName?: string; description?: string | null },
-  ): Promise<TaxonomyPaneResult<EditorTypeRow>>;
-  attach(id: string, fieldId: string): Promise<TaxonomyPaneResult<AttachedFieldRow>>;
+  ): Promise<ApiResult<EditorTypeRow>>;
+  attach(id: string, fieldId: string): Promise<ApiResult<AttachedFieldRow>>;
   detach(id: string, fieldId: string): Promise<{ ok: boolean; detail?: string }>;
   setRequired(
     id: string,
     fieldId: string,
     isRequired: boolean,
-  ): Promise<TaxonomyPaneResult<AttachedFieldRow>>;
-  reorder(id: string, fieldIds: string[]): Promise<TaxonomyPaneResult<AttachedFieldRow[]>>;
+  ): Promise<ApiResult<AttachedFieldRow>>;
+  reorder(id: string, fieldIds: string[]): Promise<ApiResult<AttachedFieldRow[]>>;
 }
 
 /** The editor's vocabulary, defined per module with `defineMessages`. */
@@ -429,7 +429,11 @@ export function TypeEditorScreen({
                         variant="ghost"
                         size="sm"
                         className="cursor-grab px-1"
-                        disabled={orderStatus === "saving"}
+                        // aria-disabled, not disabled: a disabled grip
+                        // drops keyboard focus mid-reorder (DES-011);
+                        // `move` already refuses while a save is in
+                        // flight.
+                        aria-disabled={orderStatus === "saving"}
                         aria-label={intl.formatMessage(messages.reorder, {
                           name: row.displayName,
                           position: index + 1,
