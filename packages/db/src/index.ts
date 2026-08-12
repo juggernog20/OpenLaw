@@ -14,18 +14,21 @@ import * as activitySchema from "./schema/activity.js";
 import * as authSchema from "./schema/auth.js";
 import * as contractStatusesSchema from "./schema/contract-statuses.js";
 import * as contractTypesSchema from "./schema/contract-types.js";
+import * as fieldsSchema from "./schema/fields.js";
 import * as orgSchema from "./schema/org.js";
 
 export * from "./schema/activity.js";
 export * from "./schema/auth.js";
 export * from "./schema/contract-statuses.js";
 export * from "./schema/contract-types.js";
+export * from "./schema/fields.js";
 export * from "./schema/org.js";
 export const schema = {
   ...activitySchema,
   ...authSchema,
   ...contractStatusesSchema,
   ...contractTypesSchema,
+  ...fieldsSchema,
   ...orgSchema,
 };
 

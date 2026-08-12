@@ -21,6 +21,10 @@ const TABS = [
     path: "/settings/contracts/statuses",
     label: <FormattedMessage id="settings.contracts.tab.statuses" defaultMessage="Statuses" />,
   },
+  {
+    path: "/settings/contracts/fields",
+    label: <FormattedMessage id="settings.contracts.tab.fields" defaultMessage="Fields" />,
+  },
 ] as const;
 
 export function ContractsSettingsTabs() {
