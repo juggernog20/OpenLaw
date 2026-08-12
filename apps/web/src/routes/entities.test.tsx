@@ -200,7 +200,7 @@ describe("the /entities destination", () => {
     expect(await within(dialog).findByRole("alert")).toHaveTextContent(
       "The entity type must be a live type.",
     );
-    expect(within(dialog).getByRole("dialog")).toBeInTheDocument();
+    expect(dialog).toBeInTheDocument();
     expect(within(dialog).getByLabelText("Legal name")).toHaveValue("Refused Ltd");
     expect(within(dialog).getByLabelText("Entity type")).toHaveValue("t-corp");
     expect(within(dialog).getByLabelText("Formation jurisdiction")).toHaveValue("England");
