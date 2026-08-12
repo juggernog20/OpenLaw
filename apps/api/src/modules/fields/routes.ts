@@ -21,6 +21,8 @@ import { z } from "zod";
 import {
   and,
   asc,
+  contractTypeFields,
+  count,
   eq,
   fields,
   FIELD_TAGS,
@@ -56,7 +58,8 @@ const FieldSchema = z.object({
   aiPrompt: z.string().nullable(),
   archivedAt: z.iso.datetime().nullable(),
   /** Records holding a value plus type attachments — the SET-003 guard
-   * number. Nothing holds values or attaches fields this milestone. */
+   * number. Contract-type attachments count since #84; records holding
+   * values join with the contract record milestone (M8). */
   inUseCount: z.number().int(),
 });
 
@@ -72,23 +75,7 @@ const OptionsSchema = z.array(z.string().trim().min(1).max(100)).min(1).max(100)
 /** The select types — the only ones that carry an options list. */
 const SELECT_TYPES = new Set<string>(["single_select", "multi_select"]);
 
-/**
- * Nothing holds field values or attaches fields to types yet — the
- * attachment joins land with #84 (contract types) and the later module
- * milestones. Until then every field's live-usage count is zero.
- */
-const IN_USE_COUNT = 0;
-
-/**
- * The CTR-016 narrowing guard: a global field narrows back to a module
- * scope only while no *other* module attaches it. The matter, entity,
- * and request attachment joins do not exist yet (M19/M22/M27), so no
- * cross-module attachment can exist — those milestones replace this
- * constant with real counts over their join tables.
- */
-const CROSS_MODULE_ATTACHMENT_COUNT = 0;
-
-function toRow(row: Field) {
+function toRow(row: Field, inUseCount: number) {
   return {
     id: row.id,
     slug: row.slug,
@@ -100,7 +87,7 @@ function toRow(row: Field) {
     fieldTag: row.fieldTag,
     aiPrompt: row.aiPrompt,
     archivedAt: row.archivedAt?.toISOString() ?? null,
-    inUseCount: IN_USE_COUNT,
+    inUseCount,
   };
 }
 
@@ -142,6 +129,40 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
     return row;
   }
 
+  type Reader = Tx | typeof app.db;
+
+  /** Contract-type attachments per field (#84) — the live half of the
+   * SET-003 guard number until contracts hold values (M8). */
+  async function attachmentCounts(db: Reader, fieldIds: string[]): Promise<Map<string, number>> {
+    if (fieldIds.length === 0) return new Map();
+    const rows = await db
+      .select({ fieldId: contractTypeFields.fieldId, tally: count() })
+      .from(contractTypeFields)
+      .where(inArray(contractTypeFields.fieldId, fieldIds))
+      .groupBy(contractTypeFields.fieldId);
+    return new Map(rows.map((row) => [row.fieldId, row.tally]));
+  }
+
+  async function inUseCountOf(db: Reader, fieldId: string): Promise<number> {
+    return (await attachmentCounts(db, [fieldId])).get(fieldId) ?? 0;
+  }
+
+  /**
+   * The CTR-016 narrowing guard's number: attachments in modules other
+   * than the narrow target's own. Only the contract join exists this
+   * milestone, so narrowing to `contract` can never be blocked by it;
+   * the matter and entity joins add their counts with M22/M27, and this
+   * function is where they join the sum.
+   */
+  async function attachmentsOutsideModule(
+    db: Reader,
+    fieldId: string,
+    targetScope: string,
+  ): Promise<number> {
+    if (targetScope === "contract") return 0;
+    return inUseCountOf(db, fieldId);
+  }
+
   app.get(
     "/fields",
     {
@@ -170,7 +191,11 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
             : and(scoped, isNull(fields.archivedAt)),
         )
         .orderBy(asc(fields.createdAt), asc(fields.id));
-      return { fields: rows.map(toRow) };
+      const counts = await attachmentCounts(
+        app.db,
+        rows.map((row) => row.id),
+      );
+      return { fields: rows.map((row) => toRow(row, counts.get(row.id) ?? 0)) };
     },
   );
 
@@ -240,7 +265,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return created!;
       });
-      return reply.status(201).send({ field: toRow(row) });
+      return reply.status(201).send({ field: toRow(row, 0) });
     },
   );
 
@@ -314,7 +339,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return updated!;
       });
-      return { field: toRow(row) };
+      return { field: toRow(row, await inUseCountOf(app.db, row.id)) };
     },
   );
 
@@ -342,7 +367,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         // row and write no misleading from==to audit entry.
         if (target.moduleScope === moduleScope) return target;
         const narrowing = target.moduleScope === "global";
-        if (narrowing && CROSS_MODULE_ATTACHMENT_COUNT > 0) {
+        if (narrowing && (await attachmentsOutsideModule(tx, target.id, moduleScope)) > 0) {
           throw httpError(
             409,
             `${target.displayName} is attached outside the contract module — ` +
@@ -363,7 +388,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return updated!;
       });
-      return { field: toRow(row) };
+      return { field: toRow(row, await inUseCountOf(app.db, row.id)) };
     },
   );
 
@@ -400,12 +425,12 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
             slug: target.slug,
             displayName: target.displayName,
             moduleScope: target.moduleScope,
-            inUseCount: IN_USE_COUNT,
+            inUseCount: await inUseCountOf(tx, target.id),
           },
         });
         return updated!;
       });
-      return { field: toRow(row) };
+      return { field: toRow(row, await inUseCountOf(app.db, row.id)) };
     },
   );
 
@@ -441,7 +466,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return updated!;
       });
-      return { field: toRow(row) };
+      return { field: toRow(row, await inUseCountOf(app.db, row.id)) };
     },
   );
 };

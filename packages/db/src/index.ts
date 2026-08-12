@@ -13,6 +13,7 @@ import pg from "pg";
 import * as activitySchema from "./schema/activity.js";
 import * as authSchema from "./schema/auth.js";
 import * as contractStatusesSchema from "./schema/contract-statuses.js";
+import * as contractTypeFieldsSchema from "./schema/contract-type-fields.js";
 import * as contractTypesSchema from "./schema/contract-types.js";
 import * as fieldsSchema from "./schema/fields.js";
 import * as orgSchema from "./schema/org.js";
@@ -20,6 +21,7 @@ import * as orgSchema from "./schema/org.js";
 export * from "./schema/activity.js";
 export * from "./schema/auth.js";
 export * from "./schema/contract-statuses.js";
+export * from "./schema/contract-type-fields.js";
 export * from "./schema/contract-types.js";
 export * from "./schema/fields.js";
 export * from "./schema/org.js";
@@ -27,6 +29,7 @@ export const schema = {
   ...activitySchema,
   ...authSchema,
   ...contractStatusesSchema,
+  ...contractTypeFieldsSchema,
   ...contractTypesSchema,
   ...fieldsSchema,
   ...orgSchema,
@@ -34,7 +37,21 @@ export const schema = {
 
 // Query operators re-exported so consumers use this package's drizzle-orm
 // instance — a second copy (peer-variant split) makes SQL types incompatible.
-export { and, asc, count, desc, eq, inArray, isNull, lt, gt, ne, or, sql } from "drizzle-orm";
+export {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  gt,
+  ne,
+  or,
+  sql,
+} from "drizzle-orm";
 
 export type Db = NodePgDatabase<typeof schema> & { $client: pg.Pool };
 

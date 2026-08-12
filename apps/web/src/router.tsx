@@ -25,6 +25,10 @@ import {
   settingsContractStatusesLoader,
 } from "./routes/settings-contract-statuses";
 import {
+  SettingsContractTypeEditorPage,
+  settingsContractTypeEditorLoader,
+} from "./routes/settings-contract-type-editor";
+import {
   SettingsContractTypesPage,
   settingsContractsIndexLoader,
   settingsContractTypesLoader,
@@ -90,6 +94,12 @@ export const routes: RouteObject[] = [
         path: "contracts/types",
         loader: settingsContractTypesLoader,
         element: <SettingsContractTypesPage />,
+      },
+      {
+        // #84: each type row opens its own editor screen (ST16).
+        path: "contracts/types/:typeId",
+        loader: settingsContractTypeEditorLoader,
+        element: <SettingsContractTypeEditorPage />,
       },
       {
         path: "contracts/statuses",

@@ -6,9 +6,9 @@
  * at creation and immutable; display names are presentation. Eight rows
  * are seeded by the migration that creates the table; the `other` row is
  * system-protected in application code — no archive, no hard delete — so
- * a non-null fallback type always exists. The `description` column and
- * the per-type field attachments arrive with the type-editor feature
- * (TECH-014: columns land with the feature that reads them).
+ * a non-null fallback type always exists. The per-type field
+ * attachments live in `contract_type_fields` (CTR-016), managed from
+ * the type editor.
  */
 
 import { boolean, integer, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
@@ -21,6 +21,8 @@ export const contractTypes = pgTable(
     /** Machine identity, derived from the name at creation; never changes. */
     slug: text("slug").notNull(),
     displayName: text("display_name").notNull(),
+    /** Shown in the type editor; NULL = the type has no description. */
+    description: text("description"),
     /** Picker and list position, 1-based; reorder rewrites the live rows. */
     displayOrder: integer("display_order").notNull(),
     /** True for the eight CTR-002 seed rows; user-created rows are false. */
