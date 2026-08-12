@@ -17,6 +17,13 @@
  * which role — so it takes a dialog, which is the compound-edit case
  * DES-017 carves out of the inline rule.
  *
+ * Our side of the contract is CTR-011's: the Entity that signs, picked
+ * from the M7 registry and labelled "Our entity" as the C2 mock draws
+ * it. It commits like every other field. The picker reads the
+ * registry's own Member+ list, so an archived entity is never offered;
+ * one already saved on the record stays selectable as itself. Their
+ * side — the counterparties — lands with its own ticket.
+ *
  * This is the first production mount of the DES-016 record activity
  * bar. Its applet set is limited to what exists before M9: chat
  * (CMT-004) and history (DD-017) have no panels yet, so only the
@@ -47,6 +54,7 @@ import {
   riskLabel,
   severityLabel,
   SEVERITY_LEVELS,
+  signingEntityOptions,
   STAGE_PILL,
   teamRoleLabel,
   type ContractRow,
@@ -79,24 +87,33 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
   if (!isMemberPlus(user.role)) return redirect("/");
   const number = Number(params.contractNumber);
   if (!Number.isInteger(number) || number < 1) throw new Error("That is not a contract reference.");
-  const [record, options] = await Promise.all([
+  const [record, options, registry] = await Promise.all([
     api.GET("/api/v1/contracts/{number}", { params: { path: { number } } }),
     api.GET("/api/v1/contracts/options"),
+    // The registry's own Member+ list is the signing-entity picker's
+    // source (CTR-011): it is ordered by legal name and already leaves
+    // archived entities out, so the contracts surface needs no read of
+    // its own the way it does for the Administrator-only taxonomies.
+    api.GET("/api/v1/entities"),
   ]);
-  if (!record.data || !options.data) throw new Error("The contract could not be read.");
+  if (!record.data || !options.data || !registry.data) {
+    throw new Error("The contract could not be read.");
+  }
   return {
     user,
     contract: record.data.contract,
     team: record.data.team,
     contractStatuses: options.data.contractStatuses,
     users: options.data.users,
+    entities: registry.data.entities,
   };
 }
 
-/** The fields that commit as free text (DES-017); the Owner, status,
- * priority, and risk have their own selects. */
+/** The fields that commit as free text (DES-017); the Owner, our
+ * signing entity, the status, priority, and risk have their own
+ * selects. */
 type TextFieldKey = "title" | "description";
-type FieldKey = TextFieldKey | "managerId" | "statusId" | "priority" | "risk";
+type FieldKey = TextFieldKey | "managerId" | "entityId" | "statusId" | "priority" | "risk";
 
 /** The one applet the record offers before M9 — SET-001's deep link to
  * the contract configuration behind this record. */
@@ -120,7 +137,7 @@ export function ContractRecordPage() {
 }
 
 function ContractRecord() {
-  const { user, contract, team, contractStatuses, users } =
+  const { user, contract, team, contractStatuses, users, entities } =
     useLoaderData<typeof contractRecordLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
@@ -223,6 +240,7 @@ function ContractRecord() {
    * (DD-013) — so only Member+ people are offered. The API's refusal is
    * the real guard; this keeps the picker from offering a dead end. */
   const ownerOptions = users.filter((person: UserOption) => isMemberPlus(person.role));
+  const entityOptions = signingEntityOptions(entities, saved.entity);
   /** The saved status may have been archived since, and so be absent
    * from the picker read — keep it selectable as itself rather than let
    * the select lie about what the record holds. */
@@ -400,6 +418,44 @@ function ContractRecord() {
                     <StatusNote
                       status={fieldStatus.managerId ?? "idle"}
                       detail={fieldError.managerId}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="contract-entity">
+                    {/* "Our entity" as the C2 mock labels it: the Entity
+                        is ours, the Counterparty is theirs, and the
+                        record must never blur the two (CONTEXT.md). */}
+                    <FormattedMessage id="contracts.form.entity" defaultMessage="Our entity" />
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <select
+                      id="contract-entity"
+                      value={saved.entity?.id ?? ""}
+                      className={CONTROL_CLASS}
+                      disabled={archived}
+                      onChange={(event) =>
+                        void commit("entityId", { entityId: event.target.value || null })
+                      }
+                    >
+                      {/* Empty is a real answer: a contract is often
+                        recorded before anyone decides which of ours
+                        signs it (CTR-011). */}
+                      <option value="">
+                        {intl.formatMessage({
+                          id: "contracts.entityUnknown",
+                          defaultMessage: "Not known yet",
+                        })}
+                      </option>
+                      {entityOptions.map((entity) => (
+                        <option key={entity.id} value={entity.id}>
+                          {entity.legalName}
+                        </option>
+                      ))}
+                    </select>
+                    <StatusNote
+                      status={fieldStatus.entityId ?? "idle"}
+                      detail={fieldError.entityId}
                     />
                   </div>
                 </div>

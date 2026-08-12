@@ -829,14 +829,14 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** One contract by its CTR-003 number, with its Owner and its working group — the record page's read; archived contracts answer too, so restore stays reachable */
+    /** One contract by its CTR-003 number, with its Owner, its signing entity, and its working group — the record page's read; archived contracts answer too, so restore stays reachable */
     get: operations["getContract"];
     put?: never;
     post?: never;
     delete?: never;
     options?: never;
     head?: never;
-    /** Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, priority, risk, or the status — any live status may follow any other (CTR-001). Never on an archived contract */
+    /** Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, or the status — any live status may follow any other (CTR-001). Never on an archived contract */
     patch: operations["updateContract"];
     trace?: never;
   };
@@ -3945,6 +3945,10 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              entity: {
+                id: string;
+                legalName: string;
+              } | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
@@ -4007,6 +4011,10 @@ export interface operations {
                 displayName: string;
                 image: string | null;
                 archived: boolean;
+              } | null;
+              entity: {
+                id: string;
+                legalName: string;
               } | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
@@ -4116,6 +4124,10 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              entity: {
+                id: string;
+                legalName: string;
+              } | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
@@ -4163,6 +4175,7 @@ export interface operations {
           title?: string;
           description?: string | null;
           managerId?: string | null;
+          entityId?: string | null;
           /** @enum {string} */
           priority?: "low" | "medium" | "high" | "critical";
           risk?: ("low" | "medium" | "high" | "critical") | null;
@@ -4193,6 +4206,10 @@ export interface operations {
                 displayName: string;
                 image: string | null;
                 archived: boolean;
+              } | null;
+              entity: {
+                id: string;
+                legalName: string;
               } | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
@@ -4342,6 +4359,10 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              entity: {
+                id: string;
+                legalName: string;
+              } | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
@@ -4399,6 +4420,10 @@ export interface operations {
                 displayName: string;
                 image: string | null;
                 archived: boolean;
+              } | null;
+              entity: {
+                id: string;
+                legalName: string;
               } | null;
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";

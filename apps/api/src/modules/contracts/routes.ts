@@ -14,6 +14,14 @@
  * person, role), so one person may hold two roles at once, and it has
  * its own routes and its own audit verbs.
  *
+ * Our side of the contract is CTR-011's: `entity_id`, one nullable FK
+ * into the M7 registry, naming which of our own Entities signs. It is a
+ * field like any other, so it commits through the same per-field PATCH
+ * and rides `contract.updated`. The picker reads the registry's own
+ * Member+ list, which already leaves archived entities out; the write
+ * refuses one, so nothing new is signed by an entity that has left.
+ * Their side — the counterparties — lands with its own ticket.
+ *
  * Every route is addressed by the contract's CTR-003 number, not its
  * id: the number is the reference a Legal Team Member speaks, links,
  * and emails, so it is what the URL carries. The database assigns it
@@ -43,6 +51,7 @@ import {
   CONTRACT_STAGES,
   CONTRACT_TEAM_ROLES,
   desc,
+  entities,
   eq,
   isNull,
   SEVERITY_LEVELS,
@@ -85,6 +94,17 @@ const PersonSchema = z.object({
  * roles — that is membership, not a duplicate. */
 const TeamMemberSchema = PersonSchema.extend({ role: z.enum(CONTRACT_TEAM_ROLES) });
 
+/** One of our own Entities as the contract record names it (CTR-011):
+ * the id the picker commits and the legal name that goes on the paper.
+ * Archiving an entity later never touches the record — the contract
+ * keeps naming who signed it, and the registry is where its standing is
+ * read. Nothing more of the identity card is joined in: the record
+ * renders a name, not a card. */
+const SigningEntitySchema = z.object({
+  id: z.string(),
+  legalName: z.string(),
+});
+
 const ContractRowSchema = z.object({
   id: z.string(),
   /** CTR-003's immutable global reference, rendered C-###. */
@@ -101,6 +121,11 @@ const ContractRowSchema = z.object({
   /** CTR-004's single accountable person, labelled "Owner" in the UI.
    * NULL = unassigned, which reads as triage, not as missing data. */
   manager: PersonSchema.nullable(),
+  /** CTR-011's our side: which of our Entities signs. NULL until known.
+   * The list does not draw it (the C1 mock has no such column), but it
+   * is a field of the record, and a field rides the row the per-field
+   * PATCH answers with — the same place `description` sits. */
+  entity: SigningEntitySchema.nullable(),
   priority: SeveritySchema,
   /** NULL = not yet assessed, which is not the same as low (CTR-005). */
   risk: SeveritySchema.nullable(),
@@ -162,14 +187,23 @@ function toPersonOrNull(person: JoinedPerson | null) {
   return person ? toPerson(person) : null;
 }
 
+/** An entity row as the outer join answers it, where no entity yet is a
+ * real answer (CTR-011). */
+interface JoinedEntity {
+  id: string;
+  legalName: string;
+}
+
 /** The joined shape every route answers with — the stored row plus the
- * two display names, the derived stage, and the Owner. */
+ * two display names, the derived stage, the Owner, and the entity that
+ * signs. */
 interface ContractContext {
   row: Contract;
   contractTypeName: string;
   statusName: string;
   stage: (typeof CONTRACT_STAGES)[number];
   manager: JoinedPerson | null;
+  entity: JoinedEntity | null;
 }
 
 function toRow(context: ContractContext) {
@@ -184,6 +218,7 @@ function toRow(context: ContractContext) {
     statusName: context.statusName,
     stage: context.stage,
     manager: toPersonOrNull(context.manager),
+    entity: context.entity,
     priority: row.priority,
     risk: row.risk,
     description: row.description,
@@ -198,8 +233,9 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
   type Executor = typeof app.db | Tx;
 
   /** The one read shape: the contract with its type name, status label,
-   * derived stage, and Owner. The Owner joins outward — unassigned is a
-   * real state (CTR-004), so a contract without one still reads. */
+   * derived stage, Owner, and signing entity. Both people-and-parties
+   * joins go outward — unassigned (CTR-004) and not-yet-known (CTR-011)
+   * are real states, so a contract missing either still reads. */
   const selectContracts = (db: Executor) =>
     db
       .select({
@@ -213,11 +249,16 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           image: users.image,
           archivedAt: users.archivedAt,
         },
+        entity: {
+          id: entities.id,
+          legalName: entities.legalName,
+        },
       })
       .from(contracts)
       .innerJoin(contractTypes, eq(contracts.contractTypeId, contractTypes.id))
       .innerJoin(contractStatuses, eq(contracts.statusId, contractStatuses.id))
-      .leftJoin(users, eq(contracts.managerId, users.id));
+      .leftJoin(users, eq(contracts.managerId, users.id))
+      .leftJoin(entities, eq(contracts.entityId, entities.id));
 
   /** The working group on one contract, alphabetical by name so the
    * roster reads the same on every visit; a person holding two roles
@@ -385,9 +426,9 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "getContract",
         summary:
-          "One contract by its CTR-003 number, with its Owner and its " +
-          "working group — the record page's read; archived contracts " +
-          "answer too, so restore stays reachable",
+          "One contract by its CTR-003 number, with its Owner, its " +
+          "signing entity, and its working group — the record page's " +
+          "read; archived contracts answer too, so restore stays reachable",
         tags: ["contracts"],
         params: NumberParams,
         response: { 200: ContractRecordEnvelope, default: problemResponse },
@@ -487,8 +528,10 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           contractTypeName: contractType.displayName,
           statusName: draft.displayName,
           stage: draft.stage,
-          // A new contract is unassigned; the Owner is set on the record.
+          // A new contract is unassigned, and which of ours signs is
+          // not known yet; both are set on the record afterwards.
           manager: null,
+          entity: null,
         };
       });
       return reply.status(201).send({ contract: toRow(created) });
@@ -503,9 +546,9 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "updateContract",
         summary:
           "Commit one field of a contract in place (DES-017 per-field " +
-          "commits): title, description, the Owner, priority, risk, or " +
-          "the status — any live status may follow any other (CTR-001). " +
-          "Never on an archived contract",
+          "commits): title, description, the Owner, the signing entity, " +
+          "priority, risk, or the status — any live status may follow " +
+          "any other (CTR-001). Never on an archived contract",
         tags: ["contracts"],
         params: NumberParams,
         // Strict: an unknown key is a client bug, not a silent strip.
@@ -515,6 +558,9 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           /** CTR-004's Owner. `null` clears it back to unassigned —
            * a real state (triage), not an absent field. */
           managerId: z.string().nullable().optional(),
+          /** CTR-011's our side. `null` clears it back to not known,
+           * which is where every contract starts. */
+          entityId: z.string().nullable().optional(),
           priority: SeveritySchema.optional(),
           risk: SeveritySchema.nullable().optional(),
           statusId: z.string().optional(),
@@ -565,6 +611,41 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           changed.owner = {
             from: current.manager?.displayName ?? null,
             to: manager?.displayName ?? null,
+          };
+        }
+
+        // Our side of the contract (CTR-011). The picker offers live
+        // entities only, so the write refuses an archived one: nothing
+        // new gets signed by an entity that has left the registry. An
+        // entity archived after the fact stays on the record untouched.
+        let entity = current.entity;
+        if (body.entityId !== undefined && body.entityId !== target.entityId) {
+          if (body.entityId === null) {
+            entity = null;
+          } else {
+            // Lock the entity row so a concurrent archive can't slip
+            // between the check and the update.
+            const [signatory] = await tx
+              .select({
+                id: entities.id,
+                legalName: entities.legalName,
+                archivedAt: entities.archivedAt,
+              })
+              .from(entities)
+              .where(eq(entities.id, body.entityId))
+              .limit(1)
+              .for("update");
+            if (!signatory || signatory.archivedAt) {
+              throw httpError(400, "The signing entity must be a live entity.");
+            }
+            entity = { id: signatory.id, legalName: signatory.legalName };
+          }
+          patch.entityId = entity?.id ?? null;
+          // The audit map carries legal names, not ids — the M9 viewer
+          // narrates "Entity changed from X to Y".
+          changed.entity = {
+            from: current.entity?.legalName ?? null,
+            to: entity?.legalName ?? null,
           };
         }
 
@@ -648,6 +729,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           statusName,
           stage,
           manager,
+          entity,
         };
       });
       return { contract: toRow(updated) };
