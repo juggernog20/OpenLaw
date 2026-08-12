@@ -34,6 +34,11 @@ import {
   settingsContractTypesLoader,
 } from "./routes/settings-contract-types";
 import {
+  SettingsEntityTypesPage,
+  settingsEntitiesIndexLoader,
+  settingsEntityTypesLoader,
+} from "./routes/settings-entity-types";
+import {
   SettingsMatterTypeEditorPage,
   settingsMatterTypeEditorLoader,
 } from "./routes/settings-matter-type-editor";
@@ -131,6 +136,14 @@ export const routes: RouteObject[] = [
         path: "contracts/fields",
         loader: settingsContractFieldsLoader,
         element: <SettingsContractFieldsPage />,
+      },
+      { path: "entities", loader: settingsEntitiesIndexLoader, element: <></> },
+      {
+        // #97: no per-type editor screen — entity-scoped fields render
+        // on every entity (ENT-001), so nothing attaches per type.
+        path: "entities/types",
+        loader: settingsEntityTypesLoader,
+        element: <SettingsEntityTypesPage />,
       },
     ],
   },

@@ -758,6 +758,78 @@
   "settings.contracts.title": {
     "defaultMessage": "Contracts"
   },
+  "settings.entities.tab.types": {
+    "defaultMessage": "Types"
+  },
+  "settings.entities.tabsLabel": {
+    "defaultMessage": "Entities panes"
+  },
+  "settings.entities.title": {
+    "defaultMessage": "Entities"
+  },
+  "settings.entityTypes.add": {
+    "defaultMessage": "Add type"
+  },
+  "settings.entityTypes.addName": {
+    "defaultMessage": "New type name"
+  },
+  "settings.entityTypes.archive": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.entityTypes.archiveError": {
+    "defaultMessage": "The type could not be archived."
+  },
+  "settings.entityTypes.archiveSubmit": {
+    "defaultMessage": "Archive type"
+  },
+  "settings.entityTypes.archiveTitle": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.entityTypes.archiveWarning": {
+    "defaultMessage": "{count, plural, =0 {{name} is not used by any entities — it can be archived without reassignment.} one {{name} is used by # entity. Pick a replacement type — that entity moves to it when the type is archived.} other {{name} is used by # entities. Pick a replacement type — those entities move to it when the type is archived.}}"
+  },
+  "settings.entityTypes.auditNote": {
+    "defaultMessage": "The change applies immediately and is recorded in the audit log."
+  },
+  "settings.entityTypes.count": {
+    "defaultMessage": "{count, plural, one {# type} other {# types}}"
+  },
+  "settings.entityTypes.help": {
+    "defaultMessage": "Drag to reorder. Archiving a type in use asks for a replacement; Other can't be archived."
+  },
+  "settings.entityTypes.inUse": {
+    "defaultMessage": "{count, plural, one {# entity} other {# entities}}"
+  },
+  "settings.entityTypes.locked": {
+    "defaultMessage": "{name} is system-protected and can't be archived"
+  },
+  "settings.entityTypes.moved": {
+    "defaultMessage": "{name} moved to position {position} of {total}."
+  },
+  "settings.entityTypes.noCandidates": {
+    "defaultMessage": "No other active type can take its entities. Add or restore another type first."
+  },
+  "settings.entityTypes.pageTitle": {
+    "defaultMessage": "Entity types"
+  },
+  "settings.entityTypes.reassignLabel": {
+    "defaultMessage": "Reassign {count, plural, =0 {entities} one {# entity} other {# entities}} to"
+  },
+  "settings.entityTypes.reassignNone": {
+    "defaultMessage": "No reassignment"
+  },
+  "settings.entityTypes.renameLabel": {
+    "defaultMessage": "Rename {name}"
+  },
+  "settings.entityTypes.reorder": {
+    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
+  },
+  "settings.entityTypes.restore": {
+    "defaultMessage": "Restore {name}"
+  },
+  "settings.entityTypes.title": {
+    "defaultMessage": "Entity types"
+  },
   "settings.field.error": {
     "defaultMessage": "The change could not be saved. Try again."
   },
@@ -1027,6 +1099,9 @@
   },
   "settings.section.contracts": {
     "defaultMessage": "Contracts"
+  },
+  "settings.section.entities": {
+    "defaultMessage": "Entities"
   },
   "settings.section.general": {
     "defaultMessage": "General"
