@@ -19,6 +19,9 @@ export const ACTIVITY_ENTITY_TYPES = [
   "document",
   "request",
   "user",
+  /** A corporate Entity (the registry record, M7) — not the generic
+   * polymorphic sense of this column pair (see CONTEXT.md). */
+  "entity",
   "system",
 ] as const;
 export type ActivityEntityType = (typeof ACTIVITY_ENTITY_TYPES)[number];
@@ -59,7 +62,7 @@ export const activityLog = pgTable(
     index("activity_log_action_idx").on(table.action, table.createdAt),
     check(
       "activity_log_entity_type_check",
-      sql`${table.entityType} in ('matter', 'contract', 'document', 'request', 'user', 'system')`,
+      sql`${table.entityType} in ('matter', 'contract', 'document', 'request', 'user', 'entity', 'system')`,
     ),
     check(
       "activity_log_visibility_check",

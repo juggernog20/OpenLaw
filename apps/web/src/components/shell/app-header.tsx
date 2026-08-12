@@ -24,7 +24,7 @@ export function AppHeader({
       <div className="flex shrink-0 items-center gap-4">
         {/* Below md the top nav is gone; the drawer's hamburger stands
             in for it here (DES-012, #46). */}
-        <NavDrawer />
+        <NavDrawer role={user.role} />
         {/* Warm gives the brand mark a dark chip; Light/Dark leave the
             chip transparent (DES-019). */}
         <span

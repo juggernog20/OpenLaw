@@ -875,6 +875,58 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/entities": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The registry, ordered by legal name (ENT-001) — the seam the M8 signing-entity picker consumes; archived rows only with includeArchived=true */
+    get: operations["listEntities"];
+    put?: never;
+    /** Register an entity with its ENT-001 identity card: legal name and type required, the rest optional; status defaults to active */
+    post: operations["createEntity"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/types": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The live entity types in display order — the register form's Member+ picker source (the /entity-types settings surface stays Administrator-only per SET-002) */
+    get: operations["listEntityTypeOptions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Archive an entity (soft delete, ENT-001): it leaves the list and the M8 picker; nothing is deleted, and #99's restore is the recovery story */
+    post: operations["archiveEntity"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/fields": {
     parameters: {
       query?: never;
@@ -4032,6 +4084,208 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listEntities: {
+    parameters: {
+      query?: {
+        includeArchived?: "true" | "false";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            entities: {
+              id: string;
+              legalName: string;
+              entityTypeId: string;
+              entityTypeName: string;
+              jurisdiction: string | null;
+              formedOn: string | null;
+              registrationNumber: string | null;
+              taxId: string | null;
+              registeredAgent: string | null;
+              registeredAddress: string | null;
+              /** @enum {string} */
+              status: "active" | "dormant" | "dissolved" | "divested";
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createEntity: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          legalName: string;
+          entityTypeId: string;
+          jurisdiction?: string;
+          /** Format: date */
+          formedOn?: string;
+          registrationNumber?: string;
+          taxId?: string;
+          registeredAgent?: string;
+          registeredAddress?: string;
+          /** @enum {string} */
+          status?: "active" | "dormant" | "dissolved" | "divested";
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            entity: {
+              id: string;
+              legalName: string;
+              entityTypeId: string;
+              entityTypeName: string;
+              jurisdiction: string | null;
+              formedOn: string | null;
+              registrationNumber: string | null;
+              taxId: string | null;
+              registeredAgent: string | null;
+              registeredAddress: string | null;
+              /** @enum {string} */
+              status: "active" | "dormant" | "dissolved" | "divested";
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listEntityTypeOptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            entityTypes: {
+              id: string;
+              slug: string;
+              displayName: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  archiveEntity: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            entity: {
+              id: string;
+              legalName: string;
+              entityTypeId: string;
+              entityTypeName: string;
+              jurisdiction: string | null;
+              formedOn: string | null;
+              registrationNumber: string | null;
+              taxId: string | null;
+              registeredAgent: string | null;
+              registeredAddress: string | null;
+              /** @enum {string} */
+              status: "active" | "dormant" | "dissolved" | "divested";
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
             };
           };
         };

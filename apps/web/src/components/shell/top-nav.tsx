@@ -9,11 +9,13 @@
 
 import { NavLink } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
+import type { Role } from "../../lib/roles";
 import { cn } from "../../lib/utils";
-import { destinations } from "./destinations";
+import { destinationsFor } from "./destinations";
 
-export function TopNav() {
+export function TopNav({ role }: Readonly<{ role: Role }>) {
   const intl = useIntl();
+  const destinations = destinationsFor(role);
   return (
     <nav
       aria-label={intl.formatMessage({ id: "shell.nav.primary", defaultMessage: "Primary" })}

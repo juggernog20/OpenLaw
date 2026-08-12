@@ -3,7 +3,8 @@
 /**
  * The application shell (#41): after sign-in the chrome renders — the
  * header with the product mark, search, and user menu; the top nav
- * driven by the destination registry (Home only at M4); and the page
+ * driven by the destination registry, filtered to the signed-in role
+ * (Home for everyone; Entities is Member+ per ENT-004); and the page
  * sub-bar carrying the page title. Visuals come from the Light frames
  * in designs/final-themes.pen; geometry is asserted in the e2e suite
  * where real layout exists.
@@ -39,15 +40,28 @@ describe("app shell chrome", () => {
     expect(trigger).toHaveTextContent("CC");
   });
 
-  it("renders the nav from the destination registry: Home only, marked current", async () => {
+  it("renders the nav from the destination registry, filtered to the signed-in role", async () => {
+    // Member+ gets every registered destination (Home, then the M7
+    // Entities registry), with the current one marked.
     stubApi({ signedIn: MEMBER });
     renderAt("/");
 
     const nav = await screen.findByRole("navigation");
     const links = within(nav).getAllByRole("link");
-    expect(links).toHaveLength(1);
-    expect(links[0]).toHaveAccessibleName("Home");
+    expect(links.map((link) => link.textContent)).toEqual(["Home", "Entities"]);
     expect(links[0]).toHaveAttribute("aria-current", "page");
+    expect(links[1]).not.toHaveAttribute("aria-current");
+  });
+
+  it("draws a Business User no Entities destination at all (ENT-004)", async () => {
+    stubApi({
+      signedIn: { id: "u9", email: "bao@example.com", displayName: "Bao B", role: "business_user" },
+    });
+    renderAt("/");
+
+    const nav = await screen.findByRole("navigation");
+    const links = within(nav).getAllByRole("link");
+    expect(links.map((link) => link.textContent)).toEqual(["Home"]);
   });
 
   it("renders the page sub-bar with the page title as the page's h1", async () => {

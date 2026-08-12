@@ -71,7 +71,7 @@ export function AppShell({
       <div className="@container/shell flex min-h-screen flex-col bg-canvas text-primary">
         <SkipLink />
         <AppHeader user={user} onSignOut={onSignOut} />
-        <TopNav />
+        <TopNav role={user.role} />
         {subbar}
         {/* tabIndex={-1} makes the skip-link target programmatically
             focusable, so activating the link moves keyboard focus here in
