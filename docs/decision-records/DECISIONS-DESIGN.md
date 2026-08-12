@@ -1267,7 +1267,14 @@ One written contract keeps five later panes from re-deriving the pattern by eye.
 
 The Contracts → Types pane (#81) is the reference implementation. Later taxonomy panes (matter types, statuses, fields, request types, approver groups) build to this record and extend it — a statuses pane adds its stage column and blocking guard without reopening the row anatomy. The reassignment select inside the guard modal is the shared bulk-reassign affordance SET-003 promised. When a later surface genuinely can't fit this anatomy, that's a new DES record, not a local deviation.
 
-## DES-021: List-editor table variant and the field-editor dialog (extends DES-020)
+### Amendments (2026-08-12, #86 acceptance sweep)
+
+The M6 build diverged from four clauses above. The build stands; the superseded wording is marked here, not rewritten.
+
+1. **Trailing actions.** The row-anatomy clause "a 44px trailing-action column holding one icon button" is superseded. As shipped, the trailing slot is a cluster: the row's SET-003 save micro-state, then any pane-supplied edit action — the pencil that opens the DES-021 editor dialog (fields) or navigates to the DES-022 editor screen (types) — then archive, restore, or the lock. 44px stands as the slot's minimum, not its fixed width.
+2. **Inline add.** The Add clause's "creation is one field" is superseded. The inline draft row carries the name plus at most one creation-time dimension — the statuses pane's stage select (CTR-001) rides the row. Creation richer than that opens the DES-021 editor dialog.
+3. **Archive guard.** A third guard outcome shipped beside reassign and block: when in-use rows exist and no other live row can take them, the modal disables the select and the danger CTA and says why ("No other active type can take its contracts. Add or restore another type first."). At a zero count the select stays drawn and disabled with a "No reassignment" placeholder, as written.
+4. **Show archived.** The header-strip toggle renders only when archived rows exist. A taxonomy with nothing archived draws no toggle.
 
 - **Status:** Accepted
 - **Date:** 2026-08-12
@@ -1301,6 +1308,10 @@ The alternative was forcing the catalog into the plain anatomy (losing the type/
 ### Consequences
 
 `apps/web/src/components/list-editor.tsx` carries the pattern; the Types (#81) and Statuses (#82) panes were refactored onto it with their test suites unchanged. Later taxonomy panes choose: plain anatomy (inline add, optional reorder) or the table variant (columns, dialog editor) — both are this one component. The M22 Matters → Fields pane reuses the fields pane's table variant with the scope picker widened to `matter`.
+
+### Amendment (2026-08-12, #86 acceptance sweep)
+
+The shipped dialog carries the name field too: create names the field, and edit commits a changed name alongside the other dimensions. The "non-name dimensions" wording above is superseded on that point only — in-place rename on the name cell stands, and the dialog is a second path to the name, not the only one.
 
 ## DES-022: The type-editor screen — identity card plus attachment table (extends DES-020)
 
