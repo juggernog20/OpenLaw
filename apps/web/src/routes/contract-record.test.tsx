@@ -3125,9 +3125,13 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
   });
 
   it("offers Manage team to an Administrator, and lands it on the Team card", async () => {
+    // The roster names somebody else as creator and there is no Owner,
+    // so the role is the only thing that qualifies this viewer — the
+    // default roster's creator is u1, which would let this pass on the
+    // creator clause alone.
     stubApi({
       signedIn: ADMIN,
-      extra: recordApi(contractRow({ isConfidential: true })).handler,
+      extra: recordApi(contractRow({ isConfidential: true }), [person("u2", "creator")]).handler,
     });
     renderAt("/contracts/42");
 
@@ -3137,6 +3141,9 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
       "#contract-team",
     );
     expect(screen.getByRole("region", { name: "Team" })).toHaveAttribute("id", "contract-team");
+    // The same clause gates the control: an Administrator off the team
+    // gets a working switch, not the inert reading.
+    expect(screen.getByRole("switch", { name: FLAG })).toBeEnabled();
   });
 
   it("offers Manage team to the creator — the row DD-014 means by that word", async () => {
@@ -3161,6 +3168,9 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
 
     const strip = await screen.findByRole("region", { name: BANNER });
     expect(within(strip).getByRole("link", { name: "Manage team" })).toBeInTheDocument();
+    // Ownership alone is what makes the control live here: the creator
+    // row belongs to somebody else.
+    expect(screen.getByRole("switch", { name: FLAG })).toBeEnabled();
   });
 
   it("offers it to nobody else on the team", async () => {
