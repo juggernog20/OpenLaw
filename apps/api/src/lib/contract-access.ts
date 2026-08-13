@@ -22,6 +22,13 @@
  * change. Answering that from anywhere else would mean a second copy of
  * the reach rule.
  *
+ * The mutation paths ask reach here too, on the contract row they have
+ * already locked. Until M10 they asked nothing: Member+ was a sufficient
+ * grant, so the locked read that starts every contract mutation carried
+ * no row scope. It is not sufficient now, and a write must leak no more
+ * than a read — so the write path and the read path answer out of one
+ * rule rather than two that could drift.
+ *
  * The mention candidates (CMT-007) are the same predicate turned around
  * — run over the people on this record rather than over its rows — so
  * the answer to "who can the typeahead offer" cannot disagree with the
@@ -282,13 +289,69 @@ export async function contractAudience(
  */
 export type ConfidentialityWrite = "allowed" | "refused" | "unreachable";
 
-/** The two facts about the contract this question turns on, as the
- * caller already holds them on the locked row. */
-export interface FlaggableContract {
+/** The three facts about a contract the questions below turn on, as
+ * every mutation already holds them on the row it locked. */
+export interface LockedContract {
   id: string;
   /** CTR-004's Owner. */
   managerId: string | null;
   isConfidential: boolean;
+}
+
+/** Every `contract_team` role one person holds on one contract, read
+ * live. Both questions below are built on it: reach asks whether there
+ * is any row at all, and the flag's actor set asks whether one of them
+ * is `creator`. */
+async function standingOn(
+  db: ContractAccessReader,
+  user: AuthenticatedUser,
+  contract: LockedContract,
+): Promise<{ standing: Standing; held: { role: string }[] }> {
+  const held = await db
+    .select({ role: contractTeam.role })
+    .from(contractTeam)
+    .where(and(eq(contractTeam.contractId, contract.id), eq(contractTeam.userId, user.id)));
+  return {
+    standing: {
+      role: user.role,
+      onTeam: held.length > 0,
+      isOwner: contract.managerId === user.id,
+    },
+    held,
+  };
+}
+
+/**
+ * Whether one viewer reaches one contract the caller already holds
+ * locked — the row scope's rule, asked about a row instead of used to
+ * choose rows.
+ *
+ * Every contract mutation asks this (CTR-021, DD-014). Member+ was a
+ * sufficient grant until M10, so the locked read that starts each
+ * mutation carried no row scope at all; the Confidential flag is the one
+ * thing that takes a contract away from a Legal Team Member, and a write
+ * must leak no more than a read.
+ *
+ * It is asked **after** the row lock and inside the same transaction,
+ * which is what makes it a decision rather than a guess. The contract
+ * row is held, so a concurrent flag change cannot land between this and
+ * the write; the team rows are read live under that same lock, and every
+ * route that changes them takes the same lock, so a team row removed a
+ * moment ago is already gone from this answer.
+ *
+ * Folding the row scope into the locked `SELECT` instead would read as
+ * tidier and would be harder to hold. That `SELECT` is a qualification
+ * Postgres re-checks against the row it waited for, under rules subtle
+ * enough that a refusal would be hard to tell from a bug; two plain
+ * statements under a lock the caller already holds are not.
+ */
+export async function reachesLockedContract(
+  db: ContractAccessReader,
+  user: AuthenticatedUser,
+  contract: LockedContract,
+): Promise<boolean> {
+  const { standing } = await standingOn(db, user, contract);
+  return reachesContract(standing, contract.isConfidential);
 }
 
 /**
@@ -313,20 +376,9 @@ export interface FlaggableContract {
 export async function confidentialityWrite(
   db: ContractAccessReader,
   user: AuthenticatedUser,
-  contract: FlaggableContract,
+  contract: LockedContract,
 ): Promise<ConfidentialityWrite> {
-  // Every role this person holds on this record, in one read: reach
-  // asks whether there is any, and the actor set asks whether one of
-  // them is `creator`.
-  const held = await db
-    .select({ role: contractTeam.role })
-    .from(contractTeam)
-    .where(and(eq(contractTeam.contractId, contract.id), eq(contractTeam.userId, user.id)));
-  const standing: Standing = {
-    role: user.role,
-    onTeam: held.length > 0,
-    isOwner: contract.managerId === user.id,
-  };
+  const { standing, held } = await standingOn(db, user, contract);
   if (!reachesContract(standing, contract.isConfidential)) return "unreachable";
   const isCreator = held.some((row) => row.role === CREATOR_TEAM_ROLE);
   return standing.role === "administrator" || standing.isOwner || isCreator ? "allowed" : "refused";

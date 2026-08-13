@@ -87,6 +87,15 @@
  * on it is answered exactly as they are for a contract that was never
  * made, in the list and at the record URL alike.
  *
+ * Every mutation asks the same question, on the row it has locked and
+ * inside its own transaction: the per-field patch whatever it carries,
+ * the status change, the team add and remove, the counterparty add,
+ * remove and primary change, and archive and restore. They all start at
+ * `lockedContract`, which is where the question is asked once. So a
+ * write against a contract the viewer cannot reach answers exactly as a
+ * write against a contract that does not exist, and a write leaks no
+ * more than a read.
+ *
  * Every mutation appends to the activity log in the same transaction
  * (DD-017); the feed and audit surfaces read it in M9.
  */
@@ -125,6 +134,7 @@ import {
   confidentialityWrite,
   contractTeamScope,
   CREATOR_TEAM_ROLE,
+  reachesLockedContract,
 } from "../../lib/contract-access.js";
 import {
   AttachedCustomFieldSchema,
@@ -710,13 +720,34 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
    * names, or 404s — every mutation starts here. One query, the same
    * join the reads use; `of: contracts` locks the contract row alone,
    * because the joined taxonomy rows are only read here.
+   *
+   * Reach is asked next, on the row this just locked and inside the same
+   * transaction (CTR-021, DD-014). Member+ was a sufficient grant until
+   * M10, so this read carried no row scope at all; the Confidential flag
+   * is the one thing that takes a contract away from a Legal Team
+   * Member, so every write now asks the question every read already
+   * asks — the shared predicate, not a second copy of it.
+   *
+   * The order is the point. The lock comes first, so the flag and the
+   * team rows cannot move under the answer; the question comes before
+   * anything is written, so a refusal changes nothing. A contract this
+   * viewer does not reach then answers exactly as a contract that was
+   * never made — the same status and the same words — so a write leaks
+   * no more than a read.
    */
-  async function lockedContract(tx: Tx, number: number): Promise<ContractContext> {
+  async function lockedContract(
+    tx: Tx,
+    number: number,
+    user: AuthenticatedUser,
+  ): Promise<ContractContext> {
     const [target] = await selectContracts(tx)
       .where(eq(contracts.number, number))
       .limit(1)
       .for("update", { of: contracts });
     if (!target) throw httpError(404, "No contract exists with this number.");
+    if (!(await reachesLockedContract(tx, user, target.row))) {
+      throw httpError(404, "No contract exists with this number.");
+    }
     return target;
   }
 
@@ -729,9 +760,15 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     }
   }
 
-  /** `lockedContract` for the write paths that refuse a frozen record. */
-  async function editableContract(tx: Tx, number: number): Promise<ContractContext> {
-    const current = await lockedContract(tx, number);
+  /** `lockedContract` for the write paths that refuse a frozen record.
+   * The reach refusal comes first, inside `lockedContract`: a 409 on a
+   * record the viewer cannot reach would say the record is there. */
+  async function editableContract(
+    tx: Tx,
+    number: number,
+    user: AuthenticatedUser,
+  ): Promise<ContractContext> {
+    const current = await lockedContract(tx, number, user);
     assertEditable(current);
     return current;
   }
@@ -740,16 +777,21 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
    * The two refusals behind the Confidential flag (DD-014, CTR-022),
    * decided by the shared access module and turned into HTTP here.
    *
-   * A viewer who does not reach the record is answered exactly as they
-   * are for a contract that does not exist — the same status and the
-   * same words `lockedContract` uses — so a write leaks no more than a
-   * read. A viewer who does reach it but is none of the three actors is
-   * refused plainly: they can already see the record, so 404 would hide
-   * nothing and would only make a real permission boundary read as a
-   * bug.
+   * A viewer who does reach the record but is none of the three actors
+   * is refused plainly: they can already see the record, so 404 would
+   * hide nothing and would only make a real permission boundary read as
+   * a bug.
+   *
+   * A viewer who does not reach the record never arrives here — every
+   * mutation is refused at `lockedContract` now, in the same words a
+   * contract that does not exist is refused in. The module still answers
+   * that case, and this still turns it into the same 404: the whole
+   * question has one home, and a caller that reads only half of the
+   * answer would be one refactor away from a leak.
    *
    * It runs before the archived refusal, because a 409 on a record the
-   * viewer cannot reach would say the record is there.
+   * viewer may not decide the audience of would tell them the flag write
+   * was theirs to make.
    */
   async function assertMayFlagConfidential(
     tx: Tx,
@@ -1262,10 +1304,12 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const body = request.body;
       const updated = await app.db.transaction(async (tx) => {
-        const current = await lockedContract(tx, request.params.number);
-        // The flag's own guard runs before the archived refusal: a
-        // viewer the record does not reach must not learn from a 409
-        // that it is there.
+        const current = await lockedContract(tx, request.params.number, request.user);
+        // Reach was answered above, for this patch and every other one,
+        // whatever the body carries. What is left is the flag's own
+        // narrower actor set, and it is asked before the archived
+        // refusal: a viewer who may not decide the audience should not
+        // learn from a 409 that the write was otherwise theirs to make.
         if (body.isConfidential !== undefined) {
           await assertMayFlagConfidential(tx, current, request.user);
         }
@@ -1581,7 +1625,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request, reply) => {
       const { userId, role } = request.body;
       const team = await app.db.transaction(async (tx) => {
-        const current = await editableContract(tx, request.params.number);
+        const current = await editableContract(tx, request.params.number, request.user);
         if (role === CREATOR_TEAM_ROLE) {
           throw httpError(400, "The creator is recorded when the contract is created.");
         }
@@ -1638,7 +1682,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const { userId, role } = request.params;
       const team = await app.db.transaction(async (tx) => {
-        const current = await editableContract(tx, request.params.number);
+        const current = await editableContract(tx, request.params.number, request.user);
         if (role === CREATOR_TEAM_ROLE) {
           throw httpError(409, "The creator stays on the record — it is who made it.");
         }
@@ -1712,7 +1756,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request, reply) => {
       const { counterpartyId, name } = request.body;
       const result = await app.db.transaction(async (tx) => {
-        const current = await editableContract(tx, request.params.number);
+        const current = await editableContract(tx, request.params.number, request.user);
 
         let party: JoinedCounterparty;
         let born = false;
@@ -1802,7 +1846,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const { counterpartyId } = request.params;
       const result = await app.db.transaction(async (tx) => {
-        const current = await editableContract(tx, request.params.number);
+        const current = await editableContract(tx, request.params.number, request.user);
         const [removed] = await tx
           .delete(contractCounterparties)
           .where(
@@ -1887,7 +1931,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const { counterpartyId } = request.params;
       const result = await app.db.transaction(async (tx) => {
-        const current = await editableContract(tx, request.params.number);
+        const current = await editableContract(tx, request.params.number, request.user);
         const [target] = await tx
           .select({
             id: counterparties.id,
@@ -1943,7 +1987,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const archived = await app.db.transaction(async (tx) => {
-        const current = await lockedContract(tx, request.params.number);
+        const current = await lockedContract(tx, request.params.number, request.user);
         if (current.row.archivedAt) throw httpError(409, "This contract is already archived.");
 
         const [row] = await tx
@@ -1981,7 +2025,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const restored = await app.db.transaction(async (tx) => {
-        const current = await lockedContract(tx, request.params.number);
+        const current = await lockedContract(tx, request.params.number, request.user);
         if (!current.row.archivedAt) throw httpError(409, "This contract is not archived.");
 
         const [row] = await tx
