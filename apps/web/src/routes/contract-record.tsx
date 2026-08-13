@@ -256,11 +256,11 @@ function ContractRecord() {
 
   const archived = saved.archivedAt !== null;
   /**
-   * Every control on the page is inert. Two states reach it and they
-   * read the same way (M9): an archived record, which is facts until
-   * it is restored, and a Contributor's record, which is facts because
-   * a Contributor reads. What differs is what the sub-bar offers and
-   * what the note above the cards says.
+   * True when every control on the page is inert. Two states reach it
+   * and they render the same way (CTR-021): an archived record, which
+   * is facts until it is restored, and a Contributor's record, which is
+   * facts because a Contributor reads. What differs is what the sub-bar
+   * offers and what the note above the cards says.
    */
   const frozen = archived || !canEdit;
 
