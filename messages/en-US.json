@@ -647,6 +647,21 @@
   "contracts.column.value": {
     "defaultMessage": "Value"
   },
+  "contracts.confidential.banner": {
+    "defaultMessage": "Confidential contract — the contract team, the Owner, and Administrators see it."
+  },
+  "contracts.confidential.bannerRegion": {
+    "defaultMessage": "Confidential contract"
+  },
+  "contracts.confidential.field": {
+    "defaultMessage": "Confidential — restrict to the contract team"
+  },
+  "contracts.confidential.hint": {
+    "defaultMessage": "Everyone outside the contract team loses the record and everything on it. The Owner and Administrators keep it."
+  },
+  "contracts.confidential.manageTeam": {
+    "defaultMessage": "Manage team"
+  },
   "contracts.count": {
     "defaultMessage": "{count, plural, one {# contract} other {# contracts}}"
   },

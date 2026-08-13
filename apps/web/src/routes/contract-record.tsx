@@ -59,6 +59,22 @@
  * contract) and restore live in the sub-bar; an archived record reads
  * as facts until restored.
  *
+ * Confidentiality (DD-014) is the record's third audience question,
+ * and the page answers it twice. The flag itself is a field of the
+ * record like any other, committed inline (DES-017) from the Contract
+ * card; the banner above the sub-bar is DES-009's Tier 2, drawn as
+ * `S8 ConfBanner` in the C8 mock and rendered for every viewer who
+ * reaches a confidential record.
+ *
+ * Three actors may change the audience — Administrators, the record's
+ * creator, and its Owner (CTR-022). They are the only ones who get a
+ * working control and the only ones offered the banner's "Manage team"
+ * link. Every other included viewer still reads the control, inert, the
+ * way an archived record already renders: the audience is a fact of the
+ * record, and hiding the control would hide the fact with it. The gate
+ * here mirrors `confidentialityWrite` exactly, because the API is the
+ * authority and a second rule would drift.
+ *
  * The page has two audiences (CTR-021). Member+ get the record above. A
  * Contributor on the contract's team gets the same page read-only: the
  * DES-017 inline-commit surface with every input inert, exactly the way
@@ -130,6 +146,8 @@ import { useCommentApplet } from "../components/comments/comment-applet";
 import { RecordApplets } from "../components/shell/record-applets";
 import type { Applet } from "../components/shell/applets";
 import { Avatar } from "../components/avatar";
+import { ConfidentialBanner } from "../components/confidential-banner";
+import { ConfidentialToggle } from "../components/confidential-toggle";
 import { CounterpartyPicker, type CounterpartyPick } from "../components/counterparty-picker";
 import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
 import { PageTitle } from "../components/page-title";
@@ -199,7 +217,13 @@ type FieldKey =
   | "statusId"
   | "priority"
   | "risk"
-  | "value";
+  | "value"
+  | "isConfidential";
+
+/** The Team card's anchor. Two places name it: the card itself, and
+ * the confidentiality banner's "Manage team" link, which is a fragment
+ * to it — one constant, so the link cannot point at nothing. */
+const TEAM_CARD_ID = "contract-team";
 
 /** SET-001's deep link to the contract configuration behind this
  * record — a slot that navigates rather than opening the panel. */
@@ -306,6 +330,26 @@ function ContractRecord() {
    * offers and what the note above the cards says.
    */
   const frozen = archived || !canEdit;
+  /**
+   * Whether this viewer may decide who sees the record (DD-014,
+   * CTR-022). The three actors are an Administrator, the person who
+   * made it — the `creator` team row, which nothing adds or drops — and
+   * its Owner.
+   *
+   * It says exactly what `confidentialityWrite` says on the server, out
+   * of the two facts the record read already answers: the roster and
+   * the Owner. Reach is not asked again, because reaching the page is
+   * what proves it. The API refuses anyone else with a plain 403; this
+   * is only what keeps a control from offering a dead end.
+   *
+   * It reads the live roster and the saved row rather than the loader's
+   * copies, so taking the Owner off the record takes the control with
+   * them on the same page.
+   */
+  const canFlag =
+    user.role === "administrator" ||
+    saved.manager?.id === user.id ||
+    roster.some((member) => member.id === user.id && member.role === "creator");
 
   function textDrafts(row: ContractRow): Record<TextFieldKey, string> {
     return { title: row.title, description: row.description ?? "" };
@@ -487,6 +531,16 @@ function ContractRecord() {
       user={user}
       onSignOut={() => void signOut()}
       flush
+      // DES-009 Tier 2, where the C8 mock stacks it: under the nav,
+      // above the sub-bar. Every viewer who reaches a confidential
+      // record sees it — reaching the page is what makes them an
+      // included viewer — and only the three actors are pointed at the
+      // Team card, which is where the audience is changed.
+      banner={
+        saved.isConfidential ? (
+          <ConfidentialBanner manageTeamHref={canFlag ? `#${TEAM_CARD_ID}` : undefined} />
+        ) : undefined
+      }
       subbar={
         <section
           aria-labelledby="page-title"
@@ -856,6 +910,36 @@ function ContractRecord() {
                     onStatus={(next, detail) => note("value", next, detail)}
                     onCommit={(next) => void commit("value", { value: next })}
                   />
+                  {/* Who may see the record at all (DD-014). It closes
+                      the card because it is the record's audience
+                      rather than one of its business facts, and it is
+                      the one field here that most of the people
+                      reading it may not touch.
+
+                      It commits on the switch's own change: a switch
+                      has no blur to wait for, and DES-017 commits when
+                      the person is done deciding — which for a
+                      two-state control is the moment they flip it, the
+                      same rule the record's selects already follow. */}
+                  <div className="@2xl/page:col-span-2">
+                    <ConfidentialToggle
+                      id="contract-confidential"
+                      confidential={saved.isConfidential}
+                      // Archived refuses the flag edit like every other
+                      // edit, and only the three actors may ask for
+                      // one. Everyone else reads it inert — a fact
+                      // about the record, not a control they must not
+                      // press.
+                      disabled={frozen || !canFlag || fieldStatus.isConfidential === "saving"}
+                      status={
+                        <StatusNote
+                          status={fieldStatus.isConfidential ?? "idle"}
+                          detail={fieldError.isConfidential}
+                        />
+                      }
+                      onChange={(next) => void commit("isConfidential", { isConfidential: next })}
+                    />
+                  </div>
                 </div>
               </section>
               {/* The C2 mock gives the description a card of its own,
@@ -1034,8 +1118,14 @@ function TeamCard({
 
   return (
     <section
+      // The banner's "Manage team" lands here: the audience is the
+      // roster, so the one step from the reminder is the card that
+      // holds it (DD-014's story 18).
+      id={TEAM_CARD_ID}
       aria-labelledby="contract-team-heading"
-      className="w-full shrink-0 overflow-hidden rounded-card border border-border-default bg-raised @4xl/page:w-80"
+      // A fragment link scrolls the card under the sticky chrome
+      // without this; the shell's own strips are what it clears.
+      className="w-full shrink-0 scroll-mt-4 overflow-hidden rounded-card border border-border-default bg-raised @4xl/page:w-80"
     >
       <header className="flex h-section-header items-center justify-between gap-2 rounded-t-card border-b border-border-default bg-section-header px-4">
         <h2 id="contract-team-heading" className="text-base font-semibold">
