@@ -162,11 +162,18 @@ export function dayBounds(
   options?: FormatOptions,
 ): { start: string; end: string } | null {
   if (!DATE_ONLY.test(civil)) return null;
+  // The pattern admits `2026-13-45`, which is a shape and not a date.
+  // An impossible one would reach Intl as an Invalid Date and throw,
+  // and a rolled-over one (`2026-02-31`) would silently answer March.
+  // Both are the same answer here: this is not a date, so there is no
+  // bound to take from it.
+  const noon = new Date(`${civil}T12:00:00Z`);
+  if (Number.isNaN(noon.getTime()) || noon.toISOString().slice(0, 10) !== civil) return null;
   const timeZone = resolveTimeZone(options);
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone,
     timeZoneName: "longOffset",
-  }).formatToParts(new Date(`${civil}T12:00:00Z`));
+  }).formatToParts(noon);
   const zoneName = parts.find((part) => part.type === "timeZoneName")?.value ?? "GMT";
   // `longOffset` answers "GMT" flat for UTC and "GMT+04:00" elsewhere.
   const offset = /GMT([+-]\d{2}:\d{2})/.exec(zoneName)?.[1] ?? "+00:00";

@@ -27,7 +27,11 @@ import {
 } from "fastify-type-provider-zod";
 import { OPENLAW_VERSION } from "@openlaw/shared";
 import { HttpError, PROBLEM_CONTENT_TYPE, type Problem } from "./lib/problem.js";
-import { clearActivityEmitter, setActivityEmitter } from "./lib/activity-emitter.js";
+import {
+  clearActivityEmitter,
+  setActivityEmitter,
+  type ActivityEvent,
+} from "./lib/activity-emitter.js";
 import type { MailerResolver } from "./lib/mailer.js";
 import { metaRoutes } from "./modules/meta/routes.js";
 import { authRoutes } from "./modules/auth/routes.js";
@@ -91,13 +95,16 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   // self-hosting Administrator ships events with the shipper they
   // already run. A failure to emit never fails the mutation — see
   // lib/activity-emitter.ts.
-  setActivityEmitter((event) => {
+  const emitActivity = (event: ActivityEvent) => {
     app.log.info({ activity: event }, "activity");
-  });
+  };
+  setActivityEmitter(emitActivity);
   // A closed app's logger must not stay wired up as the sink. The
-  // emitter is process-wide, so nothing else would take it back.
+  // emitter is process-wide, so nothing else would take it back — but
+  // this app takes back only its own: a second app built since then
+  // owns the sink now, and closing this one must not silence it.
   app.addHook("onClose", () => {
-    clearActivityEmitter();
+    clearActivityEmitter(emitActivity);
   });
 
   app.setValidatorCompiler(validatorCompiler);

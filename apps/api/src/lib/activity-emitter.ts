@@ -77,9 +77,17 @@ export function setActivityEmitter(next: ActivityEmitter): void {
   emitter = next;
 }
 
-/** Drops emission on the floor again — the state a fresh process is in. */
-export function clearActivityEmitter(): void {
-  emitter = SILENT;
+/**
+ * Drops emission on the floor again — the state a fresh process is in.
+ *
+ * Pass the emitter you set to clear only if it is still the one in
+ * place. An app closing takes its own logger back out; it must not
+ * silence a second app that has since taken over the sink. Passing
+ * nothing clears unconditionally, which is what a test resetting the
+ * module wants.
+ */
+export function clearActivityEmitter(only?: ActivityEmitter): void {
+  if (only === undefined || emitter === only) emitter = SILENT;
 }
 
 /**

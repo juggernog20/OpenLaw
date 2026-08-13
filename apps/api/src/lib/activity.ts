@@ -135,10 +135,7 @@ export const RECORD_ACTIVITY_TIER: ActivityVisibility = "working_team";
  * log's CSV export bounds itself at the entry recording the export
  * (M9/7), so an export never streams itself.
  */
-export interface RecordedActivity {
-  id: string;
-  createdAt: Date;
-}
+export type RecordedActivity = typeof activityLog.$inferSelect;
 
 /** Appends one entry. Append-only: nothing in application code ever
  * updates or deletes activity_log rows (corrections are new entries). */
@@ -168,7 +165,12 @@ export async function recordActivity(
         payload: entry.payload ?? {},
       })),
     )
-    .returning({ id: activityLog.id, createdAt: activityLog.createdAt });
+    // Every column, because the emitted line is built from the row and
+    // not from the entry that asked for it. Nothing here pairs a
+    // returned row with an input by position: `RETURNING` order is not
+    // something to lean on, and the line has to be a copy of what was
+    // actually stored anyway.
+    .returning();
 
   // The SIEM copy (DD-017), one line per row, alongside the in-app
   // write rather than instead of it. It rides the insert rather than the
@@ -179,20 +181,18 @@ export async function recordActivity(
   // rolled-back mutation is a failed request, which is loud on its own.
   // Emission never throws (see `emitActivityEvent`), so nothing here can
   // fail or roll back the mutation it is reporting.
-  rows.forEach((row, index) => {
-    const entry = entries[index];
-    if (!entry) return;
+  for (const row of rows) {
     emitActivityEvent({
       id: row.id,
       createdAt: row.createdAt.toISOString(),
-      entityType: entry.entityType,
-      entityId: entry.entityId ?? null,
-      actorId: entry.actorId ?? null,
-      action: entry.action,
-      visibility: entry.visibility,
-      payload: entry.payload ?? {},
+      entityType: row.entityType,
+      entityId: row.entityId,
+      actorId: row.actorId,
+      action: row.action,
+      visibility: row.visibility,
+      payload: row.payload,
     });
-  });
+  }
 
   return rows;
 }

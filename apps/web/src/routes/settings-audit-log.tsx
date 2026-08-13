@@ -12,10 +12,10 @@
  * the only gate on it is the Administrator role.
  *
  * **The pane is absent for everyone else, not refused** (SET-002). The
- * rail entry sits inside the Organization group, which non-
- * Administrators never see, so the settings rail never advertises what
- * it will not open. This loader is the client half of that gate; the
- * API's 403 is the real refusal.
+ * rail entry sits in the Security group, inside the Organization group
+ * that non-Administrators never see, so the settings rail never
+ * advertises what it will not open. This loader is the client half of
+ * that gate; the API's 403 is the real refusal.
  *
  * **Filters compose, because the API composes them.** Actor, action,
  * entity type, and date range are one `AND`, and search is one more
