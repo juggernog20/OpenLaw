@@ -37,6 +37,7 @@ import {
   eq,
   inArray,
   isNull,
+  or,
   sql,
   users,
   type CommentVisibility,
@@ -64,28 +65,11 @@ const ALL_TIERS: readonly CommentVisibility[] = COMMENT_VISIBILITIES;
  */
 const WORKING_TIERS: readonly CommentVisibility[] = ["working_team", "full_thread"];
 
-/**
- * How far one viewer sees across the contract table (CTR-021).
- *
- * Member+ see every contract, so nothing narrows and this answers
- * `undefined` — which drops out of the `and(...)` it is composed into. A
- * Contributor sees exactly the contracts they hold a `contract_team` row
- * on, whichever role that row carries: DD-015 makes the Contributor
- * grant per-record, and adding someone to the team is the act that
- * grants it.
- *
- * The same predicate serves every reader. The contract list filters on
- * it, so a Contributor's list is their work and not the whole company's;
- * the record read applies it beside the number, so a contract they are
- * not on 404s exactly as a contract that does not exist; the comment
- * routes apply it beside the id. One predicate is what keeps those
- * answers from drifting apart.
- */
-export function contractTeamScope(
-  db: ContractAccessReader,
-  user: AuthenticatedUser,
-): SQL | undefined {
-  if (user.role !== "contributor") return undefined;
+/** The contracts one person holds a `contract_team` row on, whatever
+ * role that row carries. Both halves of the reach rule ask this — the
+ * CTR-021 Contributor grant, and DD-014's named team — so they ask it
+ * once. */
+function contractsTheyAreOn(db: ContractAccessReader, user: AuthenticatedUser): SQL {
   return inArray(
     contracts.id,
     db
@@ -93,6 +77,64 @@ export function contractTeamScope(
       .from(contractTeam)
       .where(eq(contractTeam.userId, user.id)),
   );
+}
+
+/**
+ * How far one viewer sees across the contract table (CTR-021, DD-014).
+ *
+ * An Administrator sees every contract, confidential or not, so nothing
+ * narrows and this answers `undefined` — which drops out of the
+ * `and(...)` it is composed into. DD-014 states that as a rule with no
+ * exception: an Administrator who must be walled off from a record needs
+ * a role change, not a per-record carve-out.
+ *
+ * A Contributor sees exactly the contracts they hold a `contract_team`
+ * row on, whichever role that row carries: DD-015 makes the Contributor
+ * grant per-record, and adding someone to the team is the act that
+ * grants it. Confidentiality adds nothing to their answer — the row it
+ * would ask for is the row they already had to have — so the flag never
+ * widens anybody's access.
+ *
+ * A Legal Team Member read every contract until M10, and the flag is the
+ * one thing that takes one away. They reach a confidential contract when
+ * they hold a team row on it or are its Owner (`manager_id`), and reach
+ * every contract that is not confidential as before. The Owner clause is
+ * what stops a contract vanishing from the one person accountable for
+ * it.
+ *
+ * A Business User reaches no contract at all until intake links a
+ * requester to a record (M19–M21). Every contract surface refuses them
+ * at the guard, and this says the same thing again where no future route
+ * can get past it — each role is answered here on purpose, so a role
+ * added later cannot fall through into somebody else's grant.
+ *
+ * The same predicate serves every reader. The contract list filters on
+ * it, so a Contributor's list is their work and not the whole company's;
+ * the record read applies it beside the number, so a contract they
+ * cannot reach 404s exactly as a contract that does not exist; the
+ * comment and activity routes apply it beside the id. One predicate is
+ * what keeps those answers from drifting apart — and it is read live on
+ * every request, so taking somebody's last team row off ends their reach
+ * on the next one.
+ */
+export function contractTeamScope(
+  db: ContractAccessReader,
+  user: AuthenticatedUser,
+): SQL | undefined {
+  switch (user.role) {
+    case "administrator":
+      return undefined;
+    case "legal_team_member":
+      return or(
+        eq(contracts.isConfidential, false),
+        contractsTheyAreOn(db, user),
+        eq(contracts.managerId, user.id),
+      );
+    case "contributor":
+      return contractsTheyAreOn(db, user);
+    case "business_user":
+      return sql`false`;
+  }
 }
 
 /**
@@ -119,6 +161,39 @@ export function readableTiers(role: UserRole, onTeam: boolean): readonly Comment
   if (role === "administrator" || role === "legal_team_member") return ALL_TIERS;
   if (role === "contributor" && onTeam) return WORKING_TIERS;
   return [];
+}
+
+/** Where one person stands on one contract, as the answer below needs
+ * it stated: on its team, named as its Owner, or neither. */
+interface Standing {
+  role: UserRole;
+  onTeam: boolean;
+  isOwner: boolean;
+}
+
+/**
+ * Whether one person reaches one contract — `contractTeamScope`'s rule
+ * said over a person instead of over the rows.
+ *
+ * The row scope answers "which contracts does this viewer reach"; this
+ * answers "which people does this contract reach". They are the same
+ * sentence read from either end, and they are written next to each other
+ * so that the typeahead can never offer somebody the record itself would
+ * answer 404 to.
+ */
+function reachesContract(person: Standing, isConfidential: boolean): boolean {
+  switch (person.role) {
+    case "administrator":
+      return true;
+    case "legal_team_member":
+      return !isConfidential || person.onTeam || person.isOwner;
+    // The team row is the Contributor's whole grant, and it satisfies
+    // the flag too — so confidentiality adds nothing to their answer.
+    case "contributor":
+      return person.onTeam;
+    case "business_user":
+      return false;
+  }
 }
 
 /** One viewer's standing on one contract they can reach. */
@@ -177,14 +252,20 @@ export interface MentionCandidate {
  * typeahead's list, and the set the seam checks a posted mention
  * against.
  *
- * It is the tier predicate run over the people rather than over the
- * rows: a person belongs here when they hear at least one tier on this
- * record. Member+ hear every tier on every contract, so they are all
- * here whether or not they are on the team — CTR-021 already lets them
- * open it. A Contributor is here only with a `contract_team` row, which
- * is the act that grants their access; mentioning somebody does not
- * grant it, so a Contributor off the team is not offered and a mention
- * of them is refused.
+ * It is the reach rule and the tier predicate run over the people rather
+ * than over the rows: a person belongs here when the record reaches them
+ * and they hear at least one tier on it. On an open contract that is
+ * every Member+, on the team or not — CTR-021 already lets them open it.
+ * A Contributor is here only with a `contract_team` row, which is the
+ * act that grants their access; mentioning somebody does not grant it,
+ * so a Contributor off the team is not offered and a mention of them is
+ * refused.
+ *
+ * On a confidential contract the list narrows to the named team, the
+ * Owner, and Administrators — automatically, because it is the same rule
+ * the row scope applies, and CMT-007 wanted exactly that set. No
+ * endpoint changes, and no confirmation offers to add anybody: DES-009's
+ * add-as-watcher clause is superseded here.
  *
  * Anyone who hears nothing is left out rather than offered and refused.
  * A name in a typeahead that no tier can reach is the trap the
@@ -203,6 +284,16 @@ export async function contractMentionCandidates(
   contractId: string,
   only?: readonly string[],
 ): Promise<MentionCandidate[]> {
+  // The two facts about the record the reach rule turns on. A record
+  // that is not there reaches nobody, which is the same answer its own
+  // 404 gives.
+  const [record] = await db
+    .select({ isConfidential: contracts.isConfidential, managerId: contracts.managerId })
+    .from(contracts)
+    .where(eq(contracts.id, contractId))
+    .limit(1);
+  if (!record) return [];
+
   const rows = await db
     .select({
       id: users.id,
@@ -220,6 +311,8 @@ export async function contractMentionCandidates(
     // Alphabetical, as every people picker in the product is ordered.
     .orderBy(asc(sql`lower(${users.displayName})`), asc(users.id));
   return rows.flatMap((row) => {
+    const standing = { role: row.role, onTeam: row.onTeam, isOwner: row.id === record.managerId };
+    if (!reachesContract(standing, record.isConfidential)) return [];
     const tiers = readableTiers(row.role, row.onTeam);
     if (tiers.length === 0) return [];
     return [{ id: row.id, displayName: row.displayName, image: row.image, tiers }];

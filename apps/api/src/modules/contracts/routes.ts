@@ -81,6 +81,12 @@
  * business/legal editable-field split is not built here: a Contributor
  * reads.
  *
+ * The same predicate carries DD-014's Confidential flag (M10). A
+ * confidential contract is reached by the named team, its Owner, and
+ * Administrators, and by nobody else — so a Legal Team Member who is not
+ * on it is answered exactly as they are for a contract that was never
+ * made, in the list and at the record URL alike.
+ *
  * Every mutation appends to the activity log in the same transaction
  * (DD-017); the feed and audit surfaces read it in M9.
  */
@@ -132,9 +138,13 @@ const requireMember = requireRole("administrator", "legal_team_member");
 
 /**
  * The two read surfaces — the list and the record — take a Contributor
- * as well (CTR-021). The role alone opens no contract: `teamScope` narrows
- * the answer to the contracts the Contributor holds a `contract_team`
- * row on. Business Users stay refused on every contract surface.
+ * as well (CTR-021). The role alone opens no contract: `teamScope`
+ * narrows the answer to the contracts the Contributor holds a
+ * `contract_team` row on, and takes a confidential contract away from
+ * anyone outside its named team and its Owner (DD-014) — except an
+ * Administrator, who reaches every contract with no team row and no
+ * Owner assignment at all. Business Users stay refused on every contract
+ * surface.
  */
 const requireContractReader = requireRole("administrator", "legal_team_member", "contributor");
 
@@ -849,9 +859,12 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "The contract list, newest reference first: number, title, " +
           "type, and status; archived contracts only with " +
-          "includeArchived=true. Member+ read every contract; a " +
-          "Contributor reads exactly the contracts they hold a " +
-          "contract_team row on, archived ones behind the same flag",
+          "includeArchived=true. Member+ read every contract that is not " +
+          "confidential; a Contributor reads exactly the contracts they " +
+          "hold a contract_team row on, archived ones behind the same " +
+          "flag. A confidential contract is listed only for its named " +
+          "team, its Owner, and Administrators — silently absent for " +
+          "everyone else, so no count can reveal it",
         tags: ["contracts"],
         querystring: z.object({ includeArchived: z.enum(["true", "false"]).optional() }),
         response: {
@@ -968,7 +981,8 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           "the record page's read; archived contracts answer too, so " +
           "restore stays reachable. A Contributor reads a contract they " +
           "hold a contract_team row on, and is answered 404 on one they " +
-          "do not",
+          "do not. A confidential contract answers the same 404 to " +
+          "anyone outside its named team, its Owner, and Administrators",
         tags: ["contracts"],
         params: NumberParams,
         response: { 200: ContractRecordEnvelope, default: problemResponse },
