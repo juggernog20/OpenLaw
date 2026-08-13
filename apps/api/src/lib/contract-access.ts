@@ -134,6 +134,14 @@ export function contractTeamScope(
       return contractsTheyAreOn(db, user);
     case "business_user":
       return sql`false`;
+    default: {
+      // A role with no case would fall off the end and answer
+      // `undefined` — the Administrator's whole-table grant. This makes
+      // the compiler refuse that instead: a role added to the union
+      // must be answered here before the build passes.
+      const unanswered: never = user.role;
+      throw new Error(`No contract reach rule for role: ${unanswered}`);
+    }
   }
 }
 
@@ -194,6 +202,12 @@ function reachesContract(person: Standing, isConfidential: boolean): boolean {
       return person.onTeam;
     case "business_user":
       return false;
+    default: {
+      // The same refusal as the row scope's: a role the union grows
+      // must be answered in both halves, or the build fails.
+      const unanswered: never = person.role;
+      throw new Error(`No contract reach rule for role: ${unanswered}`);
+    }
   }
 }
 
