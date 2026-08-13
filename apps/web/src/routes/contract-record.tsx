@@ -269,16 +269,31 @@ function ContractRecord() {
   const [archiveStatus, setArchiveStatus] = useState<FieldStatus>("idle");
   const [archiveError, setArchiveError] = useState<string | undefined>(undefined);
 
-  /** What happened to this record (DD-017), keyed by the same entity
-   * reference the chat applet takes. The field labels ride along
-   * because a `field.<slug>` change key is a slug and not a name, and
-   * the catalog that turns one into the other belongs to this page. */
+  /**
+   * What happened to this record (DD-017), keyed by the same entity
+   * reference the chat applet takes.
+   *
+   * Two catalogs ride along, because the log has neither. A
+   * `field.<slug>` change key is a slug and not a name, and the type's
+   * attached fields are what turn one into the other. Two of those
+   * fields store an id rather than a value (CTR-016's `user` and
+   * `entity`), and the names for those ids are already on this page —
+   * the pickers loaded them. Everything the maps do not cover falls
+   * back to what the log stored.
+   */
   const historyApplet = useActivityApplet({
     entityType: "contract",
     entityId: contract.id,
-    fieldLabels: useMemo(
-      () => Object.fromEntries(attached.map((field) => [field.slug, field.displayName])),
-      [attached],
+    fields: attached,
+    referenceNames: useMemo(
+      () =>
+        Object.fromEntries([
+          ...users.map((person) => [person.id, person.displayName] as const),
+          ...refs.users.map((person) => [person.id, person.displayName] as const),
+          ...entities.map((entity) => [entity.id, entity.legalName] as const),
+          ...refs.entities.map((entity) => [entity.id, entity.legalName] as const),
+        ]),
+      [users, entities, refs],
     ),
   });
 

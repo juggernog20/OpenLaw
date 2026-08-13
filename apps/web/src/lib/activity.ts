@@ -89,19 +89,39 @@ export interface Narration {
   changes: readonly NarratedChange[];
 }
 
+/** One custom field, as much of it as the narration needs. */
+export interface NarratedField {
+  slug: string;
+  displayName: string;
+  /** CTR-016's kind. `user` and `entity` store an id, so a change to
+   * one needs a name looked up before it can be read. */
+  fieldType: string;
+}
+
 /**
  * What the narration needs that the entry does not carry.
  *
  * A custom field's changed key is `field.<slug>` (the record's own
  * `title` and a custom field named "Title" are two different things, so
- * the payload namespaces one of them). The slug is not a label, and the
+ * the payload namespaces one of them). A slug is not a label, and the
  * catalog that turns it into one belongs to whoever mounted the feed —
- * the contract record already holds its type's attached fields. An
- * unknown slug falls back to the slug itself, which is the honest
- * rendering for a field that has since been detached.
+ * the contract record already holds its type's attached fields.
+ *
+ * Two of CTR-016's nine kinds store an id rather than a value, so their
+ * changed values are ids too. The record's own people and Entities are
+ * not: M8 wrote the Owner and the signing entity into the payload as
+ * names, precisely so this layer would not have to look them up. Custom
+ * fields did not get that treatment, so `referenceNames` is where the
+ * mount hands over the names it already loaded for its own pickers.
+ *
+ * Everything here is optional and everything falls back. An unknown
+ * slug reads as the slug, and an id nothing names reads as the id —
+ * which is the honest rendering for a field since detached, or a person
+ * since deleted.
  */
 export interface NarrationContext {
-  fieldLabels?: Readonly<Record<string, string>>;
+  fields?: readonly NarratedField[];
+  referenceNames?: Readonly<Record<string, string>>;
 }
 
 /**
@@ -139,10 +159,8 @@ function notSet(intl: IntlShape): string {
  * mount supplied, and the bare slug when it supplied none.
  */
 function changeLabel(intl: IntlShape, key: string, context: NarrationContext): string {
-  if (key.startsWith("field.")) {
-    const slug = key.slice("field.".length);
-    return context.fieldLabels?.[slug] ?? slug;
-  }
+  const slug = customFieldSlug(key);
+  if (slug !== null) return customField(context, slug)?.displayName ?? slug;
   return intl.formatMessage(
     {
       id: "activity.field",
@@ -154,6 +172,19 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
     },
     { key },
   );
+}
+
+/** The slug behind a custom field's changed key, or null when the key
+ * is one of the record's own fields. */
+function customFieldSlug(key: string): string | null {
+  return key.startsWith("field.") ? key.slice("field.".length) : null;
+}
+
+/** What the mount knows about that field, if it knows about it. A field
+ * detached since the change was made is not here, and its slug is what
+ * the row reads as. */
+function customField(context: NarrationContext, slug: string): NarratedField | undefined {
+  return context.fields?.find((field) => field.slug === slug);
 }
 
 /** Whether a string is a bare civil date, as a `date` custom field
@@ -195,6 +226,13 @@ function changeValue(
   }
   if (typeof value === "number") return intl.formatNumber(value);
   if (typeof value === "string") {
+    // A `user` or `entity` field stores an id, so the id is what the
+    // payload carries. The mount already loaded these names for its own
+    // pickers; an id nothing names reads as itself, which is what a
+    // person since deleted honestly looks like.
+    const slug = customFieldSlug(key);
+    const kind = slug === null ? undefined : customField(context, slug)?.fieldType;
+    if (kind === "user" || kind === "entity") return context.referenceNames?.[value] ?? value;
     return CIVIL_DATE.test(value) ? formatShortDate(value, { locale: intl.locale }) : value;
   }
   if (Array.isArray(value)) {

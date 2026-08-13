@@ -2726,16 +2726,23 @@ describe("the contract record's history applet (M9/6)", () => {
    */
   function activityApi(pages: ReturnType<typeof entry>[][]) {
     const cursors: (string | null)[] = [];
+    /** The reference each read was keyed by, so the entity-generic
+     * claim is asserted rather than assumed. */
+    const reads: Record<string, string | null>[] = [];
     const handler = (call: StubCall): Response | undefined => {
       if (call.url.pathname !== "/api/v1/activity" || call.method !== "GET") return undefined;
       const cursor = call.url.searchParams.get("cursor");
       cursors.push(cursor);
+      reads.push({
+        entityType: call.url.searchParams.get("entityType"),
+        entityId: call.url.searchParams.get("entityId"),
+      });
       const index = cursor === null ? 0 : pages.findIndex((page) => page.at(-1)?.id === cursor) + 1;
       const entries = pages[index] ?? [];
       const next = pages[index + 1] ? (entries.at(-1)?.id ?? null) : null;
       return json(200, { entries, nextCursor: next });
     };
-    return { handler, cursors };
+    return { handler, cursors, reads };
   }
 
   function pageApi(activity: ReturnType<typeof activityApi>, record = recordApi(contractRow())) {
@@ -2766,7 +2773,10 @@ describe("the contract record's history applet (M9/6)", () => {
     expect(icon).toHaveAttribute("aria-expanded", "true");
     // Keyed by the record's entity reference, never by its CTR-003
     // number — that is what makes the panel entity-generic.
-    await waitFor(() => expect(activity.cursors).toEqual([null]));
+    await waitFor(() => {
+      expect(activity.reads).toEqual([{ entityType: "contract", entityId: "c1" }]);
+    });
+    expect(activity.cursors).toEqual([null]);
 
     await user.click(within(panel).getByRole("button", { name: "Close" }));
     expect(screen.queryByRole("complementary", { name: "History" })).not.toBeInTheDocument();
@@ -2858,6 +2868,59 @@ describe("the contract record's history applet (M9/6)", () => {
     // generic edit (CTR-001).
     expect(status).toHaveTextContent("Nadia Counsel changed the status");
     expect(status).toHaveTextContent("Draft → Internal review");
+  });
+
+  it("names the person and the Entity a reference field stores by id", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([
+      [
+        entry("a1", "contract.updated", {
+          changed: {
+            // CTR-016's two reference kinds store an id, so the id is
+            // what M8 wrote. The names are already on the page — the
+            // pickers loaded them — so the feed reads as the record
+            // does rather than as a pair of uuids.
+            "field.field_7": { from: null, to: "u2" },
+            "field.field_8": { from: null, to: "e-meridian" },
+          },
+        }),
+      ],
+    ]);
+    stubApi({
+      signedIn: MEMBER,
+      // The type attaching one field of every kind, so the reviewer and
+      // the booking-entity fields are on this record.
+      extra: pageApi(activity, recordApi(contractRow({ contractTypeId: "t-full" }))),
+    });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const feed = await screen.findByRole("list", { name: "History" });
+    const row = within(feed).getAllByRole("listitem")[0]!;
+    expect(row).toHaveTextContent("Reviewer: Not set → Nadia Counsel");
+    expect(row).toHaveTextContent("Booking entity: Not set → Meridian Bio, Inc.");
+  });
+
+  it("falls back to what the log stored when nothing names the id", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([
+      [
+        entry("a1", "contract.updated", {
+          // A field detached since the change reads as its own slug, and
+          // an id nothing names reads as itself. Both are the honest
+          // rendering of a log nobody prunes.
+          changed: { "field.since_detached": { from: null, to: "u-deleted" } },
+        }),
+      ],
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const feed = await screen.findByRole("list", { name: "History" });
+    expect(within(feed).getAllByRole("listitem")[0]).toHaveTextContent(
+      "Nadia Counsel changed since_detached",
+    );
   });
 
   it("renders an unknown action slug plainly instead of throwing", async () => {

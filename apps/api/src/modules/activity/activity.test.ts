@@ -65,6 +65,13 @@ const BUSINESS = {
   displayName: "Bao Business",
   password: "correct-horse-battery",
 } as const;
+/** Somebody to move between roles, so the admin_only assertion has a
+ * real change to look at without taking another test's fixture. */
+const SPARE = {
+  email: "feed-spare@example.com",
+  displayName: "Sam Spare",
+  password: "correct-horse-battery",
+} as const;
 
 let harness: TestHarness;
 let adminCookies: Record<string, string>;
@@ -107,6 +114,7 @@ beforeAll(async () => {
     [CONTRIBUTOR, "contributor"],
     [OUTSIDER, "contributor"],
     [BUSINESS, "business_user"],
+    [SPARE, "contributor"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, user.id));
@@ -412,13 +420,12 @@ describe("the tier a record action writes", () => {
       .orderBy(asc(activityLog.createdAt), asc(activityLog.id));
     expect(settings?.visibility).toBe("admin_only");
 
-    // A real change, so a row is actually written: the Outsider is a
-    // Contributor, and this moves them somewhere else. They hold no
-    // team row and are not read again after this point, so the move
-    // costs no other test its fixture.
+    // A real change, so a row is actually written — and on the fixture
+    // that exists to be moved, so no other test loses the role it
+    // depends on.
     const role = await harness.app.inject({
       method: "PATCH",
-      url: `/api/v1/users/${userIds.get(OUTSIDER.email)}/role`,
+      url: `/api/v1/users/${userIds.get(SPARE.email)}/role`,
       cookies: adminCookies,
       payload: { role: "business_user" },
     });

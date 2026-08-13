@@ -1562,7 +1562,7 @@ Naming a single change in the sentence and dropping its label from the line belo
 
 ### Consequences
 
-No new tokens: the row is `bg-control`, `border-muted`, `text-primary`, and `text-muted`, all already valued and gated. The applet is `apps/web/src/components/activity/activity-applet.tsx`, entity-generic and keyed by an entity reference, so matters (M22) and documents (M11) mount it rather than reimplementing it. It takes a field-label map from its mount, because a `field.<slug>` change key is a slug and the catalog that names it belongs to the record page. The Administrator's audit log (M9/7) draws its own table but narrates through the same layer, so a slug reads the same in both surfaces.
+No new tokens: the row is `bg-control`, `border-muted`, `text-primary`, and `text-muted`, all already valued and gated. The applet is `apps/web/src/components/activity/activity-applet.tsx`, entity-generic and keyed by an entity reference, so matters (M22) and documents (M11) mount it rather than reimplementing it. It takes two catalogs from its mount, because the log carries neither: the type's attached fields, because a `field.<slug>` change key is a slug and not a name, and display names for the ids CTR-016's `user` and `entity` kinds store. The record's own Owner and signing entity need no lookup — M8 wrote those into the payload as names precisely so this layer would not have to. Everything the catalogs do not cover falls back to what the log stored, which is the honest rendering for a field since detached or a person since deleted. The Administrator's audit log (M9/7) draws its own table but narrates through the same layer, so a slug reads the same in both surfaces.
 
 ## Index of decisions
 

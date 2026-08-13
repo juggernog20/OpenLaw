@@ -58,9 +58,11 @@ export interface ActivityAppletOptions {
    * record-specific address. */
   entityType: ActivityEntityType;
   entityId: string;
-  /** What the mount knows that the log does not: display names for the
-   * custom-field slugs a `field.<slug>` change key carries. */
-  fieldLabels?: NarrationContext["fieldLabels"];
+  /** What the mount knows that the log does not: the custom fields a
+   * `field.<slug>` change key names, and names for the ids the two
+   * reference kinds store. */
+  fields?: NarrationContext["fields"];
+  referenceNames?: NarrationContext["referenceNames"];
 }
 
 /**
@@ -71,14 +73,20 @@ export interface ActivityAppletOptions {
 export function useActivityApplet({
   entityType,
   entityId,
-  fieldLabels,
+  fields,
+  referenceNames,
 }: ActivityAppletOptions): Applet {
   return {
     id: "history",
     icon: History,
     label: HISTORY_LABEL,
     render: () => (
-      <ActivityFeed entityType={entityType} entityId={entityId} fieldLabels={fieldLabels} />
+      <ActivityFeed
+        entityType={entityType}
+        entityId={entityId}
+        fields={fields}
+        referenceNames={referenceNames}
+      />
     ),
   };
 }
@@ -86,8 +94,9 @@ export function useActivityApplet({
 function ActivityFeed({
   entityType,
   entityId,
-  fieldLabels,
-}: Readonly<ActivityAppletOptions>): React.ReactElement {
+  fields,
+  referenceNames,
+}: Readonly<ActivityAppletOptions>) {
   const intl = useIntl();
   /** null until the first page answers. */
   const [entries, setEntries] = useState<ActivityEntry[] | null>(null);
@@ -158,7 +167,12 @@ function ActivityFeed({
         {entries !== null && entries.length > 0 && (
           <ol aria-label={intl.formatMessage(HISTORY_LABEL)}>
             {entries.map((entry) => (
-              <ActivityRow key={entry.id} entry={entry} fieldLabels={fieldLabels} />
+              <ActivityRow
+                key={entry.id}
+                entry={entry}
+                fields={fields}
+                referenceNames={referenceNames}
+              />
             ))}
           </ol>
         )}
@@ -184,10 +198,19 @@ function ActivityFeed({
  */
 function ActivityRow({
   entry,
-  fieldLabels,
-}: Readonly<{ entry: ActivityEntry; fieldLabels?: NarrationContext["fieldLabels"] }>) {
+  fields,
+  referenceNames,
+}: Readonly<{
+  entry: ActivityEntry;
+  fields?: NarrationContext["fields"];
+  referenceNames?: NarrationContext["referenceNames"];
+}>) {
   const intl = useIntl();
-  const { icon: Icon, sentence, changes } = narrateActivity(intl, entry, { fieldLabels });
+  const {
+    icon: Icon,
+    sentence,
+    changes,
+  } = narrateActivity(intl, entry, { fields, referenceNames });
   return (
     <li className="flex gap-2.5 border-b border-border-muted px-4 py-2.5 last:border-b-0">
       <span
@@ -198,8 +221,12 @@ function ActivityRow({
       </span>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <p className="text-sm text-primary">{sentence}</p>
-        {changes.map((change) => (
-          <p key={change.label} className="text-xs break-words text-muted">
+        {/* Keyed by position: the list is one entry's own payload, read
+            once and never reordered, and two changed keys can resolve to
+            the same label when a field has been detached and only its
+            slug is left. */}
+        {changes.map((change, index) => (
+          <p key={index} className="text-xs break-words text-muted">
             {/* One change is already named by the sentence above, so its
                 line is the pair alone. Several need their labels to be
                 told apart. */}
