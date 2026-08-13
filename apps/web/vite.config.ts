@@ -23,5 +23,14 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./src/testing/setup.ts"],
     css: false,
+    // The route tests are integration tests: each one mounts the whole
+    // application shell through the real route table and drives it with
+    // real user gestures, and the ones that type into a debounced
+    // typeahead wait out that debounce several times over. Vitest's 5s
+    // default is a budget for a unit test, and on a shared CI runner —
+    // some six times slower than a developer's machine — the slowest of
+    // these sit right on it. The generous bound catches a genuine hang
+    // without failing work that is only slow.
+    testTimeout: 20_000,
   },
 });

@@ -57,6 +57,21 @@ export type ActivityAction =
   // reassignment (#100) keeps its own verb too: the entity moved because
   // an Administrator archived its type, not because someone edited it.
   | `entity.${"created" | "updated" | "status_changed" | "type_reassigned" | "archived" | "restored"}`
+  // The contract record's own feed (M8). A status change keeps its own
+  // verb: surfaces branch on the stage behind the status (CTR-001), so
+  // the M9 viewer narrates "status changed" rather than a generic edit.
+  // Team changes keep their own verbs too — putting a person on a
+  // contract is not an edit of a field, and the M9 viewer names them
+  // (CTR-004). The Owner is a field, so it rides `contract.updated`.
+  // The counterparties are the same shape as the team and for the same
+  // reason (CTR-011): a party joining or leaving the other side is not
+  // an edit of a field. The primary change is its own verb because it
+  // also happens on its own — removing the primary promotes the next
+  // party, and the log has to say so rather than leave it implied. A
+  // type reassignment (#113) keeps its own verb for the entity-record
+  // reason above: the contract moved because an Administrator archived
+  // its type, not because someone re-typed it.
+  | `contract.${"created" | "updated" | "status_changed" | "type_reassigned" | "team_added" | "team_removed" | "counterparty_added" | "counterparty_removed" | "counterparty_primary_changed" | "archived" | "restored"}`
   | "sso_provider.registered"
   | "sso_provider.updated";
 

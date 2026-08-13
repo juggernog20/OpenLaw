@@ -400,3 +400,65 @@ describe("the archive guard (SET-003: block, never reassign)", () => {
     });
   });
 });
+
+describe("the SET-003 in-use block with live counts (#113)", () => {
+  /** Terminated carries a real contract count — the guard is armed. */
+  function statusesInUse() {
+    return seededStatuses().map((row) =>
+      row.slug === "terminated" ? { ...row, inUseCount: 5 } : row,
+    );
+  }
+
+  it("shows the live usage count on the row", async () => {
+    stubApi({ signedIn: ADMIN, extra: statusesApi(newCalls(), statusesInUse()) });
+    renderAt("/settings/contracts/statuses");
+    await screen.findByText("Terminated");
+    const rows = within(statusList()).getAllByRole("listitem");
+    const terminatedRow = rows.find((row) => within(row).queryByText("Terminated"))!;
+    expect(within(terminatedRow).getByText("5 contracts")).toBeInTheDocument();
+  });
+
+  it("blocks an in-use status with the count, CTA disabled and no reassignment", async () => {
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: statusesApi(calls, statusesInUse()) });
+    renderAt("/settings/contracts/statuses");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Archive Terminated" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "Archive Terminated" });
+    expect(
+      within(dialog).getByText(
+        "Terminated is the status of 5 contracts. Move them to another status first.",
+      ),
+    ).toBeInTheDocument();
+    // Statuses never reassign (CTR-020) — no select, even in use.
+    expect(within(dialog).queryByRole("combobox")).not.toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Archive status" })).toBeDisabled();
+    expect(calls.archives).toEqual([]);
+  });
+
+  it("displays singular message for a status with one contract", async () => {
+    const calls = newCalls();
+    const statusesWithOne = seededStatuses().map((row) =>
+      row.slug === "terminated" ? { ...row, inUseCount: 1 } : row,
+    );
+    stubApi({ signedIn: ADMIN, extra: statusesApi(calls, statusesWithOne) });
+    renderAt("/settings/contracts/statuses");
+    const user = userEvent.setup();
+
+    await screen.findByText("Terminated");
+    const rows = within(statusList()).getAllByRole("listitem");
+    const terminatedRow = rows.find((row) => within(row).queryByText("Terminated"))!;
+    expect(within(terminatedRow).getByText("1 contract")).toBeInTheDocument();
+
+    await user.click(await screen.findByRole("button", { name: "Archive Terminated" }));
+    const dialog = await screen.findByRole("dialog", { name: "Archive Terminated" });
+    expect(
+      within(dialog).getByText(
+        "Terminated is the status of 1 contract. Move it to another status first.",
+      ),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Archive status" })).toBeDisabled();
+    expect(calls.archives).toEqual([]);
+  });
+});

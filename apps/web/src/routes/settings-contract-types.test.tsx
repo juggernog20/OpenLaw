@@ -369,3 +369,73 @@ describe("the archive guard (SET-003, frame ST8)", () => {
     });
   });
 });
+
+describe("the SET-003 guard with live counts (#113)", () => {
+  /** Vendor carries a real contract count — the guard is armed. */
+  function typesInUse() {
+    return seededTypes().map((row) => (row.slug === "vendor" ? { ...row, inUseCount: 4 } : row));
+  }
+
+  it("shows the live usage count on the row", async () => {
+    stubApi({ signedIn: ADMIN, extra: typesApi(newCalls(), typesInUse()) });
+    renderAt("/settings/contracts/types");
+    await screen.findByText("Vendor");
+    const rows = within(typeList()).getAllByRole("listitem");
+    const vendorRow = rows.find((row) => within(row).queryByText("Vendor"))!;
+    expect(within(vendorRow).getByText("4 contracts")).toBeInTheDocument();
+  });
+
+  it("requires a reassignment target for an in-use type and sends the pick", async () => {
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: typesApi(calls, typesInUse()) });
+    renderAt("/settings/contracts/types");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Archive Vendor" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "Archive Vendor" });
+    expect(
+      within(dialog).getByText(
+        "Vendor is used by 4 contracts. Pick a replacement type — those contracts " +
+          "move to it when the type is archived.",
+      ),
+    ).toBeInTheDocument();
+    const select = within(dialog).getByRole("combobox", { name: "Reassign 4 contracts to" });
+    expect(select).toBeEnabled();
+    expect(select).toBeRequired();
+
+    // Attempt to archive without selecting a target first.
+    await user.click(within(dialog).getByRole("button", { name: "Archive type" }));
+    // Should not archive because no target is selected.
+    expect(calls.archives).toEqual([]);
+
+    // Now select a target and submit.
+    await user.selectOptions(select, "MSA");
+    await user.click(within(dialog).getByRole("button", { name: "Archive type" }));
+    await waitFor(() =>
+      expect(calls.archives).toEqual([{ id: "t5", body: { reassignToId: "t2" } }]),
+    );
+  });
+
+  it("surfaces the API's refusal detail in the dialog", async () => {
+    const calls = newCalls();
+    const detail =
+      "This contract type is used by 4 contracts. Pick a reassignment target to archive it.";
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call: StubCall) =>
+        call.method === "POST" && call.url.pathname.endsWith("/archive")
+          ? problem(409, detail)
+          : typesApi(calls, typesInUse())(call),
+    });
+    renderAt("/settings/contracts/types");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Archive Vendor" }));
+    const dialog = await screen.findByRole("dialog", { name: "Archive Vendor" });
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", { name: "Reassign 4 contracts to" }),
+      "MSA",
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Archive type" }));
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(detail);
+  });
+});

@@ -21,6 +21,7 @@ import { z } from "zod";
 import {
   and,
   asc,
+  contracts,
   contractTypeFields,
   count,
   eq,
@@ -30,6 +31,7 @@ import {
   inArray,
   isNull,
   matterTypeFields,
+  sql,
   type Field,
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
@@ -61,8 +63,8 @@ const FieldSchema = z.object({
   archivedAt: z.iso.datetime().nullable(),
   /** Records holding a value plus type attachments — the SET-003 guard
    * number. Contract-type attachments count since #84 and matter-type
-   * attachments since #85; records holding values join with the record
-   * milestones (M8, M22). */
+   * attachments since #85; contracts holding a value count since #112,
+   * and matters join with M22. */
   inUseCount: z.number().int(),
 });
 
@@ -131,12 +133,23 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
     { moduleScope: "matter", joinTable: matterTypeFields },
   ] as const;
 
-  /** Type attachments per field across every module join — the live
-   * half of the SET-003 guard number until records hold values
-   * (M8, M22). */
-  async function attachmentCounts(db: Reader, fieldIds: string[]): Promise<Map<string, number>> {
+  /**
+   * The SET-003 guard number per field: type attachments across every
+   * module join, plus every record that holds a value for the field.
+   *
+   * Contracts hold values from #112, and they are counted by slug — a
+   * record's `custom_fields` is keyed by the field's machine identity,
+   * not its id. Archived contracts count: their values are retained
+   * exactly like a detached field's, so a restore must not make a
+   * number the Administrator already saw go up. Matters join with M22.
+   */
+  async function attachmentCounts(
+    db: Reader,
+    catalog: readonly { id: string; slug: string }[],
+  ): Promise<Map<string, number>> {
     const tally = new Map<string, number>();
-    if (fieldIds.length === 0) return tally;
+    if (catalog.length === 0) return tally;
+    const fieldIds = catalog.map((row) => row.id);
     for (const { joinTable } of MODULE_JOINS) {
       const rows = await db
         .select({ fieldId: joinTable.fieldId, tally: count() })
@@ -145,11 +158,35 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         .groupBy(joinTable.fieldId);
       for (const row of rows) tally.set(row.fieldId, (tally.get(row.fieldId) ?? 0) + row.tally);
     }
+    // One query for the whole catalog, not one per field: a record's
+    // held slugs are unnested, then counted per slug. `sql.param` binds
+    // the slug list as a single text[] — a bare array in the template
+    // expands to `($1, $2, …)`, which is a row constructor and not what
+    // `ANY` takes.
+    const slugToId = new Map(catalog.map((field) => [field.slug, field.id]));
+    const slugs = catalog.map((field) => field.slug);
+    const held = await db.execute<{ slug: string; tally: string }>(
+      sql`
+        SELECT slug, COUNT(*) AS tally
+        FROM (
+          SELECT jsonb_object_keys(${contracts.customFields}) AS slug
+          FROM ${contracts}
+          WHERE ${contracts.customFields} IS NOT NULL
+        ) AS keys
+        WHERE slug = ANY(${sql.param(slugs)}::text[])
+        GROUP BY slug
+      `,
+    );
+    for (const row of held.rows) {
+      const fieldId = slugToId.get(row.slug);
+      // COUNT() comes back as a string on a bigint column.
+      if (fieldId) tally.set(fieldId, (tally.get(fieldId) ?? 0) + Number(row.tally));
+    }
     return tally;
   }
 
-  async function inUseCountOf(db: Reader, fieldId: string): Promise<number> {
-    return (await attachmentCounts(db, [fieldId])).get(fieldId) ?? 0;
+  async function inUseCountOf(db: Reader, field: { id: string; slug: string }): Promise<number> {
+    return (await attachmentCounts(db, [field])).get(field.id) ?? 0;
   }
 
   /**
@@ -203,10 +240,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
             : and(scoped, isNull(fields.archivedAt)),
         )
         .orderBy(asc(fields.createdAt), asc(fields.id));
-      const counts = await attachmentCounts(
-        app.db,
-        rows.map((row) => row.id),
-      );
+      const counts = await attachmentCounts(app.db, rows);
       return { fields: rows.map((row) => toRow(row, counts.get(row.id) ?? 0)) };
     },
   );
@@ -352,7 +386,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return updated!;
       });
-      return { field: toRow(row, await inUseCountOf(app.db, row.id)) };
+      return { field: toRow(row, await inUseCountOf(app.db, row)) };
     },
   );
 
@@ -405,7 +439,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return updated!;
       });
-      return { field: toRow(row, await inUseCountOf(app.db, row.id)) };
+      return { field: toRow(row, await inUseCountOf(app.db, row)) };
     },
   );
 
@@ -442,12 +476,12 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
             slug: target.slug,
             displayName: target.displayName,
             moduleScope: target.moduleScope,
-            inUseCount: await inUseCountOf(tx, target.id),
+            inUseCount: await inUseCountOf(tx, target),
           },
         });
         return updated!;
       });
-      return { field: toRow(row, await inUseCountOf(app.db, row.id)) };
+      return { field: toRow(row, await inUseCountOf(app.db, row)) };
     },
   );
 
@@ -483,7 +517,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return updated!;
       });
-      return { field: toRow(row, await inUseCountOf(app.db, row.id)) };
+      return { field: toRow(row, await inUseCountOf(app.db, row)) };
     },
   );
 };

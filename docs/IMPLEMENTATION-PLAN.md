@@ -119,7 +119,7 @@ every later module reuses, so it is slower than it looks and pays for itself thr
     and the alternative is a placeholder column we'd rip out later
   - _Decisions:_ ENT-001 (partial), CTR-011
 
-- [ ] **M8 — The contract record**
+- [x] **M8 — The contract record**
       _Demo:_ Create a contract, set its owner and team, pick our entity and two counterparties, fill a
       custom field, and find it again in the list.
   - `contracts` with the global C-### sequence; owner plus contract team

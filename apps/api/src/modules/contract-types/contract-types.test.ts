@@ -7,6 +7,11 @@
  * SET-002's one role gate, with every mutation appending to the
  * activity log (DD-017). Asserted at the HTTP seam plus direct
  * activity_log reads — the log has no read routes until M9.
+ *
+ * The guard is armed from #113: the counts are real, and archiving an
+ * in-use type moves its contracts to a target type. The reassignment is
+ * a system move, so it skips the hard-required rule and retains every
+ * custom-field value.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -165,7 +170,8 @@ describe("GET /contract-types", () => {
     for (const row of rows) {
       expect(row.isSystemDefault).toBe(true);
       expect(row.archivedAt).toBeNull();
-      // No contracts exist until M8, so the live-usage count is zero.
+      // Nothing has been created on these seeds yet, so the SET-003
+      // count is zero — a real query since #113, not a placeholder.
       expect(row.inUseCount).toBe(0);
     }
     expect(rows.find((row) => row.slug === "nda")!.displayName).toBe("NDA");
@@ -457,6 +463,238 @@ describe("DELETE /contract-types/:id", () => {
       cookies: adminCookies,
     });
     expect(res.statusCode, res.body).toBe(404);
+  });
+});
+
+describe("the SET-003 archive guard over the contract record (#113)", () => {
+  interface ContractRow {
+    id: string;
+    number: number;
+    title: string;
+    contractTypeId: string;
+    customFields: Record<string, string | number | boolean | string[]>;
+  }
+
+  const createType = async (displayName: string): Promise<TypeRow> => {
+    const res = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/contract-types",
+      cookies: adminCookies,
+      payload: { displayName },
+    });
+    expect(res.statusCode, res.body).toBe(201);
+    return res.json().contractType;
+  };
+
+  const createContract = async (
+    title: string,
+    contractTypeId: string,
+    customFields?: Record<string, unknown>,
+  ): Promise<ContractRow> => {
+    const res = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/contracts",
+      cookies: adminCookies,
+      payload: { title, contractTypeId, ...(customFields ? { customFields } : {}) },
+    });
+    expect(res.statusCode, res.body).toBe(201);
+    return res.json().contract;
+  };
+
+  const contractRows = async (): Promise<ContractRow[]> => {
+    const res = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/contracts?includeArchived=true",
+      cookies: adminCookies,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    return res.json().contracts;
+  };
+
+  /** Defines a catalog field and attaches it to a type as required. */
+  const requireFieldOn = async (typeId: string, displayName: string): Promise<string> => {
+    const defined = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/fields",
+      cookies: adminCookies,
+      payload: { moduleScope: "contract", fieldTag: "legal", fieldType: "text", displayName },
+    });
+    expect(defined.statusCode, defined.body).toBe(201);
+    const field = defined.json().field;
+    const attached = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contract-types/${typeId}/fields`,
+      cookies: adminCookies,
+      payload: { fieldId: field.id, isRequired: true },
+    });
+    expect(attached.statusCode, attached.body).toBe(201);
+    return field.slug;
+  };
+
+  let reseller: TypeRow;
+  let distribution: TypeRow;
+  let apac: ContractRow;
+  let emea: ContractRow;
+  /** The slug Reseller requires and Distribution does not. */
+  let resellerFieldSlug: string;
+  /** The slug Distribution requires and no moved contract answers. */
+  let distributionFieldSlug: string;
+
+  beforeAll(async () => {
+    reseller = await createType("Reseller");
+    distribution = await createType("Distribution");
+    resellerFieldSlug = await requireFieldOn(reseller.id, "Reseller territory");
+    // The target type requires a field the moved contracts have no
+    // value for. The move must land anyway: it is a system move, so the
+    // hard-required rule (CTR-016/MTR-014) does not run.
+    distributionFieldSlug = await requireFieldOn(distribution.id, "Distribution channel");
+
+    apac = await createContract("Reseller APAC", reseller.id, { [resellerFieldSlug]: "APAC" });
+    emea = await createContract("Reseller EMEA", reseller.id, { [resellerFieldSlug]: "EMEA" });
+    // One of the two is archived: the guard counts and moves it too, so
+    // a restore never resurrects a reference to an archived type.
+    const archived = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${emea.number}/archive`,
+      cookies: adminCookies,
+    });
+    expect(archived.statusCode, archived.body).toBe(200);
+  });
+
+  it("answers the live usage count in the list read", async () => {
+    expect((await typeBySlug("reseller")).inUseCount).toBe(2);
+    expect((await typeBySlug("distribution")).inUseCount).toBe(0);
+  });
+
+  it("refuses to archive an in-use type without a target, reporting the count", async () => {
+    const res = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contract-types/${reseller.id}/archive`,
+      cookies: adminCookies,
+      payload: {},
+    });
+    expect(res.statusCode, res.body).toBe(409);
+    expect(res.headers["content-type"]).toContain("application/problem+json");
+    expect(res.json().detail).toContain("2 contracts");
+    expect((await typeBySlug("reseller")).archivedAt).toBeNull();
+  });
+
+  it("refuses to hard-delete an in-use type as 409", async () => {
+    const res = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/contract-types/${reseller.id}`,
+      cookies: adminCookies,
+    });
+    expect(res.statusCode, res.body).toBe(409);
+    expect((await listTypes(true)).some((row) => row.slug === "reseller")).toBe(true);
+  });
+
+  it("guards a type used only by an archived contract — the reference is still real", async () => {
+    const ghost = await createType("Ghost");
+    const haunted = await createContract("Ghost deal", ghost.id);
+    const archived = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${haunted.number}/archive`,
+      cookies: adminCookies,
+    });
+    expect(archived.statusCode, archived.body).toBe(200);
+
+    const refuse = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contract-types/${ghost.id}/archive`,
+      cookies: adminCookies,
+      payload: {},
+    });
+    expect(refuse.statusCode, refuse.body).toBe(409);
+    expect(refuse.json().detail).toContain("1 contract");
+    const noDelete = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/contract-types/${ghost.id}`,
+      cookies: adminCookies,
+    });
+    expect(noDelete.statusCode, noDelete.body).toBe(409);
+  });
+
+  it("archives with a target: every contract moves, archived rows included", async () => {
+    const res = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contract-types/${reseller.id}/archive`,
+      cookies: adminCookies,
+      payload: { reassignToId: distribution.id },
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().contractType.archivedAt).not.toBeNull();
+    expect(res.json().contractType.inUseCount).toBe(0);
+
+    const rows = await contractRows();
+    expect(rows.find((row) => row.id === apac.id)!.contractTypeId).toBe(distribution.id);
+    expect(rows.find((row) => row.id === emea.id)!.contractTypeId).toBe(distribution.id);
+    expect((await typeBySlug("distribution")).inUseCount).toBe(2);
+  });
+
+  it("moves a contract that has no value for the target type's required field", async () => {
+    // The move landed above with the gap open — proof the guard never
+    // calls the hard-required rule. The gap is real, not papered over.
+    const moved = (await contractRows()).find((row) => row.id === apac.id)!;
+    expect(moved.customFields[distributionFieldSlug]).toBeUndefined();
+  });
+
+  it("retains the values the old type's fields held", async () => {
+    const moved = (await contractRows()).find((row) => row.id === apac.id)!;
+    expect(moved.customFields[resellerFieldSlug]).toBe("APAC");
+  });
+
+  it("still archives an unused type without the guard", async () => {
+    const shelf = await createType("Shelf");
+    const res = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contract-types/${shelf.id}/archive`,
+      cookies: adminCookies,
+      payload: {},
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().contractType.archivedAt).not.toBeNull();
+  });
+
+  it("protects `other` regardless — in use or not", async () => {
+    const other = await typeBySlug("other");
+    await createContract("Otherwise", other.id);
+    const res = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contract-types/${other.id}/archive`,
+      cookies: adminCookies,
+      payload: { reassignToId: distribution.id },
+    });
+    expect(res.statusCode, res.body).toBe(409);
+    expect((await typeBySlug("other")).archivedAt).toBeNull();
+  });
+
+  it("writes the archive payload with a per-contract reassignment row", async () => {
+    const rows = await auditRows();
+    const archived = rows.find(
+      (row) =>
+        row.action === "contract_type.archived" &&
+        (row.payload as { slug?: string }).slug === "reseller",
+    );
+    expect(archived?.payload).toMatchObject({
+      slug: "reseller",
+      inUseCount: 2,
+      reassignedTo: "distribution",
+    });
+
+    const moves = await harness.db
+      .select()
+      .from(activityLog)
+      .where(eq(activityLog.action, "contract.type_reassigned"))
+      .orderBy(asc(activityLog.createdAt));
+    expect(moves.map((row) => row.entityId).sort()).toEqual([apac.id, emea.id].sort());
+    for (const move of moves) {
+      expect(move.entityType).toBe("contract");
+      expect(move.visibility).toBe("legal_only");
+      expect(move.payload).toMatchObject({ from: "Reseller", to: "Distribution" });
+    }
+    const numbers = moves.map((row) => (row.payload as { number?: number }).number);
+    expect(numbers.sort()).toEqual([apac.number, emea.number].sort());
   });
 });
 

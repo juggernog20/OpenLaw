@@ -54,6 +54,18 @@ export type FieldType = (typeof FIELD_TYPES)[number];
 /** The select types — the only ones that carry an options list. */
 export const SELECT_FIELD_TYPES = ["single_select", "multi_select"] as const;
 
+/**
+ * What one custom-field value looks like once stored (CTR-016). Every
+ * record module keys these by field slug in its own `custom_fields`
+ * jsonb, so the four shapes below cover all nine field types: `number`
+ * is a number, `boolean` is a boolean, `multi_select` is an array of
+ * option labels, and everything else — including `date` as an ISO
+ * calendar date and `user`/`entity` as the referenced row's id — is a
+ * string. An absent key is the only empty: a stored null would be a
+ * second way to say the same thing.
+ */
+export type CustomFieldValue = string | number | boolean | string[];
+
 /** The DD-015 tag: `business` fields render for Contributors, `legal`
  * fields stay legal-side. Every field carries exactly one. */
 export const FIELD_TAGS = ["business", "legal"] as const;
@@ -130,8 +142,9 @@ export const typeFieldColumns = () => ({
   /** Per-type form order, 1-based; reorder rewrites the rows whose
    * fields are live. */
   displayOrder: integer("display_order").notNull(),
-  /** MTR-014: hard-enforced at record creation/re-type once records
-   * exist (M8/M22); until then stored and editable only. */
+  /** MTR-014: hard-enforced by the record module at creation and at
+   * re-type — contracts from M8, matters when their record lands (M22),
+   * where the flag is stored and editable only until then. */
   isRequired: boolean("is_required").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

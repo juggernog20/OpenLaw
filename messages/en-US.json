@@ -233,6 +233,288 @@
   "auth.twoFactor.useTotp": {
     "defaultMessage": "Use your authenticator app"
   },
+  "contracts.applet.settings": {
+    "defaultMessage": "Contract settings"
+  },
+  "contracts.archivedPill": {
+    "defaultMessage": "Archived"
+  },
+  "contracts.cadenceLabel": {
+    "defaultMessage": "{cadence, select, one_time {One time} monthly {Monthly} annually {Annually} other {Unknown}}"
+  },
+  "contracts.column.actions": {
+    "defaultMessage": "Actions"
+  },
+  "contracts.column.counterparty": {
+    "defaultMessage": "Counterparty"
+  },
+  "contracts.column.owner": {
+    "defaultMessage": "Owner"
+  },
+  "contracts.column.reference": {
+    "defaultMessage": "Reference"
+  },
+  "contracts.column.status": {
+    "defaultMessage": "Status"
+  },
+  "contracts.column.title": {
+    "defaultMessage": "Title"
+  },
+  "contracts.column.type": {
+    "defaultMessage": "Type"
+  },
+  "contracts.column.value": {
+    "defaultMessage": "Value"
+  },
+  "contracts.count": {
+    "defaultMessage": "{count, plural, one {# contract} other {# contracts}}"
+  },
+  "contracts.counterparty.busy": {
+    "defaultMessage": "One change at a time. Wait for the last one to save."
+  },
+  "contracts.counterparty.empty": {
+    "defaultMessage": "Nobody is recorded on the other side yet."
+  },
+  "contracts.counterparty.hint": {
+    "defaultMessage": "Type an unknown name to create it. Add its details later."
+  },
+  "contracts.counterparty.makePrimary": {
+    "defaultMessage": "Make primary"
+  },
+  "contracts.counterparty.primary": {
+    "defaultMessage": "Primary"
+  },
+  "contracts.counterparty.remove": {
+    "defaultMessage": "Take {name} off the contract"
+  },
+  "contracts.counterpartyNone": {
+    "defaultMessage": "None recorded"
+  },
+  "contracts.create": {
+    "defaultMessage": "Create contract"
+  },
+  "contracts.empty.body": {
+    "defaultMessage": "A contract is the workspace for work that ends in a signed document. Create one when a deal starts; it takes a reference you can quote in email."
+  },
+  "contracts.empty.title": {
+    "defaultMessage": "No contracts yet"
+  },
+  "contracts.entityUnknown": {
+    "defaultMessage": "Not known yet"
+  },
+  "contracts.field.noOptions": {
+    "defaultMessage": "This field has no options yet."
+  },
+  "contracts.field.numberInvalid": {
+    "defaultMessage": "Enter this as a number."
+  },
+  "contracts.field.requiredMark": {
+    "defaultMessage": "(required)"
+  },
+  "contracts.field.selectPlaceholder": {
+    "defaultMessage": "Not set"
+  },
+  "contracts.fields.empty": {
+    "defaultMessage": "This contract type attaches no fields. Add them in contract settings."
+  },
+  "contracts.fields.section": {
+    "defaultMessage": "Fields"
+  },
+  "contracts.form.counterparties": {
+    "defaultMessage": "Counterparties"
+  },
+  "contracts.form.createError": {
+    "defaultMessage": "The contract could not be created."
+  },
+  "contracts.form.description": {
+    "defaultMessage": "Description"
+  },
+  "contracts.form.draftNote": {
+    "defaultMessage": "New contracts start in Draft. Set everything else on the record."
+  },
+  "contracts.form.entity": {
+    "defaultMessage": "Our entity"
+  },
+  "contracts.form.fieldMissing": {
+    "defaultMessage": "Fill {field} — this contract type requires it."
+  },
+  "contracts.form.owner": {
+    "defaultMessage": "Owner"
+  },
+  "contracts.form.priority": {
+    "defaultMessage": "Priority"
+  },
+  "contracts.form.risk": {
+    "defaultMessage": "Risk"
+  },
+  "contracts.form.status": {
+    "defaultMessage": "Status"
+  },
+  "contracts.form.submit": {
+    "defaultMessage": "Create"
+  },
+  "contracts.form.title": {
+    "defaultMessage": "Create contract"
+  },
+  "contracts.form.titleField": {
+    "defaultMessage": "Title"
+  },
+  "contracts.form.titleMissing": {
+    "defaultMessage": "Name the contract."
+  },
+  "contracts.form.type": {
+    "defaultMessage": "Contract type"
+  },
+  "contracts.form.typeMissing": {
+    "defaultMessage": "Pick a contract type."
+  },
+  "contracts.form.typePlaceholder": {
+    "defaultMessage": "Type…"
+  },
+  "contracts.form.value": {
+    "defaultMessage": "Value"
+  },
+  "contracts.listError": {
+    "defaultMessage": "The contract list could not be read. Try again."
+  },
+  "contracts.ownerUnassigned": {
+    "defaultMessage": "Unassigned"
+  },
+  "contracts.record.archive": {
+    "defaultMessage": "Archive"
+  },
+  "contracts.record.archivedNote": {
+    "defaultMessage": "This contract is archived — it is out of the contract list. Restore it to edit."
+  },
+  "contracts.record.documentTitle": {
+    "defaultMessage": "{reference} {title}"
+  },
+  "contracts.record.restore": {
+    "defaultMessage": "Restore"
+  },
+  "contracts.record.section": {
+    "defaultMessage": "Contract"
+  },
+  "contracts.reference": {
+    "defaultMessage": "C-{number}"
+  },
+  "contracts.restoreError": {
+    "defaultMessage": "The contract could not be restored."
+  },
+  "contracts.restoreRow": {
+    "defaultMessage": "Restore {title}"
+  },
+  "contracts.retype.error": {
+    "defaultMessage": "The contract type could not be changed."
+  },
+  "contracts.retype.missing": {
+    "defaultMessage": "Fill {field} — the new type requires it."
+  },
+  "contracts.retype.note": {
+    "defaultMessage": "{type} requires these fields. Fill them to change the type."
+  },
+  "contracts.retype.submit": {
+    "defaultMessage": "Change type"
+  },
+  "contracts.retype.title": {
+    "defaultMessage": "Change contract type"
+  },
+  "contracts.riskUnassessed": {
+    "defaultMessage": "Not assessed"
+  },
+  "contracts.severityLabel": {
+    "defaultMessage": "{level, select, low {Low} medium {Medium} high {High} critical {Critical} other {Unknown}}"
+  },
+  "contracts.showArchived": {
+    "defaultMessage": "Show archived"
+  },
+  "contracts.team.add": {
+    "defaultMessage": "Add team member"
+  },
+  "contracts.team.addError": {
+    "defaultMessage": "That person could not be added."
+  },
+  "contracts.team.empty": {
+    "defaultMessage": "Nobody is on this contract yet."
+  },
+  "contracts.team.person": {
+    "defaultMessage": "Person"
+  },
+  "contracts.team.personMissing": {
+    "defaultMessage": "Pick a person."
+  },
+  "contracts.team.personPlaceholder": {
+    "defaultMessage": "Person…"
+  },
+  "contracts.team.remove": {
+    "defaultMessage": "Take {name} off the team as {role, select, member {Member} watcher {Watcher} creator {Creator} contributor {Contributor} other {Unknown}}"
+  },
+  "contracts.team.removeError": {
+    "defaultMessage": "That person could not be taken off the team."
+  },
+  "contracts.team.role": {
+    "defaultMessage": "Role"
+  },
+  "contracts.team.section": {
+    "defaultMessage": "Team"
+  },
+  "contracts.team.submit": {
+    "defaultMessage": "Add"
+  },
+  "contracts.teamRole": {
+    "defaultMessage": "{role, select, member {Member} watcher {Watcher} creator {Creator} contributor {Contributor} other {Unknown}}"
+  },
+  "contracts.title": {
+    "defaultMessage": "Contracts"
+  },
+  "contracts.value.amount": {
+    "defaultMessage": "Amount"
+  },
+  "contracts.value.amountInvalid": {
+    "defaultMessage": "Enter the amount as a number."
+  },
+  "contracts.value.cadence": {
+    "defaultMessage": "Cadence"
+  },
+  "contracts.value.currency": {
+    "defaultMessage": "Currency"
+  },
+  "contracts.value.currencyMissing": {
+    "defaultMessage": "Pick a currency for the amount."
+  },
+  "contracts.value.currencyOption": {
+    "defaultMessage": "{code} — {name}"
+  },
+  "contracts.value.currencyPlaceholder": {
+    "defaultMessage": "Currency…"
+  },
+  "contracts.value.empty": {
+    "defaultMessage": "No value is recorded. Many contracts have none."
+  },
+  "contracts.value.hint": {
+    "defaultMessage": "Empty the amount to take the value off."
+  },
+  "contracts.valueNone": {
+    "defaultMessage": "No value"
+  },
+  "contracts.valueWithCadence": {
+    "defaultMessage": "{cadence, select, monthly {{amount} /month} annually {{amount} /year} other {{amount}}}"
+  },
+  "counterparty.picker.create": {
+    "defaultMessage": "Create \"{name}\""
+  },
+  "counterparty.picker.listLabel": {
+    "defaultMessage": "Counterparty matches"
+  },
+  "counterparty.picker.noMatches": {
+    "defaultMessage": "No counterparties to add."
+  },
+  "counterparty.picker.placeholder": {
+    "defaultMessage": "Find or create a counterparty"
+  },
+  "counterparty.picker.searching": {
+    "defaultMessage": "Searching…"
+  },
   "dialog.close": {
     "defaultMessage": "Close"
   },
@@ -400,6 +682,9 @@
   },
   "listEditor.showArchived": {
     "defaultMessage": "Show archived"
+  },
+  "nav.contracts": {
+    "defaultMessage": "Contracts"
   },
   "nav.entities": {
     "defaultMessage": "Entities"
@@ -678,7 +963,7 @@
     "defaultMessage": "Archive {name}"
   },
   "settings.contractStatuses.archiveWarning": {
-    "defaultMessage": "{count, plural, =0 {{name} is not used by any contracts.} one {{name} is used by # contract, which keeps its status until someone moves it.} other {{name} is used by # contracts, which keep their status until someone moves them.}}"
+    "defaultMessage": "{count, plural, =0 {{name} is not used by any contracts.} one {{name} is the status of # contract. Move it to another status first.} other {{name} is the status of # contracts. Move them to another status first.}}"
   },
   "settings.contractStatuses.auditNote": {
     "defaultMessage": "The change applies immediately and is recorded in the audit log."
