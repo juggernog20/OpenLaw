@@ -92,7 +92,16 @@ export function toValue(
  * nothing (DES-017). */
 export function sameDraft(left: CustomFieldDraft, right: CustomFieldDraft): boolean {
   if (Array.isArray(left) && Array.isArray(right)) {
-    return left.length === right.length && left.every((item) => right.includes(item));
+    if (left.length !== right.length) return false;
+    const leftCounts = new Map<string, number>();
+    const rightCounts = new Map<string, number>();
+    for (const item of left) leftCounts.set(item, (leftCounts.get(item) ?? 0) + 1);
+    for (const item of right) rightCounts.set(item, (rightCounts.get(item) ?? 0) + 1);
+    if (leftCounts.size !== rightCounts.size) return false;
+    for (const [key, count] of leftCounts) {
+      if (rightCounts.get(key) !== count) return false;
+    }
+    return true;
   }
   return left === right;
 }

@@ -80,20 +80,18 @@ export function signingEntityOptions(
   return saved && !live.some((option) => option.id === saved.id) ? [saved, ...live] : live;
 }
 
-/** Guards a level list literal so it can't drift from the API's enum:
- * `Exclude<SeverityLevel, U[number]>` resolves to `never` only when
- * every level appears in `U` — which needs `U` inferred from the
- * literal, so the type argument is never passed by hand. A level added
- * to the API schema and left out here then fails to compile, as does a
- * typo'd entry. */
-function exhaustiveSeverityList<U extends readonly SeverityLevel[]>(
-  levels: Exclude<SeverityLevel, U[number]> extends never ? U : never,
-): U {
-  return levels;
+/** Generic factory for exhaustive enum lists: guards a literal so it can't
+ * drift from the API's enum. `Exclude<T, U[number]>` resolves to `never` only
+ * when every value of `T` appears in `U` — which needs `U` inferred from the
+ * literal, so the type argument is never passed by hand. A value added to the
+ * API schema and left out here fails to compile, as does a typo'd entry. */
+function exhaustiveList<T extends string>() {
+  return <U extends readonly T[]>(values: Exclude<T, U[number]> extends never ? U : never): U =>
+    values;
 }
 
 /** DES-018's one ordinal severity ramp, low → critical. */
-export const SEVERITY_LEVELS = exhaustiveSeverityList([
+export const SEVERITY_LEVELS = exhaustiveList<SeverityLevel>()([
   "low",
   "medium",
   "high",
@@ -156,17 +154,9 @@ export function riskLabel(intl: IntlShape, level: SeverityLevel | null): string 
 export type ContractValue = NonNullable<ContractRow["value"]>;
 export type ValueCadence = ContractValue["cadence"];
 
-/** Guards the cadence list against drift from the API's enum, the same
- * way the severity ramp is guarded above. */
-function exhaustiveCadenceList<U extends readonly ValueCadence[]>(
-  cadences: Exclude<ValueCadence, U[number]> extends never ? U : never,
-): U {
-  return cadences;
-}
-
 /** CTR-010's cadences, in the order the picker reads: the plain one-off
  * first, then the two that repeat. */
-export const VALUE_CADENCES = exhaustiveCadenceList(["one_time", "monthly", "annually"] as const);
+export const VALUE_CADENCES = exhaustiveList<ValueCadence>()(["one_time", "monthly", "annually"] as const);
 
 export function cadenceLabel(intl: IntlShape, cadence: ValueCadence): string {
   return intl.formatMessage(
@@ -204,16 +194,8 @@ export function formatContractValue(intl: IntlShape, value: ContractValue): stri
   );
 }
 
-/** Guards the role list against drift from the API's enum, the same way
- * the severity ramp is guarded above. */
-function exhaustiveRoleList<U extends readonly ContractTeamRole[]>(
-  roles: Exclude<ContractTeamRole, U[number]> extends never ? U : never,
-): U {
-  return roles;
-}
-
 /** CTR-004's role enum, in the order the roster and the picker read. */
-export const CONTRACT_TEAM_ROLES = exhaustiveRoleList([
+export const CONTRACT_TEAM_ROLES = exhaustiveList<ContractTeamRole>()([
   "member",
   "watcher",
   "contributor",

@@ -111,7 +111,7 @@ function listApi(live: Record<string, unknown>[], archived: Record<string, unkno
     }
     if (call.url.pathname === "/api/v1/contracts" && call.method === "GET") {
       const all = call.url.searchParams.get("includeArchived") === "true";
-      return json(200, { contracts: all ? [...rows, ...archived] : rows });
+      return json(200, { contracts: all ? [...rows, ...archived] : rows, cursor: null });
     }
     if (call.url.pathname === "/api/v1/contracts" && call.method === "POST") {
       creates.push(call.body);
@@ -305,7 +305,7 @@ describe("the /contracts destination", () => {
           return json(200, { entities: [] });
         }
         if (call.url.pathname === "/api/v1/contracts" && call.method === "GET") {
-          return json(200, { contracts: [] });
+          return json(200, { contracts: [], cursor: null });
         }
         if (call.url.pathname === "/api/v1/contracts" && call.method === "POST") {
           return problem(400, "The contract type must be a live contract type.");
@@ -373,7 +373,7 @@ describe("the /contracts destination", () => {
         if (call.url.pathname === "/api/v1/contracts" && call.method === "GET") {
           return call.url.searchParams.get("includeArchived") === "true"
             ? problem(500, "The contract list could not be read.")
-            : json(200, { contracts: [contractRow()] });
+            : json(200, { contracts: [contractRow()], cursor: null });
         }
         return undefined;
       },

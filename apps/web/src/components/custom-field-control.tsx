@@ -63,7 +63,7 @@ export function CustomFieldControl({
   onDraft,
   onBlur,
   onKeyDown,
-}: Readonly<CustomFieldControlProps>) {
+}: Readonly<CustomFieldControlProps>): JSX.Element {
   const intl = useIntl();
   const text = typeof draft === "string" ? draft : "";
   const chosen = Array.isArray(draft) ? draft : [];
@@ -142,7 +142,8 @@ export function CustomFieldControl({
         // label by reference — `for` can only name one control, and
         // this is several.
         <div
-          {...shared}
+          id={id}
+          aria-describedby={describedBy}
           role="group"
           aria-labelledby={`${id}-label`}
           className="flex flex-wrap gap-x-4 gap-y-2"
@@ -208,5 +209,9 @@ export function CustomFieldControl({
           onKeyDown={onKeyDown}
         />
       );
+    default: {
+      const exhaustiveCheck: never = field.fieldType;
+      throw new Error(`Unhandled field type: ${exhaustiveCheck}`);
+    }
   }
 }

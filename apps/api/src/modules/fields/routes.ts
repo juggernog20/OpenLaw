@@ -158,13 +158,28 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         .groupBy(joinTable.fieldId);
       for (const row of rows) tally.set(row.fieldId, (tally.get(row.fieldId) ?? 0) + row.tally);
     }
-    for (const field of catalog) {
-      const [row] = await db
-        .select({ tally: count() })
-        .from(contracts)
-        .where(sql`${contracts.customFields} ? ${field.slug}`);
-      const holders = row?.tally ?? 0;
-      if (holders > 0) tally.set(field.id, (tally.get(field.id) ?? 0) + holders);
+    // Count contract custom-field holders for all catalog slugs in one query.
+    const slugToId = new Map(catalog.map((field) => [field.slug, field.id]));
+    const slugs = catalog.map((field) => field.slug);
+    if (slugs.length > 0) {
+      const customFieldRows = await db.execute<{ slug: string; tally: number }>(
+        sql`
+          SELECT slug, COUNT(*) AS tally
+          FROM (
+            SELECT jsonb_object_keys(${contracts.customFields}) AS slug
+            FROM ${contracts}
+            WHERE ${contracts.customFields} IS NOT NULL
+          ) AS keys
+          WHERE slug = ANY(${slugs})
+          GROUP BY slug
+        `,
+      );
+      for (const row of customFieldRows.rows) {
+        const fieldId = slugToId.get(row.slug);
+        if (fieldId) {
+          tally.set(fieldId, (tally.get(fieldId) ?? 0) + row.tally);
+        }
+      }
     }
     return tally;
   }

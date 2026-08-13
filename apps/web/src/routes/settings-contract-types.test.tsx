@@ -403,6 +403,12 @@ describe("the SET-003 guard with live counts (#113)", () => {
     expect(select).toBeEnabled();
     expect(select).toBeRequired();
 
+    // Attempt to archive without selecting a target first.
+    await user.click(within(dialog).getByRole("button", { name: "Archive type" }));
+    // Should not archive because no target is selected.
+    expect(calls.archives).toEqual([]);
+
+    // Now select a target and submit.
     await user.selectOptions(select, "MSA");
     await user.click(within(dialog).getByRole("button", { name: "Archive type" }));
     await waitFor(() =>

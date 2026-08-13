@@ -581,7 +581,8 @@ describe("the SET-003 in-use guard over the contract record (#113)", () => {
       cookies: adminCookies,
     });
     expect(types.statusCode, types.body).toBe(200);
-    const nda = types.json().contractTypes.find((row: StatusRow) => row.slug === "nda");
+    const nda = types.json().contractTypes.find((row: { id: string; slug: string }) => row.slug === "nda");
+    expect(nda, "NDA seed type must exist").toBeDefined();
     const res = await harness.app.inject({
       method: "POST",
       url: "/api/v1/contracts",

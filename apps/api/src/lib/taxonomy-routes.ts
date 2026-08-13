@@ -112,6 +112,11 @@ function toRow(row: TaxonomyRow, counts: Map<string, number>) {
   };
 }
 
+/** Builds the "3 entities" / "1 entity" phrase helper for guard refusals. */
+export function recordNounPhrase(recordNoun: { singular: string; plural: string }) {
+  return (count: number) => `${count} ${count === 1 ? recordNoun.singular : recordNoun.plural}`;
+}
+
 /**
  * The routes, mounted per module: `taxonomyRoutes(config)` is a
  * Fastify plugin serving `/{path}` with the full DES-020 behavior set.
@@ -146,8 +151,7 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
     }
 
     /** "3 entities" / "1 entity" — the guard refusals' count phrase. */
-    const inUsePhrase = (count: number) =>
-      `${count} ${count === 1 ? config.recordNoun.singular : config.recordNoun.plural}`;
+    const inUsePhrase = recordNounPhrase(config.recordNoun);
 
     app.get(
       `/${path}`,

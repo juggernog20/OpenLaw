@@ -436,4 +436,28 @@ describe("the SET-003 in-use block with live counts (#113)", () => {
     expect(within(dialog).getByRole("button", { name: "Archive status" })).toBeDisabled();
     expect(calls.archives).toEqual([]);
   });
+
+  it("displays singular message for a status with one contract", async () => {
+    const calls = newCalls();
+    const statusesWithOne = seededStatuses().map((row) =>
+      row.slug === "terminated" ? { ...row, inUseCount: 1 } : row,
+    );
+    stubApi({ signedIn: ADMIN, extra: statusesApi(calls, statusesWithOne) });
+    renderAt("/settings/contracts/statuses");
+    const user = userEvent.setup();
+
+    const rows = within(statusList()).getAllByRole("listitem");
+    const terminatedRow = rows.find((row) => within(row).queryByText("Terminated"))!;
+    expect(within(terminatedRow).getByText("1 contract")).toBeInTheDocument();
+
+    await user.click(await screen.findByRole("button", { name: "Archive Terminated" }));
+    const dialog = await screen.findByRole("dialog", { name: "Archive Terminated" });
+    expect(
+      within(dialog).getByText(
+        "Terminated is the status of 1 contract. Move it to another status first.",
+      ),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Archive status" })).toBeDisabled();
+    expect(calls.archives).toEqual([]);
+  });
 });

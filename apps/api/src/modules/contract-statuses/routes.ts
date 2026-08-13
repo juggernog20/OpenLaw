@@ -35,6 +35,7 @@ import {
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity, type ActivityWriter } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
+import { recordNounPhrase } from "../../lib/taxonomy-routes.js";
 
 const StageSchema = z.enum(CONTRACT_STAGES);
 
@@ -73,7 +74,7 @@ function toRow(row: ContractStatus, counts: Map<string, number>) {
 }
 
 /** "3 contracts" / "1 contract" — the guard refusal's count phrase. */
-const inUsePhrase = (total: number) => `${total} ${total === 1 ? "contract" : "contracts"}`;
+const inUsePhrase = recordNounPhrase({ singular: "contract", plural: "contracts" });
 
 /** `"On hold"` → `on_hold`; anything left empty becomes `status`. */
 function slugBaseOf(displayName: string): string {

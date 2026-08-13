@@ -908,17 +908,23 @@ function TeamCard({
    * somewhere deliberate — the card's own add control (DES-010's
    * return-focus rule, applied to a destructive row action). */
   const addControl = useRef<HTMLButtonElement>(null);
+  /** One write at a time: a ref-based guard prevents same-tick duplicate removals. */
+  const inFlight = useRef(false);
 
   async function remove(member: ContractTeamMember) {
-    if (busy) return;
+    if (inFlight.current) return;
     setError(null);
+    inFlight.current = true;
     setBusy(true);
     const { data, error: problem } = await api
       .DELETE("/api/v1/contracts/{number}/team/{userId}/{role}", {
         params: { path: { number: contractNumber, userId: member.id, role: member.role } },
       })
       .catch(() => ({ data: undefined, error: undefined }))
-      .finally(() => setBusy(false));
+      .finally(() => {
+        inFlight.current = false;
+        setBusy(false);
+      });
     if (!data) {
       setError(
         problemDetail(problem) ??
@@ -1226,6 +1232,7 @@ function CounterpartiesField({
    * row controls as standing down.
    */
   const inFlight = useRef(false);
+  const hadRefusal = useRef(false);
   const [busy, setBusy] = useState(false);
   /** A removal unmounts the row that held focus, so focus has to be put
    * somewhere deliberate — the picker, which is where the next thing a
@@ -1244,6 +1251,7 @@ function CounterpartiesField({
     if (inFlight.current) {
       // A refused pick has to say so. Dropping it in silence would look
       // exactly like a pick that landed and then vanished.
+      hadRefusal.current = true;
       onStatus(
         "error",
         intl.formatMessage({
@@ -1254,6 +1262,7 @@ function CounterpartiesField({
       return;
     }
     inFlight.current = true;
+    hadRefusal.current = false;
     setBusy(true);
     onStatus("saving");
     const { data, error: problem } = await call
@@ -1263,11 +1272,15 @@ function CounterpartiesField({
         setBusy(false);
       });
     if (!data) {
+      hadRefusal.current = true;
       onStatus("error", problemDetail(problem));
       return;
     }
     onChange(data.contract, data.counterparties);
-    onStatus("saved");
+    // Only set "saved" if no refusal occurred.
+    if (!hadRefusal.current) {
+      onStatus("saved");
+    }
   }
 
   function add(pick: CounterpartyPick) {
@@ -1305,7 +1318,13 @@ function CounterpartiesField({
         <StatusNote status={status} detail={error} />
       </div>
       {parties.length > 0 && (
-        <ul className="flex flex-col rounded-button border border-border-default">
+        <ul
+          aria-label={intl.formatMessage({
+            id: "contracts.counterparties.list",
+            defaultMessage: "Counterparties",
+          })}
+          className="flex flex-col rounded-button border border-border-default"
+        >
           {parties.map((party) => (
             <li
               key={party.id}

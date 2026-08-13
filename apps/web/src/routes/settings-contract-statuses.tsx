@@ -137,7 +137,9 @@ function ArchiveStatusDialog({
   return (
     <Dialog open onOpenChange={onOpenChange}>
       <DialogContent
-        aria-describedby={undefined}
+        aria-describedby={
+          blocked || target.inUseCount > 0 ? "archive-status-warning" : undefined
+        }
         onCloseAutoFocus={(event) => {
           if (!archived.current) return;
           event.preventDefault();
@@ -157,7 +159,7 @@ function ArchiveStatusDialog({
             {/* Statuses block at structural minimums instead of offering
                 reassignment (SET-003, CTR-020) — no select here, ever.
                 The floor reads first, in the order the API checks. */}
-            <p>
+            <p id="archive-status-warning">
               {blocked ? (
                 <FormattedMessage
                   id="settings.contractStatuses.archiveBlocked"

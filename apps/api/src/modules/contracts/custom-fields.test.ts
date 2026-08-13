@@ -25,7 +25,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, asc, eq, inArray, users } from "@openlaw/db";
+import { activityLog, asc, eq, inArray, users, type CustomFieldValue } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -75,8 +75,6 @@ interface AttachedField {
   displayOrder: number;
   isRequired: boolean;
 }
-
-type CustomFieldValue = string | number | boolean | string[];
 
 interface TypeChoice {
   id: string;

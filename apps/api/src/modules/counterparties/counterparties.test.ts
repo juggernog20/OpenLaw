@@ -33,6 +33,11 @@ const CONTRIBUTOR = {
   displayName: "Casey Contributor",
   password: "correct-horse-battery",
 } as const;
+const BUSINESS_USER = {
+  email: "business@example.com",
+  displayName: "Business User",
+  password: "correct-horse-battery",
+} as const;
 
 let harness: TestHarness;
 let adminCookies: Record<string, string>;
@@ -62,6 +67,7 @@ beforeAll(async () => {
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
     [CONTRIBUTOR, "contributor"],
+    [BUSINESS_USER, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role }).where(eq(users.id, user.id));
@@ -189,14 +195,23 @@ describe("GET /counterparties — the shared typeahead's read", () => {
     const anonymous = await harness.app.inject({ method: "GET", url: "/api/v1/counterparties" });
     expect(anonymous.statusCode, anonymous.body).toBe(401);
 
-    const cookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
-    const refused = await harness.app.inject({
+    const contributorCookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
+    const contributorRefused = await harness.app.inject({
       method: "GET",
       url: "/api/v1/counterparties",
-      cookies,
+      cookies: contributorCookies,
     });
-    expect(refused.statusCode, refused.body).toBe(403);
-    expect(refused.headers["content-type"]).toContain("application/problem+json");
+    expect(contributorRefused.statusCode, contributorRefused.body).toBe(403);
+    expect(contributorRefused.headers["content-type"]).toContain("application/problem+json");
+
+    const businessCookies = await signInCookies(harness.app, BUSINESS_USER.email, BUSINESS_USER.password);
+    const businessRefused = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/counterparties",
+      cookies: businessCookies,
+    });
+    expect(businessRefused.statusCode, businessRefused.body).toBe(403);
+    expect(businessRefused.headers["content-type"]).toContain("application/problem+json");
   });
 
   // Last in the file on purpose: it fills the book, and the cases above

@@ -47,30 +47,53 @@ export const contractTypeUsage: TaxonomyUsage = {
   },
 
   async reassign(tx, { from, to, actorId }) {
-    const moved = await tx
-      .update(contracts)
-      .set({ contractTypeId: to.id })
-      .where(eq(contracts.contractTypeId, from.id))
-      .returning({ id: contracts.id, number: contracts.number, title: contracts.title });
-    // Legal Only, like every other contract-record entry: the
-    // Administrator-side story is the system-level
-    // `contract_type.archived` entry the archive route writes.
-    await recordActivity(
-      tx,
-      moved.map((row) => ({
-        entityType: "contract" as const,
-        entityId: row.id,
-        actorId,
-        action: "contract.type_reassigned" as const,
-        visibility: "legal_only" as const,
-        payload: {
-          number: row.number,
-          title: row.title,
-          from: from.displayName,
-          to: to.displayName,
-        },
-      })),
-    );
-    return moved.length;
+    const CHUNK_SIZE = 500;
+    let totalMoved = 0;
+    const startTime = Date.now();
+
+    while (true) {
+      const chunk = await tx
+        .update(contracts)
+        .set({ contractTypeId: to.id })
+        .where(eq(contracts.contractTypeId, from.id))
+        .returning({ id: contracts.id, number: contracts.number, title: contracts.title })
+        .limit(CHUNK_SIZE);
+
+      if (chunk.length === 0) {
+        return 0;
+      }
+
+      // Legal Only, like every other contract-record entry: the
+      // Administrator-side story is the system-level
+      // `contract_type.archived` entry the archive route writes.
+      await recordActivity(
+        tx,
+        chunk.map((row) => ({
+          entityType: "contract" as const,
+          entityId: row.id,
+          actorId,
+          action: "contract.type_reassigned" as const,
+          visibility: "legal_only" as const,
+          payload: {
+            number: row.number,
+            title: row.title,
+            from: from.displayName,
+            to: to.displayName,
+          },
+        })),
+      );
+
+      totalMoved += chunk.length;
+      if (chunk.length < CHUNK_SIZE) break;
+    }
+
+    const duration = Date.now() - startTime;
+    if (totalMoved > 0) {
+      console.log(
+        `Reassigned ${totalMoved} contract(s) from ${from.displayName} to ${to.displayName} in ${duration}ms`,
+      );
+    }
+
+    return totalMoved;
   },
 };

@@ -346,9 +346,25 @@ function recordApi(
               entity: signingEntity(body.entityId),
             }
           : {};
+      // Merge customFields rather than replacing: null removes a field, omitted preserves it.
+      const customFields =
+        "customFields" in body && typeof body.customFields === "object" && body.customFields !== null
+          ? (() => {
+              const merged = { ...(row.customFields ?? {}) };
+              for (const [key, value] of Object.entries(body.customFields)) {
+                if (value === null) {
+                  delete merged[key];
+                } else {
+                  merged[key] = value;
+                }
+              }
+              return merged;
+            })()
+          : row.customFields;
       row = {
         ...row,
         ...body,
+        customFields,
         ...owner,
         ...signatory,
         ...(status ? { statusName: status.displayName, stage: status.stage } : {}),
@@ -615,6 +631,19 @@ describe("the /contracts/:number record page", () => {
         { value: { amount: 100_000, currency: "USD", cadence: "one_time" } },
       ]),
     );
+  });
+
+  it("refuses a negative amount without sending it", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    await user.type(await screen.findByLabelText("Amount"), "-5");
+    await leaveValueGroup(user);
+
+    expect(await screen.findByText("Enter the amount as a number.")).toBeVisible();
+    expect(api.patches).toEqual([]);
   });
 
   it("commits nothing when the group leaves the value as it found it", async () => {
@@ -904,7 +933,8 @@ describe("the /contracts/:number record page", () => {
     await waitFor(() => expect(api.counterpartyCalls).toEqual(["primary cp-orion"]));
     await waitFor(() => expect(screen.getByText("Saved")).toBeInTheDocument());
     // Still exactly one primary, and it is the other party now.
-    const rows = screen.getAllByRole("listitem");
+    const counterpartiesList = screen.getByRole("list", { name: "Counterparties" });
+    const rows = within(counterpartiesList).getAllByRole("listitem");
     expect(rows[0]!.textContent).toContain("Orion Cloud Ltd");
     expect(rows[0]!.textContent).toContain("Primary");
 
@@ -1362,13 +1392,14 @@ describe("the /contracts/:number record page", () => {
   });
 
   it("shows the seam's refusal beside the field that earned it", async () => {
+    const api = recordApi(contractRow());
     stubApi({
       signedIn: MEMBER,
       extra: (call) => {
         if (call.url.pathname === "/api/v1/contracts/42" && call.method === "PATCH") {
           return problem(400, "Payment terms: that is longer than this field holds.");
         }
-        return recordApi(contractRow()).handler(call);
+        return api.handler(call);
       },
     });
     renderAt("/contracts/42");

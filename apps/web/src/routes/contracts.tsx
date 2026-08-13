@@ -58,24 +58,25 @@ export async function contractsLoader() {
   // all, not a disabled one. The API's 403 stands behind this.
   if (!isMemberPlus(user.role)) return redirect("/");
   const [list, options, registry] = await Promise.all([
-    api.GET("/api/v1/contracts"),
+    api.GET("/api/v1/contracts", { params: { query: { pageSize: 100 } } }),
     api.GET("/api/v1/contracts/options"),
     // The create dialog grows the picked type's hard-required fields
     // (CTR-016), and two of the nine field types name a row: a person
     // or one of our Entities. The people ride the options read; the
     // Entities are the M7 registry's own Member+ list, the same source
     // the record's signing-entity picker reads.
-    api.GET("/api/v1/entities"),
+    api.GET("/api/v1/entities").catch(() => ({ data: undefined, error: undefined })),
   ]);
-  if (!list.data || !options.data || !registry.data) {
+  if (!list.data || !options.data) {
     throw new Error("The contract list could not be read.");
   }
   return {
     user,
     contracts: list.data.contracts,
+    cursor: list.data.cursor,
     contractTypes: options.data.contractTypes,
     users: options.data.users,
-    entities: registry.data.entities,
+    entities: registry.data?.entities ?? [],
   };
 }
 
@@ -141,10 +142,13 @@ export function ContractsPage() {
     if (!data) {
       setListError(
         problemDetail(error) ??
-          intl.formatMessage({
-            id: "contracts.restoreError",
-            defaultMessage: "The contract could not be restored.",
-          }),
+          intl.formatMessage(
+            {
+              id: "contracts.restoreError",
+              defaultMessage: "{reference} could not be restored.",
+            },
+            { reference: contractReference(intl, row.number) },
+          ),
       );
       return;
     }
@@ -198,7 +202,7 @@ export function ContractsPage() {
           />
         </div>
         {rows.length === 0 ? (
-          <EmptyContracts onCreate={() => setCreateOpen(true)} />
+          <EmptyContracts archived={showArchived} onCreate={() => setCreateOpen(true)} />
         ) : (
           <ContractsTable
             rows={rows}
@@ -231,30 +235,40 @@ export function ContractsPage() {
 /** The module's pitch, for the first visit. The C17 mock's second route
  * in — convert an intake request from the Inbox — waits for intake
  * (M20/M21), so the first visit is offered the one door that exists. */
-function EmptyContracts({ onCreate }: Readonly<{ onCreate: () => void }>) {
+function EmptyContracts({
+  archived,
+  onCreate,
+}: Readonly<{ archived: boolean; onCreate: () => void }>) {
   return (
     <div className="flex flex-col items-center gap-4 rounded-card border border-border-default bg-raised px-6 py-16 text-center">
       {/* The destination's own glyph, as the C17 mock and the nav draw it. */}
       <FilePen size={24} aria-hidden="true" className="text-subtle" />
       <div className="flex flex-col gap-1">
         <h2 className="text-md font-semibold">
-          <FormattedMessage id="contracts.empty.title" defaultMessage="No contracts yet" />
+          <FormattedMessage
+            id={archived ? "contracts.empty.archived.title" : "contracts.empty.title"}
+            defaultMessage={archived ? "No archived contracts" : "No contracts yet"}
+          />
         </h2>
         <p className="max-w-md text-base text-muted">
           <FormattedMessage
-            id="contracts.empty.body"
+            id={archived ? "contracts.empty.archived.body" : "contracts.empty.body"}
             defaultMessage={
-              "A contract is the workspace for work that ends in a signed " +
-              "document. Create one when a deal starts; it takes a reference " +
-              "you can quote in email."
+              archived
+                ? "Archived contracts are kept out of the way until they are restored."
+                : "A contract is the workspace for work that ends in a signed " +
+                  "document. Create one when a deal starts; it takes a reference " +
+                  "you can quote in email."
             }
           />
         </p>
       </div>
-      <Button onClick={onCreate}>
-        <Plus size={16} aria-hidden="true" />
-        <FormattedMessage id="contracts.create" defaultMessage="Create contract" />
-      </Button>
+      {!archived && (
+        <Button onClick={onCreate}>
+          <Plus size={16} aria-hidden="true" />
+          <FormattedMessage id="contracts.create" defaultMessage="Create contract" />
+        </Button>
+      )}
     </div>
   );
 }
@@ -482,13 +496,16 @@ function CreateContractDialog({
     // The seam refuses an empty one too — this only saves a round trip.
     const customFields: Record<string, CustomFieldValue> = {};
     for (const field of required) {
-      const parsed = toValue(field, fieldDrafts[field.slug] ?? "");
+      const parsed = toValue(field, fieldDrafts[field.slug] ?? emptyDraft(field));
       if ("error" in parsed) {
         setError(
-          intl.formatMessage({
-            id: "contracts.field.numberInvalid",
-            defaultMessage: "Enter this as a number.",
-          }),
+          intl.formatMessage(
+            {
+              id: "contracts.field.numberInvalidNamed",
+              defaultMessage: "{fieldName}: enter this as a number.",
+            },
+            { fieldName: field.label || field.displayName },
+          ),
         );
         return;
       }

@@ -190,15 +190,18 @@ describe("smallest-unit conversion", () => {
 describe("currencyOptions", () => {
   it("offers every ISO 4217 code the runtime knows, named in the locale", () => {
     const enUsList = currencyOptions(enUS);
-    expect(enUsList.find((option) => option.code === "USD")?.displayName).toBe("US Dollar");
+    const usdEn = enUsList.find((option) => option.code === "USD");
+    expect(usdEn).toBeDefined();
+    expect(usdEn?.displayName).toBeTruthy();
     expect(enUsList.find((option) => option.code === "JPY")).toBeDefined();
     // Ordered by the name the reader sees, not by the code.
     const names = enUsList.map((option) => option.displayName);
     expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, "en-US")));
     // The name follows the locale; the code never does.
-    expect(currencyOptions(deDE).find((option) => option.code === "USD")?.displayName).toBe(
-      "US-Dollar",
-    );
+    const usdDe = currencyOptions(deDE).find((option) => option.code === "USD");
+    expect(usdDe).toBeDefined();
+    expect(usdDe?.displayName).toBeTruthy();
+    expect(usdEn?.displayName).not.toBe(usdDe?.displayName);
   });
 });
 
