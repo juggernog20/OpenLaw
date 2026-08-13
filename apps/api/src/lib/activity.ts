@@ -96,6 +96,32 @@ export interface ActivityEntry {
   payload?: Record<string, unknown>;
 }
 
+/**
+ * The tier a record's own actions ride (DD-017, M9/6).
+ *
+ * DD-017 says an entry inherits the visibility tier of the action it
+ * represents. Editing a field, moving a status, or putting somebody on
+ * the team is the working group's business, so the working group can
+ * read it: those entries are Working Team, and the record feed shows
+ * them to a Contributor on the team exactly as it shows them to a
+ * Member. `admin_only` is not this — it stays for settings, user
+ * administration, and security actions, which no record feed carries.
+ * Comment entries take no default at all: each one rides the comment's
+ * own tier (CMT-006).
+ *
+ * **M8 wrote these rows `legal_only`, and those rows stay as written.**
+ * The log is append-only, so there is no migration that rewrites them;
+ * this is pre-release, and a handful of early entries reading narrower
+ * than they would today is the honest state of an append-only table.
+ *
+ * Contracts adopt this in M9/6, because the contract record is the
+ * first surface with a feed. The Entities record's `entity.*` entries
+ * still write `legal_only`: its activity bar is not mounted (M9 is out
+ * of scope for it), and they join this constant when the Entities
+ * module gets its feed in Arc 6.
+ */
+export const RECORD_ACTIVITY_TIER: ActivityVisibility = "working_team";
+
 /** Appends one entry. Append-only: nothing in application code ever
  * updates or deletes activity_log rows (corrections are new entries). */
 export async function recordActivity(db: ActivityWriter, entry: ActivityEntry): Promise<void>;

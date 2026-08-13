@@ -69,7 +69,7 @@
  * Users are bounced home, and the API's 403 is the real refusal.
  */
 
-import { memo, useRef, useState } from "react";
+import { memo, useMemo, useRef, useState } from "react";
 import {
   Link,
   redirect,
@@ -124,6 +124,7 @@ import { cn } from "../lib/utils";
 import { canReadContracts, isMemberPlus } from "../lib/roles";
 import { currentUser, needsSetup } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
+import { useActivityApplet } from "../components/activity/activity-applet";
 import { useCommentApplet } from "../components/comments/comment-applet";
 import { RecordApplets } from "../components/shell/record-applets";
 import type { Applet } from "../components/shell/applets";
@@ -266,6 +267,19 @@ function ContractRecord() {
   const [fieldError, setFieldError] = useState<Partial<Record<FieldKey, string | undefined>>>({});
   const [archiveStatus, setArchiveStatus] = useState<FieldStatus>("idle");
   const [archiveError, setArchiveError] = useState<string | undefined>(undefined);
+
+  /** What happened to this record (DD-017), keyed by the same entity
+   * reference the chat applet takes. The field labels ride along
+   * because a `field.<slug>` change key is a slug and not a name, and
+   * the catalog that turns one into the other belongs to this page. */
+  const historyApplet = useActivityApplet({
+    entityType: "contract",
+    entityId: contract.id,
+    fieldLabels: useMemo(
+      () => Object.fromEntries(attached.map((field) => [field.slug, field.displayName])),
+      [attached],
+    ),
+  });
 
   const archived = saved.archivedAt !== null;
   /**
@@ -522,7 +536,7 @@ function ContractRecord() {
           { reference, title: saved.title },
         )}
       />
-      <RecordApplets applets={[chatApplet, SETTINGS_APPLET]}>
+      <RecordApplets applets={[chatApplet, historyApplet, SETTINGS_APPLET]}>
         <div className="flex flex-col gap-4 overflow-y-auto px-page-x py-page-y">
           {archived && (
             <p className="rounded-card bg-status-warning-bg px-3 py-2 text-md text-status-warning-fg">
