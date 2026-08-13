@@ -447,7 +447,7 @@ export interface paths {
     get: operations["getContractType"];
     put?: never;
     post?: never;
-    /** Hard-delete a contract type; `other` refuses (CTR-002), and once contracts exist (M8) an in-use type will refuse too */
+    /** Hard-delete a contract type; `other` refuses (CTR-002), and so does a type still used by contracts */
     delete: operations["deleteContractType"];
     options?: never;
     head?: never;
@@ -481,7 +481,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Archive a contract type (SET-003 guarded): it leaves pickers and the default list; nothing is deleted; `other` refuses */
+    /** Archive a contract type (SET-003 guarded): a type still used by contracts requires a reassignment target, which takes them; nothing is deleted; `other` refuses */
     post: operations["archiveContractType"];
     delete?: never;
     options?: never;
@@ -728,7 +728,7 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
-    /** Hard-delete a contract status; the protected `draft`, `active`, and `expired` rows refuse (CTR-001), as does the last unarchived status of a stage */
+    /** Hard-delete a contract status; the protected `draft`, `active`, and `expired` rows refuse (CTR-001), as does the last unarchived status of a stage and a status still held by contracts */
     delete: operations["deleteContractStatus"];
     options?: never;
     head?: never;
@@ -762,7 +762,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Archive a contract status (SET-003): it leaves pickers and the default list; nothing is deleted. The last unarchived status of a stage refuses (CTR-001 floor), as do the protected `draft`, `active`, and `expired` rows — no reassignment, ever */
+    /** Archive a contract status (SET-003): it leaves pickers and the default list; nothing is deleted. A status still held by contracts refuses with the count (CTR-020 — statuses block, they never reassign), as does the last unarchived status of a stage (CTR-001 floor) and the protected `draft`, `active`, and `expired` rows */
     post: operations["archiveContractStatus"];
     delete?: never;
     options?: never;

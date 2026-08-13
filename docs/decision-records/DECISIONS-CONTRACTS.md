@@ -253,6 +253,20 @@ _None — queue cleared 2026-08-04 (CTR-001 through CTR-019). New questions from
 - **Alternatives considered** — Read-only-on-ended: contradicts platform precedent and blocks routine late filing.
 - **Consequences** — `ended_at` column in SCHEMA.md. List/count/calendar queries key off stage ≠ ended. Reopening (ended → active et al.) is allowed and logged like any transition.
 
+## CTR-020 — The taxonomy archive guards: types reassign, statuses block
+
+- **Status** — Accepted
+- **Date** — 2026-08-13
+- **Context** — M8 arms the SET-003 guards on both contract taxonomies (#113). SET-003 fixes the shape in one sentence — an in-use value "shows the live-usage count and requires a reassignment target", while "surfaces with structural minimums (statuses: ≥1 per stage per CTR-001) block instead" — but it does not say what a status does when contracts hold it and the floor is satisfied. ENT-009 answered the counting question for the type side and left the status side open.
+- **Decision** —
+  - **Contract types reassign.** Archiving a type contracts still hold refuses without a `reassignToId`, reporting the live count; with one, every contract on the type moves to the target and the type archives, in one transaction. Hard delete of an in-use type refuses with the same count.
+  - **Contract statuses block.** Archiving a status contracts still hold refuses with the live count and offers nothing else — no reassignment target, no select in the dialog. The Administrator moves the contracts, then archives the status. Hard delete refuses the same way. This is on top of the CTR-001 floor, which is checked first.
+  - **Both count archived contracts**, per ENT-009's rule inherited by this taxonomy: the counted set, the moved set, and the set the FK protects are one set.
+  - **A guard-driven type reassignment is a system move, not a re-type.** It does not run MTR-014's hard-required check (`assertRequiredCustomFields` is the one entry point, and this path does not call it), and it retains every `custom_fields` value. Each moved contract gets its own activity entry under `contract.type_reassigned`, not `contract.updated`.
+- **Rationale** — Type is a policy carrier (CTR-002); one type is a defensible substitute for another, so a bulk move is a decision an Administrator can make once. Status is a position in a lifecycle (CTR-001): which status each contract belongs on is a per-record judgement, and a bulk move would silently rewrite the pipeline. Refusing the reassignment on the type side instead would be worse than either — it would strand records on an archived type, which is the exact failure the guard exists to prevent.
+- **Alternatives considered** — Reassignment for statuses too (bulk-rewrites lifecycle positions nobody reviewed); refusing the type archive outright and making the Administrator re-type every contract (the guard's whole point is that it does not); skipping archived contracts in the count (splits the counted set from the FK set, and a restore would resurrect a reference to an archived value).
+- **Consequences** — Clearing a status held by an archived contract takes a restore, a move, and an archive again, because an archived contract refuses edits. That cost is accepted: one counting rule everywhere beats a second rule for archived rows. The type guard's bulk move can leave a moved contract missing a field the new type marks required — a real gap, filled on the record, never papered over.
+
 ## Index of decisions
 
 | #       | Decision                                                                         | Status   |
@@ -276,3 +290,4 @@ _None — queue cleared 2026-08-04 (CTR-001 through CTR-019). New questions from
 | CTR-017 | Tasks adopted; contract templates deferred                                       | Accepted |
 | CTR-018 | Confidentiality: independent flags, link-time nudge, no cascade                  | Accepted |
 | CTR-019 | End of life: signal not lock, MTR-008 sibling                                    | Accepted |
+| CTR-020 | The taxonomy archive guards: types reassign, statuses block                      | Accepted |

@@ -2662,7 +2662,7 @@
       },
       "delete": {
         "operationId": "deleteContractType",
-        "summary": "Hard-delete a contract type; `other` refuses (CTR-002), and once contracts exist (M8) an in-use type will refuse too",
+        "summary": "Hard-delete a contract type; `other` refuses (CTR-002), and so does a type still used by contracts",
         "tags": ["contract-types"],
         "parameters": [
           {
@@ -2810,7 +2810,7 @@
     "/api/v1/contract-types/{id}/archive": {
       "post": {
         "operationId": "archiveContractType",
-        "summary": "Archive a contract type (SET-003 guarded): it leaves pickers and the default list; nothing is deleted; `other` refuses",
+        "summary": "Archive a contract type (SET-003 guarded): a type still used by contracts requires a reassignment target, which takes them; nothing is deleted; `other` refuses",
         "tags": ["contract-types"],
         "requestBody": {
           "required": true,
@@ -5123,7 +5123,7 @@
       },
       "delete": {
         "operationId": "deleteContractStatus",
-        "summary": "Hard-delete a contract status; the protected `draft`, `active`, and `expired` rows refuse (CTR-001), as does the last unarchived status of a stage",
+        "summary": "Hard-delete a contract status; the protected `draft`, `active`, and `expired` rows refuse (CTR-001), as does the last unarchived status of a stage and a status still held by contracts",
         "tags": ["contract-statuses"],
         "parameters": [
           {
@@ -5265,7 +5265,7 @@
     "/api/v1/contract-statuses/{id}/archive": {
       "post": {
         "operationId": "archiveContractStatus",
-        "summary": "Archive a contract status (SET-003): it leaves pickers and the default list; nothing is deleted. The last unarchived status of a stage refuses (CTR-001 floor), as do the protected `draft`, `active`, and `expired` rows — no reassignment, ever",
+        "summary": "Archive a contract status (SET-003): it leaves pickers and the default list; nothing is deleted. A status still held by contracts refuses with the count (CTR-020 — statuses block, they never reassign), as does the last unarchived status of a stage (CTR-001 floor) and the protected `draft`, `active`, and `expired` rows",
         "tags": ["contract-statuses"],
         "parameters": [
           {

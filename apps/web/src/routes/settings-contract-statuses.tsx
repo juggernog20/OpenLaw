@@ -5,9 +5,11 @@
  * ST10 frame of settings.pen: the CTR-001 taxonomy with the stage badge
  * in the qualifier-pill slot, `draft`, `active`, and `expired` locked,
  * drag or arrow-key reorder, and an inline draft row whose stage is
- * picked at creation and immutable after. The archive guard blocks at
- * the CTR-001 floor (every stage keeps one unarchived status) instead
- * of offering reassignment — SET-003's structural-minimum rule. Every
+ * picked at creation and immutable after. The archive guard blocks
+ * instead of offering reassignment — SET-003's structural-minimum rule,
+ * recorded for statuses as CTR-020. It blocks on two things: the CTR-001
+ * floor (every stage keeps one unarchived status), and contracts that
+ * still hold the status, which the Administrator moves. Every
  * mutation applies immediately on save. The shared anatomy lives in the
  * ListEditor component (extracted with #83); this pane owns the CTR-001
  * vocabulary, the API calls, and the guard dialog. The loader is the
@@ -82,7 +84,9 @@ function ArchiveStatusDialog({
   onArchivedCloseFocus,
 }: Readonly<{
   target: StatusRow;
-  /** The CTR-001 floor: the target is its stage's last unarchived status. */
+  /** The CTR-001 floor: the target is its stage's last unarchived
+   * status. The other block — contracts still on the status — rides
+   * `target.inUseCount`, so the dialog reads it from the row. */
   blocked: boolean;
   onOpenChange: (open: boolean) => void;
   onArchived: (row: StatusRow) => void;
@@ -151,7 +155,8 @@ function ArchiveStatusDialog({
           <div className="flex items-start gap-2 rounded-card bg-status-warning-bg p-3 text-sm text-status-warning-fg">
             <TriangleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
             {/* Statuses block at structural minimums instead of offering
-                reassignment (SET-003) — no select here, ever. */}
+                reassignment (SET-003, CTR-020) — no select here, ever.
+                The floor reads first, in the order the API checks. */}
             <p>
               {blocked ? (
                 <FormattedMessage
@@ -167,9 +172,9 @@ function ArchiveStatusDialog({
                   id="settings.contractStatuses.archiveWarning"
                   defaultMessage={
                     "{count, plural, =0 {{name} is not used by any contracts.} " +
-                    "one {{name} is used by # contract, which keeps its status until " +
-                    "someone moves it.} other {{name} is used by # contracts, which keep " +
-                    "their status until someone moves them.}}"
+                    "one {{name} is the status of # contract. Move it to another status " +
+                    "first.} other {{name} is the status of # contracts. Move them to " +
+                    "another status first.}}"
                   }
                   values={{ name: target.displayName, count: target.inUseCount }}
                 />
@@ -195,7 +200,7 @@ function ArchiveStatusDialog({
             <Button
               type="button"
               variant="danger"
-              disabled={blocked || busy}
+              disabled={blocked || target.inUseCount > 0 || busy}
               onClick={() => void submit()}
             >
               <FormattedMessage

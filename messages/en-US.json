@@ -963,7 +963,7 @@
     "defaultMessage": "Archive {name}"
   },
   "settings.contractStatuses.archiveWarning": {
-    "defaultMessage": "{count, plural, =0 {{name} is not used by any contracts.} one {{name} is used by # contract, which keeps its status until someone moves it.} other {{name} is used by # contracts, which keep their status until someone moves them.}}"
+    "defaultMessage": "{count, plural, =0 {{name} is not used by any contracts.} one {{name} is the status of # contract. Move it to another status first.} other {{name} is the status of # contracts. Move them to another status first.}}"
   },
   "settings.contractStatuses.auditNote": {
     "defaultMessage": "The change applies immediately and is recorded in the audit log."

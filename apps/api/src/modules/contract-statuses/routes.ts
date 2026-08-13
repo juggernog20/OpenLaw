@@ -8,7 +8,10 @@
  * request carrying `stage` is refused rather than silently stripped.
  * Archive and delete enforce the CTR-001 floor — every stage keeps at
  * least one unarchived status — and never offer reassignment: structural
- * minimums block instead (SET-003). The `draft`, `active`, and `expired`
+ * minimums block instead (SET-003, CTR-020). From #113 that block is
+ * live on both counts: a status still held by contracts refuses with the
+ * real number, and the Administrator moves those contracts themselves.
+ * The `draft`, `active`, and `expired`
  * seed rows are system-protected here, not just in the UI. Everything
  * sits behind SET-002's single role gate — Administrators only — and
  * every mutation appends to the activity log (DD-017) inside the same
@@ -20,14 +23,17 @@ import { z } from "zod";
 import {
   and,
   asc,
+  contracts,
   contractStatuses,
   CONTRACT_STAGES,
+  count,
   eq,
+  inArray,
   isNull,
   type ContractStatus,
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
-import { recordActivity } from "../../lib/activity.js";
+import { recordActivity, type ActivityWriter } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
 const StageSchema = z.enum(CONTRACT_STAGES);
@@ -40,7 +46,8 @@ const ContractStatusSchema = z.object({
   displayOrder: z.number().int(),
   isSystemDefault: z.boolean(),
   archivedAt: z.iso.datetime().nullable(),
-  /** Live contracts on this status — the SET-003 guard number. */
+  /** The SET-003 guard number: every contract holding this status,
+   * archived contracts included (CTR-020). */
   inUseCount: z.number().int(),
 });
 
@@ -52,13 +59,7 @@ const DisplayNameSchema = z.string().trim().min(1).max(100);
 /** The CTR-001 system-protected seeds: no archive, no hard delete. */
 const PROTECTED_SLUGS = new Set(["draft", "active", "expired"]);
 
-/**
- * No contracts exist until M8, so every status's live-usage count is
- * zero. M8 replaces this with a real count over `contracts.status_id`.
- */
-const IN_USE_COUNT = 0;
-
-function toRow(row: ContractStatus) {
+function toRow(row: ContractStatus, counts: Map<string, number>) {
   return {
     id: row.id,
     slug: row.slug,
@@ -67,9 +68,12 @@ function toRow(row: ContractStatus) {
     displayOrder: row.displayOrder,
     isSystemDefault: row.isSystemDefault,
     archivedAt: row.archivedAt?.toISOString() ?? null,
-    inUseCount: IN_USE_COUNT,
+    inUseCount: counts.get(row.id) ?? 0,
   };
 }
+
+/** "3 contracts" / "1 contract" — the guard refusal's count phrase. */
+const inUsePhrase = (total: number) => `${total} ${total === 1 ? "contract" : "contracts"}`;
 
 /** `"On hold"` → `on_hold`; anything left empty becomes `status`. */
 function slugBaseOf(displayName: string): string {
@@ -84,6 +88,28 @@ function slugBaseOf(displayName: string): string {
 
 export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
   type Tx = Parameters<Parameters<typeof app.db.transaction>[0]>[0];
+
+  /**
+   * The SET-003 guard numbers: how many contracts hold each status
+   * (#113). Archived contracts count, the same rule the type guard
+   * follows (ENT-009) — the counted set and the set the
+   * `contracts.status_id` FK protects on hard delete are one set, and a
+   * restored contract must never come back holding an archived status.
+   */
+  async function usageCounts(db: ActivityWriter, ids: string[]): Promise<Map<string, number>> {
+    if (ids.length === 0) return new Map();
+    const rows = await db
+      .select({ statusId: contracts.statusId, inUse: count() })
+      .from(contracts)
+      .where(inArray(contracts.statusId, ids))
+      .groupBy(contracts.statusId);
+    return new Map(rows.map((row) => [row.statusId, row.inUse]));
+  }
+
+  /** One row as its envelope value, with its live count. */
+  async function rowJson(row: ContractStatus) {
+    return toRow(row, await usageCounts(app.db, [row.id]));
+  }
 
   /** Locks and returns one row, or 404s — every :id mutation starts here. */
   async function lockedStatus(tx: Tx, id: string): Promise<ContractStatus> {
@@ -137,7 +163,11 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
             : isNull(contractStatuses.archivedAt),
         )
         .orderBy(asc(contractStatuses.displayOrder), asc(contractStatuses.createdAt));
-      return { contractStatuses: rows.map(toRow) };
+      const counts = await usageCounts(
+        app.db,
+        rows.map((row) => row.id),
+      );
+      return { contractStatuses: rows.map((row) => toRow(row, counts)) };
     },
   );
 
@@ -187,7 +217,7 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return created!;
       });
-      return reply.status(201).send({ contractStatus: toRow(row) });
+      return reply.status(201).send({ contractStatus: await rowJson(row) });
     },
   );
 
@@ -230,7 +260,7 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return updated!;
       });
-      return { contractStatus: toRow(row) };
+      return { contractStatus: await rowJson(row) };
     },
   );
 
@@ -290,7 +320,11 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return reordered;
       });
-      return { contractStatuses: rows.map(toRow) };
+      const counts = await usageCounts(
+        app.db,
+        rows.map((row) => row.id),
+      );
+      return { contractStatuses: rows.map((row) => toRow(row, counts)) };
     },
   );
 
@@ -302,9 +336,11 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "archiveContractStatus",
         summary:
           "Archive a contract status (SET-003): it leaves pickers and the " +
-          "default list; nothing is deleted. The last unarchived status " +
-          "of a stage refuses (CTR-001 floor), as do the protected " +
-          "`draft`, `active`, and `expired` rows — no reassignment, ever",
+          "default list; nothing is deleted. A status still held by " +
+          "contracts refuses with the count (CTR-020 — statuses block, " +
+          "they never reassign), as does the last unarchived status of a " +
+          "stage (CTR-001 floor) and the protected `draft`, `active`, and " +
+          "`expired` rows",
         tags: ["contract-statuses"],
         params: z.object({ id: z.string() }),
         response: { 200: ContractStatusEnvelope, default: problemResponse },
@@ -327,6 +363,20 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
               "every stage keeps at least one. Add another status to the stage first.",
           );
         }
+        // The SET-003 guard, read under the target's row lock — the
+        // record's status PATCH locks the same row before it writes, so
+        // a status change can't slip between the count and the archive.
+        // Statuses block instead of reassigning (CTR-020): the
+        // Administrator moves the contracts, because which status each
+        // one belongs on is a judgement no bulk move can make.
+        const inUseCount = (await usageCounts(tx, [target.id])).get(target.id) ?? 0;
+        if (inUseCount > 0) {
+          throw httpError(
+            409,
+            `${target.displayName} is the status of ${inUsePhrase(inUseCount)}. ` +
+              "Move them to another status first.",
+          );
+        }
 
         const [updated] = await tx
           .update(contractStatuses)
@@ -342,12 +392,15 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
             slug: target.slug,
             displayName: target.displayName,
             stage: target.stage,
-            inUseCount: IN_USE_COUNT,
+            // Always zero here — an in-use status refuses above. It is
+            // written anyway so the M9 viewer reads one payload shape
+            // for every archive entry, whichever taxonomy wrote it.
+            inUseCount,
           },
         });
         return updated!;
       });
-      return { contractStatus: toRow(row) };
+      return { contractStatus: await rowJson(row) };
     },
   );
 
@@ -390,7 +443,7 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return updated!;
       });
-      return { contractStatus: toRow(row) };
+      return { contractStatus: await rowJson(row) };
     },
   );
 
@@ -403,7 +456,8 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "Hard-delete a contract status; the protected `draft`, " +
           "`active`, and `expired` rows refuse (CTR-001), as does the " +
-          "last unarchived status of a stage",
+          "last unarchived status of a stage and a status still held by " +
+          "contracts",
         tags: ["contract-statuses"],
         params: z.object({ id: z.string() }),
         // z.undefined() = a bodyless 204; z.null() would advertise a
@@ -427,6 +481,16 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
             409,
             `${target.displayName} is the last unarchived status in its stage — ` +
               "every stage keeps at least one. Add another status to the stage first.",
+          );
+        }
+        // An in-use status refuses cleanly — the contracts' FK would
+        // refuse anyway, as a bare 500. Move the contracts first.
+        const inUseCount = (await usageCounts(tx, [target.id])).get(target.id) ?? 0;
+        if (inUseCount > 0) {
+          throw httpError(
+            409,
+            `${target.displayName} is the status of ${inUsePhrase(inUseCount)} and ` +
+              "can't be deleted. Move them to another status first.",
           );
         }
         await tx.delete(contractStatuses).where(eq(contractStatuses.id, target.id));
