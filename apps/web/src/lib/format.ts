@@ -144,6 +144,46 @@ function civilDate(date: Date, timeZone: string): { year: number; month: number;
 }
 
 /**
+ * The two instants a civil date covers, in the reader's own timezone.
+ *
+ * A date picker answers `2026-08-01`, which is a calendar date and not
+ * a moment. An API filtering on a timestamp needs moments, and they have
+ * to be the reader's: an Administrator in Dubai scoping an answer to
+ * August means their August, not UTC's (DES-014). Returns `null` for
+ * anything that is not a bare civil date, so an empty or half-typed
+ * field simply drops the bound.
+ *
+ * A day that starts on a DST shift can be an hour off at its edge. The
+ * offset is read at noon, which no shift moves across a date boundary,
+ * so the date itself is always the right one.
+ */
+export function dayBounds(
+  civil: string,
+  options?: FormatOptions,
+): { start: string; end: string } | null {
+  if (!DATE_ONLY.test(civil)) return null;
+  // The pattern admits `2026-13-45`, which is a shape and not a date.
+  // An impossible one would reach Intl as an Invalid Date and throw,
+  // and a rolled-over one (`2026-02-31`) would silently answer March.
+  // Both are the same answer here: this is not a date, so there is no
+  // bound to take from it.
+  const noon = new Date(`${civil}T12:00:00Z`);
+  if (Number.isNaN(noon.getTime()) || noon.toISOString().slice(0, 10) !== civil) return null;
+  const timeZone = resolveTimeZone(options);
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    timeZoneName: "longOffset",
+  }).formatToParts(noon);
+  const zoneName = parts.find((part) => part.type === "timeZoneName")?.value ?? "GMT";
+  // `longOffset` answers "GMT" flat for UTC and "GMT+04:00" elsewhere.
+  const offset = /GMT([+-]\d{2}:\d{2})/.exec(zoneName)?.[1] ?? "+00:00";
+  return {
+    start: new Date(`${civil}T00:00:00.000${offset}`).toISOString(),
+    end: new Date(`${civil}T23:59:59.999${offset}`).toISOString(),
+  };
+}
+
+/**
  * Activity-feed rule: relative within 7 days ("12 minutes ago",
  * "3 hours ago", "yesterday"), short absolute beyond ("Apr 28", year
  * only when not current). Sub-minute renders as "this minute".

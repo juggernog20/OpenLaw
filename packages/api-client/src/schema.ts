@@ -1097,6 +1097,57 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/audit-log": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The system-wide audit log (DD-017), newest first: every entry of every entity type and every tier, including the `admin_only` settings, user administration, and security entries that no record feed carries. Administrator-only (SET-002). Actor, action, entity type, date range, and search compose. Paged from a server-fixed page size: pass the previous page's `nextCursor` to read further back */
+    get: operations["listAuditLog"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/audit-log/actions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The action slugs the log actually holds, ascending — the vocabulary the action filter offers. Read from the table rather than from the code, because the log outlives the code that wrote it and a slug no longer emitted is still in there */
+    get: operations["listAuditLogActions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/audit-log/export": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The currently filtered log as CSV (DD-017), newest first — the same filters the page takes, and exactly the set they name. The export is itself a security event: it appends an `export.performed` entry at `admin_only` naming its filters, and bounds itself at that entry, so an export never streams itself. Administrator-only (SET-002) */
+    get: operations["exportAuditLog"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/entity-types": {
     parameters: {
       query?: never;
@@ -5558,6 +5609,124 @@ export interface operations {
           };
         };
       };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listAuditLog: {
+    parameters: {
+      query?: {
+        actorId?: string;
+        action?: string;
+        entityType?: "matter" | "contract" | "document" | "request" | "user" | "entity" | "system";
+        from?: string;
+        to?: string;
+        q?: string;
+        cursor?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            entries: {
+              id: string;
+              action: string;
+              /** @enum {string} */
+              entityType:
+                "matter" | "contract" | "document" | "request" | "user" | "entity" | "system";
+              /** @enum {string} */
+              visibility: "legal_only" | "working_team" | "full_thread" | "admin_only";
+              entityId: string | null;
+              actor: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** Format: date-time */
+              createdAt: string;
+              payload: {
+                [key: string]: unknown;
+              };
+            }[];
+            nextCursor: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listAuditLogActions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            actions: string[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  exportAuditLog: {
+    parameters: {
+      query?: {
+        actorId?: string;
+        action?: string;
+        entityType?: "matter" | "contract" | "document" | "request" | "user" | "entity" | "system";
+        from?: string;
+        to?: string;
+        q?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
       /** @description Problem details (RFC 9457) */
       default: {
         headers: {

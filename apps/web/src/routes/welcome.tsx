@@ -12,11 +12,12 @@
 
 import { useState, type ReactNode, type SubmitEvent as FormSubmitEvent } from "react";
 import { redirect, useLoaderData, useNavigate } from "react-router";
-import { defineMessages, FormattedMessage, useIntl } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import { X } from "lucide-react";
 import { api } from "../lib/api";
 import { field } from "../lib/forms";
 import { networkError, problemDetail } from "../lib/messages";
+import { ROLE_MESSAGES } from "../lib/roles";
 import { currentUser, needsSetup } from "../lib/session";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
@@ -57,13 +58,6 @@ type Step = (typeof STEPS)[number];
 
 const INVITE_ROLES = ["legal_team_member", "contributor", "administrator"] as const;
 type InviteRole = (typeof INVITE_ROLES)[number];
-
-/** One source for the role wording the invite buttons carry. */
-const ROLE_MESSAGES = defineMessages({
-  legal_team_member: { id: "role.legalTeamMember", defaultMessage: "Legal team member" },
-  contributor: { id: "role.contributor", defaultMessage: "Contributor" },
-  administrator: { id: "role.administrator", defaultMessage: "Administrator" },
-});
 
 /** Selectable option row (aria-pressed carries the state for readers). */
 function OptionButton(

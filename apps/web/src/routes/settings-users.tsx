@@ -14,11 +14,12 @@
 
 import { useState, type SubmitEvent as FormSubmitEvent } from "react";
 import { redirect, useLoaderData } from "react-router";
-import { defineMessages, FormattedMessage, useIntl, type IntlShape } from "react-intl";
+import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { Archive, ArchiveRestore, ChevronDown, LogOut, Plus, Send, Trash2 } from "lucide-react";
 import { api } from "../lib/api";
 import { field } from "../lib/forms";
 import { problemDetail } from "../lib/messages";
+import { ROLE_MESSAGES } from "../lib/roles";
 import { currentUser, needsSetup } from "../lib/session";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
@@ -68,15 +69,6 @@ const ALL_ROLES = [
   "contributor",
   "business_user",
 ] as const satisfies readonly UserRow["role"][];
-
-/** One source for role wording: the visible labels and the accessible
- * names both format from here, so they can never drift apart. */
-const ROLE_MESSAGES = defineMessages({
-  administrator: { id: "role.administrator", defaultMessage: "Administrator" },
-  legal_team_member: { id: "role.legalTeamMember", defaultMessage: "Legal team member" },
-  contributor: { id: "role.contributor", defaultMessage: "Contributor" },
-  business_user: { id: "role.businessUser", defaultMessage: "Business user" },
-});
 
 function RoleLabel({ role }: Readonly<{ role: UserRow["role"] }>) {
   return <FormattedMessage {...ROLE_MESSAGES[role]} />;
