@@ -1662,6 +1662,30 @@ describe("the contract value (CTR-010)", () => {
     }
   });
 
+  it("holds the largest amount a reader can read back, and refuses the next one", async () => {
+    const contract = await newContract("Value ceiling");
+    // The column is a bigint and holds far more, but every reader of it
+    // is a JavaScript runtime — so the ceiling is the largest exact
+    // integer one has, stated at the seam and at the database.
+    const ceiling = Number.MAX_SAFE_INTEGER;
+    const held = await patchContract(memberCookies, contract.number, {
+      value: { amount: ceiling, currency: "USD", cadence: "one_time" },
+    });
+    expect(held.statusCode, held.body).toBe(200);
+    expect(held.json().contract.value.amount).toBe(ceiling);
+
+    const refused = await patchContract(memberCookies, contract.number, {
+      value: { amount: ceiling + 1, currency: "USD", cadence: "one_time" },
+    });
+    expect(refused.statusCode, refused.body).toBe(400);
+    await expect(
+      harness.db
+        .update(contracts)
+        .set({ valueAmount: ceiling + 1 })
+        .where(eq(contracts.id, contract.id)),
+    ).rejects.toThrow();
+  });
+
   it("normalizes the code's casing, so one currency never becomes two", async () => {
     const contract = await newContract("Lower-case currency");
     const res = await patchContract(memberCookies, contract.number, {

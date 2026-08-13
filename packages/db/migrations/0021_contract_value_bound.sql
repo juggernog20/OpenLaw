@@ -1,0 +1,2 @@
+ALTER TABLE "contracts" DROP CONSTRAINT "contracts_value_amount_check";--> statement-breakpoint
+ALTER TABLE "contracts" ADD CONSTRAINT "contracts_value_amount_check" CHECK ("contracts"."value_amount" between 0 and 9007199254740991);

@@ -54,7 +54,7 @@ import {
   useParams,
   type LoaderFunctionArgs,
 } from "react-router";
-import { FormattedMessage, defineMessage, useIntl } from "react-intl";
+import { FormattedMessage, defineMessage, useIntl, type IntlShape } from "react-intl";
 import { Archive, ArchiveRestore, ChevronRight, FileText, Plus, Settings, X } from "lucide-react";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
@@ -1184,24 +1184,44 @@ function CounterpartiesField({
 }
 
 /**
- * Every ISO 4217 code the runtime knows, as the picker's rows. There
- * are some three hundred of them, and none of them changes while the
- * page is open — so they are memoized away from the field that hosts
- * them. Without that, every keystroke in the amount box would
- * reconcile three hundred options that cannot have changed.
+ * The currency picker's rows, composed once per locale and kept. There
+ * are some three hundred ISO 4217 codes, and each row's label is an
+ * ICU message — composing them per render, or even per mount, is three
+ * hundred formats for a list that cannot change while the page is
+ * open. The cache is keyed on the locale, which is what the labels
+ * depend on.
+ */
+const currencyRowCache = new Map<string, readonly { code: string; label: string }[]>();
+
+function currencyRows(intl: IntlShape): readonly { code: string; label: string }[] {
+  let rows = currencyRowCache.get(intl.locale);
+  if (!rows) {
+    rows = currencyOptions({ locale: intl.locale }).map((currency) => ({
+      code: currency.code,
+      // The code leads: it is what a contract quotes, and it is what
+      // tells two "dollar" currencies apart.
+      label: intl.formatMessage(
+        { id: "contracts.value.currencyOption", defaultMessage: "{code} — {name}" },
+        { code: currency.code, name: currency.displayName },
+      ),
+    }));
+    currencyRowCache.set(intl.locale, rows);
+  }
+  return rows;
+}
+
+/**
+ * The rows as the picker's options. Memoized away from the field that
+ * hosts them, so a keystroke in the amount box reconciles three
+ * controls rather than three hundred options that cannot have changed.
  */
 const CurrencyOptions = memo(function CurrencyOptions() {
   const intl = useIntl();
   return (
     <>
-      {currencyOptions({ locale: intl.locale }).map((currency) => (
+      {currencyRows(intl).map((currency) => (
         <option key={currency.code} value={currency.code}>
-          {/* The code leads: it is what a contract quotes, and it is
-              what tells two "dollar" currencies apart. */}
-          {intl.formatMessage(
-            { id: "contracts.value.currencyOption", defaultMessage: "{code} — {name}" },
-            { code: currency.code, name: currency.displayName },
-          )}
+          {currency.label}
         </option>
       ))}
     </>

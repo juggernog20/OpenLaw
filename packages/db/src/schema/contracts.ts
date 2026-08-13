@@ -144,10 +144,15 @@ export const contracts = pgTable(
       "contracts_value_cadence_check",
       sql`${table.valueCadence} in ('one_time', 'monthly', 'annually')`,
     ),
-    // A negative contract value is not a value — it is a data-entry
-    // slip. Rebates and credits are payment-tracking territory, which
-    // CTR-010 keeps out of these columns.
-    check("contracts_value_amount_check", sql`${table.valueAmount} >= 0`),
+    // Two bounds on one column. A negative contract value is not a
+    // value — it is a data-entry slip; rebates and credits are
+    // payment-tracking territory, which CTR-010 keeps out of these
+    // columns. The ceiling is JavaScript's largest exact integer:
+    // `bigint` holds far more than that, but every reader of this
+    // column is a JavaScript runtime, so a larger number would be read
+    // back as a different one. The API refuses it too; this is the
+    // rule stated where no caller can get past it.
+    check("contracts_value_amount_check", sql`${table.valueAmount} between 0 and 9007199254740991`),
     // CTR-010's "nullable as a group", made a database rule rather than
     // an application convention: either the whole value is recorded or
     // none of it is. It is what stops a stray amount with no currency —
