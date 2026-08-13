@@ -49,11 +49,11 @@ _None — queue cleared 2026-08-05 (CMT-001 through CMT-005)._
 
 ## CMT-004 — Home: activity-bar panel; badge counts your unread, tier-filtered
 
-- **Status** — Accepted
+- **Status** — Accepted; the working default for unread tracking is **confirmed by CMT-009**, which also settles what the count includes
 - **Date** — 2026-08-05
 - **Decision** — The single comment surface on record screens is the right-rail activity-bar chat slot (J.2) opening the comment panel in DES-007's rail — available beside any tab. **F.7 "Communications" tab and E.6 conversation chip are removed as redundant.** The badge counts the viewer's unread comments **within tiers they can see** — hidden-tier counts never leak to Contributors or Business Users.
 - **Rationale** — Conversation belongs beside content, not on a page you navigate to; count leaks would reveal the existence of Legal-Only discussion.
-- **Consequences** — Grill-plan J.2 done; F.7 and E.6 resolved as remove; K.B9 done (anchored comments per CMT-001). Unread tracking: `comment_reads` (user_id, comment_id) or last-read-at per record — working default: `comment_last_read` (user_id, entity ref, read_at).
+- **Consequences** — Grill-plan J.2 done; F.7 and E.6 resolved as remove; K.B9 done (anchored comments per CMT-001). Unread tracking: `comment_reads` (user_id, comment_id) or last-read-at per record — working default: `comment_last_read` (user_id, entity ref, read_at), **confirmed as the shape by CMT-009**.
 
 ## CMT-005 — Post-publish: edit with marker, soft delete, tier immutable
 
@@ -106,6 +106,22 @@ _None — queue cleared 2026-08-05 (CMT-001 through CMT-005)._
 - **Alternatives considered** — **One `deleted_at` for both tombstones**: rejected, it misattributes the act. **An edit that re-validates and rewrites mentions**: rejected — it re-opens the tier-promotion path on a comment whose tier is immutable, and it rewrites history about who was addressed. **403 on a comment the viewer cannot hear**: rejected, it is the leak.
 - **Consequences** — `comment_revisions` and `comments.redacted_at` land together in M9/4 (TECH-014). Three routes: `PATCH /comments/{id}`, `DELETE /comments/{id}`, and `POST /comments/{id}/redact`. Each appends its own verb — `comment.edited`, `comment.deleted`, `comment.redacted` — at the comment's own tier, carrying ids only. A second delete or a second redact writes nothing and answers the row as it stands, so a retried request is not a second log entry. The M9/6 narration layer renders a redacted comment's entry as a redacted comment, per CMT-006.
 
+## CMT-009 — The unread count: a watermark per reader per record, and the four things it excludes (confirms CMT-004's working default)
+
+- **Status** — Accepted
+- **Date** — 2026-08-13
+- **Context** — CMT-004 says the badge counts the viewer's unread comments within the tiers they can see, and names `comment_last_read` (`user_id`, entity ref, `read_at`) as a working default against a per-comment `comment_reads`. It does not say what "unread" excludes besides a hidden tier, what a reader who has never opened the panel should see, or what act writes the row. M9/5 (#131) has to answer all four before it can draw the badge.
+- **Decision** —
+  - **`comment_last_read` is the shape**, and the working default is now the decision: one row per reader per record, keyed on (`user_id`, `entity_type`, `entity_id`), carrying `read_at`. A flat chronological thread (CMT-002) is read top to bottom, so a watermark answers the badge in one comparison. A per-comment `comment_reads` table would grow with readers × comments to answer the same question less well.
+  - **The count is taken over the filtered set, never the raw one.** It counts comments on the record that pass the DD-016 tier predicate, and it is the same predicate the thread is read at. A count is a leak like any other: a badge reading "3" over a thread showing two would announce the Legal Only comment it left out.
+  - **The viewer's own comments are not news.** What you said is not something you have to go and read.
+  - **Neither tombstone counts.** A soft-deleted or redacted comment (CMT-008) keeps its place in the thread, but there is nothing left in it to read, and a badge that counted one would send a reader to a tombstone.
+  - **No row means everything visible is unread**, not nothing. A reader who has never opened the panel has read none of the conversation, so the absent watermark reads as the beginning of time rather than as "now".
+  - **Opening the panel is the act that writes the watermark**, and only when the thread was actually delivered. A panel that failed to load its thread has shown nobody anything; clearing the badge there would take the signal away without delivering what it pointed at. The watermark only moves forward.
+- **Rationale** — Each rule keeps the badge honest about the one thing it claims: there is something here for you that you have not read. The tier clause is DD-016's leak closed on a number instead of a row. The two exclusions are what stop the badge sending somebody to their own words or to a tombstone. The never-opened default is the one a reader expects — a record with a conversation on it should announce itself the first time it is seen.
+- **Alternatives considered** — **`comment_reads` per comment**: rejected, it costs a row per reader per comment to answer a question a watermark answers exactly. **Counting tombstones**: rejected, the badge would point at nothing. **Treating a missing watermark as zero**: rejected, a record's first conversation would then be silent until somebody opened it for an unrelated reason. **Marking read when the panel opens regardless of the thread loading**: rejected, it clears the signal without delivering the thread.
+- **Consequences** — `comment_last_read` lands in M9/5 (TECH-014) with the compound primary key and no tier of its own — the predicate applies to the comments being counted, never to the watermark. Two routes: `GET /comments/unread` answers the badge, and `POST /comments/read` writes the watermark and answers the count that remains, so the badge takes the server's number rather than assuming zero. Both take the same `contractAudience` gate as the thread, so a record the viewer cannot reach answers 404. Chat stays the only applet with a badge (CMT-004); the slot already exists on the applet type. Matters (M22) and documents (M11) mount the same badge on the same table, because the watermark's entity pair is `comments`' own.
+
 ## Index of decisions
 
 | #       | Decision                                                                      | Status                                             |
@@ -113,8 +129,9 @@ _None — queue cleared 2026-08-05 (CMT-001 through CMT-005)._
 | CMT-001 | One comment system; anchored doc comments; thread follows the work            | Accepted                                           |
 | CMT-002 | Thread shape: flat chronological, mentions, no nesting                        | Accepted                                           |
 | CMT-003 | Tier rendering: badge + strong Legal-Only treatment; segmented composer       | Accepted                                           |
-| CMT-004 | Home: activity-bar panel; badge = your unread, tier-filtered                  | Accepted                                           |
+| CMT-004 | Home: activity-bar panel; badge = your unread, tier-filtered                  | Accepted (confirmed by CMT-009)                    |
 | CMT-005 | Post-publish: edit with marker, soft delete, tier immutable                   | Accepted (amended by CMT-006, extended by CMT-008) |
 | CMT-006 | Prior comment text lives in `comment_revisions`, not the activity log         | Accepted (extended by CMT-008)                     |
 | CMT-007 | Mentions: a list beside plain text; reachable candidates; narrowest promotion | Accepted                                           |
 | CMT-008 | The three corrections: owners, two tombstones, and what a redact takes        | Accepted                                           |
+| CMT-009 | The unread count: a watermark per reader per record, and what it excludes     | Accepted                                           |

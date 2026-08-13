@@ -852,7 +852,7 @@ Source: **INT-002**
 
 ### `comments`
 
-Source: **DD-016**, **CMT-001–008**
+Source: **DD-016**, **CMT-001–009**
 
 Audience-tiered comments — one system across record threads, document annotations, and the portal request thread. Flat chronological (no `parent_comment_id` by design, CMT-002). On request conversion, comment rows **re-parent** to the converted matter/contract with tiers preserved (CMT-001); `request` remains a target only for never-converted requests. The portal renders the record thread filtered to `full_thread`.
 
@@ -874,7 +874,7 @@ Mentions (CMT-007): `comment_mentions` (`comment_id` FK → `comments.id` ON DEL
 
 Prior versions (CMT-006, amending CMT-005): `comment_revisions` (`id`, `comment_id` FK → `comments.id` ON DELETE CASCADE, `body` not null, `replaced_at`), indexed on (`comment_id`, `replaced_at`). One row per body an edit or a soft delete replaced. The prior text cannot live in the audit log: DD-017 forbids `UPDATE` and `DELETE` on `activity_log`, so text that enters a payload can never leave, and a hard redact would remove the comment while leaving what it said in the log. This table is ordinary application data, so a redact purges it along with `comments.body` and `comment_mentions` (CMT-008) — the text and who it named are both gone rather than only hidden. Every `comment.*` activity payload carries ids and metadata only.
 
-Unread tracking (CMT-004 working default): `comment_last_read` (`user_id`, `entity_type`, `entity_id`, `read_at`, compound PK on first three). Badges count unread within tiers the viewer can see — hidden-tier counts never leak.
+Unread tracking (CMT-004, confirmed by CMT-009): `comment_last_read` (`user_id` FK → `users.id` with no delete action, `entity_type`, `entity_id`, `read_at`, compound PK on the first three). One watermark per reader per record — where that person had read to, not a receipt per comment. The badge counts comments on the record that pass the viewer's tier predicate, are not the viewer's own, are neither soft-deleted nor redacted, and were created after `read_at`. Hidden-tier counts never leak, because the count is taken over the same filtered set the thread is read at. **No row means everything visible is unread**, not zero: a reader who has never opened the panel has read none of it. Opening the panel writes the row, and only when the thread was actually delivered.
 
 The polymorphic `entity_type / entity_id` pair is unavoidable here unless we shard comments per host table. Reconsider in the tech-stack grill if the chosen ORM has a strong opinion. Indexed on (`entity_type`, `entity_id`, `created_at`).
 
