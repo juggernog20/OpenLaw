@@ -54,7 +54,7 @@
     "defaultMessage": "{actor} commented"
   },
   "activity.comment.redacted": {
-    "defaultMessage": "{actor} removed a comment for good"
+    "defaultMessage": "{actor} removed a comment from the record"
   },
   "activity.contract.archived": {
     "defaultMessage": "{actor} archived this contract"

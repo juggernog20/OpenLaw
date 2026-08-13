@@ -49,16 +49,7 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import {
-  activityLog,
-  and,
-  COMMENT_VISIBILITIES,
-  desc,
-  eq,
-  inArray,
-  sql,
-  users,
-} from "@openlaw/db";
+import { activityLog, and, COMMENT_VISIBILITIES, desc, eq, inArray, sql, users } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { contractAudience } from "../../lib/contract-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -179,14 +170,20 @@ export const activityRoutes: FastifyPluginAsyncZod = async (app) => {
 
       // Keyset, on the pair the feed is ordered by. The cursor row's own
       // position comes from the table rather than from the client, so a
-      // client cannot hand over a timestamp that was never written. A
-      // cursor naming no row leaves the comparison NULL, which answers
-      // an empty page — the truthful answer for a cursor into a state
-      // this table is not in.
+      // client cannot hand over a timestamp that was never written. The
+      // lookup carries the same record scope the page does, so a cursor
+      // from another record cannot set this record's boundary — a
+      // cursor is a place in one feed, not a timestamp in the table. A
+      // cursor naming no row in this feed leaves the comparison NULL,
+      // which answers an empty page — the truthful answer for a cursor
+      // into a state this feed is not in.
       const before = cursor
         ? sql`(${activityLog.createdAt}, ${activityLog.id}) < (
             select ${activityLog.createdAt}, ${activityLog.id}
-            from ${activityLog} where ${activityLog.id} = ${cursor}
+            from ${activityLog}
+            where ${activityLog.id} = ${cursor}
+              and ${activityLog.entityType} = ${entityType}
+              and ${activityLog.entityId} = ${audience.contractId}
           )`
         : undefined;
 

@@ -412,17 +412,22 @@ describe("the tier a record action writes", () => {
       .orderBy(asc(activityLog.createdAt), asc(activityLog.id));
     expect(settings?.visibility).toBe("admin_only");
 
+    // A real change, so a row is actually written: the Outsider is a
+    // Contributor, and this moves them somewhere else. They hold no
+    // team row and are not read again after this point, so the move
+    // costs no other test its fixture.
     const role = await harness.app.inject({
       method: "PATCH",
       url: `/api/v1/users/${userIds.get(OUTSIDER.email)}/role`,
       cookies: adminCookies,
-      payload: { role: "contributor" },
+      payload: { role: "business_user" },
     });
-    expect([200, 409]).toContain(role.statusCode);
+    expect(role.statusCode, role.body).toBe(200);
     const roleRows = await harness.db
       .select({ visibility: activityLog.visibility })
       .from(activityLog)
       .where(eq(activityLog.action, "user.role_changed"));
+    expect(roleRows.length).toBeGreaterThan(0);
     for (const row of roleRows) expect(row.visibility).toBe("admin_only");
   });
 

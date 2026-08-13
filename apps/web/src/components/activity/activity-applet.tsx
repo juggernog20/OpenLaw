@@ -121,7 +121,9 @@ function ActivityFeed({
         setLoadFailed(true);
         return;
       }
-      setEntries((current) => (from === null ? data.entries : [...(current ?? []), ...data.entries]));
+      setEntries((current) =>
+        from === null ? data.entries : [...(current ?? []), ...data.entries],
+      );
       setCursor(data.nextCursor);
     },
     [entityType, entityId],

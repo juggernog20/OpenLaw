@@ -347,7 +347,12 @@ const contractAuditRows = () =>
         "contract.restored",
       ]),
     )
-    .orderBy(asc(activityLog.createdAt));
+    // The id breaks a same-instant tie, and the ties are real: two
+    // entries written in one transaction share `now()`, so removing the
+    // primary counterparty and the promotion it causes land on the same
+    // timestamp. uuidv7 is time-ordered, so the id is still the order
+    // they happened in.
+    .orderBy(asc(activityLog.createdAt), asc(activityLog.id));
 
 const auditRowsFor = async (id: string) =>
   (await contractAuditRows()).filter((row) => row.entityId === id);

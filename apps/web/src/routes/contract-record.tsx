@@ -49,10 +49,11 @@
  * already made.
  *
  * This is the first production mount of the DES-016 record activity
- * bar. Two of its three slots exist: the chat applet (CMT-004), which
- * is the entity-generic comment panel keyed by this record's reference,
- * and the settings deep-link below the divider (SET-001). History
- * (DD-017) has no panel yet.
+ * bar, and all three of its slots are here. Chat (CMT-004) and history
+ * (DD-017) are the two entity-generic panels, each keyed by this
+ * record's reference rather than by its CTR-003 number; the settings
+ * deep-link (SET-001) sits below the divider. Matters (M22) and
+ * documents (M11) mount the same two panels.
  *
  * Archive (soft delete — for mistakes and imports, not for ending a
  * contract) and restore live in the sub-bar; an archived record reads

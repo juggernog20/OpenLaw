@@ -247,7 +247,6 @@ function directChange(
   ];
 }
 
-
 /** What a payload calls somebody or something it names, when it does.
  * A name that is not there is not a reason to render nothing. */
 function named(intl: IntlShape, payload: Payload, key: string): string {
@@ -411,7 +410,9 @@ const ARMS: Readonly<Record<string, Arm>> = {
     icon: MessageSquare,
     message: defineMessage({
       id: "activity.comment.redacted",
-      defaultMessage: "{actor} removed a comment for good",
+      // An Administrator's hard redact, in the tombstone's own words
+      // (DES-025): "removed", against the author's "deleted".
+      defaultMessage: "{actor} removed a comment from the record",
     }),
   },
 };
