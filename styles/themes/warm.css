@@ -91,6 +91,10 @@
   --confidential-fg: #7f5d32;
   --confidential-bg: #efe3d0;
 
+  /* The Legal Only comment row's wash (DES-023) — soft tan, one step
+   * lighter than the banner, for the reason above. */
+  --legal-only-bg: #f6efe3;
+
   /* Avatar — Warm overrides DES-018's light blue with the terracotta
    * accent (DES-019): blue is the one hue Warm's palette refuses. */
   --avatar-bg: #c97b5c;

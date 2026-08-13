@@ -162,6 +162,41 @@
       "when": 1786581450911,
       "tag": "0022_contract_custom_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1786617355311,
+      "tag": "0023_comments",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1786621211673,
+      "tag": "0024_comment_mentions",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1786626379156,
+      "tag": "0025_comment_revisions",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1786629029580,
+      "tag": "0026_comment_last_read",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1786640218702,
+      "tag": "0027_audit_log_created_at_idx",
+      "breakpoints": true
     }
   ]
 }

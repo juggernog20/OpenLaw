@@ -33,7 +33,7 @@ This document records **front-end design decisions only** — visual system (col
 (Listed here so they don't get lost — to be addressed in a separate feature-decisions grill.)
 
 - Status / state visualization (depends on a future DD in `DECISIONS.md` defining the contract lifecycle states themselves)
-- Comment-tier UI per DD-016 (visual treatment for "Legal Only" / "Working Team" / "Full Thread" — revisit when the comment composer / thread screens are mocked)
+- ~~Comment-tier UI per DD-016 (visual treatment for "Legal Only" / "Working Team" / "Full Thread")~~ — opened and answered by **DES-023**
 - Notifications surface (in-app inbox / toasts / email digest / per-channel preferences)
 - Cmd-K command palette (deferred per DES-010; revisit when command catalog crosses ~20 distinct actions or entity index spans more than two domains)
 - Empty states and onboarding voice (per-feature; depends on feature scope)
@@ -1349,6 +1349,293 @@ The list row stays one line only because this screen exists; writing its anatomy
 
 `/settings/contracts/types/:id` (#84) is the reference implementation, reached from a pencil icon button in the list row's trailing actions (the DES-021 slot; here it navigates instead of opening a dialog, because the editor is a screen). The M22 matters editor and M19 request-type editor reuse this shape with their own vocabulary.
 
+## DES-023: The comment surface — tier badges, the Legal Only row wash, and the segmented composer
+
+- **Status:** Accepted
+- **Date:** 2026-08-13
+
+### Context
+
+CMT-003 decided the comment surface's treatments in words. Every row wears a tier badge. Legal Only rows get "tinted background + the DES-009 lock glyph". The composer is a three-segment control. CMT-003 also named the design-system addition those treatments need, and this doc has carried "comment-tier UI per DD-016" on its out-of-scope list ever since, to be answered "when the comment composer / thread screens are mocked". They are mocked, and M9/2 (#128) builds them. This record is that answer.
+
+DES-016's implementation clarification governs the bar and the panel chrome, taken from the matter-detail frames (M3, comments open). What sits **inside** the panel is not in that clarification. The frame that draws it for this module is `designs/contracts.pen` **C3 — Contract detail · Comments panel**: the thread rows, the tier badge, and the composer. C3 is the reference below. Where C3 and M3 disagree about the 44px header or the 48px bar, M3 still wins.
+
+### Decision
+
+The panel is the DES-016 chat applet, and its content is three parts.
+
+**The header accessory.** The 44px panel header is chrome (DES-016). What sits beside its title belongs to the applet. The chat applet puts a neutral count pill there: `bg-badge-count-bg` / `text-badge-count-fg`, 11px semibold, `rounded-pill`. It counts the rows on screen. It can never count a row the viewer may not see. That row was filtered out at query time and is not in the client at all (DD-016).
+
+**The comment row.** 12px vertical and 16px horizontal padding, with a `border-muted` rule between rows. Two lines. The header carries a 24px avatar, the author's name (12px semibold), the tier badge, and the timestamp (11px, `text-muted`) pushed to the trailing edge. The body follows at 12px in `text-primary`, with newlines preserved, because they are the author's.
+
+**The tier badge.** Every row wears one. Three tiers, two treatments. Working Team and Full Thread take the neutral counter pair on a `rounded-chip`. **Legal Only takes DES-009's own pair**, `bg-confidential-bg` / `text-confidential`, with the DES-009 `Lock` glyph ahead of the label.
+
+**The Legal Only row wash — a new token, `--legal-only-bg`.** The row itself is tinted, so the tier reads peripherally. That is the whole point of CMT-003. The wash cannot borrow `--confidential-bg`: that is the banner surface, and the badge on the row already uses it, so the two would cancel. It takes its own value instead, one step lighter than the banner and in the same per-theme hue family — soft lavender in Light and Dark, soft tan in Warm, following DES-009's per-theme divergence. Light `#FAF3FE`, Warm `#F6EFE3`, Dark `#1E1826`. The DES-011 gate covers `--text-primary` and `--text-muted` on it in all three themes.
+
+**The composer.** A segmented tier control, then the box, then the audience line, then the action:
+
+- **The segments** are native radios in a `fieldset` labelled "Audience". That makes them one group, arrow-key navigable for free. They are drawn as a `bg-control` track with a 2px inset, each segment `rounded-chip` at 11px. The selected segment lifts onto `bg-raised` with a `border-muted` hairline and goes semibold. The rest are `text-muted` medium. The Legal Only segment carries the same lock glyph its badge does.
+- **The segment set is the viewer's rooms, not all three.** A Contributor's composer has two segments; Legal Only is absent, not disabled — the convention the nav and the settings rail already follow. The seam refuses the tier regardless.
+- **The preset is Working Team on a record page** (DD-016). The request thread's composer presets to Full Thread and lands with the portal.
+- **The audience line** sits under the box in 11px `text-muted`. It names, in words, who the selected segment means. It changes with the selection, and it is there before the post. DD-016's failure mode is saying something in the wrong room, and that safety must not depend on reading a badge afterwards.
+- **The action** is the shipped primary Button, labelled with the verb "Comment", disabled while the box is empty or a post is in flight.
+
+### Recorded normalization points (C3 deviations accepted)
+
+1. **The lock renders at 12px**, not DES-008's 16/20/24 ramp. DES-009 sets its own 12–14px range for this glyph, and inside an 11px badge a 16px lock is taller than the text it marks. The frame draws 9–10px; 12 is the floor of DES-009's range.
+2. **The composer draws two segments in C3** ("Everyone" / "Legal only"). Three is what DD-016 decided, and the labels are DD-016's own audience names: "Legal only", "Working team", "Full thread".
+3. **The frame's audience line carries an `eye` glyph.** It is dropped — a 12px eye is off both ramps, and the line reads as a sentence without it.
+4. **The frame tints Legal Only rows `#FFF8F6`,** a warm wash unrelated to the confidentiality family. The token above is in the family instead, so the two Legal-Only-ish markers in the product rhyme rather than clash.
+5. **The frame's green submit** is the shipped Button's `cta-primary`, per DES-004's normalization.
+6. **Vertical padding of 3px in the segments rounds to 4** (DES-007's scale).
+
+**Mock sweep (2026-08-13, #134):** the milestone close swept the shipped panel against both comment frames — `designs/matters.pen` **M3** and `designs/contracts.pen` **C3**. The Pencil canvas moved between files this time, so both were read rather than one. The two frames agree with each other everywhere this record touches, and points 1 to 6 hold against M3 exactly as they were written against C3, including the `#FFF8F6` wash, which is a named `legal-only-bg` variable in both files. Six further deviations came out of the sweep, all accepted:
+
+7. **Both frames badge only the Legal Only rows.** The other two authors carry a name and a timestamp and no tier at all. Every row wears a badge in the build, which is CMT-003's own wording. A thread that marks only the restricted rows leaves the other two indistinguishable, and Working Team and Full Thread are different rooms.
+8. **Both frames name the author's role beside their name** — "Dana Cruz · requester", 11px `text-muted`. It is dropped. A role is a fact about the person and it changes; the tier badge is the fact about the comment and it cannot. Two muted strings between the name and the timestamp also crowd a 320px row that now carries a tier label on every line rather than on some.
+9. **Both frames put the audience line and the submit on one foot row**, the sentence at the leading edge and the button at the trailing one. The build stacks them: the audience line runs full width under the box, then the mention chips, then the button on its own row. "Visible to everyone on this record, including the requester" does not fit beside a button in 320px, and DD-016 wants that line read rather than truncated.
+10. **The count pill is `control` / `text-secondary` in both frames.** The build uses the `badge-count` pair, per the Decision above. One counter pair serves every count in the product, and the pill in a panel header is not a different kind of number from the one on a nav item.
+11. **Neither frame's selected segment carries a border.** The build adds the `border-muted` hairline: `bg-raised` (`#FFFFFF`) on `bg-control` (`#F6F8FA`) is a three-percent step in Light and does not read as a lift on its own.
+12. **The badge label is 10px in both frames**, and 11px (`text-xs`) in the build — DES-006's floor, the same normalization DES-016 took for the activity bar's count.
+
+### Rationale
+
+CMT-003 already judged the tier badge alone insufficient. The reason is the whole DD-016 risk: a Legal Only comment read as a Working Team one is a leak of legal strategy. A wash is read without being looked at. A badge is not. Giving the wash its own token, rather than borrowing the banner's, is the argument DES-009 made for not borrowing a status pill's — one token per role, so a later shift in one does not silently move the other.
+
+Native radios cost nothing to make keyboard-accessible, because DES-010 leans on built-ins. They also announce as one choice rather than as three buttons. A handrolled toolbar would buy neither.
+
+### Alternatives considered
+
+- **Borrow `--confidential-bg` for the row.** Rejected: the badge on the row already uses it, and `--text-muted` on it misses 4.5:1 in Light and Warm.
+- **Legal Only badge on `bg-raised`, row on `--confidential-bg`.** Works, but inverts the frame — a chip lighter than its row — and still leaves the row heavier than a wash should be.
+- **A leading-edge stripe instead of a wash.** Rejected for the reason DES-009 rejected it for the banner: it reads as decoration rather than restriction.
+- **A `select` for the tier.** Rejected: DD-016 wants one deliberate act with all the options visible; a closed select hides two of the three rooms behind a click.
+
+### Consequences
+
+`--legal-only-bg` joins the DES-005 token system. It is registered in `styles/globals.css` `@theme` as `--color-legal-only-bg`, valued in all three theme files, and gated in `styles/lint-contrast.mjs` against `--text-primary` and `--text-muted`. `PanelApplet` gains an optional `accessory` slot, so an applet can put content in the panel header. DES-016's implementation clarification, point 5, anticipated exactly that. The panel is entity-generic: matters (M22) and documents (M11) mount the same component. The mention chips (M9/3) and the edited marker and tombstone (M9/4) extend this anatomy rather than replacing it.
+
+## DES-024: The mention affordances — typeahead, chip, and the promotion confirmation (extends DES-023)
+
+- **Status:** Accepted
+- **Date:** 2026-08-13
+
+### Context
+
+DES-023 drew the comment surface from `designs/contracts.pen` **C3 — Contract detail · Comments panel**. C3 draws no mention affordance at all: the composer is a two-segment control, a box, an audience line, and a submit. M9/3 (#129) adds the `@`-typeahead, the mention chip, and the promotion confirmation, and none of them has a frame. This record supplies the anatomy, in DES-023's own terms.
+
+### Decision
+
+**The typeahead is a listbox the composer's box drives, not a combobox.** The counterparty picker and the DES-014 timezone picker are hand-rolled comboboxes on an `input`. This one cannot be: ARIA in HTML permits no role on a `textarea` other than its implicit `textbox`, so `role="combobox"` and `aria-expanded` are both out. The inline-mention pattern uses what `textbox` does support.
+
+- The composer's textarea keeps its own role and takes `aria-autocomplete="list"`, `aria-controls`, and `aria-activedescendant` — all three are supported on `textbox`. The list is a sibling `ul role="listbox"`, labelled "People you can mention".
+- **A polite live region replaces `aria-expanded`.** With the list open it says how many people match and that the arrow keys choose one. Without it, a screen-reader user typing `@` would get the active-row announcements with no account of where they came from.
+- The list **opens above the box**, not below it. The composer sits at the foot of the panel, so a list drawn downward would leave the panel.
+- The list is DES-020's option chrome: `rounded-card` on `bg-raised` with the default border, rows at 12px `text-primary`, the active row on `bg-control`. Each row carries a 20px avatar (DES-018) ahead of the name.
+- Keys: Arrow walks, Enter and Tab pick, Escape closes locally (DES-010). Enter with the list open never posts a half-written comment.
+
+**The mention chip** is the neutral counter pair, `bg-badge-count-bg` / `text-badge-count-fg`, on a `rounded-chip`. It carries the person's name and nothing else — no avatar, no `@`-prefixed style, and no link colour, because a mention is a person and not a destination.
+
+- **In a posted comment** the chip is inline in the body, drawn wherever a name on the comment's mention list appears in the text (CMT-007). The rest of the sentence is the author's plain text.
+- **In the composer** the picked people sit in their own chip row under the box, labelled "Mentioned". Each chip carries a remove control: a 12px Lucide `X` on a 24×24 hit target, which is DES-011's floor, so the glyph carries padding rather than being the target itself. The lock in DES-023's badge is the precedent for a sub-16px glyph inside a chip.
+
+**The promotion confirmation** is the shipped Dialog (DES-004), not a popover or an inline banner. It has a title, the sentence that names who cannot hear the comment and the tier that would reach them, the audience line for that tier in the composer's own words, and two buttons: "Cancel" (secondary) and "Widen and post" (primary).
+
+- The title is a question — "Widen the audience?" — because the dialog asks for a decision rather than reports a fact.
+- The tier names inside the sentence are the DD-016 audience labels, lowercased into the prose. The button says what the confirm does, not which tier it does it at; the sentence above it already said the tier.
+- Cancelling restores nothing, because nothing was taken: the composer keeps its text, its mentions, and its selected segment.
+
+### Recorded normalization points
+
+1. **C3 draws none of this.** Every element above is an addition, built from the components DES-023 already named rather than from a frame.
+2. **The typeahead is not the app's combobox pattern**, for the ARIA reason above. It keeps that pattern's keyboard model — Arrow, Enter, Tab, Escape — and swaps `aria-expanded` for a live region. The box's accessible name stays "New comment", and its role stays `textbox`.
+
+### Rationale
+
+The mention is the one place in the comment surface where the composer has to offer a choice while the author is mid-sentence. Everything else about the panel is a control you touch before you write. Keeping the combobox pattern's keyboard model means the keys are ones the app already teaches, even though the role is not the same one; the list-above placement is forced by where the composer sits.
+
+The chip is neutral rather than accented for the same reason the tier badge's two wider tiers are: an accented chip would compete with the Legal Only pair that DES-023 reserved for the one thing that must be read peripherally.
+
+The dialog is the modal because the question stops a post. DD-016's failure mode is saying something in the wrong room; a dismissible popover next to a submit button is not the shape of a question you must answer.
+
+### Alternatives considered
+
+- **A `contenteditable` composer with real inline chips.** Rejected: it buys a truer chip and costs the plain-text body (CMT-007), the textarea's native keyboard model, and a large accessibility surface with no frame to build it against.
+- **An inline warning strip instead of a dialog.** Rejected: the post is stopped either way, and a strip that stops a submit without taking focus reads as a bug.
+- **Naming the promoted tier on the confirm button** ("Post at working team"). Rejected as a phrase where DES-015 wants a verb; the sentence above the button already names the tier.
+- **Loading the candidate list on the first `@`.** Rejected: the list is one working group, so it rides down with the thread and the typeahead is instant at the moment somebody is being addressed.
+
+### Consequences
+
+The composer's box stays a textbox, so nothing that finds it today stops finding it. The chip row is a derived view of the draft: a name deleted from the box drops its mention, and a chip removed deletes the name, so the text and the list can never disagree. Matters (M22) and documents (M11) inherit all of this by mounting the same panel. M9/4's edited marker and tombstone extend the row anatomy DES-023 set, beside the chips this record adds.
+
+## DES-025: The corrected comment row — the edited marker, the two tombstones, and the row's overflow menu (extends DES-023)
+
+- **Status:** Accepted
+- **Date:** 2026-08-13
+
+### Context
+
+DES-023 drew the comment row from `designs/contracts.pen` **C3 — Contract detail · Comments panel**: avatar, name, tier badge, timestamp, then the body. DES-024's consequences already flagged what comes next — "M9/4's edited marker and tombstone extend the row anatomy DES-023 set". M9/4 (#130) builds the three corrections CMT-005 and CMT-008 name, and C3 draws none of them: no edited marker, no tombstone, and no affordance for edit, delete, or redact. This record supplies that anatomy, in DES-023's own terms.
+
+### Decision
+
+**The edited marker rides beside the timestamp**, at the row header's trailing edge. It is the word "edited" at 11px `text-muted`, matching the timestamp it sits next to, with the edit time as its `title`. It is metadata about the row, so it takes the row's metadata treatment rather than a badge of its own — a second pill beside the tier badge would compete with the one thing DES-023 reserved for peripheral reading. It is drawn only while there is text to have been edited; a tombstone saying "edited" reports on nothing.
+
+**The trailing group.** The header's trailing edge becomes one `ms-auto` flex group at `gap-1.5`: the edited marker, then the timestamp, then the overflow trigger. Everything ahead of it — avatar, name, badge — is unchanged.
+
+**Two tombstones, and they say which hand removed the comment.** A removed row keeps its place in the thread and swaps its body for one sentence at 12px `text-muted` italic:
+
+- Deleted by its author — "Comment deleted by its author."
+- Removed by an Administrator — "Comment removed by an Administrator."
+
+Italic and `text-muted` because the sentence is the surface's, not the author's; every other body in the panel is somebody's own words in `text-primary`. Where both happened, the redaction sentence wins: it is the later act and the one that took the text away for good. A tombstone keeps its tier badge and its wash, because it is still the comment it stands for and it reaches the audience that comment reached (CMT-008).
+
+**The overflow menu** is the shipped DropdownMenu (DES-004) on a `ghost` `icon` Button carrying the 16px Lucide `MoreHorizontal`, accessible name "Comment actions". Items are 16px glyph plus verb: `Pencil` "Edit", `Trash2` "Delete", `Eraser` "Redact".
+
+- **The menu offers what this viewer may do and nothing else** — absent, not disabled, the convention the nav, the settings rail, and DES-023's composer segments already follow. A row with nothing on offer draws no trigger at all, so a Contributor reading somebody else's comment sees a clean row. The seam refuses each action regardless; the menu is a courtesy.
+- Edit and Delete appear for the author of a live comment. Redact appears for an Administrator on any comment not already redacted — including one the author soft-deleted, which is the case the redact exists for.
+
+**The edit box replaces the body in place.** The row's own textarea (the composer's `TEXTAREA_CLASS`), seeded with the text as it stands, accessible name "Edit comment", focused on open because the viewer just asked to type. Under it, "Cancel" (secondary) and "Save" (primary), both `sm`. Escape cancels locally, as DES-010 reserves the key for. Cancel restores nothing, because nothing was taken. It carries no mention typeahead: an edit changes the text and not who the comment addressed (CMT-008).
+
+**Both removals take the shipped Dialog** (DES-004), following DES-024's promotion confirmation. Each has a question for a title, one sentence of consequence, then "Cancel" (secondary) and the verb on a `danger` Button. Neither can be undone and each says so. A refusal closes the dialog and puts the reason on the row, where the unchanged text is still on screen.
+
+### Recorded normalization points
+
+1. **C3 draws none of this.** Every element above is an addition, built from components DES-023 and DES-024 already named rather than from a frame.
+2. **No typed confirmation.** DOC-010's hard-delete pattern asks the Administrator to type the name of what they are destroying. That is proportionate to a whole document with all its versions; it is not proportionate to one comment. The dialog names the consequence and takes one click.
+3. **The tombstone is italic**, which no other body text in the product is. It is the one place the panel speaks in its own voice inside a row of somebody else's words.
+
+### Rationale
+
+The row already carries three pieces of metadata at its trailing edge before anything is added, so the marker joins them rather than opening a fourth region. The two tombstones are two sentences because they are two facts, and after a redact the row is the only place either fact can be read — the body is gone. The overflow menu is the pattern because three actions on a dense 12px row have nowhere to sit inline, and Radix carries the keyboard model for free.
+
+### Alternatives considered
+
+- **Inline Edit and Delete links on hover.** Rejected: a hover-only affordance is not reachable by keyboard without extra work the menu already does, and the row is 12px dense with the trailing group already occupied.
+- **One tombstone sentence for both removals.** Rejected: it reads an Administrator's removal as the author's own, which CMT-008 rejects for the same reason.
+- **Keeping the tier badge off a tombstone.** Rejected: the row still reaches exactly the audience the comment reached, and dropping the badge would suggest otherwise.
+- **A typed confirmation on redact**, per DOC-010. Rejected as disproportionate for a single comment; see the normalization point above.
+
+### Consequences
+
+The row anatomy is now complete for M9. Matters (M22) and documents (M11) inherit it by mounting the same panel. The applet takes the viewer's id alongside their role, because "is this yours" is a per-row question the panel cannot answer from a role. M9/6's activity feed renders a redacted comment's entry as a redacted comment (CMT-006), and it will need the same two-sentence distinction the row draws here.
+
+## DES-026: The history panel interior — the narrated row, the medallion, and the load-more foot (extends DES-016)
+
+- **Status:** Accepted
+- **Date:** 2026-08-13
+
+### Context
+
+DES-016's implementation clarification governs the activity bar and the 44px panel header, taken from the matter-detail frames. What sits **inside** the history panel is not in that clarification, and DES-023 answered the same question for the chat panel. M9/6 (#132) builds the history applet, so this record is the other half of that answer.
+
+The clarification names `designs/matters.pen` **M13 (history open)** as the interior reference. The Pencil canvas would not move off `designs/contracts.pen`, exactly as it would not for DES-023. The frame that draws this panel for this module is `designs/contracts.pen` **C15 — Contract detail · History panel open**, and C15 is the reference below. Where C15 and M13 disagree about the 44px header or the 48px bar, M13 still wins — the same substitution DES-023 recorded, for the same reason.
+
+### Decision
+
+The panel is the DES-016 history applet, and its content is two parts.
+
+**The entry row.** 10px vertical and 16px horizontal padding, with a `border-muted` rule between rows and none under the last. A 10px gap between the medallion and the text. Two parts side by side.
+
+- **The medallion** is a 24px `rounded-pill` on `bg-control`, carrying the action family's Lucide glyph in `text-muted`. The glyph is the family's, not the entry's: people for a team change, a commit mark for a status move, a pencil for an edit, a message for the conversation, a box for an archive. A slug the narration does not recognise takes the neutral `Activity` glyph rather than none.
+- **The text column** is the sentence, then any change lines, then the timestamp. The sentence is 12px `text-primary` at a 1.4 line height, and it wraps rather than truncating — an account of what happened is not a label. Change lines and the timestamp are 11px `text-muted`.
+
+**The change line.** A field edit says what the value was and what it became, as `from → to`, rendered through the same formatters the record page uses (DES-014). One change is already named by the sentence above it, so its line is the pair alone; several are counted in the sentence and carry their labels on their own lines, because that is the only thing telling them apart.
+
+**The load-more foot.** The feed is paged (DD-017's implementation clarification), so the list ends in a secondary Button labelled "Show older" whenever a further page exists, and in nothing when it does not. The panel scrolls; the foot scrolls with it.
+
+**No badge and no header accessory.** Chat is the only applet that carries a badge (CMT-004), and a count of entries on screen would say nothing a reader wants — the feed is read, not counted.
+
+### Recorded normalization points (C15 deviations accepted)
+
+1. **The reference frame is C15, not M13.** The canvas would not switch files. C15 draws this module's own history panel with the same anatomy; M13 still governs the bar and the header.
+2. **The medallion glyph renders at 16px**, not C15's 12px. DES-008's ramp floors at 16, and 16 inside a 24px circle still leaves 4px on each side. DES-009's 12–14px carve-out is for the lock alone, and this is not that glyph.
+3. **The timestamp is the DES-014 activity-feed rule**, not C15's "Aug 3, 10:12 AM". The frame draws one fixed short-absolute-with-time format; DES-014 decided relative inside a week and short absolute after, with the long absolute and its timezone in the tooltip. The decision wins over the frame's illustrative label.
+4. **The sentences are the narration layer's, not the frame's.** C15 illustrates with actions this milestone does not have — a document upload, an AI analysis, a linked record. The rows drawn are the anatomy; the copy for each action family lives in `apps/web/src/lib/activity.ts`.
+5. **The frame draws no load-more foot**, because it draws a short feed. Paging is DD-017's decision, and the foot is what it needs.
+6. **Rows carry no tier badge.** The comment row wears one because a reader has to know which room a comment was said in (CMT-003). A feed entry's tier is the record's own policy rather than a choice its actor made, so a badge on every row would be noise repeated down the panel.
+
+**Mock sweep (2026-08-13, #134):** the milestone close opened `designs/matters.pen` and swept the shipped panel against **M13** directly. The substitution recorded in point 1 was harmless: M13 draws the same anatomy C15 does, medallion included — a 24px frame on `control` at radius 12, carrying a 12px `text-secondary` glyph, then a text column of sentence over timestamp. Points 2 to 6 hold against M13 word for word, including the 12px glyph, the fixed absolute timestamp, and the absence of both a tier badge and a load-more foot. **Point 1 is confirmed rather than superseded:** the canvas does move between files, so the reason it gives is wrong, but the frame it substituted was the right one and nothing built on it needs changing. No further deviation came out of the sweep.
+
+### Rationale
+
+The medallion is what makes the feed scannable without reading it: the eye finds the status moves in a column of sentences by their glyph, which is the whole reason C15 draws one. Giving the change its own line, rather than folding it into the sentence, is what lets one entry carry several changes — the record's PATCH commits per field (DES-017), but a re-type moves several at once, and a sentence cannot hold them all and stay a sentence.
+
+Naming a single change in the sentence and dropping its label from the line below avoids the one thing a uniform rule would produce: "Nadia Counsel changed the status" over "Status: Draft → Internal review", which says "status" twice in nine words.
+
+### Alternatives considered
+
+- **One sentence per entry, changes folded in** (C15's own "changed status Draft → Internal review"). Works for one change; breaks for three, which the record's re-type path produces routinely.
+- **A tier badge on every row**, as DES-023 puts one on every comment. Rejected — see normalization point 6.
+- **Infinite scroll instead of a foot.** Rejected: DES-010 wants keyboard-reachable affordances, and a scroll sentinel is not one.
+- **A count pill in the panel header**, mirroring chat's. Rejected: the feed is paged, so the number would count the pages read rather than the record's history, and a number that means "what you have loaded" is worse than none.
+
+### Consequences
+
+No new tokens: the row is `bg-control`, `border-muted`, `text-primary`, and `text-muted`, all already valued and gated. The applet is `apps/web/src/components/activity/activity-applet.tsx`, entity-generic and keyed by an entity reference, so matters (M22) and documents (M11) mount it rather than reimplementing it. It takes two catalogs from its mount, because the log carries neither: the type's attached fields, because a `field.<slug>` change key is a slug and not a name, and display names for the ids CTR-016's `user` and `entity` kinds store. The record's own Owner and signing entity need no lookup — M8 wrote those into the payload as names precisely so this layer would not have to. Everything the catalogs do not cover falls back to what the log stored, which is the honest rendering for a field since detached or a person since deleted. The Administrator's audit log (M9/7) draws its own table but narrates through the same layer, so a slug reads the same in both surfaces.
+
+## DES-027: The audit-log pane — the filter bar, the narrated table row, and the export foot (extends DES-021, DES-026)
+
+- **Status:** Accepted
+- **Date:** 2026-08-13
+
+### Context
+
+DES-026 drew the record's history panel: a narrated row on a medallion, change lines under the sentence, and a load-more foot. M9/7 (#133) builds the second reader of the same table — the Administrator's audit log in the Security group of `/settings` (DD-017, SET-002). It is not a panel beside a record. It is a settings pane that reads the whole log, filters it five ways, pages it, and exports it, so it needs anatomy the panel does not have: a filter bar, columns, and an export.
+
+The reference is the settings frames in `designs/settings.pen`. The Pencil canvas would not move off `designs/contracts.pen`, exactly as it would not for DES-023 and DES-026. This record is therefore built from the written pattern rather than from a frame: DES-021's table variant for the columns, the Users pane (ST5, shipped) for a settings table's chrome, DES-026 for what one entry looks like, and DES-023 for the audience badge.
+
+### Decision
+
+The pane is one flush settings card with three parts.
+
+**The filter bar** sits inside the card, above the column strip, on a `border-default` rule at 12px vertical and 16px horizontal padding. It is a `role="search"` region named "Narrow the audit log", holding six labelled controls that wrap: Person (a select of every user), Action (a select of the slugs the log actually holds), Record (a select of the entity types), From and To (native date inputs), and Search (a `type="search"` input). Each label is visible at 11px semibold `text-muted` above its control — six controls in a row have to be named, and a placeholder disappears the moment somebody uses it. A ghost "Clear filters" closes the row.
+
+- **The filters compose, and the pane never layers them by hand.** Every read carries the whole set. What is on screen is the answer to one question.
+- **Search is debounced; the rest apply immediately.** Typing a word is one request; picking from a select is one gesture and one answer.
+- **The action vocabulary comes from the table, not from the code.** The log outlives the code that wrote it, so the filter offers the slugs that are in there.
+- **Dates are the reader's own days.** A date input answers a calendar date; the pane converts it to the first and last instants of that day in the reader's timezone (DES-014), so "August" is their August.
+
+**The entry row** is a table row under DES-021's column strip: Event, Record, Audience, When.
+
+- **Event** is DES-026's narrated row, unchanged in substance: a 24px `rounded-pill` medallion on `bg-control` carrying the action family's 16px glyph, then the sentence at 12px `text-primary`, then the change lines at 11px `text-muted`. Every change line carries its label here, where the panel drops it for a single change — a table row is scanned in a column of unrelated actions, so "Role: Contributor → Legal team member" has to say which key it is about.
+- **Record** names the entity type and, under it, the entity id at 11px `text-muted`. The id is what an auditor quotes back, so it is on screen and not only in the export.
+- **Audience** carries a badge, where DES-026 deliberately carries none. The reason DES-026 dropped it does not hold here: on a record feed the tier is the record's own policy repeated down the panel, but this surface shows four tiers at once and the tier is one of the things being audited.
+- **When** is DES-014's activity-feed rule, as the panel uses it: relative inside a week, short absolute after, long absolute with its timezone in the tooltip.
+
+**The audience badge** extends DES-023's rule by one tier. The two restricted rooms — Legal Only and Administrators — take DES-009's `bg-confidential-bg` / `text-confidential` pair with the 12px `Lock` ahead of the label; the two wider ones take the neutral counter pair. The label is what tells the restricted two apart; the treatment is what makes either read as restricted without being looked at.
+
+**The export is a link, not a button.** It streams a set of unknown length, so the browser's own download is the right client for it. It sits in the card's header strip as a secondary Button rendered as an `<a download>` carrying the 16px `Download` glyph, and its href carries the filters on screen — what downloads is what is being looked at.
+
+**The foot** is DES-026's: a secondary "Show older" whenever a further page exists, and nothing when it does not. No total anywhere, for the reason the record feed has none — one paging convention, not two.
+
+### Recorded normalization points
+
+1. **The reference frames could not be opened.** `designs/settings.pen` is not the active Pencil canvas and the canvas would not switch files — the third time this milestone (DES-023, DES-026). The pane is built from DES-021's table variant, DES-026's row, DES-023's badge, and the shipped Users pane, all of which are ratified against those frames already. A frame for this pane, when one can be opened, governs the chrome; the anatomy above is the decision.
+2. **Change lines always carry their label.** DES-026 drops the label for a single change, because the sentence above it already named the key. In a table of every action in the system, the sentence often does not — "changed the organization settings" names no field — so the label stays.
+3. **The row wears an audience badge**, against DES-026's normalization point 6. See the Audience clause above for why the reason does not carry over.
+4. **The filter controls are native `select` and `input`**, through the shared `CONTROL_CLASS` treatment (the C10 field spec), not hand-rolled comboboxes. A picker over a fixed list of a dozen options is what a native select is for, and DES-010 leans on built-ins.
+
+**Mock sweep (2026-08-13, #134):** the milestone close opened `designs/settings.pen` and swept it for the frames this record was waiting on. ~~Point 1's reason is wrong~~ — **superseded**: the canvas does move between files. The right reason is simpler and it does not expire. **`designs/settings.pen` holds no audit-log frame.** Its eighteen screens run from ST1 to ST19, and the Security group appears only in ST17 (Authentication) and ST18 (OIDC); ST17 draws the rail with Authentication alone under Security, so the pane's own rail item is unmocked too. The pane is therefore built from the written pattern by necessity and not by workaround, exactly as the Context says: DES-021's table variant, DES-026's row, DES-023's badge, and ST5's settings-table chrome, which was read in the same sweep and which the pane follows apart from the filter bar the Rationale already accounts for. Points 2 to 4 are unaffected. A frame drawn for this pane later governs its chrome; the anatomy above remains the decision.
+
+### Rationale
+
+The audit log and the record feed read one table and must say the same thing about a row, which is why they share the narration layer and not the surface. What differs is the question each answers: a feed answers "what happened to this record", and its reader already knows the record, the room, and roughly when. An auditor knows none of those, which is exactly what the three columns after the sentence supply.
+
+Putting the filter bar inside the card rather than in its header strip is the one place this pane leaves the Users pane's shape. Six controls do not fit a 44px strip, and a filter bar floating above the card would read as page furniture rather than as part of the table it narrows.
+
+### Alternatives considered
+
+- **A list, as the history panel draws one.** Rejected: without columns, the entity type, the tier, and the timestamp all have to go into the sentence or under it, and the row stops being scannable at exactly the volume this surface exists for.
+- **Filters in the URL**, so a narrowed log is a link. Attractive, and deferred rather than rejected — it wants the loader to own the filters, which is a larger change than this ticket, and nothing else in settings is deep-linkable past its pane.
+- **A distinct treatment for the Administrators tier**, separate from Legal Only's. Rejected: that is a third badge treatment and a token to go with it, where the label already distinguishes them and the shared treatment carries the thing a reader must not miss.
+- **Fetching the export and offering a blob.** Rejected: it holds the whole export in memory on the client, which is the one thing streaming it was for.
+
+### Consequences
+
+`apps/web/src/routes/settings-audit-log.tsx` is the pane. No new tokens: the row is `bg-control`, `border-muted`, `border-default`, `text-primary`, and `text-muted`, and the badge reuses the confidential and counter pairs, all already valued and gated. `lib/format.ts` gains `dayBounds`, which turns a civil date into the two instants it covers in the reader's timezone — the first surface to filter on a date range, and not the last. `lib/roles.ts` gains the role wording that the Users pane, the wizard, and the Profile pane each held a copy of, because the narration is the fourth reader of it. The narration layer's entry type is now structural rather than the record feed's response shape, so both surfaces narrate the same rows without either converting for the other.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -1375,3 +1662,8 @@ The list row stays one line only because this screen exists; writing its anatomy
 | DES-020 | List-editor pattern — the shared anatomy for taxonomy settings panes                                                                                                 | Accepted |
 | DES-021 | List-editor table variant and the field-editor dialog (extends DES-020)                                                                                              | Accepted |
 | DES-022 | The type-editor screen — identity card plus attachment table (extends DES-020)                                                                                       | Accepted |
+| DES-023 | The comment surface — tier badges, the Legal Only row wash, and the segmented composer                                                                               | Accepted |
+| DES-024 | The mention affordances — typeahead, chip, and the promotion confirmation (extends DES-023)                                                                          | Accepted |
+| DES-025 | The corrected comment row — edited marker, two tombstones, and the overflow menu (extends DES-023)                                                                   | Accepted |
+| DES-026 | The history panel interior — narrated row, medallion, and load-more foot (extends DES-016)                                                                           | Accepted |
+| DES-027 | The audit-log pane — filter bar, narrated table row, and the export foot (extends DES-021, DES-026)                                                                  | Accepted |

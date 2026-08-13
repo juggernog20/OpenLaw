@@ -49,17 +49,28 @@
  * already made.
  *
  * This is the first production mount of the DES-016 record activity
- * bar. Its applet set is limited to what exists before M9: chat
- * (CMT-004) and history (DD-017) have no panels yet, so only the
- * settings deep-link slot is offered.
+ * bar, and all three of its slots are here. Chat (CMT-004) and history
+ * (DD-017) are the two entity-generic panels, each keyed by this
+ * record's reference rather than by its CTR-003 number; the settings
+ * deep-link (SET-001) sits below the divider. Matters (M22) and
+ * documents (M11) mount the same two panels.
  *
  * Archive (soft delete — for mistakes and imports, not for ending a
  * contract) and restore live in the sub-bar; an archived record reads
- * as facts until restored. The loader is the client half of the Member+
- * gate; the API's 403 is the real refusal.
+ * as facts until restored.
+ *
+ * The page has two audiences (CTR-021). Member+ get the record above. A
+ * Contributor on the contract's team gets the same page read-only: the
+ * DES-017 inline-commit surface with every input inert, exactly the way
+ * an archived record already renders, and with no archive, no restore,
+ * no team or counterparty control, and no picker reads behind them. The
+ * DD-015 business/legal editable-field split is not built here. A
+ * Contributor who is not on the contract never gets this far — the API
+ * answers 404, as it does for a contract that does not exist. Business
+ * Users are bounced home, and the API's 403 is the real refusal.
  */
 
-import { memo, useRef, useState } from "react";
+import { memo, useMemo, useRef, useState } from "react";
 import {
   Link,
   redirect,
@@ -111,9 +122,11 @@ import { currencyFractionDigits, currencyOptions, toMajorUnits, toMinorUnits } f
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
 import { problemDetail } from "../lib/messages";
 import { cn } from "../lib/utils";
-import { isMemberPlus } from "../lib/roles";
+import { canReadContracts, isMemberPlus } from "../lib/roles";
 import { currentUser, needsSetup } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
+import { useActivityApplet } from "../components/activity/activity-applet";
+import { useCommentApplet } from "../components/comments/comment-applet";
 import { RecordApplets } from "../components/shell/record-applets";
 import type { Applet } from "../components/shell/applets";
 import { Avatar } from "../components/avatar";
@@ -129,34 +142,40 @@ import { Label } from "../components/ui/label";
 export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
   const user = await currentUser();
   if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
-  // Member+ only: Contributors and Business Users get no surface at
-  // all. The API's 403 stands behind this.
-  if (!isMemberPlus(user.role)) return redirect("/");
+  // A Business User gets no surface at all. The API's 403 stands
+  // behind this.
+  if (!canReadContracts(user.role)) return redirect("/");
   const number = Number(params.contractNumber);
   if (!Number.isInteger(number) || number < 1) throw new Error("That is not a contract reference.");
+  // The pickers exist to commit from, so a read-only viewer reads
+  // none of them. Both seams are Member+ and would refuse a
+  // Contributor anyway; the record read alone carries every name the
+  // page has to draw.
+  const canEdit = isMemberPlus(user.role);
   const [record, options, registry] = await Promise.all([
     api.GET("/api/v1/contracts/{number}", { params: { path: { number } } }),
-    api.GET("/api/v1/contracts/options"),
+    canEdit ? api.GET("/api/v1/contracts/options") : undefined,
     // The registry's own Member+ list is the signing-entity picker's
     // source (CTR-011): it is ordered by legal name and already leaves
     // archived entities out, so the contracts surface needs no read of
     // its own the way it does for the Administrator-only taxonomies.
-    api.GET("/api/v1/entities"),
+    canEdit ? api.GET("/api/v1/entities") : undefined,
   ]);
-  if (!record.data || !options.data || !registry.data) {
+  if (!record.data || (canEdit && !(options?.data && registry?.data))) {
     throw new Error("The contract could not be read.");
   }
   return {
     user,
+    canEdit,
     contract: record.data.contract,
     fields: record.data.fields,
     customFieldRefs: record.data.customFieldRefs,
     team: record.data.team,
     counterparties: record.data.counterparties,
-    contractTypes: options.data.contractTypes,
-    contractStatuses: options.data.contractStatuses,
-    users: options.data.users,
-    entities: registry.data.entities,
+    contractTypes: options?.data?.contractTypes ?? [],
+    contractStatuses: options?.data?.contractStatuses ?? [],
+    users: options?.data?.users ?? [],
+    entities: registry?.data?.entities ?? [],
   };
 }
 
@@ -182,8 +201,8 @@ type FieldKey =
   | "risk"
   | "value";
 
-/** The one applet the record offers before M9 — SET-001's deep link to
- * the contract configuration behind this record. */
+/** SET-001's deep link to the contract configuration behind this
+ * record — a slot that navigates rather than opening the panel. */
 const SETTINGS_APPLET: Applet = {
   id: "settings",
   icon: Settings,
@@ -206,6 +225,7 @@ export function ContractRecordPage() {
 function ContractRecord() {
   const {
     user,
+    canEdit,
     contract,
     fields,
     customFieldRefs,
@@ -218,6 +238,17 @@ function ContractRecord() {
   } = useLoaderData<typeof contractRecordLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
+
+  /** The conversation about this record (CMT-004), keyed by the
+   * entity reference the panel takes — it never learns it is a
+   * contract. Every viewer who reaches the page reaches the thread; the
+   * API decides which tiers they hear. */
+  const chatApplet = useCommentApplet({
+    entityType: "contract",
+    entityId: contract.id,
+    role: user.role,
+    viewerId: user.id,
+  });
 
   /** The saved record — the server's truth after the last commit. */
   const [saved, setSaved] = useState<ContractRow>(contract);
@@ -238,7 +269,43 @@ function ContractRecord() {
   const [archiveStatus, setArchiveStatus] = useState<FieldStatus>("idle");
   const [archiveError, setArchiveError] = useState<string | undefined>(undefined);
 
+  /**
+   * What happened to this record (DD-017), keyed by the same entity
+   * reference the chat applet takes.
+   *
+   * Two catalogs ride along, because the log has neither. A
+   * `field.<slug>` change key is a slug and not a name, and the type's
+   * attached fields are what turn one into the other. Two of those
+   * fields store an id rather than a value (CTR-016's `user` and
+   * `entity`), and the names for those ids are already on this page —
+   * the pickers loaded them. Everything the maps do not cover falls
+   * back to what the log stored.
+   */
+  const historyApplet = useActivityApplet({
+    entityType: "contract",
+    entityId: contract.id,
+    fields: attached,
+    referenceNames: useMemo(
+      () =>
+        Object.fromEntries([
+          ...users.map((person) => [person.id, person.displayName] as const),
+          ...refs.users.map((person) => [person.id, person.displayName] as const),
+          ...entities.map((entity) => [entity.id, entity.legalName] as const),
+          ...refs.entities.map((entity) => [entity.id, entity.legalName] as const),
+        ]),
+      [users, entities, refs],
+    ),
+  });
+
   const archived = saved.archivedAt !== null;
+  /**
+   * True when every control on the page is inert. Two states reach it
+   * and they render the same way (CTR-021): an archived record, which
+   * is facts until it is restored, and a Contributor's record, which is
+   * facts because a Contributor reads. What differs is what the sub-bar
+   * offers and what the note above the cards says.
+   */
+  const frozen = archived || !canEdit;
 
   function textDrafts(row: ContractRow): Record<TextFieldKey, string> {
     return { title: row.title, description: row.description ?? "" };
@@ -449,26 +516,31 @@ function ContractRecord() {
               </span>
             )}
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <StatusNote status={archiveStatus} detail={archiveError} />
-            <Button
-              variant="secondary"
-              disabled={archiveStatus === "saving"}
-              onClick={() => void archiveOrRestore()}
-            >
-              {archived ? (
-                <>
-                  <ArchiveRestore size={16} aria-hidden="true" />
-                  <FormattedMessage id="contracts.record.restore" defaultMessage="Restore" />
-                </>
-              ) : (
-                <>
-                  <Archive size={16} aria-hidden="true" />
-                  <FormattedMessage id="contracts.record.archive" defaultMessage="Archive" />
-                </>
-              )}
-            </Button>
-          </div>
+          {/* Archive and restore are mutations, so a read-only viewer
+              is offered neither — absent, not disabled, the same
+              convention the nav and the settings rail follow. */}
+          {canEdit && (
+            <div className="flex shrink-0 items-center gap-2">
+              <StatusNote status={archiveStatus} detail={archiveError} />
+              <Button
+                variant="secondary"
+                disabled={archiveStatus === "saving"}
+                onClick={() => void archiveOrRestore()}
+              >
+                {archived ? (
+                  <>
+                    <ArchiveRestore size={16} aria-hidden="true" />
+                    <FormattedMessage id="contracts.record.restore" defaultMessage="Restore" />
+                  </>
+                ) : (
+                  <>
+                    <Archive size={16} aria-hidden="true" />
+                    <FormattedMessage id="contracts.record.archive" defaultMessage="Archive" />
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </section>
       }
     >
@@ -480,13 +552,34 @@ function ContractRecord() {
           { reference, title: saved.title },
         )}
       />
-      <RecordApplets applets={[SETTINGS_APPLET]}>
+      {/* The settings slot is absent for anyone the settings routes
+          would bounce (SET-002): every contract-settings loader sends a
+          non-Administrator to their profile, and a door that opens on a
+          redirect is worse than no door. */}
+      <RecordApplets
+        applets={
+          user.role === "administrator"
+            ? [chatApplet, historyApplet, SETTINGS_APPLET]
+            : [chatApplet, historyApplet]
+        }
+      >
         <div className="flex flex-col gap-4 overflow-y-auto px-page-x py-page-y">
           {archived && (
             <p className="rounded-card bg-status-warning-bg px-3 py-2 text-md text-status-warning-fg">
               <FormattedMessage
                 id="contracts.record.archivedNote"
                 defaultMessage="This contract is archived — it is out of the contract list. Restore it to edit."
+              />
+            </p>
+          )}
+          {/* A read-only viewer is told why, once, above the cards.
+              A note is not an affordance: it explains the inert
+              controls rather than offering a way around them. */}
+          {!canEdit && !archived && (
+            <p className="rounded-card bg-status-neutral-bg px-3 py-2 text-md text-status-neutral-fg">
+              <FormattedMessage
+                id="contracts.record.readOnlyNote"
+                defaultMessage="This record is read-only. Ask a Legal Team Member to make a change."
               />
             </p>
           )}
@@ -511,7 +604,7 @@ function ContractRecord() {
                         <Input
                           id="contract-title"
                           value={drafts.title}
-                          disabled={archived}
+                          disabled={frozen}
                           onChange={(event) =>
                             setDrafts((current) => ({ ...current, title: event.target.value }))
                           }
@@ -555,7 +648,7 @@ function ContractRecord() {
                         id="contract-type"
                         value={saved.contractTypeId}
                         className={CONTROL_CLASS}
-                        disabled={archived}
+                        disabled={frozen}
                         onChange={(event) => pickType(event.target.value)}
                       >
                         {typeOptions.map((option) => (
@@ -579,7 +672,7 @@ function ContractRecord() {
                         id="contract-owner"
                         value={saved.manager?.id ?? ""}
                         className={CONTROL_CLASS}
-                        disabled={archived}
+                        disabled={frozen}
                         onChange={(event) =>
                           void commit("managerId", { managerId: event.target.value || null })
                         }
@@ -624,7 +717,7 @@ function ContractRecord() {
                         id="contract-entity"
                         value={saved.entity?.id ?? ""}
                         className={CONTROL_CLASS}
-                        disabled={archived}
+                        disabled={frozen}
                         onChange={(event) =>
                           void commit("entityId", { entityId: event.target.value || null })
                         }
@@ -655,7 +748,7 @@ function ContractRecord() {
                   <CounterpartiesField
                     contractNumber={saved.number}
                     parties={parties}
-                    frozen={archived}
+                    frozen={frozen}
                     status={fieldStatus.counterparties ?? "idle"}
                     error={fieldError.counterparties}
                     onStatus={(next, detail) => note("counterparties", next, detail)}
@@ -675,7 +768,7 @@ function ContractRecord() {
                         id="contract-status"
                         value={saved.statusId}
                         className={CONTROL_CLASS}
-                        disabled={archived}
+                        disabled={frozen}
                         onChange={(event) =>
                           void commit("statusId", { statusId: event.target.value })
                         }
@@ -701,7 +794,7 @@ function ContractRecord() {
                         id="contract-priority"
                         value={saved.priority}
                         className={CONTROL_CLASS}
-                        disabled={archived}
+                        disabled={frozen}
                         onChange={(event) =>
                           void commit("priority", { priority: event.target.value as SeverityLevel })
                         }
@@ -727,7 +820,7 @@ function ContractRecord() {
                         id="contract-risk"
                         value={saved.risk ?? ""}
                         className={CONTROL_CLASS}
-                        disabled={archived}
+                        disabled={frozen}
                         onChange={(event) =>
                           void commit("risk", {
                             risk:
@@ -757,7 +850,7 @@ function ContractRecord() {
                     already made. */}
                   <ValueField
                     value={saved.value}
-                    frozen={archived}
+                    frozen={frozen}
                     status={fieldStatus.value ?? "idle"}
                     error={fieldError.value}
                     onStatus={(next, detail) => note("value", next, detail)}
@@ -793,7 +886,7 @@ function ContractRecord() {
                     aria-labelledby="contract-description-heading"
                     value={drafts.description}
                     className={TEXTAREA_CLASS}
-                    disabled={archived}
+                    disabled={frozen}
                     onChange={(event) =>
                       setDrafts((current) => ({ ...current, description: event.target.value }))
                     }
@@ -819,7 +912,7 @@ function ContractRecord() {
                 values={saved.customFields}
                 people={peopleReferences}
                 entities={entityReferences}
-                frozen={archived}
+                frozen={frozen}
                 status={fieldStatus}
                 error={fieldError}
                 onStatus={note}
@@ -831,7 +924,7 @@ function ContractRecord() {
               owner={saved.manager}
               roster={roster}
               users={users}
-              frozen={archived}
+              frozen={frozen}
               onRoster={setRoster}
             />
           </div>
@@ -896,7 +989,8 @@ function TeamCard({
   owner: ContractRow["manager"];
   roster: readonly ContractTeamMember[];
   users: readonly UserOption[];
-  /** The record is archived: it reads as facts until it is restored. */
+  /** The record is frozen: it is archived, or this viewer reads it
+   * rather than edits it. Either way it renders as facts. */
   frozen: boolean;
   onRoster: (team: ContractTeamMember[]) => void;
 }>) {
@@ -1214,7 +1308,8 @@ function CounterpartiesField({
   /** CTR-003's reference — the address every contract route takes. */
   contractNumber: number;
   parties: readonly ContractCounterparty[];
-  /** The record is archived: it reads as facts until it is restored. */
+  /** The record is frozen: it is archived, or this viewer reads it
+   * rather than edits it. Either way it renders as facts. */
   frozen: boolean;
   status: FieldStatus;
   error: string | undefined;
@@ -1385,9 +1480,10 @@ function CounterpartiesField({
           />
         </p>
       )}
-      {/* Only the archived record freezes the picker. A write in flight
-          must not take the focus and the half-typed name with it —
-          `write` refuses a second one on its own. */}
+      {/* Only a frozen record freezes the picker — archived, or read by
+          someone who does not edit it. A write in flight must not take
+          the focus and the half-typed name with it; `write` refuses a
+          second one on its own. */}
       <CounterpartyPicker
         id="contract-counterparty"
         ref={picker}
@@ -1504,7 +1600,8 @@ function ValueField({
   onCommit,
 }: Readonly<{
   value: ContractValue | null;
-  /** The record is archived: it reads as facts until it is restored. */
+  /** The record is frozen: it is archived, or this viewer reads it
+   * rather than edits it. Either way it renders as facts. */
   frozen: boolean;
   status: FieldStatus;
   error: string | undefined;
@@ -1737,7 +1834,8 @@ function FieldsCard({
   values: CustomFieldValues;
   people: readonly FieldReference[];
   entities: readonly FieldReference[];
-  /** The record is archived: it reads as facts until it is restored. */
+  /** The record is frozen: it is archived, or this viewer reads it
+   * rather than edits it. Either way it renders as facts. */
   frozen: boolean;
   status: Partial<Record<FieldKey, FieldStatus>>;
   error: Partial<Record<FieldKey, string | undefined>>;

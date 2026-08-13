@@ -14,14 +14,224 @@
   "action.copy": {
     "defaultMessage": "Copy"
   },
+  "action.delete": {
+    "defaultMessage": "Delete"
+  },
   "action.done": {
     "defaultMessage": "Done"
+  },
+  "action.edit": {
+    "defaultMessage": "Edit"
   },
   "action.reload": {
     "defaultMessage": "Reload"
   },
   "action.save": {
     "defaultMessage": "Save"
+  },
+  "activity.actor.system": {
+    "defaultMessage": "OpenLaw"
+  },
+  "activity.applet": {
+    "defaultMessage": "History"
+  },
+  "activity.boolean": {
+    "defaultMessage": "{value, select, true {Yes} other {No}}"
+  },
+  "activity.change": {
+    "defaultMessage": "{from} → {to}"
+  },
+  "activity.changeWithLabel": {
+    "defaultMessage": "{label}: {from} → {to}"
+  },
+  "activity.comment.deleted": {
+    "defaultMessage": "{actor} deleted a comment"
+  },
+  "activity.comment.edited": {
+    "defaultMessage": "{actor} changed a comment"
+  },
+  "activity.comment.posted": {
+    "defaultMessage": "{actor} commented"
+  },
+  "activity.comment.redacted": {
+    "defaultMessage": "{actor} removed a comment from the record"
+  },
+  "activity.contract.archived": {
+    "defaultMessage": "{actor} archived this contract"
+  },
+  "activity.contract.counterpartyAdded": {
+    "defaultMessage": "{actor} added {counterparty} on the other side"
+  },
+  "activity.contract.counterpartyRemoved": {
+    "defaultMessage": "{actor} took {counterparty} off the other side"
+  },
+  "activity.contract.created": {
+    "defaultMessage": "{actor} created this contract"
+  },
+  "activity.contract.primaryChanged": {
+    "defaultMessage": "{actor} changed which counterparty the contract is listed under"
+  },
+  "activity.contract.restored": {
+    "defaultMessage": "{actor} restored this contract"
+  },
+  "activity.contract.statusChanged": {
+    "defaultMessage": "{actor} changed the status"
+  },
+  "activity.contract.teamAdded": {
+    "defaultMessage": "{actor} added {member} to the team as {role}"
+  },
+  "activity.contract.teamRemoved": {
+    "defaultMessage": "{actor} took {member} off the team as {role}"
+  },
+  "activity.contract.typeReassigned": {
+    "defaultMessage": "{actor} re-typed this contract"
+  },
+  "activity.contract.updated": {
+    "defaultMessage": "{actor} changed {count, plural, =0 {this contract} one {{field}} other {# fields}}"
+  },
+  "activity.empty": {
+    "defaultMessage": "Nothing has happened to this record yet. Every change to it shows up here."
+  },
+  "activity.entity.archived": {
+    "defaultMessage": "{actor} archived {name}"
+  },
+  "activity.entity.created": {
+    "defaultMessage": "{actor} registered {name}"
+  },
+  "activity.entity.restored": {
+    "defaultMessage": "{actor} restored {name}"
+  },
+  "activity.entity.statusChanged": {
+    "defaultMessage": "{actor} changed the status of {name}"
+  },
+  "activity.entity.typeReassigned": {
+    "defaultMessage": "{actor} re-typed {name}"
+  },
+  "activity.entity.updated": {
+    "defaultMessage": "{actor} changed {name}"
+  },
+  "activity.export.performed": {
+    "defaultMessage": "{actor} exported the audit log"
+  },
+  "activity.field": {
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} primaryCounterparty {Primary counterparty} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
+  },
+  "activity.field.narrowed": {
+    "defaultMessage": "{actor} narrowed the field {name} to one module"
+  },
+  "activity.field.promoted": {
+    "defaultMessage": "{actor} widened the field {name} to every module"
+  },
+  "activity.loadError": {
+    "defaultMessage": "The history could not be read. Reopen the panel to try again."
+  },
+  "activity.notSet": {
+    "defaultMessage": "Not set"
+  },
+  "activity.older": {
+    "defaultMessage": "Show older"
+  },
+  "activity.olderError": {
+    "defaultMessage": "The older entries could not be read. Try again."
+  },
+  "activity.orgSettings.updated": {
+    "defaultMessage": "{actor} changed the organization settings"
+  },
+  "activity.someone": {
+    "defaultMessage": "someone"
+  },
+  "activity.ssoProvider.registered": {
+    "defaultMessage": "{actor} connected the identity provider {provider}"
+  },
+  "activity.ssoProvider.updated": {
+    "defaultMessage": "{actor} changed the identity provider {provider}"
+  },
+  "activity.taxonomy.archived": {
+    "defaultMessage": "{actor} archived the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+  },
+  "activity.taxonomy.created": {
+    "defaultMessage": "{actor} added the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+  },
+  "activity.taxonomy.deleted": {
+    "defaultMessage": "{actor} deleted the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+  },
+  "activity.taxonomy.renamed": {
+    "defaultMessage": "{actor} renamed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+  },
+  "activity.taxonomy.reordered": {
+    "defaultMessage": "{actor} reordered the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} list"
+  },
+  "activity.taxonomy.restored": {
+    "defaultMessage": "{actor} restored the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+  },
+  "activity.taxonomy.updated": {
+    "defaultMessage": "{actor} changed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+  },
+  "activity.teamRole": {
+    "defaultMessage": "{role, select, member {Member} watcher {Watcher} creator {Creator} contributor {Contributor} other {{role}}}"
+  },
+  "activity.typeField.attached": {
+    "defaultMessage": "{actor} attached the field {field} to the {owner, select, contract_type_field {contract type} matter_type_field {matter type} other {type}} {type}"
+  },
+  "activity.typeField.detached": {
+    "defaultMessage": "{actor} detached the field {field} from the {owner, select, contract_type_field {contract type} matter_type_field {matter type} other {type}} {type}"
+  },
+  "activity.typeField.reordered": {
+    "defaultMessage": "{actor} reordered the fields on the {owner, select, contract_type_field {contract type} matter_type_field {matter type} other {type}} {type}"
+  },
+  "activity.typeField.requiredChanged": {
+    "defaultMessage": "{actor} made the field {field} {required, select, true {required} other {optional}} on the {owner, select, contract_type_field {contract type} matter_type_field {matter type} other {type}} {type}"
+  },
+  "activity.unknown": {
+    "defaultMessage": "{actor} — {action}"
+  },
+  "activity.unnamed": {
+    "defaultMessage": "(unnamed)"
+  },
+  "activity.user.archived": {
+    "defaultMessage": "{actor} archived {email}"
+  },
+  "activity.user.avatarChanged": {
+    "defaultMessage": "{actor} changed their avatar"
+  },
+  "activity.user.displayNameChanged": {
+    "defaultMessage": "{actor} changed their display name"
+  },
+  "activity.user.inviteResent": {
+    "defaultMessage": "{actor} resent the invite to {email}"
+  },
+  "activity.user.inviteRevoked": {
+    "defaultMessage": "{actor} revoked the invite to {email}"
+  },
+  "activity.user.invited": {
+    "defaultMessage": "{actor} invited {email} as {role}"
+  },
+  "activity.user.otherSessionsRevoked": {
+    "defaultMessage": "{actor} signed out their other sessions"
+  },
+  "activity.user.passwordChanged": {
+    "defaultMessage": "{actor} changed their password"
+  },
+  "activity.user.roleChanged": {
+    "defaultMessage": "{actor} changed the role of {email}"
+  },
+  "activity.user.sessionsRevoked": {
+    "defaultMessage": "{actor} signed {email} out of every session"
+  },
+  "activity.user.themeChanged": {
+    "defaultMessage": "{actor} changed their theme"
+  },
+  "activity.user.timezoneChanged": {
+    "defaultMessage": "{actor} changed their timezone"
+  },
+  "activity.user.twoFactorDisabled": {
+    "defaultMessage": "{actor} turned off two-factor authentication"
+  },
+  "activity.user.twoFactorEnrolled": {
+    "defaultMessage": "{actor} turned on two-factor authentication"
+  },
+  "activity.user.unarchived": {
+    "defaultMessage": "{actor} restored {email}"
   },
   "app.pageTitle": {
     "defaultMessage": "{screen} · OpenLaw"
@@ -34,6 +244,69 @@
   },
   "applets.labelWithBadge": {
     "defaultMessage": "{label} ({count})"
+  },
+  "audit.col.audience": {
+    "defaultMessage": "Audience"
+  },
+  "audit.col.event": {
+    "defaultMessage": "Event"
+  },
+  "audit.col.record": {
+    "defaultMessage": "Record"
+  },
+  "audit.col.when": {
+    "defaultMessage": "When"
+  },
+  "audit.empty": {
+    "defaultMessage": "No entry matches these filters."
+  },
+  "audit.entityType": {
+    "defaultMessage": "{type, select, contract {Contract} matter {Matter} document {Document} request {Request} user {User} entity {Entity} system {System} other {{type}}}"
+  },
+  "audit.export": {
+    "defaultMessage": "Export CSV"
+  },
+  "audit.filter.action": {
+    "defaultMessage": "Action"
+  },
+  "audit.filter.actor": {
+    "defaultMessage": "Person"
+  },
+  "audit.filter.anyAction": {
+    "defaultMessage": "Any action"
+  },
+  "audit.filter.anyRecord": {
+    "defaultMessage": "Any record"
+  },
+  "audit.filter.anyone": {
+    "defaultMessage": "Anyone"
+  },
+  "audit.filter.clear": {
+    "defaultMessage": "Clear filters"
+  },
+  "audit.filter.from": {
+    "defaultMessage": "From"
+  },
+  "audit.filter.record": {
+    "defaultMessage": "Record"
+  },
+  "audit.filter.search": {
+    "defaultMessage": "Search"
+  },
+  "audit.filter.to": {
+    "defaultMessage": "To"
+  },
+  "audit.filters": {
+    "defaultMessage": "Narrow the audit log"
+  },
+  "audit.loadError": {
+    "defaultMessage": "The audit log could not be read. Change a filter to try again."
+  },
+  "audit.older": {
+    "defaultMessage": "Show older"
+  },
+  "audit.tier": {
+    "defaultMessage": "{tier, select, legal_only {Legal only} working_team {Working team} full_thread {Full thread} admin_only {Administrators} other {{tier}}}"
   },
   "auth.backToSignIn": {
     "defaultMessage": "Back to sign-in"
@@ -233,6 +506,108 @@
   "auth.twoFactor.useTotp": {
     "defaultMessage": "Use your authenticator app"
   },
+  "comments.actions": {
+    "defaultMessage": "Comment actions"
+  },
+  "comments.applet": {
+    "defaultMessage": "Comments"
+  },
+  "comments.audience.fullThread": {
+    "defaultMessage": "Visible to everyone on this record, including the requester."
+  },
+  "comments.audience.legalOnly": {
+    "defaultMessage": "Visible to Administrators and Legal Team Members."
+  },
+  "comments.audience.workingTeam": {
+    "defaultMessage": "Visible to the legal team and Contributors on this record."
+  },
+  "comments.composer": {
+    "defaultMessage": "New comment"
+  },
+  "comments.delete.body": {
+    "defaultMessage": "A tombstone keeps its place in the thread, and nobody can read what it said. You cannot undo this."
+  },
+  "comments.delete.title": {
+    "defaultMessage": "Delete this comment?"
+  },
+  "comments.editBox": {
+    "defaultMessage": "Edit comment"
+  },
+  "comments.editError": {
+    "defaultMessage": "The comment could not be changed. Try again."
+  },
+  "comments.edited": {
+    "defaultMessage": "edited"
+  },
+  "comments.empty": {
+    "defaultMessage": "Nothing has been said about this record yet. Add the first comment to keep the conversation on the record."
+  },
+  "comments.loadError": {
+    "defaultMessage": "The conversation could not be read. Reopen the panel to try again."
+  },
+  "comments.mention.available": {
+    "defaultMessage": "{count, plural, one {# person matches} other {# people match}}. Use the arrow keys to choose one."
+  },
+  "comments.mention.listLabel": {
+    "defaultMessage": "People you can mention"
+  },
+  "comments.mention.pickedLabel": {
+    "defaultMessage": "Mentioned"
+  },
+  "comments.mention.remove": {
+    "defaultMessage": "Remove {name}"
+  },
+  "comments.mention.unreachable": {
+    "defaultMessage": "{names} cannot be reached on this record at any audience you can post to. Take the mention out."
+  },
+  "comments.placeholder": {
+    "defaultMessage": "Add a comment…"
+  },
+  "comments.post": {
+    "defaultMessage": "Comment"
+  },
+  "comments.postError": {
+    "defaultMessage": "The comment could not be posted. Try again."
+  },
+  "comments.promote.body": {
+    "defaultMessage": "{names} cannot see a {current} comment. Post it at {promoted} instead to reach {count, plural, one {them} other {all of them}}."
+  },
+  "comments.promote.confirm": {
+    "defaultMessage": "Widen and post"
+  },
+  "comments.promote.title": {
+    "defaultMessage": "Widen the audience?"
+  },
+  "comments.redact": {
+    "defaultMessage": "Redact"
+  },
+  "comments.redact.body": {
+    "defaultMessage": "The text and every earlier version of it are removed for good. Use this for text posted into the wrong record. You cannot undo this."
+  },
+  "comments.redact.title": {
+    "defaultMessage": "Redact this comment?"
+  },
+  "comments.removeError": {
+    "defaultMessage": "The comment could not be removed. Try again."
+  },
+  "comments.tier.fullThread": {
+    "defaultMessage": "Full thread"
+  },
+  "comments.tier.legalOnly": {
+    "defaultMessage": "Legal only"
+  },
+  "comments.tier.workingTeam": {
+    "defaultMessage": "Working team"
+  },
+  "comments.tierGroup": {
+    "defaultMessage": "Audience"
+  },
+  "comments.tombstone.deleted": {
+    "defaultMessage": "Comment deleted by its author."
+  },
+  "comments.tombstone.redacted": {
+    "defaultMessage": "Comment removed by an Administrator."
+  },
   "contracts.applet.settings": {
     "defaultMessage": "Contract settings"
   },
@@ -269,6 +644,9 @@
   "contracts.count": {
     "defaultMessage": "{count, plural, one {# contract} other {# contracts}}"
   },
+  "contracts.counterparties.list": {
+    "defaultMessage": "Counterparties"
+  },
   "contracts.counterparty.busy": {
     "defaultMessage": "One change at a time. Wait for the last one to save."
   },
@@ -293,8 +671,17 @@
   "contracts.create": {
     "defaultMessage": "Create contract"
   },
+  "contracts.empty.archived.body": {
+    "defaultMessage": "Archived contracts are kept out of the way until they are restored."
+  },
+  "contracts.empty.archived.title": {
+    "defaultMessage": "No archived contracts"
+  },
   "contracts.empty.body": {
     "defaultMessage": "A contract is the workspace for work that ends in a signed document. Create one when a deal starts; it takes a reference you can quote in email."
+  },
+  "contracts.empty.readOnly.body": {
+    "defaultMessage": "Contracts you are added to appear here. Ask a Legal Team Member to add you to the ones you work on."
   },
   "contracts.empty.title": {
     "defaultMessage": "No contracts yet"
@@ -307,6 +694,9 @@
   },
   "contracts.field.numberInvalid": {
     "defaultMessage": "Enter this as a number."
+  },
+  "contracts.field.numberInvalidNamed": {
+    "defaultMessage": "{fieldName}: enter this as a number."
   },
   "contracts.field.requiredMark": {
     "defaultMessage": "(required)"
@@ -389,6 +779,9 @@
   "contracts.record.documentTitle": {
     "defaultMessage": "{reference} {title}"
   },
+  "contracts.record.readOnlyNote": {
+    "defaultMessage": "This record is read-only. Ask a Legal Team Member to make a change."
+  },
   "contracts.record.restore": {
     "defaultMessage": "Restore"
   },
@@ -399,7 +792,7 @@
     "defaultMessage": "C-{number}"
   },
   "contracts.restoreError": {
-    "defaultMessage": "The contract could not be restored."
+    "defaultMessage": "{reference} could not be restored."
   },
   "contracts.restoreRow": {
     "defaultMessage": "Restore {title}"
@@ -1486,6 +1879,9 @@
   },
   "settings.section.appearance": {
     "defaultMessage": "Appearance"
+  },
+  "settings.section.auditLog": {
+    "defaultMessage": "Audit log"
   },
   "settings.section.authentication": {
     "defaultMessage": "Authentication"

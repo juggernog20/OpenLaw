@@ -14,7 +14,8 @@
  * searches the book, commits an existing organization by id and an
  * unknown name by name, never offers to create a name the search
  * already answered with, and moves the primary. The activity bar mounts
- * with the applet set that exists before M9.
+ * with the applet set that exists at M9/2 — the chat slot and the
+ * settings deep-link.
  *
  * The CTR-016 fields are the type's: the card draws the attachments in
  * attachment order, every field type gets its own control, and each
@@ -23,7 +24,11 @@
  * the gaps when it does — one write for the type and the values
  * together (MTR-014).
  *
- * Contributors are bounced home; unauthenticated visitors land on login.
+ * A Contributor on the contract's team gets the same page read-only
+ * (M9/1): every control inert, no archive, no team or counterparty
+ * action, and neither Member+ picker read asked for. A contract they
+ * hold no team row on answers 404 and lands on the error page. Business
+ * Users are bounced home; unauthenticated visitors land on login.
  */
 
 import { describe, expect, it } from "vitest";
@@ -32,6 +37,12 @@ import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 import type { CustomFieldValue, CustomFieldValues } from "../lib/custom-fields";
 
+const ADMIN = {
+  id: "u1",
+  email: "admin@example.com",
+  displayName: "Blair Wentworth",
+  role: "administrator",
+};
 const MEMBER = {
   id: "u2",
   email: "member@example.com",
@@ -43,6 +54,12 @@ const CONTRIBUTOR = {
   email: "contributor@example.com",
   displayName: "Casey Contributor",
   role: "contributor",
+};
+const BUSINESS = {
+  id: "u9",
+  email: "business@example.com",
+  displayName: "Bao Business",
+  role: "business_user",
 };
 
 /** The people the pickers offer. A Contributor is offered for the team
@@ -445,15 +462,30 @@ describe("the /contracts/:number record page", () => {
     expect(screen.getByText("MSA")).toBeInTheDocument();
   });
 
-  it("mounts the activity bar with the applet set that exists before M9", async () => {
-    stubApi({ signedIn: MEMBER, extra: recordApi(contractRow()).handler });
+  it("mounts the activity bar with the applet set that exists at M9/2", async () => {
+    stubApi({ signedIn: ADMIN, extra: recordApi(contractRow()).handler });
     renderAt("/contracts/42");
 
     const bar = await screen.findByRole("toolbar", { name: "Applets" });
+    // Chat opens a panel (CMT-004); settings navigates (SET-001).
+    expect(within(bar).getByRole("button", { name: "Comments" })).toBeInTheDocument();
     expect(within(bar).getByRole("link", { name: "Contract settings" })).toHaveAttribute(
       "href",
       "/settings/contracts",
     );
+  });
+
+  it("keeps the settings slot off the bar for anyone the pane would bounce", async () => {
+    stubApi({ signedIn: MEMBER, extra: recordApi(contractRow()).handler });
+    renderAt("/contracts/42");
+
+    const bar = await screen.findByRole("toolbar", { name: "Applets" });
+    // The contract-settings pane is Administrator-only, and its loader
+    // sends everybody else to their profile. The slot is absent rather
+    // than offering a door that opens on a redirect — the same
+    // treatment the settings rail already gives the group it sits in.
+    expect(within(bar).getByRole("button", { name: "Comments" })).toBeInTheDocument();
+    expect(within(bar).queryByRole("link", { name: "Contract settings" })).not.toBeInTheDocument();
   });
 
   it("commits an edited field on blur as one PATCH (DES-017) and notes Saved", async () => {
@@ -1437,8 +1469,8 @@ describe("the /contracts/:number record page", () => {
     expect(await screen.findByText(/This contract type attaches no fields/)).toBeInTheDocument();
   });
 
-  it("bounces a Contributor home", async () => {
-    stubApi({ signedIn: CONTRIBUTOR });
+  it("bounces a Business User home", async () => {
+    stubApi({ signedIn: BUSINESS });
     renderAt("/contracts/42");
     expect(await screen.findByRole("heading", { level: 1, name: "Home" })).toBeInTheDocument();
   });
@@ -1447,5 +1479,1578 @@ describe("the /contracts/:number record page", () => {
     stubApi({ signedIn: null, needsSetup: false });
     renderAt("/contracts/42");
     expect(await screen.findByRole("heading", { name: "Sign in" })).toBeInTheDocument();
+  });
+});
+
+describe("a Contributor on the contract record (M9/1)", () => {
+  /**
+   * The record stub with both Member+ picker reads walled off. A
+   * Contributor is refused them at the seam, so a loader that asked
+   * would be asking for a refusal — `pickerReads` is what proves it
+   * never does.
+   */
+  function contributorApi(...args: Parameters<typeof recordApi>) {
+    const api = recordApi(...args);
+    const pickerReads: string[] = [];
+    const handler = (call: StubCall): Response | undefined => {
+      if (["/api/v1/contracts/options", "/api/v1/entities"].includes(call.url.pathname)) {
+        pickerReads.push(call.url.pathname);
+        return problem(403, "You do not have permission to perform this action.");
+      }
+      return api.handler(call);
+    };
+    return { ...api, handler, pickerReads };
+  }
+
+  it("renders the record read-only, with no edit affordance and no picker read", async () => {
+    const api = contributorApi(
+      contractRow(),
+      [person("u1", "creator"), person("u3", "contributor")],
+      [party("cp-helix", true), party("cp-orion", false)],
+    );
+    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
+    renderAt("/contracts/42");
+
+    // The record reads: the title, the status, the parties, the team.
+    expect(
+      await screen.findByRole("heading", { level: 1, name: /Acme master services agreement/ }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Helix Labs GmbH")).toBeInTheDocument();
+    expect(screen.getByText("Casey Contributor")).toBeInTheDocument();
+    expect(screen.getByText(/This record is read-only/)).toBeInTheDocument();
+
+    // Every control is inert, exactly as an archived record renders.
+    for (const label of [
+      "Title",
+      "Contract type",
+      "Owner",
+      "Our entity",
+      "Status",
+      "Priority",
+      "Risk",
+      "Payment terms",
+      "Amount",
+      "Currency",
+      "Cadence",
+      "Description",
+    ]) {
+      expect(screen.getByLabelText(label)).toBeDisabled();
+    }
+    expect(screen.getByRole("combobox", { name: "Counterparties" })).toBeDisabled();
+
+    // Archive and restore are record-level actions a Contributor never
+    // gets, so they are absent rather than permanently disabled.
+    expect(screen.queryByRole("button", { name: "Archive" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Restore" })).not.toBeInTheDocument();
+    // The team and party controls freeze the way an archived record
+    // freezes them — inert where they stand, gone where the archived
+    // record drops them.
+    expect(screen.getByRole("button", { name: "Add team member" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Make primary" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Take Helix Labs GmbH off the contract/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Take Casey Contributor off the team/ }),
+    ).not.toBeInTheDocument();
+
+    // No inline commit fires, and the Member+ picker seams are never
+    // asked for.
+    expect(api.patches).toEqual([]);
+    expect(api.posts).toEqual([]);
+    expect(api.pickerReads).toEqual([]);
+  });
+
+  it("still names the type, status, and Owner the record holds, with no picker list to read them from", async () => {
+    const api = contributorApi(
+      contractRow({ manager: person("u2"), statusId: "s-redlining", statusName: "Redlining" }),
+    );
+    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
+    renderAt("/contracts/42");
+
+    // The selects are inert, so what they show is all the record says.
+    // Each one names what is stored, not a blank — the row carries the
+    // names, so no options read is needed to draw them.
+    expect(await screen.findByLabelText("Contract type")).toHaveDisplayValue("MSA");
+    expect(screen.getByLabelText("Status")).toHaveDisplayValue("Redlining");
+    expect(screen.getByLabelText("Owner")).toHaveDisplayValue("Nadia Counsel");
+  });
+
+  it("says archived once on an archived contract, and never offers the restore", async () => {
+    const api = contributorApi(contractRow({ archivedAt: "2026-08-12T00:00:00.000Z" }));
+    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
+    renderAt("/contracts/42");
+
+    // The archived note carries the state; the read-only note stands
+    // down, because "restore it to edit" is not this viewer's to act on
+    // and two notes over one card would say the same thing twice.
+    expect(await screen.findByText(/This contract is archived/)).toBeInTheDocument();
+    expect(screen.queryByText(/This record is read-only/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Restore" })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Title")).toBeDisabled();
+    expect(api.posts).toEqual([]);
+  });
+
+  it("shows the error page for a contract they hold no team row on", async () => {
+    // The API answers 404, exactly as it does for a contract that does
+    // not exist — the client never learns which it was.
+    stubApi({
+      signedIn: CONTRIBUTOR,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/contracts/42" && call.method === "GET"
+          ? problem(404, "No contract exists with this number.")
+          : undefined,
+    });
+    renderAt("/contracts/42");
+
+    expect(
+      await screen.findByRole("heading", { name: "Something went wrong." }),
+    ).toBeInTheDocument();
+  });
+});
+
+/**
+ * The chat applet (M9/2) on the contract record: the entity-generic
+ * comment panel, mounted in the DES-016 activity bar's second slot.
+ *
+ * The panel names no record type — it is keyed by the entity reference
+ * the record carries, so the same component mounts on matters and
+ * documents later. Every row wears its DD-016 tier; a Legal Only row is
+ * tinted and locked (CMT-003). A Contributor's composer has no Legal
+ * Only segment, and their thread carries no trace of one — the API
+ * filtered it at query time, so there is nothing here to hide.
+ *
+ * The Legal Only row's wash is asserted as a class, the way the panel's
+ * docking already is in record-applets.test.tsx: jsdom computes no
+ * colour, so the class that carries the treatment is the only thing
+ * there is to read. The lock glyph beside the badge is decorative — the
+ * badge's own text names the tier — so it is asserted structurally
+ * rather than by an accessible name that would announce the tier twice.
+ */
+describe("the contract record's comment applet (M9/2)", () => {
+  const AUTHOR = {
+    id: "u2",
+    displayName: "Nadia Counsel",
+    image: null,
+    archived: false,
+  };
+  const CASEY = {
+    id: "u3",
+    displayName: "Casey Contributor",
+    image: null,
+    archived: false,
+  };
+
+  function comment(
+    id: string,
+    body: string,
+    visibility: string,
+    author = AUTHOR,
+    createdAt = "2026-08-12T09:00:00.000Z",
+    mentions: { id: string; displayName: string }[] = [],
+    /** M9/4's three states: edited, and removed by either hand. A plain
+     * comment is none of them. */
+    marks: { editedAt?: string; deletedAt?: string; redactedAt?: string } = {},
+  ) {
+    return {
+      id,
+      entityType: "contract",
+      entityId: "c1",
+      author,
+      body,
+      visibility,
+      mentions,
+      createdAt,
+      editedAt: marks.editedAt ?? null,
+      deletedAt: marks.deletedAt ?? null,
+      redactedAt: marks.redactedAt ?? null,
+    };
+  }
+
+  /** The @-typeahead's list, as the seam answers it: everybody a
+   * comment on this record reaches, with the tiers they hear. Nadia is
+   * Member+ and hears all three; Casey is a Contributor on the team and
+   * hears the two wider ones. */
+  const NADIA_CANDIDATE = {
+    id: "u2",
+    displayName: "Nadia Counsel",
+    image: null,
+    tiers: ["legal_only", "working_team", "full_thread"],
+  };
+  const CASEY_CANDIDATE = {
+    id: "u3",
+    displayName: "Casey Contributor",
+    image: null,
+    tiers: ["working_team", "full_thread"],
+  };
+  const CANDIDATES = [CASEY_CANDIDATE, NADIA_CANDIDATE];
+
+  /** The thread seam, stateful the way the API is: a post appends, and
+   * the next read answers what the poster now sees. The handler only
+   * answers; what it was asked is recorded for the test to assert. */
+  function commentsApi(
+    initial: ReturnType<typeof comment>[] = [],
+    candidates: typeof CANDIDATES = CANDIDATES,
+    /** What the badge starts at (M9/5). Zero is the common case, so
+     * every suite that is not about the badge draws none. */
+    initialUnread = 0,
+  ) {
+    let thread = initial;
+    let unread = initialUnread;
+    const posts: unknown[] = [];
+    const reads: Record<string, string | null>[] = [];
+    /** Every correction the panel sent, in order — the seam's own record
+     * of what it was asked to do (M9/4). */
+    const corrections: { method: string; id: string; body?: unknown }[] = [];
+    /** Every record the panel said it had read (M9/5). */
+    const marksRead: unknown[] = [];
+
+    /** Puts a corrected row back in the thread, in its own place. A
+     * tombstone that moved would break the thread it is holding open. */
+    const replace = (updated: ReturnType<typeof comment>) => {
+      thread = thread.map((row) => (row.id === updated.id ? updated : row));
+      return json(200, { comment: updated });
+    };
+
+    const handler = (call: StubCall): Response | undefined => {
+      if (call.url.pathname === "/api/v1/comments/mention-candidates" && call.method === "GET") {
+        return json(200, { candidates });
+      }
+      // The badge's two calls, ahead of the correction paths below —
+      // both are a static word where those expect a comment's id.
+      if (call.url.pathname === "/api/v1/comments/unread" && call.method === "GET") {
+        return json(200, { unread });
+      }
+      if (call.url.pathname === "/api/v1/comments/read" && call.method === "POST") {
+        marksRead.push(call.body);
+        unread = 0;
+        return json(200, { unread });
+      }
+      // The three corrections, each addressed to one comment by id.
+      const correction = /^\/api\/v1\/comments\/([^/]+)(\/redact)?$/.exec(call.url.pathname);
+      if (correction && correction[1] !== "mention-candidates") {
+        const id = correction[1]!;
+        const row = thread.find((existing) => existing.id === id);
+        if (!row) return problem(404, "No comment exists with this id.");
+        if (call.method === "PATCH") {
+          corrections.push({ method: "PATCH", id, body: call.body });
+          const { body } = call.body as { body: string };
+          return replace({ ...row, body, editedAt: "2026-08-12T14:00:00.000Z" });
+        }
+        if (call.method === "DELETE") {
+          corrections.push({ method: "DELETE", id });
+          return replace({ ...row, body: "", deletedAt: "2026-08-12T15:00:00.000Z" });
+        }
+        if (call.method === "POST" && correction[2]) {
+          corrections.push({ method: "REDACT", id });
+          return replace({
+            ...row,
+            body: "",
+            mentions: [],
+            redactedAt: "2026-08-12T16:00:00.000Z",
+          });
+        }
+        return undefined;
+      }
+      if (call.url.pathname !== "/api/v1/comments") return undefined;
+      if (call.method === "GET") {
+        reads.push({
+          entityType: call.url.searchParams.get("entityType"),
+          entityId: call.url.searchParams.get("entityId"),
+        });
+        return json(200, { comments: thread });
+      }
+      if (call.method === "POST") {
+        posts.push(call.body);
+        const body = call.body as {
+          body: string;
+          visibility: string;
+          mentions?: string[];
+        };
+        const posted = comment(
+          `c-new-${thread.length}`,
+          body.body,
+          body.visibility,
+          AUTHOR,
+          "2026-08-12T12:00:00.000Z",
+          (body.mentions ?? []).map((id) => ({
+            id,
+            displayName: candidates.find((person) => person.id === id)!.displayName,
+          })),
+        );
+        thread = [...thread, posted];
+        return json(201, { comment: posted });
+      }
+      return undefined;
+    };
+    return { handler, posts, reads, corrections, marksRead };
+  }
+
+  /** The record page's own seam plus the thread's, in that order. */
+  function pageApi(comments: ReturnType<typeof commentsApi>, record = recordApi(contractRow())) {
+    return (call: StubCall) => comments.handler(call) ?? record.handler(call);
+  }
+
+  /** Opens the chat panel from the activity bar and answers its icon. */
+  async function openChat(user: ReturnType<typeof userEvent.setup>) {
+    const bar = await screen.findByRole("toolbar", { name: "Applets" });
+    const icon = within(bar).getByRole("button", { name: "Comments" });
+    await user.click(icon);
+    return icon;
+  }
+
+  it("opens and closes the chat panel from the bar, returning focus to its icon", async () => {
+    const user = userEvent.setup();
+    const comments = commentsApi();
+    stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+    renderAt("/contracts/42");
+
+    const icon = await openChat(user);
+    const panel = await screen.findByRole("complementary", { name: "Comments" });
+    expect(icon).toHaveAttribute("aria-expanded", "true");
+    // The panel is keyed by the record's entity reference, never by the
+    // contract's CTR-003 number — that is what makes it entity-generic.
+    await waitFor(() => {
+      expect(comments.reads).toEqual([{ entityType: "contract", entityId: "c1" }]);
+    });
+
+    await user.click(within(panel).getByRole("button", { name: "Close" }));
+    expect(screen.queryByRole("complementary", { name: "Comments" })).not.toBeInTheDocument();
+    // DES-010: the panel is not a Radix overlay, so focus is restored
+    // by hand — to the bar icon that opened it.
+    expect(icon).toHaveFocus();
+    expect(icon).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("renders the thread flat and chronological, every row wearing its tier", async () => {
+    const user = userEvent.setup();
+    stubApi({
+      signedIn: MEMBER,
+      extra: pageApi(
+        commentsApi([
+          comment("c-1", "Redline goes back Friday.", "working_team"),
+          comment("c-2", "Hold the 1x cap.", "legal_only"),
+          comment("c-3", "Signature date is the 14th.", "full_thread", CASEY),
+        ]),
+      ),
+    });
+    renderAt("/contracts/42");
+    await openChat(user);
+
+    const thread = await screen.findByRole("list", { name: "Comments" });
+    const rows = within(thread).getAllByRole("listitem");
+    expect(rows.map((row) => within(row).getByText(/\.$/).textContent)).toEqual([
+      "Redline goes back Friday.",
+      "Hold the 1x cap.",
+      "Signature date is the 14th.",
+    ]);
+    expect(within(rows[0]!).getByText("Working team")).toBeInTheDocument();
+    expect(within(rows[1]!).getByText("Legal only")).toBeInTheDocument();
+    expect(within(rows[2]!).getByText("Full thread")).toBeInTheDocument();
+    expect(within(rows[2]!).getByText("Casey Contributor")).toBeInTheDocument();
+    // CMT-003: the tier reads peripherally, not by squinting at a badge
+    // — the row is washed and the badge carries DES-009's lock.
+    expect(rows[1]).toHaveClass("bg-legal-only-bg");
+    expect(rows[0]).not.toHaveClass("bg-legal-only-bg");
+    // Asserted structurally, for the reason this suite's header gives.
+    expect(within(rows[1]!).getByText("Legal only").querySelector("svg")).not.toBeNull();
+    expect(within(rows[0]!).getByText("Working team").querySelector("svg")).toBeNull();
+
+    // The panel header counts what is on screen — the filtered set is
+    // all there is, so no total can leak a hidden row.
+    const panel = screen.getByRole("complementary", { name: "Comments" });
+    expect(within(panel).getByText("3")).toBeInTheDocument();
+  });
+
+  it("says what the panel is for when nothing has been said", async () => {
+    const user = userEvent.setup();
+    stubApi({ signedIn: MEMBER, extra: pageApi(commentsApi()) });
+    renderAt("/contracts/42");
+    await openChat(user);
+
+    expect(
+      await screen.findByText(/Nothing has been said about this record yet/),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("list", { name: "Comments" })).not.toBeInTheDocument();
+  });
+
+  it("offers a Legal Team Member three segments, preset to Working team, each naming its audience", async () => {
+    const user = userEvent.setup();
+    stubApi({ signedIn: MEMBER, extra: pageApi(commentsApi()) });
+    renderAt("/contracts/42");
+    await openChat(user);
+
+    const panel = await screen.findByRole("complementary", { name: "Comments" });
+    const segments = within(panel).getAllByRole("radio");
+    expect(segments.map((segment) => segment.getAttribute("value"))).toEqual([
+      "legal_only",
+      "working_team",
+      "full_thread",
+    ]);
+    // DD-016: a record page opens on the working group, so the common
+    // case needs no decision.
+    expect(within(panel).getByRole("radio", { name: "Working team" })).toBeChecked();
+    expect(
+      within(panel).getByText("Visible to the legal team and Contributors on this record."),
+    ).toBeInTheDocument();
+
+    // The audience is named before the post, never after it (CMT-003).
+    await user.click(within(panel).getByRole("radio", { name: "Legal only" }));
+    expect(
+      within(panel).getByText("Visible to Administrators and Legal Team Members."),
+    ).toBeInTheDocument();
+  });
+
+  it("posts at the selected tier and puts the new comment at the end of the thread", async () => {
+    const user = userEvent.setup();
+    const comments = commentsApi([comment("c-1", "Redline goes back Friday.", "working_team")]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+    renderAt("/contracts/42");
+    await openChat(user);
+
+    const panel = await screen.findByRole("complementary", { name: "Comments" });
+    await user.click(within(panel).getByRole("radio", { name: "Legal only" }));
+    await user.type(within(panel).getByLabelText("New comment"), "Hold the 1x cap.");
+    await user.click(within(panel).getByRole("button", { name: "Comment" }));
+
+    await waitFor(() => {
+      expect(comments.posts).toEqual([
+        {
+          entityType: "contract",
+          entityId: "c1",
+          body: "Hold the 1x cap.",
+          visibility: "legal_only",
+          mentions: [],
+        },
+      ]);
+    });
+    const rows = within(await screen.findByRole("list", { name: "Comments" })).getAllByRole(
+      "listitem",
+    );
+    expect(rows).toHaveLength(2);
+    expect(within(rows[1]!).getByText("Hold the 1x cap.")).toBeInTheDocument();
+    expect(within(rows[1]!).getByText("Legal only")).toBeInTheDocument();
+    // The box empties, so the next comment starts clean.
+    expect(within(panel).getByLabelText("New comment")).toHaveValue("");
+  });
+
+  it("gives a Contributor two segments and no trace of a Legal Only comment", async () => {
+    const user = userEvent.setup();
+    // The API filtered at query time, so the Legal Only row is not in
+    // the answer at all — there is no placeholder here to render.
+    const comments = commentsApi([
+      comment("c-1", "Redline goes back Friday.", "working_team"),
+      comment("c-3", "Signature date is the 14th.", "full_thread"),
+    ]);
+    const record = recordApi(contractRow(), [person("u1", "creator"), person("u3", "contributor")]);
+    stubApi({
+      signedIn: CONTRIBUTOR,
+      extra: (call: StubCall) =>
+        comments.handler(call) ??
+        (["/api/v1/contracts/options", "/api/v1/entities"].includes(call.url.pathname)
+          ? problem(403, "You do not have permission to perform this action.")
+          : record.handler(call)),
+    });
+    renderAt("/contracts/42");
+    await openChat(user);
+
+    const panel = await screen.findByRole("complementary", { name: "Comments" });
+    // Absent, not disabled — the same convention the nav and the
+    // settings rail follow. The seam refuses the tier regardless.
+    expect(
+      within(panel)
+        .getAllByRole("radio")
+        .map((radio) => radio.getAttribute("value")),
+    ).toEqual(["working_team", "full_thread"]);
+    expect(within(panel).queryByRole("radio", { name: "Legal only" })).not.toBeInTheDocument();
+
+    const rows = within(await screen.findByRole("list", { name: "Comments" })).getAllByRole(
+      "listitem",
+    );
+    expect(rows).toHaveLength(2);
+    expect(within(panel).queryByText("Legal only")).not.toBeInTheDocument();
+    expect(panel.textContent).not.toContain("1x cap");
+    // The count is the filtered set's, so it hides no gap either.
+    expect(within(panel).getByText("2")).toBeInTheDocument();
+  });
+
+  it("lets a Contributor post into the rooms they are in", async () => {
+    const user = userEvent.setup();
+    const comments = commentsApi();
+    const record = recordApi(contractRow(), [person("u1", "creator"), person("u3", "contributor")]);
+    stubApi({
+      signedIn: CONTRIBUTOR,
+      extra: (call: StubCall) =>
+        comments.handler(call) ??
+        (["/api/v1/contracts/options", "/api/v1/entities"].includes(call.url.pathname)
+          ? problem(403, "You do not have permission to perform this action.")
+          : record.handler(call)),
+    });
+    renderAt("/contracts/42");
+    await openChat(user);
+
+    const panel = await screen.findByRole("complementary", { name: "Comments" });
+    await user.type(within(panel).getByLabelText("New comment"), "Procurement has the PO ready.");
+    await user.click(within(panel).getByRole("button", { name: "Comment" }));
+
+    await waitFor(() => {
+      expect(comments.posts).toEqual([
+        {
+          entityType: "contract",
+          entityId: "c1",
+          body: "Procurement has the PO ready.",
+          visibility: "working_team",
+          mentions: [],
+        },
+      ]);
+    });
+  });
+
+  it("says so when the thread cannot be read, and still takes a comment", async () => {
+    const user = userEvent.setup();
+    const comments = commentsApi();
+    let readsRefused = true;
+    const record = recordApi(contractRow());
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call: StubCall) => {
+        if (call.url.pathname === "/api/v1/comments" && call.method === "GET" && readsRefused) {
+          return problem(503, "The conversation is unavailable.");
+        }
+        return comments.handler(call) ?? record.handler(call);
+      },
+    });
+    renderAt("/contracts/42");
+    await openChat(user);
+
+    const panel = await screen.findByRole("complementary", { name: "Comments" });
+    expect(await within(panel).findByRole("alert")).toHaveTextContent(
+      "The conversation could not be read. Reopen the panel to try again.",
+    );
+    // A failed read draws no thread and no count — there is nothing to
+    // be honest about, so nothing is claimed.
+    expect(within(panel).queryByRole("list", { name: "Comments" })).not.toBeInTheDocument();
+    expect(within(panel).queryByText("0")).not.toBeInTheDocument();
+
+    // The composer is still the composer: the read failed, not the post.
+    readsRefused = false;
+    await user.type(within(panel).getByLabelText("New comment"), "Saying it anyway.");
+    await user.click(within(panel).getByRole("button", { name: "Comment" }));
+    await waitFor(() => {
+      expect(comments.posts).toHaveLength(1);
+    });
+    // And the thread it could not read stays unread. Folding the posted
+    // row into the failure would draw a one-row conversation under the
+    // load error, which reads as the whole of it.
+    expect(within(panel).queryByRole("list", { name: "Comments" })).not.toBeInTheDocument();
+  });
+
+  it("says so when the post is refused, and keeps the draft", async () => {
+    const user = userEvent.setup();
+    const record = recordApi(contractRow());
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call: StubCall) => {
+        if (call.url.pathname === "/api/v1/comments" && call.method === "GET") {
+          return json(200, { comments: [] });
+        }
+        if (call.url.pathname === "/api/v1/comments" && call.method === "POST") {
+          return problem(403, "You cannot post a comment at that visibility tier.");
+        }
+        return record.handler(call);
+      },
+    });
+    renderAt("/contracts/42");
+    await openChat(user);
+
+    const panel = await screen.findByRole("complementary", { name: "Comments" });
+    await user.type(within(panel).getByLabelText("New comment"), "Into a room I am not in.");
+    await user.click(within(panel).getByRole("button", { name: "Comment" }));
+
+    expect(await within(panel).findByRole("alert")).toHaveTextContent(
+      "You cannot post a comment at that visibility tier.",
+    );
+    expect(within(panel).getByLabelText("New comment")).toHaveValue("Into a room I am not in.");
+  });
+
+  /**
+   * Mentions and tier promotion (M9/3).
+   *
+   * The composer stays plain text. Typing `@` opens the typeahead over
+   * the people this record can reach; picking one writes their name into
+   * the box and puts them on the list the post carries, so who a comment
+   * addresses is a list and not a substring of prose (CMT-007).
+   *
+   * The promotion confirmation is asserted as what it is: an
+   * explanation. It names who cannot hear the comment, offers the
+   * narrowest tier that reaches them, and on cancel leaves the box
+   * untouched and posts nothing. The refusal that holds when no dialog
+   * was shown lives at the API seam, and is asserted there.
+   */
+  describe("mentions and tier promotion (M9/3)", () => {
+    /** Opens the panel and answers the composer's box. */
+    async function composerIn(user: ReturnType<typeof userEvent.setup>) {
+      await openChat(user);
+      const panel = await screen.findByRole("complementary", { name: "Comments" });
+      return { panel, box: within(panel).getByLabelText("New comment") };
+    }
+
+    it("opens a typeahead on @ and turns a pick into a chip carrying the person's name", async () => {
+      const user = userEvent.setup();
+      stubApi({ signedIn: MEMBER, extra: pageApi(commentsApi()) });
+      renderAt("/contracts/42");
+      const { panel, box } = await composerIn(user);
+
+      await user.type(box, "@Cas");
+      const list = await within(panel).findByRole("listbox", { name: "People you can mention" });
+      // Narrowed to what was typed: the other candidate is not offered.
+      expect(within(list).getAllByRole("option")).toHaveLength(1);
+      expect(within(list).getByRole("option", { name: "Casey Contributor" })).toBeInTheDocument();
+
+      await user.click(within(list).getByRole("option", { name: "Casey Contributor" }));
+      // The name goes into the text, where the author is typing.
+      expect(box).toHaveValue("@Casey Contributor ");
+      // And the person goes onto the list the post will carry, drawn as
+      // a chip rather than as raw text.
+      const mentioned = within(panel).getByRole("list", { name: "Mentioned" });
+      expect(within(mentioned).getByText("Casey Contributor")).toBeInTheDocument();
+    });
+
+    it("picks the active row with Enter rather than posting a half-written comment", async () => {
+      const user = userEvent.setup();
+      const comments = commentsApi();
+      stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+      renderAt("/contracts/42");
+      const { box } = await composerIn(user);
+
+      await user.type(box, "@Nadia{Enter}");
+      expect(box).toHaveValue("@Nadia Counsel ");
+      expect(comments.posts).toEqual([]);
+    });
+
+    it("posts the mentioned people as a list beside the plain-text body", async () => {
+      const user = userEvent.setup();
+      const comments = commentsApi();
+      stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+      renderAt("/contracts/42");
+      const { panel, box } = await composerIn(user);
+
+      await user.type(box, "@Casey{Enter}");
+      await user.type(box, "what did procurement say?");
+      await user.click(within(panel).getByRole("button", { name: "Comment" }));
+
+      await waitFor(() => {
+        expect(comments.posts).toEqual([
+          {
+            entityType: "contract",
+            entityId: "c1",
+            body: "@Casey Contributor what did procurement say?",
+            visibility: "working_team",
+            mentions: ["u3"],
+          },
+        ]);
+      });
+    });
+
+    it("drops a mention when its name is taken out of the box", async () => {
+      const user = userEvent.setup();
+      const comments = commentsApi();
+      stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+      renderAt("/contracts/42");
+      const { panel, box } = await composerIn(user);
+
+      await user.type(box, "@Casey{Enter}over to you.");
+      expect(within(panel).getByRole("list", { name: "Mentioned" })).toBeInTheDocument();
+
+      // The chip's own control takes the name out of the text too, so
+      // nothing is left addressing somebody the post does not name.
+      await user.click(within(panel).getByRole("button", { name: "Remove Casey Contributor" }));
+      expect(box).toHaveValue("over to you.");
+      expect(within(panel).queryByRole("list", { name: "Mentioned" })).not.toBeInTheDocument();
+
+      await user.click(within(panel).getByRole("button", { name: "Comment" }));
+      await waitFor(() => {
+        expect(comments.posts).toEqual([
+          {
+            entityType: "contract",
+            entityId: "c1",
+            body: "over to you.",
+            visibility: "working_team",
+            mentions: [],
+          },
+        ]);
+      });
+    });
+
+    it("asks before posting a Legal Only comment that names a Contributor, and offers the narrowest tier", async () => {
+      const user = userEvent.setup();
+      const comments = commentsApi();
+      stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+      renderAt("/contracts/42");
+      const { panel, box } = await composerIn(user);
+
+      await user.click(within(panel).getByRole("radio", { name: "Legal only" }));
+      await user.type(box, "@Casey{Enter}what did procurement say?");
+      await user.click(within(panel).getByRole("button", { name: "Comment" }));
+
+      const dialog = await screen.findByRole("dialog");
+      expect(within(dialog).getByText("Widen the audience?")).toBeInTheDocument();
+      // It names the person, and it offers Working team — the narrowest
+      // tier that includes them, never a jump to Full thread.
+      expect(dialog.textContent).toContain("Casey Contributor cannot see a legal only comment");
+      expect(dialog.textContent).toContain("working team");
+      expect(dialog.textContent).not.toContain("full thread");
+      // Nothing is posted while the question is open.
+      expect(comments.posts).toEqual([]);
+
+      await user.click(within(dialog).getByRole("button", { name: "Widen and post" }));
+      await waitFor(() => {
+        expect(comments.posts).toEqual([
+          {
+            entityType: "contract",
+            entityId: "c1",
+            body: "@Casey Contributor what did procurement say?",
+            visibility: "working_team",
+            mentions: ["u3"],
+          },
+        ]);
+      });
+    });
+
+    it("cancels the promotion, posting nothing and keeping the text and the mention", async () => {
+      const user = userEvent.setup();
+      const comments = commentsApi();
+      stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+      renderAt("/contracts/42");
+      const { panel, box } = await composerIn(user);
+
+      await user.click(within(panel).getByRole("radio", { name: "Legal only" }));
+      await user.type(box, "@Casey{Enter}what did procurement say?");
+      await user.click(within(panel).getByRole("button", { name: "Comment" }));
+
+      const dialog = await screen.findByRole("dialog");
+      await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      });
+      expect(comments.posts).toEqual([]);
+      // The composer is exactly as it was, so changing the mention is as
+      // available as widening the room.
+      expect(within(panel).getByLabelText("New comment")).toHaveValue(
+        "@Casey Contributor what did procurement say?",
+      );
+      expect(
+        within(within(panel).getByRole("list", { name: "Mentioned" })).getByText(
+          "Casey Contributor",
+        ),
+      ).toBeInTheDocument();
+      expect(within(panel).getByRole("radio", { name: "Legal only" })).toBeChecked();
+    });
+
+    it("asks nothing when everybody named already hears the selected tier", async () => {
+      const user = userEvent.setup();
+      const comments = commentsApi();
+      stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+      renderAt("/contracts/42");
+      const { panel, box } = await composerIn(user);
+
+      await user.click(within(panel).getByRole("radio", { name: "Legal only" }));
+      await user.type(box, "@Nadia{Enter}hold the 1x cap.");
+      await user.click(within(panel).getByRole("button", { name: "Comment" }));
+
+      await waitFor(() => {
+        expect(comments.posts).toEqual([
+          {
+            entityType: "contract",
+            entityId: "c1",
+            body: "@Nadia Counsel hold the 1x cap.",
+            visibility: "legal_only",
+            mentions: ["u2"],
+          },
+        ]);
+      });
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    it("renders a posted comment's mentions as chips, not as raw text", async () => {
+      const user = userEvent.setup();
+      stubApi({
+        signedIn: MEMBER,
+        extra: pageApi(
+          commentsApi([
+            comment(
+              "c-1",
+              "@Casey Contributor what did procurement say?",
+              "working_team",
+              AUTHOR,
+              "2026-08-12T09:00:00.000Z",
+              [{ id: "u3", displayName: "Casey Contributor" }],
+            ),
+          ]),
+        ),
+      });
+      renderAt("/contracts/42");
+      await openChat(user);
+
+      const row = within(await screen.findByRole("list", { name: "Comments" })).getAllByRole(
+        "listitem",
+      )[0]!;
+      // The name is its own element, so it reads as a person; the rest
+      // of the sentence is still the author's plain text.
+      const chip = within(row).getByText("@Casey Contributor");
+      expect(chip.tagName).toBe("SPAN");
+      expect(row.textContent).toContain("@Casey Contributor what did procurement say?");
+    });
+
+    it("never asks a Contributor to promote, because every name they are offered hears their tiers", async () => {
+      const user = userEvent.setup();
+      const comments = commentsApi();
+      const record = recordApi(contractRow(), [
+        person("u1", "creator"),
+        person("u3", "contributor"),
+      ]);
+      stubApi({
+        signedIn: CONTRIBUTOR,
+        extra: (call: StubCall) =>
+          comments.handler(call) ??
+          (["/api/v1/contracts/options", "/api/v1/entities"].includes(call.url.pathname)
+            ? problem(403, "You do not have permission to perform this action.")
+            : record.handler(call)),
+      });
+      renderAt("/contracts/42");
+      const { panel, box } = await composerIn(user);
+
+      // No Legal Only segment to select, so no mention can need one.
+      expect(within(panel).queryByRole("radio", { name: "Legal only" })).not.toBeInTheDocument();
+      await user.type(box, "@Nadia{Enter}we are ready.");
+      await user.click(within(panel).getByRole("button", { name: "Comment" }));
+
+      await waitFor(() => {
+        expect(comments.posts).toEqual([
+          {
+            entityType: "contract",
+            entityId: "c1",
+            body: "@Nadia Counsel we are ready.",
+            visibility: "working_team",
+            mentions: ["u2"],
+          },
+        ]);
+      });
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+  });
+
+  /**
+   * Editing, deleting, and redacting a comment (M9/4, DES-025).
+   *
+   * Three corrections, three owners. The row's menu offers what this
+   * viewer may do and nothing else — absent, not disabled. An edited row
+   * wears the marker; a removed row keeps its place as a tombstone, and
+   * the tombstone says which hand removed it, because an author taking
+   * their own words back and an Administrator removing text from the
+   * record are different facts.
+   */
+  describe("correcting a comment", () => {
+    const ADMINISTRATOR = {
+      id: "u1",
+      email: "admin@example.com",
+      displayName: "Ada Admin",
+      role: "administrator",
+    };
+
+    /** Opens the panel and answers its rows. */
+    async function rowsIn(
+      user: ReturnType<typeof userEvent.setup>,
+      api: ReturnType<typeof commentsApi>,
+      signedIn: typeof MEMBER = MEMBER,
+    ) {
+      stubApi({ signedIn, extra: pageApi(api) });
+      renderAt("/contracts/42");
+      await openChat(user);
+      const thread = await screen.findByRole("list", { name: "Comments" });
+      return within(thread).getAllByRole("listitem");
+    }
+
+    /** Opens one row's overflow menu. */
+    async function menuIn(user: ReturnType<typeof userEvent.setup>, row: HTMLElement) {
+      await user.click(within(row).getByRole("button", { name: "Comment actions" }));
+      return screen.findByRole("menu");
+    }
+
+    it("lets the author edit their own comment, and marks the row edited", async () => {
+      const user = userEvent.setup();
+      const api = commentsApi([comment("c-1", "Redline goes back Thusday.", "working_team")]);
+      const [row] = await rowsIn(user, api);
+
+      // Nothing to report before the edit.
+      expect(within(row!).queryByText("edited")).not.toBeInTheDocument();
+
+      await user.click(within(await menuIn(user, row!)).getByRole("menuitem", { name: "Edit" }));
+      const box = within(row!).getByLabelText("Edit comment");
+      expect(box).toHaveValue("Redline goes back Thusday.");
+      await user.clear(box);
+      await user.type(box, "Redline goes back Thursday.");
+      await user.click(within(row!).getByRole("button", { name: "Save" }));
+
+      await waitFor(() => {
+        expect(api.corrections).toEqual([
+          { method: "PATCH", id: "c-1", body: { body: "Redline goes back Thursday." } },
+        ]);
+      });
+      // The new text, and the marker that says a reader's copy is stale.
+      expect(await within(row!).findByText("Redline goes back Thursday.")).toBeInTheDocument();
+      expect(within(row!).getByText("edited")).toBeInTheDocument();
+      expect(within(row!).queryByLabelText("Edit comment")).not.toBeInTheDocument();
+    });
+
+    it("cancels an edit, putting the row back with nothing sent", async () => {
+      const user = userEvent.setup();
+      const api = commentsApi([comment("c-1", "As it was.", "working_team")]);
+      const [row] = await rowsIn(user, api);
+
+      await user.click(within(await menuIn(user, row!)).getByRole("menuitem", { name: "Edit" }));
+      await user.type(within(row!).getByLabelText("Edit comment"), " And more.");
+      await user.click(within(row!).getByRole("button", { name: "Cancel" }));
+
+      expect(within(row!).getByText("As it was.")).toBeInTheDocument();
+      expect(within(row!).queryByLabelText("Edit comment")).not.toBeInTheDocument();
+      expect(api.corrections).toEqual([]);
+    });
+
+    it("draws the edited marker on a row that arrived edited", async () => {
+      const user = userEvent.setup();
+      const api = commentsApi([
+        comment("c-1", "Plain.", "working_team"),
+        comment("c-2", "Corrected.", "working_team", AUTHOR, "2026-08-12T09:00:00.000Z", [], {
+          editedAt: "2026-08-12T10:00:00.000Z",
+        }),
+      ]);
+      const rows = await rowsIn(user, api);
+
+      expect(within(rows[0]!).queryByText("edited")).not.toBeInTheDocument();
+      expect(within(rows[1]!).getByText("edited")).toBeInTheDocument();
+    });
+
+    it("soft-deletes the author's own comment, leaving a tombstone in its place", async () => {
+      const user = userEvent.setup();
+      const api = commentsApi([
+        comment("c-1", "Before.", "working_team"),
+        comment("c-2", "Said in error.", "working_team"),
+        comment("c-3", "After.", "working_team"),
+      ]);
+      const rows = await rowsIn(user, api);
+
+      await user.click(
+        within(await menuIn(user, rows[1]!)).getByRole("menuitem", { name: "Delete" }),
+      );
+      const dialog = await screen.findByRole("dialog");
+      expect(within(dialog).getByText("Delete this comment?")).toBeInTheDocument();
+      await user.click(within(dialog).getByRole("button", { name: "Delete" }));
+
+      await waitFor(() => {
+        expect(api.corrections).toEqual([{ method: "DELETE", id: "c-2" }]);
+      });
+      // Nothing above or below shifted, and the text is gone.
+      const after = within(await screen.findByRole("list", { name: "Comments" })).getAllByRole(
+        "listitem",
+      );
+      expect(after).toHaveLength(3);
+      expect(within(after[0]!).getByText("Before.")).toBeInTheDocument();
+      expect(within(after[1]!).getByText("Comment deleted by its author.")).toBeInTheDocument();
+      expect(within(after[1]!).queryByText("Said in error.")).not.toBeInTheDocument();
+      expect(within(after[2]!).getByText("After.")).toBeInTheDocument();
+    });
+
+    it("cancels a delete, sending nothing", async () => {
+      const user = userEvent.setup();
+      const api = commentsApi([comment("c-1", "Still here.", "working_team")]);
+      const [row] = await rowsIn(user, api);
+
+      await user.click(within(await menuIn(user, row!)).getByRole("menuitem", { name: "Delete" }));
+      const dialog = await screen.findByRole("dialog");
+      await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(api.corrections).toEqual([]);
+      expect(within(row!).getByText("Still here.")).toBeInTheDocument();
+    });
+
+    it("gives an Administrator the redact on somebody else's comment, and no edit or delete", async () => {
+      const user = userEvent.setup();
+      const api = commentsApi([comment("c-1", "Pasted into the wrong record.", "working_team")]);
+      const [row] = await rowsIn(user, api, ADMINISTRATOR);
+
+      // A correction to somebody else's words is a redact, not an edit.
+      const menu = await menuIn(user, row!);
+      expect(
+        within(menu)
+          .getAllByRole("menuitem")
+          .map((item) => item.textContent),
+      ).toEqual(["Redact"]);
+
+      await user.click(within(menu).getByRole("menuitem", { name: "Redact" }));
+      const dialog = await screen.findByRole("dialog");
+      expect(within(dialog).getByText("Redact this comment?")).toBeInTheDocument();
+      await user.click(within(dialog).getByRole("button", { name: "Redact" }));
+
+      await waitFor(() => {
+        expect(api.corrections).toEqual([{ method: "REDACT", id: "c-1" }]);
+      });
+      const after = within(await screen.findByRole("list", { name: "Comments" })).getAllByRole(
+        "listitem",
+      );
+      // The tombstone names the hand that removed it.
+      expect(
+        within(after[0]!).getByText("Comment removed by an Administrator."),
+      ).toBeInTheDocument();
+      expect(
+        within(after[0]!).queryByText("Pasted into the wrong record."),
+      ).not.toBeInTheDocument();
+    });
+
+    it("still offers the redact on a comment the author already deleted", async () => {
+      const user = userEvent.setup();
+      // The case the redact exists for: a soft delete only moved the
+      // text to comment_revisions, and this is what takes it out.
+      const api = commentsApi([
+        comment("c-1", "", "working_team", AUTHOR, "2026-08-12T09:00:00.000Z", [], {
+          deletedAt: "2026-08-12T10:00:00.000Z",
+        }),
+      ]);
+      const [row] = await rowsIn(user, api, ADMINISTRATOR);
+
+      expect(within(row!).getByText("Comment deleted by its author.")).toBeInTheDocument();
+      const menu = await menuIn(user, row!);
+      expect(
+        within(menu)
+          .getAllByRole("menuitem")
+          .map((item) => item.textContent),
+      ).toEqual(["Redact"]);
+    });
+
+    it("offers the author edit and delete, and no redact", async () => {
+      const user = userEvent.setup();
+      const api = commentsApi([comment("c-1", "My own words.", "working_team")]);
+      const [row] = await rowsIn(user, api);
+
+      const menu = await menuIn(user, row!);
+      expect(
+        within(menu)
+          .getAllByRole("menuitem")
+          .map((item) => item.textContent),
+      ).toEqual(["Edit", "Delete"]);
+    });
+
+    it("gives a non-author who is no Administrator no menu at all", async () => {
+      const user = userEvent.setup();
+      const api = commentsApi([comment("c-1", "Not yours.", "working_team")]);
+      const record = recordApi(contractRow(), [
+        person("u1", "creator"),
+        person("u3", "contributor"),
+      ]);
+      stubApi({
+        signedIn: CONTRIBUTOR,
+        extra: (call: StubCall) =>
+          api.handler(call) ??
+          (["/api/v1/contracts/options", "/api/v1/entities"].includes(call.url.pathname)
+            ? problem(403, "You do not have permission to perform this action.")
+            : record.handler(call)),
+      });
+      renderAt("/contracts/42");
+      await openChat(user);
+
+      const thread = await screen.findByRole("list", { name: "Comments" });
+      const [row] = within(thread).getAllByRole("listitem");
+      expect(
+        within(row!).queryByRole("button", { name: "Comment actions" }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("draws no menu on a comment already redacted", async () => {
+      const user = userEvent.setup();
+      const api = commentsApi([
+        comment("c-1", "", "working_team", CASEY, "2026-08-12T09:00:00.000Z", [], {
+          redactedAt: "2026-08-12T10:00:00.000Z",
+        }),
+      ]);
+      const [row] = await rowsIn(user, api, ADMINISTRATOR);
+
+      expect(within(row!).getByText("Comment removed by an Administrator.")).toBeInTheDocument();
+      expect(
+        within(row!).queryByRole("button", { name: "Comment actions" }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("keeps the edit box and its text when a save is refused", async () => {
+      const user = userEvent.setup();
+      const api = commentsApi([comment("c-1", "As it was.", "working_team")]);
+      const record = recordApi(contractRow());
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call: StubCall) =>
+          call.url.pathname === "/api/v1/comments/c-1" && call.method === "PATCH"
+            ? problem(409, "This comment has been removed. Its text cannot be changed.")
+            : (api.handler(call) ?? record.handler(call)),
+      });
+      renderAt("/contracts/42");
+      await openChat(user);
+      const thread = await screen.findByRole("list", { name: "Comments" });
+      const [row] = within(thread).getAllByRole("listitem");
+
+      await user.click(within(await menuIn(user, row!)).getByRole("menuitem", { name: "Edit" }));
+      const box = within(row!).getByLabelText("Edit comment");
+      await user.clear(box);
+      await user.type(box, "A correction that never lands.");
+      await user.click(within(row!).getByRole("button", { name: "Save" }));
+
+      expect(await within(row!).findByRole("alert")).toHaveTextContent(
+        "This comment has been removed. Its text cannot be changed.",
+      );
+      // Nothing typed is lost to a failed save.
+      expect(within(row!).getByLabelText("Edit comment")).toHaveValue(
+        "A correction that never lands.",
+      );
+    });
+
+    it("says so when a correction is refused, and leaves the row as it was", async () => {
+      const user = userEvent.setup();
+      const api = commentsApi([comment("c-1", "Mine to take back.", "working_team")]);
+      const record = recordApi(contractRow());
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call: StubCall) =>
+          call.url.pathname === "/api/v1/comments/c-1" && call.method === "DELETE"
+            ? problem(403, "Only the author can delete a comment.")
+            : (api.handler(call) ?? record.handler(call)),
+      });
+      renderAt("/contracts/42");
+      await openChat(user);
+      const thread = await screen.findByRole("list", { name: "Comments" });
+      const [row] = within(thread).getAllByRole("listitem");
+
+      await user.click(within(await menuIn(user, row!)).getByRole("menuitem", { name: "Delete" }));
+      const dialog = await screen.findByRole("dialog");
+      await user.click(within(dialog).getByRole("button", { name: "Delete" }));
+
+      expect(await within(row!).findByRole("alert")).toHaveTextContent(
+        "Only the author can delete a comment.",
+      );
+      expect(within(row!).getByText("Mine to take back.")).toBeInTheDocument();
+    });
+  });
+
+  /**
+   * The unread badge (M9/5, CMT-004).
+   *
+   * The count is the seam's, never the panel's: the API computes it over
+   * the filtered set, and the icon draws the number it was given. So
+   * these tests assert what the icon says and what the panel told the
+   * seam — the two things a reader and the database can each see.
+   *
+   * The badge itself is decorative, because the count is folded into the
+   * icon's accessible name (`applets.labelWithBadge`). That name is what
+   * is asserted: a reader on a screen reader hears "Comments (3)", and a
+   * cleared badge is an icon named "Comments" again.
+   */
+  describe("the unread badge", () => {
+    it("carries the seam's count on the chat icon, and on no other applet", async () => {
+      stubApi({ signedIn: ADMIN, extra: pageApi(commentsApi([], CANDIDATES, 3)) });
+      renderAt("/contracts/42");
+
+      const bar = await screen.findByRole("toolbar", { name: "Applets" });
+      expect(await within(bar).findByRole("button", { name: "Comments (3)" })).toBeInTheDocument();
+      // CMT-004: chat is the only applet that carries one. The settings
+      // deep-link is the record's other slot, and it is named plainly.
+      expect(within(bar).getByRole("link", { name: "Contract settings" })).toBeInTheDocument();
+    });
+
+    it("draws no badge when there is nothing unread", async () => {
+      stubApi({ signedIn: MEMBER, extra: pageApi(commentsApi()) });
+      renderAt("/contracts/42");
+
+      const bar = await screen.findByRole("toolbar", { name: "Applets" });
+      expect(await within(bar).findByRole("button", { name: "Comments" })).toBeInTheDocument();
+    });
+
+    it("marks the record read when the panel opens, and the badge clears", async () => {
+      const user = userEvent.setup();
+      const comments = commentsApi(
+        [comment("c-1", "Redline goes back Friday.", "working_team", CASEY)],
+        CANDIDATES,
+        2,
+      );
+      stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+      renderAt("/contracts/42");
+
+      const bar = await screen.findByRole("toolbar", { name: "Applets" });
+      const icon = await within(bar).findByRole("button", { name: "Comments (2)" });
+      await user.click(icon);
+      await screen.findByRole("complementary", { name: "Comments" });
+
+      // The panel says it has read the record, by the same entity
+      // reference the thread is keyed by.
+      await waitFor(() => {
+        expect(comments.marksRead).toEqual([{ entityType: "contract", entityId: "c1" }]);
+      });
+      await waitFor(() => {
+        expect(within(bar).getByRole("button", { name: "Comments" })).toBeInTheDocument();
+      });
+    });
+
+    it("keeps the badge when the thread could not be read", async () => {
+      const user = userEvent.setup();
+      const comments = commentsApi([], CANDIDATES, 2);
+      const record = recordApi(contractRow());
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call: StubCall) =>
+          call.url.pathname === "/api/v1/comments" && call.method === "GET"
+            ? problem(500, "The conversation could not be read.")
+            : (comments.handler(call) ?? record.handler(call)),
+      });
+      renderAt("/contracts/42");
+
+      const bar = await screen.findByRole("toolbar", { name: "Applets" });
+      await user.click(await within(bar).findByRole("button", { name: "Comments (2)" }));
+      const panel = await screen.findByRole("complementary", { name: "Comments" });
+      expect(await within(panel).findByRole("alert")).toHaveTextContent(
+        "The conversation could not be read.",
+      );
+
+      // Nothing was shown, so nothing was read. Clearing the badge here
+      // would take the signal away without delivering what it points at.
+      expect(comments.marksRead).toEqual([]);
+      expect(within(bar).getByRole("button", { name: "Comments (2)" })).toBeInTheDocument();
+    });
+  });
+});
+
+describe("the contract record's history applet (M9/6)", () => {
+  const NADIA = { id: "u2", displayName: "Nadia Counsel", image: null, archived: false };
+
+  /** One activity entry as the seam answers it. */
+  function entry(
+    id: string,
+    action: string,
+    payload: Record<string, unknown> = {},
+    visibility = "working_team",
+    createdAt = "2026-08-12T09:00:00.000Z",
+    actor: typeof NADIA | null = NADIA,
+  ) {
+    return { id, action, visibility, actor, createdAt, payload };
+  }
+
+  /**
+   * The feed seam, paged the way the API is: one page and a cursor, and
+   * the cursor names where the next page starts. The handler records
+   * every cursor it was asked for, so paging is asserted at the seam
+   * rather than by counting rows on screen.
+   */
+  function activityApi(pages: ReturnType<typeof entry>[][]) {
+    const cursors: (string | null)[] = [];
+    /** The reference each read was keyed by, so the entity-generic
+     * claim is asserted rather than assumed. */
+    const reads: Record<string, string | null>[] = [];
+    const handler = (call: StubCall): Response | undefined => {
+      if (call.url.pathname !== "/api/v1/activity" || call.method !== "GET") return undefined;
+      const cursor = call.url.searchParams.get("cursor");
+      cursors.push(cursor);
+      reads.push({
+        entityType: call.url.searchParams.get("entityType"),
+        entityId: call.url.searchParams.get("entityId"),
+      });
+      const index = cursor === null ? 0 : pages.findIndex((page) => page.at(-1)?.id === cursor) + 1;
+      const entries = pages[index] ?? [];
+      const next = pages[index + 1] ? (entries.at(-1)?.id ?? null) : null;
+      return json(200, { entries, nextCursor: next });
+    };
+    return { handler, cursors, reads };
+  }
+
+  function pageApi(activity: ReturnType<typeof activityApi>, record = recordApi(contractRow())) {
+    return (call: StubCall) => activity.handler(call) ?? record.handler(call);
+  }
+
+  /** Opens the history panel from the activity bar and answers its icon. */
+  async function openHistory(user: ReturnType<typeof userEvent.setup>) {
+    const bar = await screen.findByRole("toolbar", { name: "Applets" });
+    const icon = within(bar).getByRole("button", { name: "History" });
+    await user.click(icon);
+    return icon;
+  }
+
+  it("opens and closes the history panel from the bar, beside chat and settings", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([[entry("a1", "contract.created")]]);
+    stubApi({ signedIn: ADMIN, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+
+    const bar = await screen.findByRole("toolbar", { name: "Applets" });
+    // The third slot, joining the two that were already there.
+    expect(within(bar).getByRole("button", { name: "Comments" })).toBeInTheDocument();
+    expect(within(bar).getByRole("link", { name: "Contract settings" })).toBeInTheDocument();
+
+    const icon = await openHistory(user);
+    const panel = await screen.findByRole("complementary", { name: "History" });
+    expect(icon).toHaveAttribute("aria-expanded", "true");
+    // Keyed by the record's entity reference, never by its CTR-003
+    // number — that is what makes the panel entity-generic.
+    await waitFor(() => {
+      expect(activity.reads).toEqual([{ entityType: "contract", entityId: "c1" }]);
+    });
+    expect(activity.cursors).toEqual([null]);
+
+    await user.click(within(panel).getByRole("button", { name: "Close" }));
+    expect(screen.queryByRole("complementary", { name: "History" })).not.toBeInTheDocument();
+    expect(icon).toHaveFocus();
+  });
+
+  it("reads nothing until the panel is opened", async () => {
+    const activity = activityApi([[entry("a1", "contract.created")]]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+
+    await screen.findByRole("toolbar", { name: "Applets" });
+    // The chat applet's badge is read as the page opens (CMT-004). The
+    // feed is not: a closed panel is a tool nobody has asked for.
+    expect(activity.cursors).toEqual([]);
+  });
+
+  it("writes each entry as a sentence naming the actor and the action", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([
+      [
+        entry("a5", "comment.posted", { commentId: "c9" }, "legal_only"),
+        entry("a4", "contract.counterparty_added", { counterparty: "Orion Cloud Ltd" }),
+        entry("a3", "contract.team_removed", { member: "Casey Contributor", role: "contributor" }),
+        entry("a2", "contract.team_added", { member: "Casey Contributor", role: "contributor" }),
+        entry("a1", "contract.created", { number: 42, title: "Acme master services agreement" }),
+      ],
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const feed = await screen.findByRole("list", { name: "History" });
+    const rows = within(feed).getAllByRole("listitem");
+    // Newest first, as a history is read.
+    expect(rows.map((row) => row.textContent)).toEqual([
+      expect.stringContaining("Nadia Counsel commented"),
+      expect.stringContaining("Nadia Counsel added Orion Cloud Ltd on the other side"),
+      // The role reads in the Team card's own words, not as the stored
+      // slug: one fact, named the same way on both surfaces.
+      expect.stringContaining("Nadia Counsel took Casey Contributor off the team as Contributor"),
+      expect.stringContaining("Nadia Counsel added Casey Contributor to the team as Contributor"),
+      expect.stringContaining("Nadia Counsel created this contract"),
+    ]);
+  });
+
+  it("shows the old and the new value of a field edit, formatted as the record formats them", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([
+      [
+        entry("a3", "contract.updated", {
+          changed: {
+            value: { from: null, to: { amount: 12_000_000, currency: "USD", cadence: "annually" } },
+          },
+        }),
+        entry("a2", "contract.updated", {
+          changed: {
+            title: { from: "Old title", to: "New title" },
+            priority: { from: "medium", to: "critical" },
+            // A custom field's key is namespaced by its slug; the label
+            // comes from the type's attached fields, which the record
+            // page holds and hands to the narration.
+            "field.payment_terms": { from: null, to: "Net 45" },
+          },
+        }),
+        entry("a1", "contract.status_changed", {
+          from: "Draft",
+          to: "Internal review",
+          fromStage: "draft",
+          toStage: "review",
+        }),
+      ],
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const feed = await screen.findByRole("list", { name: "History" });
+    const [value, edit, status] = within(feed).getAllByRole("listitem");
+    // The money reads through the record's own currency helper, cadence
+    // suffix and all (CTR-010, DES-014).
+    expect(value).toHaveTextContent("Nadia Counsel changed Value");
+    expect(value).toHaveTextContent("Not set → $120,000.00 /year");
+    // Several fields are counted in the sentence and named on their own
+    // lines, each old→new pair rendered the way the record renders it.
+    expect(edit).toHaveTextContent("Nadia Counsel changed 3 fields");
+    expect(edit).toHaveTextContent("Title: Old title → New title");
+    expect(edit).toHaveTextContent("Priority: Medium → Critical");
+    expect(edit).toHaveTextContent("Payment terms: Not set → Net 45");
+    // A status move keeps its own words rather than reading as a
+    // generic edit (CTR-001).
+    expect(status).toHaveTextContent("Nadia Counsel changed the status");
+    expect(status).toHaveTextContent("Draft → Internal review");
+  });
+
+  it("names the person and the Entity a reference field stores by id", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([
+      [
+        entry("a1", "contract.updated", {
+          changed: {
+            // CTR-016's two reference kinds store an id, so the id is
+            // what M8 wrote. The names are already on the page — the
+            // pickers loaded them — so the feed reads as the record
+            // does rather than as a pair of uuids.
+            "field.field_7": { from: null, to: "u2" },
+            "field.field_8": { from: null, to: "e-meridian" },
+          },
+        }),
+      ],
+    ]);
+    stubApi({
+      signedIn: MEMBER,
+      // The type attaching one field of every kind, so the reviewer and
+      // the booking-entity fields are on this record.
+      extra: pageApi(activity, recordApi(contractRow({ contractTypeId: "t-full" }))),
+    });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const feed = await screen.findByRole("list", { name: "History" });
+    const row = within(feed).getAllByRole("listitem")[0]!;
+    expect(row).toHaveTextContent("Reviewer: Not set → Nadia Counsel");
+    expect(row).toHaveTextContent("Booking entity: Not set → Meridian Bio, Inc.");
+  });
+
+  it("falls back to what the log stored when nothing names the id", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([
+      [
+        entry("a1", "contract.updated", {
+          // A field detached since the change reads as its own slug, and
+          // an id nothing names reads as itself. Both are the honest
+          // rendering of a log nobody prunes.
+          changed: { "field.since_detached": { from: null, to: "u-deleted" } },
+        }),
+      ],
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const feed = await screen.findByRole("list", { name: "History" });
+    expect(within(feed).getAllByRole("listitem")[0]).toHaveTextContent(
+      "Nadia Counsel changed since_detached",
+    );
+  });
+
+  it("renders an unknown action slug plainly instead of throwing", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([
+      [
+        // A slug from a version of the application that no longer
+        // exists. The log is append-only, so this is inevitable rather
+        // than hypothetical.
+        entry("a2", "contract.frobnicated", { whatever: true }),
+        entry("a1", "contract.created"),
+      ],
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const feed = await screen.findByRole("list", { name: "History" });
+    const rows = within(feed).getAllByRole("listitem");
+    // The row still names the actor and the fact, and the rows around
+    // it still read.
+    expect(rows[0]).toHaveTextContent("Nadia Counsel — contract.frobnicated");
+    expect(rows[1]).toHaveTextContent("Nadia Counsel created this contract");
+  });
+
+  it("names OpenLaw as the actor on an entry with no human behind it", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([
+      [entry("a1", "contract.archived", {}, "working_team", undefined, null)],
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const feed = await screen.findByRole("list", { name: "History" });
+    expect(within(feed).getAllByRole("listitem")[0]).toHaveTextContent(
+      "OpenLaw archived this contract",
+    );
+  });
+
+  it("pages rather than loading the whole history", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([
+      [entry("a3", "contract.created"), entry("a2", "contract.archived")],
+      [entry("a1", "contract.restored")],
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const feed = await screen.findByRole("list", { name: "History" });
+    expect(within(feed).getAllByRole("listitem")).toHaveLength(2);
+
+    const panel = screen.getByRole("complementary", { name: "History" });
+    await user.click(within(panel).getByRole("button", { name: "Show older" }));
+
+    await waitFor(() => {
+      expect(within(feed).getAllByRole("listitem")).toHaveLength(3);
+    });
+    // The second read asked for what came after the first page's last
+    // row, and the end of the feed offers nothing further.
+    expect(activity.cursors).toEqual([null, "a2"]);
+    expect(within(panel).queryByRole("button", { name: "Show older" })).not.toBeInTheDocument();
+  });
+
+  it("says what the panel is for when nothing has happened yet", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([[]]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const panel = await screen.findByRole("complementary", { name: "History" });
+    expect(
+      await within(panel).findByText(/Nothing has happened to this record yet/),
+    ).toBeInTheDocument();
+  });
+
+  it("says the history could not be read when the seam refuses", async () => {
+    const user = userEvent.setup();
+    const refusing = (call: StubCall) =>
+      call.url.pathname === "/api/v1/activity"
+        ? problem(500, "Something went wrong.")
+        : recordApi(contractRow()).handler(call);
+    stubApi({ signedIn: MEMBER, extra: refusing });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const panel = await screen.findByRole("complementary", { name: "History" });
+    expect(await within(panel).findByRole("alert")).toHaveTextContent(
+      "The history could not be read.",
+    );
+  });
+
+  it("opens the same panel for a Contributor on the team", async () => {
+    const user = userEvent.setup();
+    // The API filters the feed; the panel takes what it is given. What
+    // this proves is that a Contributor reaches the applet at all —
+    // the tier predicate itself is proven at the API seam.
+    const activity = activityApi([[entry("a1", "comment.posted", { commentId: "c1" })]]);
+    stubApi({ signedIn: CONTRIBUTOR, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const feed = await screen.findByRole("list", { name: "History" });
+    expect(within(feed).getAllByRole("listitem")[0]).toHaveTextContent("Nadia Counsel commented");
   });
 });

@@ -13,6 +13,7 @@ import {
   type ActivityVisibility,
   type Db,
 } from "@openlaw/db";
+import { emitActivityEvent } from "./activity-emitter.js";
 
 /**
  * A database handle or a transaction inside one — callers that mutate
@@ -72,8 +73,22 @@ export type ActivityAction =
   // reason above: the contract moved because an Administrator archived
   // its type, not because someone re-typed it.
   | `contract.${"created" | "updated" | "status_changed" | "type_reassigned" | "team_added" | "team_removed" | "counterparty_added" | "counterparty_removed" | "counterparty_primary_changed" | "archived" | "restored"}`
+  // The conversation on a record (M9/2, M9/4). Every entry carries the
+  // comment's own tier, so a Legal Only comment leaves no trace for
+  // anyone who could not read it. They carry ids and metadata only —
+  // no comment text ever enters a payload, because DD-017 forbids
+  // UPDATE and DELETE here and an Administrator's hard redact has to be
+  // able to remove what was said (CMT-006, amending CMT-005). Correcting
+  // a comment keeps its own verb from taking it back: an edit and a
+  // delete are the author's acts, and a redact is an Administrator's.
+  | `comment.${"posted" | "edited" | "deleted" | "redacted"}`
   | "sso_provider.registered"
-  | "sso_provider.updated";
+  | "sso_provider.updated"
+  // Data leaving the system (M9/7, DD-017). An export is a security
+  // event in its own right, so taking one appends an entry at
+  // `admin_only` naming the filters it was taken under. It hangs off
+  // `system`: an export is about no single record.
+  | "export.performed";
 
 export interface ActivityEntry {
   entityType: ActivityEntityType;
@@ -87,24 +102,97 @@ export interface ActivityEntry {
   payload?: Record<string, unknown>;
 }
 
+/**
+ * The tier a record's own actions ride (DD-017, M9/6).
+ *
+ * DD-017 says an entry inherits the visibility tier of the action it
+ * represents. Editing a field, moving a status, or putting somebody on
+ * the team is the working group's business, so the working group can
+ * read it: those entries are Working Team, and the record feed shows
+ * them to a Contributor on the team exactly as it shows them to a
+ * Member. `admin_only` is not this — it stays for settings, user
+ * administration, and security actions, which no record feed carries.
+ * Comment entries take no default at all: each one rides the comment's
+ * own tier (CMT-006).
+ *
+ * **M8 wrote these rows `legal_only`, and those rows stay as written.**
+ * The log is append-only, so there is no migration that rewrites them;
+ * this is pre-release, and a handful of early entries reading narrower
+ * than they would today is the honest state of an append-only table.
+ *
+ * Contracts adopt this in M9/6, because the contract record is the
+ * first surface with a feed. The Entities record's `entity.*` entries
+ * still write `legal_only`: its activity bar is not mounted (M9 is out
+ * of scope for it), and they join this constant when the Entities
+ * module gets its feed in Arc 6.
+ */
+export const RECORD_ACTIVITY_TIER: ActivityVisibility = "working_team";
+
+/**
+ * One appended row, as the table now holds it. Returned because two
+ * callers need the row's own identity rather than the entry they handed
+ * over: structured emission names the row it is a copy of, and the audit
+ * log's CSV export bounds itself at the entry recording the export
+ * (M9/7), so an export never streams itself.
+ */
+export type RecordedActivity = typeof activityLog.$inferSelect;
+
 /** Appends one entry. Append-only: nothing in application code ever
  * updates or deletes activity_log rows (corrections are new entries). */
-export async function recordActivity(db: ActivityWriter, entry: ActivityEntry): Promise<void>;
+export async function recordActivity(
+  db: ActivityWriter,
+  entry: ActivityEntry,
+): Promise<RecordedActivity[]>;
 /** Appends multiple entries in one write. */
-export async function recordActivity(db: ActivityWriter, entries: ActivityEntry[]): Promise<void>;
+export async function recordActivity(
+  db: ActivityWriter,
+  entries: ActivityEntry[],
+): Promise<RecordedActivity[]>;
 export async function recordActivity(
   db: ActivityWriter,
   entryOrEntries: ActivityEntry | ActivityEntry[],
-): Promise<void> {
+): Promise<RecordedActivity[]> {
   const entries = Array.isArray(entryOrEntries) ? entryOrEntries : [entryOrEntries];
-  await db.insert(activityLog).values(
-    entries.map((entry) => ({
-      entityType: entry.entityType,
-      entityId: entry.entityId ?? null,
-      actorId: entry.actorId ?? null,
-      action: entry.action,
-      visibility: entry.visibility,
-      payload: entry.payload ?? {},
-    })),
-  );
+  const rows = await db
+    .insert(activityLog)
+    .values(
+      entries.map((entry) => ({
+        entityType: entry.entityType,
+        entityId: entry.entityId ?? null,
+        actorId: entry.actorId ?? null,
+        action: entry.action,
+        visibility: entry.visibility,
+        payload: entry.payload ?? {},
+      })),
+    )
+    // Every column, because the emitted line is built from the row and
+    // not from the entry that asked for it. Nothing here pairs a
+    // returned row with an input by position: `RETURNING` order is not
+    // something to lean on, and the line has to be a copy of what was
+    // actually stored anyway.
+    .returning();
+
+  // The SIEM copy (DD-017), one line per row, alongside the in-app
+  // write rather than instead of it. It rides the insert rather than the
+  // commit: a caller inside a transaction gets its line when the row is
+  // written, and a transaction that later rolls back has emitted a line
+  // for a row nobody can read. That is the price of not making every
+  // caller hand over a commit hook, and it is the cheaper mistake — a
+  // rolled-back mutation is a failed request, which is loud on its own.
+  // Emission never throws (see `emitActivityEvent`), so nothing here can
+  // fail or roll back the mutation it is reporting.
+  for (const row of rows) {
+    emitActivityEvent({
+      id: row.id,
+      createdAt: row.createdAt.toISOString(),
+      entityType: row.entityType,
+      entityId: row.entityId,
+      actorId: row.actorId,
+      action: row.action,
+      visibility: row.visibility,
+      payload: row.payload,
+    });
+  }
+
+  return rows;
 }

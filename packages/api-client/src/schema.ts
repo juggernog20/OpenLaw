@@ -794,7 +794,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The contract list, newest reference first: number, title, type, and status; archived contracts only with includeArchived=true */
+    /** The contract list, newest reference first: number, title, type, and status; archived contracts only with includeArchived=true. Member+ read every contract; a Contributor reads exactly the contracts they hold a contract_team row on, archived ones behind the same flag */
     get: operations["listContracts"];
     put?: never;
     /** Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward */
@@ -829,7 +829,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** One contract by its CTR-003 number, with its Owner, its signing entity, its counterparties, its working group, and the fields its type attaches (CTR-016) in attachment order — the record page's read; archived contracts answer too, so restore stays reachable */
+    /** One contract by its CTR-003 number, with its Owner, its signing entity, its counterparties, its working group, and the fields its type attaches (CTR-016) in attachment order — the record page's read; archived contracts answer too, so restore stays reachable. A Contributor reads a contract they hold a contract_team row on, and is answered 404 on one they do not */
     get: operations["getContract"];
     put?: never;
     post?: never;
@@ -968,6 +968,178 @@ export interface paths {
     };
     /** Find counterparties by name — the shared typeahead's read (CTR-011), reused by contract intake. Archived counterparties are never offered; an empty query answers the first names alphabetically, so an unprompted typeahead still opens onto something */
     get: operations["searchCounterparties"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/comments": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One record's comment thread, flat and oldest first (CMT-002), filtered at query time to the DD-016 tiers the viewer is in the room for. A tier they are not in is omitted entirely — no placeholder, no gap, and no count. A record they cannot reach answers 404, exactly as one that does not exist */
+    get: operations["listComments"];
+    put?: never;
+    /** Post a comment on a record at one of the DD-016 tiers. The seam refuses a tier the poster is not in the room for, so a Contributor cannot post Legal Only whatever the client sends, and it refuses a comment whose mentions outrun its tier (CMT-007), so the composer's confirmation explains the promotion rather than enforcing it. The tier is immutable afterwards (CMT-005) — there is no route that changes it. Writes one comment_mentions row per person named, and appends a comment.posted activity entry at the comment's own tier, all in the same transaction */
+    post: operations["postComment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/comments/mention-candidates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The people a comment on this record can address (CMT-007), each with the DD-016 tiers they hear on it — the @-typeahead's list, and what the promotion confirmation reads to work out the narrowest tier that includes everyone named. Somebody no tier reaches is left out rather than offered and refused. A record the viewer cannot reach answers 404 */
+    get: operations["listMentionCandidates"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/comments/unread": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** How many comments on this record the viewer has not read — the chat applet's badge (CMT-004). Counted over the same filtered set the thread is read at, so a tier the viewer is not in the room for contributes nothing; the viewer's own comments and both kinds of tombstone contribute nothing either. A viewer who has never opened the panel has every comment they can see counted. A record they cannot reach answers 404 */
+    get: operations["readUnreadComments"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/comments/read": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Mark this record's conversation read up to now, which is what opening the chat panel does (CMT-004). Writes the viewer's `comment_last_read` watermark and answers the count that remains — normally zero, and whatever landed between the read and this call otherwise. A record the viewer cannot reach answers 404 */
+    post: operations["markCommentsRead"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/comments/{commentId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Take a comment back. The author alone may. The delete is soft (CMT-005): the row keeps its place as a tombstone so the thread around it still reads, and the body moves to comment_revisions. Deleting a comment already removed writes nothing and answers the row as it stands. Appends comment.deleted at the comment's own tier */
+    delete: operations["deleteComment"];
+    options?: never;
+    head?: never;
+    /** Change what a comment says. The author alone may, and an Administrator is no exception — a correction to somebody else's words is a redact, not an edit. The prior body goes to comment_revisions and the row takes an edited marker, so a reader can tell the text moved since they read it. The tier is immutable (CMT-005): this route takes a body and nothing else. A comment already deleted or redacted has no text to change. Appends comment.edited at the comment's own tier */
+    patch: operations["editComment"];
+    trace?: never;
+  };
+  "/api/v1/comments/{commentId}/redact": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Remove what a comment said, for good. An Administrator alone may (CMT-005), on anybody's comment including their own. It clears the body, every comment_revisions row, and the list of who the text named — so text posted into the wrong record is gone rather than only hidden. This is the reason prior versions live outside the append-only log (CMT-006). The row stays as a tombstone, because the thread around it still has to read. Appends comment.redacted at the comment's own tier */
+    post: operations["redactComment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/activity": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One record's activity feed, newest first (DD-017), filtered at query time to the DD-016 tiers the viewer is in the room for. A comment entry rides the comment's own tier, so a Legal Only comment leaves no trace for anyone who could not read it — no row, no gap, and no count. `admin_only` entries never appear here; the Administrator's audit log is their surface. Paged from a server-fixed page size: pass the previous page's `nextCursor` to read further back. A record the viewer cannot reach answers 404, exactly as one that does not exist */
+    get: operations["listActivity"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/audit-log": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The system-wide audit log (DD-017), newest first: every entry of every entity type and every tier, including the `admin_only` settings, user administration, and security entries that no record feed carries. Administrator-only (SET-002). Actor, action, entity type, date range, and search compose. Paged from a server-fixed page size: pass the previous page's `nextCursor` to read further back */
+    get: operations["listAuditLog"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/audit-log/actions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The action slugs the log actually holds, ascending — the vocabulary the action filter offers. Read from the table rather than from the code, because the log outlives the code that wrote it and a slug no longer emitted is still in there */
+    get: operations["listAuditLogActions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/audit-log/export": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The currently filtered log as CSV (DD-017), newest first — the same filters the page takes, and exactly the set they name. The export is itself a security event: it appends an `export.performed` entry at `admin_only` naming its filters, and bounds itself at that entry, so an export never streams itself. Administrator-only (SET-002) */
+    get: operations["exportAuditLog"];
     put?: never;
     post?: never;
     delete?: never;
@@ -4976,6 +5148,585 @@ export interface operations {
           };
         };
       };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listComments: {
+    parameters: {
+      query: {
+        entityType: "contract";
+        entityId: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            comments: {
+              id: string;
+              /** @enum {string} */
+              entityType: "contract";
+              entityId: string;
+              author: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              body: string;
+              /** @enum {string} */
+              visibility: "legal_only" | "working_team" | "full_thread";
+              mentions: {
+                id: string;
+                displayName: string;
+              }[];
+              /** Format: date-time */
+              createdAt: string;
+              editedAt: string | null;
+              deletedAt: string | null;
+              redactedAt: string | null;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  postComment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          entityType: "contract";
+          entityId: string;
+          body: string;
+          /** @enum {string} */
+          visibility: "legal_only" | "working_team" | "full_thread";
+          mentions?: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            comment: {
+              id: string;
+              /** @enum {string} */
+              entityType: "contract";
+              entityId: string;
+              author: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              body: string;
+              /** @enum {string} */
+              visibility: "legal_only" | "working_team" | "full_thread";
+              mentions: {
+                id: string;
+                displayName: string;
+              }[];
+              /** Format: date-time */
+              createdAt: string;
+              editedAt: string | null;
+              deletedAt: string | null;
+              redactedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listMentionCandidates: {
+    parameters: {
+      query: {
+        entityType: "contract";
+        entityId: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            candidates: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              tiers: ("legal_only" | "working_team" | "full_thread")[];
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  readUnreadComments: {
+    parameters: {
+      query: {
+        entityType: "contract";
+        entityId: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            unread: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  markCommentsRead: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          entityType: "contract";
+          entityId: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            unread: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteComment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        commentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            comment: {
+              id: string;
+              /** @enum {string} */
+              entityType: "contract";
+              entityId: string;
+              author: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              body: string;
+              /** @enum {string} */
+              visibility: "legal_only" | "working_team" | "full_thread";
+              mentions: {
+                id: string;
+                displayName: string;
+              }[];
+              /** Format: date-time */
+              createdAt: string;
+              editedAt: string | null;
+              deletedAt: string | null;
+              redactedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  editComment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        commentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          body: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            comment: {
+              id: string;
+              /** @enum {string} */
+              entityType: "contract";
+              entityId: string;
+              author: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              body: string;
+              /** @enum {string} */
+              visibility: "legal_only" | "working_team" | "full_thread";
+              mentions: {
+                id: string;
+                displayName: string;
+              }[];
+              /** Format: date-time */
+              createdAt: string;
+              editedAt: string | null;
+              deletedAt: string | null;
+              redactedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  redactComment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        commentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            comment: {
+              id: string;
+              /** @enum {string} */
+              entityType: "contract";
+              entityId: string;
+              author: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              body: string;
+              /** @enum {string} */
+              visibility: "legal_only" | "working_team" | "full_thread";
+              mentions: {
+                id: string;
+                displayName: string;
+              }[];
+              /** Format: date-time */
+              createdAt: string;
+              editedAt: string | null;
+              deletedAt: string | null;
+              redactedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listActivity: {
+    parameters: {
+      query: {
+        entityType: "contract";
+        entityId: string;
+        cursor?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            entries: {
+              id: string;
+              action: string;
+              /** @enum {string} */
+              visibility: "legal_only" | "working_team" | "full_thread";
+              actor: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** Format: date-time */
+              createdAt: string;
+              payload: {
+                [key: string]: unknown;
+              };
+            }[];
+            nextCursor: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listAuditLog: {
+    parameters: {
+      query?: {
+        actorId?: string;
+        action?: string;
+        entityType?: "matter" | "contract" | "document" | "request" | "user" | "entity" | "system";
+        from?: string;
+        to?: string;
+        q?: string;
+        cursor?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            entries: {
+              id: string;
+              action: string;
+              /** @enum {string} */
+              entityType:
+                "matter" | "contract" | "document" | "request" | "user" | "entity" | "system";
+              /** @enum {string} */
+              visibility: "legal_only" | "working_team" | "full_thread" | "admin_only";
+              entityId: string | null;
+              actor: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** Format: date-time */
+              createdAt: string;
+              payload: {
+                [key: string]: unknown;
+              };
+            }[];
+            nextCursor: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listAuditLogActions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            actions: string[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  exportAuditLog: {
+    parameters: {
+      query?: {
+        actorId?: string;
+        action?: string;
+        entityType?: "matter" | "contract" | "document" | "request" | "user" | "entity" | "system";
+        from?: string;
+        to?: string;
+        q?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
       /** @description Problem details (RFC 9457) */
       default: {
         headers: {

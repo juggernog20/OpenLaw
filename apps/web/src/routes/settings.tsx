@@ -5,8 +5,9 @@
  * reached from the avatar menu, a two-group left rail, and a routable
  * URL per pane. The Organization group renders for Administrators only
  * (SET-002) and carries General (#63) and Users (#65, #66) plus the
- * collapsible Security group with Authentication (#64) — rail entries
- * for unshipped panes are omitted, not disabled.
+ * collapsible Security group with Authentication (#64) and the audit
+ * log (#133) — rail entries for unshipped panes are omitted, not
+ * disabled.
  * Visual spec: designs/settings.pen per SETTINGS-INVENTORY.md.
  */
 
@@ -20,6 +21,7 @@ import {
   KeyRound,
   Landmark,
   Palette,
+  ScrollText,
   Shield,
   User,
   Users,
@@ -96,8 +98,8 @@ const PERSONAL_GROUP: SettingsGroup = {
  * The Organization group, hidden entirely from non-Administrators
  * (SET-002's single role check) — absent, not disabled. Security is a
  * collapsible group per the SET-001 amendment: it holds policy about
- * how you get in, and grows (the DD-017 audit-log view lands there in
- * M9); people-facing actions live in Users (SET-005).
+ * how you get in, and it grew: the DD-017 audit log joined it in M9.
+ * People-facing actions live in Users (SET-005).
  */
 const ORGANIZATION_GROUP: SettingsGroup = {
   id: "organization",
@@ -127,6 +129,19 @@ const ORGANIZATION_GROUP: SettingsGroup = {
           label: defineMessage({
             id: "settings.section.authentication",
             defaultMessage: "Authentication",
+          }),
+        },
+        // The DD-017 audit log, which SET-001 said would land here in
+        // M9 (#133). Administrator-only like everything in this group,
+        // so it is absent for everyone else rather than shown and
+        // refused (SET-002).
+        {
+          id: "audit-log",
+          path: "/settings/audit-log",
+          icon: ScrollText,
+          label: defineMessage({
+            id: "settings.section.auditLog",
+            defaultMessage: "Audit log",
           }),
         },
       ],

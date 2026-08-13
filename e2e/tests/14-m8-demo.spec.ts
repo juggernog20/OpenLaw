@@ -12,9 +12,11 @@
  * contract to select it on; M8 does, so the seam between the registry
  * and the record is proved here.
  *
- * A second journey proves the DD-013 Member+ floor: a Contributor's nav
- * carries no Contracts item, both contract URLs bounce them home, and
- * the API's 403 stands behind the bounce.
+ * A second journey proves the two access floors (CTR-021): a
+ * Contributor's nav carries the Contracts item, their list holds only
+ * the contract they are on the team of, the record opens read-only, a
+ * contract they are not on answers 404 as one that does not exist, and
+ * every write and both Member+ picker reads answer 403.
  *
  * The seed and migration checks at the top are the `docker compose up`
  * acceptance, asserted from inside the demo: the M8 migrations
@@ -245,6 +247,48 @@ async function registerDemoEntity(request: APIRequestContext): Promise<string> {
   return legalName;
 }
 
+/** One person's id by email, read from the Administrator-only user
+ * list — the id every team route is addressed by. */
+async function userIdOf(request: APIRequestContext, email: string): Promise<string> {
+  const listed = await request.get("/api/v1/users");
+  expect(listed.ok()).toBe(true);
+  const found = z
+    .object({ users: z.array(z.object({ id: z.string(), email: z.string() })) })
+    .parse(await listed.json())
+    .users.find((user) => user.email === email);
+  expect(found, `no user is registered under ${email}`).toBeDefined();
+  return found!.id;
+}
+
+/**
+ * Creates a per-run contract on a seed type that demands no fields, and
+ * answers its CTR-003 number. The Contributor journey needs two records
+ * to tell apart, and neither of them needs the demo type's attachments.
+ */
+async function createBareContract(request: APIRequestContext, title: string): Promise<number> {
+  const options = await request.get("/api/v1/contracts/options");
+  expect(options.ok()).toBe(true);
+  const bare = z
+    .object({
+      contractTypes: z.array(
+        z.object({
+          id: z.string(),
+          fields: z.array(z.object({ isRequired: z.boolean() })),
+        }),
+      ),
+    })
+    .parse(await options.json())
+    .contractTypes.find((type) => type.fields.every((field) => !field.isRequired));
+  expect(bare, "no contract type without a hard-required field is configured").toBeDefined();
+
+  const created = await request.post("/api/v1/contracts", {
+    data: { title, contractTypeId: bare!.id },
+  });
+  expect(created.status(), await created.text()).toBe(201);
+  return z.object({ contract: z.object({ number: z.number().int() }) }).parse(await created.json())
+    .contract.number;
+}
+
 /**
  * Names one counterparty through the shared typeahead (CTR-011). The row
  * to click is whichever the picker offers: the organization we already
@@ -454,8 +498,12 @@ test.describe.serial("M8 demo path", () => {
     }
   });
 
-  test("a Contributor has no Contracts module at all (DD-013)", async ({ page, browser }) => {
+  test("a Contributor reads the contracts they are on, and nothing else (CTR-021)", async ({
+    page,
+    browser,
+  }) => {
     await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+    await ensureDemoContractsInert(page.request);
 
     const email = `e2e-m8-contributor-${Date.now()}@e2e.example`;
     let member: OnboardedMember | undefined;
@@ -467,36 +515,82 @@ test.describe.serial("M8 demo path", () => {
         password: "their-own-e2e-password",
       });
       const contributorPage = member.page;
+      const contributorId = await userIdOf(page.request, email);
 
-      // No Contracts nav item — absent, not disabled.
+      // Two contracts, titled per run so two runs in flight at once
+      // never read each other's rows. The Contributor goes on the first
+      // team and nowhere near the second.
+      const stamp = Date.now();
+      const theirsTitle = `${CONTRACT_PREFIX} theirs ${stamp}`;
+      const notTheirsTitle = `${CONTRACT_PREFIX} not theirs ${stamp}`;
+      const theirs = await createBareContract(page.request, theirsTitle);
+      const notTheirs = await createBareContract(page.request, notTheirsTitle);
+      const joined = await page.request.post(`/api/v1/contracts/${theirs}/team`, {
+        data: { userId: contributorId, role: "contributor" },
+      });
+      expect(joined.status(), await joined.text()).toBe(201);
+
+      // The Contracts destination is drawn for them now — they have
+      // contracts to see. Entities stays Member+ (ENT-004).
       await contributorPage.goto("/");
       const nav = contributorPage.getByRole("navigation", { name: "Primary" });
-      await expect(nav.getByRole("link", { name: "Home" })).toBeVisible();
-      await expect(nav.getByRole("link", { name: "Contracts" })).toHaveCount(0);
+      await expect(nav.getByRole("link", { name: "Contracts" })).toBeVisible();
+      await expect(nav.getByRole("link", { name: "Entities" })).toHaveCount(0);
 
-      // Both contract URLs bounce them home — the list and a record.
-      for (const path of ["/contracts", "/contracts/1"]) {
-        await contributorPage.goto(path);
-        await expect(contributorPage).toHaveURL(/\/$/);
-      }
+      // Their list is their work: the contract they are on is there,
+      // the one they are not is not, and no create action is offered.
+      await contributorPage.goto("/contracts");
+      await expect(contributorPage.getByRole("link", { name: theirsTitle })).toBeVisible();
+      await expect(contributorPage.getByRole("link", { name: notTheirsTitle })).toHaveCount(0);
+      await expect(contributorPage.getByRole("button", { name: "Create contract" })).toHaveCount(0);
 
-      // The client bounce is convenience; the API's refusal is real —
-      // on the list, the picker read, the counterparty search, and the
-      // write. The write carries a shape-valid body: validation answers
-      // before the role guard, and the refusal under test is the
-      // guard's.
+      // The record opens read-only: the inputs are inert and neither
+      // archive nor restore is offered.
+      await contributorPage.goto(`/contracts/${theirs}`);
+      await expect(
+        contributorPage.getByRole("heading", { level: 1, name: theirsTitle }),
+      ).toBeVisible();
+      await expect(contributorPage.getByLabel("Title")).toBeDisabled();
+      await expect(contributorPage.getByLabel("Status")).toBeDisabled();
+      await expect(contributorPage.getByRole("button", { name: "Archive" })).toHaveCount(0);
+      await expect(contributorPage.getByRole("button", { name: "Restore" })).toHaveCount(0);
+
+      // The client is convenience; the API is the gate. The read they
+      // hold answers; the one they do not is 404, exactly as a contract
+      // that does not exist. Every write and the Member+ picker reads
+      // are 403. The writes carry shape-valid bodies: validation
+      // answers before the role guard, and the refusal under test is
+      // the guard's.
+      const listed = await contributorPage.request.get("/api/v1/contracts");
+      expect(listed.ok()).toBe(true);
+      const numbers = ContractRows.parse(await listed.json()).contracts.map((row) => row.number);
+      expect(numbers).toContain(theirs);
+      expect(numbers).not.toContain(notTheirs);
+
+      const held = await contributorPage.request.get(`/api/v1/contracts/${theirs}`);
+      expect(held.status(), await held.text()).toBe(200);
+      const withheld = await contributorPage.request.get(`/api/v1/contracts/${notTheirs}`);
+      expect(withheld.status(), "a contract they are not on must read as absent").toBe(404);
+
       const refusals = [
-        contributorPage.request.get("/api/v1/contracts"),
         contributorPage.request.get("/api/v1/contracts/options"),
         contributorPage.request.get("/api/v1/counterparties"),
         contributorPage.request.post("/api/v1/contracts", {
           data: { title: "Sneaky contract", contractTypeId: "any" },
         }),
+        contributorPage.request.patch(`/api/v1/contracts/${theirs}`, {
+          data: { title: "Renamed by a Contributor" },
+        }),
+        contributorPage.request.post(`/api/v1/contracts/${theirs}/archive`),
+        contributorPage.request.post(`/api/v1/contracts/${theirs}/counterparties`, {
+          data: { name: "Sneaky counterparty" },
+        }),
       ];
       for (const refused of await Promise.all(refusals)) {
-        expect(refused.status(), "the contract routes must refuse a Contributor").toBe(403);
+        expect(refused.status(), "the contract write seams must refuse a Contributor").toBe(403);
       }
     } finally {
+      await ensureDemoContractsInert(page.request);
       await member?.context.close();
       await ensureMemberInert(page.request, email);
     }
