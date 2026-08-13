@@ -155,8 +155,9 @@ function notSet(intl: IntlShape): string {
 
 /**
  * One changed key, named as the record names it. The record's own fields
- * have labels of their own; a `field.<slug>` key takes the label the
- * mount supplied, and the bare slug when it supplied none.
+ * have labels of their own; a `field.<slug>` key takes its name from the
+ * catalog the mount supplied, and the bare slug when that catalog does
+ * not have it.
  */
 function changeLabel(intl: IntlShape, key: string, context: NarrationContext): string {
   const slug = customFieldSlug(key);
