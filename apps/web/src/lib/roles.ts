@@ -36,7 +36,11 @@ export const ROLE_MESSAGES: Readonly<Record<Role, MessageDescriptor>> = defineMe
  * in a payload.
  */
 export function roleLabel(intl: IntlShape, role: string): string {
-  const message = ROLE_MESSAGES[role as Role];
+  // Indexed as the open vocabulary it is, rather than asserted into the
+  // union: the caller's string is whatever a payload holds, and a miss
+  // is the case this function exists to answer.
+  const catalog: Readonly<Partial<Record<string, MessageDescriptor>>> = ROLE_MESSAGES;
+  const message = catalog[role];
   return message ? intl.formatMessage(message) : role;
 }
 
