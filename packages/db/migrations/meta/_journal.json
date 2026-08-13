@@ -155,6 +155,13 @@
       "when": 1786580681348,
       "tag": "0021_contract_value_bound",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1786581450911,
+      "tag": "0022_contract_custom_fields",
+      "breakpoints": true
     }
   ]
 }

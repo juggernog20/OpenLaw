@@ -3237,7 +3237,7 @@
     "/api/v1/contract-types/{id}/fields/{fieldId}": {
       "patch": {
         "operationId": "setContractTypeFieldRequired",
-        "summary": "Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard enforcement arrives with the record milestone (M8)",
+        "summary": "Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard-enforced when a record is created on this type and when one is re-typed onto it (MTR-014)",
         "tags": ["contract-types"],
         "requestBody": {
           "required": true,
@@ -5636,6 +5636,31 @@
                               }
                             ]
                           },
+                          "customFields": {
+                            "type": "object",
+                            "propertyNames": {
+                              "type": "string"
+                            },
+                            "additionalProperties": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                }
+                              ]
+                            }
+                          },
                           "archivedAt": {
                             "anyOf": [
                               {
@@ -5675,6 +5700,7 @@
                           "risk",
                           "value",
                           "description",
+                          "customFields",
                           "archivedAt",
                           "createdAt",
                           "updatedAt"
@@ -5703,7 +5729,7 @@
       },
       "post": {
         "operationId": "createContract",
-        "summary": "Create a contract from a title and a live type; the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward",
+        "summary": "Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward",
         "tags": ["contracts"],
         "requestBody": {
           "required": true,
@@ -5719,6 +5745,38 @@
                   },
                   "contractTypeId": {
                     "type": "string"
+                  },
+                  "customFields": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
                   }
                 },
                 "required": ["title", "contractTypeId"],
@@ -5889,6 +5947,31 @@
                             }
                           ]
                         },
+                        "customFields": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            ]
+                          }
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -5928,6 +6011,7 @@
                         "risk",
                         "value",
                         "description",
+                        "customFields",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -5957,7 +6041,7 @@
     "/api/v1/contracts/options": {
       "get": {
         "operationId": "listContractOptions",
-        "summary": "The live contract types and statuses in display order, and the live people the Owner and team pickers offer — the create dialog's and the record's Member+ picker source (the settings surfaces stay Administrator-only per SET-002)",
+        "summary": "The live contract types in display order, each with the fields it attaches (CTR-016) so the create dialog can grow the ones it requires; the live statuses; and the live people the Owner and team pickers offer — the create dialog's and the record's Member+ picker source (the settings surfaces stay Administrator-only per SET-002)",
         "tags": ["contracts"],
         "responses": {
           "200": {
@@ -5980,9 +6064,82 @@
                           },
                           "displayName": {
                             "type": "string"
+                          },
+                          "fields": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "fieldId": {
+                                  "type": "string"
+                                },
+                                "slug": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "description": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "fieldType": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "long_text",
+                                    "number",
+                                    "date",
+                                    "boolean",
+                                    "single_select",
+                                    "multi_select",
+                                    "user",
+                                    "entity"
+                                  ]
+                                },
+                                "options": {
+                                  "anyOf": [
+                                    {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "displayOrder": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "isRequired": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "fieldId",
+                                "slug",
+                                "displayName",
+                                "description",
+                                "fieldType",
+                                "options",
+                                "displayOrder",
+                                "isRequired"
+                              ],
+                              "additionalProperties": false
+                            }
                           }
                         },
-                        "required": ["id", "slug", "displayName"],
+                        "required": ["id", "slug", "displayName", "fields"],
                         "additionalProperties": false
                       }
                     },
@@ -6070,7 +6227,7 @@
     "/api/v1/contracts/{number}": {
       "get": {
         "operationId": "getContract",
-        "summary": "One contract by its CTR-003 number, with its Owner, its signing entity, its counterparties, and its working group — the record page's read; archived contracts answer too, so restore stays reachable",
+        "summary": "One contract by its CTR-003 number, with its Owner, its signing entity, its counterparties, its working group, and the fields its type attaches (CTR-016) in attachment order — the record page's read; archived contracts answer too, so restore stays reachable",
         "tags": ["contracts"],
         "parameters": [
           {
@@ -6246,6 +6403,31 @@
                             }
                           ]
                         },
+                        "customFields": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            ]
+                          }
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -6285,10 +6467,136 @@
                         "risk",
                         "value",
                         "description",
+                        "customFields",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
                       ],
+                      "additionalProperties": false
+                    },
+                    "fields": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "fieldId": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "fieldType": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "long_text",
+                              "number",
+                              "date",
+                              "boolean",
+                              "single_select",
+                              "multi_select",
+                              "user",
+                              "entity"
+                            ]
+                          },
+                          "options": {
+                            "anyOf": [
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "isRequired": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "fieldId",
+                          "slug",
+                          "displayName",
+                          "description",
+                          "fieldType",
+                          "options",
+                          "displayOrder",
+                          "isRequired"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "customFieldRefs": {
+                      "type": "object",
+                      "properties": {
+                        "users": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              },
+                              "image": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "archived": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": ["id", "displayName", "image", "archived"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "entities": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "legalName": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "legalName"],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": ["users", "entities"],
                       "additionalProperties": false
                     },
                     "team": {
@@ -6354,7 +6662,7 @@
                       }
                     }
                   },
-                  "required": ["contract", "team", "counterparties"],
+                  "required": ["contract", "fields", "customFieldRefs", "team", "counterparties"],
                   "additionalProperties": false
                 }
               }
@@ -6374,7 +6682,7 @@
       },
       "patch": {
         "operationId": "updateContract",
-        "summary": "Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, the value, or the status — any live status may follow any other (CTR-001). The value is one field in three parts: amount, currency, and cadence commit together and clear together. Never on an archived contract",
+        "summary": "Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, the value, the type, a custom field, or the status — any live status may follow any other (CTR-001). The value is one field in three parts: amount, currency, and cadence commit together and clear together. Re-typing re-checks the new type's hard-required fields before it commits (CTR-016/MTR-014), so the type and the values that satisfy it may be sent together. Never on an archived contract",
         "tags": ["contracts"],
         "requestBody": {
           "required": true,
@@ -6459,6 +6767,41 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "contractTypeId": {
+                    "type": "string"
+                  },
+                  "customFields": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
                   },
                   "statusId": {
                     "type": "string"
@@ -6643,6 +6986,31 @@
                             }
                           ]
                         },
+                        "customFields": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            ]
+                          }
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -6682,14 +7050,140 @@
                         "risk",
                         "value",
                         "description",
+                        "customFields",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
                       ],
                       "additionalProperties": false
+                    },
+                    "fields": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "fieldId": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "fieldType": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "long_text",
+                              "number",
+                              "date",
+                              "boolean",
+                              "single_select",
+                              "multi_select",
+                              "user",
+                              "entity"
+                            ]
+                          },
+                          "options": {
+                            "anyOf": [
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "isRequired": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "fieldId",
+                          "slug",
+                          "displayName",
+                          "description",
+                          "fieldType",
+                          "options",
+                          "displayOrder",
+                          "isRequired"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "customFieldRefs": {
+                      "type": "object",
+                      "properties": {
+                        "users": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              },
+                              "image": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "archived": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": ["id", "displayName", "image", "archived"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "entities": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "legalName": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "legalName"],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": ["users", "entities"],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["contract"],
+                  "required": ["contract", "fields", "customFieldRefs"],
                   "additionalProperties": false
                 }
               }
@@ -7102,6 +7596,31 @@
                             }
                           ]
                         },
+                        "customFields": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            ]
+                          }
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -7141,6 +7660,7 @@
                         "risk",
                         "value",
                         "description",
+                        "customFields",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -7383,6 +7903,31 @@
                             }
                           ]
                         },
+                        "customFields": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            ]
+                          }
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -7422,6 +7967,7 @@
                         "risk",
                         "value",
                         "description",
+                        "customFields",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -7664,6 +8210,31 @@
                             }
                           ]
                         },
+                        "customFields": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            ]
+                          }
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -7703,6 +8274,7 @@
                         "risk",
                         "value",
                         "description",
+                        "customFields",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -7937,6 +8509,31 @@
                             }
                           ]
                         },
+                        "customFields": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            ]
+                          }
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -7976,6 +8573,7 @@
                         "risk",
                         "value",
                         "description",
+                        "customFields",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -8181,6 +8779,31 @@
                             }
                           ]
                         },
+                        "customFields": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            ]
+                          }
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -8220,6 +8843,7 @@
                         "risk",
                         "value",
                         "description",
+                        "customFields",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"

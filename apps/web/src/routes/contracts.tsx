@@ -5,9 +5,11 @@
  * carries so far: the list (reference, title, primary counterparty,
  * type, status, value, Owner — ordered newest reference first by the
  * API, each row opening its record page at `/contracts/<number>`), the
- * create dialog that takes a title and a type, an empty state that says
- * what the module is, and the show-archived toggle with a row-level
- * restore. The C1 mock's remaining columns — risk and expiry — join
+ * create dialog that takes a title, a type, and whatever fields that
+ * type hard-requires (CTR-016/MTR-014 — the dialog grows them the
+ * moment a type is picked, and creation is refused while one is empty),
+ * an empty state that says what the module is, and the show-archived
+ * toggle with a row-level restore. The C1 mock's remaining columns — risk and expiry — join
  * with the tickets that add those fields to the record. The destination is
  * Member+ only (DD-013): the loader is the client half of that gate,
  * and the API's 403 is the real refusal.
@@ -25,7 +27,15 @@ import {
   STAGE_PILL,
   type ContractRow,
   type ContractTypeOption,
+  type RegistryEntity,
+  type UserOption,
 } from "../lib/contracts";
+import {
+  emptyDraft,
+  toValue,
+  type CustomFieldDraft,
+  type CustomFieldValue,
+} from "../lib/custom-fields";
 import { CONTROL_CLASS } from "../lib/form-controls";
 import { problemDetail } from "../lib/messages";
 import { isMemberPlus } from "../lib/roles";
@@ -33,6 +43,7 @@ import { currentUser, needsSetup } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
 import { Avatar } from "../components/avatar";
+import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
 import { PageTitle } from "../components/page-title";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
@@ -46,16 +57,31 @@ export async function contractsLoader() {
   // Member+ only: Contributors and Business Users get no surface at
   // all, not a disabled one. The API's 403 stands behind this.
   if (!isMemberPlus(user.role)) return redirect("/");
-  const [list, options] = await Promise.all([
+  const [list, options, registry] = await Promise.all([
     api.GET("/api/v1/contracts"),
     api.GET("/api/v1/contracts/options"),
+    // The create dialog grows the picked type's hard-required fields
+    // (CTR-016), and two of the nine field types name a row: a person
+    // or one of our Entities. The people ride the options read; the
+    // Entities are the M7 registry's own Member+ list, the same source
+    // the record's signing-entity picker reads.
+    api.GET("/api/v1/entities"),
   ]);
-  if (!list.data || !options.data) throw new Error("The contract list could not be read.");
-  return { user, contracts: list.data.contracts, contractTypes: options.data.contractTypes };
+  if (!list.data || !options.data || !registry.data) {
+    throw new Error("The contract list could not be read.");
+  }
+  return {
+    user,
+    contracts: list.data.contracts,
+    contractTypes: options.data.contractTypes,
+    users: options.data.users,
+    entities: registry.data.entities,
+  };
 }
 
 export function ContractsPage() {
-  const { user, contracts, contractTypes } = useLoaderData<typeof contractsLoader>();
+  const { user, contracts, contractTypes, users, entities } =
+    useLoaderData<typeof contractsLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
   const [rows, setRows] = useState<ContractRow[]>(contracts);
@@ -185,6 +211,15 @@ export function ContractsPage() {
       {createOpen && (
         <CreateContractDialog
           contractTypes={contractTypes}
+          people={users.map((person: UserOption) => ({
+            id: person.id,
+            label: person.displayName,
+            archived: person.archived,
+          }))}
+          entities={entities.map((entity: RegistryEntity) => ({
+            id: entity.id,
+            label: entity.legalName,
+          }))}
           onOpenChange={setCreateOpen}
           onCreated={(row) => setRows((current) => [row, ...current])}
         />
@@ -384,23 +419,43 @@ function ContractsTable({
   );
 }
 
-/** Creation is deliberately minimal: a title and a type. The status
- * starts on the protected draft seed, and everything else is set inline
- * on the record afterward (DES-017). */
+/** Creation is deliberately minimal: a title, a type, and whatever that
+ * type hard-requires (CTR-016/MTR-014 — the dialog grows the required
+ * fields as soon as a type is picked, so a contract cannot be born
+ * missing data its type demands). The status starts on the protected
+ * draft seed, and everything else is set inline on the record afterward
+ * (DES-017). */
 function CreateContractDialog({
   contractTypes,
+  people,
+  entities,
   onOpenChange,
   onCreated,
 }: Readonly<{
   contractTypes: ContractTypeOption[];
+  /** What a required `user` field offers. */
+  people: readonly FieldReference[];
+  /** What a required `entity` field offers — the M7 registry. */
+  entities: readonly FieldReference[];
   onOpenChange: (open: boolean) => void;
   onCreated: (row: ContractRow) => void;
 }>) {
   const intl = useIntl();
   const [title, setTitle] = useState("");
   const [contractTypeId, setContractTypeId] = useState("");
+  /** The required fields' drafts, keyed by slug. They survive switching
+   * types and back — a name typed once should not have to be typed
+   * again because someone checked another type on the way. */
+  const [fieldDrafts, setFieldDrafts] = useState<Record<string, CustomFieldDraft>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /** What the picked type demands. Nothing until a type is picked —
+   * the dialog cannot ask for a type's fields before it has a type. */
+  const required =
+    contractTypes
+      .find((contractType) => contractType.id === contractTypeId)
+      ?.fields.filter((field) => field.isRequired) ?? [];
 
   async function submit() {
     if (busy) return;
@@ -423,9 +478,37 @@ function CreateContractDialog({
       );
       return;
     }
+    // The type's own demands, checked where the person can answer them.
+    // The seam refuses an empty one too — this only saves a round trip.
+    const customFields: Record<string, CustomFieldValue> = {};
+    for (const field of required) {
+      const parsed = toValue(field, fieldDrafts[field.slug] ?? "");
+      if ("error" in parsed) {
+        setError(
+          intl.formatMessage({
+            id: "contracts.field.numberInvalid",
+            defaultMessage: "Enter this as a number.",
+          }),
+        );
+        return;
+      }
+      if (parsed.value === null) {
+        setError(
+          intl.formatMessage(
+            {
+              id: "contracts.form.fieldMissing",
+              defaultMessage: "Fill {field} — this contract type requires it.",
+            },
+            { field: field.displayName },
+          ),
+        );
+        return;
+      }
+      customFields[field.slug] = parsed.value;
+    }
     setBusy(true);
     const { data, error: problem } = await api
-      .POST("/api/v1/contracts", { body: { title: title.trim(), contractTypeId } })
+      .POST("/api/v1/contracts", { body: { title: title.trim(), contractTypeId, customFields } })
       .catch(() => ({ data: null, error: undefined }));
     setBusy(false);
     if (!data) {
@@ -493,6 +576,40 @@ function CreateContractDialog({
               ))}
             </select>
           </div>
+          {/* The type's hard-required fields, grown into the dialog the
+              moment a type is picked (CTR-016/MTR-014). The optional
+              ones are not here: they are set inline on the record, and
+              creation stays the smallest thing that makes a record. */}
+          {required.map((field) => (
+            <div key={field.slug} className="flex flex-col gap-1.5">
+              <Label id={`contract-new-${field.slug}-label`} htmlFor={`contract-new-${field.slug}`}>
+                {field.displayName}
+                <span aria-hidden="true" className="ms-0.5 text-status-danger-fg">
+                  *
+                </span>
+                <span className="sr-only">
+                  <FormattedMessage id="contracts.field.requiredMark" defaultMessage="(required)" />
+                </span>
+              </Label>
+              <CustomFieldControl
+                id={`contract-new-${field.slug}`}
+                field={field}
+                draft={fieldDrafts[field.slug] ?? emptyDraft(field)}
+                people={people}
+                entities={entities}
+                describedBy={field.description ? `contract-new-${field.slug}-help` : undefined}
+                onDraft={(next) => {
+                  setFieldDrafts((current) => ({ ...current, [field.slug]: next }));
+                  setError(null);
+                }}
+              />
+              {field.description && (
+                <p id={`contract-new-${field.slug}-help`} className="text-xs text-muted">
+                  {field.description}
+                </p>
+              )}
+            </div>
+          ))}
           <p className="text-sm text-muted">
             <FormattedMessage
               id="contracts.form.draftNote"

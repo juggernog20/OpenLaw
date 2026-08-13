@@ -5,11 +5,11 @@
  * deliverable is a signed document. Only the columns this milestone
  * step reads land here, per the incremental-schema doctrine (TECH-014)
  * — `number`, `title`, the type and status FKs, `manager_id`,
- * `priority`, `risk`, the CTR-010 value trio, `description`, timestamps,
- * and the soft-delete stamp. Custom fields arrive with the ticket that
- * reads them; term, confidentiality, parent, and matter linking arrive
- * with their own milestones. SCHEMA.md is the naming reference, never a
- * migration to transcribe.
+ * `priority`, `risk`, the CTR-010 value trio, `description`,
+ * `custom_fields`, timestamps, and the soft-delete stamp. Term,
+ * confidentiality, parent, and matter linking arrive with their own
+ * milestones. SCHEMA.md is the naming reference, never a migration to
+ * transcribe.
  *
  * `number` is CTR-003's global reference: a dedicated Postgres identity
  * sequence, independent of the future matters sequence, rendered C-###
@@ -29,6 +29,7 @@ import {
   check,
   index,
   integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -38,6 +39,7 @@ import { users } from "./auth.js";
 import { contractStatuses } from "./contract-statuses.js";
 import { contractTypes } from "./contract-types.js";
 import { entities } from "./entities.js";
+import type { CustomFieldValue } from "./fields.js";
 import { uuidPk } from "./helpers.js";
 
 /**
@@ -111,6 +113,20 @@ export const contracts = pgTable(
      * empty string never reaches the column and readers have one
      * absence to test. */
     description: text("description"),
+    /** CTR-016's custom fields: one JSON object keyed by the catalog
+     * field's `slug`, never by its id. The slug is the field's machine
+     * identity and never changes, which is what lets a value outlive
+     * every rename — and what lets it be **retained on detach**, so
+     * re-attaching the field to the type brings the value back rather
+     * than finding an empty box. Which of these keys render, and in
+     * what order, is the `contract_type_fields` join's answer, not this
+     * column's: values for fields the type no longer attaches sit here
+     * unread until something attaches them again. `{}` = nothing
+     * recorded, which is where every contract starts. */
+    customFields: jsonb("custom_fields")
+      .$type<Record<string, CustomFieldValue>>()
+      .notNull()
+      .default({}),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
@@ -132,6 +148,11 @@ export const contracts = pgTable(
     // "What is on my desk" — the Owner filter the list offers, and the
     // guard that answers whether a departing person still owns work.
     index("contracts_manager_idx").on(table.managerId),
+    // "How many contracts hold a value for this field" — the SET-003
+    // number the field archive dialog shows. It is a key-existence test
+    // (`custom_fields ? slug`) over every row, which is what the
+    // default jsonb GIN opclass indexes.
+    index("contracts_custom_fields_idx").using("gin", table.customFields),
     // `entity_id` carries no index yet: nothing in M8 reads contracts by
     // the entity that signs them. The roll-up that will (ENT-007, M27)
     // brings its own, per the incremental-schema doctrine.
@@ -162,6 +183,11 @@ export const contracts = pgTable(
       "contracts_value_group_check",
       sql`num_nonnulls(${table.valueAmount}, ${table.valueCurrency}, ${table.valueCadence}) in (0, 3)`,
     ),
+    // The custom fields are a map from slug to value, so the column
+    // holds a JSON object or it holds nothing readable. A stored array
+    // or bare string would make `custom_fields ? slug` — the archive
+    // guard's own test — an error rather than an answer.
+    check("contracts_custom_fields_check", sql`jsonb_typeof(${table.customFields}) = 'object'`),
   ],
 );
 

@@ -8,8 +8,9 @@
  * (MTR-011) mount the same routes with their own join tables, scope
  * rules, and audit actions. Detaching deletes the join row only: the
  * catalog definition and any stored values survive by rule (MTR-014).
- * The required flag is stored and editable here; its hard enforcement
- * at record creation arrives with each module's record milestone.
+ * The required flag is stored and editable here; the record module
+ * enforces it, at creation and at re-type. Contracts do from #112;
+ * matters do when their record lands (M22).
  * Everything sits behind SET-002's single role gate — Administrators
  * only — and every mutation appends to the activity log (DD-017)
  * inside the same transaction.
@@ -58,8 +59,11 @@ export interface TypeFieldRoutesConfig {
   scopeSummary: string;
   /** DD-017 action prefix, e.g. `contract_type_field`. */
   actionPrefix: TypeFieldActionPrefix;
-  /** The milestone that hard-enforces `isRequired` (M8 / M22). */
-  requiredMilestone: string;
+  /** The milestone that will hard-enforce `isRequired`, for a module
+   * whose record does not exist yet (M22 for matters). Omitted once it
+   * does: contracts enforce the flag from #112, at creation and at
+   * re-type, so their summary states the rule rather than promising it. */
+  requiredMilestone?: string;
 }
 
 /**
@@ -224,7 +228,10 @@ export function typeFieldRoutes(config: TypeFieldRoutesConfig): FastifyPluginAsy
           summary:
             "Set an attachment's required flag: per attachment, so a " +
             "field can be required for one type and optional elsewhere; " +
-            `hard enforcement arrives with the record milestone (${config.requiredMilestone})`,
+            (config.requiredMilestone
+              ? `hard enforcement arrives with the record milestone (${config.requiredMilestone})`
+              : "hard-enforced when a record is created on this type and " +
+                "when one is re-typed onto it (MTR-014)"),
           tags: [config.tag],
           params: z.object({ id: z.string(), fieldId: z.string() }),
           body: z.object({ isRequired: z.boolean() }),

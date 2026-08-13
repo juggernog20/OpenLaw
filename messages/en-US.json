@@ -302,6 +302,24 @@
   "contracts.entityUnknown": {
     "defaultMessage": "Not known yet"
   },
+  "contracts.field.noOptions": {
+    "defaultMessage": "This field has no options yet."
+  },
+  "contracts.field.numberInvalid": {
+    "defaultMessage": "Enter this as a number."
+  },
+  "contracts.field.requiredMark": {
+    "defaultMessage": "(required)"
+  },
+  "contracts.field.selectPlaceholder": {
+    "defaultMessage": "Not set"
+  },
+  "contracts.fields.empty": {
+    "defaultMessage": "This contract type attaches no fields. Add them in contract settings."
+  },
+  "contracts.fields.section": {
+    "defaultMessage": "Fields"
+  },
   "contracts.form.counterparties": {
     "defaultMessage": "Counterparties"
   },
@@ -316,6 +334,9 @@
   },
   "contracts.form.entity": {
     "defaultMessage": "Our entity"
+  },
+  "contracts.form.fieldMissing": {
+    "defaultMessage": "Fill {field} — this contract type requires it."
   },
   "contracts.form.owner": {
     "defaultMessage": "Owner"
@@ -382,6 +403,21 @@
   },
   "contracts.restoreRow": {
     "defaultMessage": "Restore {title}"
+  },
+  "contracts.retype.error": {
+    "defaultMessage": "The contract type could not be changed."
+  },
+  "contracts.retype.missing": {
+    "defaultMessage": "Fill {field} — the new type requires it."
+  },
+  "contracts.retype.note": {
+    "defaultMessage": "{type} requires these fields. Fill them to change the type."
+  },
+  "contracts.retype.submit": {
+    "defaultMessage": "Change type"
+  },
+  "contracts.retype.title": {
+    "defaultMessage": "Change contract type"
   },
   "contracts.riskUnassessed": {
     "defaultMessage": "Not assessed"

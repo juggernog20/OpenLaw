@@ -15,6 +15,14 @@
  * unknown name by name, never offers to create a name the search
  * already answered with, and moves the primary. The activity bar mounts
  * with the applet set that exists before M9.
+ *
+ * The CTR-016 fields are the type's: the card draws the attachments in
+ * attachment order, every field type gets its own control, and each
+ * commits on its own keyed by slug. Re-typing commits straight away
+ * when the new type demands nothing new, and opens a dialog collecting
+ * the gaps when it does — one write for the type and the values
+ * together (MTR-014).
+ *
  * Contributors are bounced home; unauthenticated visitors land on login.
  */
 
@@ -62,10 +70,59 @@ const PEOPLE = [
   },
 ];
 
+/** The fields the two types attach (CTR-016). MSAs carry an optional
+ * text field; NDAs demand a select before anything may be typed onto
+ * one, which is what makes a re-type onto NDA a compound edit. */
+const PAYMENT_TERMS = {
+  fieldId: "f-terms",
+  slug: "payment_terms",
+  displayName: "Payment terms",
+  description: "How long the other side has to pay.",
+  fieldType: "text",
+  options: null,
+  displayOrder: 1,
+  isRequired: false,
+};
+const OUR_POSITION = {
+  fieldId: "f-position",
+  slug: "our_position",
+  displayName: "Our position",
+  description: null,
+  fieldType: "single_select",
+  options: ["Customer", "Provider"],
+  displayOrder: 1,
+  isRequired: true,
+};
+
+/** A type attaching one field of every CTR-016 kind, so the nine
+ * controls can be read in one render. Order is the attachment order the
+ * API answers with, which is the order the card must draw. */
+const EVERY_FIELD = [
+  ["text", "Governing office", null],
+  ["long_text", "Special terms", null],
+  ["number", "Notice period", null],
+  ["date", "Signed on", null],
+  ["boolean", "Auto renews", null],
+  ["single_select", "Paper", ["Ours", "Theirs"]],
+  ["multi_select", "Regions", ["EMEA", "APAC"]],
+  ["user", "Reviewer", null],
+  ["entity", "Booking entity", null],
+].map(([fieldType, displayName, options], index) => ({
+  fieldId: `f-${index}`,
+  slug: `field_${index}`,
+  displayName: displayName as string,
+  description: null,
+  fieldType: fieldType as string,
+  options: options as string[] | null,
+  displayOrder: index + 1,
+  isRequired: false,
+}));
+
 const OPTIONS = {
   contractTypes: [
-    { id: "t-nda", slug: "nda", displayName: "NDA" },
-    { id: "t-msa", slug: "msa", displayName: "MSA" },
+    { id: "t-nda", slug: "nda", displayName: "NDA", fields: [OUR_POSITION] },
+    { id: "t-msa", slug: "msa", displayName: "MSA", fields: [PAYMENT_TERMS] },
+    { id: "t-full", slug: "full", displayName: "Every field", fields: EVERY_FIELD },
   ],
   contractStatuses: [
     { id: "s-draft", slug: "draft", displayName: "Draft", stage: "draft" },
@@ -154,6 +211,7 @@ function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
     // (CTR-010).
     value: null,
     description: "Three-year platform engagement.",
+    customFields: {},
     archivedAt: null,
     createdAt: "2026-08-01T00:00:00.000Z",
     updatedAt: "2026-08-01T00:00:00.000Z",
@@ -184,6 +242,16 @@ function recordApi(
   initialParties: ReturnType<typeof party>[] = [],
 ) {
   let row = initial;
+  /** The attached fields follow the row's type, exactly as the API
+   * derives them from the `contract_type_fields` join (CTR-016). */
+  const fieldsOf = (of: Record<string, unknown>) =>
+    OPTIONS.contractTypes.find((option) => option.id === of.contractTypeId)?.fields ?? [];
+  const customEnvelope = () => ({
+    fields: fieldsOf(row),
+    // Nothing in these suites stores a `user` or `entity` value, so no
+    // row is named that the pickers do not already offer.
+    customFieldRefs: { users: [], entities: [] },
+  });
   let team = initialTeam;
   let parties = initialParties;
   const patches: unknown[] = [];
@@ -220,7 +288,7 @@ function recordApi(
       });
     }
     if (call.url.pathname === "/api/v1/contracts/42" && call.method === "GET") {
-      return json(200, { contract: row, team, counterparties: parties });
+      return json(200, { contract: row, ...customEnvelope(), team, counterparties: parties });
     }
     if (call.url.pathname === "/api/v1/contracts/42/counterparties" && call.method === "POST") {
       const body = call.body as { counterpartyId?: string; name?: string };
@@ -288,7 +356,7 @@ function recordApi(
       // The stored FKs never ride the row back — the joined rows do.
       delete (row as Record<string, unknown>).managerId;
       delete (row as Record<string, unknown>).entityId;
-      return json(200, { contract: row });
+      return json(200, { contract: row, ...customEnvelope() });
     }
     if (call.url.pathname === "/api/v1/contracts/42/team" && call.method === "POST") {
       const body = call.body as { userId: string; role: string };
@@ -863,6 +931,8 @@ describe("the /contracts/:number record page", () => {
         if (call.url.pathname === "/api/v1/contracts/42" && call.method === "GET") {
           return json(200, {
             contract: contractRow(),
+            fields: [PAYMENT_TERMS],
+            customFieldRefs: { users: [], entities: [] },
             team: [person("u1", "creator")],
             counterparties: [],
           });
@@ -898,6 +968,8 @@ describe("the /contracts/:number record page", () => {
         if (call.url.pathname === "/api/v1/contracts/42" && call.method === "GET") {
           return json(200, {
             contract: contractRow(),
+            fields: [PAYMENT_TERMS],
+            customFieldRefs: { users: [], entities: [] },
             team: [person("u1", "creator")],
             counterparties: [],
           });
@@ -1003,6 +1075,8 @@ describe("the /contracts/:number record page", () => {
         if (call.url.pathname === "/api/v1/contracts/42" && call.method === "GET") {
           return json(200, {
             contract: contractRow(),
+            fields: [PAYMENT_TERMS],
+            customFieldRefs: { users: [], entities: [] },
             team: [person("u1", "creator")],
             counterparties: [],
           });
@@ -1037,12 +1111,15 @@ describe("the /contracts/:number record page", () => {
     expect(screen.getByText(/This contract is archived/)).toBeInTheDocument();
     for (const label of [
       "Title",
+      "Contract type",
       "Owner",
       "Our entity",
       "Counterparties",
       "Status",
       "Priority",
       "Risk",
+      // The type's own fields freeze with the record (CTR-016).
+      "Payment terms",
       // The value freezes as a group, like it commits as one.
       "Amount",
       "Currency",
@@ -1069,6 +1146,249 @@ describe("the /contracts/:number record page", () => {
     expect(screen.queryByText(/This contract is archived/)).not.toBeInTheDocument();
     expect(screen.getByLabelText("Title")).toBeEnabled();
     expect(screen.getByRole("button", { name: "Archive" })).toBeInTheDocument();
+  });
+
+  it("draws the type's attached fields in attachment order and commits one by slug", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const card = within(await screen.findByRole("region", { name: "Fields" }));
+    // The MSA attaches one field, and the card draws its help text.
+    const terms = card.getByLabelText("Payment terms");
+    expect(card.getByText("How long the other side has to pay.")).toBeInTheDocument();
+
+    await user.type(terms, "Net 45");
+    await user.tab();
+    // One PATCH, keyed by the field's slug — never by its id, and never
+    // as a whole-map replacement.
+    await waitFor(() =>
+      expect(api.patches).toEqual([{ customFields: { payment_terms: "Net 45" } }]),
+    );
+    expect(await card.findByText("Saved")).toBeInTheDocument();
+  });
+
+  it("commits nothing when Escape reverts a field, or when a blur changes nothing", async () => {
+    const api = recordApi(contractRow({ customFields: { payment_terms: "Net 30" } }));
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const terms = await screen.findByLabelText("Payment terms");
+    expect(terms).toHaveValue("Net 30");
+    await user.clear(terms);
+    await user.type(terms, "Net 60{Escape}");
+    expect(terms).toHaveValue("Net 30");
+
+    // A blur that changes nothing is not a commit (DES-017).
+    await user.click(terms);
+    await user.tab();
+    expect(api.patches).toEqual([]);
+  });
+
+  it("clears a field by emptying it, and sends null rather than a blank", async () => {
+    const api = recordApi(contractRow({ customFields: { payment_terms: "Net 30" } }));
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    await user.clear(await screen.findByLabelText("Payment terms"));
+    await user.tab();
+    await waitFor(() => expect(api.patches).toEqual([{ customFields: { payment_terms: null } }]));
+  });
+
+  it("renders a control for every field type and commits the ones that commit on change", async () => {
+    const api = recordApi(
+      contractRow({ contractTypeId: "t-full", contractTypeName: "Every field" }),
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const card = within(await screen.findByRole("region", { name: "Fields" }));
+    // All nine, in attachment order.
+    expect(
+      card.getAllByText(
+        /Governing office|Special terms|Notice period|Signed on|Auto renews|Paper|Regions|Reviewer|Booking entity/,
+      ),
+    ).toHaveLength(9);
+    expect(card.getByLabelText("Notice period")).toHaveAttribute("type", "number");
+    expect(card.getByLabelText("Signed on")).toHaveAttribute("type", "date");
+    // The two that name a row reuse the record's own pickers: the
+    // people the Owner select offers and the M7 registry.
+    expect(
+      within(card.getByLabelText("Reviewer")).getByRole("option", { name: "Nadia Counsel" }),
+    ).toBeInTheDocument();
+    expect(
+      within(card.getByLabelText("Booking entity")).getByRole("option", {
+        name: "Meridian Bio, Inc.",
+      }),
+    ).toBeInTheDocument();
+
+    // A pick is a decision, so it commits the moment it changes.
+    await user.click(card.getByRole("switch", { name: "Auto renews" }));
+    await waitFor(() => expect(api.patches).toEqual([{ customFields: { field_4: true } }]));
+    await user.selectOptions(card.getByLabelText("Paper"), "Theirs");
+    await user.click(card.getByRole("checkbox", { name: "APAC" }));
+    await waitFor(() =>
+      expect(api.patches).toEqual([
+        { customFields: { field_4: true } },
+        { customFields: { field_5: "Theirs" } },
+        { customFields: { field_6: ["APAC"] } },
+      ]),
+    );
+  });
+
+  it("commits a number field as a number, and clears it when the box is emptied", async () => {
+    const api = recordApi(
+      contractRow({
+        contractTypeId: "t-full",
+        contractTypeName: "Every field",
+        customFields: { field_2: 30 },
+      }),
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const notice = await screen.findByLabelText("Notice period");
+    expect(notice).toHaveValue(30);
+    await user.clear(notice);
+    await user.type(notice, "45");
+    await user.tab();
+    // A number, not the string that was typed — the box holds a draft,
+    // and the draft becomes a value only at the moment of commit.
+    await waitFor(() => expect(api.patches).toEqual([{ customFields: { field_2: 45 } }]));
+
+    await user.clear(screen.getByLabelText("Notice period"));
+    await user.tab();
+    await waitFor(() =>
+      expect(api.patches).toEqual([
+        { customFields: { field_2: 45 } },
+        { customFields: { field_2: null } },
+      ]),
+    );
+  });
+
+  it("re-types straight away when the new type demands nothing new", async () => {
+    const api = recordApi(contractRow({ customFields: { our_position: "Provider" } }));
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    // The NDA's required field is already answered by a retained value,
+    // so the pick commits like any other select.
+    await user.selectOptions(await screen.findByLabelText("Contract type"), "t-nda");
+    await waitFor(() => expect(api.patches).toEqual([{ contractTypeId: "t-nda" }]));
+    // The new type's fields replace the old type's on the card.
+    const card = within(screen.getByRole("region", { name: "Fields" }));
+    expect(await card.findByLabelText(/Our position/)).toBeInTheDocument();
+    expect(card.queryByLabelText("Payment terms")).not.toBeInTheDocument();
+  });
+
+  it("asks for the new type's required fields before re-typing, and commits both as one write", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    await user.selectOptions(await screen.findByLabelText("Contract type"), "t-nda");
+    // Nothing is committed until the gap is answered — the record has
+    // nowhere to fill a field its current type does not attach.
+    expect(
+      await screen.findByRole("heading", { name: "Change contract type" }),
+    ).toBeInTheDocument();
+    expect(api.patches).toEqual([]);
+
+    await user.click(screen.getByRole("button", { name: "Change type" }));
+    expect(await screen.findByText(/Fill Our position/)).toBeInTheDocument();
+    expect(api.patches).toEqual([]);
+
+    await user.selectOptions(screen.getByLabelText("Our position"), "Customer");
+    await user.click(screen.getByRole("button", { name: "Change type" }));
+    await waitFor(() =>
+      expect(api.patches).toEqual([
+        { contractTypeId: "t-nda", customFields: { our_position: "Customer" } },
+      ]),
+    );
+    expect(screen.queryByRole("heading", { name: "Change contract type" })).not.toBeInTheDocument();
+  });
+
+  it("shows the seam's own refusal inside the re-type dialog", async () => {
+    const record = recordApi(contractRow());
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/contracts/42" && call.method === "PATCH") {
+          return problem(400, "Our position: pick one of the options.");
+        }
+        return record.handler(call);
+      },
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    await user.selectOptions(await screen.findByLabelText("Contract type"), "t-nda");
+    await user.selectOptions(screen.getByLabelText("Our position"), "Customer");
+    await user.click(screen.getByRole("button", { name: "Change type" }));
+
+    // The dialog covers the field whose micro-state would carry this,
+    // so the refusal has to read inside the dialog or it reads nowhere.
+    const dialog = within(await screen.findByRole("dialog"));
+    expect(await dialog.findByRole("alert")).toHaveTextContent(
+      "Our position: pick one of the options.",
+    );
+    expect(dialog.getByRole("heading", { name: "Change contract type" })).toBeInTheDocument();
+  });
+
+  it("cancels a re-type without committing anything", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    await user.selectOptions(await screen.findByLabelText("Contract type"), "t-nda");
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("heading", { name: "Change contract type" }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(api.patches).toEqual([]);
+    // The select goes back to what the record holds — it must never
+    // show a type the contract is not on.
+    expect(screen.getByLabelText("Contract type")).toHaveValue("t-msa");
+  });
+
+  it("shows the seam's refusal beside the field that earned it", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/contracts/42" && call.method === "PATCH") {
+          return problem(400, "Payment terms: that is longer than this field holds.");
+        }
+        return recordApi(contractRow()).handler(call);
+      },
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    await user.type(await screen.findByLabelText("Payment terms"), "Net 45");
+    await user.tab();
+    expect(
+      await screen.findByText("Payment terms: that is longer than this field holds."),
+    ).toBeInTheDocument();
+  });
+
+  it("says so when the type attaches no fields at all", async () => {
+    const api = recordApi(
+      contractRow({ contractTypeId: "t-none", contractTypeName: "Unconfigured" }),
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+
+    expect(await screen.findByText(/This contract type attaches no fields/)).toBeInTheDocument();
   });
 
   it("bounces a Contributor home", async () => {

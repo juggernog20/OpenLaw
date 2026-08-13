@@ -7,10 +7,24 @@
  * the record holds, the Description card under it, and the Team card
  * the C2 mock draws in the record's side column. Every field edits in
  * place and commits individually per DES-017 — no page edit mode, no
- * dirty state, no Save chrome — with the Owner, status, priority, and
- * risk as selects. The type is shown but not edited here: re-typing
- * re-checks the type's required fields, which lands with the
- * custom-field work.
+ * dirty state, no Save chrome — with the Owner, the type, status,
+ * priority, and risk as selects.
+ *
+ * The custom fields are CTR-016's, and they earn the card the C2 mock
+ * draws for them. The contract's type decides which of them appear and
+ * in what order; each commits inline, keyed by the field's slug. All
+ * nine field types render through a control of their own, and the two
+ * that name a row reuse the record's own pickers: `user` offers the
+ * people the Owner select offers, `entity` the registry the signing
+ * entity select reads.
+ *
+ * Re-typing is the one edit here that is not a plain field commit.
+ * Changing the type re-checks the **new** type's hard-required fields
+ * (MTR-014), and a record cannot fill fields its current type does not
+ * attach — so a re-type with gaps opens a dialog that collects them and
+ * commits the type and the values as one. That is the compound edit
+ * DES-017 carves out of the inline rule. The seam refuses either way;
+ * the dialog is what makes the refusal answerable.
  *
  * The value is CTR-010's, and it is the one field here that is not a
  * scalar: an amount, its currency, and its cadence are three controls
@@ -76,10 +90,23 @@ import {
   type ContractStatusOption,
   type ContractTeamMember,
   type ContractTeamRole,
+  type ContractTypeOption,
   type SeverityLevel,
   type ValueCadence,
   type UserOption,
 } from "../lib/contracts";
+import {
+  commitsOnChange,
+  sameDraft,
+  toDraft,
+  toValue,
+  unansweredRequired,
+  type AttachedField,
+  type CustomFieldDraft,
+  type CustomFieldRefs,
+  type CustomFieldValue,
+  type CustomFieldValues,
+} from "../lib/custom-fields";
 import { currencyFractionDigits, currencyOptions, toMajorUnits, toMinorUnits } from "../lib/format";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
 import { problemDetail } from "../lib/messages";
@@ -91,6 +118,7 @@ import { RecordApplets } from "../components/shell/record-applets";
 import type { Applet } from "../components/shell/applets";
 import { Avatar } from "../components/avatar";
 import { CounterpartyPicker, type CounterpartyPick } from "../components/counterparty-picker";
+import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
 import { PageTitle } from "../components/page-title";
 import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Button } from "../components/ui/button";
@@ -121,8 +149,11 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
   return {
     user,
     contract: record.data.contract,
+    fields: record.data.fields,
+    customFieldRefs: record.data.customFieldRefs,
     team: record.data.team,
     counterparties: record.data.counterparties,
+    contractTypes: options.data.contractTypes,
     contractStatuses: options.data.contractStatuses,
     users: options.data.users,
     entities: registry.data.entities,
@@ -130,14 +161,22 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
 }
 
 /** The fields that commit as free text (DES-017); the Owner, our
- * signing entity, the status, priority, and risk have their own
- * selects, and the counterparties have their own routes. */
+ * signing entity, the type, the status, priority, and risk have their
+ * own selects, and the counterparties have their own routes. */
 type TextFieldKey = "title" | "description";
+/** One custom field's key, namespaced by slug so a catalog field named
+ * "Title" and the record's own title are never one micro-state. */
+type CustomFieldKey = `field:${string}`;
+/** What one committed field answers with: nothing more when it landed,
+ * and the seam's own refusal when it did not. */
+type CommitOutcome = { ok: true } | { ok: false; detail?: string };
 type FieldKey =
   | TextFieldKey
+  | CustomFieldKey
   | "managerId"
   | "entityId"
   | "counterparties"
+  | "contractTypeId"
   | "statusId"
   | "priority"
   | "risk"
@@ -165,13 +204,31 @@ export function ContractRecordPage() {
 }
 
 function ContractRecord() {
-  const { user, contract, team, counterparties, contractStatuses, users, entities } =
-    useLoaderData<typeof contractRecordLoader>();
+  const {
+    user,
+    contract,
+    fields,
+    customFieldRefs,
+    team,
+    counterparties,
+    contractTypes,
+    contractStatuses,
+    users,
+    entities,
+  } = useLoaderData<typeof contractRecordLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
 
   /** The saved record — the server's truth after the last commit. */
   const [saved, setSaved] = useState<ContractRow>(contract);
+  /** The fields the contract's type attaches, in attachment order. They
+   * are state rather than loader data because a re-type replaces them,
+   * and the PATCH that re-types answers with the new set. */
+  const [attached, setAttached] = useState<AttachedField[]>(fields);
+  /** The people and Entities the stored values name — merged into the
+   * pickers so an archived one still renders as itself. */
+  const [refs, setRefs] = useState<CustomFieldRefs>(customFieldRefs);
+  const [retypeTo, setRetypeTo] = useState<ContractTypeOption | null>(null);
   const [roster, setRoster] = useState<ContractTeamMember[]>(team);
   /** The other side (CTR-011), primary first as the API orders it. */
   const [parties, setParties] = useState<ContractCounterparty[]>(counterparties);
@@ -195,8 +252,15 @@ function ContractRecord() {
   /** One PATCH per committed field (DES-017): success adopts the
    * server's row as saved truth but resets only the committed field's
    * draft — another field's in-progress edit is not this commit's to
-   * discard. */
-  async function commit(key: FieldKey, body: Record<string, unknown>) {
+   * discard. The attached fields ride back on every answer because a
+   * re-type replaces them, and a card still drawing the old type's
+   * fields over the new type's values would be lying.
+   *
+   * It answers with the outcome as well as noting it. The field's own
+   * micro-state is where a refusal normally reads, but a dialog sitting
+   * over the record covers that spot — so the refusal is returned too,
+   * and whoever asked for the commit decides where to show it. */
+  async function commit(key: FieldKey, body: Record<string, unknown>): Promise<CommitOutcome> {
     note(key, "saving");
     const { data, error } = await api
       .PATCH("/api/v1/contracts/{number}", {
@@ -204,16 +268,42 @@ function ContractRecord() {
         body,
       })
       .catch(() => ({ data: undefined, error: undefined }));
-    if (data) {
-      const row = data.contract;
-      setSaved(row);
-      if (key === "title" || key === "description") {
-        setDrafts((current) => ({ ...current, [key]: textDrafts(row)[key] }));
-      }
-      note(key, "saved");
-    } else {
-      note(key, "error", problemDetail(error));
+    if (!data) {
+      const detail = problemDetail(error);
+      note(key, "error", detail);
+      return { ok: false, detail };
     }
+    const row = data.contract;
+    setSaved(row);
+    setAttached(data.fields);
+    setRefs(data.customFieldRefs);
+    if (key === "title" || key === "description") {
+      setDrafts((current) => ({ ...current, [key]: textDrafts(row)[key] }));
+    }
+    note(key, "saved");
+    return { ok: true };
+  }
+
+  /** One custom field, committed by slug (CTR-016). `null` clears it. */
+  function commitCustomField(slug: string, value: CustomFieldValue | null) {
+    return commit(`field:${slug}`, { customFields: { [slug]: value } });
+  }
+
+  /**
+   * Re-typing (CTR-002/MTR-014). When the new type demands nothing the
+   * record does not already answer, it commits like any other select.
+   * When it demands something, the record has nowhere to fill it — the
+   * gaps belong to a type the contract does not hold yet — so the
+   * dialog collects them and commits the type and the values together.
+   */
+  function pickType(contractTypeId: string) {
+    const target = contractTypes.find((option: ContractTypeOption) => option.id === contractTypeId);
+    if (!target || target.id === saved.contractTypeId) return;
+    if (unansweredRequired(target.fields, saved.customFields).length === 0) {
+      void commit("contractTypeId", { contractTypeId });
+      return;
+    }
+    setRetypeTo(target);
   }
 
   function commitText(key: TextFieldKey) {
@@ -271,6 +361,43 @@ function ContractRecord() {
    * the real guard; this keeps the picker from offering a dead end. */
   const ownerOptions = users.filter((person: UserOption) => isMemberPlus(person.role));
   const entityOptions = signingEntityOptions(entities, saved.entity);
+  /** What a `user` custom field offers: everyone the pickers offer,
+   * plus anyone a stored value already names. A custom person field is
+   * not the Owner, so it is not held to the Member+ floor (CTR-004). */
+  const peopleReferences = mergeReferences(
+    users.map((person: UserOption) => ({
+      id: person.id,
+      label: person.displayName,
+      archived: person.archived,
+    })),
+    refs.users.map((person) => ({
+      id: person.id,
+      label: person.displayName,
+      archived: person.archived,
+    })),
+  );
+  /** What an `entity` custom field offers: the live registry, plus any
+   * Entity a stored value already names. */
+  const entityReferences = mergeReferences(
+    entityOptions.map((entity) => ({ id: entity.id, label: entity.legalName })),
+    refs.entities.map((entity) => ({ id: entity.id, label: entity.legalName })),
+  );
+  /** The saved type may have been archived since, and so be absent from
+   * the picker read — keep it selectable as itself rather than let the
+   * select lie about what the record holds. */
+  const typeOptions: ContractTypeOption[] = contractTypes.some(
+    (option: ContractTypeOption) => option.id === saved.contractTypeId,
+  )
+    ? contractTypes
+    : [
+        {
+          id: saved.contractTypeId,
+          slug: saved.contractTypeId,
+          displayName: saved.contractTypeName,
+          fields: attached,
+        },
+        ...contractTypes,
+      ];
   /** The saved status may have been archived since, and so be absent
    * from the picker read — keep it selectable as itself rather than let
    * the select lie about what the record holds. */
@@ -410,12 +537,39 @@ function ContractRecord() {
                     }
                     value={reference}
                   />
-                  <ReadOnlyField
-                    label={
+                  {/* The type is a field like any other on the surface,
+                      and not like any other underneath: picking one
+                      re-checks what that type demands (MTR-014), so a
+                      pick with gaps opens a dialog instead of
+                      committing. The C2 mock draws the type in a hero
+                      meta strip that edits through the page-level Edit
+                      toggle DES-017 removed, so it lands here with the
+                      other scalars — the same move the Owner, our
+                      entity, and the value already made. */}
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="contract-type">
                       <FormattedMessage id="contracts.form.type" defaultMessage="Contract type" />
-                    }
-                    value={saved.contractTypeName}
-                  />
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <select
+                        id="contract-type"
+                        value={saved.contractTypeId}
+                        className={CONTROL_CLASS}
+                        disabled={archived}
+                        onChange={(event) => pickType(event.target.value)}
+                      >
+                        {typeOptions.map((option) => (
+                          <option key={option.id} value={option.id}>
+                            {option.displayName}
+                          </option>
+                        ))}
+                      </select>
+                      <StatusNote
+                        status={fieldStatus.contractTypeId ?? "idle"}
+                        detail={fieldError.contractTypeId}
+                      />
+                    </div>
+                  </div>
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="contract-owner">
                       <FormattedMessage id="contracts.form.owner" defaultMessage="Owner" />
@@ -654,6 +808,23 @@ function ContractRecord() {
                   />
                 </div>
               </section>
+              {/* CTR-016's fields, in the card the C2 mock draws for
+                  them and in the order the type's attachment join
+                  gives. It follows the Description card because the
+                  mock puts it after — the record's own columns first,
+                  then the account of them, then what this type asks
+                  for on top. */}
+              <FieldsCard
+                fields={attached}
+                values={saved.customFields}
+                people={peopleReferences}
+                entities={entityReferences}
+                frozen={archived}
+                status={fieldStatus}
+                error={fieldError}
+                onStatus={note}
+                onCommit={commitCustomField}
+              />
             </div>
             <TeamCard
               contractNumber={saved.number}
@@ -666,8 +837,43 @@ function ContractRecord() {
           </div>
         </div>
       </RecordApplets>
+      {retypeTo && (
+        <RetypeDialog
+          target={retypeTo}
+          values={saved.customFields}
+          people={peopleReferences}
+          entities={entityReferences}
+          onOpenChange={(open) => {
+            if (!open) setRetypeTo(null);
+          }}
+          onConfirm={async (customFields) => {
+            const outcome = await commit("contractTypeId", {
+              contractTypeId: retypeTo.id,
+              customFields,
+            });
+            if (outcome.ok) {
+              setRetypeTo(null);
+              return undefined;
+            }
+            // The seam's own refusal, handed back to the dialog: the
+            // field's micro-state carries it too, but the dialog is
+            // covering the field it would read on.
+            return outcome.detail ?? "";
+          }}
+        />
+      )}
     </AppShell>
   );
+}
+
+/** The rows a `user` or `entity` control offers: the live list first,
+ * then anything a stored value names that the live list left out. */
+function mergeReferences(
+  live: readonly FieldReference[],
+  held: readonly FieldReference[],
+): FieldReference[] {
+  const offered = new Set(live.map((row) => row.id));
+  return [...live, ...held.filter((row) => !offered.has(row.id))];
 }
 
 /**
@@ -1486,8 +1692,357 @@ function ValueField({
   );
 }
 
+/**
+ * CTR-016's fields, as the C2 mock's Fields card draws them: one row per
+ * attached field, the label on the left and the value on the right. The
+ * mock draws each value as read-only text under a page-level Edit
+ * toggle DES-017 removed, so the value cell holds the field's own
+ * control instead — the same substitution the Contract card above makes.
+ *
+ * The order is the type's attachment order, given by the API. Nothing
+ * here sorts, filters, or hides: a field the type attaches renders, and
+ * a value under a slug it does not attach is held by the record and
+ * drawn by nobody.
+ */
+function FieldsCard({
+  fields,
+  values,
+  people,
+  entities,
+  frozen,
+  status,
+  error,
+  onStatus,
+  onCommit,
+}: Readonly<{
+  fields: readonly AttachedField[];
+  values: CustomFieldValues;
+  people: readonly FieldReference[];
+  entities: readonly FieldReference[];
+  /** The record is archived: it reads as facts until it is restored. */
+  frozen: boolean;
+  status: Partial<Record<FieldKey, FieldStatus>>;
+  error: Partial<Record<FieldKey, string | undefined>>;
+  onStatus: (key: FieldKey, status: FieldStatus, detail?: string) => void;
+  /** Fire and forget: the row reads the outcome from its own
+   * micro-state, which `onStatus` has already been handed. */
+  onCommit: (slug: string, value: CustomFieldValue | null) => void;
+}>) {
+  return (
+    <section
+      aria-labelledby="contract-fields-heading"
+      className="w-full overflow-hidden rounded-card border border-border-default bg-raised"
+    >
+      <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
+        <h2 id="contract-fields-heading" className="text-base font-semibold">
+          <FormattedMessage id="contracts.fields.section" defaultMessage="Fields" />
+        </h2>
+      </header>
+      {fields.length === 0 ? (
+        <p className="px-4 py-3 text-base text-muted">
+          <FormattedMessage
+            id="contracts.fields.empty"
+            defaultMessage="This contract type attaches no fields. Add them in contract settings."
+          />
+        </p>
+      ) : (
+        <div className="flex flex-col py-1">
+          {fields.map((field) => (
+            <CustomFieldRow
+              // Keyed by slug, so re-typing to a type that attaches the
+              // same field keeps that row's draft rather than reviving
+              // the previous type's row in its place.
+              key={field.slug}
+              field={field}
+              value={values[field.slug]}
+              people={people}
+              entities={entities}
+              frozen={frozen}
+              status={status[`field:${field.slug}`] ?? "idle"}
+              error={error[`field:${field.slug}`]}
+              onStatus={(next, detail) => onStatus(`field:${field.slug}`, next, detail)}
+              onCommit={(value) => onCommit(field.slug, value)}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+/**
+ * One custom field, committed on its own (DES-017). Which gesture
+ * commits it follows the split the record already draws: a pick is a
+ * decision, so a toggle, a select, and a checkbox group commit the
+ * moment they change; typing is a draft, so a text, number, or date box
+ * commits on blur and on Enter, and Escape puts back what was saved.
+ */
+function CustomFieldRow({
+  field,
+  value,
+  people,
+  entities,
+  frozen,
+  status,
+  error,
+  onStatus,
+  onCommit,
+}: Readonly<{
+  field: AttachedField;
+  value: CustomFieldValue | undefined;
+  people: readonly FieldReference[];
+  entities: readonly FieldReference[];
+  frozen: boolean;
+  status: FieldStatus;
+  error: string | undefined;
+  onStatus: (status: FieldStatus, detail?: string) => void;
+  onCommit: (value: CustomFieldValue | null) => void;
+}>) {
+  const intl = useIntl();
+  const [draft, setDraft] = useState<CustomFieldDraft>(() => toDraft(field, value));
+  /** The value the draft was last seeded from, compared by content
+   * rather than by object — that is what lets another field's commit
+   * answer with a fresh row without discarding a half-typed entry here. */
+  const [seed, setSeed] = useState(() => JSON.stringify(value ?? null));
+  const seeded = JSON.stringify(value ?? null);
+  if (seed !== seeded) {
+    setSeed(seeded);
+    setDraft(toDraft(field, value));
+  }
+
+  const controlId = `contract-field-${field.slug}`;
+  const helpId = field.description ? `${controlId}-help` : undefined;
+  const immediate = commitsOnChange(field);
+
+  function revert() {
+    setDraft(toDraft(field, value));
+    onStatus("idle");
+  }
+
+  function commitDraft(next: CustomFieldDraft) {
+    // Enter already committed this draft and the PATCH is in flight —
+    // the blur that follows must not send a duplicate.
+    if (status === "saving") return;
+    if (sameDraft(next, toDraft(field, value))) {
+      // Nothing changed: commit nothing (DES-017), and drop any refusal
+      // the last attempt left standing.
+      onStatus("idle");
+      return;
+    }
+    const parsed = toValue(field, next);
+    if ("error" in parsed) {
+      onStatus(
+        "error",
+        intl.formatMessage({
+          id: "contracts.field.numberInvalid",
+          defaultMessage: "Enter this as a number.",
+        }),
+      );
+      return;
+    }
+    onCommit(parsed.value);
+  }
+
+  return (
+    <div className="flex flex-col gap-2 border-b border-border-muted px-4 py-2.5 last:border-b-0 @2xl/page:flex-row @2xl/page:items-center @2xl/page:gap-4">
+      <div className="flex shrink-0 flex-col gap-0.5 @2xl/page:w-55">
+        {/* The id is what a checkbox group points at: `for` names one
+            control, and a multi-select is several. */}
+        <Label id={`${controlId}-label`} htmlFor={controlId}>
+          {field.displayName}
+          {field.isRequired && (
+            <>
+              {/* The C10 mock's required marker. The glyph is
+                  decoration; the word beside it is what a reader who
+                  cannot see the color gets. */}
+              <span aria-hidden="true" className="ms-0.5 text-status-danger-fg">
+                *
+              </span>
+              <span className="sr-only">
+                <FormattedMessage id="contracts.field.requiredMark" defaultMessage="(required)" />
+              </span>
+            </>
+          )}
+        </Label>
+        {field.description && (
+          <span id={helpId} className="text-xs text-muted">
+            {field.description}
+          </span>
+        )}
+      </div>
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+        <div className="min-w-0 flex-1">
+          <CustomFieldControl
+            id={controlId}
+            field={field}
+            draft={draft}
+            disabled={frozen}
+            people={people}
+            entities={entities}
+            describedBy={helpId}
+            onDraft={(next) => {
+              setDraft(next);
+              if (immediate) commitDraft(next);
+            }}
+            onBlur={immediate ? undefined : () => commitDraft(draft)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") revert();
+              // A textarea's Enter is a newline, and the record page is
+              // not a form, so only the single-line boxes take it as a
+              // commit.
+              if (event.key === "Enter" && !immediate && field.fieldType !== "long_text") {
+                event.preventDefault();
+                commitDraft(draft);
+              }
+            }}
+          />
+        </div>
+        <StatusNote status={status} detail={error} />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Re-typing onto a type that demands something the record does not
+ * answer (MTR-014). The record cannot fill those fields inline — they
+ * belong to a type it does not hold yet — so this collects them and
+ * commits the type and the values as one write. It is the compound edit
+ * DES-017 carves out of the inline rule, with its own explicit confirm.
+ */
+function RetypeDialog({
+  target,
+  values,
+  people,
+  entities,
+  onOpenChange,
+  onConfirm,
+}: Readonly<{
+  target: ContractTypeOption;
+  values: CustomFieldValues;
+  people: readonly FieldReference[];
+  entities: readonly FieldReference[];
+  onOpenChange: (open: boolean) => void;
+  /** Answers `undefined` when the re-type landed, and the seam's own
+   * refusal — or an empty string when it gave none — when it did not. */
+  onConfirm: (customFields: Record<string, CustomFieldValue | null>) => Promise<string | undefined>;
+}>) {
+  const intl = useIntl();
+  const gaps = unansweredRequired(target.fields, values);
+  const [drafts, setDrafts] = useState<Record<string, CustomFieldDraft>>(() =>
+    Object.fromEntries(gaps.map((field) => [field.slug, toDraft(field, values[field.slug])])),
+  );
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit() {
+    if (busy) return;
+    setError(null);
+    const collected: Record<string, CustomFieldValue | null> = {};
+    for (const field of gaps) {
+      const parsed = toValue(field, drafts[field.slug] ?? "");
+      if ("error" in parsed) {
+        setError(
+          intl.formatMessage({
+            id: "contracts.field.numberInvalid",
+            defaultMessage: "Enter this as a number.",
+          }),
+        );
+        return;
+      }
+      if (parsed.value === null) {
+        setError(
+          intl.formatMessage(
+            {
+              id: "contracts.retype.missing",
+              defaultMessage: "Fill {field} — the new type requires it.",
+            },
+            { field: field.displayName },
+          ),
+        );
+        return;
+      }
+      collected[field.slug] = parsed.value;
+    }
+    setBusy(true);
+    const refusal = await onConfirm(collected).finally(() => setBusy(false));
+    if (refusal !== undefined) {
+      setError(
+        refusal ||
+          intl.formatMessage({
+            id: "contracts.retype.error",
+            defaultMessage: "The contract type could not be changed.",
+          }),
+      );
+    }
+  }
+
+  return (
+    <Dialog open onOpenChange={onOpenChange}>
+      <DialogContent aria-describedby="contract-retype-note">
+        <DialogTitle>
+          <FormattedMessage id="contracts.retype.title" defaultMessage="Change contract type" />
+        </DialogTitle>
+        <p id="contract-retype-note" className="mt-2 text-base text-muted">
+          <FormattedMessage
+            id="contracts.retype.note"
+            defaultMessage="{type} requires these fields. Fill them to change the type."
+            values={{ type: target.displayName }}
+          />
+        </p>
+        <form
+          className="mt-4 flex flex-col gap-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submit();
+          }}
+        >
+          {gaps.map((field) => (
+            <div key={field.slug} className="flex flex-col gap-1.5">
+              <Label
+                id={`contract-retype-${field.slug}-label`}
+                htmlFor={`contract-retype-${field.slug}`}
+              >
+                {field.displayName}
+              </Label>
+              <CustomFieldControl
+                id={`contract-retype-${field.slug}`}
+                field={field}
+                draft={drafts[field.slug] ?? ""}
+                people={people}
+                entities={entities}
+                describedBy={field.description ? `contract-retype-${field.slug}-help` : undefined}
+                onDraft={(next) => setDrafts((current) => ({ ...current, [field.slug]: next }))}
+              />
+              {field.description && (
+                <p id={`contract-retype-${field.slug}-help`} className="text-xs text-muted">
+                  {field.description}
+                </p>
+              )}
+            </div>
+          ))}
+          {error && (
+            <p role="alert" className="text-xs text-status-danger-fg">
+              {error}
+            </p>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
+              <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+            </Button>
+            <Button type="submit" disabled={busy}>
+              <FormattedMessage id="contracts.retype.submit" defaultMessage="Change type" />
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 /** A stated fact rather than an editable field: the reference is
- * immutable (CTR-003), and the type moves with the custom-field work. */
+ * immutable (CTR-003), so it is the one thing on the record no control
+ * answers for. */
 function ReadOnlyField({ label, value }: Readonly<{ label: React.ReactNode; value: string }>) {
   return (
     <div className="flex flex-col gap-1.5">
