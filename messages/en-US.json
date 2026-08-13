@@ -92,8 +92,35 @@
   "activity.empty": {
     "defaultMessage": "Nothing has happened to this record yet. Every change to it shows up here."
   },
+  "activity.entity.archived": {
+    "defaultMessage": "{actor} archived {name}"
+  },
+  "activity.entity.created": {
+    "defaultMessage": "{actor} registered {name}"
+  },
+  "activity.entity.restored": {
+    "defaultMessage": "{actor} restored {name}"
+  },
+  "activity.entity.statusChanged": {
+    "defaultMessage": "{actor} changed the status of {name}"
+  },
+  "activity.entity.typeReassigned": {
+    "defaultMessage": "{actor} re-typed {name}"
+  },
+  "activity.entity.updated": {
+    "defaultMessage": "{actor} changed {name}"
+  },
+  "activity.export.performed": {
+    "defaultMessage": "{actor} exported the audit log"
+  },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} primaryCounterparty {Primary counterparty} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} primaryCounterparty {Primary counterparty} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
+  },
+  "activity.field.narrowed": {
+    "defaultMessage": "{actor} narrowed the field {name} to one module"
+  },
+  "activity.field.promoted": {
+    "defaultMessage": "{actor} widened the field {name} to every module"
   },
   "activity.loadError": {
     "defaultMessage": "The history could not be read. Reopen the panel to try again."
@@ -104,11 +131,101 @@
   "activity.older": {
     "defaultMessage": "Show older"
   },
+  "activity.orgSettings.updated": {
+    "defaultMessage": "{actor} changed the organization settings"
+  },
   "activity.someone": {
     "defaultMessage": "someone"
   },
+  "activity.ssoProvider.registered": {
+    "defaultMessage": "{actor} connected the identity provider {provider}"
+  },
+  "activity.ssoProvider.updated": {
+    "defaultMessage": "{actor} changed the identity provider {provider}"
+  },
+  "activity.taxonomy.archived": {
+    "defaultMessage": "{actor} archived the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+  },
+  "activity.taxonomy.created": {
+    "defaultMessage": "{actor} added the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+  },
+  "activity.taxonomy.deleted": {
+    "defaultMessage": "{actor} deleted the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+  },
+  "activity.taxonomy.renamed": {
+    "defaultMessage": "{actor} renamed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+  },
+  "activity.taxonomy.reordered": {
+    "defaultMessage": "{actor} reordered the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} list"
+  },
+  "activity.taxonomy.restored": {
+    "defaultMessage": "{actor} restored the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+  },
+  "activity.taxonomy.updated": {
+    "defaultMessage": "{actor} changed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+  },
+  "activity.typeField.attached": {
+    "defaultMessage": "{actor} attached the field {field} to the {owner, select, contract_type_field {contract type} matter_type_field {matter type} other {type}} {type}"
+  },
+  "activity.typeField.detached": {
+    "defaultMessage": "{actor} detached the field {field} from the {owner, select, contract_type_field {contract type} matter_type_field {matter type} other {type}} {type}"
+  },
+  "activity.typeField.reordered": {
+    "defaultMessage": "{actor} reordered the fields on the {owner, select, contract_type_field {contract type} matter_type_field {matter type} other {type}} {type}"
+  },
+  "activity.typeField.requiredChanged": {
+    "defaultMessage": "{actor} made the field {field} {required, select, true {required} other {optional}} on the {owner, select, contract_type_field {contract type} matter_type_field {matter type} other {type}} {type}"
+  },
   "activity.unknown": {
     "defaultMessage": "{actor} — {action}"
+  },
+  "activity.unnamed": {
+    "defaultMessage": "(unnamed)"
+  },
+  "activity.user.archived": {
+    "defaultMessage": "{actor} archived {email}"
+  },
+  "activity.user.avatarChanged": {
+    "defaultMessage": "{actor} changed their avatar"
+  },
+  "activity.user.displayNameChanged": {
+    "defaultMessage": "{actor} changed their display name"
+  },
+  "activity.user.inviteResent": {
+    "defaultMessage": "{actor} resent the invite to {email}"
+  },
+  "activity.user.inviteRevoked": {
+    "defaultMessage": "{actor} revoked the invite to {email}"
+  },
+  "activity.user.invited": {
+    "defaultMessage": "{actor} invited {email} as {role}"
+  },
+  "activity.user.otherSessionsRevoked": {
+    "defaultMessage": "{actor} signed out their other sessions"
+  },
+  "activity.user.passwordChanged": {
+    "defaultMessage": "{actor} changed their password"
+  },
+  "activity.user.roleChanged": {
+    "defaultMessage": "{actor} changed the role of {email}"
+  },
+  "activity.user.sessionsRevoked": {
+    "defaultMessage": "{actor} signed {email} out of every session"
+  },
+  "activity.user.themeChanged": {
+    "defaultMessage": "{actor} changed their theme"
+  },
+  "activity.user.timezoneChanged": {
+    "defaultMessage": "{actor} changed their timezone"
+  },
+  "activity.user.twoFactorDisabled": {
+    "defaultMessage": "{actor} turned off two-factor authentication"
+  },
+  "activity.user.twoFactorEnrolled": {
+    "defaultMessage": "{actor} turned on two-factor authentication"
+  },
+  "activity.user.unarchived": {
+    "defaultMessage": "{actor} restored {email}"
   },
   "app.pageTitle": {
     "defaultMessage": "{screen} · OpenLaw"
@@ -121,6 +238,69 @@
   },
   "applets.labelWithBadge": {
     "defaultMessage": "{label} ({count})"
+  },
+  "audit.col.audience": {
+    "defaultMessage": "Audience"
+  },
+  "audit.col.event": {
+    "defaultMessage": "Event"
+  },
+  "audit.col.record": {
+    "defaultMessage": "Record"
+  },
+  "audit.col.when": {
+    "defaultMessage": "When"
+  },
+  "audit.empty": {
+    "defaultMessage": "No entry matches these filters."
+  },
+  "audit.entityType": {
+    "defaultMessage": "{type, select, contract {Contract} matter {Matter} document {Document} request {Request} user {User} entity {Entity} system {System} other {{type}}}"
+  },
+  "audit.export": {
+    "defaultMessage": "Export CSV"
+  },
+  "audit.filter.action": {
+    "defaultMessage": "Action"
+  },
+  "audit.filter.actor": {
+    "defaultMessage": "Person"
+  },
+  "audit.filter.anyAction": {
+    "defaultMessage": "Any action"
+  },
+  "audit.filter.anyRecord": {
+    "defaultMessage": "Any record"
+  },
+  "audit.filter.anyone": {
+    "defaultMessage": "Anyone"
+  },
+  "audit.filter.clear": {
+    "defaultMessage": "Clear filters"
+  },
+  "audit.filter.from": {
+    "defaultMessage": "From"
+  },
+  "audit.filter.record": {
+    "defaultMessage": "Record"
+  },
+  "audit.filter.search": {
+    "defaultMessage": "Search"
+  },
+  "audit.filter.to": {
+    "defaultMessage": "To"
+  },
+  "audit.filters": {
+    "defaultMessage": "Narrow the audit log"
+  },
+  "audit.loadError": {
+    "defaultMessage": "The audit log could not be read. Change a filter to try again."
+  },
+  "audit.older": {
+    "defaultMessage": "Show older"
+  },
+  "audit.tier": {
+    "defaultMessage": "{tier, select, legal_only {Legal only} working_team {Working team} full_thread {Full thread} admin_only {Administrators} other {{tier}}}"
   },
   "auth.backToSignIn": {
     "defaultMessage": "Back to sign-in"
@@ -1693,6 +1873,9 @@
   },
   "settings.section.appearance": {
     "defaultMessage": "Appearance"
+  },
+  "settings.section.auditLog": {
+    "defaultMessage": "Audit log"
   },
   "settings.section.authentication": {
     "defaultMessage": "Authentication"

@@ -1564,6 +1564,65 @@ Naming a single change in the sentence and dropping its label from the line belo
 
 No new tokens: the row is `bg-control`, `border-muted`, `text-primary`, and `text-muted`, all already valued and gated. The applet is `apps/web/src/components/activity/activity-applet.tsx`, entity-generic and keyed by an entity reference, so matters (M22) and documents (M11) mount it rather than reimplementing it. It takes two catalogs from its mount, because the log carries neither: the type's attached fields, because a `field.<slug>` change key is a slug and not a name, and display names for the ids CTR-016's `user` and `entity` kinds store. The record's own Owner and signing entity need no lookup — M8 wrote those into the payload as names precisely so this layer would not have to. Everything the catalogs do not cover falls back to what the log stored, which is the honest rendering for a field since detached or a person since deleted. The Administrator's audit log (M9/7) draws its own table but narrates through the same layer, so a slug reads the same in both surfaces.
 
+## DES-027: The audit-log pane — the filter bar, the narrated table row, and the export foot (extends DES-021, DES-026)
+
+- **Status:** Accepted
+- **Date:** 2026-08-13
+
+### Context
+
+DES-026 drew the record's history panel: a narrated row on a medallion, change lines under the sentence, and a load-more foot. M9/7 (#133) builds the second reader of the same table — the Administrator's audit log in the Security group of `/settings` (DD-017, SET-002). It is not a panel beside a record. It is a settings pane that reads the whole log, filters it five ways, pages it, and exports it, so it needs anatomy the panel does not have: a filter bar, columns, and an export.
+
+The reference is the settings frames in `designs/settings.pen`. The Pencil canvas would not move off `designs/contracts.pen`, exactly as it would not for DES-023 and DES-026. This record is therefore built from the written pattern rather than from a frame: DES-021's table variant for the columns, the Users pane (ST5, shipped) for a settings table's chrome, DES-026 for what one entry looks like, and DES-023 for the audience badge.
+
+### Decision
+
+The pane is one flush settings card with three parts.
+
+**The filter bar** sits inside the card, above the column strip, on a `border-default` rule at 12px vertical and 16px horizontal padding. It is a `role="search"` region named "Narrow the audit log", holding six labelled controls that wrap: Person (a select of every user), Action (a select of the slugs the log actually holds), Record (a select of the entity types), From and To (native date inputs), and Search (a `type="search"` input). Each label is visible at 11px semibold `text-muted` above its control — six controls in a row have to be named, and a placeholder disappears the moment somebody uses it. A ghost "Clear filters" closes the row.
+
+- **The filters compose, and the pane never layers them by hand.** Every read carries the whole set. What is on screen is the answer to one question.
+- **Search is debounced; the rest apply immediately.** Typing a word is one request; picking from a select is one gesture and one answer.
+- **The action vocabulary comes from the table, not from the code.** The log outlives the code that wrote it, so the filter offers the slugs that are in there.
+- **Dates are the reader's own days.** A date input answers a calendar date; the pane converts it to the first and last instants of that day in the reader's timezone (DES-014), so "August" is their August.
+
+**The entry row** is a table row under DES-021's column strip: Event, Record, Audience, When.
+
+- **Event** is DES-026's narrated row, unchanged in substance: a 24px `rounded-pill` medallion on `bg-control` carrying the action family's 16px glyph, then the sentence at 12px `text-primary`, then the change lines at 11px `text-muted`. Every change line carries its label here, where the panel drops it for a single change — a table row is scanned in a column of unrelated actions, so "Role: Contributor → Legal team member" has to say which key it is about.
+- **Record** names the entity type and, under it, the entity id at 11px `text-muted`. The id is what an auditor quotes back, so it is on screen and not only in the export.
+- **Audience** carries a badge, where DES-026 deliberately carries none. The reason DES-026 dropped it does not hold here: on a record feed the tier is the record's own policy repeated down the panel, but this surface shows four tiers at once and the tier is one of the things being audited.
+- **When** is DES-014's activity-feed rule, as the panel uses it: relative inside a week, short absolute after, long absolute with its timezone in the tooltip.
+
+**The audience badge** extends DES-023's rule by one tier. The two restricted rooms — Legal Only and Administrators — take DES-009's `bg-confidential-bg` / `text-confidential` pair with the 12px `Lock` ahead of the label; the two wider ones take the neutral counter pair. The label is what tells the restricted two apart; the treatment is what makes either read as restricted without being looked at.
+
+**The export is a link, not a button.** It streams a set of unknown length, so the browser's own download is the right client for it. It sits in the card's header strip as a secondary Button rendered as an `<a download>` carrying the 16px `Download` glyph, and its href carries the filters on screen — what downloads is what is being looked at.
+
+**The foot** is DES-026's: a secondary "Show older" whenever a further page exists, and nothing when it does not. No total anywhere, for the reason the record feed has none — one paging convention, not two.
+
+### Recorded normalization points
+
+1. **The reference frames could not be opened.** `designs/settings.pen` is not the active Pencil canvas and the canvas would not switch files — the third time this milestone (DES-023, DES-026). The pane is built from DES-021's table variant, DES-026's row, DES-023's badge, and the shipped Users pane, all of which are ratified against those frames already. A frame for this pane, when one can be opened, governs the chrome; the anatomy above is the decision.
+2. **Change lines always carry their label.** DES-026 drops the label for a single change, because the sentence above it already named the key. In a table of every action in the system, the sentence often does not — "changed the organization settings" names no field — so the label stays.
+3. **The row wears an audience badge**, against DES-026's normalization point 6. See the Audience clause above for why the reason does not carry over.
+4. **The filter controls are native `select` and `input`**, through the shared `CONTROL_CLASS` treatment (the C10 field spec), not hand-rolled comboboxes. A picker over a fixed list of a dozen options is what a native select is for, and DES-010 leans on built-ins.
+
+### Rationale
+
+The audit log and the record feed read one table and must say the same thing about a row, which is why they share the narration layer and not the surface. What differs is the question each answers: a feed answers "what happened to this record", and its reader already knows the record, the room, and roughly when. An auditor knows none of those, which is exactly what the three columns after the sentence supply.
+
+Putting the filter bar inside the card rather than in its header strip is the one place this pane leaves the Users pane's shape. Six controls do not fit a 44px strip, and a filter bar floating above the card would read as page furniture rather than as part of the table it narrows.
+
+### Alternatives considered
+
+- **A list, as the history panel draws one.** Rejected: without columns, the entity type, the tier, and the timestamp all have to go into the sentence or under it, and the row stops being scannable at exactly the volume this surface exists for.
+- **Filters in the URL**, so a narrowed log is a link. Attractive, and deferred rather than rejected — it wants the loader to own the filters, which is a larger change than this ticket, and nothing else in settings is deep-linkable past its pane.
+- **A distinct treatment for the Administrators tier**, separate from Legal Only's. Rejected: that is a third badge treatment and a token to go with it, where the label already distinguishes them and the shared treatment carries the thing a reader must not miss.
+- **Fetching the export and offering a blob.** Rejected: it holds the whole export in memory on the client, which is the one thing streaming it was for.
+
+### Consequences
+
+`apps/web/src/routes/settings-audit-log.tsx` is the pane. No new tokens: the row is `bg-control`, `border-muted`, `border-default`, `text-primary`, and `text-muted`, and the badge reuses the confidential and counter pairs, all already valued and gated. `lib/format.ts` gains `dayBounds`, which turns a civil date into the two instants it covers in the reader's timezone — the first surface to filter on a date range, and not the last. `lib/roles.ts` gains the role wording that the Users pane, the wizard, and the Profile pane each held a copy of, because the narration is the fourth reader of it. The narration layer's entry type is now structural rather than the record feed's response shape, so both surfaces narrate the same rows without either converting for the other.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |

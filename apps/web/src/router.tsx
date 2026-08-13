@@ -57,6 +57,7 @@ import {
   SettingsAuthenticationPage,
   settingsAuthenticationLoader,
 } from "./routes/settings-authentication";
+import { SettingsAuditLogPage, settingsAuditLogLoader } from "./routes/settings-audit-log";
 import { SettingsProfilePage, settingsProfileLoader } from "./routes/settings-profile";
 import { SetupPage, setupLoader } from "./routes/setup";
 import { TwoFactorPage } from "./routes/two-factor";
@@ -140,6 +141,13 @@ export const routes: RouteObject[] = [
         path: "authentication",
         loader: settingsAuthenticationLoader,
         element: <SettingsAuthenticationPage />,
+      },
+      {
+        // #133: the DD-017 audit log, beside Authentication in the
+        // Security group. Administrator-only (SET-002).
+        path: "audit-log",
+        loader: settingsAuditLogLoader,
+        element: <SettingsAuditLogPage />,
       },
       // Each section URL forwards to its first pane, so the rail's
       // entries and deep links share one canonical address.

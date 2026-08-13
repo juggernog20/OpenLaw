@@ -782,6 +782,24 @@ The per-entity feed is built. Five points the decision left open, answered by th
 
 The narration layer is `apps/web/src/lib/activity.ts`: slug plus payload to an ICU message, its values, and the family's glyph, with old and new values rendered through the same formatters the record page uses. It sits in `lib/` rather than inside the panel because the Administrator's audit log is a second reader of it.
 
+### Implementation clarification (2026-08-13, #133)
+
+The audit log is built, and with it the SIEM clause. Five points the decision left open, answered by the surface that reads the whole table.
+
+1. **The audit log consults no access layer at all.** The record feed reuses `contractAudience` because it is a record's feed and a Contributor's reach is the question. This surface has no record, so there is no reach to compute: it reads `activity_log` with no tier predicate and no entity scope, gated on the Administrator role alone (SET-002, DD-013). The two surfaces share the table and the narration and nothing else, deliberately — a tier predicate threaded through both would be one rule serving two questions, and the audit log's answer would then depend on a function of the reader's contract teams.
+
+2. **The pane is absent, not refused** (SET-002). It sits in the Security group of `/settings`, which is inside the Organization group non-Administrators never see. The route's loader bounces them and the API answers 403, but the point is that the rail never advertises it.
+
+3. **The export is bounded at its own entry.** DD-017 makes an export a security event, so taking one appends `export.performed` at `admin_only`, carrying the filters it was taken under — the log says what left, not merely that something did. That entry is written before a byte is streamed, so a reader who disconnects mid-download is still on the record; and the stream is bounded above by it, on the same `(created_at, id)` keyset the paging uses. An export therefore never contains the record of itself, and two exports of one filter answer the same rows. `export.performed` joins the closed `ActivityAction` union, and hangs off `system`, because an export is about no single record.
+
+4. **The export streams, and the browser downloads it.** The filtered set has no bound, so the response is a `text/csv` stream walked in chunks over the same keyset rather than an answer assembled in memory. The client is an ordinary link carrying the filters on screen. Every CSV field is quoted, and a value opening with `=`, `+`, `-`, `@`, a tab, or a carriage return is prefixed with an apostrophe: this file is handed to an auditor who opens it in a spreadsheet, and a display name of `=1+1` is a formula there.
+
+5. **Structured emission is process-wide, and it cannot fail a mutation.** `recordActivity` emits each appended row as one line of JSON through the application logger, alongside the in-app write. The sink is set once by `buildApp` rather than threaded through the writer's seventy-odd call sites: stdout is process-wide, and the writer's own argument is a database handle or the transaction it must write inside. Emission is wrapped in a catch that swallows — the in-app entry is the record, the emitted line is a copy for somebody else's system, and a full log volume must not roll back a role change. The failure goes unreported, because there is nowhere to report a logger's failure except the logger. One consequence is stated rather than hidden: the line rides the insert, not the commit, so a transaction that later rolls back has emitted a line for a row nobody can read.
+
+The audit log's page size is its own constant (50), larger than the feed's, and everything else about its paging is the feed's convention unchanged: keyset on `(created_at, id)`, a cursor that is one entry's id, a cursor naming no row answering an empty page, and no total in the envelope. Filters — actor, action, entity type, date range — are one `AND` over one predicate that the page, the export, and the boundary all read, so the three cannot disagree about what the current filter means. Search is one more term of that predicate, across the action slug, the entity id, the actor's name and email, and the payload's own text.
+
+The narration layer now covers the whole vocabulary rather than a record feed's half of it, because this surface reads all of it. Its entry type is structural rather than one response shape, so both surfaces narrate the same rows without either converting for the other.
+
 ---
 
 ## DD-018: Work-model doctrine — dual workspaces with the deliverable rule

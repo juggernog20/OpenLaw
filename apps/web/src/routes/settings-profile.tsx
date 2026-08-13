@@ -22,6 +22,7 @@ import { authClient } from "../lib/auth-client";
 import { formatShortDate } from "../lib/format";
 import { field } from "../lib/forms";
 import { networkError } from "../lib/messages";
+import { ROLE_MESSAGES, type Role } from "../lib/roles";
 import { currentUser, needsSetup } from "../lib/session";
 import { Avatar } from "../components/avatar";
 import { PageTitle } from "../components/page-title";
@@ -59,22 +60,8 @@ export async function settingsProfileLoader() {
 const AVATAR_BYTE_LIMIT = 1024 * 1024;
 const AVATAR_TYPES = ["image/png", "image/jpeg"];
 
-function RoleLabel({
-  role,
-}: Readonly<{
-  /** The DD-013 enum, as the /me contract types it. */
-  role: "administrator" | "legal_team_member" | "contributor" | "business_user";
-}>) {
-  switch (role) {
-    case "administrator":
-      return <FormattedMessage id="role.administrator" defaultMessage="Administrator" />;
-    case "legal_team_member":
-      return <FormattedMessage id="role.legalTeamMember" defaultMessage="Legal team member" />;
-    case "contributor":
-      return <FormattedMessage id="role.contributor" defaultMessage="Contributor" />;
-    case "business_user":
-      return <FormattedMessage id="role.businessUser" defaultMessage="Business user" />;
-  }
+function RoleLabel({ role }: Readonly<{ role: Role }>) {
+  return <FormattedMessage {...ROLE_MESSAGES[role]} />;
 }
 
 type TotpDialog =

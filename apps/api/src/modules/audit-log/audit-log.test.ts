@@ -615,10 +615,7 @@ describe("structured emission", () => {
     });
     // The line names the row it is a copy of, so a SIEM and the pane
     // are talking about the same entry.
-    const [row] = await harness.db
-      .select()
-      .from(activityLog)
-      .where(eq(activityLog.id, event!.id));
+    const [row] = await harness.db.select().from(activityLog).where(eq(activityLog.id, event!.id));
     expect(row).toBeDefined();
     expect(event!.createdAt).toBe(row!.createdAt.toISOString());
     expect(event!.payload).toEqual(row!.payload);

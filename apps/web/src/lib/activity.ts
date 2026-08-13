@@ -26,10 +26,14 @@
  * that names the actor and the slug; the same holds one level down, for
  * a payload that does not carry the keys its slug usually does.
  *
- * The vocabulary narrated today is the vocabulary a **record** feed can
- * contain: `contract.*` and `comment.*`. The audit log's wider set —
- * `user.*`, `org_settings.*`, the taxonomy prefixes, `entity.*` — joins
- * in M9/7, and reads through the fallback until it does.
+ * The vocabulary narrated here is the whole of it. A record feed can
+ * only contain `contract.*` and `comment.*`, and those came first
+ * (M9/6); the Administrator's audit log reads the table with no entity
+ * scope and no tier filter, so it reaches everything — user
+ * administration, settings, the taxonomies, the field catalog, the
+ * registry, the identity provider, and an export of the log itself.
+ * Those arms landed with that surface (M9/7). Adding an action family
+ * is adding entries to `ARMS`, and nothing else.
  *
  * Nothing here reads comment text: `comment.*` payloads carry ids only,
  * because the log is append-only and an Administrator's hard redact has
@@ -42,17 +46,37 @@ import {
   Archive,
   ArchiveRestore,
   Building2,
+  Clock,
+  Download,
   FilePlus2,
   GitCommitHorizontal,
+  Globe,
+  Image as ImageIcon,
+  KeyRound,
+  Link2,
+  ListOrdered,
+  LogOut,
   MessageSquare,
+  Palette,
   PencilLine,
+  Settings,
+  ShieldCheck,
+  ShieldOff,
+  SquareCheck,
   Tag,
+  Tags,
+  Trash2,
+  Unlink,
+  UserCog,
+  UserMinus,
+  UserPlus,
   Users,
   type LucideIcon,
 } from "lucide-react";
 import { defineMessage, type IntlShape, type MessageDescriptor } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 import { formatShortDate } from "./format";
+import { roleLabel } from "./roles";
 import {
   formatContractValue,
   riskLabel,
@@ -64,8 +88,22 @@ import {
 type FeedResponse =
   paths["/api/v1/activity"]["get"]["responses"]["200"]["content"]["application/json"];
 
-/** One activity entry as the API answers it. */
+/** One activity entry as the record feed answers it. */
 export type ActivityEntry = FeedResponse["entries"][number];
+
+/**
+ * What narration actually reads out of an entry: who acted, what they
+ * did, and the action's own data. Structural rather than one surface's
+ * response type, because two surfaces answer entries and their shapes
+ * are not the same one — the audit log carries a fourth tier, an entity
+ * type, and an entity id that a record feed has no use for. Both
+ * satisfy this, and neither has to be converted to be narrated.
+ */
+export interface NarratableEntry {
+  action: string;
+  actor: { displayName: string } | null;
+  payload: Record<string, unknown>;
+}
 
 /** The record a feed hangs off — the reference the panel is keyed by. */
 export type ActivityEntityType =
@@ -129,11 +167,11 @@ export interface NarrationContext {
  * put there. Every read of it below is defensive, because the shapes
  * are as old as the rows and nothing prunes either.
  */
-type Payload = ActivityEntry["payload"];
+type Payload = NarratableEntry["payload"];
 
 /** Who acted, as the sentence names them. A system-emitted entry has no
  * human actor, and saying so beats inventing one. */
-function actorName(intl: IntlShape, entry: ActivityEntry): string {
+function actorName(intl: IntlShape, entry: NarratableEntry): string {
   return (
     entry.actor?.displayName ??
     intl.formatMessage({ id: "activity.actor.system", defaultMessage: "OpenLaw" })
@@ -165,11 +203,31 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
   return intl.formatMessage(
     {
       id: "activity.field",
+      // One catalog of changed-key names, for both surfaces. The record
+      // page's own fields lead; the rest are the keys the audit log's
+      // wider vocabulary changes — settings, user administration, the
+      // taxonomies, the field catalog, the registry, and the identity
+      // provider. A key with no arm reads as itself, which is the
+      // honest rendering for one this build no longer writes.
       defaultMessage:
         "{key, select, title {Title} description {Description} owner {Owner} " +
         "entity {Signing entity} priority {Priority} risk {Risk} " +
         "contractType {Contract type} value {Value} status {Status} " +
-        "primaryCounterparty {Primary counterparty} other {{key}}}",
+        "primaryCounterparty {Primary counterparty} " +
+        "displayName {Name} display_name {Display name} name {Name} " +
+        "role {Role} email {Email} " +
+        "stage {Stage} moduleScope {Scope} isRequired {Required} " +
+        "theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} " +
+        "defaultLocale {Default language} defaultTimezone {Default timezone} " +
+        "authMode {Sign-in method} allowedEmailDomains {Allowed email domains} " +
+        "smtpUrl {SMTP server} smtpFrom {From address} " +
+        "issuer {Issuer} domain {Email domain} clientId {Client ID} " +
+        "clientSecret {Client secret} " +
+        "legalName {Legal name} entityType {Entity type} " +
+        "jurisdiction {Jurisdiction} formedOn {Formed on} " +
+        "registrationNumber {Registration number} taxId {Tax ID} " +
+        "registeredAgent {Registered agent} registeredAddress {Registered address} " +
+        "other {{key}}}",
     },
     { key },
   );
@@ -295,6 +353,60 @@ function named(intl: IntlShape, payload: Payload, key: string): string {
 }
 
 /**
+ * What a payload calls the thing it is about — a taxonomy row, a field,
+ * a registry record. Display name first, because that is what the reader
+ * saw; the slug behind it when the payload carries no name, which is
+ * what a rename's payload looks like; and a placeholder when it carries
+ * neither, which only an ancient row shape can.
+ */
+function thingName(intl: IntlShape, payload: Payload): string {
+  return (
+    text(payload, "displayName") ??
+    text(payload, "legalName") ??
+    text(payload, "slug") ??
+    intl.formatMessage({ id: "activity.unnamed", defaultMessage: "(unnamed)" })
+  );
+}
+
+/**
+ * The `{field, old, new}` shape the settings, profile, and identity
+ * provider writers use. The payload names the key it changed instead of
+ * the slug doing it, because one slug covers every field on the surface.
+ */
+function fieldChange(
+  intl: IntlShape,
+  payload: Payload,
+  context: NarrationContext,
+): NarratedChange[] {
+  const key = text(payload, "field");
+  if (key === null) return [];
+  return [
+    {
+      label: changeLabel(intl, key, context),
+      from: changeValue(intl, key, payload.old, context),
+      to: changeValue(intl, key, payload.new, context),
+    },
+  ];
+}
+
+/** A role change, with both sides in the words the Users pane uses. A
+ * slug that is no longer a role reads as itself (`roleLabel`). */
+function roleChange(
+  intl: IntlShape,
+  payload: Payload,
+  context: NarrationContext,
+): NarratedChange[] {
+  if (!("from" in payload) && !("to" in payload)) return [];
+  return [
+    {
+      label: changeLabel(intl, "role", context),
+      from: roleLabel(intl, String(payload.from ?? "")),
+      to: roleLabel(intl, String(payload.to ?? "")),
+    },
+  ];
+}
+
+/**
  * One action's narration: the glyph it wears, the sentence it reads as,
  * the placeholders that sentence needs, and the old→new pairs it
  * carries.
@@ -317,11 +429,191 @@ interface Arm {
 }
 
 /**
- * The vocabulary a record feed can contain, narrated. `contract.*` is
- * the record's own story and `comment.*` is the conversation on it; the
- * audit log's wider set joins in M9/7. A slug that is not here reads
- * through the fallback at the bottom of `narrateActivity`, which is what
- * makes this table safe to be incomplete.
+ * The settings taxonomies say the same seven things about five
+ * different lists, so they share seven sentences and name which list
+ * inside them.
+ *
+ * The name of the list is an ICU `select` rather than an interpolated
+ * noun: a translator needs the whole sentence for each case, because a
+ * language that inflects around the noun cannot be served by dropping
+ * one into a slot. `other` covers a taxonomy this build no longer has,
+ * which the append-only log can still be holding entries for.
+ */
+/**
+ * Every `defaultMessage` below spells the `kind` select out in full,
+ * rather than sharing one constant for it. The ICU extractor reads the
+ * source rather than running it, so a message assembled from a variable
+ * is a message it cannot see. Literal, repeated, and extractable beats
+ * short and invisible.
+ */
+const TAXONOMY = {
+  created: defineMessage({
+    id: "activity.taxonomy.created",
+    defaultMessage:
+      "{actor} added the {kind, select, contract_type {contract type} " +
+      "matter_type {matter type} entity_type {entity type} " +
+      "contract_status {contract status} field {field} other {type}} {name}",
+  }),
+  renamed: defineMessage({
+    id: "activity.taxonomy.renamed",
+    defaultMessage:
+      "{actor} renamed the {kind, select, contract_type {contract type} " +
+      "matter_type {matter type} entity_type {entity type} " +
+      "contract_status {contract status} field {field} other {type}} {name}",
+  }),
+  updated: defineMessage({
+    id: "activity.taxonomy.updated",
+    defaultMessage:
+      "{actor} changed the {kind, select, contract_type {contract type} " +
+      "matter_type {matter type} entity_type {entity type} " +
+      "contract_status {contract status} field {field} other {type}} {name}",
+  }),
+  reordered: defineMessage({
+    id: "activity.taxonomy.reordered",
+    defaultMessage:
+      "{actor} reordered the {kind, select, contract_type {contract type} " +
+      "matter_type {matter type} entity_type {entity type} " +
+      "contract_status {contract status} field {field} other {type}} list",
+  }),
+  archived: defineMessage({
+    id: "activity.taxonomy.archived",
+    defaultMessage:
+      "{actor} archived the {kind, select, contract_type {contract type} " +
+      "matter_type {matter type} entity_type {entity type} " +
+      "contract_status {contract status} field {field} other {type}} {name}",
+  }),
+  restored: defineMessage({
+    id: "activity.taxonomy.restored",
+    defaultMessage:
+      "{actor} restored the {kind, select, contract_type {contract type} " +
+      "matter_type {matter type} entity_type {entity type} " +
+      "contract_status {contract status} field {field} other {type}} {name}",
+  }),
+  deleted: defineMessage({
+    id: "activity.taxonomy.deleted",
+    defaultMessage:
+      "{actor} deleted the {kind, select, contract_type {contract type} " +
+      "matter_type {matter type} entity_type {entity type} " +
+      "contract_status {contract status} field {field} other {type}} {name}",
+  }),
+} as const;
+
+/** Which list a taxonomy arm is about, plus the row it names. */
+function taxonomyValues(kind: string) {
+  return (intl: IntlShape, payload: Payload) => ({ kind, name: thingName(intl, payload) });
+}
+
+/**
+ * The taxonomy arms for one prefix, keyed by slug. Each list gets the
+ * verbs its own writer emits and no others: the field catalog neither
+ * renames, reorders, nor hard-deletes, and a statuses list has no
+ * description to change. An arm for a slug that cannot be written is a
+ * sentence nobody will ever read.
+ */
+function taxonomyArms(
+  kind: string,
+  icon: LucideIcon,
+  verbs: readonly (keyof typeof TAXONOMY)[],
+): Record<string, Arm> {
+  const values = taxonomyValues(kind);
+  const arms: Record<keyof typeof TAXONOMY, Arm> = {
+    created: { icon, message: TAXONOMY.created, values },
+    renamed: {
+      icon,
+      message: TAXONOMY.renamed,
+      values,
+      changes: (intl, payload, context) => directChange(intl, payload, "displayName", context),
+    },
+    updated: { icon, message: TAXONOMY.updated, values, changes: changesFrom },
+    reordered: { icon: ListOrdered, message: TAXONOMY.reordered, values },
+    archived: { icon: Archive, message: TAXONOMY.archived, values },
+    restored: { icon: ArchiveRestore, message: TAXONOMY.restored, values },
+    deleted: { icon: Trash2, message: TAXONOMY.deleted, values },
+  };
+  return Object.fromEntries(verbs.map((verb) => [`${kind}.${verb}`, arms[verb]]));
+}
+
+/** The seven a settings taxonomy writes (contract, matter, and entity
+ * types), in one place because three lists share them. */
+const TAXONOMY_VERBS = [
+  "created",
+  "renamed",
+  "updated",
+  "reordered",
+  "archived",
+  "restored",
+  "deleted",
+] as const satisfies readonly (keyof typeof TAXONOMY)[];
+
+/**
+ * The two type-field prefixes attach the same catalog to two different
+ * types, so they share four sentences and name which type inside them,
+ * for the reason the taxonomies do.
+ */
+const TYPE_FIELD = {
+  attached: defineMessage({
+    id: "activity.typeField.attached",
+    defaultMessage:
+      "{actor} attached the field {field} to the {owner, select, " +
+      "contract_type_field {contract type} matter_type_field {matter type} " +
+      "other {type}} {type}",
+  }),
+  detached: defineMessage({
+    id: "activity.typeField.detached",
+    defaultMessage:
+      "{actor} detached the field {field} from the {owner, select, " +
+      "contract_type_field {contract type} matter_type_field {matter type} " +
+      "other {type}} {type}",
+  }),
+  reordered: defineMessage({
+    id: "activity.typeField.reordered",
+    defaultMessage:
+      "{actor} reordered the fields on the {owner, select, " +
+      "contract_type_field {contract type} matter_type_field {matter type} " +
+      "other {type}} {type}",
+  }),
+  requiredChanged: defineMessage({
+    id: "activity.typeField.requiredChanged",
+    defaultMessage:
+      "{actor} made the field {field} {required, select, true {required} " +
+      "other {optional}} on the {owner, select, " +
+      "contract_type_field {contract type} matter_type_field {matter type} " +
+      "other {type}} {type}",
+  }),
+} as const;
+
+/** The same four arms for one type-field prefix, keyed by slug. */
+function typeFieldArms(owner: string): Record<string, Arm> {
+  const values = (intl: IntlShape, payload: Payload) => ({
+    owner,
+    type: named(intl, payload, "typeSlug"),
+    field: named(intl, payload, "fieldSlug"),
+    required: String(payload.isRequired === true),
+  });
+  return {
+    [`${owner}.attached`]: { icon: Link2, message: TYPE_FIELD.attached, values },
+    [`${owner}.detached`]: { icon: Unlink, message: TYPE_FIELD.detached, values },
+    [`${owner}.reordered`]: { icon: ListOrdered, message: TYPE_FIELD.reordered, values },
+    [`${owner}.required_changed`]: {
+      icon: SquareCheck,
+      message: TYPE_FIELD.requiredChanged,
+      values,
+    },
+  };
+}
+
+/**
+ * The whole vocabulary, narrated. `contract.*` is a record's own story
+ * and `comment.*` the conversation on it — those two are all a record
+ * feed can contain (M9/6). Everything after them is what the
+ * Administrator's audit log reaches and no record feed does (M9/7):
+ * user administration, settings, the taxonomies, the field catalog, the
+ * registry, the identity provider, and an export of the log itself.
+ *
+ * A slug that is not here reads through the fallback at the bottom of
+ * `narrateActivity`, which is what makes this table safe to be
+ * incomplete — and it will be, because the log outlives the code that
+ * wrote it.
  */
 const ARMS: Readonly<Record<string, Arm>> = {
   "contract.created": {
@@ -454,6 +746,278 @@ const ARMS: Readonly<Record<string, Arm>> = {
       defaultMessage: "{actor} removed a comment from the record",
     }),
   },
+
+  // ---- User administration and the profile (audit log only) ----
+  // These name the person acted on by their email, because that is what
+  // the payload carries — a display name would need a lookup, and an
+  // email is what an Administrator searched for anyway.
+  "user.invited": {
+    icon: UserPlus,
+    message: defineMessage({
+      id: "activity.user.invited",
+      defaultMessage: "{actor} invited {email} as {role}",
+    }),
+    values: (intl, payload) => ({
+      email: named(intl, payload, "email"),
+      role: roleLabel(intl, String(payload.role ?? "")),
+    }),
+  },
+  "user.invite_resent": {
+    icon: UserPlus,
+    message: defineMessage({
+      id: "activity.user.inviteResent",
+      defaultMessage: "{actor} resent the invite to {email}",
+    }),
+    values: (intl, payload) => ({ email: named(intl, payload, "email") }),
+  },
+  "user.invite_revoked": {
+    icon: UserMinus,
+    message: defineMessage({
+      id: "activity.user.inviteRevoked",
+      defaultMessage: "{actor} revoked the invite to {email}",
+    }),
+    values: (intl, payload) => ({ email: named(intl, payload, "email") }),
+  },
+  "user.role_changed": {
+    icon: UserCog,
+    message: defineMessage({
+      id: "activity.user.roleChanged",
+      defaultMessage: "{actor} changed the role of {email}",
+    }),
+    values: (intl, payload) => ({ email: named(intl, payload, "email") }),
+    changes: roleChange,
+  },
+  "user.archived": {
+    icon: Archive,
+    message: defineMessage({
+      id: "activity.user.archived",
+      defaultMessage: "{actor} archived {email}",
+    }),
+    values: (intl, payload) => ({ email: named(intl, payload, "email") }),
+  },
+  "user.unarchived": {
+    icon: ArchiveRestore,
+    message: defineMessage({
+      id: "activity.user.unarchived",
+      defaultMessage: "{actor} restored {email}",
+    }),
+    values: (intl, payload) => ({ email: named(intl, payload, "email") }),
+  },
+  "user.sessions_revoked": {
+    icon: LogOut,
+    message: defineMessage({
+      id: "activity.user.sessionsRevoked",
+      defaultMessage: "{actor} signed {email} out of every session",
+    }),
+    values: (intl, payload) => ({ email: named(intl, payload, "email") }),
+  },
+  // The profile's own four. Each payload is `{field, old, new}`, and the
+  // avatar's two sides are `[image]` rather than the encoded image — the
+  // writer keeps a data: URI out of the log, so nothing here has to.
+  "user.theme_changed": {
+    icon: Palette,
+    message: defineMessage({
+      id: "activity.user.themeChanged",
+      defaultMessage: "{actor} changed their theme",
+    }),
+    changes: fieldChange,
+  },
+  "user.timezone_changed": {
+    icon: Clock,
+    message: defineMessage({
+      id: "activity.user.timezoneChanged",
+      defaultMessage: "{actor} changed their timezone",
+    }),
+    changes: fieldChange,
+  },
+  "user.display_name_changed": {
+    icon: PencilLine,
+    message: defineMessage({
+      id: "activity.user.displayNameChanged",
+      defaultMessage: "{actor} changed their display name",
+    }),
+    changes: fieldChange,
+  },
+  "user.avatar_changed": {
+    icon: ImageIcon,
+    message: defineMessage({
+      id: "activity.user.avatarChanged",
+      defaultMessage: "{actor} changed their avatar",
+    }),
+  },
+  "user.password_changed": {
+    icon: KeyRound,
+    message: defineMessage({
+      id: "activity.user.passwordChanged",
+      defaultMessage: "{actor} changed their password",
+    }),
+  },
+  "user.other_sessions_revoked": {
+    icon: LogOut,
+    message: defineMessage({
+      id: "activity.user.otherSessionsRevoked",
+      defaultMessage: "{actor} signed out their other sessions",
+    }),
+  },
+  "user.two_factor_enrolled": {
+    icon: ShieldCheck,
+    message: defineMessage({
+      id: "activity.user.twoFactorEnrolled",
+      defaultMessage: "{actor} turned on two-factor authentication",
+    }),
+  },
+  "user.two_factor_disabled": {
+    icon: ShieldOff,
+    message: defineMessage({
+      id: "activity.user.twoFactorDisabled",
+      defaultMessage: "{actor} turned off two-factor authentication",
+    }),
+  },
+
+  // ---- The organization's own settings ----
+  // One entry per changed field, so the sentence names the surface and
+  // the change line names the field. Naming the field in the sentence
+  // would need the label lowercased into prose, which is a translation
+  // trap for the sake of one word.
+  "org_settings.updated": {
+    icon: Settings,
+    message: defineMessage({
+      id: "activity.orgSettings.updated",
+      defaultMessage: "{actor} changed the organization settings",
+    }),
+    changes: fieldChange,
+  },
+
+  // ---- The identity provider ----
+  "sso_provider.registered": {
+    icon: Globe,
+    message: defineMessage({
+      id: "activity.ssoProvider.registered",
+      defaultMessage: "{actor} connected the identity provider {provider}",
+    }),
+    values: (intl, payload) => ({ provider: named(intl, payload, "providerId") }),
+  },
+  "sso_provider.updated": {
+    icon: Globe,
+    message: defineMessage({
+      id: "activity.ssoProvider.updated",
+      defaultMessage: "{actor} changed the identity provider {provider}",
+    }),
+    values: (intl, payload) => ({ provider: named(intl, payload, "providerId") }),
+    // The secret's two sides are both `[secret]`: the writer records
+    // that it was rotated and never what it was.
+    changes: fieldChange,
+  },
+
+  // ---- The settings taxonomies and the field catalog ----
+  ...taxonomyArms("contract_type", Tag, TAXONOMY_VERBS),
+  ...taxonomyArms("matter_type", Tag, TAXONOMY_VERBS),
+  ...taxonomyArms("entity_type", Tag, TAXONOMY_VERBS),
+  // A status has a stage rather than a description, so it never writes
+  // the `updated` verb.
+  ...taxonomyArms("contract_status", GitCommitHorizontal, [
+    "created",
+    "renamed",
+    "reordered",
+    "archived",
+    "restored",
+    "deleted",
+  ]),
+  // The catalog is unordered (DES-021), names through its editor dialog
+  // rather than a rename verb, and is never hard-deleted.
+  ...taxonomyArms("field", Tags, ["created", "updated", "archived", "restored"]),
+  // The catalog's two scope moves keep their own verbs, because the
+  // scope is what decides which modules can attach the field.
+  "field.promoted": {
+    icon: Tags,
+    message: defineMessage({
+      id: "activity.field.promoted",
+      defaultMessage: "{actor} widened the field {name} to every module",
+    }),
+    values: (intl, payload) => ({ name: thingName(intl, payload) }),
+    changes: (intl, payload, context) => directChange(intl, payload, "moduleScope", context),
+  },
+  "field.narrowed": {
+    icon: Tags,
+    message: defineMessage({
+      id: "activity.field.narrowed",
+      defaultMessage: "{actor} narrowed the field {name} to one module",
+    }),
+    values: (intl, payload) => ({ name: thingName(intl, payload) }),
+    changes: (intl, payload, context) => directChange(intl, payload, "moduleScope", context),
+  },
+
+  // ---- Fields attached to a type ----
+  ...typeFieldArms("contract_type_field"),
+  ...typeFieldArms("matter_type_field"),
+
+  // ---- The Entities registry (M7) ----
+  // Its own feed is not mounted yet (DD-017's clarification), so the
+  // audit log is where these read today.
+  "entity.created": {
+    icon: Building2,
+    message: defineMessage({
+      id: "activity.entity.created",
+      defaultMessage: "{actor} registered {name}",
+    }),
+    values: (intl, payload) => ({ name: thingName(intl, payload) }),
+  },
+  "entity.updated": {
+    icon: PencilLine,
+    message: defineMessage({
+      id: "activity.entity.updated",
+      defaultMessage: "{actor} changed {name}",
+    }),
+    values: (intl, payload) => ({ name: thingName(intl, payload) }),
+    changes: changesFrom,
+  },
+  "entity.status_changed": {
+    icon: GitCommitHorizontal,
+    message: defineMessage({
+      id: "activity.entity.statusChanged",
+      defaultMessage: "{actor} changed the status of {name}",
+    }),
+    values: (intl, payload) => ({ name: thingName(intl, payload) }),
+    changes: (intl, payload, context) => directChange(intl, payload, "status", context),
+  },
+  "entity.type_reassigned": {
+    icon: Tag,
+    message: defineMessage({
+      id: "activity.entity.typeReassigned",
+      defaultMessage: "{actor} re-typed {name}",
+    }),
+    values: (intl, payload) => ({ name: thingName(intl, payload) }),
+    changes: (intl, payload, context) => directChange(intl, payload, "entityType", context),
+  },
+  "entity.archived": {
+    icon: Archive,
+    message: defineMessage({
+      id: "activity.entity.archived",
+      defaultMessage: "{actor} archived {name}",
+    }),
+    values: (intl, payload) => ({ name: thingName(intl, payload) }),
+  },
+  "entity.restored": {
+    icon: ArchiveRestore,
+    message: defineMessage({
+      id: "activity.entity.restored",
+      defaultMessage: "{actor} restored {name}",
+    }),
+    values: (intl, payload) => ({ name: thingName(intl, payload) }),
+  },
+
+  // ---- Data leaving the system ----
+  // The one entry the audit log writes about itself (DD-017). The
+  // filters it was taken under are in the payload; the sentence says
+  // that an export happened, which is the fact an auditor is reading
+  // for.
+  "export.performed": {
+    icon: Download,
+    message: defineMessage({
+      id: "activity.export.performed",
+      defaultMessage: "{actor} exported the audit log",
+    }),
+  },
 };
 
 /**
@@ -471,7 +1035,7 @@ const UNKNOWN = defineMessage({ id: "activity.unknown", defaultMessage: "{actor}
  * them throws, and a slug with no arm falls through to `UNKNOWN`. */
 export function narrateActivity(
   intl: IntlShape,
-  entry: ActivityEntry,
+  entry: NarratableEntry,
   context: NarrationContext = {},
 ): Narration {
   const actor = actorName(intl, entry);
