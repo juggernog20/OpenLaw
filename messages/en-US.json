@@ -530,6 +530,9 @@
   "comments.composer": {
     "defaultMessage": "New comment"
   },
+  "comments.confidentialNotice": {
+    "defaultMessage": "Confidential contract — whichever audience you pick, only the contract team, the Owner, and Administrators can read it."
+  },
   "comments.delete.body": {
     "defaultMessage": "A tombstone keeps its place in the thread, and nobody can read what it said. You cannot undo this."
   },
@@ -613,6 +616,12 @@
   },
   "comments.tombstone.redacted": {
     "defaultMessage": "Comment removed by an Administrator."
+  },
+  "confidential.marker": {
+    "defaultMessage": "Confidential"
+  },
+  "confidential.markerShort": {
+    "defaultMessage": "CONFI"
   },
   "contracts.applet.settings": {
     "defaultMessage": "Contract settings"
