@@ -59,6 +59,12 @@
   "activity.contract.archived": {
     "defaultMessage": "{actor} archived this contract"
   },
+  "activity.contract.confidentialityCleared": {
+    "defaultMessage": "{actor} cleared this contract's confidential mark"
+  },
+  "activity.contract.confidentialitySet": {
+    "defaultMessage": "{actor} marked this contract confidential"
+  },
   "activity.contract.counterpartyAdded": {
     "defaultMessage": "{actor} added {counterparty} on the other side"
   },

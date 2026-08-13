@@ -5661,6 +5661,9 @@
                               ]
                             }
                           },
+                          "isConfidential": {
+                            "type": "boolean"
+                          },
                           "archivedAt": {
                             "anyOf": [
                               {
@@ -5701,6 +5704,7 @@
                           "value",
                           "description",
                           "customFields",
+                          "isConfidential",
                           "archivedAt",
                           "createdAt",
                           "updatedAt"
@@ -5729,7 +5733,7 @@
       },
       "post": {
         "operationId": "createContract",
-        "summary": "Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward",
+        "summary": "Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward — except the Confidential flag (DD-014), which may be set here so a sensitive record is never visible to the wrong audience, even briefly",
         "tags": ["contracts"],
         "requestBody": {
           "required": true,
@@ -5777,6 +5781,9 @@
                         }
                       ]
                     }
+                  },
+                  "isConfidential": {
+                    "type": "boolean"
                   }
                 },
                 "required": ["title", "contractTypeId"],
@@ -5972,6 +5979,9 @@
                             ]
                           }
                         },
+                        "isConfidential": {
+                          "type": "boolean"
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -6012,6 +6022,7 @@
                         "value",
                         "description",
                         "customFields",
+                        "isConfidential",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -6428,6 +6439,9 @@
                             ]
                           }
                         },
+                        "isConfidential": {
+                          "type": "boolean"
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -6468,6 +6482,7 @@
                         "value",
                         "description",
                         "customFields",
+                        "isConfidential",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -6682,7 +6697,7 @@
       },
       "patch": {
         "operationId": "updateContract",
-        "summary": "Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, the value, the type, a custom field, or the status — any live status may follow any other (CTR-001). The value is one field in three parts: amount, currency, and cadence commit together and clear together. Re-typing re-checks the new type's hard-required fields before it commits (CTR-016/MTR-014), so the type and the values that satisfy it may be sent together. Never on an archived contract",
+        "summary": "Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, the value, the type, a custom field, or the status — any live status may follow any other (CTR-001). The value is one field in three parts: amount, currency, and cadence commit together and clear together. Re-typing re-checks the new type's hard-required fields before it commits (CTR-016/MTR-014), so the type and the values that satisfy it may be sent together. The Confidential flag (DD-014) commits here too, but only for an Administrator, the contract's creator, or its Owner: anyone else who reaches the record is refused 403, and anyone who does not reach it is answered 404 like a contract that does not exist. Never on an archived contract",
         "tags": ["contracts"],
         "requestBody": {
           "required": true,
@@ -6805,6 +6820,9 @@
                   },
                   "statusId": {
                     "type": "string"
+                  },
+                  "isConfidential": {
+                    "type": "boolean"
                   }
                 },
                 "additionalProperties": false
@@ -7011,6 +7029,9 @@
                             ]
                           }
                         },
+                        "isConfidential": {
+                          "type": "boolean"
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -7051,6 +7072,7 @@
                         "value",
                         "description",
                         "customFields",
+                        "isConfidential",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -7621,6 +7643,9 @@
                             ]
                           }
                         },
+                        "isConfidential": {
+                          "type": "boolean"
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -7661,6 +7686,7 @@
                         "value",
                         "description",
                         "customFields",
+                        "isConfidential",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -7928,6 +7954,9 @@
                             ]
                           }
                         },
+                        "isConfidential": {
+                          "type": "boolean"
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -7968,6 +7997,7 @@
                         "value",
                         "description",
                         "customFields",
+                        "isConfidential",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -8235,6 +8265,9 @@
                             ]
                           }
                         },
+                        "isConfidential": {
+                          "type": "boolean"
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -8275,6 +8308,7 @@
                         "value",
                         "description",
                         "customFields",
+                        "isConfidential",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -8534,6 +8568,9 @@
                             ]
                           }
                         },
+                        "isConfidential": {
+                          "type": "boolean"
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -8574,6 +8611,7 @@
                         "value",
                         "description",
                         "customFields",
+                        "isConfidential",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -8804,6 +8842,9 @@
                             ]
                           }
                         },
+                        "isConfidential": {
+                          "type": "boolean"
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -8844,6 +8885,7 @@
                         "value",
                         "description",
                         "customFields",
+                        "isConfidential",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"

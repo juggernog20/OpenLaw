@@ -24,8 +24,17 @@
  * `contract_team` row on it or are its Owner — and a Contributor still
  * needs the row either way, because the flag never widens access.
  *
- * The flag has no write path yet (it lands in M10/2), so every test
- * seeds it straight into the column.
+ * The write path is the second subject (M10/2). Three actors set and
+ * clear the flag — an Administrator, the contract's creator, and its
+ * Owner — at creation and on the record. Two refusals sit behind it and
+ * the difference is the point: a viewer who reaches the record but is
+ * none of the three is refused with a plain 403, because their sight of
+ * it is not a secret; a viewer who does not reach it at all is answered
+ * with the missing-record 404.
+ *
+ * The read tests below the write ones seed the flag straight into the
+ * column, because a fixture that walls a record off is not the subject
+ * of a read test.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -59,6 +68,15 @@ const OWNER = {
   displayName: "Priya Owner",
   password: "correct-horse-battery",
 } as const;
+/** A Legal Team Member on the team who made nothing and owns nothing:
+ * the viewer the write path answers 403, not 404. They can see the
+ * record, so nothing about it is a secret from them — they simply may
+ * not decide its audience. */
+const TEAMMATE = {
+  email: "confi-teammate@example.com",
+  displayName: "Tomas Teammate",
+  password: "correct-horse-battery",
+} as const;
 /** A Contributor on the team — their M9 access must survive the flag
  * untouched. */
 const CONTRIBUTOR = {
@@ -78,6 +96,7 @@ let adminCookies: Record<string, string>;
 let memberCookies: Record<string, string>;
 let outsiderCookies: Record<string, string>;
 let ownerCookies: Record<string, string>;
+let teammateCookies: Record<string, string>;
 let contributorCookies: Record<string, string>;
 let strangerCookies: Record<string, string>;
 const userIds = new Map<string, string>();
@@ -92,6 +111,7 @@ interface ContractRow {
   id: string;
   number: number;
   title: string;
+  isConfidential: boolean;
 }
 
 interface MentionCandidateRow {
@@ -118,6 +138,7 @@ beforeAll(async () => {
     [MEMBER, "legal_team_member"],
     [OUTSIDER, "legal_team_member"],
     [OWNER, "legal_team_member"],
+    [TEAMMATE, "legal_team_member"],
     [CONTRIBUTOR, "contributor"],
     [STRANGER, "contributor"],
   ] as const) {
@@ -129,6 +150,7 @@ beforeAll(async () => {
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
   outsiderCookies = await signInCookies(harness.app, OUTSIDER.email, OUTSIDER.password);
   ownerCookies = await signInCookies(harness.app, OWNER.email, OWNER.password);
+  teammateCookies = await signInCookies(harness.app, TEAMMATE.email, TEAMMATE.password);
   contributorCookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
   strangerCookies = await signInCookies(harness.app, STRANGER.email, STRANGER.password);
 }, 120_000);
@@ -175,6 +197,34 @@ async function markConfidential(contractId: string, value = true): Promise<void>
     .update(contracts)
     .set({ isConfidential: value })
     .where(eq(contracts.id, contractId));
+}
+
+/** Creates a contract as anybody, with whatever body the test wants —
+ * the raw answer, because the write tests are about the refusals too. */
+const createContract = async (cookies: Record<string, string>, body: Record<string, unknown>) =>
+  harness.app.inject({
+    method: "POST",
+    url: "/api/v1/contracts",
+    cookies,
+    payload: { contractTypeId: await ndaTypeId(), ...body },
+  });
+
+/** The DES-017 per-field commit, raw. */
+const patchContract = (
+  cookies: Record<string, string>,
+  number: number,
+  payload: Record<string, unknown>,
+) => harness.app.inject({ method: "PATCH", url: `/api/v1/contracts/${number}`, cookies, payload });
+
+/** Sets or clears the flag through the record patch, requiring success. */
+async function setFlag(
+  cookies: Record<string, string>,
+  number: number,
+  isConfidential: boolean,
+): Promise<void> {
+  const res = await patchContract(cookies, number, { isConfidential });
+  expect(res.statusCode, res.body).toBe(200);
+  expect(res.json().contract.isConfidential).toBe(isConfidential);
 }
 
 /** Puts somebody on a contract's team, requiring success. */
@@ -494,5 +544,292 @@ describe("who still reaches a confidential contract (M10/1)", () => {
     );
     expect((await readComments(memberCookies, walled.id)).statusCode).toBe(404);
     expect((await readActivity(memberCookies, walled.id)).statusCode).toBe(404);
+  });
+});
+
+/** One record's `contract.confidentiality_*` entries, as the record's
+ * own feed answers them (DD-017's first surface). Read as a viewer who
+ * is on the record, because the feed is gated on reach like everything
+ * else. */
+async function flagEntriesInFeed(
+  cookies: Record<string, string>,
+  entityId: string,
+): Promise<{ action: string; visibility: string; actor: { id: string } | null }[]> {
+  const res = await readActivity(cookies, entityId);
+  expect(res.statusCode, res.body).toBe(200);
+  const entries = res.json().entries as {
+    action: string;
+    visibility: string;
+    actor: { id: string } | null;
+    createdAt: string;
+  }[];
+  // The feed is newest first; the log's own order reads better here.
+  return entries.filter((entry) => entry.action.startsWith("contract.confidentiality")).reverse();
+}
+
+/** The same entries from the Administrator-only audit log (DD-017's
+ * second surface), which reads the whole table with no record scope. */
+async function flagEntriesInAuditLog(
+  entityId: string,
+): Promise<{ action: string; actor: { id: string } | null; createdAt: string }[]> {
+  const res = await harness.app.inject({
+    method: "GET",
+    url: "/api/v1/audit-log?entityType=contract",
+    cookies: adminCookies,
+  });
+  expect(res.statusCode, res.body).toBe(200);
+  const entries = res.json().entries as {
+    action: string;
+    entityId: string | null;
+    actor: { id: string } | null;
+    createdAt: string;
+  }[];
+  return entries
+    .filter((entry) => entry.entityId === entityId)
+    .filter((entry) => entry.action.startsWith("contract.confidentiality"))
+    .reverse();
+}
+
+describe("the flag on the contract row (M10/2)", () => {
+  it("rides every answer a contract comes back on, and is false until somebody sets it", async () => {
+    const born = await createContract(adminCookies, { title: "Confi row: born open" });
+    expect(born.statusCode, born.body).toBe(201);
+    expect(born.json().contract.isConfidential).toBe(false);
+    const contract = born.json().contract as ContractRow;
+
+    await setFlag(adminCookies, contract.number, true);
+
+    const record = await getContract(adminCookies, contract.number);
+    expect(record.statusCode, record.body).toBe(200);
+    expect(record.json().contract.isConfidential).toBe(true);
+
+    const listed = (await listContracts(adminCookies)).find((row) => row.id === contract.id);
+    expect(listed).toMatchObject({ isConfidential: true });
+  });
+
+  it("leaves the list its no-count shape — there is no total to scrub", async () => {
+    const res = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/contracts",
+      cookies: adminCookies,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(Object.keys(res.json())).toEqual(["contracts"]);
+  });
+});
+
+describe("setting the flag at creation (M10/2)", () => {
+  it("makes a contract confidential from birth, so no wrong audience ever sees it", async () => {
+    const created = await createContract(memberCookies, {
+      title: "Confi birth: walled from the first moment",
+      isConfidential: true,
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const contract = created.json().contract as ContractRow;
+    expect(contract.isConfidential).toBe(true);
+
+    // The creator is the actor by definition, so nothing was refused —
+    // and the record is already away from everyone else.
+    expect((await getContract(outsiderCookies, contract.number)).statusCode).toBe(404);
+    expect((await listContracts(outsiderCookies)).map((row) => row.id)).not.toContain(contract.id);
+    expect((await getContract(memberCookies, contract.number)).statusCode).toBe(200);
+  });
+
+  it("records the set at creation, so the audit log holds every walling-off", async () => {
+    const created = await createContract(memberCookies, {
+      title: "Confi birth: on the record from the start",
+      isConfidential: true,
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const contract = created.json().contract as ContractRow;
+
+    expect(await flagEntriesInFeed(memberCookies, contract.id)).toEqual([
+      expect.objectContaining({
+        action: "contract.confidentiality_set",
+        visibility: "working_team",
+        actor: expect.objectContaining({ id: idOf(MEMBER) }),
+      }),
+    ]);
+  });
+
+  it("leaves a contract created without the flag open", async () => {
+    const created = await createContract(memberCookies, { title: "Confi birth: open by default" });
+    expect(created.statusCode, created.body).toBe(201);
+    const contract = created.json().contract as ContractRow;
+    expect(contract.isConfidential).toBe(false);
+    expect(await flagEntriesInFeed(memberCookies, contract.id)).toEqual([]);
+    expect((await getContract(outsiderCookies, contract.number)).statusCode).toBe(200);
+  });
+});
+
+describe("who may set and clear the flag (M10/2, DD-014)", () => {
+  /**
+   * One contract with all three actors and both refused viewers on it:
+   * the Administrator, the creator, the Owner, a team Member who is
+   * neither, and a Legal Team Member with nothing at all.
+   */
+  async function contractWithEveryone(title: string): Promise<ContractRow> {
+    const created = await createContract(memberCookies, { title });
+    expect(created.statusCode, created.body).toBe(201);
+    const contract = created.json().contract as ContractRow;
+    await putOnTeam(contract.number, idOf(TEAMMATE), "member");
+    await setOwner(contract.number, idOf(OWNER));
+    return contract;
+  }
+
+  it("lets the Administrator, the creator, and the Owner each set it and clear it again", async () => {
+    const contract = await contractWithEveryone("Confi actors: the three who may");
+
+    for (const [who, cookies] of [
+      ["the Administrator", adminCookies],
+      ["the creator", memberCookies],
+      ["the Owner", ownerCookies],
+    ] as const) {
+      const set = await patchContract(adminCookies, contract.number, { isConfidential: false });
+      expect(set.statusCode, `${who} setup: ${set.body}`).toBe(200);
+
+      await setFlag(cookies, contract.number, true);
+      await setFlag(cookies, contract.number, false);
+    }
+  });
+
+  it("refuses a team Member who is none of the three with a plain 403 — their sight of the record is not a secret", async () => {
+    const contract = await contractWithEveryone("Confi actors: on the team, not an actor");
+
+    const refused = await patchContract(teammateCookies, contract.number, {
+      isConfidential: true,
+    });
+    expect(refused.statusCode, refused.body).toBe(403);
+    expect(refused.headers["content-type"]).toContain("application/problem+json");
+    // The refusal says who may, so the reader knows where to go — and
+    // says nothing about the record, which they can see anyway.
+    expect(refused.json()).toMatchObject({
+      status: 403,
+      detail: "Only an Administrator, the contract's creator, or its Owner can change this.",
+    });
+    // They still read the record they were refused the flag on.
+    expect((await getContract(teammateCookies, contract.number)).statusCode).toBe(200);
+    expect((await getContract(adminCookies, contract.number)).json().contract.isConfidential).toBe(
+      false,
+    );
+  });
+
+  it("answers a Legal Team Member who cannot reach the record with the missing-record 404, body for body", async () => {
+    const contract = await contractWithEveryone("Confi actors: out of reach entirely");
+    await setFlag(adminCookies, contract.number, true);
+
+    const refused = await patchContract(outsiderCookies, contract.number, {
+      isConfidential: false,
+    });
+    const absent = await patchContract(outsiderCookies, 999_999, { isConfidential: false });
+    expect(refused.statusCode, refused.body).toBe(404);
+    expect(refused.headers["content-type"]).toContain("application/problem+json");
+    expect(withoutInstance(refused.json())).toEqual(withoutInstance(absent.json()));
+    expect(refused.body).not.toContain("out of reach entirely");
+    // And the flag they tried to clear is still set.
+    expect((await getContract(adminCookies, contract.number)).json().contract.isConfidential).toBe(
+      true,
+    );
+  });
+
+  it("refuses a Legal Team Member who reaches an open contract with the 403, not the 404", async () => {
+    const contract = await contractWithEveryone("Confi actors: reaches it, may not flag it");
+
+    // The contract is open, so this viewer reads it like everyone else
+    // — and is refused the flag on the same terms as a team Member.
+    const refused = await patchContract(outsiderCookies, contract.number, {
+      isConfidential: true,
+    });
+    expect(refused.statusCode, refused.body).toBe(403);
+    expect((await getContract(outsiderCookies, contract.number)).statusCode).toBe(200);
+  });
+
+  it("keeps every other viewer refused where the contract routes already refuse them", async () => {
+    const contract = await contractWithEveryone("Confi actors: below the Member+ floor");
+    await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+
+    // The per-field PATCH is Member+ (CTR-021), so a Contributor is
+    // refused at the guard whether they are on the record or not — the
+    // flag widens nobody's reach and narrows nobody's floor.
+    for (const cookies of [contributorCookies, strangerCookies]) {
+      const refused = await patchContract(cookies, contract.number, { isConfidential: true });
+      expect(refused.statusCode, refused.body).toBe(403);
+      expect(refused.headers["content-type"]).toContain("application/problem+json");
+      // The route's own floor, not the flag's actor set: the words are
+      // the guard's, and they name no record.
+      expect(refused.json()).toMatchObject({ status: 403 });
+      expect(refused.body).not.toContain("below the Member+ floor");
+    }
+  });
+
+  it("refuses the flag on an archived contract, like every other edit", async () => {
+    const contract = await contractWithEveryone("Confi actors: archived and inert");
+    const archived = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/archive`,
+      cookies: adminCookies,
+    });
+    expect(archived.statusCode, archived.body).toBe(200);
+
+    const refused = await patchContract(adminCookies, contract.number, { isConfidential: true });
+    expect(refused.statusCode, refused.body).toBe(409);
+    expect(refused.headers["content-type"]).toContain("application/problem+json");
+    // The archived refusal every other field already gets, word for
+    // word — the flag is an edit, not an exception to the freeze.
+    expect(refused.json()).toMatchObject({
+      status: 409,
+      detail: "This contract is archived. Restore it before editing.",
+    });
+    expect((await getContract(adminCookies, contract.number)).json().contract.isConfidential).toBe(
+      false,
+    );
+  });
+});
+
+describe("what a set and a clear leave behind (M10/2, DD-017)", () => {
+  it("narrates both in the record's own feed and holds both in the audit log with actor and timestamp", async () => {
+    const created = await createContract(adminCookies, { title: "Confi log: set then cleared" });
+    expect(created.statusCode, created.body).toBe(201);
+    const contract = created.json().contract as ContractRow;
+    await putOnTeam(contract.number, idOf(MEMBER), "member");
+
+    await setFlag(adminCookies, contract.number, true);
+    await setFlag(adminCookies, contract.number, false);
+
+    // The team's feed: one entry each, at the record-action tier, so a
+    // Contributor on the team reads them exactly as a Member does.
+    expect(await flagEntriesInFeed(memberCookies, contract.id)).toEqual([
+      expect.objectContaining({
+        action: "contract.confidentiality_set",
+        visibility: "working_team",
+        actor: expect.objectContaining({ id: idOf(ADMIN) }),
+      }),
+      expect.objectContaining({
+        action: "contract.confidentiality_cleared",
+        visibility: "working_team",
+        actor: expect.objectContaining({ id: idOf(ADMIN) }),
+      }),
+    ]);
+
+    // The Administrator's audit log: the same two rows, read from the
+    // whole table with no record scope. One write serves both surfaces.
+    const audited = await flagEntriesInAuditLog(contract.id);
+    expect(audited.map((entry) => entry.action)).toEqual([
+      "contract.confidentiality_set",
+      "contract.confidentiality_cleared",
+    ]);
+    for (const entry of audited) {
+      expect(entry.actor?.id).toBe(idOf(ADMIN));
+      expect(Date.parse(entry.createdAt)).not.toBeNaN();
+    }
+  });
+
+  it("writes nothing when the flag is re-sent unchanged", async () => {
+    const created = await createContract(adminCookies, { title: "Confi log: nothing changed" });
+    expect(created.statusCode, created.body).toBe(201);
+    const contract = created.json().contract as ContractRow;
+
+    await setFlag(adminCookies, contract.number, false);
+    expect(await flagEntriesInFeed(adminCookies, contract.id)).toEqual([]);
   });
 });

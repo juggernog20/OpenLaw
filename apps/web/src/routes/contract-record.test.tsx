@@ -2821,6 +2821,8 @@ describe("the contract record's history applet (M9/6)", () => {
     const user = userEvent.setup();
     const activity = activityApi([
       [
+        entry("a7", "contract.confidentiality_cleared", { number: 42 }),
+        entry("a6", "contract.confidentiality_set", { number: 42 }),
         entry("a5", "comment.posted", { commentId: "c9" }, "legal_only"),
         entry("a4", "contract.counterparty_added", { counterparty: "Orion Cloud Ltd" }),
         entry("a3", "contract.team_removed", { member: "Casey Contributor", role: "contributor" }),
@@ -2836,6 +2838,10 @@ describe("the contract record's history applet (M9/6)", () => {
     const rows = within(feed).getAllByRole("listitem");
     // Newest first, as a history is read.
     expect(rows.map((row) => row.textContent)).toEqual([
+      // The two M10/2 slugs have arms of their own — without them the
+      // feed would fall through to the plain unknown-slug rendering.
+      expect.stringContaining("Nadia Counsel cleared this contract's confidential mark"),
+      expect.stringContaining("Nadia Counsel marked this contract confidential"),
       expect.stringContaining("Nadia Counsel commented"),
       expect.stringContaining("Nadia Counsel added Orion Cloud Ltd on the other side"),
       // The role reads in the Team card's own words, not as the stored

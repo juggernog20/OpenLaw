@@ -14,6 +14,14 @@
  * a record, and two copies of it would drift. The contract routes take
  * the reach half; the comment routes take both.
  *
+ * A third question joins them in M10: who may decide the audience — set
+ * the Confidential flag or clear it (DD-014, CTR-022). It is here
+ * because its refusal is built out of reach: a viewer who does not reach
+ * the record is answered as if the record were not there, and only a
+ * viewer who does reach it is told plainly that this is not theirs to
+ * change. Answering that from anywhere else would mean a second copy of
+ * the reach rule.
+ *
  * The mention candidates (CMT-007) are the same predicate turned around
  * — run over the people on this record rather than over its rows — so
  * the answer to "who can the typeahead offer" cannot disagree with the
@@ -55,6 +63,15 @@ import type { AuthenticatedUser } from "../auth/guards.js";
  * connection to ask who may touch it.
  */
 export type ContractAccessReader = Db | Parameters<Parameters<Db["transaction"]>[0]>[0];
+
+/**
+ * The `contract_team` role that records who made the contract (CTR-004).
+ * It is provenance rather than membership — the server writes it once at
+ * creation and nothing after that adds or drops it — and it is the row
+ * DD-014 means by "the creator". It lives here because two rules read
+ * it: the routes write it, and the flag's actor set below asks for it.
+ */
+export const CREATOR_TEAM_ROLE = "creator";
 
 /** Every tier a Member+ hears — DD-016's three, widest last. */
 const ALL_TIERS: readonly CommentVisibility[] = COMMENT_VISIBILITIES;
@@ -250,6 +267,69 @@ export async function contractAudience(
   if (!row) return null;
   const tiers = readableTiers(user.role, row.onTeam);
   return tiers.length === 0 ? null : { contractId: row.id, tiers };
+}
+
+/**
+ * What one viewer may do to one contract's Confidential flag.
+ *
+ * Three answers rather than a boolean, because the two refusals are not
+ * the same refusal and the caller must not have to invent the
+ * difference. `unreachable` is answered as a missing record — the same
+ * 404 the record read gives, so a write leaks no more than a read.
+ * `refused` is a plain 403: this viewer can already see the record, so
+ * telling them it exists tells them nothing, and a 404 here would only
+ * make a real permission boundary look like a bug.
+ */
+export type ConfidentialityWrite = "allowed" | "refused" | "unreachable";
+
+/** The two facts about the contract this question turns on, as the
+ * caller already holds them on the locked row. */
+export interface FlaggableContract {
+  id: string;
+  /** CTR-004's Owner. */
+  managerId: string | null;
+  isConfidential: boolean;
+}
+
+/**
+ * Who may wall a contract off, and who may open it again (DD-014,
+ * extended by CTR-022).
+ *
+ * Three actors: an Administrator, the person who made the record (its
+ * `creator` team row), and its Owner. DD-014 named the first two; CTR-022
+ * adds the Owner, on the ground that the person accountable for a
+ * contract is the person who should be able to decide its audience —
+ * the same extension that keeps a confidential contract visible to its
+ * own Owner.
+ *
+ * Being on the team is not enough. A team Member reads the record, works
+ * on it, and comments on it, and none of that is a claim on who else may
+ * see it.
+ *
+ * Reach is asked first, and with the same rule every read uses, so the
+ * write path cannot answer a question the read path would have refused
+ * to admit was there.
+ */
+export async function confidentialityWrite(
+  db: ContractAccessReader,
+  user: AuthenticatedUser,
+  contract: FlaggableContract,
+): Promise<ConfidentialityWrite> {
+  // Every role this person holds on this record, in one read: reach
+  // asks whether there is any, and the actor set asks whether one of
+  // them is `creator`.
+  const held = await db
+    .select({ role: contractTeam.role })
+    .from(contractTeam)
+    .where(and(eq(contractTeam.contractId, contract.id), eq(contractTeam.userId, user.id)));
+  const standing: Standing = {
+    role: user.role,
+    onTeam: held.length > 0,
+    isOwner: contract.managerId === user.id,
+  };
+  if (!reachesContract(standing, contract.isConfidential)) return "unreachable";
+  const isCreator = held.some((row) => row.role === CREATOR_TEAM_ROLE);
+  return standing.role === "administrator" || standing.isOwner || isCreator ? "allowed" : "refused";
 }
 
 /** One person a comment on this record can address, and the tiers they
