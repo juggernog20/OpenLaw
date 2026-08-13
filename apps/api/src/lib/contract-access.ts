@@ -153,9 +153,10 @@ export function contractTeamScope(
  * they are in and no others, so read and write share one rule rather
  * than two that could disagree.
  *
- * `onTeam` is not read for Member+ today — they hear every tier on every
- * contract. It is a parameter because M10's confidentiality gate turns
- * on exactly that fact, and the caller already knows it.
+ * `onTeam` is not read for Member+ — they hear every tier on every
+ * contract they reach. M10's confidentiality gate turns on that same
+ * fact, but it does so in `reachesContract` below: reach and tier stay
+ * two questions, and this one answers only the second.
  */
 export function readableTiers(role: UserRole, onTeam: boolean): readonly CommentVisibility[] {
   if (role === "administrator" || role === "legal_team_member") return ALL_TIERS;
