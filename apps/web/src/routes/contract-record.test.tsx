@@ -14,7 +14,8 @@
  * searches the book, commits an existing organization by id and an
  * unknown name by name, never offers to create a name the search
  * already answered with, and moves the primary. The activity bar mounts
- * with the applet set that exists before M9.
+ * with the applet set that exists at M9/2 — the chat slot and the
+ * settings deep-link.
  *
  * The CTR-016 fields are the type's: the card draws the attachments in
  * attachment order, every field type gets its own control, and each
@@ -455,11 +456,13 @@ describe("the /contracts/:number record page", () => {
     expect(screen.getByText("MSA")).toBeInTheDocument();
   });
 
-  it("mounts the activity bar with the applet set that exists before M9", async () => {
+  it("mounts the activity bar with the applet set that exists at M9/2", async () => {
     stubApi({ signedIn: MEMBER, extra: recordApi(contractRow()).handler });
     renderAt("/contracts/42");
 
     const bar = await screen.findByRole("toolbar", { name: "Applets" });
+    // Chat opens a panel (CMT-004); settings navigates (SET-001).
+    expect(within(bar).getByRole("button", { name: "Comments" })).toBeInTheDocument();
     expect(within(bar).getByRole("link", { name: "Contract settings" })).toHaveAttribute(
       "href",
       "/settings/contracts",
@@ -1584,5 +1587,363 @@ describe("a Contributor on the contract record (M9/1)", () => {
     expect(
       await screen.findByRole("heading", { name: "Something went wrong." }),
     ).toBeInTheDocument();
+  });
+});
+
+/**
+ * The chat applet (M9/2) on the contract record: the entity-generic
+ * comment panel, mounted in the DES-016 activity bar's second slot.
+ *
+ * The panel names no record type — it is keyed by the entity reference
+ * the record carries, so the same component mounts on matters and
+ * documents later. Every row wears its DD-016 tier; a Legal Only row is
+ * tinted and locked (CMT-003). A Contributor's composer has no Legal
+ * Only segment, and their thread carries no trace of one — the API
+ * filtered it at query time, so there is nothing here to hide.
+ *
+ * The Legal Only row's wash is asserted as a class, the way the panel's
+ * docking already is in record-applets.test.tsx: jsdom computes no
+ * colour, so the class that carries the treatment is the only thing
+ * there is to read. The lock glyph beside the badge is decorative — the
+ * badge's own text names the tier — so it is asserted structurally
+ * rather than by an accessible name that would announce the tier twice.
+ */
+describe("the contract record's comment applet (M9/2)", () => {
+  const AUTHOR = {
+    id: "u2",
+    displayName: "Nadia Counsel",
+    image: null,
+    archived: false,
+  };
+  const CASEY = {
+    id: "u3",
+    displayName: "Casey Contributor",
+    image: null,
+    archived: false,
+  };
+
+  function comment(
+    id: string,
+    body: string,
+    visibility: string,
+    author = AUTHOR,
+    createdAt = "2026-08-12T09:00:00.000Z",
+  ) {
+    return { id, entityType: "contract", entityId: "c1", author, body, visibility, createdAt };
+  }
+
+  /** The thread seam, stateful the way the API is: a post appends, and
+   * the next read answers what the poster now sees. The handler only
+   * answers; what it was asked is recorded for the test to assert. */
+  function commentsApi(initial: ReturnType<typeof comment>[] = []) {
+    let thread = initial;
+    const posts: unknown[] = [];
+    const reads: Record<string, string | null>[] = [];
+    const handler = (call: StubCall): Response | undefined => {
+      if (call.url.pathname !== "/api/v1/comments") return undefined;
+      if (call.method === "GET") {
+        reads.push({
+          entityType: call.url.searchParams.get("entityType"),
+          entityId: call.url.searchParams.get("entityId"),
+        });
+        return json(200, { comments: thread });
+      }
+      if (call.method === "POST") {
+        posts.push(call.body);
+        const body = call.body as { body: string; visibility: string };
+        const posted = comment(
+          `c-new-${thread.length}`,
+          body.body,
+          body.visibility,
+          AUTHOR,
+          "2026-08-12T12:00:00.000Z",
+        );
+        thread = [...thread, posted];
+        return json(201, { comment: posted });
+      }
+      return undefined;
+    };
+    return { handler, posts, reads };
+  }
+
+  /** The record page's own seam plus the thread's, in that order. */
+  function pageApi(comments: ReturnType<typeof commentsApi>, record = recordApi(contractRow())) {
+    return (call: StubCall) => comments.handler(call) ?? record.handler(call);
+  }
+
+  /** Opens the chat panel from the activity bar and answers its icon. */
+  async function openChat(user: ReturnType<typeof userEvent.setup>) {
+    const bar = await screen.findByRole("toolbar", { name: "Applets" });
+    const icon = within(bar).getByRole("button", { name: "Comments" });
+    await user.click(icon);
+    return icon;
+  }
+
+  it("opens and closes the chat panel from the bar, returning focus to its icon", async () => {
+    const user = userEvent.setup();
+    const comments = commentsApi();
+    stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+    renderAt("/contracts/42");
+
+    const icon = await openChat(user);
+    const panel = await screen.findByRole("complementary", { name: "Comments" });
+    expect(icon).toHaveAttribute("aria-expanded", "true");
+    // The panel is keyed by the record's entity reference, never by the
+    // contract's CTR-003 number — that is what makes it entity-generic.
+    await waitFor(() => {
+      expect(comments.reads).toEqual([{ entityType: "contract", entityId: "c1" }]);
+    });
+
+    await user.click(within(panel).getByRole("button", { name: "Close" }));
+    expect(screen.queryByRole("complementary", { name: "Comments" })).not.toBeInTheDocument();
+    // DES-010: the panel is not a Radix overlay, so focus is restored
+    // by hand — to the bar icon that opened it.
+    expect(icon).toHaveFocus();
+    expect(icon).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("renders the thread flat and chronological, every row wearing its tier", async () => {
+    const user = userEvent.setup();
+    stubApi({
+      signedIn: MEMBER,
+      extra: pageApi(
+        commentsApi([
+          comment("c-1", "Redline goes back Friday.", "working_team"),
+          comment("c-2", "Hold the 1x cap.", "legal_only"),
+          comment("c-3", "Signature date is the 14th.", "full_thread", CASEY),
+        ]),
+      ),
+    });
+    renderAt("/contracts/42");
+    await openChat(user);
+
+    const thread = await screen.findByRole("list", { name: "Comments" });
+    const rows = within(thread).getAllByRole("listitem");
+    expect(rows.map((row) => within(row).getByText(/\.$/).textContent)).toEqual([
+      "Redline goes back Friday.",
+      "Hold the 1x cap.",
+      "Signature date is the 14th.",
+    ]);
+    expect(within(rows[0]!).getByText("Working team")).toBeInTheDocument();
+    expect(within(rows[1]!).getByText("Legal only")).toBeInTheDocument();
+    expect(within(rows[2]!).getByText("Full thread")).toBeInTheDocument();
+    expect(within(rows[2]!).getByText("Casey Contributor")).toBeInTheDocument();
+    // CMT-003: the tier reads peripherally, not by squinting at a badge
+    // — the row is washed and the badge carries DES-009's lock.
+    expect(rows[1]).toHaveClass("bg-legal-only-bg");
+    expect(rows[0]).not.toHaveClass("bg-legal-only-bg");
+    // Asserted structurally, for the reason this suite's header gives.
+    expect(within(rows[1]!).getByText("Legal only").querySelector("svg")).not.toBeNull();
+    expect(within(rows[0]!).getByText("Working team").querySelector("svg")).toBeNull();
+
+    // The panel header counts what is on screen — the filtered set is
+    // all there is, so no total can leak a hidden row.
+    const panel = screen.getByRole("complementary", { name: "Comments" });
+    expect(within(panel).getByText("3")).toBeInTheDocument();
+  });
+
+  it("says what the panel is for when nothing has been said", async () => {
+    const user = userEvent.setup();
+    stubApi({ signedIn: MEMBER, extra: pageApi(commentsApi()) });
+    renderAt("/contracts/42");
+    await openChat(user);
+
+    expect(
+      await screen.findByText(/Nothing has been said about this record yet/),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("list", { name: "Comments" })).not.toBeInTheDocument();
+  });
+
+  it("offers a Legal Team Member three segments, preset to Working team, each naming its audience", async () => {
+    const user = userEvent.setup();
+    stubApi({ signedIn: MEMBER, extra: pageApi(commentsApi()) });
+    renderAt("/contracts/42");
+    await openChat(user);
+
+    const panel = await screen.findByRole("complementary", { name: "Comments" });
+    const segments = within(panel).getAllByRole("radio");
+    expect(segments.map((segment) => segment.getAttribute("value"))).toEqual([
+      "legal_only",
+      "working_team",
+      "full_thread",
+    ]);
+    // DD-016: a record page opens on the working group, so the common
+    // case needs no decision.
+    expect(within(panel).getByRole("radio", { name: "Working team" })).toBeChecked();
+    expect(
+      within(panel).getByText("Visible to the legal team and Contributors on this record."),
+    ).toBeInTheDocument();
+
+    // The audience is named before the post, never after it (CMT-003).
+    await user.click(within(panel).getByRole("radio", { name: "Legal only" }));
+    expect(
+      within(panel).getByText("Visible to Administrators and Legal Team Members."),
+    ).toBeInTheDocument();
+  });
+
+  it("posts at the selected tier and puts the new comment at the end of the thread", async () => {
+    const user = userEvent.setup();
+    const comments = commentsApi([comment("c-1", "Redline goes back Friday.", "working_team")]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+    renderAt("/contracts/42");
+    await openChat(user);
+
+    const panel = await screen.findByRole("complementary", { name: "Comments" });
+    await user.click(within(panel).getByRole("radio", { name: "Legal only" }));
+    await user.type(within(panel).getByLabelText("New comment"), "Hold the 1x cap.");
+    await user.click(within(panel).getByRole("button", { name: "Comment" }));
+
+    await waitFor(() => {
+      expect(comments.posts).toEqual([
+        {
+          entityType: "contract",
+          entityId: "c1",
+          body: "Hold the 1x cap.",
+          visibility: "legal_only",
+        },
+      ]);
+    });
+    const rows = within(await screen.findByRole("list", { name: "Comments" })).getAllByRole(
+      "listitem",
+    );
+    expect(rows).toHaveLength(2);
+    expect(within(rows[1]!).getByText("Hold the 1x cap.")).toBeInTheDocument();
+    expect(within(rows[1]!).getByText("Legal only")).toBeInTheDocument();
+    // The box empties, so the next comment starts clean.
+    expect(within(panel).getByLabelText("New comment")).toHaveValue("");
+  });
+
+  it("gives a Contributor two segments and no trace of a Legal Only comment", async () => {
+    const user = userEvent.setup();
+    // The API filtered at query time, so the Legal Only row is not in
+    // the answer at all — there is no placeholder here to render.
+    const comments = commentsApi([
+      comment("c-1", "Redline goes back Friday.", "working_team"),
+      comment("c-3", "Signature date is the 14th.", "full_thread"),
+    ]);
+    const record = recordApi(contractRow(), [person("u1", "creator"), person("u3", "contributor")]);
+    stubApi({
+      signedIn: CONTRIBUTOR,
+      extra: (call: StubCall) =>
+        comments.handler(call) ??
+        (["/api/v1/contracts/options", "/api/v1/entities"].includes(call.url.pathname)
+          ? problem(403, "You do not have permission to perform this action.")
+          : record.handler(call)),
+    });
+    renderAt("/contracts/42");
+    await openChat(user);
+
+    const panel = await screen.findByRole("complementary", { name: "Comments" });
+    // Absent, not disabled — the same convention the nav and the
+    // settings rail follow. The seam refuses the tier regardless.
+    expect(
+      within(panel)
+        .getAllByRole("radio")
+        .map((radio) => radio.getAttribute("value")),
+    ).toEqual(["working_team", "full_thread"]);
+    expect(within(panel).queryByRole("radio", { name: "Legal only" })).not.toBeInTheDocument();
+
+    const rows = within(await screen.findByRole("list", { name: "Comments" })).getAllByRole(
+      "listitem",
+    );
+    expect(rows).toHaveLength(2);
+    expect(within(panel).queryByText("Legal only")).not.toBeInTheDocument();
+    expect(panel.textContent).not.toContain("1x cap");
+    // The count is the filtered set's, so it hides no gap either.
+    expect(within(panel).getByText("2")).toBeInTheDocument();
+  });
+
+  it("lets a Contributor post into the rooms they are in", async () => {
+    const user = userEvent.setup();
+    const comments = commentsApi();
+    const record = recordApi(contractRow(), [person("u1", "creator"), person("u3", "contributor")]);
+    stubApi({
+      signedIn: CONTRIBUTOR,
+      extra: (call: StubCall) =>
+        comments.handler(call) ??
+        (["/api/v1/contracts/options", "/api/v1/entities"].includes(call.url.pathname)
+          ? problem(403, "You do not have permission to perform this action.")
+          : record.handler(call)),
+    });
+    renderAt("/contracts/42");
+    await openChat(user);
+
+    const panel = await screen.findByRole("complementary", { name: "Comments" });
+    await user.type(within(panel).getByLabelText("New comment"), "Procurement has the PO ready.");
+    await user.click(within(panel).getByRole("button", { name: "Comment" }));
+
+    await waitFor(() => {
+      expect(comments.posts).toEqual([
+        {
+          entityType: "contract",
+          entityId: "c1",
+          body: "Procurement has the PO ready.",
+          visibility: "working_team",
+        },
+      ]);
+    });
+  });
+
+  it("says so when the thread cannot be read, and still takes a comment", async () => {
+    const user = userEvent.setup();
+    const comments = commentsApi();
+    let readsRefused = true;
+    const record = recordApi(contractRow());
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call: StubCall) => {
+        if (call.url.pathname === "/api/v1/comments" && call.method === "GET" && readsRefused) {
+          return problem(503, "The conversation is unavailable.");
+        }
+        return comments.handler(call) ?? record.handler(call);
+      },
+    });
+    renderAt("/contracts/42");
+    await openChat(user);
+
+    const panel = await screen.findByRole("complementary", { name: "Comments" });
+    expect(await within(panel).findByRole("alert")).toHaveTextContent(
+      "The conversation could not be read. Reopen the panel to try again.",
+    );
+    // A failed read draws no thread and no count — there is nothing to
+    // be honest about, so nothing is claimed.
+    expect(within(panel).queryByRole("list", { name: "Comments" })).not.toBeInTheDocument();
+    expect(within(panel).queryByText("0")).not.toBeInTheDocument();
+
+    // The composer is still the composer: the read failed, not the post.
+    readsRefused = false;
+    await user.type(within(panel).getByLabelText("New comment"), "Saying it anyway.");
+    await user.click(within(panel).getByRole("button", { name: "Comment" }));
+    await waitFor(() => {
+      expect(comments.posts).toHaveLength(1);
+    });
+  });
+
+  it("says so when the post is refused, and keeps the draft", async () => {
+    const user = userEvent.setup();
+    const record = recordApi(contractRow());
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call: StubCall) => {
+        if (call.url.pathname === "/api/v1/comments" && call.method === "GET") {
+          return json(200, { comments: [] });
+        }
+        if (call.url.pathname === "/api/v1/comments" && call.method === "POST") {
+          return problem(403, "You cannot post a comment at that visibility tier.");
+        }
+        return record.handler(call);
+      },
+    });
+    renderAt("/contracts/42");
+    await openChat(user);
+
+    const panel = await screen.findByRole("complementary", { name: "Comments" });
+    await user.type(within(panel).getByLabelText("New comment"), "Into a room I am not in.");
+    await user.click(within(panel).getByRole("button", { name: "Comment" }));
+
+    expect(await within(panel).findByRole("alert")).toHaveTextContent(
+      "You cannot post a comment at that visibility tier.",
+    );
+    expect(within(panel).getByLabelText("New comment")).toHaveValue("Into a room I am not in.");
   });
 });

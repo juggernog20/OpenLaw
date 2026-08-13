@@ -59,7 +59,12 @@ export function RecordApplets({
     <div className="@container/record relative flex min-h-0 flex-1">
       <div className="min-w-0 flex-1">{children}</div>
       {expanded ? (
-        <AppletPanel id={panelId} label={intl.formatMessage(expanded.label)} onClose={close}>
+        <AppletPanel
+          id={panelId}
+          label={intl.formatMessage(expanded.label)}
+          accessory={expanded.accessory?.()}
+          onClose={close}
+        >
           {expanded.render()}
         </AppletPanel>
       ) : null}

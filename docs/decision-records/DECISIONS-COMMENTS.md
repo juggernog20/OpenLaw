@@ -57,18 +57,30 @@ _None — queue cleared 2026-08-05 (CMT-001 through CMT-005)._
 
 ## CMT-005 — Post-publish: edit with marker, soft delete, tier immutable
 
-- **Status** — Accepted
+- **Status** — Accepted; the "prior text in the audit log" clause is **amended by CMT-006**
 - **Date** — 2026-08-05
-- **Decision** — Authors edit their own comments (visible "edited" marker; prior text in the audit log per DD-017). Delete is soft: a tombstone keeps thread continuity, text retained in the audit log; Admin hard-redact per the MTR-008/DOC-010 pattern. **Tier is immutable after posting** — wrong room means delete and repost.
+- **Decision** — Authors edit their own comments (visible "edited" marker; ~~prior text in the audit log per DD-017~~ — **superseded by CMT-006**: prior text lives in `comment_revisions`). Delete is soft: a tombstone keeps thread continuity, ~~text retained in the audit log~~ (**CMT-006**: in `comment_revisions`); Admin hard-redact per the MTR-008/DOC-010 pattern. **Tier is immutable after posting** — wrong room means delete and repost.
 - **Rationale** — Widening leaks text written for a narrower room; narrowing hides what a wider room already read. Both are worse than repost.
 - **Consequences** — `edited_at`, `deleted_at` on `comments`; no tier-update endpoint.
 
+## CMT-006 — Prior comment text lives in `comment_revisions`, never in an activity payload (amends CMT-005)
+
+- **Status** — Accepted
+- **Date** — 2026-08-13
+- **Context** — CMT-005 says two things that cannot both hold. First, prior comment text lives in the audit log. Second, an Administrator can hard-redact a comment. DD-017 forbids `UPDATE` and `DELETE` on `activity_log`; corrections are appended, never applied. Text that enters a payload can therefore never leave it. A redact would remove the comment and leave what it said sitting in the log.
+- **Decision** —
+  - **No comment text ever enters an activity payload.** Comment activity entries carry ids and metadata only. `comment.posted` carries the comment's id. It rides the comment's own tier, and every later `comment.*` verb does the same.
+  - **Prior versions live in `comment_revisions`** — `comment_id`, `body`, `replaced_at`. An edit writes a row there, and so does a soft delete. That table is ordinary application data, so a hard redact purges it along with `comments.body`.
+- **Rationale** — Append-only stays absolute. Redaction stays real. Each rule keeps its full strength, because the two now apply to different tables.
+- **Consequences** — `comment_revisions` lands with edit and soft delete (M9/4), not before (TECH-014's incremental-schema rule). Every `comment.*` activity payload carries ids only; M9/2 already writes them that way. The M9/6 narration layer renders a comment entry from the comment it names, never from text in the payload. A redacted comment's feed entry therefore reads as a redacted comment, instead of quoting what was removed.
+
 ## Index of decisions
 
-| #       | Decision                                                                | Status   |
-| ------- | ----------------------------------------------------------------------- | -------- |
-| CMT-001 | One comment system; anchored doc comments; thread follows the work      | Accepted |
-| CMT-002 | Thread shape: flat chronological, mentions, no nesting                  | Accepted |
-| CMT-003 | Tier rendering: badge + strong Legal-Only treatment; segmented composer | Accepted |
-| CMT-004 | Home: activity-bar panel; badge = your unread, tier-filtered            | Accepted |
-| CMT-005 | Post-publish: edit with marker, soft delete, tier immutable             | Accepted |
+| #       | Decision                                                                | Status                        |
+| ------- | ----------------------------------------------------------------------- | ----------------------------- |
+| CMT-001 | One comment system; anchored doc comments; thread follows the work      | Accepted                      |
+| CMT-002 | Thread shape: flat chronological, mentions, no nesting                  | Accepted                      |
+| CMT-003 | Tier rendering: badge + strong Legal-Only treatment; segmented composer | Accepted                      |
+| CMT-004 | Home: activity-bar panel; badge = your unread, tier-filtered            | Accepted                      |
+| CMT-005 | Post-publish: edit with marker, soft delete, tier immutable             | Accepted (amended by CMT-006) |
+| CMT-006 | Prior comment text lives in `comment_revisions`, not the activity log   | Accepted                      |

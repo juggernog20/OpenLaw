@@ -852,22 +852,22 @@ Source: **INT-002**
 
 ### `comments`
 
-Source: **DD-016**, **CMT-001–005**
+Source: **DD-016**, **CMT-001–006**
 
 Audience-tiered comments — one system across record threads, document annotations, and the portal request thread. Flat chronological (no `parent_comment_id` by design, CMT-002). On request conversion, comment rows **re-parent** to the converted matter/contract with tiers preserved (CMT-001); `request` remains a target only for never-converted requests. The portal renders the record thread filtered to `full_thread`.
 
-| Column                     | Type        | Notes                                                                                                              |
-| -------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------ |
-| `id`                       | UUID        | PK                                                                                                                 |
-| `entity_type`              | text (enum) | `matter` \| `contract` \| `document` \| `request`                                                                  |
-| `entity_id`                | UUID        | polymorphic — references the row in the table named by `entity_type`                                               |
-| `author_id`                | UUID        | FK → `users.id`, not null                                                                                          |
-| `body`                     | text        | not null                                                                                                           |
-| `visibility`               | text (enum) | `legal_only` \| `working_team` \| `full_thread` per **DD-016**; **immutable after posting** per CMT-005            |
-| `anchor`                   | jsonb       | nullable per **CMT-001**; document comments only: `{version_id, quote, position}` — renders the K.B9 margin marker |
-| `edited_at`                | timestamptz | nullable per **CMT-005**; "edited" marker, prior text in audit log                                                 |
-| `deleted_at`               | timestamptz | nullable per **CMT-005**; soft delete → tombstone in thread; Admin hard-redact per MTR-008/DOC-010 pattern         |
-| `created_at`, `updated_at` | timestamptz |                                                                                                                    |
+| Column                     | Type        | Notes                                                                                                                                                                      |
+| -------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                                                                                         |
+| `entity_type`              | text (enum) | `matter` \| `contract` \| `document` \| `request`                                                                                                                          |
+| `entity_id`                | UUID        | polymorphic — references the row in the table named by `entity_type`                                                                                                       |
+| `author_id`                | UUID        | FK → `users.id`, not null                                                                                                                                                  |
+| `body`                     | text        | not null                                                                                                                                                                   |
+| `visibility`               | text (enum) | `legal_only` \| `working_team` \| `full_thread` per **DD-016**; **immutable after posting** per CMT-005                                                                    |
+| `anchor`                   | jsonb       | nullable per **CMT-001**; document comments only: `{version_id, quote, position}` — renders the K.B9 margin marker; lands with documents in M11, not before (**TECH-014**) |
+| `edited_at`                | timestamptz | nullable per **CMT-005**; "edited" marker, prior text in `comment_revisions` per **CMT-006**                                                                               |
+| `deleted_at`               | timestamptz | nullable per **CMT-005**; soft delete → tombstone in thread; Admin hard-redact per MTR-008/DOC-010 pattern                                                                 |
+| `created_at`, `updated_at` | timestamptz |                                                                                                                                                                            |
 
 Unread tracking (CMT-004 working default): `comment_last_read` (`user_id`, `entity_type`, `entity_id`, `read_at`, compound PK on first three). Badges count unread within tiers the viewer can see — hidden-tier counts never leak.
 

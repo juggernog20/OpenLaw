@@ -33,7 +33,7 @@ This document records **front-end design decisions only** — visual system (col
 (Listed here so they don't get lost — to be addressed in a separate feature-decisions grill.)
 
 - Status / state visualization (depends on a future DD in `DECISIONS.md` defining the contract lifecycle states themselves)
-- Comment-tier UI per DD-016 (visual treatment for "Legal Only" / "Working Team" / "Full Thread" — revisit when the comment composer / thread screens are mocked)
+- ~~Comment-tier UI per DD-016 (visual treatment for "Legal Only" / "Working Team" / "Full Thread")~~ — opened and answered by **DES-023**
 - Notifications surface (in-app inbox / toasts / email digest / per-channel preferences)
 - Cmd-K command palette (deferred per DES-010; revisit when command catalog crosses ~20 distinct actions or entity index spans more than two domains)
 - Empty states and onboarding voice (per-feature; depends on feature scope)
@@ -1349,6 +1349,63 @@ The list row stays one line only because this screen exists; writing its anatomy
 
 `/settings/contracts/types/:id` (#84) is the reference implementation, reached from a pencil icon button in the list row's trailing actions (the DES-021 slot; here it navigates instead of opening a dialog, because the editor is a screen). The M22 matters editor and M19 request-type editor reuse this shape with their own vocabulary.
 
+## DES-023: The comment surface — tier badges, the Legal Only row wash, and the segmented composer
+
+- **Status:** Accepted
+- **Date:** 2026-08-13
+
+### Context
+
+CMT-003 decided the comment surface's treatments in words. Every row wears a tier badge. Legal Only rows get "tinted background + the DES-009 lock glyph". The composer is a three-segment control. CMT-003 also named the design-system addition those treatments need, and this doc has carried "comment-tier UI per DD-016" on its out-of-scope list ever since, to be answered "when the comment composer / thread screens are mocked". They are mocked, and M9/2 (#128) builds them. This record is that answer.
+
+DES-016's implementation clarification governs the bar and the panel chrome, taken from the matter-detail frames (M3, comments open). What sits **inside** the panel is not in that clarification. The frame that draws it for this module is `designs/contracts.pen` **C3 — Contract detail · Comments panel**: the thread rows, the tier badge, and the composer. C3 is the reference below. Where C3 and M3 disagree about the 44px header or the 48px bar, M3 still wins.
+
+### Decision
+
+The panel is the DES-016 chat applet, and its content is three parts.
+
+**The header accessory.** The 44px panel header is chrome (DES-016). What sits beside its title belongs to the applet. The chat applet puts a neutral count pill there: `bg-badge-count-bg` / `text-badge-count-fg`, 11px semibold, `rounded-pill`. It counts the rows on screen. It can never count a row the viewer may not see. That row was filtered out at query time and is not in the client at all (DD-016).
+
+**The comment row.** 12px vertical and 16px horizontal padding, with a `border-muted` rule between rows. Two lines. The header carries a 24px avatar, the author's name (12px semibold), the tier badge, and the timestamp (11px, `text-muted`) pushed to the trailing edge. The body follows at 12px in `text-primary`, with newlines preserved, because they are the author's.
+
+**The tier badge.** Every row wears one. Three tiers, two treatments. Working Team and Full Thread take the neutral counter pair on a `rounded-chip`. **Legal Only takes DES-009's own pair**, `bg-confidential-bg` / `text-confidential`, with the DES-009 `Lock` glyph ahead of the label.
+
+**The Legal Only row wash — a new token, `--legal-only-bg`.** The row itself is tinted, so the tier reads peripherally. That is the whole point of CMT-003. The wash cannot borrow `--confidential-bg`: that is the banner surface, and the badge on the row already uses it, so the two would cancel. It takes its own value instead, one step lighter than the banner and in the same per-theme hue family — soft lavender in Light and Dark, soft tan in Warm, following DES-009's per-theme divergence. Light `#FAF3FE`, Warm `#F6EFE3`, Dark `#1E1826`. The DES-011 gate covers `--text-primary` and `--text-muted` on it in all three themes.
+
+**The composer.** A segmented tier control, then the box, then the audience line, then the action:
+
+- **The segments** are native radios in a `fieldset` labelled "Audience". That makes them one group, arrow-key navigable for free. They are drawn as a `bg-control` track with a 2px inset, each segment `rounded-chip` at 11px. The selected segment lifts onto `bg-raised` with a `border-muted` hairline and goes semibold. The rest are `text-muted` medium. The Legal Only segment carries the same lock glyph its badge does.
+- **The segment set is the viewer's rooms, not all three.** A Contributor's composer has two segments; Legal Only is absent, not disabled — the convention the nav and the settings rail already follow. The seam refuses the tier regardless.
+- **The preset is Working Team on a record page** (DD-016). The request thread's composer presets to Full Thread and lands with the portal.
+- **The audience line** sits under the box in 11px `text-muted`. It names, in words, who the selected segment means. It changes with the selection, and it is there before the post. DD-016's failure mode is saying something in the wrong room, and that safety must not depend on reading a badge afterwards.
+- **The action** is the shipped primary Button, labelled with the verb "Comment", disabled while the box is empty or a post is in flight.
+
+### Recorded normalization points (C3 deviations accepted)
+
+1. **The lock renders at 12px**, not DES-008's 16/20/24 ramp. DES-009 sets its own 12–14px range for this glyph, and inside an 11px badge a 16px lock is taller than the text it marks. The frame draws 9–10px; 12 is the floor of DES-009's range.
+2. **The composer draws two segments in C3** ("Everyone" / "Legal only"). Three is what DD-016 decided, and the labels are DD-016's own audience names: "Legal only", "Working team", "Full thread".
+3. **The frame's audience line carries an `eye` glyph.** It is dropped — a 12px eye is off both ramps, and the line reads as a sentence without it.
+4. **The frame tints Legal Only rows `#FFF8F6`,** a warm wash unrelated to the confidentiality family. The token above is in the family instead, so the two Legal-Only-ish markers in the product rhyme rather than clash.
+5. **The frame's green submit** is the shipped Button's `cta-primary`, per DES-004's normalization.
+6. **Vertical padding of 3px in the segments rounds to 4** (DES-007's scale).
+
+### Rationale
+
+CMT-003 already judged the tier badge alone insufficient. The reason is the whole DD-016 risk: a Legal Only comment read as a Working Team one is a leak of legal strategy. A wash is read without being looked at. A badge is not. Giving the wash its own token, rather than borrowing the banner's, is the argument DES-009 made for not borrowing a status pill's — one token per role, so a later shift in one does not silently move the other.
+
+Native radios cost nothing to make keyboard-accessible, because DES-010 leans on built-ins. They also announce as one choice rather than as three buttons. A handrolled toolbar would buy neither.
+
+### Alternatives considered
+
+- **Borrow `--confidential-bg` for the row.** Rejected: the badge on the row already uses it, and `--text-muted` on it misses 4.5:1 in Light and Warm.
+- **Legal Only badge on `bg-raised`, row on `--confidential-bg`.** Works, but inverts the frame — a chip lighter than its row — and still leaves the row heavier than a wash should be.
+- **A leading-edge stripe instead of a wash.** Rejected for the reason DES-009 rejected it for the banner: it reads as decoration rather than restriction.
+- **A `select` for the tier.** Rejected: DD-016 wants one deliberate act with all the options visible; a closed select hides two of the three rooms behind a click.
+
+### Consequences
+
+`--legal-only-bg` joins the DES-005 token system. It is registered in `styles/globals.css` `@theme` as `--color-legal-only-bg`, valued in all three theme files, and gated in `styles/lint-contrast.mjs` against `--text-primary` and `--text-muted`. `PanelApplet` gains an optional `accessory` slot, so an applet can put content in the panel header. DES-016's implementation clarification, point 5, anticipated exactly that. The panel is entity-generic: matters (M22) and documents (M11) mount the same component. The mention chips (M9/3) and the edited marker and tombstone (M9/4) extend this anatomy rather than replacing it.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -1375,3 +1432,4 @@ The list row stays one line only because this screen exists; writing its anatomy
 | DES-020 | List-editor pattern — the shared anatomy for taxonomy settings panes                                                                                                 | Accepted |
 | DES-021 | List-editor table variant and the field-editor dialog (extends DES-020)                                                                                              | Accepted |
 | DES-022 | The type-editor screen — identity card plus attachment table (extends DES-020)                                                                                       | Accepted |
+| DES-023 | The comment surface — tier badges, the Legal Only row wash, and the segmented composer                                                                               | Accepted |

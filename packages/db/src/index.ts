@@ -12,6 +12,7 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
 import * as activitySchema from "./schema/activity.js";
 import * as authSchema from "./schema/auth.js";
+import * as commentsSchema from "./schema/comments.js";
 import * as contractCounterpartiesSchema from "./schema/contract-counterparties.js";
 import * as contractStatusesSchema from "./schema/contract-statuses.js";
 import * as contractTeamSchema from "./schema/contract-team.js";
@@ -28,6 +29,7 @@ import * as orgSchema from "./schema/org.js";
 
 export * from "./schema/activity.js";
 export * from "./schema/auth.js";
+export * from "./schema/comments.js";
 export * from "./schema/contract-counterparties.js";
 export * from "./schema/contract-statuses.js";
 export * from "./schema/contract-team.js";
@@ -44,6 +46,7 @@ export * from "./schema/org.js";
 export const schema = {
   ...activitySchema,
   ...authSchema,
+  ...commentsSchema,
   ...contractCounterpartiesSchema,
   ...contractStatusesSchema,
   ...contractTeamSchema,
@@ -77,6 +80,10 @@ export {
   or,
   sql,
 } from "drizzle-orm";
+/** The type a composed predicate carries. Exported from here for the
+ * same reason the operators are: a second drizzle-orm copy makes the
+ * SQL types incompatible. */
+export type { SQL } from "drizzle-orm";
 
 export type Db = NodePgDatabase<typeof schema> & { $client: pg.Pool };
 

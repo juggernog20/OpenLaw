@@ -83,6 +83,11 @@
   --confidential-fg: #c8b5ff;
   --confidential-bg: #241b30;
 
+  /* The Legal Only comment row's wash (DES-023) — one step up from the
+   * card surface, so the row reads as tinted and the badge above it
+   * keeps the banner's deeper purple. */
+  --legal-only-bg: #1e1826;
+
   /* Avatar — uniform initials treatment per DES-018 */
   --avatar-bg: #51b3d6;
   --avatar-fg: #0d1117;
