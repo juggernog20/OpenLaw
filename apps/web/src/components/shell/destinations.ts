@@ -12,7 +12,7 @@
 
 import { House, Landmark, Signature, type LucideIcon } from "lucide-react";
 import { defineMessage, type MessageDescriptor } from "react-intl";
-import { MEMBER_PLUS_ROLES, type Role } from "../../lib/roles";
+import { CONTRACT_READER_ROLES, MEMBER_PLUS_ROLES, type Role } from "../../lib/roles";
 
 export interface Destination {
   id: string;
@@ -31,13 +31,14 @@ export const destinations: Destination[] = [
     label: defineMessage({ id: "nav.home", defaultMessage: "Home" }),
   },
   {
-    // The M8 contract record. Member+ only; Contributor record-level
-    // access waits for the DD-015 permission grid.
+    // The M8 contract record. Member+, plus a Contributor (CTR-021): they
+    // have contracts to see — the ones they are on the team of — so
+    // the destination is drawn for them too.
     id: "contracts",
     path: "/contracts",
     icon: Signature,
     label: defineMessage({ id: "nav.contracts", defaultMessage: "Contracts" }),
-    roles: MEMBER_PLUS_ROLES,
+    roles: CONTRACT_READER_ROLES,
   },
   {
     // The M7 registry core; M27 grows this same destination into the

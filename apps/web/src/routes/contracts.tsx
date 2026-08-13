@@ -10,9 +10,14 @@
  * moment a type is picked, and creation is refused while one is empty),
  * an empty state that says what the module is, and the show-archived
  * toggle with a row-level restore. The C1 mock's remaining columns — risk and expiry — join
- * with the tickets that add those fields to the record. The destination is
- * Member+ only (DD-013): the loader is the client half of that gate,
- * and the API's 403 is the real refusal.
+ * with the tickets that add those fields to the record.
+ *
+ * The destination takes Member+ and Contributors (CTR-021). A Contributor's
+ * list is the contracts they hold a `contract_team` row on — the API
+ * does that narrowing, and an empty answer is the list's own empty
+ * state, never a refusal. The page reads for them: no create, no
+ * restore, no picker reads. Business Users are bounced home; the API's
+ * 403 is the real refusal.
  */
 
 import { useState } from "react";
@@ -38,7 +43,7 @@ import {
 } from "../lib/custom-fields";
 import { CONTROL_CLASS } from "../lib/form-controls";
 import { problemDetail } from "../lib/messages";
-import { isMemberPlus } from "../lib/roles";
+import { canReadContracts, isMemberPlus } from "../lib/roles";
 import { currentUser, needsSetup } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
@@ -54,33 +59,40 @@ import { Switch } from "../components/ui/switch";
 export async function contractsLoader() {
   const user = await currentUser();
   if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
-  // Member+ only: Contributors and Business Users get no surface at
-  // all, not a disabled one. The API's 403 stands behind this.
-  if (!isMemberPlus(user.role)) return redirect("/");
+  // A Business User gets no surface at all, not a disabled one. The
+  // API's 403 stands behind this.
+  if (!canReadContracts(user.role)) return redirect("/");
+  // Whether this viewer may change anything from the list — create a
+  // contract, or restore an archived one. Both are Member+, and so are
+  // the two picker reads the create dialog needs. A Contributor asks
+  // for neither: both seams refuse them, and a page with no create
+  // dialog has nothing to fill.
+  const canEdit = isMemberPlus(user.role);
   const [list, options, registry] = await Promise.all([
     api.GET("/api/v1/contracts"),
-    api.GET("/api/v1/contracts/options"),
     // The create dialog grows the picked type's hard-required fields
     // (CTR-016), and two of the nine field types name a row: a person
     // or one of our Entities. The people ride the options read; the
     // Entities are the M7 registry's own Member+ list, the same source
     // the record's signing-entity picker reads.
-    api.GET("/api/v1/entities"),
+    canEdit ? api.GET("/api/v1/contracts/options") : undefined,
+    canEdit ? api.GET("/api/v1/entities") : undefined,
   ]);
-  if (!list.data || !options.data || !registry.data) {
+  if (!list.data || (canEdit && !(options?.data && registry?.data))) {
     throw new Error("The contract list could not be read.");
   }
   return {
     user,
+    canEdit,
     contracts: list.data.contracts,
-    contractTypes: options.data.contractTypes,
-    users: options.data.users,
-    entities: registry.data.entities,
+    contractTypes: options?.data?.contractTypes ?? [],
+    users: options?.data?.users ?? [],
+    entities: registry?.data?.entities ?? [],
   };
 }
 
 export function ContractsPage() {
-  const { user, contracts, contractTypes, users, entities } =
+  const { user, canEdit, contracts, contractTypes, users, entities } =
     useLoaderData<typeof contractsLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
@@ -155,12 +167,14 @@ export function ContractsPage() {
     setRows((current) => current.map((existing) => (existing.id === row.id ? restored : existing)));
   }
 
-  const createButton = (
+  /** Absent, not disabled, for a read-only viewer — the same
+   * convention the nav and the settings rail follow (SET-002). */
+  const createButton = canEdit ? (
     <Button onClick={() => setCreateOpen(true)}>
       <Plus size={16} aria-hidden="true" />
       <FormattedMessage id="contracts.create" defaultMessage="Create contract" />
     </Button>
-  );
+  ) : undefined;
 
   return (
     <AppShell
@@ -201,13 +215,18 @@ export function ContractsPage() {
           />
         </div>
         {rows.length === 0 ? (
-          <EmptyContracts archived={showArchived} onCreate={() => setCreateOpen(true)} />
+          <EmptyContracts
+            archived={showArchived}
+            onCreate={canEdit ? () => setCreateOpen(true) : undefined}
+          />
         ) : (
           <ContractsTable
             rows={rows}
             showArchived={showArchived}
             busy={listBusy}
-            onRestore={(row) => void restoreRow(row)}
+            // Restore is a mutation, so a read-only viewer is offered
+            // no way to ask for one.
+            onRestore={canEdit ? (row) => void restoreRow(row) : undefined}
           />
         )}
       </div>
@@ -233,36 +252,59 @@ export function ContractsPage() {
 
 /** The module's pitch, for the first visit. The C17 mock's second route
  * in — convert an intake request from the Inbox — waits for intake
- * (M20/M21), so the first visit is offered the one door that exists. */
+ * (M20/M21), so the first visit is offered the one door that exists.
+ * A Contributor gets the same empty state with no door: they are on no
+ * contract yet, and being added to one is what puts a row here. */
 function EmptyContracts({
   archived,
   onCreate,
-}: Readonly<{ archived: boolean; onCreate: () => void }>) {
+}: Readonly<{ archived: boolean; onCreate?: () => void }>) {
   return (
     <div className="flex flex-col items-center gap-4 rounded-card border border-border-default bg-raised px-6 py-16 text-center">
       {/* The destination's own glyph, as the C17 mock and the nav draw it. */}
       <FilePen size={24} aria-hidden="true" className="text-subtle" />
+      {/* One static id per line, so every one of them is extracted —
+          a composed id is a message the catalog never sees (DES-013). */}
       <div className="flex flex-col gap-1">
         <h2 className="text-md font-semibold">
-          <FormattedMessage
-            id={archived ? "contracts.empty.archived.title" : "contracts.empty.title"}
-            defaultMessage={archived ? "No archived contracts" : "No contracts yet"}
-          />
+          {archived ? (
+            <FormattedMessage
+              id="contracts.empty.archived.title"
+              defaultMessage="No archived contracts"
+            />
+          ) : (
+            <FormattedMessage id="contracts.empty.title" defaultMessage="No contracts yet" />
+          )}
         </h2>
         <p className="max-w-md text-base text-muted">
-          <FormattedMessage
-            id={archived ? "contracts.empty.archived.body" : "contracts.empty.body"}
-            defaultMessage={
-              archived
-                ? "Archived contracts are kept out of the way until they are restored."
-                : "A contract is the workspace for work that ends in a signed " +
-                  "document. Create one when a deal starts; it takes a reference " +
-                  "you can quote in email."
-            }
-          />
+          {archived ? (
+            <FormattedMessage
+              id="contracts.empty.archived.body"
+              defaultMessage="Archived contracts are kept out of the way until they are restored."
+            />
+          ) : onCreate ? (
+            <FormattedMessage
+              id="contracts.empty.body"
+              defaultMessage={
+                "A contract is the workspace for work that ends in a signed " +
+                "document. Create one when a deal starts; it takes a reference " +
+                "you can quote in email."
+              }
+            />
+          ) : (
+            // A Contributor cannot make the first one: being added to a
+            // contract's team is what puts a row here (DD-015).
+            <FormattedMessage
+              id="contracts.empty.readOnly.body"
+              defaultMessage={
+                "Contracts you are added to appear here. Ask a Legal Team " +
+                "Member to add you to the ones you work on."
+              }
+            />
+          )}
         </p>
       </div>
-      {!archived && (
+      {!archived && onCreate && (
         <Button onClick={onCreate}>
           <Plus size={16} aria-hidden="true" />
           <FormattedMessage id="contracts.create" defaultMessage="Create contract" />
@@ -274,7 +316,7 @@ function EmptyContracts({
 
 /** The list, reduced to the columns the record core carries. The API
  * orders the rows; this renders them. The archived view adds an
- * Archived pill and a row-level restore. */
+ * Archived pill and, for a viewer who may restore, a row-level restore. */
 function ContractsTable({
   rows,
   showArchived,
@@ -285,9 +327,12 @@ function ContractsTable({
   showArchived: boolean;
   /** A list-level request is in flight; row actions stand down. */
   busy: boolean;
-  onRestore: (row: ContractRow) => void;
+  /** Absent for a read-only viewer, so no restore is offered at all. */
+  onRestore?: (row: ContractRow) => void;
 }>) {
   const intl = useIntl();
+  /** The actions column exists only where an action does. */
+  const actions = showArchived && onRestore !== undefined;
   return (
     <div className="overflow-x-auto rounded-card border border-border-default bg-raised">
       <table className="w-full">
@@ -319,7 +364,7 @@ function ContractsTable({
             <th scope="col" className="w-48 px-4 py-2 text-start font-medium">
               <FormattedMessage id="contracts.column.owner" defaultMessage="Owner" />
             </th>
-            {showArchived && (
+            {actions && (
               <th scope="col" className="w-24 px-4 py-2 text-end font-medium">
                 <span className="sr-only">
                   <FormattedMessage id="contracts.column.actions" defaultMessage="Actions" />
@@ -406,7 +451,7 @@ function ContractsTable({
                   </span>
                 )}
               </td>
-              {showArchived && (
+              {actions && (
                 <td className="px-4 py-2.5 text-end">
                   {row.archivedAt !== null && (
                     <Button

@@ -4,7 +4,8 @@
  * The application shell (#41): after sign-in the chrome renders — the
  * header with the product mark, search, and user menu; the top nav
  * driven by the destination registry, filtered to the signed-in role
- * (Home for everyone; Entities is Member+ per ENT-004); and the page
+ * (Home for everyone; Contracts for Member+ and Contributors per M9;
+ * Entities is Member+ per ENT-004); and the page
  * sub-bar carrying the page title. Visuals come from the Light frames
  * in designs/final-themes.pen; geometry is asserted in the e2e suite
  * where real layout exists.
@@ -52,6 +53,24 @@ describe("app shell chrome", () => {
     expect(links.map((link) => link.textContent)).toEqual(["Home", "Contracts", "Entities"]);
     expect(links[0]).toHaveAttribute("aria-current", "page");
     expect(links[1]).not.toHaveAttribute("aria-current");
+  });
+
+  it("draws a Contributor the Contracts destination and nothing else (M9/1)", async () => {
+    // A Contributor now has contracts to see — the ones they are on the
+    // team of — so the destination is drawn. Entities stays Member+.
+    stubApi({
+      signedIn: {
+        id: "u3",
+        email: "casey@example.com",
+        displayName: "Casey Contributor",
+        role: "contributor",
+      },
+    });
+    renderAt("/");
+
+    const nav = await screen.findByRole("navigation");
+    const links = within(nav).getAllByRole("link");
+    expect(links.map((link) => link.textContent)).toEqual(["Home", "Contracts"]);
   });
 
   it("draws a Business User no Member+ destination at all (ENT-004)", async () => {
