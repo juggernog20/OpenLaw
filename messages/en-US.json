@@ -236,18 +236,6 @@
   "dialog.close": {
     "defaultMessage": "Close"
   },
-  "error.body": {
-    "defaultMessage": "The page could not load. Reload to try again."
-  },
-  "error.network": {
-    "defaultMessage": "The server could not be reached. Try again."
-  },
-  "error.pageTitle": {
-    "defaultMessage": "Something went wrong"
-  },
-  "error.title": {
-    "defaultMessage": "Something went wrong."
-  },
   "entities.archivedPill": {
     "defaultMessage": "Archived"
   },
@@ -352,6 +340,18 @@
   },
   "entities.title": {
     "defaultMessage": "Entities"
+  },
+  "error.body": {
+    "defaultMessage": "The page could not load. Reload to try again."
+  },
+  "error.network": {
+    "defaultMessage": "The server could not be reached. Try again."
+  },
+  "error.pageTitle": {
+    "defaultMessage": "Something went wrong"
+  },
+  "error.title": {
+    "defaultMessage": "Something went wrong."
   },
   "format.deadline.overdue": {
     "defaultMessage": "{days, plural, one {# day} other {# days}} overdue"
