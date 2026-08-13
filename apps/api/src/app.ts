@@ -27,6 +27,7 @@ import {
 } from "fastify-type-provider-zod";
 import { OPENLAW_VERSION } from "@openlaw/shared";
 import { HttpError, PROBLEM_CONTENT_TYPE, type Problem } from "./lib/problem.js";
+import { setActivityEmitter } from "./lib/activity-emitter.js";
 import type { MailerResolver } from "./lib/mailer.js";
 import { metaRoutes } from "./modules/meta/routes.js";
 import { authRoutes } from "./modules/auth/routes.js";
@@ -34,6 +35,7 @@ import { contractStatusesRoutes } from "./modules/contract-statuses/routes.js";
 import { contractTypesRoutes } from "./modules/contract-types/routes.js";
 import { attachedFieldsRoutes } from "./modules/contract-types/attached-fields.js";
 import { activityRoutes } from "./modules/activity/routes.js";
+import { auditLogRoutes } from "./modules/audit-log/routes.js";
 import { commentsRoutes } from "./modules/comments/routes.js";
 import { contractsRoutes } from "./modules/contracts/routes.js";
 import { counterpartiesRoutes } from "./modules/counterparties/routes.js";
@@ -83,6 +85,15 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   // Shape hints for V8; guards assign the real values per request.
   app.decorateRequest("user", undefined as unknown as AuthenticatedUser);
   app.decorateRequest("session", undefined as unknown as AuthenticatedSession);
+
+  // DD-017's SIEM clause: every activity row also leaves this process as
+  // one line of structured JSON through the application logger, so a
+  // self-hosting Administrator ships events with the shipper they
+  // already run. A failure to emit never fails the mutation — see
+  // lib/activity-emitter.ts.
+  setActivityEmitter((event) => {
+    app.log.info({ activity: event }, "activity");
+  });
 
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
@@ -255,6 +266,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(counterpartiesRoutes, { prefix: "/api/v1" });
   await app.register(commentsRoutes, { prefix: "/api/v1" });
   await app.register(activityRoutes, { prefix: "/api/v1" });
+  await app.register(auditLogRoutes, { prefix: "/api/v1" });
   await app.register(entityTypesRoutes, { prefix: "/api/v1" });
   await app.register(entitiesRoutes, { prefix: "/api/v1" });
   await app.register(fieldsRoutes, { prefix: "/api/v1" });

@@ -13,6 +13,7 @@ import {
   type ActivityVisibility,
   type Db,
 } from "@openlaw/db";
+import { emitActivityEvent } from "./activity-emitter.js";
 
 /**
  * A database handle or a transaction inside one — callers that mutate
@@ -82,7 +83,12 @@ export type ActivityAction =
   // delete are the author's acts, and a redact is an Administrator's.
   | `comment.${"posted" | "edited" | "deleted" | "redacted"}`
   | "sso_provider.registered"
-  | "sso_provider.updated";
+  | "sso_provider.updated"
+  // Data leaving the system (M9/7, DD-017). An export is a security
+  // event in its own right, so taking one appends an entry at
+  // `admin_only` naming the filters it was taken under. It hangs off
+  // `system`: an export is about no single record.
+  | "export.performed";
 
 export interface ActivityEntry {
   entityType: ActivityEntityType;
@@ -122,24 +128,71 @@ export interface ActivityEntry {
  */
 export const RECORD_ACTIVITY_TIER: ActivityVisibility = "working_team";
 
+/**
+ * One appended row, as the table now holds it. Returned because two
+ * callers need the row's own identity rather than the entry they handed
+ * over: structured emission names the row it is a copy of, and the audit
+ * log's CSV export bounds itself at the entry recording the export
+ * (M9/7), so an export never streams itself.
+ */
+export interface RecordedActivity {
+  id: string;
+  createdAt: Date;
+}
+
 /** Appends one entry. Append-only: nothing in application code ever
  * updates or deletes activity_log rows (corrections are new entries). */
-export async function recordActivity(db: ActivityWriter, entry: ActivityEntry): Promise<void>;
+export async function recordActivity(
+  db: ActivityWriter,
+  entry: ActivityEntry,
+): Promise<RecordedActivity[]>;
 /** Appends multiple entries in one write. */
-export async function recordActivity(db: ActivityWriter, entries: ActivityEntry[]): Promise<void>;
+export async function recordActivity(
+  db: ActivityWriter,
+  entries: ActivityEntry[],
+): Promise<RecordedActivity[]>;
 export async function recordActivity(
   db: ActivityWriter,
   entryOrEntries: ActivityEntry | ActivityEntry[],
-): Promise<void> {
+): Promise<RecordedActivity[]> {
   const entries = Array.isArray(entryOrEntries) ? entryOrEntries : [entryOrEntries];
-  await db.insert(activityLog).values(
-    entries.map((entry) => ({
+  const rows = await db
+    .insert(activityLog)
+    .values(
+      entries.map((entry) => ({
+        entityType: entry.entityType,
+        entityId: entry.entityId ?? null,
+        actorId: entry.actorId ?? null,
+        action: entry.action,
+        visibility: entry.visibility,
+        payload: entry.payload ?? {},
+      })),
+    )
+    .returning({ id: activityLog.id, createdAt: activityLog.createdAt });
+
+  // The SIEM copy (DD-017), one line per row, alongside the in-app
+  // write rather than instead of it. It rides the insert rather than the
+  // commit: a caller inside a transaction gets its line when the row is
+  // written, and a transaction that later rolls back has emitted a line
+  // for a row nobody can read. That is the price of not making every
+  // caller hand over a commit hook, and it is the cheaper mistake — a
+  // rolled-back mutation is a failed request, which is loud on its own.
+  // Emission never throws (see `emitActivityEvent`), so nothing here can
+  // fail or roll back the mutation it is reporting.
+  rows.forEach((row, index) => {
+    const entry = entries[index];
+    if (!entry) return;
+    emitActivityEvent({
+      id: row.id,
+      createdAt: row.createdAt.toISOString(),
       entityType: entry.entityType,
       entityId: entry.entityId ?? null,
       actorId: entry.actorId ?? null,
       action: entry.action,
       visibility: entry.visibility,
       payload: entry.payload ?? {},
-    })),
-  );
+    });
+  });
+
+  return rows;
 }
