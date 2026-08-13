@@ -55,8 +55,20 @@ export const comments = pgTable(
     visibility: text("visibility", { enum: COMMENT_VISIBILITIES }).notNull(),
     /** NULL = never edited; a timestamp draws the "edited" marker. */
     editedAt: timestamp("edited_at", { withTimezone: true }),
-    /** NULL = live; a timestamp draws a tombstone in the thread. */
+    /** NULL = live; a timestamp draws a tombstone in the thread. The
+     * author's own act. The body moves to `comment_revisions` with it,
+     * so a soft delete hides what was said without losing it. */
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    /**
+     * NULL = never redacted; a timestamp says an Administrator removed
+     * the text (CMT-005's hard redact, CMT-006). It is its own column
+     * rather than a second meaning for `deleted_at`, because the two
+     * tombstones are different acts by different people: an author took
+     * their own words back, or an Administrator removed text posted into
+     * the wrong record. The reader is owed the difference, and the row
+     * is the only place left to read it — the body is gone.
+     */
+    redactedAt: timestamp("redacted_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
@@ -114,3 +126,42 @@ export const commentMentions = pgTable(
 );
 
 export type CommentMention = typeof commentMentions.$inferSelect;
+
+/**
+ * What a comment used to say (CMT-006, amending CMT-005) — one row per
+ * body an edit or a soft delete replaced.
+ *
+ * CMT-005 first put the prior text in the audit log. It cannot live
+ * there. DD-017 forbids `UPDATE` and `DELETE` on `activity_log`, so text
+ * that enters a payload can never leave it, and an Administrator's hard
+ * redact would then remove the comment and leave what it said sitting in
+ * the log. The two rules only both hold when the text is somewhere else.
+ *
+ * This table is that somewhere else. It is ordinary application data, so
+ * a redact purges it along with `comments.body` and the text is
+ * genuinely gone rather than only hidden. The append-only rule keeps its
+ * full strength, because it applies to a different table.
+ *
+ * Rows are the comment's, so they cascade with it: nothing here outlives
+ * the comment it is a version of.
+ */
+export const commentRevisions = pgTable(
+  "comment_revisions",
+  {
+    id: uuidPk(),
+    commentId: text("comment_id")
+      .notNull()
+      .references(() => comments.id, { onDelete: "cascade" }),
+    /** The body this revision replaced, exactly as it was posted. */
+    body: text("body").notNull(),
+    /** When the body stopped being the comment's own text. */
+    replacedAt: timestamp("replaced_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    // The one read this table takes: one comment's prior versions,
+    // oldest first — and the one a redact deletes by.
+    index("comment_revisions_comment_idx").on(table.commentId, table.replacedAt),
+  ],
+);
+
+export type CommentRevision = typeof commentRevisions.$inferSelect;

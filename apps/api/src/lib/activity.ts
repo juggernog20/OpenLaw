@@ -72,13 +72,15 @@ export type ActivityAction =
   // reason above: the contract moved because an Administrator archived
   // its type, not because someone re-typed it.
   | `contract.${"created" | "updated" | "status_changed" | "type_reassigned" | "team_added" | "team_removed" | "counterparty_added" | "counterparty_removed" | "counterparty_primary_changed" | "archived" | "restored"}`
-  // The conversation on a record (M9/2). The entry carries the
+  // The conversation on a record (M9/2, M9/4). Every entry carries the
   // comment's own tier, so a Legal Only comment leaves no trace for
-  // anyone who could not read it. It carries ids and metadata only —
+  // anyone who could not read it. They carry ids and metadata only —
   // no comment text ever enters a payload, because DD-017 forbids
   // UPDATE and DELETE here and an Administrator's hard redact has to be
-  // able to remove what was said (CMT-006, amending CMT-005).
-  | "comment.posted"
+  // able to remove what was said (CMT-006, amending CMT-005). Correcting
+  // a comment keeps its own verb from taking it back: an edit and a
+  // delete are the author's acts, and a redact is an Administrator's.
+  | `comment.${"posted" | "edited" | "deleted" | "redacted"}`
   | "sso_provider.registered"
   | "sso_provider.updated";
 

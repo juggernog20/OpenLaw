@@ -176,6 +176,13 @@
       "when": 1786621211673,
       "tag": "0024_comment_mentions",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1786626379156,
+      "tag": "0025_comment_revisions",
+      "breakpoints": true
     }
   ]
 }

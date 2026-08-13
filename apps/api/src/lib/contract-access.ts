@@ -49,7 +49,9 @@ import type { AuthenticatedUser } from "../auth/guards.js";
 /**
  * A database handle or a transaction inside one, as `ActivityWriter`
  * already is. A caller that checks and then writes passes its
- * transaction, so the check and the write share one snapshot.
+ * transaction, so the check and the write share one snapshot — and so
+ * that a caller holding a row lock does not take a second pool
+ * connection to ask who may touch it.
  */
 export type ContractAccessReader = Db | Parameters<Parameters<Db["transaction"]>[0]>[0];
 
@@ -79,7 +81,10 @@ const WORKING_TIERS: readonly CommentVisibility[] = ["working_team", "full_threa
  * routes apply it beside the id. One predicate is what keeps those
  * answers from drifting apart.
  */
-export function contractTeamScope(db: Db, user: AuthenticatedUser): SQL | undefined {
+export function contractTeamScope(
+  db: ContractAccessReader,
+  user: AuthenticatedUser,
+): SQL | undefined {
   if (user.role !== "contributor") return undefined;
   return inArray(
     contracts.id,
@@ -133,7 +138,7 @@ export interface ContractAudience {
  * never created.
  */
 export async function contractAudience(
-  db: Db,
+  db: ContractAccessReader,
   user: AuthenticatedUser,
   contractId: string,
 ): Promise<ContractAudience | null> {

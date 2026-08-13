@@ -34,11 +34,21 @@
  * confirmation: it names who cannot hear it, offers the narrowest tier
  * that includes them, and posts nothing if it is cancelled. The
  * confirmation explains; the seam is what enforces.
+ *
+ * A row carries the three corrections it is owed (M9/4, DES-025). The
+ * author edits and deletes their own; an Administrator redacts anybody's.
+ * An edited row wears an "edited" marker so a reader can tell the text
+ * moved since they read it, and a removed row keeps its place as a
+ * tombstone so the thread around it still makes sense. The tombstone
+ * says which hand removed it, because an author taking their own words
+ * back and an Administrator removing text from the record are different
+ * facts. Every one of these is refused at the seam too; the menu offers
+ * only what the viewer may do.
  */
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { FormattedMessage, defineMessage, useIntl, type IntlShape } from "react-intl";
-import { Lock, MessageSquare, X } from "lucide-react";
+import { Eraser, Lock, MessageSquare, MoreHorizontal, Pencil, Trash2, X } from "lucide-react";
 import { api } from "../../lib/api";
 import {
   composerTiers,
@@ -64,6 +74,12 @@ import { cn } from "../../lib/utils";
 import { Avatar } from "../avatar";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 import type { Applet } from "../shell/applets";
 
 const CHAT_LABEL = defineMessage({ id: "comments.applet", defaultMessage: "Comments" });
@@ -76,6 +92,10 @@ const LOCK_SIZE = 12;
 /** The remove control on a mention chip. Same reasoning as the lock: it
  * rides inside a chip, where DES-008's 16px floor would outgrow it. */
 const CHIP_GLYPH_SIZE = 12;
+
+/** DES-008's inline size, for the row's own affordances: the overflow
+ * trigger and the glyph on each menu item. */
+const ROW_GLYPH_SIZE = 16;
 
 /**
  * How far past the `@` the typeahead keeps looking. Display names carry
@@ -91,8 +111,12 @@ export interface CommentAppletOptions {
    * record-specific address. */
   entityType: CommentEntityType;
   entityId: string;
-  /** The viewer's DD-013 role, which decides the composer's segments. */
+  /** The viewer's DD-013 role, which decides the composer's segments and
+   * whether a row offers the Administrator's redact. */
   role: Role;
+  /** Who is reading. An edit and a delete are the author's alone
+   * (CMT-005), so a row needs to know whether this is their author. */
+  viewerId: string;
 }
 
 /**
@@ -101,7 +125,12 @@ export interface CommentAppletOptions {
  * for yet, and M9/4's unread badge is what will read the record without
  * one.
  */
-export function useCommentApplet({ entityType, entityId, role }: CommentAppletOptions): Applet {
+export function useCommentApplet({
+  entityType,
+  entityId,
+  role,
+  viewerId,
+}: CommentAppletOptions): Applet {
   const [comments, setComments] = useState<Comment[] | null>(null);
   const [candidates, setCandidates] = useState<MentionCandidate[]>([]);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -142,11 +171,21 @@ export function useCommentApplet({ entityType, entityId, role }: CommentAppletOp
         entityType={entityType}
         entityId={entityId}
         role={role}
+        viewerId={viewerId}
         comments={comments}
         candidates={candidates}
         loadFailed={loadFailed}
         onLoad={load}
         onPosted={(posted) => setComments((current) => [...(current ?? []), posted])}
+        // A correction answers with the row as it now stands, so the
+        // thread takes the server's word for it rather than guessing at
+        // what changed. The row keeps its place: a tombstone that moved
+        // would break the thread it is holding open.
+        onChanged={(changed) =>
+          setComments(
+            (current) => current?.map((row) => (row.id === changed.id ? changed : row)) ?? current,
+          )
+        }
       />
     ),
   };
@@ -167,21 +206,25 @@ function CommentThread({
   entityType,
   entityId,
   role,
+  viewerId,
   comments,
   candidates,
   loadFailed,
   onLoad,
   onPosted,
+  onChanged,
 }: Readonly<{
   entityType: CommentEntityType;
   entityId: string;
   role: Role;
+  viewerId: string;
   /** null until the first read answers. */
   comments: readonly Comment[] | null;
   candidates: readonly MentionCandidate[];
   loadFailed: boolean;
   onLoad: () => Promise<void>;
   onPosted: (comment: Comment) => void;
+  onChanged: (comment: Comment) => void;
 }>) {
   const intl = useIntl();
 
@@ -214,7 +257,13 @@ function CommentThread({
         {comments !== null && comments.length > 0 && (
           <ol aria-label={intl.formatMessage(CHAT_LABEL)}>
             {comments.map((comment) => (
-              <CommentRow key={comment.id} comment={comment} />
+              <CommentRow
+                key={comment.id}
+                comment={comment}
+                role={role}
+                viewerId={viewerId}
+                onChanged={onChanged}
+              />
             ))}
           </ol>
         )}
@@ -230,19 +279,139 @@ function CommentThread({
   );
 }
 
+/** What a removed comment leaves behind, by whose hand (DES-025). The
+ * two are different acts: an author took their own words back, or an
+ * Administrator removed text from the record. */
+const TOMBSTONE = {
+  deleted: defineMessage({
+    id: "comments.tombstone.deleted",
+    defaultMessage: "Comment deleted by its author.",
+  }),
+  redacted: defineMessage({
+    id: "comments.tombstone.redacted",
+    defaultMessage: "Comment removed by an Administrator.",
+  }),
+} as const;
+
 /**
  * One comment. A Legal Only row takes the confidential tint and the lock
  * glyph, so the room it was said in reads before the badge does
  * (CMT-003). The badge is always a step of surface away from its row,
  * which is what keeps it legible on the tint and off it.
+ *
+ * The row has three states past the plain one (M9/4). Edited draws the
+ * marker beside the timestamp. Removed draws a tombstone in place of
+ * the body, so the thread around it still reads. Editing swaps the body
+ * for a box, and nothing else about the row moves.
+ *
+ * An edit changes the text and not who the comment addressed: who was
+ * named is a fact about the moment it was said, and the mention list
+ * stays as posted (CMT-007). So the edit box carries no typeahead.
  */
-function CommentRow({ comment }: Readonly<{ comment: Comment }>) {
+function CommentRow({
+  comment,
+  role,
+  viewerId,
+  onChanged,
+}: Readonly<{
+  comment: Comment;
+  role: Role;
+  viewerId: string;
+  onChanged: (comment: Comment) => void;
+}>) {
   const intl = useIntl();
+  const [editing, setEditing] = useState(false);
+  /** The correction the viewer has been asked to confirm, or null. */
+  const [confirming, setConfirming] = useState<Removal | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  /** Where focus lands when a removal takes the menu that started it
+   * away. Radix hands focus back to the trigger as the dialog closes,
+   * and the trigger is about to unmount, so the row catches it. */
+  const item = useRef<HTMLLIElement>(null);
+
   const legalOnly = comment.visibility === "legal_only";
+  /** Redacted wins where both happened: the Administrator's act is the
+   * later fact, and it is the one that took the text away for good. */
+  const removed = comment.redactedAt ? "redacted" : comment.deletedAt ? "deleted" : null;
+  const mine = comment.author.id === viewerId;
+  /** An author corrects their own words; a comment already removed has
+   * no text left to correct. */
+  const canCorrect = mine && removed === null;
+  /** The Administrator's redact reaches a soft-deleted comment too —
+   * that is the case it exists for. A soft delete only moved the text to
+   * `comment_revisions`; the redact is what takes it out of there. */
+  const canRedact = role === "administrator" && comment.redactedAt === null;
+
+  /** One correction, applied and answered by the seam. */
+  async function correct(
+    call: () => Promise<{ data?: { comment: Comment }; error?: unknown }>,
+    fallback: string,
+  ) {
+    setBusy(true);
+    setError(null);
+    const { data, error: problem } = await call()
+      .catch(() => ({ data: undefined, error: undefined }))
+      .finally(() => setBusy(false));
+    // The question has been answered either way, so it closes either
+    // way — a refusal belongs on the row it was refused about, where the
+    // text that did not change is still on screen.
+    setConfirming(null);
+    if (!data) {
+      setError(problemDetail(problem) ?? fallback);
+      return;
+    }
+    // The box stays open on a refusal, so nothing the author typed is
+    // lost to a failed save.
+    setEditing(false);
+    onChanged(data.comment);
+  }
+
+  const save = (body: string) =>
+    correct(
+      () =>
+        api.PATCH("/api/v1/comments/{commentId}", {
+          params: { path: { commentId: comment.id } },
+          body: { body },
+        }),
+      intl.formatMessage({
+        id: "comments.editError",
+        defaultMessage: "The comment could not be changed. Try again.",
+      }),
+    );
+
+  async function remove(removal: Removal) {
+    await correct(
+      () =>
+        removal === "delete"
+          ? api.DELETE("/api/v1/comments/{commentId}", {
+              params: { path: { commentId: comment.id } },
+            })
+          : api.POST("/api/v1/comments/{commentId}/redact", {
+              params: { path: { commentId: comment.id } },
+            }),
+      intl.formatMessage({
+        id: "comments.removeError",
+        defaultMessage: "The comment could not be removed. Try again.",
+      }),
+    );
+    // The row that was acted on, whether the seam took it or refused it:
+    // on success the trigger is gone and focus would fall to the
+    // document, and on a refusal the reason is here to be read. DES-010
+    // asks for focus to be restored by hand where no overlay owns it.
+    item.current?.focus();
+  }
+
   return (
     <li
+      ref={item}
+      // Not in the tab order — a reader tabs through the thread's
+      // controls, not its rows — but focusable by hand, so a removal
+      // has somewhere to put focus once its own trigger is gone.
+      tabIndex={-1}
       className={cn(
         "flex flex-col gap-1.5 border-b border-border-muted px-4 py-3 last:border-b-0",
+        "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-link",
         legalOnly && "bg-legal-only-bg",
       )}
     >
@@ -254,20 +423,271 @@ function CommentRow({ comment }: Readonly<{ comment: Comment }>) {
           {comment.author.displayName}
         </span>
         <TierBadge tier={comment.visibility} />
-        <time
-          dateTime={comment.createdAt}
-          title={formatLongDateTime(comment.createdAt, { locale: intl.locale })}
-          className="ms-auto shrink-0 text-xs text-muted"
-        >
-          {formatRelativeOrShort(comment.createdAt, { locale: intl.locale })}
-        </time>
+        <div className="ms-auto flex shrink-0 items-center gap-1.5">
+          {/* Only while there is text to have been edited. A tombstone
+              saying "edited" would be reporting on nothing. */}
+          {comment.editedAt !== null && removed === null && (
+            <span
+              className="text-xs text-muted"
+              title={formatLongDateTime(comment.editedAt, { locale: intl.locale })}
+            >
+              <FormattedMessage id="comments.edited" defaultMessage="edited" />
+            </span>
+          )}
+          <time
+            dateTime={comment.createdAt}
+            title={formatLongDateTime(comment.createdAt, { locale: intl.locale })}
+            className="text-xs text-muted"
+          >
+            {formatRelativeOrShort(comment.createdAt, { locale: intl.locale })}
+          </time>
+          <RowActions
+            canEdit={canCorrect}
+            canDelete={canCorrect}
+            canRedact={canRedact}
+            busy={busy}
+            onEdit={() => {
+              setError(null);
+              setEditing(true);
+            }}
+            onRemove={setConfirming}
+          />
+        </div>
       </div>
-      {/* User-generated text: newlines are the author's, so they are
-          kept rather than collapsed (DES-015). */}
-      <p className="text-sm whitespace-pre-wrap text-primary">
-        <MentionedBody body={comment.body} mentions={comment.mentions} />
-      </p>
+      {removed !== null && (
+        <p className="text-sm text-muted italic">
+          <FormattedMessage {...TOMBSTONE[removed]} />
+        </p>
+      )}
+      {removed === null && editing && (
+        <EditBox
+          body={comment.body}
+          busy={busy}
+          onCancel={() => {
+            setEditing(false);
+            setError(null);
+          }}
+          onSave={save}
+        />
+      )}
+      {removed === null && !editing && (
+        // User-generated text: newlines are the author's, so they are
+        // kept rather than collapsed (DES-015).
+        <p className="text-sm whitespace-pre-wrap text-primary">
+          <MentionedBody body={comment.body} mentions={comment.mentions} />
+        </p>
+      )}
+      {error && (
+        <p role="alert" className="text-xs text-status-danger-fg">
+          {error}
+        </p>
+      )}
+      <RemovalDialog
+        removal={confirming}
+        busy={busy}
+        onCancel={() => setConfirming(null)}
+        onConfirm={() => {
+          if (confirming) void remove(confirming);
+        }}
+      />
     </li>
+  );
+}
+
+/** Which removal is being confirmed: the author's, or the
+ * Administrator's. */
+type Removal = "delete" | "redact";
+
+/**
+ * The row's overflow menu. It offers what this viewer may do and
+ * nothing else — absent, not disabled, the convention the nav and the
+ * settings rail already follow. A row with nothing on offer draws no
+ * trigger at all, so a Contributor reading somebody else's comment sees
+ * a clean row. The seam refuses each of these regardless; the menu is a
+ * courtesy.
+ */
+function RowActions({
+  canEdit,
+  canDelete,
+  canRedact,
+  busy,
+  onEdit,
+  onRemove,
+}: Readonly<{
+  canEdit: boolean;
+  canDelete: boolean;
+  canRedact: boolean;
+  busy: boolean;
+  onEdit: () => void;
+  onRemove: (removal: Removal) => void;
+}>) {
+  const intl = useIntl();
+  if (!canEdit && !canDelete && !canRedact) return null;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          disabled={busy}
+          aria-label={intl.formatMessage({
+            id: "comments.actions",
+            defaultMessage: "Comment actions",
+          })}
+        >
+          <MoreHorizontal size={ROW_GLYPH_SIZE} aria-hidden="true" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {canEdit && (
+          <DropdownMenuItem onSelect={onEdit}>
+            <Pencil size={ROW_GLYPH_SIZE} aria-hidden="true" />
+            <FormattedMessage id="action.edit" defaultMessage="Edit" />
+          </DropdownMenuItem>
+        )}
+        {canDelete && (
+          <DropdownMenuItem onSelect={() => onRemove("delete")}>
+            <Trash2 size={ROW_GLYPH_SIZE} aria-hidden="true" />
+            <FormattedMessage id="action.delete" defaultMessage="Delete" />
+          </DropdownMenuItem>
+        )}
+        {canRedact && (
+          <DropdownMenuItem onSelect={() => onRemove("redact")}>
+            <Eraser size={ROW_GLYPH_SIZE} aria-hidden="true" />
+            <FormattedMessage id="comments.redact" defaultMessage="Redact" />
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/**
+ * The edit box, in the row where the body was. It seeds from the text
+ * as it stands and commits on Save; Cancel puts the row back exactly as
+ * it was, because nothing was taken.
+ */
+function EditBox({
+  body,
+  busy,
+  onCancel,
+  onSave,
+}: Readonly<{
+  body: string;
+  busy: boolean;
+  onCancel: () => void;
+  onSave: (body: string) => void;
+}>) {
+  const intl = useIntl();
+  const [draft, setDraft] = useState(body);
+  return (
+    <div className="flex flex-col gap-2">
+      <textarea
+        // The row swapped its body for this box on the viewer's own
+        // command, so the caret belongs where they just asked to type.
+        // This is a mount inside a click handler, not a page load.
+        autoFocus
+        aria-label={intl.formatMessage({
+          id: "comments.editBox",
+          defaultMessage: "Edit comment",
+        })}
+        value={draft}
+        className={TEXTAREA_CLASS}
+        onChange={(event) => setDraft(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key !== "Escape") return;
+          // Local dismiss, as DES-010 reserves the key for.
+          event.preventDefault();
+          event.stopPropagation();
+          onCancel();
+        }}
+      />
+      <div className="flex justify-end gap-2">
+        <Button type="button" size="sm" variant="secondary" onClick={onCancel}>
+          <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          disabled={busy || draft.trim() === ""}
+          onClick={() => onSave(draft.trim())}
+        >
+          <FormattedMessage id="action.save" defaultMessage="Save" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/** What each removal asks, and what its confirm says it will do. */
+const REMOVAL_COPY = {
+  delete: {
+    title: defineMessage({
+      id: "comments.delete.title",
+      defaultMessage: "Delete this comment?",
+    }),
+    body: defineMessage({
+      id: "comments.delete.body",
+      defaultMessage:
+        "A tombstone keeps its place in the thread, and nobody can read what it said. You cannot undo this.",
+    }),
+    confirm: defineMessage({ id: "action.delete", defaultMessage: "Delete" }),
+  },
+  redact: {
+    title: defineMessage({
+      id: "comments.redact.title",
+      defaultMessage: "Redact this comment?",
+    }),
+    body: defineMessage({
+      id: "comments.redact.body",
+      defaultMessage:
+        "The text and every earlier version of it are removed for good. Use this for text posted into the wrong record. You cannot undo this.",
+    }),
+    confirm: defineMessage({ id: "comments.redact", defaultMessage: "Redact" }),
+  },
+} as const;
+
+/**
+ * The confirmation both removals take. They are destructive and neither
+ * can be undone, so each is a question with the consequence spelled out
+ * before the verb (DES-004's Dialog, DES-024's precedent).
+ */
+function RemovalDialog({
+  removal,
+  busy,
+  onCancel,
+  onConfirm,
+}: Readonly<{
+  removal: Removal | null;
+  busy: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}>) {
+  const copy = removal ? REMOVAL_COPY[removal] : null;
+  return (
+    <Dialog open={removal !== null} onOpenChange={(next) => !next && onCancel()}>
+      <DialogContent aria-describedby={undefined}>
+        {copy && (
+          <>
+            <DialogTitle>
+              <FormattedMessage {...copy.title} />
+            </DialogTitle>
+            <p className="mt-4 text-base text-primary">
+              <FormattedMessage {...copy.body} />
+            </p>
+            <div className="mt-6 flex justify-end gap-2">
+              <Button type="button" variant="secondary" onClick={onCancel}>
+                <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+              </Button>
+              <Button type="button" variant="danger" disabled={busy} onClick={onConfirm}>
+                <FormattedMessage {...copy.confirm} />
+              </Button>
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 

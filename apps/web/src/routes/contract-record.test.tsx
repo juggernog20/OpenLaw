@@ -1629,6 +1629,9 @@ describe("the contract record's comment applet (M9/2)", () => {
     author = AUTHOR,
     createdAt = "2026-08-12T09:00:00.000Z",
     mentions: { id: string; displayName: string }[] = [],
+    /** M9/4's three states: edited, and removed by either hand. A plain
+     * comment is none of them. */
+    marks: { editedAt?: string; deletedAt?: string; redactedAt?: string } = {},
   ) {
     return {
       id,
@@ -1639,6 +1642,9 @@ describe("the contract record's comment applet (M9/2)", () => {
       visibility,
       mentions,
       createdAt,
+      editedAt: marks.editedAt ?? null,
+      deletedAt: marks.deletedAt ?? null,
+      redactedAt: marks.redactedAt ?? null,
     };
   }
 
@@ -1670,9 +1676,46 @@ describe("the contract record's comment applet (M9/2)", () => {
     let thread = initial;
     const posts: unknown[] = [];
     const reads: Record<string, string | null>[] = [];
+    /** Every correction the panel sent, in order — the seam's own record
+     * of what it was asked to do (M9/4). */
+    const corrections: { method: string; id: string; body?: unknown }[] = [];
+
+    /** Puts a corrected row back in the thread, in its own place. A
+     * tombstone that moved would break the thread it is holding open. */
+    const replace = (updated: ReturnType<typeof comment>) => {
+      thread = thread.map((row) => (row.id === updated.id ? updated : row));
+      return json(200, { comment: updated });
+    };
+
     const handler = (call: StubCall): Response | undefined => {
       if (call.url.pathname === "/api/v1/comments/mention-candidates" && call.method === "GET") {
         return json(200, { candidates });
+      }
+      // The three corrections, each addressed to one comment by id.
+      const correction = /^\/api\/v1\/comments\/([^/]+)(\/redact)?$/.exec(call.url.pathname);
+      if (correction && correction[1] !== "mention-candidates") {
+        const id = correction[1]!;
+        const row = thread.find((existing) => existing.id === id);
+        if (!row) return problem(404, "No comment exists with this id.");
+        if (call.method === "PATCH") {
+          corrections.push({ method: "PATCH", id, body: call.body });
+          const { body } = call.body as { body: string };
+          return replace({ ...row, body, editedAt: "2026-08-12T14:00:00.000Z" });
+        }
+        if (call.method === "DELETE") {
+          corrections.push({ method: "DELETE", id });
+          return replace({ ...row, body: "", deletedAt: "2026-08-12T15:00:00.000Z" });
+        }
+        if (call.method === "POST" && correction[2]) {
+          corrections.push({ method: "REDACT", id });
+          return replace({
+            ...row,
+            body: "",
+            mentions: [],
+            redactedAt: "2026-08-12T16:00:00.000Z",
+          });
+        }
+        return undefined;
       }
       if (call.url.pathname !== "/api/v1/comments") return undefined;
       if (call.method === "GET") {
@@ -1705,7 +1748,7 @@ describe("the contract record's comment applet (M9/2)", () => {
       }
       return undefined;
     };
-    return { handler, posts, reads };
+    return { handler, posts, reads, corrections };
   }
 
   /** The record page's own seam plus the thread's, in that order. */
@@ -2256,6 +2299,305 @@ describe("the contract record's comment applet (M9/2)", () => {
         ]);
       });
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+  });
+
+  /**
+   * Editing, deleting, and redacting a comment (M9/4, DES-025).
+   *
+   * Three corrections, three owners. The row's menu offers what this
+   * viewer may do and nothing else — absent, not disabled. An edited row
+   * wears the marker; a removed row keeps its place as a tombstone, and
+   * the tombstone says which hand removed it, because an author taking
+   * their own words back and an Administrator removing text from the
+   * record are different facts.
+   */
+  describe("correcting a comment", () => {
+    const ADMINISTRATOR = {
+      id: "u1",
+      email: "admin@example.com",
+      displayName: "Ada Admin",
+      role: "administrator",
+    };
+
+    /** Opens the panel and answers its rows. */
+    async function rowsIn(
+      user: ReturnType<typeof userEvent.setup>,
+      api: ReturnType<typeof commentsApi>,
+      signedIn: typeof MEMBER = MEMBER,
+    ) {
+      stubApi({ signedIn, extra: pageApi(api) });
+      renderAt("/contracts/42");
+      await openChat(user);
+      const thread = await screen.findByRole("list", { name: "Comments" });
+      return within(thread).getAllByRole("listitem");
+    }
+
+    /** Opens one row's overflow menu. */
+    async function menuIn(user: ReturnType<typeof userEvent.setup>, row: HTMLElement) {
+      await user.click(within(row).getByRole("button", { name: "Comment actions" }));
+      return screen.findByRole("menu");
+    }
+
+    it("lets the author edit their own comment, and marks the row edited", async () => {
+      const user = userEvent.setup();
+      const api = commentsApi([comment("c-1", "Redline goes back Thusday.", "working_team")]);
+      const [row] = await rowsIn(user, api);
+
+      // Nothing to report before the edit.
+      expect(within(row!).queryByText("edited")).not.toBeInTheDocument();
+
+      await user.click(within(await menuIn(user, row!)).getByRole("menuitem", { name: "Edit" }));
+      const box = within(row!).getByLabelText("Edit comment");
+      expect(box).toHaveValue("Redline goes back Thusday.");
+      await user.clear(box);
+      await user.type(box, "Redline goes back Thursday.");
+      await user.click(within(row!).getByRole("button", { name: "Save" }));
+
+      await waitFor(() => {
+        expect(api.corrections).toEqual([
+          { method: "PATCH", id: "c-1", body: { body: "Redline goes back Thursday." } },
+        ]);
+      });
+      // The new text, and the marker that says a reader's copy is stale.
+      expect(await within(row!).findByText("Redline goes back Thursday.")).toBeInTheDocument();
+      expect(within(row!).getByText("edited")).toBeInTheDocument();
+      expect(within(row!).queryByLabelText("Edit comment")).not.toBeInTheDocument();
+    });
+
+    it("cancels an edit, putting the row back with nothing sent", async () => {
+      const user = userEvent.setup();
+      const api = commentsApi([comment("c-1", "As it was.", "working_team")]);
+      const [row] = await rowsIn(user, api);
+
+      await user.click(within(await menuIn(user, row!)).getByRole("menuitem", { name: "Edit" }));
+      await user.type(within(row!).getByLabelText("Edit comment"), " And more.");
+      await user.click(within(row!).getByRole("button", { name: "Cancel" }));
+
+      expect(within(row!).getByText("As it was.")).toBeInTheDocument();
+      expect(within(row!).queryByLabelText("Edit comment")).not.toBeInTheDocument();
+      expect(api.corrections).toEqual([]);
+    });
+
+    it("draws the edited marker on a row that arrived edited", async () => {
+      const user = userEvent.setup();
+      const api = commentsApi([
+        comment("c-1", "Plain.", "working_team"),
+        comment("c-2", "Corrected.", "working_team", AUTHOR, "2026-08-12T09:00:00.000Z", [], {
+          editedAt: "2026-08-12T10:00:00.000Z",
+        }),
+      ]);
+      const rows = await rowsIn(user, api);
+
+      expect(within(rows[0]!).queryByText("edited")).not.toBeInTheDocument();
+      expect(within(rows[1]!).getByText("edited")).toBeInTheDocument();
+    });
+
+    it("soft-deletes the author's own comment, leaving a tombstone in its place", async () => {
+      const user = userEvent.setup();
+      const api = commentsApi([
+        comment("c-1", "Before.", "working_team"),
+        comment("c-2", "Said in error.", "working_team"),
+        comment("c-3", "After.", "working_team"),
+      ]);
+      const rows = await rowsIn(user, api);
+
+      await user.click(
+        within(await menuIn(user, rows[1]!)).getByRole("menuitem", { name: "Delete" }),
+      );
+      const dialog = await screen.findByRole("dialog");
+      expect(within(dialog).getByText("Delete this comment?")).toBeInTheDocument();
+      await user.click(within(dialog).getByRole("button", { name: "Delete" }));
+
+      await waitFor(() => {
+        expect(api.corrections).toEqual([{ method: "DELETE", id: "c-2" }]);
+      });
+      // Nothing above or below shifted, and the text is gone.
+      const after = within(await screen.findByRole("list", { name: "Comments" })).getAllByRole(
+        "listitem",
+      );
+      expect(after).toHaveLength(3);
+      expect(within(after[0]!).getByText("Before.")).toBeInTheDocument();
+      expect(within(after[1]!).getByText("Comment deleted by its author.")).toBeInTheDocument();
+      expect(within(after[1]!).queryByText("Said in error.")).not.toBeInTheDocument();
+      expect(within(after[2]!).getByText("After.")).toBeInTheDocument();
+    });
+
+    it("cancels a delete, sending nothing", async () => {
+      const user = userEvent.setup();
+      const api = commentsApi([comment("c-1", "Still here.", "working_team")]);
+      const [row] = await rowsIn(user, api);
+
+      await user.click(within(await menuIn(user, row!)).getByRole("menuitem", { name: "Delete" }));
+      const dialog = await screen.findByRole("dialog");
+      await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(api.corrections).toEqual([]);
+      expect(within(row!).getByText("Still here.")).toBeInTheDocument();
+    });
+
+    it("gives an Administrator the redact on somebody else's comment, and no edit or delete", async () => {
+      const user = userEvent.setup();
+      const api = commentsApi([comment("c-1", "Pasted into the wrong record.", "working_team")]);
+      const [row] = await rowsIn(user, api, ADMINISTRATOR);
+
+      // A correction to somebody else's words is a redact, not an edit.
+      const menu = await menuIn(user, row!);
+      expect(
+        within(menu)
+          .getAllByRole("menuitem")
+          .map((item) => item.textContent),
+      ).toEqual(["Redact"]);
+
+      await user.click(within(menu).getByRole("menuitem", { name: "Redact" }));
+      const dialog = await screen.findByRole("dialog");
+      expect(within(dialog).getByText("Redact this comment?")).toBeInTheDocument();
+      await user.click(within(dialog).getByRole("button", { name: "Redact" }));
+
+      await waitFor(() => {
+        expect(api.corrections).toEqual([{ method: "REDACT", id: "c-1" }]);
+      });
+      const after = within(await screen.findByRole("list", { name: "Comments" })).getAllByRole(
+        "listitem",
+      );
+      // The tombstone names the hand that removed it.
+      expect(
+        within(after[0]!).getByText("Comment removed by an Administrator."),
+      ).toBeInTheDocument();
+      expect(
+        within(after[0]!).queryByText("Pasted into the wrong record."),
+      ).not.toBeInTheDocument();
+    });
+
+    it("still offers the redact on a comment the author already deleted", async () => {
+      const user = userEvent.setup();
+      // The case the redact exists for: a soft delete only moved the
+      // text to comment_revisions, and this is what takes it out.
+      const api = commentsApi([
+        comment("c-1", "", "working_team", AUTHOR, "2026-08-12T09:00:00.000Z", [], {
+          deletedAt: "2026-08-12T10:00:00.000Z",
+        }),
+      ]);
+      const [row] = await rowsIn(user, api, ADMINISTRATOR);
+
+      expect(within(row!).getByText("Comment deleted by its author.")).toBeInTheDocument();
+      const menu = await menuIn(user, row!);
+      expect(
+        within(menu)
+          .getAllByRole("menuitem")
+          .map((item) => item.textContent),
+      ).toEqual(["Redact"]);
+    });
+
+    it("offers the author edit and delete, and no redact", async () => {
+      const user = userEvent.setup();
+      const api = commentsApi([comment("c-1", "My own words.", "working_team")]);
+      const [row] = await rowsIn(user, api);
+
+      const menu = await menuIn(user, row!);
+      expect(
+        within(menu)
+          .getAllByRole("menuitem")
+          .map((item) => item.textContent),
+      ).toEqual(["Edit", "Delete"]);
+    });
+
+    it("gives a non-author who is no Administrator no menu at all", async () => {
+      const user = userEvent.setup();
+      const api = commentsApi([comment("c-1", "Not yours.", "working_team")]);
+      const record = recordApi(contractRow(), [
+        person("u1", "creator"),
+        person("u3", "contributor"),
+      ]);
+      stubApi({
+        signedIn: CONTRIBUTOR,
+        extra: (call: StubCall) =>
+          api.handler(call) ??
+          (["/api/v1/contracts/options", "/api/v1/entities"].includes(call.url.pathname)
+            ? problem(403, "You do not have permission to perform this action.")
+            : record.handler(call)),
+      });
+      renderAt("/contracts/42");
+      await openChat(user);
+
+      const thread = await screen.findByRole("list", { name: "Comments" });
+      const [row] = within(thread).getAllByRole("listitem");
+      expect(
+        within(row!).queryByRole("button", { name: "Comment actions" }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("draws no menu on a comment already redacted", async () => {
+      const user = userEvent.setup();
+      const api = commentsApi([
+        comment("c-1", "", "working_team", CASEY, "2026-08-12T09:00:00.000Z", [], {
+          redactedAt: "2026-08-12T10:00:00.000Z",
+        }),
+      ]);
+      const [row] = await rowsIn(user, api, ADMINISTRATOR);
+
+      expect(within(row!).getByText("Comment removed by an Administrator.")).toBeInTheDocument();
+      expect(
+        within(row!).queryByRole("button", { name: "Comment actions" }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("keeps the edit box and its text when a save is refused", async () => {
+      const user = userEvent.setup();
+      const api = commentsApi([comment("c-1", "As it was.", "working_team")]);
+      const record = recordApi(contractRow());
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call: StubCall) =>
+          call.url.pathname === "/api/v1/comments/c-1" && call.method === "PATCH"
+            ? problem(409, "This comment has been removed. Its text cannot be changed.")
+            : (api.handler(call) ?? record.handler(call)),
+      });
+      renderAt("/contracts/42");
+      await openChat(user);
+      const thread = await screen.findByRole("list", { name: "Comments" });
+      const [row] = within(thread).getAllByRole("listitem");
+
+      await user.click(within(await menuIn(user, row!)).getByRole("menuitem", { name: "Edit" }));
+      const box = within(row!).getByLabelText("Edit comment");
+      await user.clear(box);
+      await user.type(box, "A correction that never lands.");
+      await user.click(within(row!).getByRole("button", { name: "Save" }));
+
+      expect(await within(row!).findByRole("alert")).toHaveTextContent(
+        "This comment has been removed. Its text cannot be changed.",
+      );
+      // Nothing typed is lost to a failed save.
+      expect(within(row!).getByLabelText("Edit comment")).toHaveValue(
+        "A correction that never lands.",
+      );
+    });
+
+    it("says so when a correction is refused, and leaves the row as it was", async () => {
+      const user = userEvent.setup();
+      const api = commentsApi([comment("c-1", "Mine to take back.", "working_team")]);
+      const record = recordApi(contractRow());
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call: StubCall) =>
+          call.url.pathname === "/api/v1/comments/c-1" && call.method === "DELETE"
+            ? problem(403, "Only the author can delete a comment.")
+            : (api.handler(call) ?? record.handler(call)),
+      });
+      renderAt("/contracts/42");
+      await openChat(user);
+      const thread = await screen.findByRole("list", { name: "Comments" });
+      const [row] = within(thread).getAllByRole("listitem");
+
+      await user.click(within(await menuIn(user, row!)).getByRole("menuitem", { name: "Delete" }));
+      const dialog = await screen.findByRole("dialog");
+      await user.click(within(dialog).getByRole("button", { name: "Delete" }));
+
+      expect(await within(row!).findByRole("alert")).toHaveTextContent(
+        "Only the author can delete a comment.",
+      );
+      expect(within(row!).getByText("Mine to take back.")).toBeInTheDocument();
     });
   });
 });
