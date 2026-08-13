@@ -1512,6 +1512,58 @@ The row already carries three pieces of metadata at its trailing edge before any
 
 The row anatomy is now complete for M9. Matters (M22) and documents (M11) inherit it by mounting the same panel. The applet takes the viewer's id alongside their role, because "is this yours" is a per-row question the panel cannot answer from a role. M9/6's activity feed renders a redacted comment's entry as a redacted comment (CMT-006), and it will need the same two-sentence distinction the row draws here.
 
+## DES-026: The history panel interior — the narrated row, the medallion, and the load-more foot (extends DES-016)
+
+- **Status:** Accepted
+- **Date:** 2026-08-13
+
+### Context
+
+DES-016's implementation clarification governs the activity bar and the 44px panel header, taken from the matter-detail frames. What sits **inside** the history panel is not in that clarification, and DES-023 answered the same question for the chat panel. M9/6 (#132) builds the history applet, so this record is the other half of that answer.
+
+The clarification names `designs/matters.pen` **M13 (history open)** as the interior reference. The Pencil canvas would not move off `designs/contracts.pen`, exactly as it would not for DES-023. The frame that draws this panel for this module is `designs/contracts.pen` **C15 — Contract detail · History panel open**, and C15 is the reference below. Where C15 and M13 disagree about the 44px header or the 48px bar, M13 still wins — the same substitution DES-023 recorded, for the same reason.
+
+### Decision
+
+The panel is the DES-016 history applet, and its content is two parts.
+
+**The entry row.** 10px vertical and 16px horizontal padding, with a `border-muted` rule between rows and none under the last. A 10px gap between the medallion and the text. Two parts side by side.
+
+- **The medallion** is a 24px `rounded-pill` on `bg-control`, carrying the action family's Lucide glyph in `text-muted`. The glyph is the family's, not the entry's: people for a team change, a commit mark for a status move, a pencil for an edit, a message for the conversation, a box for an archive. A slug the narration does not recognise takes the neutral `Activity` glyph rather than none.
+- **The text column** is the sentence, then any change lines, then the timestamp. The sentence is 12px `text-primary` at a 1.4 line height, and it wraps rather than truncating — an account of what happened is not a label. Change lines and the timestamp are 11px `text-muted`.
+
+**The change line.** A field edit says what the value was and what it became, as `from → to`, rendered through the same formatters the record page uses (DES-014). One change is already named by the sentence above it, so its line is the pair alone; several are counted in the sentence and carry their labels on their own lines, because that is the only thing telling them apart.
+
+**The load-more foot.** The feed is paged (DD-017's implementation clarification), so the list ends in a secondary Button labelled "Show older" whenever a further page exists, and in nothing when it does not. The panel scrolls; the foot scrolls with it.
+
+**No badge and no header accessory.** Chat is the only applet that carries a badge (CMT-004), and a count of entries on screen would say nothing a reader wants — the feed is read, not counted.
+
+### Recorded normalization points (C15 deviations accepted)
+
+1. **The reference frame is C15, not M13.** The canvas would not switch files. C15 draws this module's own history panel with the same anatomy; M13 still governs the bar and the header.
+2. **The medallion glyph renders at 16px**, not C15's 12px. DES-008's ramp floors at 16, and 16 inside a 24px circle still leaves 4px on each side. DES-009's 12–14px carve-out is for the lock alone, and this is not that glyph.
+3. **The timestamp is the DES-014 activity-feed rule**, not C15's "Aug 3, 10:12 AM". The frame draws one fixed short-absolute-with-time format; DES-014 decided relative inside a week and short absolute after, with the long absolute and its timezone in the tooltip. The decision wins over the frame's illustrative label.
+4. **The sentences are the narration layer's, not the frame's.** C15 illustrates with actions this milestone does not have — a document upload, an AI analysis, a linked record. The rows drawn are the anatomy; the copy for each action family lives in `apps/web/src/lib/activity.ts`.
+5. **The frame draws no load-more foot**, because it draws a short feed. Paging is DD-017's decision, and the foot is what it needs.
+6. **Rows carry no tier badge.** The comment row wears one because a reader has to know which room a comment was said in (CMT-003). A feed entry's tier is the record's own policy rather than a choice its actor made, so a badge on every row would be noise repeated down the panel.
+
+### Rationale
+
+The medallion is what makes the feed scannable without reading it: the eye finds the status moves in a column of sentences by their glyph, which is the whole reason C15 draws one. Giving the change its own line, rather than folding it into the sentence, is what lets one entry carry several changes — the record's PATCH commits per field (DES-017), but a re-type moves several at once, and a sentence cannot hold them all and stay a sentence.
+
+Naming a single change in the sentence and dropping its label from the line below avoids the one thing a uniform rule would produce: "Nadia Counsel changed the status" over "Status: Draft → Internal review", which says "status" twice in nine words.
+
+### Alternatives considered
+
+- **One sentence per entry, changes folded in** (C15's own "changed status Draft → Internal review"). Works for one change; breaks for three, which the record's re-type path produces routinely.
+- **A tier badge on every row**, as DES-023 puts one on every comment. Rejected — see normalization point 6.
+- **Infinite scroll instead of a foot.** Rejected: DES-010 wants keyboard-reachable affordances, and a scroll sentinel is not one.
+- **A count pill in the panel header**, mirroring chat's. Rejected: the feed is paged, so the number would count the pages read rather than the record's history, and a number that means "what you have loaded" is worse than none.
+
+### Consequences
+
+No new tokens: the row is `bg-control`, `border-muted`, `text-primary`, and `text-muted`, all already valued and gated. The applet is `apps/web/src/components/activity/activity-applet.tsx`, entity-generic and keyed by an entity reference, so matters (M22) and documents (M11) mount it rather than reimplementing it. It takes a field-label map from its mount, because a `field.<slug>` change key is a slug and the catalog that names it belongs to the record page. The Administrator's audit log (M9/7) draws its own table but narrates through the same layer, so a slug reads the same in both surfaces.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -1541,3 +1593,4 @@ The row anatomy is now complete for M9. Matters (M22) and documents (M11) inheri
 | DES-023 | The comment surface — tier badges, the Legal Only row wash, and the segmented composer                                                                               | Accepted |
 | DES-024 | The mention affordances — typeahead, chip, and the promotion confirmation (extends DES-023)                                                                          | Accepted |
 | DES-025 | The corrected comment row — edited marker, two tombstones, and the overflow menu (extends DES-023)                                                                   | Accepted |
+| DES-026 | The history panel interior — narrated row, medallion, and load-more foot (extends DES-016)                                                                           | Accepted |
