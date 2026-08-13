@@ -60,14 +60,10 @@ const CONTRIBUTOR_NAME = "Rowan Contributor";
 const LEGAL_ONLY_COMMENT = "Hold the 1x liability cap; their redline is a negotiating position.";
 const FULL_THREAD_COMMENT = "Their signatory is confirmed for Friday.";
 
+/** Only what the sweep reads: the title it matches on and the reference
+ * it archives by. */
 const ContractRows = z.object({
-  contracts: z.array(
-    z.object({
-      id: z.string(),
-      number: z.number().int(),
-      title: z.string(),
-    }),
-  ),
+  contracts: z.array(z.object({ number: z.number().int(), title: z.string() })),
 });
 
 const ActivityEntries = z.object({
