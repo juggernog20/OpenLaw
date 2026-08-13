@@ -5,8 +5,9 @@
  * record page (/contracts/:number): the row shape the API answers, the
  * C-### reference (CTR-003), the DES-018 severity ramp behind priority
  * and risk, the stage-keyed status pill, the CTR-004 people — the Owner
- * and the contract team's roles — and CTR-011's two sides: our Entity
- * that signs, and their Counterparties.
+ * and the contract team's roles — CTR-011's two sides (our Entity that
+ * signs, and their Counterparties), and CTR-010's value, which is three
+ * parts that read and write as one field.
  *
  * The severity ramp's pill colors are not here yet: M8/1 edits priority
  * and risk as selects, and no surface renders them as pills. The ramp's
@@ -15,6 +16,7 @@
 
 import type { IntlShape } from "react-intl";
 import type { paths } from "@openlaw/api-client";
+import { formatCurrency } from "./format";
 
 /** One contract as the API answers it, aliased to the generated client
  * schema so a contract change surfaces as a compile error here, not as
@@ -142,6 +144,64 @@ export function riskLabel(intl: IntlShape, level: SeverityLevel | null): string 
   return level === null
     ? intl.formatMessage({ id: "contracts.riskUnassessed", defaultMessage: "Not assessed" })
     : severityLabel(intl, level);
+}
+
+/**
+ * CTR-010's contract value: the amount as an integer count of the
+ * currency's smallest unit, the ISO 4217 code that says which unit that
+ * is, and what the amount is per. It is one field in three parts —
+ * recorded together, cleared together — and null as a whole when no
+ * value is recorded, which is what an NDA looks like.
+ */
+export type ContractValue = NonNullable<ContractRow["value"]>;
+export type ValueCadence = ContractValue["cadence"];
+
+/** Guards the cadence list against drift from the API's enum, the same
+ * way the severity ramp is guarded above. */
+function exhaustiveCadenceList<U extends readonly ValueCadence[]>(
+  cadences: Exclude<ValueCadence, U[number]> extends never ? U : never,
+): U {
+  return cadences;
+}
+
+/** CTR-010's cadences, in the order the picker reads: the plain one-off
+ * first, then the two that repeat. */
+export const VALUE_CADENCES = exhaustiveCadenceList(["one_time", "monthly", "annually"] as const);
+
+export function cadenceLabel(intl: IntlShape, cadence: ValueCadence): string {
+  return intl.formatMessage(
+    {
+      id: "contracts.cadenceLabel",
+      defaultMessage:
+        "{cadence, select, one_time {One time} monthly {Monthly} annually {Annually} " +
+        "other {Unknown}}",
+    },
+    { cadence },
+  );
+}
+
+/**
+ * The value as DES-014 renders it — "$120,000.00 /year" — with the
+ * money through the shared currency helper (locale-correct symbol,
+ * grouping, and the precision the ISO code itself carries) and the
+ * cadence suffix selected inside one ICU message, because the "/" and
+ * the word after it are locale copy, not code (DES-013). A one-off
+ * value takes no suffix: there is nothing it is per.
+ */
+export function formatContractValue(intl: IntlShape, value: ContractValue): string {
+  const amount = formatCurrency(
+    { amount: value.amount, currency: value.currency },
+    { locale: intl.locale },
+  );
+  return intl.formatMessage(
+    {
+      id: "contracts.valueWithCadence",
+      defaultMessage:
+        "{cadence, select, monthly {{amount} /month} annually {{amount} /year} " +
+        "other {{amount}}}",
+    },
+    { amount, cadence: value.cadence },
+  );
 }
 
 /** Guards the role list against drift from the API's enum, the same way

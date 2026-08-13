@@ -239,6 +239,9 @@
   "contracts.archivedPill": {
     "defaultMessage": "Archived"
   },
+  "contracts.cadenceLabel": {
+    "defaultMessage": "{cadence, select, one_time {One time} monthly {Monthly} annually {Annually} other {Unknown}}"
+  },
   "contracts.column.actions": {
     "defaultMessage": "Actions"
   },
@@ -259,6 +262,9 @@
   },
   "contracts.column.type": {
     "defaultMessage": "Type"
+  },
+  "contracts.column.value": {
+    "defaultMessage": "Value"
   },
   "contracts.count": {
     "defaultMessage": "{count, plural, one {# contract} other {# contracts}}"
@@ -344,6 +350,9 @@
   "contracts.form.typePlaceholder": {
     "defaultMessage": "Type…"
   },
+  "contracts.form.value": {
+    "defaultMessage": "Value"
+  },
   "contracts.listError": {
     "defaultMessage": "The contract list could not be read. Try again."
   },
@@ -421,6 +430,39 @@
   },
   "contracts.title": {
     "defaultMessage": "Contracts"
+  },
+  "contracts.value.amount": {
+    "defaultMessage": "Amount"
+  },
+  "contracts.value.amountInvalid": {
+    "defaultMessage": "Enter the amount as a number."
+  },
+  "contracts.value.cadence": {
+    "defaultMessage": "Cadence"
+  },
+  "contracts.value.currency": {
+    "defaultMessage": "Currency"
+  },
+  "contracts.value.currencyMissing": {
+    "defaultMessage": "Pick a currency for the amount."
+  },
+  "contracts.value.currencyOption": {
+    "defaultMessage": "{code} — {name}"
+  },
+  "contracts.value.currencyPlaceholder": {
+    "defaultMessage": "Currency…"
+  },
+  "contracts.value.empty": {
+    "defaultMessage": "No value is recorded. Many contracts have none."
+  },
+  "contracts.value.hint": {
+    "defaultMessage": "Empty the amount to take the value off."
+  },
+  "contracts.valueNone": {
+    "defaultMessage": "No value"
+  },
+  "contracts.valueWithCadence": {
+    "defaultMessage": "{cadence, select, monthly {{amount} /month} annually {{amount} /year} other {{amount}}}"
   },
   "counterparty.picker.create": {
     "defaultMessage": "Create \"{name}\""

@@ -8,7 +8,10 @@
  * archived contracts unless asked. The record read, the DES-017
  * per-field PATCH, archive, and restore all address a contract by its
  * number. Status changes are unrestricted (CTR-001) and the stage rides
- * along derived, never stored. Everything is Member+ (Administrators
+ * along derived, never stored. The CTR-010 value is the one field that
+ * is not a scalar: amount, currency, and cadence commit as a group,
+ * clear as a group, and are refused in part. Everything is Member+
+ * (Administrators
  * and Legal Team Members); Contributors and Business Users are refused
  * on every route. Every mutation lands in the activity log inside the
  * same transaction (DD-017), asserted by reading the table — the log
@@ -20,6 +23,7 @@ import {
   activityLog,
   asc,
   contractCounterparties,
+  contracts,
   counterparties,
   eq,
   inArray,
@@ -118,6 +122,9 @@ interface ContractRow {
   primaryCounterparty: { id: string; name: string } | null;
   priority: string;
   risk: string | null;
+  /** CTR-010's amount, currency, and cadence as one field; null = no
+   * value is recorded, which is what an NDA looks like. */
+  value: { amount: number; currency: string; cadence: string } | null;
   description: string | null;
   archivedAt: string | null;
 }
@@ -1561,6 +1568,181 @@ describe("the counterparties (CTR-011)", () => {
       (row) => row.action === "contract.counterparty_added",
     );
     expect(entry!.payload).toMatchObject({ counterparty: "Already Known Ltd", created: false });
+  });
+});
+
+describe("the contract value (CTR-010)", () => {
+  it("is born with no value, because a contract worth nothing is normal", async () => {
+    const contract = await newContract("Mutual NDA — no price");
+    expect(contract.value).toBeNull();
+  });
+
+  it("records the amount, the currency, and the cadence as one field", async () => {
+    const contract = await newContract("Orion Cloud — platform 2026");
+    const res = await patchContract(memberCookies, contract.number, {
+      value: { amount: 48_000_000, currency: "USD", cadence: "annually" },
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    // Integer minor units on the wire and in the column: the amount is
+    // 480,000 dollars counted in cents, never a float.
+    expect(res.json().contract.value).toEqual({
+      amount: 48_000_000,
+      currency: "USD",
+      cadence: "annually",
+    });
+    const read = await getContract(memberCookies, contract.number);
+    expect(read.json().contract.value).toEqual({
+      amount: 48_000_000,
+      currency: "USD",
+      cadence: "annually",
+    });
+  });
+
+  it("clears back to no value as one group, not one column at a time", async () => {
+    const contract = await newContract("Helix — pilot, later cancelled");
+    await patchContract(memberCookies, contract.number, {
+      value: { amount: 250_000, currency: "EUR", cadence: "monthly" },
+    });
+    const res = await patchContract(memberCookies, contract.number, { value: null });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().contract.value).toBeNull();
+    // The columns behind the field are empty too, not merely unreported.
+    const [row] = await harness.db
+      .select({
+        amount: contracts.valueAmount,
+        currency: contracts.valueCurrency,
+        cadence: contracts.valueCadence,
+      })
+      .from(contracts)
+      .where(eq(contracts.id, contract.id));
+    expect(row).toEqual({ amount: null, currency: null, cadence: null });
+  });
+
+  it("refuses an amount with no currency — a number nobody can read", async () => {
+    const contract = await newContract("Value without a currency");
+    const res = await patchContract(memberCookies, contract.number, {
+      value: { amount: 100_000, cadence: "one_time" },
+    });
+    expect(res.statusCode, res.body).toBe(400);
+    expect(res.json().errors).toEqual(
+      expect.arrayContaining([expect.objectContaining({ path: "value.currency" })]),
+    );
+    expect((await getContract(memberCookies, contract.number)).json().contract.value).toBeNull();
+  });
+
+  it("refuses an amount with no cadence, so every value says what it is per", async () => {
+    const contract = await newContract("Value without a cadence");
+    const res = await patchContract(memberCookies, contract.number, {
+      value: { amount: 100_000, currency: "USD" },
+    });
+    expect(res.statusCode, res.body).toBe(400);
+  });
+
+  it("refuses a code that is not ISO 4217, a cadence outside the set, and a stray key", async () => {
+    const contract = await newContract("Value refusals");
+    for (const value of [
+      { amount: 1000, currency: "XYZ", cadence: "one_time" },
+      { amount: 1000, currency: "US", cadence: "one_time" },
+      { amount: 1000, currency: "USD", cadence: "weekly" },
+      { amount: 1000, currency: "USD", cadence: "one_time", total: 12_000 },
+    ]) {
+      const res = await patchContract(memberCookies, contract.number, { value });
+      expect(res.statusCode, JSON.stringify(value)).toBe(400);
+    }
+    expect((await getContract(memberCookies, contract.number)).json().contract.value).toBeNull();
+  });
+
+  it("refuses a negative amount and a fractional one — minor units are whole", async () => {
+    const contract = await newContract("Value arithmetic");
+    for (const amount of [-1, 10.5]) {
+      const res = await patchContract(memberCookies, contract.number, {
+        value: { amount, currency: "USD", cadence: "one_time" },
+      });
+      expect(res.statusCode, String(amount)).toBe(400);
+    }
+  });
+
+  it("normalizes the code's casing, so one currency never becomes two", async () => {
+    const contract = await newContract("Lower-case currency");
+    const res = await patchContract(memberCookies, contract.number, {
+      value: { amount: 5000, currency: "gbp", cadence: "one_time" },
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().contract.value.currency).toBe("GBP");
+  });
+
+  it("holds a currency whose smallest unit is the unit itself", async () => {
+    const contract = await newContract("Yen contract");
+    // JPY has no minor unit: 5,000 yen is stored as 5000, not 500000.
+    const res = await patchContract(memberCookies, contract.number, {
+      value: { amount: 5000, currency: "JPY", cadence: "one_time" },
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().contract.value).toEqual({
+      amount: 5000,
+      currency: "JPY",
+      cadence: "one_time",
+    });
+  });
+
+  it("rides the list row, so a Legal Team Member can scan what a contract is worth", async () => {
+    const contract = await newContract("Listed with a value");
+    await patchContract(memberCookies, contract.number, {
+      value: { amount: 12_000_000, currency: "USD", cadence: "annually" },
+    });
+    const listed = (await listContracts(memberCookies)).find((row) => row.id === contract.id);
+    expect(listed!.value).toEqual({ amount: 12_000_000, currency: "USD", cadence: "annually" });
+  });
+
+  it("refuses a part of a value at the database, whatever the caller believes", async () => {
+    const contract = await newContract("Half a value");
+    // The seam keeps the group together (CTR-010); the group check is
+    // the backstop that makes a half-written value unwritable.
+    await expect(
+      harness.db.update(contracts).set({ valueAmount: 1000 }).where(eq(contracts.id, contract.id)),
+    ).rejects.toThrow();
+  });
+
+  it("writes the whole value before and after, and nothing when it repeats", async () => {
+    const contract = await newContract("Value audit");
+    const value = { amount: 90_000_00, currency: "USD", cadence: "monthly" };
+    await patchContract(memberCookies, contract.number, { value });
+    // The same value again is not a change: no audit row may claim one.
+    await patchContract(memberCookies, contract.number, { value });
+    await patchContract(memberCookies, contract.number, { value: null });
+
+    const entries = (await auditRowsFor(contract.id)).filter(
+      (row) => row.action === "contract.updated",
+    );
+    expect(entries).toHaveLength(2);
+    expect((entries[0]!.payload as { changed: Record<string, unknown> }).changed).toEqual({
+      value: { from: null, to: value },
+    });
+    expect((entries[1]!.payload as { changed: Record<string, unknown> }).changed).toEqual({
+      value: { from: value, to: null },
+    });
+  });
+
+  it("commits with another field in the same body without either being lost", async () => {
+    const contract = await newContract("Value beside risk");
+    const res = await patchContract(memberCookies, contract.number, {
+      risk: "high",
+      value: { amount: 1_000_000, currency: "CHF", cadence: "one_time" },
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().contract).toMatchObject({
+      risk: "high",
+      value: { amount: 1_000_000, currency: "CHF", cadence: "one_time" },
+    });
+  });
+
+  it("freezes on an archived contract, like every other field", async () => {
+    const contract = await newContract("Archived, then priced");
+    await archiveContract(adminCookies, contract.number);
+    const res = await patchContract(memberCookies, contract.number, {
+      value: { amount: 1000, currency: "USD", cadence: "one_time" },
+    });
+    expect(res.statusCode, res.body).toBe(409);
   });
 });
 

@@ -141,6 +141,13 @@
       "when": 1786575433642,
       "tag": "0019_counterparties",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1786578598089,
+      "tag": "0020_contract_value",
+      "breakpoints": true
     }
   ]
 }

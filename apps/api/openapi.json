@@ -5600,6 +5600,32 @@
                               }
                             ]
                           },
+                          "value": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "amount": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "currency": {
+                                    "type": "string"
+                                  },
+                                  "cadence": {
+                                    "type": "string",
+                                    "enum": ["one_time", "monthly", "annually"]
+                                  }
+                                },
+                                "required": ["amount", "currency", "cadence"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "description": {
                             "anyOf": [
                               {
@@ -5647,6 +5673,7 @@
                           "primaryCounterparty",
                           "priority",
                           "risk",
+                          "value",
                           "description",
                           "archivedAt",
                           "createdAt",
@@ -5826,6 +5853,32 @@
                             }
                           ]
                         },
+                        "value": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "amount": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "currency": {
+                                  "type": "string"
+                                },
+                                "cadence": {
+                                  "type": "string",
+                                  "enum": ["one_time", "monthly", "annually"]
+                                }
+                              },
+                              "required": ["amount", "currency", "cadence"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "description": {
                           "anyOf": [
                             {
@@ -5873,6 +5926,7 @@
                         "primaryCounterparty",
                         "priority",
                         "risk",
+                        "value",
                         "description",
                         "archivedAt",
                         "createdAt",
@@ -6156,6 +6210,32 @@
                             }
                           ]
                         },
+                        "value": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "amount": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "currency": {
+                                  "type": "string"
+                                },
+                                "cadence": {
+                                  "type": "string",
+                                  "enum": ["one_time", "monthly", "annually"]
+                                }
+                              },
+                              "required": ["amount", "currency", "cadence"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "description": {
                           "anyOf": [
                             {
@@ -6203,6 +6283,7 @@
                         "primaryCounterparty",
                         "priority",
                         "risk",
+                        "value",
                         "description",
                         "archivedAt",
                         "createdAt",
@@ -6293,7 +6374,7 @@
       },
       "patch": {
         "operationId": "updateContract",
-        "summary": "Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, or the status — any live status may follow any other (CTR-001). Never on an archived contract",
+        "summary": "Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, the value, or the status — any live status may follow any other (CTR-001). The value is one field in three parts: amount, currency, and cadence commit together and clear together. Never on an archived contract",
         "tags": ["contracts"],
         "requestBody": {
           "required": true,
@@ -6347,6 +6428,32 @@
                       {
                         "type": "string",
                         "enum": ["low", "medium", "high", "critical"]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "value": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "amount": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "currency": {
+                            "type": "string"
+                          },
+                          "cadence": {
+                            "type": "string",
+                            "enum": ["one_time", "monthly", "annually"]
+                          }
+                        },
+                        "required": ["amount", "currency", "cadence"],
+                        "additionalProperties": false
                       },
                       {
                         "type": "null"
@@ -6500,6 +6607,32 @@
                             }
                           ]
                         },
+                        "value": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "amount": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "currency": {
+                                  "type": "string"
+                                },
+                                "cadence": {
+                                  "type": "string",
+                                  "enum": ["one_time", "monthly", "annually"]
+                                }
+                              },
+                              "required": ["amount", "currency", "cadence"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "description": {
                           "anyOf": [
                             {
@@ -6547,6 +6680,7 @@
                         "primaryCounterparty",
                         "priority",
                         "risk",
+                        "value",
                         "description",
                         "archivedAt",
                         "createdAt",
@@ -6932,6 +7066,32 @@
                             }
                           ]
                         },
+                        "value": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "amount": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "currency": {
+                                  "type": "string"
+                                },
+                                "cadence": {
+                                  "type": "string",
+                                  "enum": ["one_time", "monthly", "annually"]
+                                }
+                              },
+                              "required": ["amount", "currency", "cadence"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "description": {
                           "anyOf": [
                             {
@@ -6979,6 +7139,7 @@
                         "primaryCounterparty",
                         "priority",
                         "risk",
+                        "value",
                         "description",
                         "archivedAt",
                         "createdAt",
@@ -7186,6 +7347,32 @@
                             }
                           ]
                         },
+                        "value": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "amount": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "currency": {
+                                  "type": "string"
+                                },
+                                "cadence": {
+                                  "type": "string",
+                                  "enum": ["one_time", "monthly", "annually"]
+                                }
+                              },
+                              "required": ["amount", "currency", "cadence"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "description": {
                           "anyOf": [
                             {
@@ -7233,6 +7420,7 @@
                         "primaryCounterparty",
                         "priority",
                         "risk",
+                        "value",
                         "description",
                         "archivedAt",
                         "createdAt",
@@ -7440,6 +7628,32 @@
                             }
                           ]
                         },
+                        "value": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "amount": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "currency": {
+                                  "type": "string"
+                                },
+                                "cadence": {
+                                  "type": "string",
+                                  "enum": ["one_time", "monthly", "annually"]
+                                }
+                              },
+                              "required": ["amount", "currency", "cadence"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "description": {
                           "anyOf": [
                             {
@@ -7487,6 +7701,7 @@
                         "primaryCounterparty",
                         "priority",
                         "risk",
+                        "value",
                         "description",
                         "archivedAt",
                         "createdAt",
@@ -7686,6 +7901,32 @@
                             }
                           ]
                         },
+                        "value": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "amount": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "currency": {
+                                  "type": "string"
+                                },
+                                "cadence": {
+                                  "type": "string",
+                                  "enum": ["one_time", "monthly", "annually"]
+                                }
+                              },
+                              "required": ["amount", "currency", "cadence"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "description": {
                           "anyOf": [
                             {
@@ -7733,6 +7974,7 @@
                         "primaryCounterparty",
                         "priority",
                         "risk",
+                        "value",
                         "description",
                         "archivedAt",
                         "createdAt",
@@ -7903,6 +8145,32 @@
                             }
                           ]
                         },
+                        "value": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "amount": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "currency": {
+                                  "type": "string"
+                                },
+                                "cadence": {
+                                  "type": "string",
+                                  "enum": ["one_time", "monthly", "annually"]
+                                }
+                              },
+                              "required": ["amount", "currency", "cadence"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "description": {
                           "anyOf": [
                             {
@@ -7950,6 +8218,7 @@
                         "primaryCounterparty",
                         "priority",
                         "risk",
+                        "value",
                         "description",
                         "archivedAt",
                         "createdAt",

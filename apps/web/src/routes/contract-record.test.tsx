@@ -5,7 +5,9 @@
  * with the standard fetch stub: Member+ lands on the record at its
  * number-based address, edits a field in place (DES-017 — blur commits
  * one PATCH, Escape commits none), sets the Owner, the signing entity,
- * status, priority, and risk from their selects, works the Team card,
+ * status, priority, and risk from their selects, records the CTR-010
+ * value as one field in three controls — committed, reverted, and
+ * cleared as a group — works the Team card,
  * archives the record (every input freezes, the sub-bar action flips),
  * and restores it. The signing-entity picker reads the M7 registry,
  * which never lists an archived entity. The counterparty typeahead
@@ -148,6 +150,9 @@ function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
     primaryCounterparty: null,
     priority: "medium",
     risk: null,
+    // No value is recorded, which is where every contract starts
+    // (CTR-010).
+    value: null,
     description: "Three-year platform engagement.",
     archivedAt: null,
     createdAt: "2026-08-01T00:00:00.000Z",
@@ -313,6 +318,15 @@ function recordApi(
   return { handler, patches, posts, teamCalls, counterpartyCalls, searches };
 }
 
+/**
+ * The value's three controls are one field, so moving between them is
+ * not leaving it. Every commit assertion has to put the focus outside
+ * the group deliberately — Tab from the amount only reaches the
+ * currency, which is still inside.
+ */
+const leaveValueGroup = (user: ReturnType<typeof userEvent.setup>) =>
+  user.click(screen.getByLabelText("Title"));
+
 describe("the /contracts/:number record page", () => {
   it("shows a Legal Team Member the record at its number-based address", async () => {
     stubApi({ signedIn: MEMBER, extra: recordApi(contractRow()).handler });
@@ -422,6 +436,170 @@ describe("the /contracts/:number record page", () => {
     await waitFor(() =>
       expect(api.patches).toEqual([{ priority: "critical" }, { risk: "high" }, { risk: null }]),
     );
+  });
+
+  it("commits the amount, the currency, and the cadence as one PATCH", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    expect(
+      await screen.findByText("No value is recorded. Many contracts have none."),
+    ).toBeVisible();
+    await user.type(screen.getByLabelText("Amount"), "480000");
+    // Moving between the three controls stays inside one field, so
+    // neither of these blurs commits anything on its own.
+    await user.selectOptions(screen.getByLabelText("Currency"), "USD");
+    await user.selectOptions(screen.getByLabelText("Cadence"), "annually");
+    expect(api.patches).toEqual([]);
+
+    // Leaving the group is what commits it.
+    await leaveValueGroup(user);
+    await waitFor(() =>
+      expect(api.patches).toEqual([
+        { value: { amount: 48_000_000, currency: "USD", cadence: "annually" } },
+      ]),
+    );
+    // The record reads the value back as DES-014 renders it.
+    expect(await screen.findByText("$480,000.00 /year")).toBeVisible();
+  });
+
+  it("commits the group on Enter from any one of its three controls", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    await user.type(await screen.findByLabelText("Amount"), "1200");
+    await user.selectOptions(screen.getByLabelText("Currency"), "EUR");
+    await user.selectOptions(screen.getByLabelText("Cadence"), "monthly");
+    await user.keyboard("{Enter}");
+
+    await waitFor(() =>
+      expect(api.patches).toEqual([
+        { value: { amount: 120_000, currency: "EUR", cadence: "monthly" } },
+      ]),
+    );
+    expect(await screen.findByText("€1,200.00 /month")).toBeVisible();
+  });
+
+  it("reverts all three parts on Escape, because half a value is nobody's", async () => {
+    const api = recordApi(
+      contractRow({ value: { amount: 48_000_000, currency: "USD", cadence: "annually" } }),
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const amount = await screen.findByLabelText("Amount");
+    expect(amount).toHaveValue(480_000);
+    await user.clear(amount);
+    await user.type(amount, "1");
+    await user.selectOptions(screen.getByLabelText("Currency"), "GBP");
+    await user.selectOptions(screen.getByLabelText("Cadence"), "monthly");
+    await user.keyboard("{Escape}");
+
+    expect(amount).toHaveValue(480_000);
+    expect(screen.getByLabelText("Currency")).toHaveValue("USD");
+    expect(screen.getByLabelText("Cadence")).toHaveValue("annually");
+    await leaveValueGroup(user);
+    expect(api.patches).toEqual([]);
+  });
+
+  it("clears the whole value when the amount is emptied", async () => {
+    const api = recordApi(
+      contractRow({ value: { amount: 500_000, currency: "USD", cadence: "one_time" } }),
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    // A one-off takes no cadence suffix: there is nothing it is per.
+    expect(await screen.findByText("$5,000.00")).toBeVisible();
+    await user.clear(screen.getByLabelText("Amount"));
+    await leaveValueGroup(user);
+
+    await waitFor(() => expect(api.patches).toEqual([{ value: null }]));
+    // The currency and the cadence go with it — the group clears whole.
+    expect(screen.getByLabelText("Currency")).toHaveValue("");
+    expect(screen.getByLabelText("Cadence")).toHaveValue("one_time");
+    expect(screen.getByText("No value is recorded. Many contracts have none.")).toBeVisible();
+  });
+
+  it("refuses an amount with no currency without sending it", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    await user.type(await screen.findByLabelText("Amount"), "1000");
+    await leaveValueGroup(user);
+
+    expect(await screen.findByText("Pick a currency for the amount.")).toBeVisible();
+    expect(api.patches).toEqual([]);
+
+    // Picking one answers the refusal on the next commit.
+    await user.selectOptions(screen.getByLabelText("Currency"), "USD");
+    await leaveValueGroup(user);
+    await waitFor(() =>
+      expect(api.patches).toEqual([
+        { value: { amount: 100_000, currency: "USD", cadence: "one_time" } },
+      ]),
+    );
+  });
+
+  it("commits nothing when the group leaves the value as it found it", async () => {
+    const api = recordApi(
+      contractRow({ value: { amount: 100_000, currency: "USD", cadence: "one_time" } }),
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByLabelText("Amount"));
+    await leaveValueGroup(user);
+    expect(api.patches).toEqual([]);
+  });
+
+  it("counts the smallest unit of the currency, not always cents", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    // The yen has no minor unit: 5,000 yen is 5000, not 500000.
+    await user.type(await screen.findByLabelText("Amount"), "5000");
+    await user.selectOptions(screen.getByLabelText("Currency"), "JPY");
+    await leaveValueGroup(user);
+
+    await waitFor(() =>
+      expect(api.patches).toEqual([
+        { value: { amount: 5000, currency: "JPY", cadence: "one_time" } },
+      ]),
+    );
+    expect(await screen.findByText("¥5,000")).toBeVisible();
+  });
+
+  it("shows the API's refusal beside the value when a commit is turned down", async () => {
+    const api = recordApi(contractRow());
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/contracts/42" && call.method === "PATCH"
+          ? problem(400, "Use a three-letter ISO 4217 currency code.")
+          : api.handler(call),
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    await user.type(await screen.findByLabelText("Amount"), "10");
+    await user.selectOptions(screen.getByLabelText("Currency"), "USD");
+    await leaveValueGroup(user);
+
+    expect(
+      await screen.findByText("Use a three-letter ISO 4217 currency code."),
+    ).toBeInTheDocument();
   });
 
   it("sets the Owner from the picker and clears it back to unassigned", async () => {
@@ -865,6 +1043,10 @@ describe("the /contracts/:number record page", () => {
       "Status",
       "Priority",
       "Risk",
+      // The value freezes as a group, like it commits as one.
+      "Amount",
+      "Currency",
+      "Cadence",
       "Description",
     ]) {
       expect(screen.getByLabelText(label)).toBeDisabled();

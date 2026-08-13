@@ -68,6 +68,9 @@ function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
     primaryCounterparty: null,
     priority: "medium",
     risk: null,
+    // No value is recorded, which is where every contract starts
+    // (CTR-010).
+    value: null,
     description: null,
     archivedAt: null,
     createdAt: "2026-08-01T00:00:00.000Z",
@@ -154,6 +157,30 @@ describe("the /contracts destination", () => {
     // record holds the rest of a tripartite deal (CTR-011).
     const row = await screen.findByRole("row", { name: /Acme master services agreement/ });
     expect(within(row).getByText("Orion Cloud Ltd")).toBeInTheDocument();
+  });
+
+  it("renders the value with its cadence suffix, and says so when there is none", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: listApi([
+        contractRow({ value: { amount: 48_000_000, currency: "USD", cadence: "annually" } }),
+        contractRow({
+          id: "c2",
+          number: 41,
+          title: "Mutual NDA",
+          value: null,
+        }),
+      ]).handler,
+    });
+    renderAt("/contracts");
+
+    // DES-014: the full figure with the locale's own symbol and
+    // grouping — never a compact "$480K".
+    const priced = await screen.findByRole("row", { name: /Acme master services agreement/ });
+    expect(within(priced).getByText("$480,000.00 /year")).toBeInTheDocument();
+    // No value recorded is a real state, not a gap (CTR-010).
+    const free = screen.getByRole("row", { name: /Mutual NDA/ });
+    expect(within(free).getByText("No value")).toBeInTheDocument();
   });
 
   it("names the Owner on the row, so the list answers who runs what", async () => {
