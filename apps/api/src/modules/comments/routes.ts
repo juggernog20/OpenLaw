@@ -480,9 +480,14 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const { entityType, entityId } = request.body;
-      const audience = await contractAudience(app.db, request.user, entityId);
-      if (!audience) throw httpError(404, NO_RECORD);
       return await app.db.transaction(async (tx) => {
+        // Asked on the same snapshot the write and the count land on, as
+        // every other write in this module does: a team row dropped
+        // between the check and the write must not leave a watermark on
+        // a record the reader no longer reaches. A refusal thrown here
+        // rolls the transaction back and keeps its status.
+        const audience = await contractAudience(tx, request.user, entityId);
+        if (!audience) throw httpError(404, NO_RECORD);
         await tx
           .insert(commentLastRead)
           .values({ userId: request.user.id, entityType, entityId: audience.contractId })
