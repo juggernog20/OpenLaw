@@ -114,7 +114,7 @@ import {
   type CustomFieldValue,
 } from "@openlaw/db";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
-import { recordActivity } from "../../lib/activity.js";
+import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { contractTeamScope } from "../../lib/contract-access.js";
 import {
   AttachedCustomFieldSchema,
@@ -1091,7 +1091,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           entityId: row!.id,
           actorId: request.user.id,
           action: "contract.created",
-          visibility: "legal_only",
+          visibility: RECORD_ACTIVITY_TIER,
           payload: {
             number: row!.number,
             title: row!.title,
@@ -1393,7 +1393,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             entityId: target.id,
             actorId: request.user.id,
             action: "contract.updated",
-            visibility: "legal_only",
+            visibility: RECORD_ACTIVITY_TIER,
             payload: { number: row!.number, title: row!.title, changed },
           });
         }
@@ -1403,7 +1403,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             entityId: target.id,
             actorId: request.user.id,
             action: "contract.status_changed",
-            visibility: "legal_only",
+            visibility: RECORD_ACTIVITY_TIER,
             payload: { number: row!.number, title: row!.title, ...statusChange },
           });
         }
@@ -1477,7 +1477,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           entityId: current.row.id,
           actorId: request.user.id,
           action: "contract.team_added",
-          visibility: "legal_only",
+          visibility: RECORD_ACTIVITY_TIER,
           payload: {
             number: current.row.number,
             title: current.row.title,
@@ -1538,7 +1538,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           entityId: current.row.id,
           actorId: request.user.id,
           action: "contract.team_removed",
-          visibility: "legal_only",
+          visibility: RECORD_ACTIVITY_TIER,
           payload: {
             number: current.row.number,
             title: current.row.title,
@@ -1640,7 +1640,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           entityId: current.row.id,
           actorId: request.user.id,
           action: "contract.counterparty_added",
-          visibility: "legal_only",
+          visibility: RECORD_ACTIVITY_TIER,
           payload: {
             number: current.row.number,
             title: current.row.title,
@@ -1721,7 +1721,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           entityId: current.row.id,
           actorId: request.user.id,
           action: "contract.counterparty_removed",
-          visibility: "legal_only",
+          visibility: RECORD_ACTIVITY_TIER,
           payload: { ...audit, counterparty: removedName, wasPrimary: removed.isPrimary },
         });
         // The promotion is its own entry: nobody asked for it, so the
@@ -1733,7 +1733,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             entityId: current.row.id,
             actorId: request.user.id,
             action: "contract.counterparty_primary_changed",
-            visibility: "legal_only",
+            visibility: RECORD_ACTIVITY_TIER,
             payload: { ...audit, from: removedName, to: promotedName },
           });
         }
@@ -1786,7 +1786,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           entityId: current.row.id,
           actorId: request.user.id,
           action: "contract.counterparty_primary_changed",
-          visibility: "legal_only",
+          visibility: RECORD_ACTIVITY_TIER,
           payload: {
             number: current.row.number,
             title: current.row.title,
@@ -1830,7 +1830,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           entityId: current.row.id,
           actorId: request.user.id,
           action: "contract.archived",
-          visibility: "legal_only",
+          visibility: RECORD_ACTIVITY_TIER,
           payload: { number: row!.number, title: row!.title },
         });
         return { ...current, row: row! };
@@ -1868,7 +1868,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           entityId: current.row.id,
           actorId: request.user.id,
           action: "contract.restored",
-          visibility: "legal_only",
+          visibility: RECORD_ACTIVITY_TIER,
           payload: { number: row!.number, title: row!.title },
         });
         return { ...current, row: row! };

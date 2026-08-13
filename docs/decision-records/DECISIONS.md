@@ -766,6 +766,22 @@ Two layers, both append-only, both inherit the visibility model defined in **DD-
 - Structured event emission to stdout is a separate concern handled by the application logger, not by the activity feed.
 - Pencil mocks must include the activity feed (filterable by entity), the matter timeline rendering, and the admin audit-log page (with filters, search, and CSV export).
 
+### Implementation clarification (2026-08-13, #132)
+
+The per-entity feed is built. Five points the decision left open, answered by the surface that first reads the table.
+
+1. **A record action's tier is Working Team.** DD-017 says an entry inherits the visibility tier of the action. Editing a field, moving a status, or putting somebody on the team is the working group's business, so the working group reads it. `contract.*` writes `working_team` through one named constant, `RECORD_ACTIVITY_TIER` in `apps/api/src/lib/activity.ts`, so the policy has one place rather than twelve. `admin_only` is unchanged and stays for settings, user administration, and security actions; a comment entry takes no default at all, because it rides the comment's own tier (CMT-006). The Entities record's `entity.*` entries still write `legal_only`: its activity bar is not mounted, and they adopt the constant when the Entities feed lands in Arc 6.
+
+2. **Rows written before this stay as written.** M8 wrote `contract.*` at `legal_only`. No migration rewrites them. Append-only means append-only, and a handful of early entries reading narrower than they would today is the honest state of the table. This is pre-release; the cost is nil and the precedent is worth more.
+
+3. **The feed reuses one gate, and excludes `admin_only` by not asking for it.** `contractAudience` answers which record the viewer reaches (CTR-021) and which DD-016 tiers they hear on it, and the feed filters on exactly that list. `readableTiers` never answers `admin_only`, so a settings or security entry is out of a record feed by the same fact that puts Legal Only out of a Contributor's reach — no second rule, and no list of excluded slugs to keep in step.
+
+4. **The feed pages, from the first release.** `GET /api/v1/activity` answers one page and a cursor. The page size is a server constant, not a client parameter: the point is that no request returns the whole history, and a limit the client picks is a limit the client can decline to pick. Paging is keyset on `(created_at, id)` — the order the feed reads in, and the leading columns of `activity_log_entity_idx`. The cursor is one entry's id; a cursor naming no row answers an empty page rather than an error. There is no total in the envelope, for the reason the comment thread has none: a count computed over rows the viewer cannot see is a leak like any other.
+
+5. **The read side's action vocabulary is open where the write side's is closed.** `ActivityAction` is a closed union because a mistyped slug would be a permanently unqueryable row. The response schema types `action` as plain text instead, and the narration layer renders an unrecognised slug plainly rather than throwing. Nothing prunes this table, so a slug written by a version of the application that no longer exists is still in it and still has to come out.
+
+The narration layer is `apps/web/src/lib/activity.ts`: slug plus payload to an ICU message, its values, and the family's glyph, with old and new values rendered through the same formatters the record page uses. It sits in `lib/` rather than inside the panel because the Administrator's audit log is a second reader of it.
+
 ---
 
 ## DD-018: Work-model doctrine — dual workspaces with the deliverable rule

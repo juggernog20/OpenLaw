@@ -49,10 +49,11 @@
  * already made.
  *
  * This is the first production mount of the DES-016 record activity
- * bar. Two of its three slots exist: the chat applet (CMT-004), which
- * is the entity-generic comment panel keyed by this record's reference,
- * and the settings deep-link below the divider (SET-001). History
- * (DD-017) has no panel yet.
+ * bar, and all three of its slots are here. Chat (CMT-004) and history
+ * (DD-017) are the two entity-generic panels, each keyed by this
+ * record's reference rather than by its CTR-003 number; the settings
+ * deep-link (SET-001) sits below the divider. Matters (M22) and
+ * documents (M11) mount the same two panels.
  *
  * Archive (soft delete — for mistakes and imports, not for ending a
  * contract) and restore live in the sub-bar; an archived record reads
@@ -69,7 +70,7 @@
  * Users are bounced home, and the API's 403 is the real refusal.
  */
 
-import { memo, useRef, useState } from "react";
+import { memo, useMemo, useRef, useState } from "react";
 import {
   Link,
   redirect,
@@ -124,6 +125,7 @@ import { cn } from "../lib/utils";
 import { canReadContracts, isMemberPlus } from "../lib/roles";
 import { currentUser, needsSetup } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
+import { useActivityApplet } from "../components/activity/activity-applet";
 import { useCommentApplet } from "../components/comments/comment-applet";
 import { RecordApplets } from "../components/shell/record-applets";
 import type { Applet } from "../components/shell/applets";
@@ -266,6 +268,34 @@ function ContractRecord() {
   const [fieldError, setFieldError] = useState<Partial<Record<FieldKey, string | undefined>>>({});
   const [archiveStatus, setArchiveStatus] = useState<FieldStatus>("idle");
   const [archiveError, setArchiveError] = useState<string | undefined>(undefined);
+
+  /**
+   * What happened to this record (DD-017), keyed by the same entity
+   * reference the chat applet takes.
+   *
+   * Two catalogs ride along, because the log has neither. A
+   * `field.<slug>` change key is a slug and not a name, and the type's
+   * attached fields are what turn one into the other. Two of those
+   * fields store an id rather than a value (CTR-016's `user` and
+   * `entity`), and the names for those ids are already on this page —
+   * the pickers loaded them. Everything the maps do not cover falls
+   * back to what the log stored.
+   */
+  const historyApplet = useActivityApplet({
+    entityType: "contract",
+    entityId: contract.id,
+    fields: attached,
+    referenceNames: useMemo(
+      () =>
+        Object.fromEntries([
+          ...users.map((person) => [person.id, person.displayName] as const),
+          ...refs.users.map((person) => [person.id, person.displayName] as const),
+          ...entities.map((entity) => [entity.id, entity.legalName] as const),
+          ...refs.entities.map((entity) => [entity.id, entity.legalName] as const),
+        ]),
+      [users, entities, refs],
+    ),
+  });
 
   const archived = saved.archivedAt !== null;
   /**
@@ -522,7 +552,7 @@ function ContractRecord() {
           { reference, title: saved.title },
         )}
       />
-      <RecordApplets applets={[chatApplet, SETTINGS_APPLET]}>
+      <RecordApplets applets={[chatApplet, historyApplet, SETTINGS_APPLET]}>
         <div className="flex flex-col gap-4 overflow-y-auto px-page-x py-page-y">
           {archived && (
             <p className="rounded-card bg-status-warning-bg px-3 py-2 text-md text-status-warning-fg">

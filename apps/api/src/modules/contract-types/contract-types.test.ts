@@ -690,7 +690,7 @@ describe("the SET-003 archive guard over the contract record (#113)", () => {
     expect(moves.map((row) => row.entityId).sort()).toEqual([apac.id, emea.id].sort());
     for (const move of moves) {
       expect(move.entityType).toBe("contract");
-      expect(move.visibility).toBe("legal_only");
+      expect(move.visibility).toBe("working_team");
       expect(move.payload).toMatchObject({ from: "Reseller", to: "Distribution" });
     }
     const numbers = moves.map((row) => (row.payload as { number?: number }).number);

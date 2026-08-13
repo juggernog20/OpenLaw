@@ -1080,6 +1080,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/activity": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One record's activity feed, newest first (DD-017), filtered at query time to the DD-016 tiers the viewer is in the room for. A comment entry rides the comment's own tier, so a Legal Only comment leaves no trace for anyone who could not read it — no row, no gap, and no count. `admin_only` entries never appear here; the Administrator's audit log is their surface. Paged from a server-fixed page size: pass the previous page's `nextCursor` to read further back. A record the viewer cannot reach answers 404, exactly as one that does not exist */
+    get: operations["listActivity"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/entity-types": {
     parameters: {
       query?: never;
@@ -5486,6 +5503,58 @@ export interface operations {
               deletedAt: string | null;
               redactedAt: string | null;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listActivity: {
+    parameters: {
+      query: {
+        entityType: "contract";
+        entityId: string;
+        cursor?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            entries: {
+              id: string;
+              action: string;
+              /** @enum {string} */
+              visibility: "legal_only" | "working_team" | "full_thread";
+              actor: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              /** Format: date-time */
+              createdAt: string;
+              payload: {
+                [key: string]: unknown;
+              };
+            }[];
+            nextCursor: string | null;
           };
         };
       };

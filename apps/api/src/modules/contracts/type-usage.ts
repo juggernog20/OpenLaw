@@ -33,7 +33,7 @@
  */
 
 import { contracts, count, eq, inArray } from "@openlaw/db";
-import { recordActivity, type ActivityWriter } from "../../lib/activity.js";
+import { recordActivity, RECORD_ACTIVITY_TIER, type ActivityWriter } from "../../lib/activity.js";
 import type { TaxonomyUsage } from "../../lib/taxonomy-routes.js";
 
 export const contractTypeUsage: TaxonomyUsage = {
@@ -57,7 +57,8 @@ export const contractTypeUsage: TaxonomyUsage = {
     // which Drizzle refuses when the list is empty. Leave before the
     // write rather than let the archive transaction abort on a 500.
     if (moved.length === 0) return 0;
-    // Legal Only, like every other contract-record entry: the
+    // Working Team, like every other contract-record entry (DD-017,
+    // M9/6): the record's working group reads its own narrative. The
     // Administrator-side story is the system-level
     // `contract_type.archived` entry the archive route writes.
     await recordActivity(
@@ -67,7 +68,7 @@ export const contractTypeUsage: TaxonomyUsage = {
         entityId: row.id,
         actorId,
         action: "contract.type_reassigned" as const,
-        visibility: "legal_only" as const,
+        visibility: RECORD_ACTIVITY_TIER,
         payload: {
           number: row.number,
           title: row.title,

@@ -347,7 +347,12 @@ const contractAuditRows = () =>
         "contract.restored",
       ]),
     )
-    .orderBy(asc(activityLog.createdAt));
+    // The id breaks a same-instant tie, and the ties are real: two
+    // entries written in one transaction share `now()`, so removing the
+    // primary counterparty and the promotion it causes land on the same
+    // timestamp. uuidv7 is time-ordered, so the id is still the order
+    // they happened in.
+    .orderBy(asc(activityLog.createdAt), asc(activityLog.id));
 
 const auditRowsFor = async (id: string) =>
   (await contractAuditRows()).filter((row) => row.entityId === id);
@@ -804,12 +809,12 @@ describe("POST /contracts — creation and the CTR-003 number", () => {
     }
   });
 
-  it("writes contract.created with the reference, type, and status, Legal Only", async () => {
+  it("writes contract.created with the reference, type, and status, at Working Team", async () => {
     const created = await newContract("Audited creation", "vendor");
     const rows = await auditRowsFor(created.id);
     expect(rows.map((row) => row.action)).toEqual(["contract.created"]);
     expect(rows[0]?.entityType).toBe("contract");
-    expect(rows[0]?.visibility).toBe("legal_only");
+    expect(rows[0]?.visibility).toBe("working_team");
     expect(rows[0]?.actorId).not.toBeNull();
     expect(rows[0]?.payload).toMatchObject({
       number: created.number,
@@ -966,7 +971,7 @@ describe("PATCH /contracts/:number — the DES-017 per-field commits", () => {
     const updated = (await auditRowsFor(contract.id)).find(
       (row) => row.action === "contract.updated",
     );
-    expect(updated?.visibility).toBe("legal_only");
+    expect(updated?.visibility).toBe("working_team");
     expect(updated?.payload).toMatchObject({
       number: contract.number,
       title: "Audited edits, renamed",
@@ -1052,7 +1057,7 @@ describe("the CTR-001 status change", () => {
 
     const rows = await auditRowsFor(contract.id);
     const statusChanged = rows.find((row) => row.action === "contract.status_changed");
-    expect(statusChanged?.visibility).toBe("legal_only");
+    expect(statusChanged?.visibility).toBe("working_team");
     expect(statusChanged?.payload).toMatchObject({
       number: contract.number,
       from: "Draft",
@@ -1376,7 +1381,7 @@ describe("the contract team (CTR-004)", () => {
       "contract.team_removed",
     ]);
     for (const row of rows.slice(1)) {
-      expect(row.visibility).toBe("legal_only");
+      expect(row.visibility).toBe("working_team");
       expect(row.payload).toMatchObject({
         number: contract.number,
         member: MEMBER.displayName,
@@ -2010,7 +2015,7 @@ describe("the DD-017 activity trail", () => {
     const ids = new Set((await listContracts(adminCookies, true)).map((row) => row.id));
     for (const row of rows) {
       expect(row.entityType).toBe("contract");
-      expect(row.visibility).toBe("legal_only");
+      expect(row.visibility).toBe("working_team");
       expect(row.actorId).not.toBeNull();
       expect(ids.has(row.entityId!)).toBe(true);
     }

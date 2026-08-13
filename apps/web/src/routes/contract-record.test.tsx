@@ -2702,3 +2702,330 @@ describe("the contract record's comment applet (M9/2)", () => {
     });
   });
 });
+
+describe("the contract record's history applet (M9/6)", () => {
+  const NADIA = { id: "u2", displayName: "Nadia Counsel", image: null, archived: false };
+
+  /** One activity entry as the seam answers it. */
+  function entry(
+    id: string,
+    action: string,
+    payload: Record<string, unknown> = {},
+    visibility = "working_team",
+    createdAt = "2026-08-12T09:00:00.000Z",
+    actor: typeof NADIA | null = NADIA,
+  ) {
+    return { id, action, visibility, actor, createdAt, payload };
+  }
+
+  /**
+   * The feed seam, paged the way the API is: one page and a cursor, and
+   * the cursor names where the next page starts. The handler records
+   * every cursor it was asked for, so paging is asserted at the seam
+   * rather than by counting rows on screen.
+   */
+  function activityApi(pages: ReturnType<typeof entry>[][]) {
+    const cursors: (string | null)[] = [];
+    /** The reference each read was keyed by, so the entity-generic
+     * claim is asserted rather than assumed. */
+    const reads: Record<string, string | null>[] = [];
+    const handler = (call: StubCall): Response | undefined => {
+      if (call.url.pathname !== "/api/v1/activity" || call.method !== "GET") return undefined;
+      const cursor = call.url.searchParams.get("cursor");
+      cursors.push(cursor);
+      reads.push({
+        entityType: call.url.searchParams.get("entityType"),
+        entityId: call.url.searchParams.get("entityId"),
+      });
+      const index = cursor === null ? 0 : pages.findIndex((page) => page.at(-1)?.id === cursor) + 1;
+      const entries = pages[index] ?? [];
+      const next = pages[index + 1] ? (entries.at(-1)?.id ?? null) : null;
+      return json(200, { entries, nextCursor: next });
+    };
+    return { handler, cursors, reads };
+  }
+
+  function pageApi(activity: ReturnType<typeof activityApi>, record = recordApi(contractRow())) {
+    return (call: StubCall) => activity.handler(call) ?? record.handler(call);
+  }
+
+  /** Opens the history panel from the activity bar and answers its icon. */
+  async function openHistory(user: ReturnType<typeof userEvent.setup>) {
+    const bar = await screen.findByRole("toolbar", { name: "Applets" });
+    const icon = within(bar).getByRole("button", { name: "History" });
+    await user.click(icon);
+    return icon;
+  }
+
+  it("opens and closes the history panel from the bar, beside chat and settings", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([[entry("a1", "contract.created")]]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+
+    const bar = await screen.findByRole("toolbar", { name: "Applets" });
+    // The third slot, joining the two that were already there.
+    expect(within(bar).getByRole("button", { name: "Comments" })).toBeInTheDocument();
+    expect(within(bar).getByRole("link", { name: "Contract settings" })).toBeInTheDocument();
+
+    const icon = await openHistory(user);
+    const panel = await screen.findByRole("complementary", { name: "History" });
+    expect(icon).toHaveAttribute("aria-expanded", "true");
+    // Keyed by the record's entity reference, never by its CTR-003
+    // number — that is what makes the panel entity-generic.
+    await waitFor(() => {
+      expect(activity.reads).toEqual([{ entityType: "contract", entityId: "c1" }]);
+    });
+    expect(activity.cursors).toEqual([null]);
+
+    await user.click(within(panel).getByRole("button", { name: "Close" }));
+    expect(screen.queryByRole("complementary", { name: "History" })).not.toBeInTheDocument();
+    expect(icon).toHaveFocus();
+  });
+
+  it("reads nothing until the panel is opened", async () => {
+    const activity = activityApi([[entry("a1", "contract.created")]]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+
+    await screen.findByRole("toolbar", { name: "Applets" });
+    // The chat applet's badge is read as the page opens (CMT-004). The
+    // feed is not: a closed panel is a tool nobody has asked for.
+    expect(activity.cursors).toEqual([]);
+  });
+
+  it("writes each entry as a sentence naming the actor and the action", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([
+      [
+        entry("a5", "comment.posted", { commentId: "c9" }, "legal_only"),
+        entry("a4", "contract.counterparty_added", { counterparty: "Orion Cloud Ltd" }),
+        entry("a3", "contract.team_removed", { member: "Casey Contributor", role: "contributor" }),
+        entry("a2", "contract.team_added", { member: "Casey Contributor", role: "contributor" }),
+        entry("a1", "contract.created", { number: 42, title: "Acme master services agreement" }),
+      ],
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const feed = await screen.findByRole("list", { name: "History" });
+    const rows = within(feed).getAllByRole("listitem");
+    // Newest first, as a history is read.
+    expect(rows.map((row) => row.textContent)).toEqual([
+      expect.stringContaining("Nadia Counsel commented"),
+      expect.stringContaining("Nadia Counsel added Orion Cloud Ltd on the other side"),
+      expect.stringContaining("Nadia Counsel took Casey Contributor off the team as contributor"),
+      expect.stringContaining("Nadia Counsel added Casey Contributor to the team as contributor"),
+      expect.stringContaining("Nadia Counsel created this contract"),
+    ]);
+  });
+
+  it("shows the old and the new value of a field edit, formatted as the record formats them", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([
+      [
+        entry("a3", "contract.updated", {
+          changed: {
+            value: { from: null, to: { amount: 12_000_000, currency: "USD", cadence: "annually" } },
+          },
+        }),
+        entry("a2", "contract.updated", {
+          changed: {
+            title: { from: "Old title", to: "New title" },
+            priority: { from: "medium", to: "critical" },
+            // A custom field's key is namespaced by its slug; the label
+            // comes from the type's attached fields, which the record
+            // page holds and hands to the narration.
+            "field.payment_terms": { from: null, to: "Net 45" },
+          },
+        }),
+        entry("a1", "contract.status_changed", {
+          from: "Draft",
+          to: "Internal review",
+          fromStage: "draft",
+          toStage: "review",
+        }),
+      ],
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const feed = await screen.findByRole("list", { name: "History" });
+    const [value, edit, status] = within(feed).getAllByRole("listitem");
+    // The money reads through the record's own currency helper, cadence
+    // suffix and all (CTR-010, DES-014).
+    expect(value).toHaveTextContent("Nadia Counsel changed Value");
+    expect(value).toHaveTextContent("Not set → $120,000.00 /year");
+    // Several fields are counted in the sentence and named on their own
+    // lines, each old→new pair rendered the way the record renders it.
+    expect(edit).toHaveTextContent("Nadia Counsel changed 3 fields");
+    expect(edit).toHaveTextContent("Title: Old title → New title");
+    expect(edit).toHaveTextContent("Priority: Medium → Critical");
+    expect(edit).toHaveTextContent("Payment terms: Not set → Net 45");
+    // A status move keeps its own words rather than reading as a
+    // generic edit (CTR-001).
+    expect(status).toHaveTextContent("Nadia Counsel changed the status");
+    expect(status).toHaveTextContent("Draft → Internal review");
+  });
+
+  it("names the person and the Entity a reference field stores by id", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([
+      [
+        entry("a1", "contract.updated", {
+          changed: {
+            // CTR-016's two reference kinds store an id, so the id is
+            // what M8 wrote. The names are already on the page — the
+            // pickers loaded them — so the feed reads as the record
+            // does rather than as a pair of uuids.
+            "field.field_7": { from: null, to: "u2" },
+            "field.field_8": { from: null, to: "e-meridian" },
+          },
+        }),
+      ],
+    ]);
+    stubApi({
+      signedIn: MEMBER,
+      // The type attaching one field of every kind, so the reviewer and
+      // the booking-entity fields are on this record.
+      extra: pageApi(activity, recordApi(contractRow({ contractTypeId: "t-full" }))),
+    });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const feed = await screen.findByRole("list", { name: "History" });
+    const row = within(feed).getAllByRole("listitem")[0]!;
+    expect(row).toHaveTextContent("Reviewer: Not set → Nadia Counsel");
+    expect(row).toHaveTextContent("Booking entity: Not set → Meridian Bio, Inc.");
+  });
+
+  it("falls back to what the log stored when nothing names the id", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([
+      [
+        entry("a1", "contract.updated", {
+          // A field detached since the change reads as its own slug, and
+          // an id nothing names reads as itself. Both are the honest
+          // rendering of a log nobody prunes.
+          changed: { "field.since_detached": { from: null, to: "u-deleted" } },
+        }),
+      ],
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const feed = await screen.findByRole("list", { name: "History" });
+    expect(within(feed).getAllByRole("listitem")[0]).toHaveTextContent(
+      "Nadia Counsel changed since_detached",
+    );
+  });
+
+  it("renders an unknown action slug plainly instead of throwing", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([
+      [
+        // A slug from a version of the application that no longer
+        // exists. The log is append-only, so this is inevitable rather
+        // than hypothetical.
+        entry("a2", "contract.frobnicated", { whatever: true }),
+        entry("a1", "contract.created"),
+      ],
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const feed = await screen.findByRole("list", { name: "History" });
+    const rows = within(feed).getAllByRole("listitem");
+    // The row still names the actor and the fact, and the rows around
+    // it still read.
+    expect(rows[0]).toHaveTextContent("Nadia Counsel — contract.frobnicated");
+    expect(rows[1]).toHaveTextContent("Nadia Counsel created this contract");
+  });
+
+  it("names OpenLaw as the actor on an entry with no human behind it", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([
+      [entry("a1", "contract.archived", {}, "working_team", undefined, null)],
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const feed = await screen.findByRole("list", { name: "History" });
+    expect(within(feed).getAllByRole("listitem")[0]).toHaveTextContent(
+      "OpenLaw archived this contract",
+    );
+  });
+
+  it("pages rather than loading the whole history", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([
+      [entry("a3", "contract.created"), entry("a2", "contract.archived")],
+      [entry("a1", "contract.restored")],
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const feed = await screen.findByRole("list", { name: "History" });
+    expect(within(feed).getAllByRole("listitem")).toHaveLength(2);
+
+    const panel = screen.getByRole("complementary", { name: "History" });
+    await user.click(within(panel).getByRole("button", { name: "Show older" }));
+
+    await waitFor(() => {
+      expect(within(feed).getAllByRole("listitem")).toHaveLength(3);
+    });
+    // The second read asked for what came after the first page's last
+    // row, and the end of the feed offers nothing further.
+    expect(activity.cursors).toEqual([null, "a2"]);
+    expect(within(panel).queryByRole("button", { name: "Show older" })).not.toBeInTheDocument();
+  });
+
+  it("says what the panel is for when nothing has happened yet", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([[]]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const panel = await screen.findByRole("complementary", { name: "History" });
+    expect(
+      await within(panel).findByText(/Nothing has happened to this record yet/),
+    ).toBeInTheDocument();
+  });
+
+  it("says the history could not be read when the seam refuses", async () => {
+    const user = userEvent.setup();
+    const refusing = (call: StubCall) =>
+      call.url.pathname === "/api/v1/activity"
+        ? problem(500, "Something went wrong.")
+        : recordApi(contractRow()).handler(call);
+    stubApi({ signedIn: MEMBER, extra: refusing });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const panel = await screen.findByRole("complementary", { name: "History" });
+    expect(await within(panel).findByRole("alert")).toHaveTextContent(
+      "The history could not be read.",
+    );
+  });
+
+  it("opens the same panel for a Contributor on the team", async () => {
+    const user = userEvent.setup();
+    // The API filters the feed; the panel takes what it is given. What
+    // this proves is that a Contributor reaches the applet at all —
+    // the tier predicate itself is proven at the API seam.
+    const activity = activityApi([[entry("a1", "comment.posted", { commentId: "c1" })]]);
+    stubApi({ signedIn: CONTRIBUTOR, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const feed = await screen.findByRole("list", { name: "History" });
+    expect(within(feed).getAllByRole("listitem")[0]).toHaveTextContent("Nadia Counsel commented");
+  });
+});
