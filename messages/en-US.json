@@ -131,6 +131,9 @@
   "activity.older": {
     "defaultMessage": "Show older"
   },
+  "activity.olderError": {
+    "defaultMessage": "The older entries could not be read. Try again."
+  },
   "activity.orgSettings.updated": {
     "defaultMessage": "{actor} changed the organization settings"
   },
@@ -163,6 +166,9 @@
   },
   "activity.taxonomy.updated": {
     "defaultMessage": "{actor} changed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+  },
+  "activity.teamRole": {
+    "defaultMessage": "{role, select, member {Member} watcher {Watcher} creator {Creator} contributor {Contributor} other {{role}}}"
   },
   "activity.typeField.attached": {
     "defaultMessage": "{actor} attached the field {field} to the {owner, select, contract_type_field {contract type} matter_type_field {matter type} other {type}} {type}"

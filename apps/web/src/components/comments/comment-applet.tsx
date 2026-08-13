@@ -218,7 +218,13 @@ export function useCommentApplet({
         candidates={candidates}
         loadFailed={loadFailed}
         onLoad={load}
-        onPosted={(posted) => setComments((current) => [...(current ?? []), posted])}
+        // A thread that could not be read stays unread. Folding the
+        // posted row into the null sentinel would turn "we do not know
+        // what is here" into a one-row conversation, under a load error
+        // that is still on screen and beside a count claiming 1.
+        onPosted={(posted) =>
+          setComments((current) => (current === null ? null : [...current, posted]))
+        }
         // A correction answers with the row as it now stands, so the
         // thread takes the server's word for it rather than guessing at
         // what changed. The row keeps its place: a tombstone that moved
@@ -835,7 +841,14 @@ function Composer({
 }>) {
   const intl = useIntl();
   const tiers = composerTiers(role);
-  const [tier, setTier] = useState<CommentTier>(RECORD_DEFAULT_TIER);
+  // The record's default when this role is in that room, and their
+  // widest room when it is not. Seeding the flat default would leave a
+  // role without Working Team holding a tier no segment offers: nothing
+  // would read as checked, and the post would carry a tier the seam
+  // refuses.
+  const [tier, setTier] = useState<CommentTier>(
+    tiers.includes(RECORD_DEFAULT_TIER) ? RECORD_DEFAULT_TIER : tiers[0]!,
+  );
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   /** Everybody picked from the typeahead so far. The draft is what says

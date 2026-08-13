@@ -541,23 +541,25 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request, reply) => {
       const { entityType, entityId, body, visibility } = request.body;
-      const audience = await contractAudience(app.db, request.user, entityId);
-      if (!audience) throw httpError(404, NO_RECORD);
-      // The composer offers a Contributor two segments; this is the
-      // refusal that holds when the request does not come from it.
-      if (!audience.tiers.includes(visibility)) {
-        throw httpError(403, "You cannot post a comment at that visibility tier.");
-      }
-
       // One person named twice is one person to reach, and the row's
       // compound key says so too.
       const named = [...new Set(request.body.mentions ?? [])];
 
       const comment = await app.db.transaction(async (tx) => {
-        // Checked inside the transaction, on the same snapshot the
-        // rows are written on: a team row dropped between the check and
-        // the insert must not leave a mention nobody can hear. A refusal
+        // Read on the same snapshot the rows are written on: a team row
+        // dropped between the check and the insert must not authorize a
+        // post onto a record the author no longer reaches. A refusal
         // thrown here rolls the transaction back and keeps its status.
+        const audience = await contractAudience(tx, request.user, entityId);
+        if (!audience) throw httpError(404, NO_RECORD);
+        // The composer offers a Contributor two segments; this is the
+        // refusal that holds when the request does not come from it.
+        if (!audience.tiers.includes(visibility)) {
+          throw httpError(403, "You cannot post a comment at that visibility tier.");
+        }
+
+        // Checked on that same snapshot: a team row dropped before the
+        // insert must not leave a mention nobody can hear.
         if (named.length > 0) {
           const candidates = await contractMentionCandidates(tx, audience.contractId, named);
           const byId = new Map(candidates.map((candidate) => [candidate.id, candidate]));

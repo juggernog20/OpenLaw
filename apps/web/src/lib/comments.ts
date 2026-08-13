@@ -106,6 +106,10 @@ export function composerTiers(role: Role): readonly CommentTier[] {
  * What a record page's composer opens on (DD-016): the working group,
  * so the common case needs no decision. The request thread opens on
  * Full Thread instead, and that composer lands with the portal.
+ *
+ * It is the record's convention and not a tier anybody may post at: a
+ * caller seeds from it only when `composerTiers` puts the poster in that
+ * room, and falls back to their widest room when it does not.
  */
 export const RECORD_DEFAULT_TIER: CommentTier = "working_team";
 

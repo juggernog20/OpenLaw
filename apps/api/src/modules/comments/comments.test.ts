@@ -1221,7 +1221,7 @@ describe("an Administrator hard-redacting a comment", () => {
     ).toEqual([]);
   });
 
-  it("refuses a Legal Team Member and a Contributor, and writes nothing", async () => {
+  it("refuses a Legal Team Member, a Contributor, and a Business User, and writes nothing", async () => {
     const contract = await contractWithTeam("Redact refused");
     const posted = await comment(memberCookies, contract.id, "Still here.", "working_team");
 

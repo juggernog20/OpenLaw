@@ -167,8 +167,11 @@ async function openApplet(page: Page, label: "Comments" | "History"): Promise<Lo
  * what the form records.
  */
 async function postComment(page: Page, panel: Locator, tier: string, body: string) {
-  const composer = panel.locator("form");
-  await composer.getByText(tier, { exact: true }).click();
+  // The segments live in the composer's own fieldset, which its legend
+  // names "Audience" — a fieldset is a `group`, so that is what a person
+  // reaches for and what the query asks for.
+  const audience = panel.getByRole("group", { name: "Audience" });
+  await audience.getByText(tier, { exact: true }).click();
   await expect(panel.getByRole("radio", { name: tier })).toBeChecked();
   await panel.getByLabel("New comment").fill(body);
   const posted = page.waitForResponse(

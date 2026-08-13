@@ -1666,3 +1666,4 @@ Putting the filter bar inside the card rather than in its header strip is the on
 | DES-024 | The mention affordances — typeahead, chip, and the promotion confirmation (extends DES-023)                                                                          | Accepted |
 | DES-025 | The corrected comment row — edited marker, two tombstones, and the overflow menu (extends DES-023)                                                                   | Accepted |
 | DES-026 | The history panel interior — narrated row, medallion, and load-more foot (extends DES-016)                                                                           | Accepted |
+| DES-027 | The audit-log pane — filter bar, narrated table row, and the export foot (extends DES-021, DES-026)                                                                  | Accepted |

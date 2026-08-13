@@ -353,6 +353,30 @@ function named(intl: IntlShape, payload: Payload, key: string): string {
 }
 
 /**
+ * A `contract_team` role (CTR-004) in the words the record's Team card
+ * uses, so one fact does not read as "Contributor" on the card and
+ * `contributor` in the feed.
+ *
+ * The `other` arm echoes the slug rather than answering "Unknown", the
+ * way `changeLabel` does: the log is append-only, so a role this build
+ * no longer has is still in a payload and still has to come out as
+ * itself.
+ */
+function teamRole(intl: IntlShape, payload: Payload): string {
+  const role = text(payload, "role");
+  if (role === null) return named(intl, payload, "role");
+  return intl.formatMessage(
+    {
+      id: "activity.teamRole",
+      defaultMessage:
+        "{role, select, member {Member} watcher {Watcher} creator {Creator} " +
+        "contributor {Contributor} other {{role}}}",
+    },
+    { role },
+  );
+}
+
+/**
  * What a payload calls the thing it is about — a taxonomy row, a field,
  * a registry record. Display name first, because that is what the reader
  * saw; the slug behind it when the payload carries no name, which is
@@ -397,11 +421,18 @@ function roleChange(
   context: NarrationContext,
 ): NarratedChange[] {
   if (!("from" in payload) && !("to" in payload)) return [];
+  // A side the payload does not carry reads as unrecorded, the way every
+  // other one-sided change in this module reads. `roleLabel` would
+  // answer the empty string and leave the row reading "Role:  → …".
+  const side = (value: unknown): string =>
+    value === null || value === undefined || value === ""
+      ? notSet(intl)
+      : roleLabel(intl, String(value));
   return [
     {
       label: changeLabel(intl, "role", context),
-      from: roleLabel(intl, String(payload.from ?? "")),
-      to: roleLabel(intl, String(payload.to ?? "")),
+      from: side(payload.from),
+      to: side(payload.to),
     },
   ];
 }
@@ -664,7 +695,7 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
     values: (intl, payload) => ({
       member: named(intl, payload, "member"),
-      role: named(intl, payload, "role"),
+      role: teamRole(intl, payload),
     }),
   },
   "contract.team_removed": {
@@ -675,7 +706,7 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
     values: (intl, payload) => ({
       member: named(intl, payload, "member"),
-      role: named(intl, payload, "role"),
+      role: teamRole(intl, payload),
     }),
   },
   "contract.counterparty_added": {

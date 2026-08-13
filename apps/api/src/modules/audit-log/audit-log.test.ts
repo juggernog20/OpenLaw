@@ -7,7 +7,7 @@
  * in the system keeps.
  *
  * **It is the single answer to "who did that."** One Administrator's
- * afternoon writes entries of four entity types at four tiers, and the
+ * afternoon writes entries of four entity types at three tiers, and the
  * log carries all of them — including the `admin_only` user
  * administration and settings entries that no record feed can reach.
  *

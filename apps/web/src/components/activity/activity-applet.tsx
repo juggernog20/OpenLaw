@@ -148,7 +148,12 @@ function ActivityFeed({
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {loadFailed && (
+        {/* Two failures, and they leave the reader in different places.
+            A first page that fails has no feed and no control to retry
+            with, so reopening the panel is the way back. A failed "Show
+            older" keeps the feed and the button, so the retry is the
+            control already on screen. */}
+        {loadFailed && entries === null && (
           <p role="alert" className="px-4 py-3 text-sm text-status-danger-fg">
             <FormattedMessage
               id="activity.loadError"
@@ -175,6 +180,16 @@ function ActivityFeed({
               />
             ))}
           </ol>
+        )}
+        {/* Beside the control that failed rather than at the top of the
+            feed: the reader is at the foot, which is where they pressed. */}
+        {loadFailed && entries !== null && (
+          <p role="alert" className="px-4 pt-3 text-sm text-status-danger-fg">
+            <FormattedMessage
+              id="activity.olderError"
+              defaultMessage="The older entries could not be read. Try again."
+            />
+          </p>
         )}
         {cursor !== null && (
           <div className="px-4 py-3">

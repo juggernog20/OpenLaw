@@ -268,8 +268,8 @@ describe("the filters", () => {
     // A second one composes with the first rather than replacing it:
     // both ride the same request.
     await user.selectOptions(filterBar().getByLabelText("Action"), "org_settings.updated");
-    await waitFor(async () => {
-      const query = await lastRead(calls);
+    await waitFor(() => {
+      const query = calls.reads.at(-1)!;
       expect(query.get("entityType")).toBe("user");
       expect(query.get("action")).toBe("org_settings.updated");
     });
@@ -288,8 +288,8 @@ describe("the filters", () => {
     await user.type(filterBar().getByLabelText("From"), "2026-08-01");
     await user.type(filterBar().getByLabelText("To"), "2026-08-31");
 
-    await waitFor(async () => {
-      const query = await lastRead(calls);
+    await waitFor(() => {
+      const query = calls.reads.at(-1)!;
       expect(query.get("actorId")).toBe("u1");
       // Civil dates become instants, and they are the reader's own:
       // the first and last moments of those days where the reader is,

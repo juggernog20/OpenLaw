@@ -37,6 +37,12 @@ import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 import type { CustomFieldValue, CustomFieldValues } from "../lib/custom-fields";
 
+const ADMIN = {
+  id: "u1",
+  email: "admin@example.com",
+  displayName: "Blair Wentworth",
+  role: "administrator",
+};
 const MEMBER = {
   id: "u2",
   email: "member@example.com",
@@ -457,7 +463,7 @@ describe("the /contracts/:number record page", () => {
   });
 
   it("mounts the activity bar with the applet set that exists at M9/2", async () => {
-    stubApi({ signedIn: MEMBER, extra: recordApi(contractRow()).handler });
+    stubApi({ signedIn: ADMIN, extra: recordApi(contractRow()).handler });
     renderAt("/contracts/42");
 
     const bar = await screen.findByRole("toolbar", { name: "Applets" });
@@ -467,6 +473,19 @@ describe("the /contracts/:number record page", () => {
       "href",
       "/settings/contracts",
     );
+  });
+
+  it("keeps the settings slot off the bar for anyone the pane would bounce", async () => {
+    stubApi({ signedIn: MEMBER, extra: recordApi(contractRow()).handler });
+    renderAt("/contracts/42");
+
+    const bar = await screen.findByRole("toolbar", { name: "Applets" });
+    // The contract-settings pane is Administrator-only, and its loader
+    // sends everybody else to their profile. The slot is absent rather
+    // than offering a door that opens on a redirect — the same
+    // treatment the settings rail already gives the group it sits in.
+    expect(within(bar).getByRole("button", { name: "Comments" })).toBeInTheDocument();
+    expect(within(bar).queryByRole("link", { name: "Contract settings" })).not.toBeInTheDocument();
   });
 
   it("commits an edited field on blur as one PATCH (DES-017) and notes Saved", async () => {
@@ -2020,6 +2039,10 @@ describe("the contract record's comment applet (M9/2)", () => {
     await waitFor(() => {
       expect(comments.posts).toHaveLength(1);
     });
+    // And the thread it could not read stays unread. Folding the posted
+    // row into the failure would draw a one-row conversation under the
+    // load error, which reads as the whole of it.
+    expect(within(panel).queryByRole("list", { name: "Comments" })).not.toBeInTheDocument();
   });
 
   it("says so when the post is refused, and keeps the draft", async () => {
@@ -2632,7 +2655,7 @@ describe("the contract record's comment applet (M9/2)", () => {
    */
   describe("the unread badge", () => {
     it("carries the seam's count on the chat icon, and on no other applet", async () => {
-      stubApi({ signedIn: MEMBER, extra: pageApi(commentsApi([], CANDIDATES, 3)) });
+      stubApi({ signedIn: ADMIN, extra: pageApi(commentsApi([], CANDIDATES, 3)) });
       renderAt("/contracts/42");
 
       const bar = await screen.findByRole("toolbar", { name: "Applets" });
@@ -2760,7 +2783,7 @@ describe("the contract record's history applet (M9/6)", () => {
   it("opens and closes the history panel from the bar, beside chat and settings", async () => {
     const user = userEvent.setup();
     const activity = activityApi([[entry("a1", "contract.created")]]);
-    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    stubApi({ signedIn: ADMIN, extra: pageApi(activity) });
     renderAt("/contracts/42");
 
     const bar = await screen.findByRole("toolbar", { name: "Applets" });
@@ -2815,8 +2838,10 @@ describe("the contract record's history applet (M9/6)", () => {
     expect(rows.map((row) => row.textContent)).toEqual([
       expect.stringContaining("Nadia Counsel commented"),
       expect.stringContaining("Nadia Counsel added Orion Cloud Ltd on the other side"),
-      expect.stringContaining("Nadia Counsel took Casey Contributor off the team as contributor"),
-      expect.stringContaining("Nadia Counsel added Casey Contributor to the team as contributor"),
+      // The role reads in the Team card's own words, not as the stored
+      // slug: one fact, named the same way on both surfaces.
+      expect.stringContaining("Nadia Counsel took Casey Contributor off the team as Contributor"),
+      expect.stringContaining("Nadia Counsel added Casey Contributor to the team as Contributor"),
       expect.stringContaining("Nadia Counsel created this contract"),
     ]);
   });

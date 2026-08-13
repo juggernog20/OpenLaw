@@ -241,7 +241,14 @@ export function SettingsAuditLogPage() {
     () => JSON.stringify(queryFrom({ ...filters, q: term })),
     [filters, term],
   );
-  const query = useMemo(() => JSON.parse(queryKey) as Record<string, string>, [queryKey]);
+  // Built from the same inputs the key is built from, and rebuilt only
+  // when the key moves — so a re-render with the same filters hands
+  // `loadPage` the object it already had. The key is the identity here,
+  // which is why it is the only dependency.
+  const query = useMemo<Record<string, string>>(
+    () => queryFrom({ ...filters, q: term }),
+    [queryKey],
+  );
 
   /**
    * Which question is on screen. A read that is no longer the current

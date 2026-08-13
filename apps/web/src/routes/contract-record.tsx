@@ -552,7 +552,17 @@ function ContractRecord() {
           { reference, title: saved.title },
         )}
       />
-      <RecordApplets applets={[chatApplet, historyApplet, SETTINGS_APPLET]}>
+      {/* The settings slot is absent for anyone the settings routes
+          would bounce (SET-002): every contract-settings loader sends a
+          non-Administrator to their profile, and a door that opens on a
+          redirect is worse than no door. */}
+      <RecordApplets
+        applets={
+          user.role === "administrator"
+            ? [chatApplet, historyApplet, SETTINGS_APPLET]
+            : [chatApplet, historyApplet]
+        }
+      >
         <div className="flex flex-col gap-4 overflow-y-auto px-page-x py-page-y">
           {archived && (
             <p className="rounded-card bg-status-warning-bg px-3 py-2 text-md text-status-warning-fg">
