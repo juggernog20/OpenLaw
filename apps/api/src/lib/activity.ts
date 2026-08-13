@@ -71,8 +71,13 @@ export type ActivityAction =
   // party, and the log has to say so rather than leave it implied. A
   // type reassignment (#113) keeps its own verb for the entity-record
   // reason above: the contract moved because an Administrator archived
-  // its type, not because someone re-typed it.
-  | `contract.${"created" | "updated" | "status_changed" | "type_reassigned" | "team_added" | "team_removed" | "counterparty_added" | "counterparty_removed" | "counterparty_primary_changed" | "archived" | "restored"}`
+  // its type, not because someone re-typed it. Setting and clearing the
+  // Confidential flag (M10/2) keep their own verbs for a third reason:
+  // DD-014 requires every walling-off of a record to be accountable by
+  // actor and timestamp, and a verb an Administrator can filter the
+  // audit log on is what makes that a query rather than a hunt through
+  // `contract.updated` payloads.
+  | `contract.${"created" | "updated" | "status_changed" | "type_reassigned" | "team_added" | "team_removed" | "counterparty_added" | "counterparty_removed" | "counterparty_primary_changed" | "confidentiality_set" | "confidentiality_cleared" | "archived" | "restored"}`
   // The conversation on a record (M9/2, M9/4). Every entry carries the
   // comment's own tier, so a Legal Only comment leaves no trace for
   // anyone who could not read it. They carry ids and metadata only —
