@@ -5,9 +5,9 @@
  * deliverable is a signed document. Only the columns this milestone
  * step reads land here, per the incremental-schema doctrine (TECH-014)
  * — `number`, `title`, the type and status FKs, `manager_id`,
- * `priority`, `risk`, `description`, timestamps, and the soft-delete
- * stamp. Parties, value, and custom fields arrive with the tickets that
- * read them; term, confidentiality, parent, and matter linking arrive
+ * `priority`, `risk`, the CTR-010 value trio, `description`, timestamps,
+ * and the soft-delete stamp. Custom fields arrive with the ticket that
+ * reads them; term, confidentiality, parent, and matter linking arrive
  * with their own milestones. SCHEMA.md is the naming reference, never a
  * migration to transcribe.
  *
@@ -23,7 +23,17 @@
  */
 
 import { sql } from "drizzle-orm";
-import { check, index, integer, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+  bigint,
+  char,
+  check,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 import { users } from "./auth.js";
 import { contractStatuses } from "./contract-statuses.js";
 import { contractTypes } from "./contract-types.js";
@@ -38,6 +48,17 @@ import { uuidPk } from "./helpers.js";
  */
 export const SEVERITY_LEVELS = ["low", "medium", "high", "critical"] as const;
 export type SeverityLevel = (typeof SEVERITY_LEVELS)[number];
+
+/**
+ * CTR-010's cadence: what the recorded amount is per. It backs the
+ * "/year" the mock renders after the money, and it is what makes two
+ * contract values comparable later — an annualized figure needs to know
+ * whether the number is a one-off, a month, or a year. Code branches on
+ * it (the suffix, and reporting's annualization), so it is a fixed
+ * enum, not an admin-configurable list.
+ */
+export const VALUE_CADENCES = ["one_time", "monthly", "annually"] as const;
+export type ValueCadence = (typeof VALUE_CADENCES)[number];
 
 export const contracts = pgTable(
   "contracts",
@@ -74,6 +95,17 @@ export const contracts = pgTable(
     priority: text("priority", { enum: SEVERITY_LEVELS }).notNull().default("medium"),
     /** CTR-005: NULL = not yet assessed, which is not the same as low. */
     risk: text("risk", { enum: SEVERITY_LEVELS }),
+    /** CTR-010's value, in three columns that are one field. The amount
+     * is an integer count of the currency's smallest unit — cents for
+     * USD, yen for JPY — never a float, so no rounding can creep into a
+     * number that ends up in a report. Total-contract-value math
+     * (annual × term) is derived at read time, never stored. */
+    valueAmount: bigint("value_amount", { mode: "number" }),
+    /** The ISO 4217 code the amount is counted in. Fixed-width by the
+     * standard, so the column is too. */
+    valueCurrency: char("value_currency", { length: 3 }),
+    /** What the amount is per (CTR-010). */
+    valueCadence: text("value_cadence", { enum: VALUE_CADENCES }),
     /** Long-form context that fits no other field. NULL = nothing was
      * written; the write path normalizes a blank string to NULL, so an
      * empty string never reaches the column and readers have one
@@ -108,6 +140,28 @@ export const contracts = pgTable(
       sql`${table.priority} in ('low', 'medium', 'high', 'critical')`,
     ),
     check("contracts_risk_check", sql`${table.risk} in ('low', 'medium', 'high', 'critical')`),
+    check(
+      "contracts_value_cadence_check",
+      sql`${table.valueCadence} in ('one_time', 'monthly', 'annually')`,
+    ),
+    // Two bounds on one column. A negative contract value is not a
+    // value — it is a data-entry slip; rebates and credits are
+    // payment-tracking territory, which CTR-010 keeps out of these
+    // columns. The ceiling is JavaScript's largest exact integer:
+    // `bigint` holds far more than that, but every reader of this
+    // column is a JavaScript runtime, so a larger number would be read
+    // back as a different one. The API refuses it too; this is the
+    // rule stated where no caller can get past it.
+    check("contracts_value_amount_check", sql`${table.valueAmount} between 0 and 9007199254740991`),
+    // CTR-010's "nullable as a group", made a database rule rather than
+    // an application convention: either the whole value is recorded or
+    // none of it is. It is what stops a stray amount with no currency —
+    // a number nobody can read — from ever reaching a row, whichever
+    // write path put it there.
+    check(
+      "contracts_value_group_check",
+      sql`num_nonnulls(${table.valueAmount}, ${table.valueCurrency}, ${table.valueCadence}) in (0, 3)`,
+    ),
   ],
 );
 

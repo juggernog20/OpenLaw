@@ -306,3 +306,59 @@ export function formatCurrency(
   const formatted = formatter.format(value.amount / 10 ** digits);
   return options?.showCode ? `${formatted} ${value.currency}` : formatted;
 }
+
+/**
+ * How many digits separate a currency's major unit from the smallest
+ * unit it is stored in: 2 for USD (cents), 0 for JPY (the yen is the
+ * smallest unit), 3 for BHD. Read from the ISO code through Intl, so no
+ * table of exceptions is kept anywhere.
+ */
+export function currencyFractionDigits(currency: string, options?: FormatOptions): number {
+  return (
+    numberFormatter(resolveLocale(options), { style: "currency", currency }).resolvedOptions()
+      .maximumFractionDigits ?? 2
+  );
+}
+
+/**
+ * The two directions between what a person types and what is stored
+ * (DES-014: storage is an integer count of the smallest unit, never a
+ * float). A form takes major units — 480000 dollars — and the column
+ * holds 48000000 cents.
+ */
+export function toMinorUnits(major: number, currency: string, options?: FormatOptions): number {
+  return Math.round(major * 10 ** currencyFractionDigits(currency, options));
+}
+
+export function toMajorUnits(minor: number, currency: string, options?: FormatOptions): number {
+  return minor / 10 ** currencyFractionDigits(currency, options);
+}
+
+/** One entry in a currency picker: the ISO 4217 code that is committed
+ * and the name of the currency in the reader's own language. */
+export interface CurrencyOption {
+  code: string;
+  displayName: string;
+}
+
+const currencyOptionCache = new Map<string, CurrencyOption[]>();
+
+/**
+ * Every currency this runtime knows, named in the reader's locale and
+ * ordered by that name. The list comes from the runtime's own ICU
+ * tables rather than a table checked into the repository: a hand-kept
+ * list goes stale, and shortening it would decide for a self-hoster
+ * which currencies they may trade in.
+ */
+export function currencyOptions(options?: FormatOptions): CurrencyOption[] {
+  const locale = resolveLocale(options);
+  let list = currencyOptionCache.get(locale);
+  if (!list) {
+    const names = new Intl.DisplayNames(locale, { type: "currency" });
+    list = Intl.supportedValuesOf("currency")
+      .map((code) => ({ code, displayName: names.of(code) ?? code }))
+      .sort((a, b) => a.displayName.localeCompare(b.displayName, locale));
+    currencyOptionCache.set(locale, list);
+  }
+  return list;
+}

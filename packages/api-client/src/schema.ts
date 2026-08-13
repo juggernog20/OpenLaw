@@ -836,7 +836,7 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
-    /** Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, or the status — any live status may follow any other (CTR-001). Never on an archived contract */
+    /** Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, the value, or the status — any live status may follow any other (CTR-001). The value is one field in three parts: amount, currency, and cadence commit together and clear together. Never on an archived contract */
     patch: operations["updateContract"];
     trace?: never;
   };
@@ -4024,6 +4024,12 @@ export interface operations {
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
+              value: {
+                amount: number;
+                currency: string;
+                /** @enum {string} */
+                cadence: "one_time" | "monthly" | "annually";
+              } | null;
               description: string | null;
               archivedAt: string | null;
               /** Format: date-time */
@@ -4095,6 +4101,12 @@ export interface operations {
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
+              value: {
+                amount: number;
+                currency: string;
+                /** @enum {string} */
+                cadence: "one_time" | "monthly" | "annually";
+              } | null;
               description: string | null;
               archivedAt: string | null;
               /** Format: date-time */
@@ -4211,6 +4223,12 @@ export interface operations {
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
+              value: {
+                amount: number;
+                currency: string;
+                /** @enum {string} */
+                cadence: "one_time" | "monthly" | "annually";
+              } | null;
               description: string | null;
               archivedAt: string | null;
               /** Format: date-time */
@@ -4265,6 +4283,12 @@ export interface operations {
           /** @enum {string} */
           priority?: "low" | "medium" | "high" | "critical";
           risk?: ("low" | "medium" | "high" | "critical") | null;
+          value?: {
+            amount: number;
+            currency: string;
+            /** @enum {string} */
+            cadence: "one_time" | "monthly" | "annually";
+          } | null;
           statusId?: string;
         };
       };
@@ -4304,6 +4328,12 @@ export interface operations {
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
+              value: {
+                amount: number;
+                currency: string;
+                /** @enum {string} */
+                cadence: "one_time" | "monthly" | "annually";
+              } | null;
               description: string | null;
               archivedAt: string | null;
               /** Format: date-time */
@@ -4467,6 +4497,12 @@ export interface operations {
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
+              value: {
+                amount: number;
+                currency: string;
+                /** @enum {string} */
+                cadence: "one_time" | "monthly" | "annually";
+              } | null;
               description: string | null;
               archivedAt: string | null;
               /** Format: date-time */
@@ -4540,6 +4576,12 @@ export interface operations {
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
+              value: {
+                amount: number;
+                currency: string;
+                /** @enum {string} */
+                cadence: "one_time" | "monthly" | "annually";
+              } | null;
               description: string | null;
               archivedAt: string | null;
               /** Format: date-time */
@@ -4613,6 +4655,12 @@ export interface operations {
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
+              value: {
+                amount: number;
+                currency: string;
+                /** @enum {string} */
+                cadence: "one_time" | "monthly" | "annually";
+              } | null;
               description: string | null;
               archivedAt: string | null;
               /** Format: date-time */
@@ -4685,6 +4733,12 @@ export interface operations {
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
+              value: {
+                amount: number;
+                currency: string;
+                /** @enum {string} */
+                cadence: "one_time" | "monthly" | "annually";
+              } | null;
               description: string | null;
               archivedAt: string | null;
               /** Format: date-time */
@@ -4751,6 +4805,12 @@ export interface operations {
               /** @enum {string} */
               priority: "low" | "medium" | "high" | "critical";
               risk: ("low" | "medium" | "high" | "critical") | null;
+              value: {
+                amount: number;
+                currency: string;
+                /** @enum {string} */
+                cadence: "one_time" | "monthly" | "annually";
+              } | null;
               description: string | null;
               archivedAt: string | null;
               /** Format: date-time */

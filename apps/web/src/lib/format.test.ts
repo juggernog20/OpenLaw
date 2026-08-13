@@ -11,6 +11,8 @@
 import { describe, expect, it } from "vitest";
 import {
   configureFormatting,
+  currencyFractionDigits,
+  currencyOptions,
   formatCount,
   formatCurrency,
   formatDeadline,
@@ -19,6 +21,8 @@ import {
   formatPercent,
   formatRelativeOrShort,
   formatShortDate,
+  toMajorUnits,
+  toMinorUnits,
 } from "./format";
 
 // 2026-05-03 2:34 PM PDT — the DES-014 worked example.
@@ -158,6 +162,43 @@ describe("formatCurrency", () => {
     expect(
       formatCurrency({ amount: 1_000_000, currency: "USD" }, { ...enUS, showCode: true }),
     ).toBe("$10,000.00 USD");
+  });
+});
+
+describe("smallest-unit conversion", () => {
+  it("reads each currency's precision from its ISO code", () => {
+    expect(currencyFractionDigits("USD", enUS)).toBe(2);
+    expect(currencyFractionDigits("JPY", enUS)).toBe(0);
+    expect(currencyFractionDigits("BHD", enUS)).toBe(3);
+  });
+
+  it("converts between what a person types and what is stored", () => {
+    // What a form takes is major units; what the column holds is not.
+    expect(toMinorUnits(480_000, "USD", enUS)).toBe(48_000_000);
+    expect(toMinorUnits(5000, "JPY", enUS)).toBe(5000);
+    expect(toMajorUnits(48_000_000, "USD", enUS)).toBe(480_000);
+    expect(toMajorUnits(5000, "JPY", enUS)).toBe(5000);
+  });
+
+  it("rounds to whole smallest units, so no float creeps into storage", () => {
+    // 0.1 + 0.2 arithmetic must not leave 1234.9999999 in a column.
+    expect(toMinorUnits(12.35, "USD", enUS)).toBe(1235);
+    expect(toMinorUnits(0.005, "USD", enUS)).toBe(1);
+  });
+});
+
+describe("currencyOptions", () => {
+  it("offers every ISO 4217 code the runtime knows, named in the locale", () => {
+    const enUsList = currencyOptions(enUS);
+    expect(enUsList.find((option) => option.code === "USD")?.displayName).toBe("US Dollar");
+    expect(enUsList.find((option) => option.code === "JPY")).toBeDefined();
+    // Ordered by the name the reader sees, not by the code.
+    const names = enUsList.map((option) => option.displayName);
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, "en-US")));
+    // The name follows the locale; the code never does.
+    expect(currencyOptions(deDE).find((option) => option.code === "USD")?.displayName).toBe(
+      "US-Dollar",
+    );
   });
 });
 

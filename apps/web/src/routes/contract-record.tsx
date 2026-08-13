@@ -4,12 +4,19 @@
  * The contract record page (M8), at the CTR-003 number-based address
  * `/contracts/42`: the breadcrumb sub-bar carrying the reference, the
  * title, and the status pill, then the Contract card with the fields
- * the record holds and, beside it, the Team card the C2 mock draws in
- * the record's side column. Every field edits in place and commits
- * individually per DES-017 — no page edit mode, no dirty state, no
- * Save chrome — with the Owner, status, priority, and risk as selects.
- * The type is shown but not edited here: re-typing re-checks the type's
- * required fields, which lands with the custom-field work.
+ * the record holds, the Description card under it, and the Team card
+ * the C2 mock draws in the record's side column. Every field edits in
+ * place and commits individually per DES-017 — no page edit mode, no
+ * dirty state, no Save chrome — with the Owner, status, priority, and
+ * risk as selects. The type is shown but not edited here: re-typing
+ * re-checks the type's required fields, which lands with the
+ * custom-field work.
+ *
+ * The value is CTR-010's, and it is the one field here that is not a
+ * scalar: an amount, its currency, and its cadence are three controls
+ * that commit together, clear together, and revert together. DES-017
+ * still governs it — the group is what blur and Escape act on, because
+ * a value half-committed or half-reverted is a value nobody chose.
  *
  * The people are CTR-004's: one Owner (`manager_id`, labelled "Owner",
  * name only) who may be left unassigned, and the working group in the
@@ -38,7 +45,7 @@
  * gate; the API's 403 is the real refusal.
  */
 
-import { useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
 import {
   Link,
   redirect,
@@ -47,29 +54,36 @@ import {
   useParams,
   type LoaderFunctionArgs,
 } from "react-router";
-import { FormattedMessage, defineMessage, useIntl } from "react-intl";
+import { FormattedMessage, defineMessage, useIntl, type IntlShape } from "react-intl";
 import { Archive, ArchiveRestore, ChevronRight, FileText, Plus, Settings, X } from "lucide-react";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import {
   ADDABLE_TEAM_ROLES,
+  cadenceLabel,
   contractReference,
   type ContractCounterparty,
+  type ContractValue,
+  formatContractValue,
   riskLabel,
   severityLabel,
   SEVERITY_LEVELS,
   signingEntityOptions,
   STAGE_PILL,
   teamRoleLabel,
+  VALUE_CADENCES,
   type ContractRow,
   type ContractStatusOption,
   type ContractTeamMember,
   type ContractTeamRole,
   type SeverityLevel,
+  type ValueCadence,
   type UserOption,
 } from "../lib/contracts";
+import { currencyFractionDigits, currencyOptions, toMajorUnits, toMinorUnits } from "../lib/format";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
 import { problemDetail } from "../lib/messages";
+import { cn } from "../lib/utils";
 import { isMemberPlus } from "../lib/roles";
 import { currentUser, needsSetup } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
@@ -120,7 +134,14 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
  * selects, and the counterparties have their own routes. */
 type TextFieldKey = "title" | "description";
 type FieldKey =
-  TextFieldKey | "managerId" | "entityId" | "counterparties" | "statusId" | "priority" | "risk";
+  | TextFieldKey
+  | "managerId"
+  | "entityId"
+  | "counterparties"
+  | "statusId"
+  | "priority"
+  | "risk"
+  | "value";
 
 /** The one applet the record offers before M9 — SET-001's deep link to
  * the contract configuration behind this record. */
@@ -346,256 +367,294 @@ function ContractRecord() {
               column beside them. Below the container threshold the two
               stack, so the roster follows the record (DES-012). */}
           <div className="flex flex-col items-start gap-4 @4xl/page:flex-row">
-            <section className="w-full min-w-0 flex-1 overflow-hidden rounded-card border border-border-default bg-raised">
-              <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
-                <h2 className="text-base font-semibold">
-                  <FormattedMessage id="contracts.record.section" defaultMessage="Contract" />
-                </h2>
-              </header>
-              <div className="grid grid-cols-1 gap-4 p-4 @2xl/page:grid-cols-2">
-                <div className="@2xl/page:col-span-2">
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="contract-title">
-                      <FormattedMessage id="contracts.form.titleField" defaultMessage="Title" />
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        id="contract-title"
-                        value={drafts.title}
-                        disabled={archived}
-                        onChange={(event) =>
-                          setDrafts((current) => ({ ...current, title: event.target.value }))
-                        }
-                        onBlur={() => commitText("title")}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter") commitText("title");
-                          if (event.key === "Escape") revertText("title");
-                        }}
-                      />
-                      <StatusNote status={fieldStatus.title ?? "idle"} detail={fieldError.title} />
+            <div className="flex w-full min-w-0 flex-1 flex-col gap-4">
+              <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
+                <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
+                  <h2 className="text-base font-semibold">
+                    <FormattedMessage id="contracts.record.section" defaultMessage="Contract" />
+                  </h2>
+                </header>
+                <div className="grid grid-cols-1 gap-4 p-4 @2xl/page:grid-cols-2">
+                  <div className="@2xl/page:col-span-2">
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="contract-title">
+                        <FormattedMessage id="contracts.form.titleField" defaultMessage="Title" />
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          id="contract-title"
+                          value={drafts.title}
+                          disabled={archived}
+                          onChange={(event) =>
+                            setDrafts((current) => ({ ...current, title: event.target.value }))
+                          }
+                          onBlur={() => commitText("title")}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter") commitText("title");
+                            if (event.key === "Escape") revertText("title");
+                          }}
+                        />
+                        <StatusNote
+                          status={fieldStatus.title ?? "idle"}
+                          detail={fieldError.title}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-                <ReadOnlyField
-                  label={
-                    <FormattedMessage id="contracts.column.reference" defaultMessage="Reference" />
-                  }
-                  value={reference}
-                />
-                <ReadOnlyField
-                  label={
-                    <FormattedMessage id="contracts.form.type" defaultMessage="Contract type" />
-                  }
-                  value={saved.contractTypeName}
-                />
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="contract-owner">
-                    <FormattedMessage id="contracts.form.owner" defaultMessage="Owner" />
-                  </Label>
-                  <div className="flex items-center gap-2">
-                    <select
-                      id="contract-owner"
-                      value={saved.manager?.id ?? ""}
-                      className={CONTROL_CLASS}
-                      disabled={archived}
-                      onChange={(event) =>
-                        void commit("managerId", { managerId: event.target.value || null })
-                      }
-                    >
-                      {/* Empty is a real answer: an unassigned contract
+                  <ReadOnlyField
+                    label={
+                      <FormattedMessage
+                        id="contracts.column.reference"
+                        defaultMessage="Reference"
+                      />
+                    }
+                    value={reference}
+                  />
+                  <ReadOnlyField
+                    label={
+                      <FormattedMessage id="contracts.form.type" defaultMessage="Contract type" />
+                    }
+                    value={saved.contractTypeName}
+                  />
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="contract-owner">
+                      <FormattedMessage id="contracts.form.owner" defaultMessage="Owner" />
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <select
+                        id="contract-owner"
+                        value={saved.manager?.id ?? ""}
+                        className={CONTROL_CLASS}
+                        disabled={archived}
+                        onChange={(event) =>
+                          void commit("managerId", { managerId: event.target.value || null })
+                        }
+                      >
+                        {/* Empty is a real answer: an unassigned contract
                         sits in triage until someone takes it (CTR-004). */}
-                      <option value="">
-                        {intl.formatMessage({
-                          id: "contracts.ownerUnassigned",
-                          defaultMessage: "Unassigned",
-                        })}
-                      </option>
-                      {/* The saved Owner may have been archived since, and
+                        <option value="">
+                          {intl.formatMessage({
+                            id: "contracts.ownerUnassigned",
+                            defaultMessage: "Unassigned",
+                          })}
+                        </option>
+                        {/* The saved Owner may have been archived since, and
                         so be absent from the picker read — keep them
                         selectable as themselves rather than let the
                         select lie about what the record holds. */}
-                      {(saved.manager &&
-                      !ownerOptions.some((person) => person.id === saved.manager!.id)
-                        ? [saved.manager, ...ownerOptions]
-                        : ownerOptions
-                      ).map((person) => (
-                        <option key={person.id} value={person.id}>
-                          {person.displayName}
-                        </option>
-                      ))}
-                    </select>
-                    <StatusNote
-                      status={fieldStatus.managerId ?? "idle"}
-                      detail={fieldError.managerId}
-                    />
+                        {(saved.manager &&
+                        !ownerOptions.some((person) => person.id === saved.manager!.id)
+                          ? [saved.manager, ...ownerOptions]
+                          : ownerOptions
+                        ).map((person) => (
+                          <option key={person.id} value={person.id}>
+                            {person.displayName}
+                          </option>
+                        ))}
+                      </select>
+                      <StatusNote
+                        status={fieldStatus.managerId ?? "idle"}
+                        detail={fieldError.managerId}
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="contract-entity">
-                    {/* "Our entity" as the C2 mock labels it: the Entity
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="contract-entity">
+                      {/* "Our entity" as the C2 mock labels it: the Entity
                         is ours, the Counterparty is theirs, and the
                         record must never blur the two (CONTEXT.md). */}
-                    <FormattedMessage id="contracts.form.entity" defaultMessage="Our entity" />
-                  </Label>
-                  <div className="flex items-center gap-2">
-                    <select
-                      id="contract-entity"
-                      value={saved.entity?.id ?? ""}
-                      className={CONTROL_CLASS}
-                      disabled={archived}
-                      onChange={(event) =>
-                        void commit("entityId", { entityId: event.target.value || null })
-                      }
-                    >
-                      {/* Empty is a real answer: a contract is often
+                      <FormattedMessage id="contracts.form.entity" defaultMessage="Our entity" />
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <select
+                        id="contract-entity"
+                        value={saved.entity?.id ?? ""}
+                        className={CONTROL_CLASS}
+                        disabled={archived}
+                        onChange={(event) =>
+                          void commit("entityId", { entityId: event.target.value || null })
+                        }
+                      >
+                        {/* Empty is a real answer: a contract is often
                         recorded before anyone decides which of ours
                         signs it (CTR-011). */}
-                      <option value="">
-                        {intl.formatMessage({
-                          id: "contracts.entityUnknown",
-                          defaultMessage: "Not known yet",
-                        })}
-                      </option>
-                      {entityOptions.map((entity) => (
-                        <option key={entity.id} value={entity.id}>
-                          {entity.legalName}
+                        <option value="">
+                          {intl.formatMessage({
+                            id: "contracts.entityUnknown",
+                            defaultMessage: "Not known yet",
+                          })}
                         </option>
-                      ))}
-                    </select>
-                    <StatusNote
-                      status={fieldStatus.entityId ?? "idle"}
-                      detail={fieldError.entityId}
-                    />
+                        {entityOptions.map((entity) => (
+                          <option key={entity.id} value={entity.id}>
+                            {entity.legalName}
+                          </option>
+                        ))}
+                      </select>
+                      <StatusNote
+                        status={fieldStatus.entityId ?? "idle"}
+                        detail={fieldError.entityId}
+                      />
+                    </div>
                   </div>
-                </div>
-                {/* Their side, next to ours: the two never blur
+                  {/* Their side, next to ours: the two never blur
                     (CONTEXT.md), and the record reads them together. */}
-                <CounterpartiesField
-                  contractNumber={saved.number}
-                  parties={parties}
-                  frozen={archived}
-                  status={fieldStatus.counterparties ?? "idle"}
-                  error={fieldError.counterparties}
-                  onStatus={(next, detail) => note("counterparties", next, detail)}
-                  onChange={(row, next) => {
-                    // The primary decides what the list column and the
-                    // record hero show, so the row moves with the party.
-                    setSaved(row);
-                    setParties(next);
-                  }}
-                />
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="contract-status">
-                    <FormattedMessage id="contracts.form.status" defaultMessage="Status" />
-                  </Label>
-                  <div className="flex items-center gap-2">
-                    <select
-                      id="contract-status"
-                      value={saved.statusId}
-                      className={CONTROL_CLASS}
-                      disabled={archived}
-                      onChange={(event) =>
-                        void commit("statusId", { statusId: event.target.value })
-                      }
-                    >
-                      {statusOptions.map((option) => (
-                        <option key={option.id} value={option.id}>
-                          {option.displayName}
-                        </option>
-                      ))}
-                    </select>
-                    <StatusNote
-                      status={fieldStatus.statusId ?? "idle"}
-                      detail={fieldError.statusId}
-                    />
+                  <CounterpartiesField
+                    contractNumber={saved.number}
+                    parties={parties}
+                    frozen={archived}
+                    status={fieldStatus.counterparties ?? "idle"}
+                    error={fieldError.counterparties}
+                    onStatus={(next, detail) => note("counterparties", next, detail)}
+                    onChange={(row, next) => {
+                      // The primary decides what the list column and the
+                      // record hero show, so the row moves with the party.
+                      setSaved(row);
+                      setParties(next);
+                    }}
+                  />
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="contract-status">
+                      <FormattedMessage id="contracts.form.status" defaultMessage="Status" />
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <select
+                        id="contract-status"
+                        value={saved.statusId}
+                        className={CONTROL_CLASS}
+                        disabled={archived}
+                        onChange={(event) =>
+                          void commit("statusId", { statusId: event.target.value })
+                        }
+                      >
+                        {statusOptions.map((option) => (
+                          <option key={option.id} value={option.id}>
+                            {option.displayName}
+                          </option>
+                        ))}
+                      </select>
+                      <StatusNote
+                        status={fieldStatus.statusId ?? "idle"}
+                        detail={fieldError.statusId}
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="contract-priority">
-                    <FormattedMessage id="contracts.form.priority" defaultMessage="Priority" />
-                  </Label>
-                  <div className="flex items-center gap-2">
-                    <select
-                      id="contract-priority"
-                      value={saved.priority}
-                      className={CONTROL_CLASS}
-                      disabled={archived}
-                      onChange={(event) =>
-                        void commit("priority", { priority: event.target.value as SeverityLevel })
-                      }
-                    >
-                      {SEVERITY_LEVELS.map((level) => (
-                        <option key={level} value={level}>
-                          {severityLabel(intl, level)}
-                        </option>
-                      ))}
-                    </select>
-                    <StatusNote
-                      status={fieldStatus.priority ?? "idle"}
-                      detail={fieldError.priority}
-                    />
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="contract-priority">
+                      <FormattedMessage id="contracts.form.priority" defaultMessage="Priority" />
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <select
+                        id="contract-priority"
+                        value={saved.priority}
+                        className={CONTROL_CLASS}
+                        disabled={archived}
+                        onChange={(event) =>
+                          void commit("priority", { priority: event.target.value as SeverityLevel })
+                        }
+                      >
+                        {SEVERITY_LEVELS.map((level) => (
+                          <option key={level} value={level}>
+                            {severityLabel(intl, level)}
+                          </option>
+                        ))}
+                      </select>
+                      <StatusNote
+                        status={fieldStatus.priority ?? "idle"}
+                        detail={fieldError.priority}
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="contract-risk">
-                    <FormattedMessage id="contracts.form.risk" defaultMessage="Risk" />
-                  </Label>
-                  <div className="flex items-center gap-2">
-                    <select
-                      id="contract-risk"
-                      value={saved.risk ?? ""}
-                      className={CONTROL_CLASS}
-                      disabled={archived}
-                      onChange={(event) =>
-                        void commit("risk", {
-                          risk:
-                            event.target.value === ""
-                              ? null
-                              : (event.target.value as SeverityLevel),
-                        })
-                      }
-                    >
-                      {/* Empty is a real answer, not a placeholder: risk
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="contract-risk">
+                      <FormattedMessage id="contracts.form.risk" defaultMessage="Risk" />
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <select
+                        id="contract-risk"
+                        value={saved.risk ?? ""}
+                        className={CONTROL_CLASS}
+                        disabled={archived}
+                        onChange={(event) =>
+                          void commit("risk", {
+                            risk:
+                              event.target.value === ""
+                                ? null
+                                : (event.target.value as SeverityLevel),
+                          })
+                        }
+                      >
+                        {/* Empty is a real answer, not a placeholder: risk
                         stays unset until legal assesses it (CTR-005). */}
-                      <option value="">{riskLabel(intl, null)}</option>
-                      {SEVERITY_LEVELS.map((level) => (
-                        <option key={level} value={level}>
-                          {severityLabel(intl, level)}
-                        </option>
-                      ))}
-                    </select>
-                    <StatusNote status={fieldStatus.risk ?? "idle"} detail={fieldError.risk} />
+                        <option value="">{riskLabel(intl, null)}</option>
+                        {SEVERITY_LEVELS.map((level) => (
+                          <option key={level} value={level}>
+                            {severityLabel(intl, level)}
+                          </option>
+                        ))}
+                      </select>
+                      <StatusNote status={fieldStatus.risk ?? "idle"} detail={fieldError.risk} />
+                    </div>
                   </div>
+                  {/* CTR-010's value: three controls, one field. It sits
+                    with the other scalars the record holds, because the
+                    C2 hero meta strip it is drawn in edits through the
+                    page-level Edit toggle DES-017 removed — the same
+                    move the Owner, our entity, and the counterparties
+                    already made. */}
+                  <ValueField
+                    value={saved.value}
+                    frozen={archived}
+                    status={fieldStatus.value ?? "idle"}
+                    error={fieldError.value}
+                    onStatus={(next, detail) => note("value", next, detail)}
+                    onCommit={(next) => void commit("value", { value: next })}
+                  />
                 </div>
-                <div className="flex flex-col gap-1.5 @2xl/page:col-span-2">
-                  <Label htmlFor="contract-description">
+              </section>
+              {/* The C2 mock gives the description a card of its own,
+                  and it earns one: it is the only free-form field on
+                  the record, and a textarea the width of the card reads
+                  as prose rather than as one more entry in a field
+                  grid. It follows the Contract card because the facts
+                  come before the account of them — the mock's own order,
+                  where the hero the Contract card replaces leads.
+
+                  The heading names the textarea rather than the card:
+                  one accessible name each, carried by the control that
+                  answers to it, as the Contract card above does. */}
+              <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
+                <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
+                  <h2 id="contract-description-heading" className="text-base font-semibold">
                     <FormattedMessage
                       id="contracts.form.description"
                       defaultMessage="Description"
                     />
-                  </Label>
-                  <div className="flex items-start gap-2">
-                    <textarea
-                      id="contract-description"
-                      value={drafts.description}
-                      className={TEXTAREA_CLASS}
-                      disabled={archived}
-                      onChange={(event) =>
-                        setDrafts((current) => ({ ...current, description: event.target.value }))
-                      }
-                      onBlur={() => commitText("description")}
-                      onKeyDown={(event) => {
-                        if (event.key === "Escape") revertText("description");
-                      }}
-                    />
-                    <StatusNote
-                      status={fieldStatus.description ?? "idle"}
-                      detail={fieldError.description}
-                    />
-                  </div>
+                  </h2>
+                </header>
+                <div className="flex items-start gap-2 p-4">
+                  <textarea
+                    id="contract-description"
+                    // The card's own heading names the field: a second
+                    // label above a full-width textarea would repeat it.
+                    aria-labelledby="contract-description-heading"
+                    value={drafts.description}
+                    className={TEXTAREA_CLASS}
+                    disabled={archived}
+                    onChange={(event) =>
+                      setDrafts((current) => ({ ...current, description: event.target.value }))
+                    }
+                    onBlur={() => commitText("description")}
+                    onKeyDown={(event) => {
+                      if (event.key === "Escape") revertText("description");
+                    }}
+                  />
+                  <StatusNote
+                    status={fieldStatus.description ?? "idle"}
+                    detail={fieldError.description}
+                  />
                 </div>
-              </div>
-            </section>
+              </section>
+            </div>
             <TeamCard
               contractNumber={saved.number}
               owner={saved.manager}
@@ -1120,6 +1179,309 @@ function CounterpartiesField({
           defaultMessage="Type an unknown name to create it. Add its details later."
         />
       </p>
+    </div>
+  );
+}
+
+/**
+ * The currency picker's rows, composed once per locale and kept. There
+ * are some three hundred ISO 4217 codes, and each row's label is an
+ * ICU message — composing them per render, or even per mount, is three
+ * hundred formats for a list that cannot change while the page is
+ * open. The cache is keyed on the locale, which is what the labels
+ * depend on.
+ */
+const currencyRowCache = new Map<string, readonly { code: string; label: string }[]>();
+
+function currencyRows(intl: IntlShape): readonly { code: string; label: string }[] {
+  let rows = currencyRowCache.get(intl.locale);
+  if (!rows) {
+    rows = currencyOptions({ locale: intl.locale }).map((currency) => ({
+      code: currency.code,
+      // The code leads: it is what a contract quotes, and it is what
+      // tells two "dollar" currencies apart.
+      label: intl.formatMessage(
+        { id: "contracts.value.currencyOption", defaultMessage: "{code} — {name}" },
+        { code: currency.code, name: currency.displayName },
+      ),
+    }));
+    currencyRowCache.set(intl.locale, rows);
+  }
+  return rows;
+}
+
+/**
+ * The rows as the picker's options. Memoized away from the field that
+ * hosts them, so a keystroke in the amount box reconciles three
+ * controls rather than three hundred options that cannot have changed.
+ */
+const CurrencyOptions = memo(function CurrencyOptions() {
+  const intl = useIntl();
+  return (
+    <>
+      {currencyRows(intl).map((currency) => (
+        <option key={currency.code} value={currency.code}>
+          {currency.label}
+        </option>
+      ))}
+    </>
+  );
+});
+
+/** What the three controls hold between commits. The amount is a
+ * string, in major units, because that is what a person types and an
+ * empty box is a state a number cannot hold. */
+interface ValueDraft {
+  amount: string;
+  currency: string;
+  cadence: ValueCadence;
+}
+
+/** The saved value as the controls show it, and as a string that
+ * changes only when the value itself does — the seed the draft is reset
+ * from when a commit lands. */
+function valueDraft(value: ContractValue | null, locale: string): ValueDraft {
+  return value === null
+    ? { amount: "", currency: "", cadence: "one_time" }
+    : {
+        amount: String(toMajorUnits(value.amount, value.currency, { locale })),
+        currency: value.currency,
+        cadence: value.cadence,
+      };
+}
+
+function valueSeed(value: ContractValue | null): string {
+  return value === null ? "" : `${value.amount}:${value.currency}:${value.cadence}`;
+}
+
+/**
+ * CTR-010's value: an amount, the ISO 4217 currency it is counted in,
+ * and what it is per — three controls that are one field.
+ *
+ * DES-017 governs it, read as a group rather than as three scalars.
+ * Moving between the three controls is moving inside one field, so it
+ * commits when focus leaves the group, not when it leaves a control;
+ * Enter commits from any of the three; Escape reverts all three, since
+ * a half-reverted value would be a value nobody chose. Emptying the
+ * amount clears the whole field — no value recorded is the state every
+ * contract starts in, and an NDA stays in.
+ *
+ * The amount is typed in major units and stored in the currency's
+ * smallest unit, so the currency decides the conversion; changing it
+ * re-scales what is typed at commit time rather than rewriting the box
+ * under the person filling it in.
+ */
+function ValueField({
+  value,
+  frozen,
+  status,
+  error,
+  onStatus,
+  onCommit,
+}: Readonly<{
+  value: ContractValue | null;
+  /** The record is archived: it reads as facts until it is restored. */
+  frozen: boolean;
+  status: FieldStatus;
+  error: string | undefined;
+  onStatus: (status: FieldStatus, detail?: string) => void;
+  onCommit: (value: ContractValue | null) => void;
+}>) {
+  const intl = useIntl();
+  const [draft, setDraft] = useState<ValueDraft>(() => valueDraft(value, intl.locale));
+  /** The value the draft was last seeded from. Comparing the content
+   * rather than the object is what lets another field's commit answer
+   * with a fresh row without discarding a half-typed amount here. */
+  const [seed, setSeed] = useState(() => valueSeed(value));
+  const seeded = valueSeed(value);
+  if (seed !== seeded) {
+    setSeed(seeded);
+    setDraft(valueDraft(value, intl.locale));
+  }
+
+  /** A step of one smallest unit: cents for USD, whole yen for JPY. The
+   * box refuses a precision the currency cannot hold. */
+  const step =
+    draft.currency === ""
+      ? 0.01
+      : 10 **
+        -currencyFractionDigits(draft.currency, {
+          locale: intl.locale,
+        });
+
+  function revert() {
+    setDraft(valueDraft(value, intl.locale));
+    onStatus("idle");
+  }
+
+  function commit() {
+    // Enter already committed this draft and the PATCH is in flight —
+    // the blur that follows must not send a duplicate.
+    if (status === "saving") return;
+    const typed = draft.amount.trim();
+
+    if (typed === "") {
+      // An empty amount is how the whole field is cleared. With nothing
+      // recorded there is nothing to clear, so the group reverts —
+      // a currency picked and then abandoned is not a value.
+      if (value === null) {
+        revert();
+        return;
+      }
+      onCommit(null);
+      return;
+    }
+
+    const major = Number(typed);
+    if (!Number.isFinite(major) || major < 0) {
+      onStatus(
+        "error",
+        intl.formatMessage({
+          id: "contracts.value.amountInvalid",
+          defaultMessage: "Enter the amount as a number.",
+        }),
+      );
+      return;
+    }
+    if (draft.currency === "") {
+      // The seam refuses this too, and the database refuses it again.
+      // Saying so here keeps a round trip out of a mistake the form can
+      // see for itself — the same guard an empty title already gets.
+      onStatus(
+        "error",
+        intl.formatMessage({
+          id: "contracts.value.currencyMissing",
+          defaultMessage: "Pick a currency for the amount.",
+        }),
+      );
+      return;
+    }
+
+    const next: ContractValue = {
+      amount: toMinorUnits(major, draft.currency, { locale: intl.locale }),
+      currency: draft.currency,
+      cadence: draft.cadence,
+    };
+    if (
+      value &&
+      next.amount === value.amount &&
+      next.currency === value.currency &&
+      next.cadence === value.cadence
+    ) {
+      // Nothing changed: commit nothing (DES-017), and drop any
+      // refusal the last attempt left standing.
+      onStatus("idle");
+      return;
+    }
+    onCommit(next);
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5 @2xl/page:col-span-2">
+      <div className="flex items-center gap-2">
+        <span id="contract-value-label" className="text-sm font-medium text-primary">
+          <FormattedMessage id="contracts.form.value" defaultMessage="Value" />
+        </span>
+        <StatusNote status={status} detail={error} />
+      </div>
+      <div
+        role="group"
+        aria-labelledby="contract-value-label"
+        className="flex flex-wrap items-center gap-2"
+        // Focus moving between the three controls stays inside one
+        // field, so only focus leaving the group commits it.
+        onBlur={(event) => {
+          if (event.currentTarget.contains(event.relatedTarget)) return;
+          commit();
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            // The record page is not a form; Enter here means commit.
+            event.preventDefault();
+            commit();
+          }
+          if (event.key === "Escape") revert();
+        }}
+      >
+        <Input
+          id="contract-value-amount"
+          type="number"
+          inputMode="decimal"
+          min={0}
+          step={step}
+          className="w-40"
+          disabled={frozen}
+          aria-label={intl.formatMessage({
+            id: "contracts.value.amount",
+            defaultMessage: "Amount",
+          })}
+          value={draft.amount}
+          onChange={(event) => setDraft((current) => ({ ...current, amount: event.target.value }))}
+        />
+        <select
+          id="contract-value-currency"
+          className={cn(CONTROL_CLASS, "w-56")}
+          disabled={frozen}
+          aria-label={intl.formatMessage({
+            id: "contracts.value.currency",
+            defaultMessage: "Currency",
+          })}
+          value={draft.currency}
+          onChange={(event) =>
+            setDraft((current) => ({ ...current, currency: event.target.value }))
+          }
+        >
+          <option value="">
+            {intl.formatMessage({
+              id: "contracts.value.currencyPlaceholder",
+              defaultMessage: "Currency…",
+            })}
+          </option>
+          <CurrencyOptions />
+        </select>
+        <select
+          id="contract-value-cadence"
+          className={cn(CONTROL_CLASS, "w-40")}
+          disabled={frozen}
+          aria-label={intl.formatMessage({
+            id: "contracts.value.cadence",
+            defaultMessage: "Cadence",
+          })}
+          value={draft.cadence}
+          onChange={(event) =>
+            setDraft((current) => ({ ...current, cadence: event.target.value as ValueCadence }))
+          }
+        >
+          {/* No empty option: an amount always says what it is per, and
+              a one-off is a cadence, not the absence of one (CTR-010). */}
+          {VALUE_CADENCES.map((cadence) => (
+            <option key={cadence} value={cadence}>
+              {cadenceLabel(intl, cadence)}
+            </option>
+          ))}
+        </select>
+      </div>
+      {value ? (
+        <>
+          {/* What the record says it is worth, read back as DES-014
+              renders it — the three controls hold the parts, this is
+              the field. */}
+          <p className="text-md">{formatContractValue(intl, value)}</p>
+          <p className="text-xs text-muted">
+            <FormattedMessage
+              id="contracts.value.hint"
+              defaultMessage="Empty the amount to take the value off."
+            />
+          </p>
+        </>
+      ) : (
+        <p className="text-base text-muted">
+          <FormattedMessage
+            id="contracts.value.empty"
+            defaultMessage="No value is recorded. Many contracts have none."
+          />
+        </p>
+      )}
     </div>
   );
 }

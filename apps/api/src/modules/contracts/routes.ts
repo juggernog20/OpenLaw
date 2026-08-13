@@ -44,6 +44,15 @@
  * and renders the label. Any status may follow any other: real deals
  * collapse and reopen, so there is no transition matrix.
  *
+ * The value is CTR-010's, and it is the first field here that is not a
+ * scalar: an amount, its ISO 4217 currency, and the cadence the amount
+ * is per are three columns that behave as one field. They commit
+ * together, clear together, and appear in the audit map as one entry —
+ * an amount with no currency is a number nobody can read, so the seam
+ * refuses it and the database check refuses it again. The amount is an
+ * integer count of the currency's smallest unit; no total is stored,
+ * because every total (annual × term) is derivable from what is.
+ *
  * Access is Member+ throughout — Administrators and Legal Team Members
  * equally. Contributor record-level access waits for the DD-015 grid.
  * Every mutation appends to the activity log in the same transaction
@@ -72,6 +81,7 @@ import {
   sql,
   users,
   USER_ROLES,
+  VALUE_CADENCES,
   type Contract,
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
@@ -93,6 +103,46 @@ const OWNER_ROLES = ["administrator", "legal_team_member"] as const;
 const CREATOR_ROLE = "creator";
 
 const SeveritySchema = z.enum(SEVERITY_LEVELS);
+
+/**
+ * The ISO 4217 codes this instance accepts, taken from the runtime's own
+ * CU/ICU tables rather than a list checked into the repository: a
+ * hand-kept list is a list that goes stale, and picking a shorter one
+ * would be an unrecorded product decision about which currencies a
+ * self-hoster may trade in.
+ */
+const ISO_4217 = new Set(Intl.supportedValuesOf("currency"));
+
+/**
+ * CTR-010's value, as every surface reads it: the amount as an integer
+ * count of the currency's smallest unit (cents for USD, yen for JPY),
+ * the ISO 4217 code that says which unit that is, and what the amount
+ * is per. Null as a whole — no value recorded is normal, which is what
+ * an NDA looks like — never null in part.
+ */
+const ContractValueSchema = z.object({
+  amount: z.int().nonnegative(),
+  currency: z.string(),
+  cadence: z.enum(VALUE_CADENCES),
+});
+
+/**
+ * The same trio on the way in. All three are required together, so the
+ * seam cannot be handed an amount with no currency; `null` in place of
+ * the object is how the whole value is cleared. Case is normalized, so
+ * "usd" and "USD" are one currency and never two rows that disagree.
+ */
+const ContractValueInput = z.strictObject({
+  amount: z.int().nonnegative(),
+  currency: z
+    .string()
+    .trim()
+    .transform((code) => code.toUpperCase())
+    .refine((code) => ISO_4217.has(code), {
+      message: "Use a three-letter ISO 4217 currency code.",
+    }),
+  cadence: z.enum(VALUE_CADENCES),
+});
 
 /** A person as every contract surface renders them: name and face, plus
  * the SET-005 archived flag the shared identity component greys on. */
@@ -164,6 +214,11 @@ const ContractRowSchema = z.object({
   priority: SeveritySchema,
   /** NULL = not yet assessed, which is not the same as low (CTR-005). */
   risk: SeveritySchema.nullable(),
+  /** CTR-010's amount, currency, and cadence as one field. NULL = no
+   * value is recorded, which is normal — an NDA is worth nothing and
+   * says nothing about money. The C1 mock draws it as a list column, so
+   * it rides every row, not just the record's. */
+  value: ContractValueSchema.nullable(),
   description: z.string().nullable(),
   archivedAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
@@ -267,6 +322,33 @@ interface ContractContext {
   primaryCounterparty: JoinedCounterparty | null;
 }
 
+/** The three stored columns read back as the one field they are. The
+ * database's group check is what lets this test a single column and
+ * trust the rest; the other two are tested anyway, because a type that
+ * admits the partial state should be narrowed by the code that reads
+ * it, not by a comment. */
+function toValue(row: Contract) {
+  return row.valueAmount === null || row.valueCurrency === null || row.valueCadence === null
+    ? null
+    : { amount: row.valueAmount, currency: row.valueCurrency, cadence: row.valueCadence };
+}
+
+/** One value equals another when all three parts match, and no value
+ * equals no value. A field that commits as a group compares as a group
+ * — otherwise a re-sent identical value would write an audit row saying
+ * something changed when nothing did. */
+function sameValue(
+  left: z.infer<typeof ContractValueSchema> | null,
+  right: z.infer<typeof ContractValueSchema> | null,
+) {
+  if (left === null || right === null) return left === right;
+  return (
+    left.amount === right.amount &&
+    left.currency === right.currency &&
+    left.cadence === right.cadence
+  );
+}
+
 function toRow(context: ContractContext) {
   const { row } = context;
   return {
@@ -283,6 +365,7 @@ function toRow(context: ContractContext) {
     primaryCounterparty: context.primaryCounterparty,
     priority: row.priority,
     risk: row.risk,
+    value: toValue(row),
     description: row.description,
     archivedAt: row.archivedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
@@ -749,8 +832,10 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "Commit one field of a contract in place (DES-017 per-field " +
           "commits): title, description, the Owner, the signing entity, " +
-          "priority, risk, or the status — any live status may follow " +
-          "any other (CTR-001). Never on an archived contract",
+          "priority, risk, the value, or the status — any live status " +
+          "may follow any other (CTR-001). The value is one field in " +
+          "three parts: amount, currency, and cadence commit together " +
+          "and clear together. Never on an archived contract",
         tags: ["contracts"],
         params: NumberParams,
         // Strict: an unknown key is a client bug, not a silent strip.
@@ -765,6 +850,11 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           entityId: z.string().nullable().optional(),
           priority: SeveritySchema.optional(),
           risk: SeveritySchema.nullable().optional(),
+          /** CTR-010's value, committed as one field. `null` clears all
+           * three parts — a contract that never had a value and one
+           * whose value was taken off read the same, because both are
+           * "no value is recorded". */
+          value: ContractValueInput.nullable().optional(),
           statusId: z.string().optional(),
         }),
         response: { 200: ContractEnvelope, default: problemResponse },
@@ -859,6 +949,23 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         if (body.risk !== undefined && body.risk !== target.risk) {
           patch.risk = body.risk;
           changed.risk = { from: target.risk, to: body.risk };
+        }
+
+        // CTR-010's value: three columns, one field. They are written as
+        // a group and compared as a group, so changing the currency
+        // alone is one change to "the value", not a change to a column
+        // nobody edits on its own. The audit map carries the whole trio
+        // on both sides — "$120,000 /year" only reads as a change from
+        // something if the something is there to read.
+        if (body.value !== undefined) {
+          const before = toValue(target);
+          const next = body.value;
+          if (!sameValue(before, next)) {
+            patch.valueAmount = next?.amount ?? null;
+            patch.valueCurrency = next?.currency ?? null;
+            patch.valueCadence = next?.cadence ?? null;
+            changed.value = { from: before, to: next };
+          }
         }
 
         // The status keeps its own audit verb — surfaces branch on the
