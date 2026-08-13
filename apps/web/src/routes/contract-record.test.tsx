@@ -2731,6 +2731,139 @@ describe("the contract record's comment applet (M9/2)", () => {
       expect(within(bar).getByRole("button", { name: "Comments (2)" })).toBeInTheDocument();
     });
   });
+
+  /**
+   * DES-009 inside a confidential record (M10/5): Tier 1's lock-only
+   * micro-marker on every row, and Tier 3's notice under the composer.
+   *
+   * jsdom computes no colours, so what is asserted is the token class
+   * that carries the treatment. There is no add-as-watcher offer to
+   * assert the absence of copy for — CMT-007 superseded that clause
+   * (CTR-022) — so what is asserted is that the notice states the bound
+   * and nothing offers to widen the audience of the record itself.
+   */
+  describe("inside a confidential record (M10/5)", () => {
+    const NOTICE =
+      "Confidential contract — whichever audience you pick, only the contract team, the Owner, and Administrators can read it.";
+
+    /** The record seam with the flag set, plus the thread's. */
+    function confidentialPage(comments: ReturnType<typeof commentsApi>) {
+      return pageApi(comments, recordApi(contractRow({ isConfidential: true })));
+    }
+
+    it("marks every comment beside its timestamp, whatever its tier", async () => {
+      const user = userEvent.setup();
+      const comments = commentsApi([
+        comment("c-1", "Redline goes back Friday.", "working_team"),
+        comment("c-2", "Privilege point for the file.", "legal_only"),
+      ]);
+      stubApi({ signedIn: MEMBER, extra: confidentialPage(comments) });
+      renderAt("/contracts/42");
+      await openChat(user);
+
+      const thread = await screen.findByRole("list", { name: "Comments" });
+      const rows = within(thread).getAllByRole("listitem");
+      expect(rows).toHaveLength(2);
+      for (const row of rows) {
+        // Lock only — no "CONFI" beside a timestamp; the record page
+        // is already saying the word on its banner.
+        const lock = row.querySelector("svg.lucide-lock.text-confidential");
+        expect(lock).not.toBeNull();
+        expect(row).not.toHaveTextContent("CONFI");
+      }
+    });
+
+    it("marks no comment on a record that is not confidential", async () => {
+      const user = userEvent.setup();
+      // A Legal Only row, deliberately: its tier badge carries a lock of
+      // its own (CMT-003), and the marker must be told apart from it.
+      const comments = commentsApi([comment("c-1", "Privilege point.", "legal_only")]);
+      stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+      renderAt("/contracts/42");
+      await openChat(user);
+
+      const thread = await screen.findByRole("list", { name: "Comments" });
+      const row = within(thread).getAllByRole("listitem")[0]!;
+      expect(row.querySelector("svg.lucide-lock")).not.toBeNull();
+      expect(row.querySelector("svg.lucide-lock.text-confidential")).toBeNull();
+    });
+
+    it("states the bound under the composer, and states it at every tier", async () => {
+      const user = userEvent.setup();
+      const comments = commentsApi();
+      stubApi({ signedIn: MEMBER, extra: confidentialPage(comments) });
+      renderAt("/contracts/42");
+      await openChat(user);
+
+      const notice = await screen.findByText(NOTICE);
+      expect(notice).toHaveClass("text-confidential");
+      // The tier line still says which room; the notice says the whole
+      // panel is inside a wall.
+      expect(
+        screen.getByText("Visible to the legal team and Contributors on this record."),
+      ).toBeInTheDocument();
+
+      // Every segment, and the statement holds at each of them.
+      for (const segment of ["Legal only", "Full thread"]) {
+        await user.click(screen.getByRole("radio", { name: segment }));
+        expect(screen.getByText(NOTICE)).toBeInTheDocument();
+      }
+    });
+
+    it("says nothing about confidentiality on a record that is not confidential", async () => {
+      const user = userEvent.setup();
+      stubApi({ signedIn: MEMBER, extra: pageApi(commentsApi()) });
+      renderAt("/contracts/42");
+      await openChat(user);
+
+      await screen.findByRole("textbox", { name: "New comment" });
+      expect(screen.queryByText(NOTICE)).not.toBeInTheDocument();
+    });
+
+    it("offers no membership grant with a mention — CMT-007 replaced that clause", async () => {
+      const user = userEvent.setup();
+      const comments = commentsApi();
+      stubApi({ signedIn: MEMBER, extra: confidentialPage(comments) });
+      renderAt("/contracts/42");
+      await openChat(user);
+
+      const box = await screen.findByRole("textbox", { name: "New comment" });
+      await user.type(box, "@Casey");
+      await user.click(await screen.findByRole("option", { name: "Casey Contributor" }));
+      await user.type(box, "please look");
+      await user.click(screen.getByRole("button", { name: "Comment" }));
+
+      // The typeahead offers only people the record reaches, so the
+      // post goes straight through: no watcher confirmation, no grant.
+      await waitFor(() =>
+        expect(comments.posts).toEqual([
+          {
+            entityType: "contract",
+            entityId: "c1",
+            body: "@Casey Contributor please look",
+            visibility: "working_team",
+            mentions: ["u3"],
+          },
+        ]),
+      );
+      expect(screen.queryByText(/watcher/i)).not.toBeInTheDocument();
+    });
+
+    it("uses one Lock glyph in the panel, and no alternate icon", async () => {
+      const user = userEvent.setup();
+      const comments = commentsApi([comment("c-1", "Redline goes back Friday.", "working_team")]);
+      stubApi({ signedIn: MEMBER, extra: confidentialPage(comments) });
+      const { view } = renderAt("/contracts/42");
+      await openChat(user);
+
+      const panel = await screen.findByRole("complementary", { name: "Comments" });
+      // The row's marker, the Legal Only segment's glyph, and the
+      // composer notice — all the same glyph.
+      expect(panel.querySelectorAll("svg.lucide-lock").length).toBeGreaterThan(0);
+      expect(view.container.querySelector("svg.lucide-shield-alert")).toBeNull();
+      expect(view.container.querySelector("svg.lucide-eye-off")).toBeNull();
+    });
+  });
 });
 
 describe("the contract record's history applet (M9/6)", () => {
@@ -3065,6 +3198,47 @@ describe("the contract record's history applet (M9/6)", () => {
 
     const feed = await screen.findByRole("list", { name: "History" });
     expect(within(feed).getAllByRole("listitem")[0]).toHaveTextContent("Nadia Counsel commented");
+  });
+
+  /**
+   * DES-009 Tier 1's micro-marker in the feed (M10/5). An entry copied
+   * out of the panel has to carry its restriction with it, which is the
+   * whole reason the marker exists at this size.
+   */
+  describe("inside a confidential record (M10/5)", () => {
+    it("marks every entry beside its timestamp", async () => {
+      const user = userEvent.setup();
+      const activity = activityApi([
+        [entry("a1", "contract.created"), entry("a2", "contract.confidentiality_set")],
+      ]);
+      stubApi({
+        signedIn: MEMBER,
+        extra: pageApi(activity, recordApi(contractRow({ isConfidential: true }))),
+      });
+      renderAt("/contracts/42");
+      await openHistory(user);
+
+      const feed = await screen.findByRole("list", { name: "History" });
+      const rows = within(feed).getAllByRole("listitem");
+      expect(rows).toHaveLength(2);
+      for (const row of rows) {
+        // Lock only — the record page's banner is already saying the
+        // word, and thirty repetitions of it are noise.
+        expect(row.querySelector("svg.lucide-lock.text-confidential")).not.toBeNull();
+        expect(row).not.toHaveTextContent("CONFI");
+      }
+    });
+
+    it("marks no entry on a record that is not confidential", async () => {
+      const user = userEvent.setup();
+      const activity = activityApi([[entry("a1", "contract.created")]]);
+      stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+      renderAt("/contracts/42");
+      await openHistory(user);
+
+      const feed = await screen.findByRole("list", { name: "History" });
+      expect(within(feed).getAllByRole("listitem")[0]!.querySelector("svg.lucide-lock")).toBeNull();
+    });
   });
 });
 

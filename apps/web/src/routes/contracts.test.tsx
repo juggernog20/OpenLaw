@@ -448,6 +448,65 @@ describe("the /contracts destination", () => {
   });
 });
 
+/**
+ * DES-009's Tier 1 marker in the list (M10/5). The list is the one
+ * surface in this build that renders a contract title outside the
+ * record page, so it is the one place the marker goes today.
+ *
+ * jsdom computes no colours, so what is asserted is the token class
+ * that carries the treatment — the same thing the banner's own tests
+ * assert, and the contrast lint covers the values.
+ */
+describe("the confidential marker in the contract list (M10/5)", () => {
+  const MARKER = "Confidential";
+
+  it("marks a confidential row beside its title, and marks nothing else", async () => {
+    const api = listApi([
+      contractRow({ id: "c1", number: 42, title: "Acme master services agreement" }),
+      contractRow({ id: "c2", number: 55, title: "Beacon sponsorship", isConfidential: true }),
+    ]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts");
+
+    const walled = await screen.findByRole("row", { name: /Beacon sponsorship/ });
+    const marker = within(walled).getByRole("img", { name: MARKER });
+    // DES-009's literal label, in DES-009's own foreground token.
+    expect(marker).toHaveClass("text-confidential");
+    // Uppercase and letter-spaced, as DES-009 draws it.
+    expect(within(marker).getByText("CONFI")).toHaveClass("uppercase", "tracking-[0.4px]");
+    // The open record carries nothing at all — the marker is the
+    // exception, and the absence of one is the rule.
+    const open = screen.getByRole("row", { name: /Acme master services agreement/ });
+    expect(within(open).queryByRole("img", { name: MARKER })).not.toBeInTheDocument();
+  });
+
+  it("never doubles as a placeholder for a record the viewer cannot reach", async () => {
+    // The seam answers this viewer the contracts they may reach and no
+    // others (DD-014, CTR-021). A record they cannot reach is not a
+    // marked row — it is no row, and no count.
+    const api = listApi([contractRow({ id: "c1", number: 42, title: "Acme master services" })]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts");
+
+    expect(await screen.findByText("C-42")).toBeInTheDocument();
+    expect(screen.getAllByRole("row")).toHaveLength(2); // the header and the one row
+    expect(screen.queryByRole("img", { name: MARKER })).not.toBeInTheDocument();
+    expect(screen.getByText("1 contract")).toBeInTheDocument();
+  });
+
+  it("uses one Lock glyph, and no alternate icon", async () => {
+    const api = listApi([contractRow({ isConfidential: true })]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    const { view } = renderAt("/contracts");
+
+    const marker = await screen.findByRole("img", { name: MARKER });
+    expect(marker.querySelector("svg.lucide-lock")).not.toBeNull();
+    // DES-009 admits no alternate — the glyph is the affordance.
+    expect(view.container.querySelector("svg.lucide-shield-alert")).toBeNull();
+    expect(view.container.querySelector("svg.lucide-eye-off")).toBeNull();
+  });
+});
+
 describe("a Contributor on the /contracts destination (M9/1)", () => {
   /**
    * The list stub with both Member+ picker reads walled off. The

@@ -64,7 +64,9 @@
  * record like any other, committed inline (DES-017) from the Contract
  * card; the banner above the sub-bar is DES-009's Tier 2, drawn as
  * `S8 ConfBanner` in the C8 mock and rendered for every viewer who
- * reaches a confidential record.
+ * reaches a confidential record. The two entity-generic panels take
+ * the flag too: DES-009's Tier 1 micro-marker on every comment and
+ * every activity entry, and its Tier 3 notice under the composer.
  *
  * Three actors may change the audience — Administrators, the record's
  * creator, and its Owner (CTR-022). They are the only ones who get a
@@ -263,19 +265,25 @@ function ContractRecord() {
   const intl = useIntl();
   const navigate = useNavigate();
 
+  /** The saved record — the server's truth after the last commit. */
+  const [saved, setSaved] = useState<ContractRow>(contract);
+
   /** The conversation about this record (CMT-004), keyed by the
    * entity reference the panel takes — it never learns it is a
    * contract. Every viewer who reaches the page reaches the thread; the
-   * API decides which tiers they hear. */
+   * API decides which tiers they hear.
+   *
+   * The flag rides along so the panel can wear DES-009's Tier 1 micro
+   * marker and say its Tier 3 notice. It is read from the saved row and
+   * not the loader's copy, so flagging the record on this page moves
+   * the panel with it, exactly as it moves the banner. */
   const chatApplet = useCommentApplet({
     entityType: "contract",
     entityId: contract.id,
     role: user.role,
     viewerId: user.id,
+    confidential: saved.isConfidential,
   });
-
-  /** The saved record — the server's truth after the last commit. */
-  const [saved, setSaved] = useState<ContractRow>(contract);
   /** The fields the contract's type attaches, in attachment order. They
    * are state rather than loader data because a re-type replaces them,
    * and the PATCH that re-types answers with the new set. */
@@ -308,6 +316,7 @@ function ContractRecord() {
   const historyApplet = useActivityApplet({
     entityType: "contract",
     entityId: contract.id,
+    confidential: saved.isConfidential,
     fields: attached,
     referenceNames: useMemo(
       () =>
