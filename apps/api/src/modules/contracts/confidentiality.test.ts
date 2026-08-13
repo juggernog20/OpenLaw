@@ -32,6 +32,15 @@
  * it is not a secret; a viewer who does not reach it at all is answered
  * with the missing-record 404.
  *
+ * The third subject is every other write (M10/3). A mutation against a
+ * contract the viewer cannot reach is refused exactly as a mutation
+ * against a contract that does not exist — the per-field patch whatever
+ * it carries, the status change, the team add and remove, the
+ * counterparty add, remove and primary change, and archive and restore.
+ * The matrix sends each of them twice, once at the walled record and
+ * once at a number nothing was ever created under, and the two answers
+ * must be one answer. Writes leak no more than reads.
+ *
  * The read tests below the write ones seed the flag straight into the
  * column, because a fixture that walls a record off is not the subject
  * of a read test.
@@ -120,6 +129,12 @@ interface MentionCandidateRow {
   tiers: string[];
 }
 
+interface CounterpartyRow {
+  id: string;
+  name: string;
+  isPrimary: boolean;
+}
+
 beforeAll(async () => {
   harness = await startHarness();
   const setup = await harness.app.inject({
@@ -159,20 +174,37 @@ afterAll(async () => {
   await harness.stop();
 });
 
-/** The `nda` seed type, which every contract here is created as. */
-async function ndaTypeId(): Promise<string> {
+/** The picker read behind the create dialog, as the Administrator. */
+async function contractOptions(): Promise<{
+  contractTypes: { id: string; slug: string }[];
+  contractStatuses: { id: string; slug: string }[];
+}> {
   const res = await harness.app.inject({
     method: "GET",
     url: "/api/v1/contracts/options",
     cookies: adminCookies,
   });
   expect(res.statusCode, res.body).toBe(200);
-  const nda = (res.json().contractTypes as { id: string; slug: string }[]).find(
-    (row) => row.slug === "nda",
-  );
+  return res.json();
+}
+
+/** The `nda` seed type, which every contract here is created as. */
+async function ndaTypeId(): Promise<string> {
+  const nda = (await contractOptions()).contractTypes.find((row) => row.slug === "nda");
   expect(nda, "the nda seed type").toBeDefined();
   return nda!.id;
 }
+
+/** A live CTR-001 status other than the one every contract is born on,
+ * so a status change is a real change. */
+async function reviewStatusId(): Promise<string> {
+  const statuses = (await contractOptions()).contractStatuses;
+  const next = statuses.find((row) => row.slug !== DRAFT_SLUG);
+  expect(next, "a live status beyond draft").toBeDefined();
+  return next!.id;
+}
+
+const DRAFT_SLUG = "draft";
 
 /** Creates a contract as the Administrator, requiring success. The
  * creator takes the `creator` team row, which is how every contract in
@@ -311,6 +343,78 @@ async function candidates(
   const res = await readCandidates(cookies, entityId);
   expect(res.statusCode, res.body).toBe(200);
   return res.json().candidates as MentionCandidateRow[];
+}
+
+/** The rest of the contract's mutation seams, raw — the M10/3 matrix
+ * aims every one of them at a record the viewer cannot reach. */
+const addTeamMember = (
+  cookies: Record<string, string>,
+  number: number,
+  payload: Record<string, unknown>,
+) =>
+  harness.app.inject({ method: "POST", url: `/api/v1/contracts/${number}/team`, cookies, payload });
+
+const removeTeamMember = (
+  cookies: Record<string, string>,
+  number: number,
+  userId: string,
+  role: string,
+) =>
+  harness.app.inject({
+    method: "DELETE",
+    url: `/api/v1/contracts/${number}/team/${userId}/${role}`,
+    cookies,
+  });
+
+const addCounterparty = (
+  cookies: Record<string, string>,
+  number: number,
+  payload: Record<string, unknown>,
+) =>
+  harness.app.inject({
+    method: "POST",
+    url: `/api/v1/contracts/${number}/counterparties`,
+    cookies,
+    payload,
+  });
+
+const removeCounterparty = (
+  cookies: Record<string, string>,
+  number: number,
+  counterpartyId: string,
+) =>
+  harness.app.inject({
+    method: "DELETE",
+    url: `/api/v1/contracts/${number}/counterparties/${counterpartyId}`,
+    cookies,
+  });
+
+const setPrimaryCounterparty = (
+  cookies: Record<string, string>,
+  number: number,
+  counterpartyId: string,
+) =>
+  harness.app.inject({
+    method: "POST",
+    url: `/api/v1/contracts/${number}/counterparties/${counterpartyId}/primary`,
+    cookies,
+  });
+
+const archiveContract = (cookies: Record<string, string>, number: number) =>
+  harness.app.inject({ method: "POST", url: `/api/v1/contracts/${number}/archive`, cookies });
+
+const restoreContract = (cookies: Record<string, string>, number: number) =>
+  harness.app.inject({ method: "POST", url: `/api/v1/contracts/${number}/restore`, cookies });
+
+/** Puts a named counterparty on a contract as the Administrator,
+ * answering the row it landed as. */
+async function putCounterpartyOn(number: number, name: string): Promise<CounterpartyRow> {
+  const res = await addCounterparty(adminCookies, number, { name });
+  expect(res.statusCode, res.body).toBe(201);
+  const parties = res.json().counterparties as CounterpartyRow[];
+  const party = parties.find((row) => row.name === name);
+  expect(party, name).toBeDefined();
+  return party!;
 }
 
 describe("the Confidential flag and the contract list (M10/1)", () => {
@@ -783,6 +887,217 @@ describe("who may set and clear the flag (M10/2, DD-014)", () => {
     expect((await getContract(adminCookies, contract.number)).json().contract.isConfidential).toBe(
       false,
     );
+  });
+});
+
+/** One mutation seam, as a name and a call that can be aimed at any
+ * number — so the same write can be sent at the walled record and at a
+ * number nothing was ever created under, and the two answers compared. */
+type Mutation = readonly [
+  what: string,
+  against: (number: number) => ReturnType<typeof getContract>,
+];
+
+/**
+ * Every mutation a contract has, aimed at whoever holds these cookies:
+ * the per-field patch (each field it commits, and an empty body), the
+ * status change, the team add and remove, the counterparty add, remove
+ * and primary change, and archive and restore.
+ *
+ * The ids the calls carry are real, so each one would land if reach let
+ * it through — a matrix built out of ids that name nothing would pass on
+ * the wrong refusal.
+ */
+async function everyMutation(
+  cookies: Record<string, string>,
+  fixture: { teamMemberId: string; parties: readonly CounterpartyRow[] },
+): Promise<Mutation[]> {
+  const statusId = await reviewStatusId();
+  const [primaryParty, secondParty] = fixture.parties;
+  return [
+    ["the per-field patch: title", (n) => patchContract(cookies, n, { title: "Renamed outside" })],
+    ["the per-field patch: the Owner", (n) => patchContract(cookies, n, { managerId: null })],
+    [
+      "the per-field patch: the value",
+      (n) =>
+        patchContract(cookies, n, { value: { amount: 1, currency: "USD", cadence: "one_time" } }),
+    ],
+    [
+      "the per-field patch: a custom field",
+      (n) => patchContract(cookies, n, { customFields: { governing_law: "England" } }),
+    ],
+    // #146 enforced reach only when the flag was in the payload. Every
+    // patch enforces it now, whatever it carries — including one that
+    // carries nothing, which is the request that asks the record to
+    // answer for itself and nothing more.
+    ["the per-field patch: nothing at all", (n) => patchContract(cookies, n, {})],
+    ["the flag itself", (n) => patchContract(cookies, n, { isConfidential: false })],
+    ["the status change", (n) => patchContract(cookies, n, { statusId })],
+    [
+      "a team add",
+      (n) => addTeamMember(cookies, n, { userId: fixture.teamMemberId, role: "watcher" }),
+    ],
+    ["a team remove", (n) => removeTeamMember(cookies, n, fixture.teamMemberId, "member")],
+    ["a counterparty add", (n) => addCounterparty(cookies, n, { name: "Outside Added Ltd" })],
+    ["a counterparty remove", (n) => removeCounterparty(cookies, n, primaryParty!.id)],
+    ["a counterparty primary change", (n) => setPrimaryCounterparty(cookies, n, secondParty!.id)],
+    ["archive", (n) => archiveContract(cookies, n)],
+    ["restore", (n) => restoreContract(cookies, n)],
+  ];
+}
+
+describe("every mutation against a confidential contract (M10/3)", () => {
+  it("answers a non-team Legal Team Member exactly as a missing record, on every route", async () => {
+    const walled = await newContract("Confi writes: the walled one");
+    await putOnTeam(walled.number, idOf(MEMBER), "member");
+    const first = await putCounterpartyOn(walled.number, "Confi Writes Primary Ltd");
+    const second = await putCounterpartyOn(walled.number, "Confi Writes Second Ltd");
+    await markConfidential(walled.id);
+
+    const mutations = await everyMutation(outsiderCookies, {
+      teamMemberId: idOf(MEMBER),
+      parties: [first, second],
+    });
+    // A number nothing was ever created under. The same call is sent
+    // twice — once at the walled record, once here — and the two
+    // answers must be one answer.
+    const missing = 999_999;
+    for (const [what, against] of mutations) {
+      const refused = await against(walled.number);
+      const absent = await against(missing);
+      expect(refused.statusCode, `${what}: ${refused.body}`).toBe(404);
+      expect(refused.headers["content-type"], what).toContain("application/problem+json");
+      // `instance` is the URL the client itself asked for, so it is the
+      // one field two different requests are entitled to differ on.
+      expect(withoutInstance(refused.json()), what).toEqual(withoutInstance(absent.json()));
+      // Not the title, not the id, and not a party the record names.
+      expect(refused.body, what).not.toContain("the walled one");
+      expect(refused.body, what).not.toContain(walled.id);
+      expect(refused.body, what).not.toContain("Confi Writes Primary Ltd");
+    }
+
+    // Nothing landed. The record is as the Administrator left it, down
+    // to its team, its parties, and its flag.
+    const after = await getContract(adminCookies, walled.number);
+    expect(after.statusCode, after.body).toBe(200);
+    expect(after.json().contract).toMatchObject({
+      title: "Confi writes: the walled one",
+      isConfidential: true,
+      archivedAt: null,
+    });
+    expect((after.json().team as { id: string }[]).map((row) => row.id)).toContain(idOf(MEMBER));
+    const parties = after.json().counterparties as CounterpartyRow[];
+    expect(parties.map((row) => row.name)).toEqual([
+      "Confi Writes Primary Ltd",
+      "Confi Writes Second Ltd",
+    ]);
+    expect(parties.find((row) => row.isPrimary)?.name).toBe("Confi Writes Primary Ltd");
+  });
+
+  it("refuses reach before it refuses the archived record, so a 409 never says the record is there", async () => {
+    const walled = await newContract("Confi writes: archived and out of reach");
+    await markConfidential(walled.id);
+    const archived = await archiveContract(adminCookies, walled.number);
+    expect(archived.statusCode, archived.body).toBe(200);
+
+    // An archived contract answers 409 to everyone who reaches it. This
+    // viewer must never get that far: the state of a record they cannot
+    // see is not theirs to learn.
+    const refused = await patchContract(outsiderCookies, walled.number, { title: "Renamed" });
+    expect(refused.statusCode, refused.body).toBe(404);
+    expect(refused.json()).toMatchObject({ status: 404 });
+    expect(refused.body).not.toContain("archived");
+  });
+
+  it("takes the mutation away the moment the viewer's last team row comes off", async () => {
+    const walled = await newContract("Confi writes: the row that was taken back");
+    await putOnTeam(walled.number, idOf(MEMBER), "member");
+    await markConfidential(walled.id);
+
+    const allowed = await patchContract(memberCookies, walled.number, { title: "Renamed inside" });
+    expect(allowed.statusCode, allowed.body).toBe(200);
+
+    const removed = await removeTeamMember(adminCookies, walled.number, idOf(MEMBER), "member");
+    expect(removed.statusCode, removed.body).toBe(200);
+
+    // The predicate reads the rows live, and it reads them inside the
+    // write's own transaction — so the next write is already refused.
+    const refused = await patchContract(memberCookies, walled.number, { title: "Renamed after" });
+    expect(refused.statusCode, refused.body).toBe(404);
+    expect((await getContract(adminCookies, walled.number)).json().contract.title).toBe(
+      "Renamed inside",
+    );
+  });
+});
+
+describe("who still mutates a confidential contract (M10/3)", () => {
+  it("leaves a team-row holder, the Owner, and the Administrator writing everything as before", async () => {
+    for (const [who, cookies, onTeam] of [
+      ["a team Member", memberCookies, true],
+      ["the Owner with no team row", ownerCookies, false],
+      ["the Administrator with neither", adminCookies, false],
+    ] as const) {
+      const walled = await newContract(`Confi writes: ${who} keeps working`);
+      await setOwner(walled.number, idOf(OWNER));
+      if (onTeam) await putOnTeam(walled.number, idOf(MEMBER), "member");
+      const first = await putCounterpartyOn(walled.number, `Confi Keeps Primary ${who} Ltd`);
+      const second = await putCounterpartyOn(walled.number, `Confi Keeps Second ${who} Ltd`);
+      await markConfidential(walled.id);
+
+      const statusId = await reviewStatusId();
+      const attempts: readonly [string, () => ReturnType<typeof getContract>, number][] = [
+        [
+          "the title",
+          () => patchContract(cookies, walled.number, { title: `Renamed by ${who}` }),
+          200,
+        ],
+        ["the status", () => patchContract(cookies, walled.number, { statusId }), 200],
+        [
+          "a team add",
+          () => addTeamMember(cookies, walled.number, { userId: idOf(TEAMMATE), role: "watcher" }),
+          201,
+        ],
+        [
+          "a counterparty add",
+          () => addCounterparty(cookies, walled.number, { name: `Confi Keeps Added ${who} Ltd` }),
+          201,
+        ],
+      ];
+      for (const [what, send, expected] of attempts) {
+        const res = await send();
+        expect(res.statusCode, `${who} / ${what}: ${res.body}`).toBe(expected);
+      }
+
+      // The sequenced writes, which each need the one before it.
+      const dropped = await removeTeamMember(cookies, walled.number, idOf(TEAMMATE), "watcher");
+      expect(dropped.statusCode, `${who}: ${dropped.body}`).toBe(200);
+      const promoted = await setPrimaryCounterparty(cookies, walled.number, second.id);
+      expect(promoted.statusCode, `${who}: ${promoted.body}`).toBe(200);
+      const dismissed = await removeCounterparty(cookies, walled.number, first.id);
+      expect(dismissed.statusCode, `${who}: ${dismissed.body}`).toBe(200);
+      const gone = await archiveContract(cookies, walled.number);
+      expect(gone.statusCode, `${who}: ${gone.body}`).toBe(200);
+      const back = await restoreContract(cookies, walled.number);
+      expect(back.statusCode, `${who}: ${back.body}`).toBe(200);
+
+      expect((await getContract(adminCookies, walled.number)).json().contract.title).toBe(
+        `Renamed by ${who}`,
+      );
+    }
+  });
+
+  it("keeps a Contributor on the team refused at the Member+ floor, flag or no flag", async () => {
+    const walled = await newContract("Confi writes: the Contributor's own");
+    await putOnTeam(walled.number, idOf(CONTRIBUTOR), "contributor");
+    await markConfidential(walled.id);
+
+    // CTR-021 keeps every mutation Member+. A Contributor reaches the
+    // record and is still refused the write — with the guard's own 403,
+    // which names no record, rather than the reach 404.
+    const refused = await patchContract(contributorCookies, walled.number, { title: "Renamed" });
+    expect(refused.statusCode, refused.body).toBe(403);
+    expect(refused.headers["content-type"]).toContain("application/problem+json");
+    expect((await getContract(contributorCookies, walled.number)).statusCode).toBe(200);
   });
 });
 
