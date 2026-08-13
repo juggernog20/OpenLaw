@@ -6,6 +6,12 @@
  * container contexts are established here — `shell` on the shell
  * column and `page` on the main region — so content components query
  * their container, never the viewport (DES-012).
+ *
+ * One slot sits between the nav and the sub-bar: the record banner
+ * (DES-009 Tier 2). It is a slot on the shell rather than the first
+ * thing a page draws because it is chrome — it belongs with the nav
+ * above it and the sub-bar below it, and the C8 mock stacks the three
+ * in exactly that order.
  */
 
 import { useCallback, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
@@ -24,12 +30,17 @@ import type { ShellUser } from "./user-menu";
 export function AppShell({
   user,
   onSignOut,
+  banner,
   subbar,
   flush = false,
   children,
 }: Readonly<{
   user: ShellUser;
   onSignOut: () => void;
+  /** Chrome between the nav and the sub-bar — DES-009's confidentiality
+   * banner today, and nothing else. It is persistent by contract: the
+   * shell renders whatever it is given and offers no way to close it. */
+  banner?: ReactNode;
   subbar?: ReactNode;
   /** Edge-to-edge main region for pages that own their gutters (the settings rail). */
   flush?: boolean;
@@ -72,6 +83,7 @@ export function AppShell({
         <SkipLink />
         <AppHeader user={user} onSignOut={onSignOut} />
         <TopNav role={user.role} />
+        {banner}
         {subbar}
         {/* tabIndex={-1} makes the skip-link target programmatically
             focusable, so activating the link moves keyboard focus here in

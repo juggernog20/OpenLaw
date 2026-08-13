@@ -98,6 +98,8 @@ function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
     value: null,
     description: null,
     customFields: {},
+    // Open by default; the flag is opt-in, per record (DD-014).
+    isConfidential: false,
     archivedAt: null,
     createdAt: "2026-08-01T00:00:00.000Z",
     updatedAt: "2026-08-01T00:00:00.000Z",
@@ -131,6 +133,7 @@ function listApi(live: Record<string, unknown>[], archived: Record<string, unkno
         title: string;
         contractTypeId: string;
         customFields?: Record<string, unknown>;
+        isConfidential?: boolean;
       };
       const created = contractRow({
         id: "c-new",
@@ -139,6 +142,7 @@ function listApi(live: Record<string, unknown>[], archived: Record<string, unkno
         contractTypeId: body.contractTypeId,
         contractTypeName: body.contractTypeId === "t-nda" ? "NDA" : "MSA",
         customFields: body.customFields ?? {},
+        isConfidential: body.isConfidential ?? false,
       });
       rows.unshift(created);
       return json(201, { contract: created });
@@ -246,12 +250,40 @@ describe("the /contracts destination", () => {
 
     await waitFor(() =>
       expect(api.creates).toEqual([
-        { title: "Globex NDA", contractTypeId: "t-nda", customFields: {} },
+        { title: "Globex NDA", contractTypeId: "t-nda", customFields: {}, isConfidential: false },
       ]),
     );
     expect(await screen.findByRole("link", { name: "Globex NDA" })).toHaveAttribute(
       "href",
       "/contracts/43",
+    );
+  });
+
+  it("sets the Confidential flag at creation, so the record is never open even briefly", async () => {
+    // DD-014's story 5: the actor is the creator by definition, so
+    // whoever may create a contract may be born one confidential.
+    const api = listApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts");
+    const user = userEvent.setup();
+
+    await openCreateDialog(user);
+    await user.type(screen.getByLabelText("Title"), "Project Atlas NDA");
+    await user.selectOptions(screen.getByLabelText("Contract type"), "t-nda");
+    await user.click(
+      screen.getByRole("switch", { name: "Confidential — restrict to the contract team" }),
+    );
+    await user.click(screen.getByRole("button", { name: "Create" }));
+
+    await waitFor(() =>
+      expect(api.creates).toEqual([
+        {
+          title: "Project Atlas NDA",
+          contractTypeId: "t-nda",
+          customFields: {},
+          isConfidential: true,
+        },
+      ]),
     );
   });
 
@@ -301,6 +333,7 @@ describe("the /contracts destination", () => {
           title: "Orion MSA",
           contractTypeId: "t-msa",
           customFields: { governing_law: "England & Wales" },
+          isConfidential: false,
         },
       ]),
     );

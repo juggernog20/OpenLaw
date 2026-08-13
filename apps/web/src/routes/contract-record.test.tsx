@@ -230,6 +230,8 @@ function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
     value: null,
     description: "Three-year platform engagement.",
     customFields: {},
+    // Open by default; the flag is opt-in, per record (DD-014).
+    isConfidential: false,
     archivedAt: null,
     createdAt: "2026-08-01T00:00:00.000Z",
     updatedAt: "2026-08-01T00:00:00.000Z",
@@ -1212,6 +1214,11 @@ describe("the /contracts/:number record page", () => {
     expect(
       screen.queryByRole("button", { name: /Take Helix Labs GmbH off the contract/ }),
     ).not.toBeInTheDocument();
+    // The audience freezes with the facts: an archived record refuses
+    // the flag edit like every other edit (DD-014).
+    expect(
+      screen.getByRole("switch", { name: "Confidential — restrict to the contract team" }),
+    ).toBeDisabled();
     // The team freezes with everything else.
     expect(screen.getByRole("button", { name: "Add team member" })).toBeDisabled();
     expect(
@@ -3058,5 +3065,233 @@ describe("the contract record's history applet (M9/6)", () => {
 
     const feed = await screen.findByRole("list", { name: "History" });
     expect(within(feed).getAllByRole("listitem")[0]).toHaveTextContent("Nadia Counsel commented");
+  });
+});
+
+/**
+ * The record page's confidentiality surfaces (M10/4): DES-009's Tier 2
+ * banner and the flag control.
+ *
+ * The banner is chrome, so what is asserted is that it is there, that
+ * it carries the tokens, and that nothing closes it. The colours
+ * themselves are covered by the contrast lint — jsdom computes none —
+ * so the classes that carry the treatment are the only thing there is
+ * to read, the way the comment row's wash is already asserted.
+ *
+ * The control's gate says what `confidentialityWrite` says on the
+ * server: an Administrator, the `creator` team row, and the Owner may
+ * change the audience, and every other included viewer reads it inert.
+ * A viewer who cannot reach the record never gets this far — the API
+ * answers 404, which the Contributor block above already proves.
+ */
+describe("the contract record's confidentiality surfaces (M10/4)", () => {
+  const BANNER = "Confidential contract";
+  const FLAG = "Confidential — restrict to the contract team";
+
+  /** The banner's own region. It is a landmark so the statement stays
+   * reachable after half an hour inside the record. */
+  function banner() {
+    return screen.queryByRole("region", { name: BANNER });
+  }
+
+  it("renders no banner on a contract that is not confidential", async () => {
+    stubApi({ signedIn: MEMBER, extra: recordApi(contractRow()).handler });
+    renderAt("/contracts/42");
+
+    await screen.findByRole("heading", { level: 1, name: /Acme master services agreement/ });
+    expect(banner()).not.toBeInTheDocument();
+    // The control is there either way: it is the record's audience,
+    // and an open record states that it is open.
+    expect(screen.getByRole("switch", { name: FLAG })).not.toBeChecked();
+  });
+
+  it("banners a confidential record with the DES-009 tokens, and offers no way to close it", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: recordApi(contractRow({ isConfidential: true })).handler,
+    });
+    renderAt("/contracts/42");
+
+    const strip = await screen.findByRole("region", { name: BANNER });
+    expect(strip).toHaveTextContent(
+      "Confidential contract — the contract team, the Owner, and Administrators see it.",
+    );
+    // The existing tokens, not a hand-picked colour or height.
+    expect(strip).toHaveClass("bg-confidential-bg");
+    expect(strip).toHaveClass("text-confidential");
+    expect(strip).toHaveClass("h-(--height-confidential-banner)");
+    // Chrome, not a notification: nothing in it dismisses it.
+    expect(within(strip).queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("offers Manage team to an Administrator, and lands it on the Team card", async () => {
+    // The roster names somebody else as creator and there is no Owner,
+    // so the role is the only thing that qualifies this viewer — the
+    // default roster's creator is u1, which would let this pass on the
+    // creator clause alone.
+    stubApi({
+      signedIn: ADMIN,
+      extra: recordApi(contractRow({ isConfidential: true }), [person("u2", "creator")]).handler,
+    });
+    renderAt("/contracts/42");
+
+    const strip = await screen.findByRole("region", { name: BANNER });
+    expect(within(strip).getByRole("link", { name: "Manage team" })).toHaveAttribute(
+      "href",
+      "#contract-team",
+    );
+    expect(screen.getByRole("region", { name: "Team" })).toHaveAttribute("id", "contract-team");
+    // The same clause gates the control: an Administrator off the team
+    // gets a working switch, not the inert reading.
+    expect(screen.getByRole("switch", { name: FLAG })).toBeEnabled();
+  });
+
+  it("offers Manage team to the creator — the row DD-014 means by that word", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: recordApi(contractRow({ isConfidential: true }), [person("u2", "creator")]).handler,
+    });
+    renderAt("/contracts/42");
+
+    const strip = await screen.findByRole("region", { name: BANNER });
+    expect(within(strip).getByRole("link", { name: "Manage team" })).toBeInTheDocument();
+  });
+
+  it("offers Manage team to the Owner, who joined the actor set in CTR-022", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: recordApi(contractRow({ isConfidential: true, manager: person("u2") }), [
+        person("u1", "creator"),
+      ]).handler,
+    });
+    renderAt("/contracts/42");
+
+    const strip = await screen.findByRole("region", { name: BANNER });
+    expect(within(strip).getByRole("link", { name: "Manage team" })).toBeInTheDocument();
+    // Ownership alone is what makes the control live here: the creator
+    // row belongs to somebody else.
+    expect(screen.getByRole("switch", { name: FLAG })).toBeEnabled();
+  });
+
+  it("offers it to nobody else on the team", async () => {
+    // Working on a record is not a claim on who else may see it.
+    stubApi({
+      signedIn: MEMBER,
+      extra: recordApi(contractRow({ isConfidential: true }), [
+        person("u1", "creator"),
+        person("u2", "member"),
+      ]).handler,
+    });
+    renderAt("/contracts/42");
+
+    const strip = await screen.findByRole("region", { name: BANNER });
+    expect(within(strip).queryByRole("link", { name: "Manage team" })).not.toBeInTheDocument();
+  });
+
+  it("sets the flag through the record, and the banner follows the commit", async () => {
+    const api = recordApi(contractRow(), [person("u2", "creator")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("switch", { name: FLAG }));
+    await waitFor(() => expect(api.patches).toEqual([{ isConfidential: true }]));
+    expect(await screen.findByRole("region", { name: BANNER })).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: FLAG })).toBeChecked();
+  });
+
+  it("clears the flag again, and the banner goes with it", async () => {
+    const api = recordApi(contractRow({ isConfidential: true }), [person("u2", "creator")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("switch", { name: FLAG }));
+    await waitFor(() => expect(api.patches).toEqual([{ isConfidential: false }]));
+    await waitFor(() => expect(banner()).not.toBeInTheDocument());
+  });
+
+  it("shows the seam's refusal beside the control, and keeps the saved truth", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/contracts/42" && call.method === "PATCH") {
+          return problem(403, "You do not have permission to perform this action.");
+        }
+        return recordApi(contractRow(), [person("u2", "creator")]).handler(call);
+      },
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("switch", { name: FLAG }));
+    expect(
+      await screen.findByText("You do not have permission to perform this action."),
+    ).toBeInTheDocument();
+    // Nothing was adopted: the record is still open, and it still says so.
+    expect(screen.getByRole("switch", { name: FLAG })).not.toBeChecked();
+    expect(banner()).not.toBeInTheDocument();
+  });
+
+  it("gives a team Member who is none of the three actors the inert control, not a broken one", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: recordApi(contractRow({ isConfidential: true }), [
+        person("u1", "creator"),
+        person("u2", "member"),
+      ]).handler,
+    });
+    renderAt("/contracts/42");
+
+    const flag = await screen.findByRole("switch", { name: FLAG });
+    // Inert, not absent: the audience is a fact of the record, and a
+    // control that vanished would leave it unreadable on the card.
+    expect(flag).toBeDisabled();
+    expect(flag).toBeChecked();
+    expect(screen.getByText(/Everyone outside the contract team loses the record/)).toBeVisible();
+  });
+
+  it("gives a Contributor on the team the inert control too", async () => {
+    const api = recordApi(contractRow({ isConfidential: true }), [
+      person("u1", "creator"),
+      person("u3", "contributor"),
+    ]);
+    stubApi({
+      signedIn: CONTRIBUTOR,
+      extra: (call) =>
+        ["/api/v1/contracts/options", "/api/v1/entities"].includes(call.url.pathname)
+          ? problem(403, "You do not have permission to perform this action.")
+          : api.handler(call),
+    });
+    renderAt("/contracts/42");
+
+    expect(await screen.findByRole("region", { name: BANNER })).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: FLAG })).toBeDisabled();
+  });
+
+  it("freezes the control on an archived record, like every other edit", async () => {
+    const api = recordApi(contractRow({ archivedAt: "2026-08-02T00:00:00.000Z" }), [
+      person("u2", "creator"),
+    ]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+
+    expect(await screen.findByRole("switch", { name: FLAG })).toBeDisabled();
+  });
+
+  it("uses one Lock glyph on both surfaces, and no alternate icon anywhere", async () => {
+    stubApi({
+      signedIn: ADMIN,
+      extra: recordApi(contractRow({ isConfidential: true })).handler,
+    });
+    const { view } = renderAt("/contracts/42");
+
+    const strip = await screen.findByRole("region", { name: BANNER });
+    // The banner and the control each carry one, and it is the same
+    // glyph — DES-009 admits no alternate.
+    expect(strip.querySelector("svg.lucide-lock")).not.toBeNull();
+    expect(view.container.querySelectorAll("svg.lucide-lock")).toHaveLength(2);
+    expect(view.container.querySelector("svg.lucide-shield-alert")).toBeNull();
+    expect(view.container.querySelector("svg.lucide-eye-off")).toBeNull();
   });
 });

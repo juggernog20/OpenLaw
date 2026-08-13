@@ -48,6 +48,7 @@ import { currentUser, needsSetup } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
 import { Avatar } from "../components/avatar";
+import { ConfidentialToggle } from "../components/confidential-toggle";
 import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
 import { PageTitle } from "../components/page-title";
 import { Button } from "../components/ui/button";
@@ -505,6 +506,10 @@ function CreateContractDialog({
    * types and back — a name typed once should not have to be typed
    * again because someone checked another type on the way. */
   const [fieldDrafts, setFieldDrafts] = useState<Record<string, CustomFieldDraft>>({});
+  /** DD-014's flag, set here so a sensitive record is never visible to
+   * the wrong audience, even briefly. The actor is the creator by
+   * definition, so no gate is needed: whoever may create may flag. */
+  const [confidential, setConfidential] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -569,7 +574,9 @@ function CreateContractDialog({
     }
     setBusy(true);
     const { data, error: problem } = await api
-      .POST("/api/v1/contracts", { body: { title: title.trim(), contractTypeId, customFields } })
+      .POST("/api/v1/contracts", {
+        body: { title: title.trim(), contractTypeId, customFields, isConfidential: confidential },
+      })
       .catch(() => ({ data: null, error: undefined }));
     setBusy(false);
     if (!data) {
@@ -671,6 +678,14 @@ function CreateContractDialog({
               )}
             </div>
           ))}
+          {/* DD-014's flag, where the C10 mock draws it: the last row
+              before the note, so the audience is decided before the
+              record exists rather than in the seconds after. */}
+          <ConfidentialToggle
+            id="contract-new-confidential"
+            confidential={confidential}
+            onChange={setConfidential}
+          />
           <p className="text-sm text-muted">
             <FormattedMessage
               id="contracts.form.draftNote"
