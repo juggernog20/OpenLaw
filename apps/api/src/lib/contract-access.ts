@@ -14,6 +14,11 @@
  * a record, and two copies of it would drift. The contract routes take
  * the reach half; the comment routes take both.
  *
+ * The mention candidates (CMT-007) are the same predicate turned around
+ * — run over the people on this record rather than over its rows — so
+ * the answer to "who can the typeahead offer" cannot disagree with the
+ * answer to "who is refused a mention at this tier".
+ *
  * **Filtering happens at query time, never at display time** (DD-016,
  * DD-017). A tier the viewer is not in never leaves the database, so no
  * total, badge, or page count can reveal that it exists.
@@ -25,18 +30,28 @@
 
 import {
   and,
+  asc,
   contracts,
   contractTeam,
   COMMENT_VISIBILITIES,
   eq,
   inArray,
+  isNull,
   sql,
+  users,
   type CommentVisibility,
   type Db,
   type SQL,
   type UserRole,
 } from "@openlaw/db";
 import type { AuthenticatedUser } from "../auth/guards.js";
+
+/**
+ * A database handle or a transaction inside one, as `ActivityWriter`
+ * already is. A caller that checks and then writes passes its
+ * transaction, so the check and the write share one snapshot.
+ */
+export type ContractAccessReader = Db | Parameters<Parameters<Db["transaction"]>[0]>[0];
 
 /** Every tier a Member+ hears — DD-016's three, widest last. */
 const ALL_TIERS: readonly CommentVisibility[] = COMMENT_VISIBILITIES;
@@ -140,4 +155,68 @@ export async function contractAudience(
   if (!row) return null;
   const tiers = readableTiers(user.role, row.onTeam);
   return tiers.length === 0 ? null : { contractId: row.id, tiers };
+}
+
+/** One person a comment on this record can address, and the tiers they
+ * would hear it at. */
+export interface MentionCandidate {
+  id: string;
+  displayName: string;
+  image: string | null;
+  /** The DD-016 tiers this person hears on this contract; never empty. */
+  tiers: readonly CommentVisibility[];
+}
+
+/**
+ * Everyone a comment on one contract can reach (CMT-007) — the
+ * typeahead's list, and the set the seam checks a posted mention
+ * against.
+ *
+ * It is the tier predicate run over the people rather than over the
+ * rows: a person belongs here when they hear at least one tier on this
+ * record. Member+ hear every tier on every contract, so they are all
+ * here whether or not they are on the team — CTR-021 already lets them
+ * open it. A Contributor is here only with a `contract_team` row, which
+ * is the act that grants their access; mentioning somebody does not
+ * grant it, so a Contributor off the team is not offered and a mention
+ * of them is refused.
+ *
+ * Anyone who hears nothing is left out rather than offered and refused.
+ * A name in a typeahead that no tier can reach is the trap the
+ * promotion confirmation exists to avoid.
+ *
+ * Archived people are out: they have left, and addressing a question to
+ * them reaches nobody (SET-005).
+ *
+ * `only` narrows the read to a handful of ids. The typeahead wants the
+ * whole list; a post that names three people wants three rows, not the
+ * directory. Both take the same answer, which is the point — one rule
+ * decides who the list offers and who a post may name.
+ */
+export async function contractMentionCandidates(
+  db: ContractAccessReader,
+  contractId: string,
+  only?: readonly string[],
+): Promise<MentionCandidate[]> {
+  const rows = await db
+    .select({
+      id: users.id,
+      displayName: users.displayName,
+      image: users.image,
+      role: users.role,
+      onTeam: sql<boolean>`exists (
+        select 1 from ${contractTeam}
+        where ${contractTeam.contractId} = ${contractId}
+          and ${contractTeam.userId} = ${users.id}
+      )`,
+    })
+    .from(users)
+    .where(and(isNull(users.archivedAt), only ? inArray(users.id, [...only]) : undefined))
+    // Alphabetical, as every people picker in the product is ordered.
+    .orderBy(asc(sql`lower(${users.displayName})`), asc(users.id));
+  return rows.flatMap((row) => {
+    const tiers = readableTiers(row.role, row.onTeam);
+    if (tiers.length === 0) return [];
+    return [{ id: row.id, displayName: row.displayName, image: row.image, tiers }];
+  });
 }

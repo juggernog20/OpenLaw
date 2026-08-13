@@ -136,7 +136,7 @@ every later module reuses, so it is slower than it looks and pays for itself thr
     (the table itself has existed since M5, fed by settings mutations; the audit-log view joins the
     Security group in `/settings`)
   - Edit-with-marker and soft delete; tier immutable after posting
-  - _Decisions:_ CMT-001 to CMT-005, DD-016, DD-017
+  - _Decisions:_ CMT-001 to CMT-007, DD-016, DD-017
 
 - [ ] **M10 — Confidentiality**
       _Demo:_ Mark a contract confidential; a Legal Team Member who isn't on it can't see it in the list, in

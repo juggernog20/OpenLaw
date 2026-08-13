@@ -254,6 +254,21 @@
   "comments.loadError": {
     "defaultMessage": "The conversation could not be read. Reopen the panel to try again."
   },
+  "comments.mention.available": {
+    "defaultMessage": "{count, plural, one {# person matches} other {# people match}}. Use the arrow keys to choose one."
+  },
+  "comments.mention.listLabel": {
+    "defaultMessage": "People you can mention"
+  },
+  "comments.mention.pickedLabel": {
+    "defaultMessage": "Mentioned"
+  },
+  "comments.mention.remove": {
+    "defaultMessage": "Remove {name}"
+  },
+  "comments.mention.unreachable": {
+    "defaultMessage": "{names} cannot be reached on this record at any audience you can post to. Take the mention out."
+  },
   "comments.placeholder": {
     "defaultMessage": "Add a comment…"
   },
@@ -262,6 +277,15 @@
   },
   "comments.postError": {
     "defaultMessage": "The comment could not be posted. Try again."
+  },
+  "comments.promote.body": {
+    "defaultMessage": "{names} cannot see a {current} comment. Post it at {promoted} instead to reach {count, plural, one {them} other {all of them}}."
+  },
+  "comments.promote.confirm": {
+    "defaultMessage": "Widen and post"
+  },
+  "comments.promote.title": {
+    "defaultMessage": "Widen the audience?"
   },
   "comments.tier.fullThread": {
     "defaultMessage": "Full thread"

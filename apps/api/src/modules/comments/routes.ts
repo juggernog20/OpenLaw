@@ -41,14 +41,31 @@
  * An archived record still takes comments. Archiving is a soft delete
  * for mistakes and imports (CONTEXT.md) and it freezes the record's
  * fields; the conversation about why it was archived is not one of them.
+ *
+ * **Mentions are a list, not prose** (M9/3, CMT-007). A post names the
+ * people it addresses by id, and each one becomes a `comment_mentions`
+ * row. Tier promotion reads that list here, and the M18 notification
+ * fan-out reads it later; neither re-parses a body. The seam refuses a
+ * comment whose mentions outrun its tier, whatever the client sent — the
+ * composer's confirmation explains the promotion, it does not enforce it.
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { and, asc, comments, COMMENT_VISIBILITIES, eq, inArray, users } from "@openlaw/db";
+import {
+  and,
+  asc,
+  commentMentions,
+  comments,
+  COMMENT_VISIBILITIES,
+  eq,
+  inArray,
+  sql,
+  users,
+} from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
-import { contractAudience } from "../../lib/contract-access.js";
+import { contractAudience, contractMentionCandidates } from "../../lib/contract-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
 /**
@@ -92,6 +109,14 @@ const AuthorSchema = z.object({
   archived: z.boolean(),
 });
 
+/** One mentioned person, as a posted comment carries them. The name is
+ * re-read from the users table rather than frozen into the row, so a
+ * chip renders whoever that person is now. */
+const MentionSchema = z.object({
+  id: z.string(),
+  displayName: z.string(),
+});
+
 const CommentSchema = z.object({
   id: z.string(),
   entityType: CommentEntityType,
@@ -99,8 +124,24 @@ const CommentSchema = z.object({
   author: AuthorSchema,
   body: z.string(),
   visibility: VisibilitySchema,
+  /** Who the comment addresses (CMT-007), alphabetical. Empty for a
+   * comment that names nobody. */
+  mentions: z.array(MentionSchema),
   createdAt: z.iso.datetime({ offset: true }),
 });
+
+/**
+ * The people a post may name. Bounded because an unbounded list is a
+ * way to make one insert arbitrarily large; twenty is far past any
+ * conversation a 2–10 person legal team holds on one record.
+ *
+ * Each id is bounded rather than shaped, for `RecordIdSchema`'s reason:
+ * every id in this API is an opaque text primary key, and no route
+ * asserts a UUID pattern. A well-formed id that names nobody this
+ * record can reach is refused below anyway, so shaping the string would
+ * add a second, weaker gate in front of the real one.
+ */
+const MentionsSchema = z.array(z.string().min(1).max(64)).max(20);
 
 /** The reference the thread is keyed by — one record, named by type and
  * id rather than by a contract's CTR-003 number, because the panel that
@@ -141,7 +182,40 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
 
   type ThreadRow = Awaited<ReturnType<typeof selectComments>>[number];
 
-  function toComment(row: ThreadRow) {
+  /** Derived from the response schema, so the projection and what the
+   * route promises cannot drift apart. */
+  type Mention = z.infer<typeof MentionSchema>;
+
+  /**
+   * Who each of these comments addresses, in one read. The list is a
+   * table, not a substring of the body, so this is a join rather than a
+   * parse — that is the whole reason `comment_mentions` exists.
+   */
+  async function mentionsOf(
+    db: Executor,
+    commentIds: readonly string[],
+  ): Promise<Map<string, Mention[]>> {
+    const byComment = new Map<string, Mention[]>();
+    if (commentIds.length === 0) return byComment;
+    const rows = await db
+      .select({
+        commentId: commentMentions.commentId,
+        id: users.id,
+        displayName: users.displayName,
+      })
+      .from(commentMentions)
+      .innerJoin(users, eq(commentMentions.userId, users.id))
+      .where(inArray(commentMentions.commentId, [...commentIds]))
+      .orderBy(asc(sql`lower(${users.displayName})`), asc(users.id));
+    for (const row of rows) {
+      const list = byComment.get(row.commentId);
+      if (list) list.push({ id: row.id, displayName: row.displayName });
+      else byComment.set(row.commentId, [{ id: row.id, displayName: row.displayName }]);
+    }
+    return byComment;
+  }
+
+  function toComment(row: ThreadRow, mentions: readonly Mention[] = []) {
     return {
       id: row.id,
       // Narrowed for the response schema: the column admits four types,
@@ -156,6 +230,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
       body: row.body,
       visibility: row.visibility,
+      mentions: [...mentions],
       createdAt: row.createdAt.toISOString(),
     };
   }
@@ -195,7 +270,49 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         // same-instant tie: uuidv7 is time-ordered, so that order is
         // still the posting order.
         .orderBy(asc(comments.createdAt), asc(comments.id));
-      return { comments: rows.map(toComment) };
+      const mentions = await mentionsOf(
+        app.db,
+        rows.map((row) => row.id),
+      );
+      return { comments: rows.map((row) => toComment(row, mentions.get(row.id))) };
+    },
+  );
+
+  app.get(
+    "/comments/mention-candidates",
+    {
+      preHandler: requireCommentReader,
+      schema: {
+        operationId: "listMentionCandidates",
+        summary:
+          "The people a comment on this record can address (CMT-007), " +
+          "each with the DD-016 tiers they hear on it — the @-typeahead's " +
+          "list, and what the promotion confirmation reads to work out " +
+          "the narrowest tier that includes everyone named. Somebody no " +
+          "tier reaches is left out rather than offered and refused. A " +
+          "record the viewer cannot reach answers 404",
+        tags: ["comments"],
+        querystring: EntityRefQuery,
+        response: {
+          200: z.object({
+            candidates: z.array(
+              z.object({
+                id: z.string(),
+                displayName: z.string(),
+                image: z.string().nullable(),
+                tiers: z.array(VisibilitySchema),
+              }),
+            ),
+          }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => {
+      const audience = await contractAudience(app.db, request.user, request.query.entityId);
+      if (!audience) throw httpError(404, NO_RECORD);
+      const candidates = await contractMentionCandidates(app.db, audience.contractId);
+      return { candidates: candidates.map((row) => ({ ...row, tiers: [...row.tiers] })) };
     },
   );
 
@@ -208,16 +325,23 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "Post a comment on a record at one of the DD-016 tiers. The " +
           "seam refuses a tier the poster is not in the room for, so a " +
-          "Contributor cannot post Legal Only whatever the client sends. " +
-          "The tier is immutable afterwards (CMT-005) — there is no " +
-          "route that changes it. Appends a comment.posted activity " +
-          "entry at the comment's own tier, in the same transaction",
+          "Contributor cannot post Legal Only whatever the client sends, " +
+          "and it refuses a comment whose mentions outrun its tier " +
+          "(CMT-007), so the composer's confirmation explains the " +
+          "promotion rather than enforcing it. The tier is immutable " +
+          "afterwards (CMT-005) — there is no route that changes it. " +
+          "Writes one comment_mentions row per person named, and appends " +
+          "a comment.posted activity entry at the comment's own tier, " +
+          "all in the same transaction",
         tags: ["comments"],
         body: z.strictObject({
           entityType: CommentEntityType,
           entityId: RecordIdSchema,
           body: CommentBodySchema,
           visibility: VisibilitySchema,
+          /** Who the comment addresses, by id. Repeats collapse: one
+           * person named twice is still one person to reach. */
+          mentions: MentionsSchema.optional(),
         }),
         response: {
           201: z.object({ comment: CommentSchema }),
@@ -235,7 +359,39 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         throw httpError(403, "You cannot post a comment at that visibility tier.");
       }
 
-      const row = await app.db.transaction(async (tx) => {
+      // One person named twice is one person to reach, and the row's
+      // compound key says so too.
+      const named = [...new Set(request.body.mentions ?? [])];
+
+      const comment = await app.db.transaction(async (tx) => {
+        // Checked inside the transaction, on the same snapshot the
+        // rows are written on: a team row dropped between the check and
+        // the insert must not leave a mention nobody can hear. A refusal
+        // thrown here rolls the transaction back and keeps its status.
+        if (named.length > 0) {
+          const candidates = await contractMentionCandidates(tx, audience.contractId, named);
+          const byId = new Map(candidates.map((candidate) => [candidate.id, candidate]));
+          // Somebody no tier on this record reaches is not addressable
+          // here at all. Mentioning a person does not put them on the
+          // team; adding them to the team is what grants them the record.
+          if (named.some((id) => !byId.has(id))) {
+            throw httpError(400, "That is not a person you can mention on this record.");
+          }
+          // The load-bearing refusal (CMT-007). The client's
+          // confirmation offers the promotion; this is what holds when
+          // the request did not come from it.
+          const unreachable = named
+            .map((id) => byId.get(id)!)
+            .filter((candidate) => !candidate.tiers.includes(visibility));
+          if (unreachable.length > 0) {
+            const names = unreachable.map((candidate) => candidate.displayName).join(", ");
+            throw httpError(
+              403,
+              `${names} cannot see a comment at that visibility tier. Widen the audience or take the mention out.`,
+            );
+          }
+        }
+
         const [created] = await tx
           .insert(comments)
           .values({
@@ -246,6 +402,11 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
             visibility,
           })
           .returning({ id: comments.id });
+        if (named.length > 0) {
+          await tx
+            .insert(commentMentions)
+            .values(named.map((userId) => ({ commentId: created!.id, userId })));
+        }
         // The entry rides the comment's own tier, so it is hidden from
         // exactly the people the comment is hidden from. Ids only: the
         // log is append-only, and text in a payload could never be
@@ -261,10 +422,11 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         // Read back through the same projection the thread uses, so the
         // row the poster gets is the row they will see on the next load.
         const [posted] = await selectComments(tx).where(eq(comments.id, created!.id));
-        return posted!;
+        const mentions = await mentionsOf(tx, [created!.id]);
+        return toComment(posted!, mentions.get(created!.id));
       });
 
-      return reply.status(201).send({ comment: toComment(row) });
+      return reply.status(201).send({ comment });
     },
   );
 };

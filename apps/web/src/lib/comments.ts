@@ -18,8 +18,18 @@ import { isMemberPlus, type Role } from "./roles";
 type ThreadResponse =
   paths["/api/v1/comments"]["get"]["responses"]["200"]["content"]["application/json"];
 
+type CandidatesResponse =
+  paths["/api/v1/comments/mention-candidates"]["get"]["responses"]["200"]["content"]["application/json"];
+
 /** One comment as the API answers it. */
 export type Comment = ThreadResponse["comments"][number];
+
+/** One person a comment addresses, as a posted comment carries them. */
+export type CommentMention = Comment["mentions"][number];
+
+/** One person the @-typeahead offers, with the tiers they hear on this
+ * record — the fact the promotion confirmation is computed from. */
+export type MentionCandidate = CandidatesResponse["candidates"][number];
 
 /** DD-016's audience tier, as stored and as posted. */
 export type CommentTier = Comment["visibility"];
@@ -98,3 +108,118 @@ export function composerTiers(role: Role): readonly CommentTier[] {
  * Full Thread instead, and that composer lands with the portal.
  */
 export const RECORD_DEFAULT_TIER: CommentTier = "working_team";
+
+/**
+ * How a mention reads in the body (CMT-007). The comment stays plain
+ * text — the `@` and the person's name, exactly as it would be typed —
+ * and the queryable list of who was named travels beside it. Nothing in
+ * the body is markup, so a body read anywhere else still reads as a
+ * sentence.
+ */
+export function mentionText(displayName: string): string {
+  return `@${displayName}`;
+}
+
+/**
+ * The picked names that begin with this one and run longer.
+ *
+ * One name can sit inside another — "@Casey" is the first half of
+ * "@Casey Contributor" — and display names carry spaces, so no word
+ * boundary tells the two apart. Where a longer picked name starts, the
+ * text is naming that person and not this one.
+ */
+function longerNames(token: string, tokens: readonly string[]): string[] {
+  return tokens.filter((other) => other.length > token.length && other.startsWith(token));
+}
+
+/** Where in the draft this name stands for this person, and not for a
+ * longer picked name that starts the same way. */
+function ownOccurrences(draft: string, token: string, longer: readonly string[]): number[] {
+  const hits: number[] = [];
+  for (let from = 0; from <= draft.length;) {
+    const at = draft.indexOf(token, from);
+    if (at === -1) break;
+    if (!longer.some((other) => draft.startsWith(other, at))) hits.push(at);
+    from = at + 1;
+  }
+  return hits;
+}
+
+/**
+ * Which of the people the author picked are still named in the draft.
+ *
+ * Picking a name writes it into the box, so deleting it there is how a
+ * mention is taken back. This keeps the two from disagreeing: a person
+ * the text no longer names is not somebody the comment addresses, and
+ * a post never carries a mention with no trace in what it says.
+ *
+ * Two people with the identical display name are one name in the text,
+ * so both stay on the list. That is CMT-007's recorded limit of keeping
+ * the body plain.
+ */
+export function namedInDraft(
+  draft: string,
+  picked: readonly MentionCandidate[],
+): MentionCandidate[] {
+  const tokens = picked.map((person) => mentionText(person.displayName));
+  return picked.filter((_person, index) => {
+    const token = tokens[index]!;
+    return ownOccurrences(draft, token, longerNames(token, tokens)).length > 0;
+  });
+}
+
+/**
+ * The draft with every mention of one person taken out of it — what the
+ * chip's remove control leaves behind.
+ *
+ * Each name goes with the space that follows it where there is one, so
+ * removing a mention does not leave a gap in the sentence. A longer
+ * picked name that starts the same way is left standing: taking back
+ * "@Casey" must not cut "@Casey Contributor" in half.
+ */
+export function withoutMention(
+  draft: string,
+  person: MentionCandidate,
+  picked: readonly MentionCandidate[],
+): string {
+  const token = mentionText(person.displayName);
+  const tokens = picked.map((other) => mentionText(other.displayName));
+  const hits = ownOccurrences(draft, token, longerNames(token, tokens));
+  let kept = "";
+  let from = 0;
+  for (const at of hits) {
+    if (at < from) continue;
+    kept += draft.slice(from, at);
+    const after = at + token.length;
+    from = draft.startsWith(" ", after) ? after + 1 : after;
+  }
+  return kept + draft.slice(from);
+}
+
+/** Who among the people named cannot hear a comment at this tier. */
+export function unreachableAt(
+  named: readonly MentionCandidate[],
+  tier: CommentTier,
+): MentionCandidate[] {
+  return named.filter((person) => !person.tiers.includes(tier));
+}
+
+/**
+ * The narrowest tier that reaches everybody named and that this author
+ * may post at, or `null` when no tier does both.
+ *
+ * `COMMENT_TIERS` is narrowest first, so the first tier that works is
+ * the smallest step. Widening the audience is the least the promotion
+ * can do; jumping to Full Thread would hand the conversation to a room
+ * nobody asked for.
+ */
+export function narrowestTierFor(
+  named: readonly MentionCandidate[],
+  allowed: readonly CommentTier[],
+): CommentTier | null {
+  return (
+    COMMENT_TIERS.find(
+      (tier) => allowed.includes(tier) && named.every((person) => person.tiers.includes(tier)),
+    ) ?? null
+  );
+}
