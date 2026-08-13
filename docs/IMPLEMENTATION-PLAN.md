@@ -36,9 +36,11 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arc 2, milestone 6** — types, statuses, and the field catalog. Arc 1 is done: the monorepo and
-CI, the authentication chain, the Compose stack a deployer actually runs, the themed app shell,
-and the `/settings` destination with its Personal and Organization rails.
+**Arc 2, milestone 10** — confidentiality, the last milestone of the arc. Arc 1 is done: the
+monorepo and CI, the authentication chain, the Compose stack a deployer actually runs, the themed
+app shell, and the `/settings` destination with its Personal and Organization rails. Arc 2 has the
+configurable types and statuses, the Entities registry, the contract record, and — with M9 — the
+conversation on a record and the two read surfaces over the activity log.
 
 ---
 
@@ -128,7 +130,7 @@ every later module reuses, so it is slower than it looks and pays for itself thr
   - List and detail views; per-field inline commit, no page edit mode
   - _Decisions:_ CTR-003, CTR-004, CTR-005, CTR-010, CTR-011, DES-017
 
-- [ ] **M9 — Comments and activity**
+- [x] **M9 — Comments and activity**
       _Demo:_ Post a Legal Only comment and a Full Thread comment on a contract, then watch the activity feed
       record a field edit at the right visibility tier.
   - One comment system: flat, chronological, @mentions, no nesting; segmented composer with tier badges
@@ -136,7 +138,8 @@ every later module reuses, so it is slower than it looks and pays for itself thr
     (the table itself has existed since M5, fed by settings mutations; the audit-log view joins the
     Security group in `/settings`)
   - Edit-with-marker and soft delete; tier immutable after posting
-  - _Decisions:_ CMT-001 to CMT-007, DD-016, DD-017
+  - Contributor team access to a contract record, which is the second audience Legal Only excludes
+  - _Decisions:_ CMT-001 to CMT-009, CTR-021, DD-016, DD-017, DES-023 to DES-027
 
 - [ ] **M10 — Confidentiality**
       _Demo:_ Mark a contract confidential; a Legal Team Member who isn't on it can't see it in the list, in

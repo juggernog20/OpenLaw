@@ -1389,6 +1389,15 @@ The panel is the DES-016 chat applet, and its content is three parts.
 5. **The frame's green submit** is the shipped Button's `cta-primary`, per DES-004's normalization.
 6. **Vertical padding of 3px in the segments rounds to 4** (DES-007's scale).
 
+**Mock sweep (2026-08-13, #134):** the milestone close swept the shipped panel against both comment frames — `designs/matters.pen` **M3** and `designs/contracts.pen` **C3**. The Pencil canvas moved between files this time, so both were read rather than one. The two frames agree with each other everywhere this record touches, and points 1 to 6 hold against M3 exactly as they were written against C3, including the `#FFF8F6` wash, which is a named `legal-only-bg` variable in both files. Six further deviations came out of the sweep, all accepted:
+
+7. **Both frames badge only the Legal Only rows.** The other two authors carry a name and a timestamp and no tier at all. Every row wears a badge in the build, which is CMT-003's own wording. A thread that marks only the restricted rows leaves the other two indistinguishable, and Working Team and Full Thread are different rooms.
+8. **Both frames name the author's role beside their name** — "Dana Cruz · requester", 11px `text-muted`. It is dropped. A role is a fact about the person and it changes; the tier badge is the fact about the comment and it cannot. Two muted strings between the name and the timestamp also crowd a 320px row that now carries a tier label on every line rather than on some.
+9. **Both frames put the audience line and the submit on one foot row**, the sentence at the leading edge and the button at the trailing one. The build stacks them: the audience line runs full width under the box, then the mention chips, then the button on its own row. "Visible to everyone on this record, including the requester" does not fit beside a button in 320px, and DD-016 wants that line read rather than truncated.
+10. **The count pill is `control` / `text-secondary` in both frames.** The build uses the `badge-count` pair, per the Decision above. One counter pair serves every count in the product, and the pill in a panel header is not a different kind of number from the one on a nav item.
+11. **Neither frame's selected segment carries a border.** The build adds the `border-muted` hairline: `bg-raised` (`#FFFFFF`) on `bg-control` (`#F6F8FA`) is a three-percent step in Light and does not read as a lift on its own.
+12. **The badge label is 10px in both frames**, and 11px (`text-xs`) in the build — DES-006's floor, the same normalization DES-016 took for the activity bar's count.
+
 ### Rationale
 
 CMT-003 already judged the tier badge alone insufficient. The reason is the whole DD-016 risk: a Legal Only comment read as a Working Team one is a leak of legal strategy. A wash is read without being looked at. A badge is not. Giving the wash its own token, rather than borrowing the banner's, is the argument DES-009 made for not borrowing a status pill's — one token per role, so a later shift in one does not silently move the other.
@@ -1547,6 +1556,8 @@ The panel is the DES-016 history applet, and its content is two parts.
 5. **The frame draws no load-more foot**, because it draws a short feed. Paging is DD-017's decision, and the foot is what it needs.
 6. **Rows carry no tier badge.** The comment row wears one because a reader has to know which room a comment was said in (CMT-003). A feed entry's tier is the record's own policy rather than a choice its actor made, so a badge on every row would be noise repeated down the panel.
 
+**Mock sweep (2026-08-13, #134):** the milestone close opened `designs/matters.pen` and swept the shipped panel against **M13** directly. The substitution recorded in point 1 was harmless: M13 draws the same anatomy C15 does, medallion included — a 24px frame on `control` at radius 12, carrying a 12px `text-secondary` glyph, then a text column of sentence over timestamp. Points 2 to 6 hold against M13 word for word, including the 12px glyph, the fixed absolute timestamp, and the absence of both a tier badge and a load-more foot. **Point 1 is confirmed rather than superseded:** the canvas does move between files, so the reason it gives is wrong, but the frame it substituted was the right one and nothing built on it needs changing. No further deviation came out of the sweep.
+
 ### Rationale
 
 The medallion is what makes the feed scannable without reading it: the eye finds the status moves in a column of sentences by their glyph, which is the whole reason C15 draws one. Giving the change its own line, rather than folding it into the sentence, is what lets one entry carry several changes — the record's PATCH commits per field (DES-017), but a re-type moves several at once, and a sentence cannot hold them all and stay a sentence.
@@ -1605,6 +1616,8 @@ The pane is one flush settings card with three parts.
 2. **Change lines always carry their label.** DES-026 drops the label for a single change, because the sentence above it already named the key. In a table of every action in the system, the sentence often does not — "changed the organization settings" names no field — so the label stays.
 3. **The row wears an audience badge**, against DES-026's normalization point 6. See the Audience clause above for why the reason does not carry over.
 4. **The filter controls are native `select` and `input`**, through the shared `CONTROL_CLASS` treatment (the C10 field spec), not hand-rolled comboboxes. A picker over a fixed list of a dozen options is what a native select is for, and DES-010 leans on built-ins.
+
+**Mock sweep (2026-08-13, #134):** the milestone close opened `designs/settings.pen` and swept it for the frames this record was waiting on. ~~Point 1's reason is wrong~~ — **superseded**: the canvas does move between files. The right reason is simpler and it does not expire. **`designs/settings.pen` holds no audit-log frame.** Its nineteen screens run ST1 to ST19, and the Security group appears only in ST17 (Authentication) and ST18 (OIDC); ST17 draws the rail with Authentication alone under Security, so the pane's own rail item is unmocked too. The pane is therefore built from the written pattern by necessity and not by workaround, exactly as the Context says: DES-021's table variant, DES-026's row, DES-023's badge, and ST5's settings-table chrome, which was read in the same sweep and which the pane follows apart from the filter bar the Rationale already accounts for. Points 2 to 4 are unaffected. A frame drawn for this pane later governs its chrome; the anatomy above remains the decision.
 
 ### Rationale
 
