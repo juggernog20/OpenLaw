@@ -36,7 +36,7 @@
  * one is itself a security event — the API appends its own entry.
  */
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { Download, Lock } from "lucide-react";
@@ -243,8 +243,19 @@ export function SettingsAuditLogPage() {
   );
   const query = useMemo(() => JSON.parse(queryKey) as Record<string, string>, [queryKey]);
 
+  /**
+   * Which question is on screen. A read that is no longer the current
+   * one has been abandoned — the reader narrowed again while it was in
+   * flight — and its answer is dropped rather than written over the
+   * question they are now asking. Without this, a slow first page for
+   * one filter set lands on top of a fast one for the next, and the
+   * table shows an answer to a question nobody is asking.
+   */
+  const generation = useRef(0);
+
   const loadPage = useCallback(
     async (from: string | null) => {
+      const mine = (generation.current += 1);
       setBusy(true);
       setLoadFailed(false);
       const { data } = await api
@@ -252,6 +263,7 @@ export function SettingsAuditLogPage() {
           params: { query: { ...query, ...(from ? { cursor: from } : {}) } },
         })
         .catch(() => ({ data: undefined }));
+      if (mine !== generation.current) return;
       setBusy(false);
       if (!data) {
         setLoadFailed(true);

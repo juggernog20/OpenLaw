@@ -343,6 +343,18 @@ describe("what the audit log carries", () => {
 });
 
 describe("the filters", () => {
+  it("refuses a filter it cannot parse, rather than ignoring it", async () => {
+    // A dropped filter would answer a wider set than the reader asked
+    // for, which on this surface is the wrong way to fail.
+    const rejected: Query[] = [{ from: "last Tuesday" }, { entityType: "invoice" }, { q: "" }];
+    for (const query of rejected) {
+      const res = await read(adminCookies, query);
+      expect(res.statusCode, res.body).toBe(400);
+      expect(res.headers["content-type"]).toContain("application/problem+json");
+      expect(res.json().title).toBe("Request validation failed");
+    }
+  });
+
   it("narrows by actor", async () => {
     const { entries } = await everyPage({ actorId: userIds.get(MEMBER.email)! });
     expect(entries.length).toBeGreaterThan(0);

@@ -27,7 +27,7 @@ import {
 } from "fastify-type-provider-zod";
 import { OPENLAW_VERSION } from "@openlaw/shared";
 import { HttpError, PROBLEM_CONTENT_TYPE, type Problem } from "./lib/problem.js";
-import { setActivityEmitter } from "./lib/activity-emitter.js";
+import { clearActivityEmitter, setActivityEmitter } from "./lib/activity-emitter.js";
 import type { MailerResolver } from "./lib/mailer.js";
 import { metaRoutes } from "./modules/meta/routes.js";
 import { authRoutes } from "./modules/auth/routes.js";
@@ -93,6 +93,11 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   // lib/activity-emitter.ts.
   setActivityEmitter((event) => {
     app.log.info({ activity: event }, "activity");
+  });
+  // A closed app's logger must not stay wired up as the sink. The
+  // emitter is process-wide, so nothing else would take it back.
+  app.addHook("onClose", () => {
+    clearActivityEmitter();
   });
 
   app.setValidatorCompiler(validatorCompiler);

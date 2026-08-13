@@ -24,6 +24,18 @@
  * roll back a role change. So the emitter is called inside a catch that
  * swallows, and the failure goes unreported — there is nowhere to report
  * a logger's failure except the logger.
+ *
+ * **The line is a faithful copy, and nothing is redacted here.** Secrets
+ * are kept out of a payload by the writer that builds it, which is the
+ * only place that can: `activity_log` is append-only (DD-017 forbids
+ * `UPDATE` and `DELETE`), so a secret that reaches a payload is in the
+ * record forever and redacting the emitted copy would hide nothing.
+ * The writers already do this at source — an SSO client secret is
+ * recorded as `[secret]` on both sides of its change, an avatar and an
+ * org logo as `[image]` — and no writer puts an SMTP URL in a payload
+ * at all. Projecting or filtering fields here would instead make the
+ * shipped line and the stored row disagree, which is the one thing a
+ * SIEM copy must never do.
  */
 
 import type { ActivityEntityType, ActivityVisibility } from "@openlaw/db";

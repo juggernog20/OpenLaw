@@ -443,30 +443,40 @@ export const auditLogRoutes: FastifyPluginAsyncZod = async (app) => {
       async function* rows(): AsyncGenerator<string> {
         yield csvRow(CSV_COLUMNS);
         let cursor: string | undefined;
-        for (;;) {
-          const chunk = await selectEntries(
-            app.db,
-            cursor === undefined ? bounded : and(bounded, olderThan(cursor)),
-            EXPORT_CHUNK,
-          );
-          for (const row of chunk) {
-            const entry = toEntry(row);
-            yield csvRow([
-              entry.id,
-              entry.createdAt,
-              entry.action,
-              entry.entityType,
-              entry.entityId,
-              entry.visibility,
-              entry.actor?.id ?? null,
-              entry.actor?.displayName ?? null,
-              row.actor?.email ?? null,
-              JSON.stringify(entry.payload),
-            ]);
+        try {
+          for (;;) {
+            const chunk = await selectEntries(
+              app.db,
+              cursor === undefined ? bounded : and(bounded, olderThan(cursor)),
+              EXPORT_CHUNK,
+            );
+            for (const row of chunk) {
+              const entry = toEntry(row);
+              yield csvRow([
+                entry.id,
+                entry.createdAt,
+                entry.action,
+                entry.entityType,
+                entry.entityId,
+                entry.visibility,
+                entry.actor?.id ?? null,
+                entry.actor?.displayName ?? null,
+                row.actor?.email ?? null,
+                JSON.stringify(entry.payload),
+              ]);
+            }
+            if (chunk.length < EXPORT_CHUNK) return;
+            cursor = chunk.at(-1)?.id;
+            if (cursor === undefined) return;
           }
-          if (chunk.length < EXPORT_CHUNK) return;
-          cursor = chunk.at(-1)?.id;
-          if (cursor === undefined) return;
+        } catch (error) {
+          // The response committed the moment the first chunk went out,
+          // so a failure here cannot become a Problem body — the reader
+          // gets a short file and no way to tell it is short. The log is
+          // the only place that can say so, and the marker names the
+          // export entry the truncated file belongs to.
+          request.log.error({ err: error, export: marker?.id }, "audit log export truncated");
+          throw error;
         }
       }
 

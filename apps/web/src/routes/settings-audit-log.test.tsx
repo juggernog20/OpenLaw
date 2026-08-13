@@ -228,9 +228,8 @@ describe("what the pane shows", () => {
     expect(screen.getByText("Blair Wentworth created this contract")).toBeVisible();
   });
 
-  it("says so when nothing matches, and when the read fails", async () => {
-    const calls = newCalls();
-    stubApi({ signedIn: ADMIN, extra: auditApi(calls, { pages: [[]] }) });
+  it("says so when nothing matches the filters", async () => {
+    stubApi({ signedIn: ADMIN, extra: auditApi(newCalls(), { pages: [[]] }) });
     renderAt("/settings/audit-log");
 
     expect(await screen.findByText("No entry matches these filters.")).toBeVisible();

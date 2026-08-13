@@ -60,6 +60,13 @@ export const activityLog = pgTable(
     index("activity_log_entity_idx").on(table.entityType, table.entityId, table.createdAt),
     index("activity_log_actor_idx").on(table.actorId, table.createdAt),
     index("activity_log_action_idx").on(table.action, table.createdAt),
+    // The fourth shape, added with the surface that reads it (M9/7):
+    // the Administrator's audit log, which has no entity scope and no
+    // actor to key on. It orders the whole table by `(created_at, id)`
+    // — the pair its keyset cursor walks — and this is the largest
+    // table in the system, so without this index every page and every
+    // export sorts all of it.
+    index("activity_log_created_at_idx").on(table.createdAt, table.id),
     check(
       "activity_log_entity_type_check",
       sql`${table.entityType} in ('matter', 'contract', 'document', 'request', 'user', 'entity', 'system')`,
