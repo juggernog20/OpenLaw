@@ -58,9 +58,15 @@ export function ConfidentialBanner({
         </span>
       </p>
       {manageTeamHref !== undefined && (
+        // `text-confidential` is restated on the anchor because the base
+        // layer colours every `<a>` with the link token, which would
+        // otherwise win over the strip's own foreground. DES-028 puts
+        // the trailing link on the banner's pair, and that is the pair
+        // the contrast lint checks against `confidential-bg` — the link
+        // token on this surface is 4.34:1, under the 4.5 floor.
         <a
           href={manageTeamHref}
-          className="flex shrink-0 items-center gap-1 rounded-chip text-sm font-semibold hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+          className="flex shrink-0 items-center gap-1 rounded-chip text-sm font-semibold text-confidential hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
         >
           <FormattedMessage id="contracts.confidential.manageTeam" defaultMessage="Manage team" />
           <ArrowRight size={LOCK_SIZE} aria-hidden="true" />

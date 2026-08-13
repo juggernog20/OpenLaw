@@ -3310,10 +3310,13 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
     renderAt("/contracts/42");
 
     const strip = await screen.findByRole("region", { name: BANNER });
-    expect(within(strip).getByRole("link", { name: "Manage team" })).toHaveAttribute(
-      "href",
-      "#contract-team",
-    );
+    const manage = within(strip).getByRole("link", { name: "Manage team" });
+    expect(manage).toHaveAttribute("href", "#contract-team");
+    // The link stays on the banner's own foreground. The base layer
+    // colours every `<a>` with the link token, and the link token on
+    // `confidential-bg` is 4.34:1 — under the 4.5 floor the contrast
+    // lint holds the banner's own pair to.
+    expect(manage).toHaveClass("text-confidential");
     expect(screen.getByRole("region", { name: "Team" })).toHaveAttribute("id", "contract-team");
     // The same clause gates the control: an Administrator off the team
     // gets a working switch, not the inert reading.
