@@ -30,6 +30,7 @@ import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import type { CustomFieldValue, CustomFieldValues } from "../lib/custom-fields";
 
 const MEMBER = {
   id: "u2",
@@ -348,10 +349,13 @@ function recordApi(
           : {};
       // Merge customFields rather than replacing: null removes a field, omitted preserves it.
       const customFields =
-        "customFields" in body && typeof body.customFields === "object" && body.customFields !== null
+        "customFields" in body &&
+        typeof body.customFields === "object" &&
+        body.customFields !== null
           ? (() => {
-              const merged = { ...(row.customFields ?? {}) };
-              for (const [key, value] of Object.entries(body.customFields)) {
+              const merged: CustomFieldValues = { ...(row.customFields ?? {}) };
+              const patch = body.customFields as Record<string, CustomFieldValue | null>;
+              for (const [key, value] of Object.entries(patch)) {
                 if (value === null) {
                   delete merged[key];
                 } else {
@@ -834,7 +838,9 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
 
-    const picker = await screen.findByLabelText("Counterparties");
+    // By role, not by label: the recorded-parties list carries the same
+    // accessible name as the picker that adds to it.
+    const picker = await screen.findByRole("combobox", { name: "Counterparties" });
     await user.click(picker);
     await user.type(picker, "Vertex Materials SA");
     await user.click(await screen.findByRole("option", { name: 'Create "Vertex Materials SA"' }));
@@ -857,7 +863,9 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
 
-    const picker = await screen.findByLabelText("Counterparties");
+    // By role, not by label: the recorded-parties list carries the same
+    // accessible name as the picker that adds to it.
+    const picker = await screen.findByRole("combobox", { name: "Counterparties" });
     await user.click(picker);
     await user.type(picker, "Helix");
     await screen.findByRole("option", { name: /Helix Labs GmbH/ });
@@ -881,7 +889,9 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
 
-    const picker = await screen.findByLabelText("Counterparties");
+    // By role, not by label: the recorded-parties list carries the same
+    // accessible name as the picker that adds to it.
+    const picker = await screen.findByRole("combobox", { name: "Counterparties" });
     await user.click(picker);
     await user.type(picker, "Helix");
     await screen.findByRole("option", { name: /Helix Labs GmbH/ });
@@ -900,7 +910,9 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
 
-    const picker = await screen.findByLabelText("Counterparties");
+    // By role, not by label: the recorded-parties list carries the same
+    // accessible name as the picker that adds to it.
+    const picker = await screen.findByRole("combobox", { name: "Counterparties" });
     await user.click(picker);
     await user.type(picker, "Helix");
     await screen.findByRole("option", { name: "The Helix Group Ltd" });
@@ -976,7 +988,9 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
 
-    const picker = await screen.findByLabelText("Counterparties");
+    // By role, not by label: the recorded-parties list carries the same
+    // accessible name as the picker that adds to it.
+    const picker = await screen.findByRole("combobox", { name: "Counterparties" });
     await user.click(picker);
     await user.type(picker, "Orion");
     await user.click(await screen.findByRole("option", { name: "Orion Cloud Ltd" }));
@@ -1144,7 +1158,6 @@ describe("the /contracts/:number record page", () => {
       "Contract type",
       "Owner",
       "Our entity",
-      "Counterparties",
       "Status",
       "Priority",
       "Risk",
@@ -1159,7 +1172,9 @@ describe("the /contracts/:number record page", () => {
       expect(screen.getByLabelText(label)).toBeDisabled();
     }
     // The counterparties freeze too — the parties still read, but
-    // nothing about them can be changed.
+    // nothing about them can be changed. The picker is asked for by
+    // role: the recorded-parties list shares its accessible name.
+    expect(screen.getByRole("combobox", { name: "Counterparties" })).toBeDisabled();
     expect(screen.getByText("Helix Labs GmbH")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Make primary" })).not.toBeInTheDocument();
     expect(

@@ -95,7 +95,6 @@ import {
   eq,
   inArray,
   isNull,
-  lt,
   ne,
   SEVERITY_LEVELS,
   sql,
@@ -826,42 +825,22 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "listContracts",
         summary:
           "The contract list, newest reference first: number, title, " +
-          "type, and status; archived contracts only with includeArchived=true; " +
-          "keyset-paginated on contracts.number descending",
+          "type, and status; archived contracts only with includeArchived=true",
         tags: ["contracts"],
-        querystring: z.object({
-          includeArchived: z.enum(["true", "false"]).optional(),
-          cursor: z.coerce.number().int().optional(),
-          pageSize: z.coerce.number().int().min(1).max(100).optional(),
-        }),
+        querystring: z.object({ includeArchived: z.enum(["true", "false"]).optional() }),
         response: {
-          200: z.object({
-            contracts: z.array(ContractRowSchema),
-            cursor: z.number().int().nullable(),
-          }),
+          200: z.object({ contracts: z.array(ContractRowSchema) }),
           default: problemResponse,
         },
       },
     },
     async (request) => {
-      const pageSize = request.query.pageSize ?? 50;
-      const cursor = request.query.cursor;
-
-      let query = selectContracts(app.db)
+      const rows = await selectContracts(app.db)
         .where(request.query.includeArchived === "true" ? undefined : isNull(contracts.archivedAt))
-        .orderBy(desc(contracts.number))
-        .limit(pageSize + 1);
-
-      if (cursor !== undefined) {
-        query = query.where(lt(contracts.number, cursor));
-      }
-
-      const rows = await query;
-      const hasMore = rows.length > pageSize;
-      const pageRows = hasMore ? rows.slice(0, pageSize) : rows;
-      const nextCursor = hasMore ? pageRows[pageRows.length - 1]!.number : null;
-
-      return { contracts: pageRows.map(toRow), cursor: nextCursor };
+        // The reference is monotonic, so newest-first is the number
+        // descending — no second sort key can tie.
+        .orderBy(desc(contracts.number));
+      return { contracts: rows.map(toRow) };
     },
   );
 

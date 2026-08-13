@@ -158,28 +158,29 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         .groupBy(joinTable.fieldId);
       for (const row of rows) tally.set(row.fieldId, (tally.get(row.fieldId) ?? 0) + row.tally);
     }
-    // Count contract custom-field holders for all catalog slugs in one query.
+    // One query for the whole catalog, not one per field: a record's
+    // held slugs are unnested, then counted per slug. `sql.param` binds
+    // the slug list as a single text[] — a bare array in the template
+    // expands to `($1, $2, …)`, which is a row constructor and not what
+    // `ANY` takes.
     const slugToId = new Map(catalog.map((field) => [field.slug, field.id]));
     const slugs = catalog.map((field) => field.slug);
-    if (slugs.length > 0) {
-      const customFieldRows = await db.execute<{ slug: string; tally: number }>(
-        sql`
-          SELECT slug, COUNT(*) AS tally
-          FROM (
-            SELECT jsonb_object_keys(${contracts.customFields}) AS slug
-            FROM ${contracts}
-            WHERE ${contracts.customFields} IS NOT NULL
-          ) AS keys
-          WHERE slug = ANY(${slugs})
-          GROUP BY slug
-        `,
-      );
-      for (const row of customFieldRows.rows) {
-        const fieldId = slugToId.get(row.slug);
-        if (fieldId) {
-          tally.set(fieldId, (tally.get(fieldId) ?? 0) + row.tally);
-        }
-      }
+    const held = await db.execute<{ slug: string; tally: string }>(
+      sql`
+        SELECT slug, COUNT(*) AS tally
+        FROM (
+          SELECT jsonb_object_keys(${contracts.customFields}) AS slug
+          FROM ${contracts}
+          WHERE ${contracts.customFields} IS NOT NULL
+        ) AS keys
+        WHERE slug = ANY(${sql.param(slugs)}::text[])
+        GROUP BY slug
+      `,
+    );
+    for (const row of held.rows) {
+      const fieldId = slugToId.get(row.slug);
+      // COUNT() comes back as a string on a bigint column.
+      if (fieldId) tally.set(fieldId, (tally.get(fieldId) ?? 0) + Number(row.tally));
     }
     return tally;
   }

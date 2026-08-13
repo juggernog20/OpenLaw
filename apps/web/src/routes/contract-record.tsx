@@ -902,20 +902,20 @@ function TeamCard({
 }>) {
   const intl = useIntl();
   const [addOpen, setAddOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   /** A removal unmounts the row that held focus, so focus has to be put
    * somewhere deliberate — the card's own add control (DES-010's
    * return-focus rule, applied to a destructive row action). */
   const addControl = useRef<HTMLButtonElement>(null);
-  /** One write at a time: a ref-based guard prevents same-tick duplicate removals. */
+  /** One write at a time. This is a ref, not state: two clicks in one
+   * tick both read the same pre-render state value and both pass, so a
+   * state flag refuses nothing. */
   const inFlight = useRef(false);
 
   async function remove(member: ContractTeamMember) {
     if (inFlight.current) return;
     setError(null);
     inFlight.current = true;
-    setBusy(true);
     const { data, error: problem } = await api
       .DELETE("/api/v1/contracts/{number}/team/{userId}/{role}", {
         params: { path: { number: contractNumber, userId: member.id, role: member.role } },
@@ -923,7 +923,6 @@ function TeamCard({
       .catch(() => ({ data: undefined, error: undefined }))
       .finally(() => {
         inFlight.current = false;
-        setBusy(false);
       });
     if (!data) {
       setError(

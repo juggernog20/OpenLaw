@@ -195,7 +195,11 @@ describe("GET /counterparties — the shared typeahead's read", () => {
     const anonymous = await harness.app.inject({ method: "GET", url: "/api/v1/counterparties" });
     expect(anonymous.statusCode, anonymous.body).toBe(401);
 
-    const contributorCookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
+    const contributorCookies = await signInCookies(
+      harness.app,
+      CONTRIBUTOR.email,
+      CONTRIBUTOR.password,
+    );
     const contributorRefused = await harness.app.inject({
       method: "GET",
       url: "/api/v1/counterparties",
@@ -204,7 +208,11 @@ describe("GET /counterparties — the shared typeahead's read", () => {
     expect(contributorRefused.statusCode, contributorRefused.body).toBe(403);
     expect(contributorRefused.headers["content-type"]).toContain("application/problem+json");
 
-    const businessCookies = await signInCookies(harness.app, BUSINESS_USER.email, BUSINESS_USER.password);
+    const businessCookies = await signInCookies(
+      harness.app,
+      BUSINESS_USER.email,
+      BUSINESS_USER.password,
+    );
     const businessRefused = await harness.app.inject({
       method: "GET",
       url: "/api/v1/counterparties",

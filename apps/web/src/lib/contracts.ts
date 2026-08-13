@@ -156,7 +156,11 @@ export type ValueCadence = ContractValue["cadence"];
 
 /** CTR-010's cadences, in the order the picker reads: the plain one-off
  * first, then the two that repeat. */
-export const VALUE_CADENCES = exhaustiveList<ValueCadence>()(["one_time", "monthly", "annually"] as const);
+export const VALUE_CADENCES = exhaustiveList<ValueCadence>()([
+  "one_time",
+  "monthly",
+  "annually",
+] as const);
 
 export function cadenceLabel(intl: IntlShape, cadence: ValueCadence): string {
   return intl.formatMessage(

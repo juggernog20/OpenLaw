@@ -58,25 +58,24 @@ export async function contractsLoader() {
   // all, not a disabled one. The API's 403 stands behind this.
   if (!isMemberPlus(user.role)) return redirect("/");
   const [list, options, registry] = await Promise.all([
-    api.GET("/api/v1/contracts", { params: { query: { pageSize: 100 } } }),
+    api.GET("/api/v1/contracts"),
     api.GET("/api/v1/contracts/options"),
     // The create dialog grows the picked type's hard-required fields
     // (CTR-016), and two of the nine field types name a row: a person
     // or one of our Entities. The people ride the options read; the
     // Entities are the M7 registry's own Member+ list, the same source
     // the record's signing-entity picker reads.
-    api.GET("/api/v1/entities").catch(() => ({ data: undefined, error: undefined })),
+    api.GET("/api/v1/entities"),
   ]);
-  if (!list.data || !options.data) {
+  if (!list.data || !options.data || !registry.data) {
     throw new Error("The contract list could not be read.");
   }
   return {
     user,
     contracts: list.data.contracts,
-    cursor: list.data.cursor,
     contractTypes: options.data.contractTypes,
     users: options.data.users,
-    entities: registry.data?.entities ?? [],
+    entities: registry.data.entities,
   };
 }
 
@@ -504,7 +503,7 @@ function CreateContractDialog({
               id: "contracts.field.numberInvalidNamed",
               defaultMessage: "{fieldName}: enter this as a number.",
             },
-            { fieldName: field.label || field.displayName },
+            { fieldName: field.displayName },
           ),
         );
         return;

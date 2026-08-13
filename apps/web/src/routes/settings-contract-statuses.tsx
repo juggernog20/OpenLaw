@@ -137,9 +137,7 @@ function ArchiveStatusDialog({
   return (
     <Dialog open onOpenChange={onOpenChange}>
       <DialogContent
-        aria-describedby={
-          blocked || target.inUseCount > 0 ? "archive-status-warning" : undefined
-        }
+        aria-describedby={blocked || target.inUseCount > 0 ? "archive-status-warning" : undefined}
         onCloseAutoFocus={(event) => {
           if (!archived.current) return;
           event.preventDefault();

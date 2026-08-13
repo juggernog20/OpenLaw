@@ -446,6 +446,7 @@ describe("the SET-003 in-use block with live counts (#113)", () => {
     renderAt("/settings/contracts/statuses");
     const user = userEvent.setup();
 
+    await screen.findByText("Terminated");
     const rows = within(statusList()).getAllByRole("listitem");
     const terminatedRow = rows.find((row) => within(row).queryByText("Terminated"))!;
     expect(within(terminatedRow).getByText("1 contract")).toBeInTheDocument();

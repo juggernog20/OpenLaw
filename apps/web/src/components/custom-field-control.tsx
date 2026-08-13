@@ -63,7 +63,7 @@ export function CustomFieldControl({
   onDraft,
   onBlur,
   onKeyDown,
-}: Readonly<CustomFieldControlProps>): JSX.Element {
+}: Readonly<CustomFieldControlProps>) {
   const intl = useIntl();
   const text = typeof draft === "string" ? draft : "";
   const chosen = Array.isArray(draft) ? draft : [];
