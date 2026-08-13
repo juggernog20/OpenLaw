@@ -45,7 +45,7 @@
  * gate; the API's 403 is the real refusal.
  */
 
-import { useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
 import {
   Link,
   redirect,
@@ -1183,6 +1183,31 @@ function CounterpartiesField({
   );
 }
 
+/**
+ * Every ISO 4217 code the runtime knows, as the picker's rows. There
+ * are some three hundred of them, and none of them changes while the
+ * page is open — so they are memoized away from the field that hosts
+ * them. Without that, every keystroke in the amount box would
+ * reconcile three hundred options that cannot have changed.
+ */
+const CurrencyOptions = memo(function CurrencyOptions() {
+  const intl = useIntl();
+  return (
+    <>
+      {currencyOptions({ locale: intl.locale }).map((currency) => (
+        <option key={currency.code} value={currency.code}>
+          {/* The code leads: it is what a contract quotes, and it is
+              what tells two "dollar" currencies apart. */}
+          {intl.formatMessage(
+            { id: "contracts.value.currencyOption", defaultMessage: "{code} — {name}" },
+            { code: currency.code, name: currency.displayName },
+          )}
+        </option>
+      ))}
+    </>
+  );
+});
+
 /** What the three controls hold between commits. The amount is a
  * string, in major units, because that is what a person types and an
  * empty box is a state a number cannot hold. */
@@ -1254,7 +1279,6 @@ function ValueField({
     setDraft(valueDraft(value, intl.locale));
   }
 
-  const currencies = currencyOptions({ locale: intl.locale });
   /** A step of one smallest unit: cents for USD, whole yen for JPY. The
    * box refuses a precision the currency cannot hold. */
   const step =
@@ -1393,16 +1417,7 @@ function ValueField({
               defaultMessage: "Currency…",
             })}
           </option>
-          {currencies.map((currency) => (
-            <option key={currency.code} value={currency.code}>
-              {/* The code leads: it is what a contract quotes, and it
-                  is what tells two "dollar" currencies apart. */}
-              {intl.formatMessage(
-                { id: "contracts.value.currencyOption", defaultMessage: "{code} — {name}" },
-                { code: currency.code, name: currency.displayName },
-              )}
-            </option>
-          ))}
+          <CurrencyOptions />
         </select>
         <select
           id="contract-value-cadence"
