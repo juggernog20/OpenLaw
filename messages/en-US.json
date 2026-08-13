@@ -269,6 +269,9 @@
   "contracts.count": {
     "defaultMessage": "{count, plural, one {# contract} other {# contracts}}"
   },
+  "contracts.counterparties.list": {
+    "defaultMessage": "Counterparties"
+  },
   "contracts.counterparty.busy": {
     "defaultMessage": "One change at a time. Wait for the last one to save."
   },
@@ -293,8 +296,17 @@
   "contracts.create": {
     "defaultMessage": "Create contract"
   },
+  "contracts.empty.archived.body": {
+    "defaultMessage": "Archived contracts are kept out of the way until they are restored."
+  },
+  "contracts.empty.archived.title": {
+    "defaultMessage": "No archived contracts"
+  },
   "contracts.empty.body": {
     "defaultMessage": "A contract is the workspace for work that ends in a signed document. Create one when a deal starts; it takes a reference you can quote in email."
+  },
+  "contracts.empty.readOnly.body": {
+    "defaultMessage": "Contracts you are added to appear here. Ask a Legal Team Member to add you to the ones you work on."
   },
   "contracts.empty.title": {
     "defaultMessage": "No contracts yet"
@@ -307,6 +319,9 @@
   },
   "contracts.field.numberInvalid": {
     "defaultMessage": "Enter this as a number."
+  },
+  "contracts.field.numberInvalidNamed": {
+    "defaultMessage": "{fieldName}: enter this as a number."
   },
   "contracts.field.requiredMark": {
     "defaultMessage": "(required)"
@@ -389,6 +404,9 @@
   "contracts.record.documentTitle": {
     "defaultMessage": "{reference} {title}"
   },
+  "contracts.record.readOnlyNote": {
+    "defaultMessage": "This record is read-only. Ask a Legal Team Member to make a change."
+  },
   "contracts.record.restore": {
     "defaultMessage": "Restore"
   },
@@ -399,7 +417,7 @@
     "defaultMessage": "C-{number}"
   },
   "contracts.restoreError": {
-    "defaultMessage": "The contract could not be restored."
+    "defaultMessage": "{reference} could not be restored."
   },
   "contracts.restoreRow": {
     "defaultMessage": "Restore {title}"

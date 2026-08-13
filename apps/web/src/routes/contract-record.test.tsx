@@ -23,7 +23,11 @@
  * the gaps when it does — one write for the type and the values
  * together (MTR-014).
  *
- * Contributors are bounced home; unauthenticated visitors land on login.
+ * A Contributor on the contract's team gets the same page read-only
+ * (M9/1): every control inert, no archive, no team or counterparty
+ * action, and neither Member+ picker read asked for. A contract they
+ * hold no team row on answers 404 and lands on the error page. Business
+ * Users are bounced home; unauthenticated visitors land on login.
  */
 
 import { describe, expect, it } from "vitest";
@@ -43,6 +47,12 @@ const CONTRIBUTOR = {
   email: "contributor@example.com",
   displayName: "Casey Contributor",
   role: "contributor",
+};
+const BUSINESS = {
+  id: "u9",
+  email: "business@example.com",
+  displayName: "Bao Business",
+  role: "business_user",
 };
 
 /** The people the pickers offer. A Contributor is offered for the team
@@ -1437,8 +1447,8 @@ describe("the /contracts/:number record page", () => {
     expect(await screen.findByText(/This contract type attaches no fields/)).toBeInTheDocument();
   });
 
-  it("bounces a Contributor home", async () => {
-    stubApi({ signedIn: CONTRIBUTOR });
+  it("bounces a Business User home", async () => {
+    stubApi({ signedIn: BUSINESS });
     renderAt("/contracts/42");
     expect(await screen.findByRole("heading", { level: 1, name: "Home" })).toBeInTheDocument();
   });
@@ -1447,5 +1457,132 @@ describe("the /contracts/:number record page", () => {
     stubApi({ signedIn: null, needsSetup: false });
     renderAt("/contracts/42");
     expect(await screen.findByRole("heading", { name: "Sign in" })).toBeInTheDocument();
+  });
+});
+
+describe("a Contributor on the contract record (M9/1)", () => {
+  /**
+   * The record stub with both Member+ picker reads walled off. A
+   * Contributor is refused them at the seam, so a loader that asked
+   * would be asking for a refusal — `pickerReads` is what proves it
+   * never does.
+   */
+  function contributorApi(...args: Parameters<typeof recordApi>) {
+    const api = recordApi(...args);
+    const pickerReads: string[] = [];
+    const handler = (call: StubCall): Response | undefined => {
+      if (["/api/v1/contracts/options", "/api/v1/entities"].includes(call.url.pathname)) {
+        pickerReads.push(call.url.pathname);
+        return problem(403, "You do not have permission to perform this action.");
+      }
+      return api.handler(call);
+    };
+    return { ...api, handler, pickerReads };
+  }
+
+  it("renders the record read-only, with no edit affordance and no picker read", async () => {
+    const api = contributorApi(
+      contractRow(),
+      [person("u1", "creator"), person("u3", "contributor")],
+      [party("cp-helix", true), party("cp-orion", false)],
+    );
+    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
+    renderAt("/contracts/42");
+
+    // The record reads: the title, the status, the parties, the team.
+    expect(
+      await screen.findByRole("heading", { level: 1, name: /Acme master services agreement/ }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Helix Labs GmbH")).toBeInTheDocument();
+    expect(screen.getByText("Casey Contributor")).toBeInTheDocument();
+    expect(screen.getByText(/This record is read-only/)).toBeInTheDocument();
+
+    // Every control is inert, exactly as an archived record renders.
+    for (const label of [
+      "Title",
+      "Contract type",
+      "Owner",
+      "Our entity",
+      "Status",
+      "Priority",
+      "Risk",
+      "Payment terms",
+      "Amount",
+      "Currency",
+      "Cadence",
+      "Description",
+    ]) {
+      expect(screen.getByLabelText(label)).toBeDisabled();
+    }
+    expect(screen.getByRole("combobox", { name: "Counterparties" })).toBeDisabled();
+
+    // Archive and restore are record-level actions a Contributor never
+    // gets, so they are absent rather than permanently disabled.
+    expect(screen.queryByRole("button", { name: "Archive" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Restore" })).not.toBeInTheDocument();
+    // The team and party controls freeze the way an archived record
+    // freezes them — inert where they stand, gone where the archived
+    // record drops them.
+    expect(screen.getByRole("button", { name: "Add team member" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Make primary" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Take Helix Labs GmbH off the contract/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Take Casey Contributor off the team/ }),
+    ).not.toBeInTheDocument();
+
+    // No inline commit fires, and the Member+ picker seams are never
+    // asked for.
+    expect(api.patches).toEqual([]);
+    expect(api.posts).toEqual([]);
+    expect(api.pickerReads).toEqual([]);
+  });
+
+  it("still names the type, status, and Owner the record holds, with no picker list to read them from", async () => {
+    const api = contributorApi(
+      contractRow({ manager: person("u2"), statusId: "s-redlining", statusName: "Redlining" }),
+    );
+    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
+    renderAt("/contracts/42");
+
+    // The selects are inert, so what they show is all the record says.
+    // Each one names what is stored, not a blank — the row carries the
+    // names, so no options read is needed to draw them.
+    expect(await screen.findByLabelText("Contract type")).toHaveDisplayValue("MSA");
+    expect(screen.getByLabelText("Status")).toHaveDisplayValue("Redlining");
+    expect(screen.getByLabelText("Owner")).toHaveDisplayValue("Nadia Counsel");
+  });
+
+  it("says archived once on an archived contract, and never offers the restore", async () => {
+    const api = contributorApi(contractRow({ archivedAt: "2026-08-12T00:00:00.000Z" }));
+    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
+    renderAt("/contracts/42");
+
+    // The archived note carries the state; the read-only note stands
+    // down, because "restore it to edit" is not this viewer's to act on
+    // and two notes over one card would say the same thing twice.
+    expect(await screen.findByText(/This contract is archived/)).toBeInTheDocument();
+    expect(screen.queryByText(/This record is read-only/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Restore" })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Title")).toBeDisabled();
+    expect(api.posts).toEqual([]);
+  });
+
+  it("shows the error page for a contract they hold no team row on", async () => {
+    // The API answers 404, exactly as it does for a contract that does
+    // not exist — the client never learns which it was.
+    stubApi({
+      signedIn: CONTRIBUTOR,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/contracts/42" && call.method === "GET"
+          ? problem(404, "No contract exists with this number.")
+          : undefined,
+    });
+    renderAt("/contracts/42");
+
+    expect(
+      await screen.findByRole("heading", { name: "Something went wrong." }),
+    ).toBeInTheDocument();
   });
 });

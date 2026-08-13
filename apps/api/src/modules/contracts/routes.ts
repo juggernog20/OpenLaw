@@ -70,8 +70,17 @@
  * reassignment deliberately will not, since that is a system move rather
  * than a re-type anyone chose.
  *
- * Access is Member+ throughout — Administrators and Legal Team Members
- * equally. Contributor record-level access waits for the DD-015 grid.
+ * Access has two floors (CTR-021). Every mutation is Member+ —
+ * Administrators and Legal Team Members equally — and so is every
+ * picker read behind one. The list and the record read one step wider:
+ * a Contributor reaches them, and `teamScope` narrows what they reach
+ * to the contracts they hold a `contract_team` row on. Being added to
+ * the team is what grants the access (DD-015), so a contract a
+ * Contributor is not on answers exactly as a contract that does not
+ * exist. Business Users are refused everywhere. The DD-015
+ * business/legal editable-field split is not built here: a Contributor
+ * reads.
+ *
  * Every mutation appends to the activity log in the same transaction
  * (DD-017); the feed and audit surfaces read it in M9.
  */
@@ -104,7 +113,7 @@ import {
   type Contract,
   type CustomFieldValue,
 } from "@openlaw/db";
-import { requireRole } from "../../auth/guards.js";
+import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import {
   AttachedCustomFieldSchema,
@@ -117,14 +126,22 @@ import {
 } from "../../lib/custom-fields.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
-/** Contracts are Member+ everywhere, read and write. */
+/** Every mutation, and every picker read behind one, is Member+. */
 const requireMember = requireRole("administrator", "legal_team_member");
+
+/**
+ * The two read surfaces — the list and the record — take a Contributor
+ * as well (CTR-021). The role alone opens no contract: `teamScope` narrows
+ * the answer to the contracts the Contributor holds a `contract_team`
+ * row on. Business Users stay refused on every contract surface.
+ */
+const requireContractReader = requireRole("administrator", "legal_team_member", "contributor");
 
 /** The protected CTR-001 seed every contract is born on. */
 const DRAFT_STATUS_SLUG = "draft";
 
-/** Contract surfaces are Member+ (DD-013), so only a Member+ user can
- * be the Owner: an Owner who cannot open the record cannot run it. */
+/** Only a Member+ user can be the Owner: the Owner runs the contract,
+ * and a read-only viewer cannot run one (CTR-004, DD-013). */
 const OWNER_ROLES = ["administrator", "legal_team_member"] as const;
 
 /** The `creator` row is provenance, not membership: the server writes it
@@ -507,6 +524,32 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       )
       .leftJoin(counterparties, eq(contractCounterparties.counterpartyId, counterparties.id));
 
+  /**
+   * How far one viewer sees across the contract table (CTR-021).
+   * Member+ see every contract, so nothing narrows and this answers
+   * `undefined` — which drops out of the `and(...)` it is composed
+   * into. A Contributor sees exactly the contracts they hold a
+   * `contract_team` row on, whichever role that row carries: DD-015
+   * makes the Contributor grant per-record, and adding someone to the
+   * team is the act that grants it.
+   *
+   * The same predicate serves both readers. The list filters on it, so
+   * a Contributor's list is their work and not the whole company's; the
+   * record read applies it beside the number, so a contract they are
+   * not on 404s exactly as a contract that does not exist. One
+   * predicate is what keeps those two answers from drifting apart.
+   */
+  function teamScope(user: AuthenticatedUser) {
+    if (user.role !== "contributor") return undefined;
+    return inArray(
+      contracts.id,
+      app.db
+        .select({ contractId: contractTeam.contractId })
+        .from(contractTeam)
+        .where(eq(contractTeam.userId, user.id)),
+    );
+  }
+
   /** The working group on one contract, alphabetical by name so the
    * roster reads the same on every visit; a person holding two roles
    * appears once per role. */
@@ -820,12 +863,15 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     "/contracts",
     {
-      preHandler: requireMember,
+      preHandler: requireContractReader,
       schema: {
         operationId: "listContracts",
         summary:
           "The contract list, newest reference first: number, title, " +
-          "type, and status; archived contracts only with includeArchived=true",
+          "type, and status; archived contracts only with " +
+          "includeArchived=true. Member+ read every contract; a " +
+          "Contributor reads exactly the contracts they hold a " +
+          "contract_team row on, archived ones behind the same flag",
         tags: ["contracts"],
         querystring: z.object({ includeArchived: z.enum(["true", "false"]).optional() }),
         response: {
@@ -836,7 +882,15 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const rows = await selectContracts(app.db)
-        .where(request.query.includeArchived === "true" ? undefined : isNull(contracts.archivedAt))
+        .where(
+          and(
+            request.query.includeArchived === "true" ? undefined : isNull(contracts.archivedAt),
+            // A Contributor's list is the contracts they are on. An
+            // empty answer is a real state — the list's own empty
+            // state, never a refusal.
+            teamScope(request.user),
+          ),
+        )
         // The reference is monotonic, so newest-first is the number
         // descending — no second sort key can tie.
         .orderBy(desc(contracts.number));
@@ -924,7 +978,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     "/contracts/:number",
     {
-      preHandler: requireMember,
+      preHandler: requireContractReader,
       schema: {
         operationId: "getContract",
         summary:
@@ -932,7 +986,9 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           "signing entity, its counterparties, its working group, and " +
           "the fields its type attaches (CTR-016) in attachment order — " +
           "the record page's read; archived contracts answer too, so " +
-          "restore stays reachable",
+          "restore stays reachable. A Contributor reads a contract they " +
+          "hold a contract_team row on, and is answered 404 on one they " +
+          "do not",
         tags: ["contracts"],
         params: NumberParams,
         response: { 200: ContractRecordEnvelope, default: problemResponse },
@@ -940,7 +996,10 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const [row] = await selectContracts(app.db)
-        .where(eq(contracts.number, request.params.number))
+        // The scope rides beside the number, so a contract a
+        // Contributor is not on reads as one that does not exist. A
+        // locked page would tell them it is there.
+        .where(and(eq(contracts.number, request.params.number), teamScope(request.user)))
         .limit(1);
       if (!row) throw httpError(404, "No contract exists with this number.");
       const [team, parties, custom] = await Promise.all([

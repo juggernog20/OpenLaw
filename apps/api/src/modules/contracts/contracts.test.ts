@@ -10,12 +10,18 @@
  * number. Status changes are unrestricted (CTR-001) and the stage rides
  * along derived, never stored. The CTR-010 value is the one field that
  * is not a scalar: amount, currency, and cadence commit as a group,
- * clear as a group, and are refused in part. Everything is Member+
- * (Administrators
- * and Legal Team Members); Contributors and Business Users are refused
- * on every route. Every mutation lands in the activity log inside the
- * same transaction (DD-017), asserted by reading the table — the log
- * has no read routes until M9.
+ * clear as a group, and are refused in part.
+ *
+ * Access has two floors (M9/1). Every write is Member+ (Administrators
+ * and Legal Team Members), and so is the picker read behind the create
+ * dialog. The list and the record read take a Contributor as well, and
+ * answer them exactly the contracts they hold a `contract_team` row on
+ * — a contract they are not on reads as one that does not exist.
+ * Business Users are refused on every route.
+ *
+ * Every mutation lands in the activity log inside the same transaction
+ * (DD-017), asserted by reading the table — the log has no read routes
+ * until M9.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -47,6 +53,13 @@ const CONTRIBUTOR = {
   displayName: "Casey Contributor",
   password: "correct-horse-battery",
 } as const;
+/** A second Contributor, deliberately left off every team: their list
+ * is what an empty team list answers with (M9/1). */
+const OUTSIDER = {
+  email: "outsider@example.com",
+  displayName: "Ola Outsider",
+  password: "correct-horse-battery",
+} as const;
 const BUSINESS = {
   email: "business@example.com",
   displayName: "Bao Business",
@@ -56,6 +69,8 @@ const BUSINESS = {
 let harness: TestHarness;
 let adminCookies: Record<string, string>;
 let memberCookies: Record<string, string>;
+let contributorCookies: Record<string, string>;
+let outsiderCookies: Record<string, string>;
 /** Fixture email → user id, for the owner and team routes. */
 const userIds = new Map<string, string>();
 const idOf = (fixture: { email: string }): string => {
@@ -76,6 +91,7 @@ beforeAll(async () => {
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
     [CONTRIBUTOR, "contributor"],
+    [OUTSIDER, "contributor"],
     [BUSINESS, "business_user"],
   ] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
@@ -90,6 +106,8 @@ beforeAll(async () => {
   userIds.set(ADMIN.email, admin!.id);
   adminCookies = await signInCookies(harness.app, ADMIN.email, ADMIN.password);
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
+  contributorCookies = await signInCookies(harness.app, CONTRIBUTOR.email, CONTRIBUTOR.password);
+  outsiderCookies = await signInCookies(harness.app, OUTSIDER.email, OUTSIDER.password);
 }, 120_000);
 
 afterAll(async () => {
@@ -334,6 +352,75 @@ const contractAuditRows = () =>
 const auditRowsFor = async (id: string) =>
   (await contractAuditRows()).filter((row) => row.entityId === id);
 
+/**
+ * Every mutation seam a contract has, aimed at whoever holds these
+ * cookies: create, the per-field PATCH, the status change and the value
+ * and custom fields that ride it, archive, restore, the team, and the
+ * counterparties. The whole set is Member+, so a Contributor and a
+ * Business User are both refused all of it.
+ */
+const refusedWrites = (cookies: Record<string, string>) => [
+  harness.app.inject({
+    method: "POST",
+    url: "/api/v1/contracts",
+    cookies,
+    payload: { title: "Sneaky NDA", contractTypeId: "any" },
+  }),
+  harness.app.inject({
+    method: "PATCH",
+    url: "/api/v1/contracts/99999",
+    cookies,
+    payload: { title: "Sneaky rename" },
+  }),
+  harness.app.inject({
+    method: "PATCH",
+    url: "/api/v1/contracts/99999",
+    cookies,
+    payload: { statusId: "any" },
+  }),
+  harness.app.inject({
+    method: "PATCH",
+    url: "/api/v1/contracts/99999",
+    cookies,
+    payload: { value: { amount: 100, currency: "USD", cadence: "one_time" } },
+  }),
+  harness.app.inject({
+    method: "PATCH",
+    url: "/api/v1/contracts/99999",
+    cookies,
+    payload: { customFields: { governing_law: "England" } },
+  }),
+  harness.app.inject({
+    method: "POST",
+    url: "/api/v1/contracts/99999/team",
+    cookies,
+    payload: { userId: "any", role: "member" },
+  }),
+  harness.app.inject({
+    method: "DELETE",
+    url: "/api/v1/contracts/99999/team/any/member",
+    cookies,
+  }),
+  harness.app.inject({
+    method: "POST",
+    url: "/api/v1/contracts/99999/counterparties",
+    cookies,
+    payload: { name: "Sneaky Counterparty Ltd" },
+  }),
+  harness.app.inject({
+    method: "DELETE",
+    url: "/api/v1/contracts/99999/counterparties/any",
+    cookies,
+  }),
+  harness.app.inject({
+    method: "POST",
+    url: "/api/v1/contracts/99999/counterparties/any/primary",
+    cookies,
+  }),
+  harness.app.inject({ method: "POST", url: "/api/v1/contracts/99999/archive", cookies }),
+  harness.app.inject({ method: "POST", url: "/api/v1/contracts/99999/restore", cookies }),
+];
+
 describe("the Member+ access floor on contract surfaces", () => {
   it("refuses an unauthenticated request as 401 on every route", async () => {
     const attempts = [
@@ -371,50 +458,39 @@ describe("the Member+ access floor on contract surfaces", () => {
     }
   });
 
-  it("refuses a Contributor and a Business User as 403 problem+json, read and write", async () => {
-    for (const fixture of [CONTRIBUTOR, BUSINESS]) {
-      const cookies = await signInCookies(harness.app, fixture.email, fixture.password);
-      const attempts = [
-        harness.app.inject({ method: "GET", url: "/api/v1/contracts", cookies }),
-        harness.app.inject({ method: "GET", url: "/api/v1/contracts/options", cookies }),
-        harness.app.inject({
-          method: "POST",
-          url: "/api/v1/contracts",
-          cookies,
-          payload: { title: "Sneaky NDA", contractTypeId: "any" },
-        }),
-        harness.app.inject({ method: "GET", url: "/api/v1/contracts/99999", cookies }),
-        harness.app.inject({
-          method: "PATCH",
-          url: "/api/v1/contracts/99999",
-          cookies,
-          payload: { title: "Sneaky rename" },
-        }),
-        harness.app.inject({
-          method: "POST",
-          url: "/api/v1/contracts/99999/counterparties",
-          cookies,
-          payload: { name: "Sneaky Counterparty Ltd" },
-        }),
-        harness.app.inject({
-          method: "DELETE",
-          url: "/api/v1/contracts/99999/counterparties/any",
-          cookies,
-        }),
-        harness.app.inject({
-          method: "POST",
-          url: "/api/v1/contracts/99999/counterparties/any/primary",
-          cookies,
-        }),
-        harness.app.inject({ method: "POST", url: "/api/v1/contracts/99999/archive", cookies }),
-        harness.app.inject({ method: "POST", url: "/api/v1/contracts/99999/restore", cookies }),
-      ];
-      for (const res of await Promise.all(attempts)) {
-        expect(res.statusCode, `${fixture.email}: ${res.body}`).toBe(403);
-        expect(res.headers["content-type"]).toContain("application/problem+json");
-      }
+  it("refuses a Business User as 403 problem+json on every route, read and write", async () => {
+    const cookies = await signInCookies(harness.app, BUSINESS.email, BUSINESS.password);
+    const attempts = [
+      harness.app.inject({ method: "GET", url: "/api/v1/contracts", cookies }),
+      harness.app.inject({ method: "GET", url: "/api/v1/contracts/options", cookies }),
+      harness.app.inject({ method: "GET", url: "/api/v1/contracts/99999", cookies }),
+      ...refusedWrites(cookies),
+    ];
+    for (const res of await Promise.all(attempts)) {
+      expect(res.statusCode, `${BUSINESS.email}: ${res.body}`).toBe(403);
+      expect(res.headers["content-type"]).toContain("application/problem+json");
     }
     // None of the refused writes landed.
+    expect(
+      (await listContracts(adminCookies, true)).some((row) => row.title === "Sneaky NDA"),
+    ).toBe(false);
+  });
+
+  it("refuses a Contributor every write and the Member+ picker read", async () => {
+    const attempts = [
+      // The pickers exist to be assigned from, and a Contributor
+      // assigns nothing — so the picker read stays Member+ (M9/1).
+      harness.app.inject({
+        method: "GET",
+        url: "/api/v1/contracts/options",
+        cookies: contributorCookies,
+      }),
+      ...refusedWrites(contributorCookies),
+    ];
+    for (const res of await Promise.all(attempts)) {
+      expect(res.statusCode, `${CONTRIBUTOR.email}: ${res.body}`).toBe(403);
+      expect(res.headers["content-type"]).toContain("application/problem+json");
+    }
     expect(
       (await listContracts(adminCookies, true)).some((row) => row.title === "Sneaky NDA"),
     ).toBe(false);
@@ -429,6 +505,138 @@ describe("the Member+ access floor on contract surfaces", () => {
     expect(created.statusCode, created.body).toBe(201);
     const read = await getContract(memberCookies, created.json().contract.number);
     expect(read.statusCode, read.body).toBe(200);
+  });
+});
+
+describe("Contributor team access to the contract record (M9/1)", () => {
+  /** Puts someone on a contract's team, requiring success. */
+  const putOnTeam = async (number: number, userId: string, role = "contributor") => {
+    const res = await addTeamMember(adminCookies, number, { userId, role });
+    expect(res.statusCode, res.body).toBe(201);
+  };
+
+  it("opens a contract they hold a team row on", async () => {
+    const contract = await newContract("Contributor reads this one");
+    await putOnTeam(contract.number, idOf(CONTRIBUTOR));
+
+    const res = await getContract(contributorCookies, contract.number);
+    expect(res.statusCode, res.body).toBe(200);
+    const body = res.json();
+    expect(body.contract.title).toBe("Contributor reads this one");
+    // The whole record read, not a reduced one: the roster and the
+    // other side come back as they do for Member+.
+    expect(body.team.map((row: TeamMember) => row.id)).toContain(idOf(CONTRIBUTOR));
+    expect(body.counterparties).toEqual([]);
+  });
+
+  it("is answered 404 on a contract they hold no team row on, exactly as on one that does not exist", async () => {
+    const contract = await newContract("Contributor is not on this one");
+
+    const refused = await getContract(contributorCookies, contract.number);
+    const absent = await getContract(contributorCookies, 999_999);
+    expect(refused.statusCode, refused.body).toBe(404);
+    expect(refused.headers["content-type"]).toContain("application/problem+json");
+    // Same shape, same words: a contract they are not on must not read
+    // any differently from one nobody ever made. `instance` is left out
+    // of the comparison because it is the URL each request asked for.
+    const withoutInstance = (body: Record<string, unknown>) => ({ ...body, instance: undefined });
+    expect(withoutInstance(refused.json())).toEqual(withoutInstance(absent.json()));
+  });
+
+  it("takes the access from the team row itself, whatever role that row carries", async () => {
+    const contract = await newContract("Contributor watches this one");
+    await putOnTeam(contract.number, idOf(CONTRIBUTOR), "watcher");
+
+    const res = await getContract(contributorCookies, contract.number);
+    expect(res.statusCode, res.body).toBe(200);
+  });
+
+  it("lists exactly the contracts they are on, archived ones behind the same toggle", async () => {
+    const live = await newContract("Contributor list: live");
+    const archived = await newContract("Contributor list: archived");
+    const other = await newContract("Contributor list: not theirs");
+    await putOnTeam(live.number, idOf(CONTRIBUTOR));
+    await putOnTeam(archived.number, idOf(CONTRIBUTOR));
+    const gone = await archiveContract(adminCookies, archived.number);
+    expect(gone.statusCode, gone.body).toBe(200);
+
+    const numbers = (await listContracts(contributorCookies)).map((row) => row.number);
+    expect(numbers).toContain(live.number);
+    expect(numbers).not.toContain(archived.number);
+    expect(numbers).not.toContain(other.number);
+
+    const withArchived = (await listContracts(contributorCookies, true)).map((row) => row.number);
+    expect(withArchived).toContain(live.number);
+    expect(withArchived).toContain(archived.number);
+    expect(withArchived).not.toContain(other.number);
+
+    // Member+ still read the whole company's list — the narrowing is
+    // the Contributor's alone.
+    const memberNumbers = (await listContracts(memberCookies, true)).map((row) => row.number);
+    expect(memberNumbers).toEqual(expect.arrayContaining([live.number, other.number]));
+  });
+
+  it("answers a Contributor on no team with an empty list, not a refusal", async () => {
+    const res = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/contracts",
+      cookies: outsiderCookies,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().contracts).toEqual([]);
+  });
+
+  it("refuses every write on a contract they are on, and leaves the record as it was", async () => {
+    const contract = await newContract("Contributor cannot edit this one");
+    await putOnTeam(contract.number, idOf(CONTRIBUTOR));
+
+    const attempts = [
+      patchContract(contributorCookies, contract.number, { title: "Renamed by a Contributor" }),
+      patchContract(contributorCookies, contract.number, { statusId: "any" }),
+      patchContract(contributorCookies, contract.number, { managerId: idOf(CONTRIBUTOR) }),
+      patchContract(contributorCookies, contract.number, {
+        value: { amount: 500, currency: "USD", cadence: "one_time" },
+      }),
+      patchContract(contributorCookies, contract.number, { customFields: { anything: "x" } }),
+      addTeamMember(contributorCookies, contract.number, {
+        userId: idOf(MEMBER),
+        role: "member",
+      }),
+      removeTeamMember(contributorCookies, contract.number, idOf(CONTRIBUTOR), "contributor"),
+      addCounterparty(contributorCookies, contract.number, { name: "Contributor Added Ltd" }),
+      archiveContract(contributorCookies, contract.number),
+      restoreContract(contributorCookies, contract.number),
+    ];
+    for (const res of await Promise.all(attempts)) {
+      expect(res.statusCode, res.body).toBe(403);
+      expect(res.headers["content-type"]).toContain("application/problem+json");
+    }
+
+    const after = await getContract(contributorCookies, contract.number);
+    expect(after.statusCode, after.body).toBe(200);
+    expect(after.json().contract.title).toBe("Contributor cannot edit this one");
+    expect(after.json().contract.archivedAt).toBeNull();
+    expect(after.json().team.map((row: TeamMember) => row.id)).toContain(idOf(CONTRIBUTOR));
+  });
+
+  it("stops reading a contract the moment their team row is taken off", async () => {
+    const contract = await newContract("Contributor loses this one");
+    await putOnTeam(contract.number, idOf(CONTRIBUTOR));
+    expect((await getContract(contributorCookies, contract.number)).statusCode).toBe(200);
+
+    const removed = await removeTeamMember(
+      adminCookies,
+      contract.number,
+      idOf(CONTRIBUTOR),
+      "contributor",
+    );
+    expect(removed.statusCode, removed.body).toBe(200);
+
+    const res = await getContract(contributorCookies, contract.number);
+    expect(res.statusCode, res.body).toBe(404);
+    expect((await listContracts(contributorCookies)).map((row) => row.number)).not.toContain(
+      contract.number,
+    );
   });
 });
 

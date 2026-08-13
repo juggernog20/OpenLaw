@@ -267,6 +267,22 @@ _None — queue cleared 2026-08-04 (CTR-001 through CTR-019). New questions from
 - **Alternatives considered** — Reassignment for statuses too (bulk-rewrites lifecycle positions nobody reviewed); refusing the type archive outright and making the Administrator re-type every contract (the guard's whole point is that it does not); skipping archived contracts in the count (splits the counted set from the FK set, and a restore would resurrect a reference to an archived value).
 - **Consequences** — Clearing a status held by an archived contract takes a restore, a move, and an archive again, because an archived contract refuses edits. That cost is accepted: one counting rule everywhere beats a second rule for archived rows. The type guard's bulk move can leave a moved contract missing a field the new type marks required — a real gap, filled on the record, never papered over.
 
+## CTR-021 — Contributor contract access: the team row is the grant, read-only in M9
+
+- **Status** — Accepted
+- **Date** — 2026-08-13
+- **Context** — M9 gives a Contributor their first record-level access (#127), so the DD-016 tier filter has a real second audience. DD-015 says a Contributor is "made, not born" and sees "only matters/contracts they are explicitly added to", but it does not say which row in the schema counts as "added", nor what happens on a contract they are not on. It also grants them a business/legal editable-field split that the M9 record does not yet carry.
+- **Decision** —
+  - **Any `contract_team` row is the grant.** A Contributor reads a contract when they hold a row on it, whatever role that row carries — `member`, `watcher`, `contributor`, or `creator`. The act of adding someone to the team is what grants the access, so no second rule decides which roles count.
+  - **One predicate, both readers.** The list filters on it and the record read applies it beside the number. A contract a Contributor holds no row on answers **404 with the same body as a contract that does not exist** — never 403, never a locked page. Access is not advertised.
+  - **An empty scope is an empty list**, not a refusal. A Contributor on no contract gets the list's own empty state.
+  - **Read-only in M9.** Every mutation seam stays Member+: create, the per-field PATCH, status, archive, restore, team, counterparties, value, and custom fields. So does the picker read behind the create dialog and the record's selects — the pickers exist to commit from.
+  - **The DD-015 business/legal field split is not built here.** It lands with the field grid.
+  - **Business Users stay refused** on every contract surface until intake links a requester to a record (M19–M21).
+- **Rationale** — Keying on the row rather than on the row's role keeps one act (add to the team) as the whole grant, which is what an Administrator can reason about. Answering 404 rather than 403 is the DD-014/DD-016 silent-omission rule applied to the record itself: a refusal that names the record tells a Contributor a contract exists, and existence is sometimes the sensitive part. One predicate over both readers is what stops a contract appearing in a list that the record read then refuses.
+- **Alternatives considered** — Granting only on a `contributor`-role row (leaves a Contributor added as a watcher with a row nobody honours); 403 on a contract they are not on (leaks the record's existence); giving a Contributor the picker reads so the record's selects render from a live list (they commit nothing, and the record read already carries every name the page draws); building the DD-015 field split now (the grid is a milestone of its own, and a half-built split would be a permission rule nobody reviewed).
+- **Consequences** — Removing a Contributor's last team row takes their read away immediately, because the guard reads the rows live on every request. The Contracts destination appears in a Contributor's nav. The record page renders the DES-017 inline surface with its inputs inert — the same treatment an archived contract already gets — with archive and restore absent rather than disabled, since a Contributor never gets them. The M9 comment and activity surfaces mount on this same scope.
+
 ## Index of decisions
 
 | #       | Decision                                                                         | Status   |
@@ -291,3 +307,4 @@ _None — queue cleared 2026-08-04 (CTR-001 through CTR-019). New questions from
 | CTR-018 | Confidentiality: independent flags, link-time nudge, no cascade                  | Accepted |
 | CTR-019 | End of life: signal not lock, MTR-008 sibling                                    | Accepted |
 | CTR-020 | The taxonomy archive guards: types reassign, statuses block                      | Accepted |
+| CTR-021 | Contributor contract access: the team row is the grant, read-only in M9          | Accepted |
