@@ -52,6 +52,14 @@
  * for mistakes and imports (CONTEXT.md) and it freezes the record's
  * fields; the conversation about why it was archived is not one of them.
  *
+ * **The unread count is the thread's own filter, counted** (M9/5,
+ * CMT-009). It runs over the same tiers the thread is read at, so a
+ * comment the viewer is not in the room for contributes nothing — a
+ * count is a leak like any other, and a badge that said "3" where the
+ * thread shows two would announce the Legal Only comment it left out.
+ * Opening the panel moves the viewer's watermark in `comment_last_read`,
+ * and the badge clears.
+ *
  * **Mentions are a list, not prose** (M9/3, CMT-007). A post names the
  * people it addresses by id, and each one becomes a `comment_mentions`
  * row. Tier promotion reads that list here, and the M18 notification
@@ -65,19 +73,28 @@ import { z } from "zod";
 import {
   and,
   asc,
+  commentLastRead,
   commentMentions,
   commentRevisions,
   comments,
   COMMENT_VISIBILITIES,
+  count,
   eq,
+  gt,
   inArray,
+  isNull,
+  ne,
   sql,
   users,
   type CommentVisibility,
 } from "@openlaw/db";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
-import { contractAudience, contractMentionCandidates } from "../../lib/contract-access.js";
+import {
+  contractAudience,
+  contractMentionCandidates,
+  type ContractAudience,
+} from "../../lib/contract-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
 /**
@@ -354,6 +371,138 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!audience) throw httpError(404, NO_RECORD);
       const candidates = await contractMentionCandidates(app.db, audience.contractId);
       return { candidates: candidates.map((row) => ({ ...row, tiers: [...row.tiers] })) };
+    },
+  );
+
+  /** What both badge routes answer: one number, and nothing that could
+   * be subtracted from another one to find what it left out. */
+  const UnreadEnvelope = z.object({ unread: z.int().nonnegative() });
+
+  /**
+   * How many comments on this record are news to this viewer (CMT-004,
+   * CMT-009).
+   *
+   * Four conditions, and each one is a rule the badge has to keep. The
+   * tier predicate, so a comment the viewer is not in the room for
+   * contributes nothing — the count is taken over the filtered set,
+   * never the raw one, exactly as the thread is read. Not the viewer's
+   * own, because their own words are not news. Not a tombstone, by
+   * either hand, because a removed comment has nothing left to read.
+   * And later than the watermark.
+   *
+   * **No watermark means everything visible is unread**, not nothing.
+   * A reader who has never opened the panel has read none of it, and
+   * `-infinity` is that sentence in SQL: every row is later than it.
+   */
+  async function unreadCount(
+    db: Executor,
+    user: AuthenticatedUser,
+    entityType: "contract",
+    audience: ContractAudience,
+  ): Promise<number> {
+    // The viewer's own place in this record's conversation, as a scalar:
+    // the primary key names exactly one row, or none at all.
+    const watermark = db
+      .select({ readAt: commentLastRead.readAt })
+      .from(commentLastRead)
+      .where(
+        and(
+          eq(commentLastRead.userId, user.id),
+          eq(commentLastRead.entityType, entityType),
+          eq(commentLastRead.entityId, audience.contractId),
+        ),
+      );
+    const [row] = await db
+      .select({ unread: count() })
+      .from(comments)
+      .where(
+        and(
+          eq(comments.entityType, entityType),
+          eq(comments.entityId, audience.contractId),
+          inArray(comments.visibility, [...audience.tiers]),
+          ne(comments.authorId, user.id),
+          isNull(comments.deletedAt),
+          isNull(comments.redactedAt),
+          gt(comments.createdAt, sql`coalesce((${watermark}), '-infinity'::timestamptz)`),
+        ),
+      );
+    return row?.unread ?? 0;
+  }
+
+  app.get(
+    "/comments/unread",
+    {
+      preHandler: requireCommentReader,
+      schema: {
+        operationId: "readUnreadComments",
+        summary:
+          "How many comments on this record the viewer has not read — " +
+          "the chat applet's badge (CMT-004). Counted over the same " +
+          "filtered set the thread is read at, so a tier the viewer is " +
+          "not in the room for contributes nothing; the viewer's own " +
+          "comments and both kinds of tombstone contribute nothing " +
+          "either. A viewer who has never opened the panel has every " +
+          "comment they can see counted. A record they cannot reach " +
+          "answers 404",
+        tags: ["comments"],
+        querystring: EntityRefQuery,
+        response: { 200: UnreadEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const audience = await contractAudience(app.db, request.user, request.query.entityId);
+      if (!audience) throw httpError(404, NO_RECORD);
+      const unread = await unreadCount(app.db, request.user, request.query.entityType, audience);
+      return { unread };
+    },
+  );
+
+  app.post(
+    "/comments/read",
+    {
+      preHandler: requireCommentReader,
+      schema: {
+        operationId: "markCommentsRead",
+        summary:
+          "Mark this record's conversation read up to now, which is what " +
+          "opening the chat panel does (CMT-004). Writes the viewer's " +
+          "`comment_last_read` watermark and answers the count that " +
+          "remains — normally zero, and whatever landed between the read " +
+          "and this call otherwise. A record the viewer cannot reach " +
+          "answers 404",
+        tags: ["comments"],
+        body: z.strictObject({
+          entityType: CommentEntityType,
+          entityId: RecordIdSchema,
+        }),
+        response: { 200: UnreadEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const { entityType, entityId } = request.body;
+      return await app.db.transaction(async (tx) => {
+        // Asked on the same snapshot the write and the count land on, as
+        // every other write in this module does: a team row dropped
+        // between the check and the write must not leave a watermark on
+        // a record the reader no longer reaches. A refusal thrown here
+        // rolls the transaction back and keeps its status.
+        const audience = await contractAudience(tx, request.user, entityId);
+        if (!audience) throw httpError(404, NO_RECORD);
+        await tx
+          .insert(commentLastRead)
+          .values({ userId: request.user.id, entityType, entityId: audience.contractId })
+          .onConflictDoUpdate({
+            target: [commentLastRead.userId, commentLastRead.entityType, commentLastRead.entityId],
+            // The watermark only ever moves forward. Two panels open in
+            // two tabs settle on the later of the two rather than on
+            // whichever request the database happened to serve last.
+            set: { readAt: sql`greatest(${commentLastRead.readAt}, now())` },
+          });
+        // Counted after the write, on the same snapshot: the badge takes
+        // the server's number rather than assuming the write cleared it.
+        const unread = await unreadCount(tx, request.user, entityType, audience);
+        return { unread };
+      });
     },
   );
 

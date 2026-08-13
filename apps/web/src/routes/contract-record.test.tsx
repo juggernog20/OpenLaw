@@ -1672,13 +1672,19 @@ describe("the contract record's comment applet (M9/2)", () => {
   function commentsApi(
     initial: ReturnType<typeof comment>[] = [],
     candidates: typeof CANDIDATES = CANDIDATES,
+    /** What the badge starts at (M9/5). Zero is the common case, so
+     * every suite that is not about the badge draws none. */
+    initialUnread = 0,
   ) {
     let thread = initial;
+    let unread = initialUnread;
     const posts: unknown[] = [];
     const reads: Record<string, string | null>[] = [];
     /** Every correction the panel sent, in order — the seam's own record
      * of what it was asked to do (M9/4). */
     const corrections: { method: string; id: string; body?: unknown }[] = [];
+    /** Every record the panel said it had read (M9/5). */
+    const marksRead: unknown[] = [];
 
     /** Puts a corrected row back in the thread, in its own place. A
      * tombstone that moved would break the thread it is holding open. */
@@ -1690,6 +1696,16 @@ describe("the contract record's comment applet (M9/2)", () => {
     const handler = (call: StubCall): Response | undefined => {
       if (call.url.pathname === "/api/v1/comments/mention-candidates" && call.method === "GET") {
         return json(200, { candidates });
+      }
+      // The badge's two calls, ahead of the correction paths below —
+      // both are a static word where those expect a comment's id.
+      if (call.url.pathname === "/api/v1/comments/unread" && call.method === "GET") {
+        return json(200, { unread });
+      }
+      if (call.url.pathname === "/api/v1/comments/read" && call.method === "POST") {
+        marksRead.push(call.body);
+        unread = 0;
+        return json(200, { unread });
       }
       // The three corrections, each addressed to one comment by id.
       const correction = /^\/api\/v1\/comments\/([^/]+)(\/redact)?$/.exec(call.url.pathname);
@@ -1748,7 +1764,7 @@ describe("the contract record's comment applet (M9/2)", () => {
       }
       return undefined;
     };
-    return { handler, posts, reads, corrections };
+    return { handler, posts, reads, corrections, marksRead };
   }
 
   /** The record page's own seam plus the thread's, in that order. */
@@ -2598,6 +2614,91 @@ describe("the contract record's comment applet (M9/2)", () => {
         "Only the author can delete a comment.",
       );
       expect(within(row!).getByText("Mine to take back.")).toBeInTheDocument();
+    });
+  });
+
+  /**
+   * The unread badge (M9/5, CMT-004).
+   *
+   * The count is the seam's, never the panel's: the API computes it over
+   * the filtered set, and the icon draws the number it was given. So
+   * these tests assert what the icon says and what the panel told the
+   * seam — the two things a reader and the database can each see.
+   *
+   * The badge itself is decorative, because the count is folded into the
+   * icon's accessible name (`applets.labelWithBadge`). That name is what
+   * is asserted: a reader on a screen reader hears "Comments (3)", and a
+   * cleared badge is an icon named "Comments" again.
+   */
+  describe("the unread badge", () => {
+    it("carries the seam's count on the chat icon, and on no other applet", async () => {
+      stubApi({ signedIn: MEMBER, extra: pageApi(commentsApi([], CANDIDATES, 3)) });
+      renderAt("/contracts/42");
+
+      const bar = await screen.findByRole("toolbar", { name: "Applets" });
+      expect(await within(bar).findByRole("button", { name: "Comments (3)" })).toBeInTheDocument();
+      // CMT-004: chat is the only applet that carries one. The settings
+      // deep-link is the record's other slot, and it is named plainly.
+      expect(within(bar).getByRole("link", { name: "Contract settings" })).toBeInTheDocument();
+    });
+
+    it("draws no badge when there is nothing unread", async () => {
+      stubApi({ signedIn: MEMBER, extra: pageApi(commentsApi()) });
+      renderAt("/contracts/42");
+
+      const bar = await screen.findByRole("toolbar", { name: "Applets" });
+      expect(await within(bar).findByRole("button", { name: "Comments" })).toBeInTheDocument();
+    });
+
+    it("marks the record read when the panel opens, and the badge clears", async () => {
+      const user = userEvent.setup();
+      const comments = commentsApi(
+        [comment("c-1", "Redline goes back Friday.", "working_team", CASEY)],
+        CANDIDATES,
+        2,
+      );
+      stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+      renderAt("/contracts/42");
+
+      const bar = await screen.findByRole("toolbar", { name: "Applets" });
+      const icon = await within(bar).findByRole("button", { name: "Comments (2)" });
+      await user.click(icon);
+      await screen.findByRole("complementary", { name: "Comments" });
+
+      // The panel says it has read the record, by the same entity
+      // reference the thread is keyed by.
+      await waitFor(() => {
+        expect(comments.marksRead).toEqual([{ entityType: "contract", entityId: "c1" }]);
+      });
+      await waitFor(() => {
+        expect(within(bar).getByRole("button", { name: "Comments" })).toBeInTheDocument();
+      });
+    });
+
+    it("keeps the badge when the thread could not be read", async () => {
+      const user = userEvent.setup();
+      const comments = commentsApi([], CANDIDATES, 2);
+      const record = recordApi(contractRow());
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call: StubCall) =>
+          call.url.pathname === "/api/v1/comments" && call.method === "GET"
+            ? problem(500, "The conversation could not be read.")
+            : (comments.handler(call) ?? record.handler(call)),
+      });
+      renderAt("/contracts/42");
+
+      const bar = await screen.findByRole("toolbar", { name: "Applets" });
+      await user.click(await within(bar).findByRole("button", { name: "Comments (2)" }));
+      const panel = await screen.findByRole("complementary", { name: "Comments" });
+      expect(await within(panel).findByRole("alert")).toHaveTextContent(
+        "The conversation could not be read.",
+      );
+
+      // Nothing was shown, so nothing was read. Clearing the badge here
+      // would take the signal away without delivering what it points at.
+      expect(comments.marksRead).toEqual([]);
+      expect(within(bar).getByRole("button", { name: "Comments (2)" })).toBeInTheDocument();
     });
   });
 });

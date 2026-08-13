@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Audience-tiered comments (DD-016, CMT-001–006) — one table behind
+ * Audience-tiered comments (DD-016, CMT-001–009) — one table behind
  * every thread in the product: the record threads, the document
  * annotations, and the portal request thread.
  *
@@ -165,3 +165,55 @@ export const commentRevisions = pgTable(
 );
 
 export type CommentRevision = typeof commentRevisions.$inferSelect;
+
+/**
+ * How far one person has read one record's conversation (CMT-004,
+ * CMT-009) — the fact the chat applet's unread badge is counted against.
+ *
+ * One row per reader per record, keyed on exactly that: (`user_id`,
+ * `entity_type`, `entity_id`). A watermark, not a receipt per comment.
+ * A flat chronological thread (CMT-002) is read top to bottom, so "I was
+ * here at this time" answers the badge in one comparison, and a table
+ * that grows with readers × records stays far smaller than one that
+ * grows with readers × comments.
+ *
+ * `read_at` moves forward when the reader opens the panel. **No row at
+ * all means they have never opened it**, which is not the same as having
+ * read nothing new — everything they can see is unread. The count's
+ * `coalesce` is where that reading is written down.
+ *
+ * The entity pair is `comments`' own, polymorphic and unkeyed, so a
+ * watermark can sit on any record a thread can. The CHECK admits the
+ * same four types for the same reason.
+ *
+ * Nothing here is content. It is one person's place in one conversation,
+ * so it carries no tier of its own: the tier predicate is applied to the
+ * comments being counted, never to the watermark.
+ */
+export const commentLastRead = pgTable(
+  "comment_last_read",
+  {
+    // No cascade, as everywhere else a comment names a person: someone
+    // is archived, never deleted (SET-005).
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    entityType: text("entity_type", { enum: COMMENT_ENTITY_TYPES }).notNull(),
+    /** Polymorphic with entity_type, so no FK (SCHEMA.md). */
+    entityId: text("entity_id").notNull(),
+    /** When this reader last opened this record's thread. */
+    readAt: timestamp("read_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({
+      name: "comment_last_read_pkey",
+      columns: [table.userId, table.entityType, table.entityId],
+    }),
+    check(
+      "comment_last_read_entity_type_check",
+      sql`${table.entityType} in ('matter', 'contract', 'document', 'request')`,
+    ),
+  ],
+);
+
+export type CommentLastRead = typeof commentLastRead.$inferSelect;

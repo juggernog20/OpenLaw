@@ -35,6 +35,13 @@
  * text in it could never be taken out again. And a hard redact clears
  * the body **and** every revision row, so the text is genuinely gone
  * rather than moved somewhere quieter.
+ *
+ * M9/5 adds the unread badge, and it is the tier filter again in a
+ * second shape. Two viewers with different tier reach hold different
+ * counts on one record at the same time, and each count is checked
+ * against the thread that viewer actually receives — a badge that
+ * counted a Legal Only comment would announce the conversation the
+ * thread is at pains to hide.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -42,6 +49,7 @@ import {
   activityLog,
   and,
   asc,
+  commentLastRead,
   commentMentions,
   commentRevisions,
   comments,
@@ -248,6 +256,38 @@ async function thread(cookies: Record<string, string>, entityId: string): Promis
   const res = await read(cookies, entityId);
   expect(res.statusCode, res.body).toBe(200);
   return res.json().comments as CommentRow[];
+}
+
+/** The badge (M9/5), as raw responses: what the icon shows, and what
+ * opening the panel does to it. */
+const readUnread = (cookies: Record<string, string>, entityId: string, entityType = "contract") =>
+  harness.app.inject({
+    method: "GET",
+    url: `/api/v1/comments/unread?entityType=${entityType}&entityId=${entityId}`,
+    cookies,
+  });
+
+const markRead = (cookies: Record<string, string>, entityId: string, entityType = "contract") =>
+  harness.app.inject({
+    method: "POST",
+    url: "/api/v1/comments/read",
+    cookies,
+    payload: { entityType, entityId },
+  });
+
+/** The badge one viewer's icon would carry, requiring success. */
+async function unread(cookies: Record<string, string>, entityId: string): Promise<number> {
+  const res = await readUnread(cookies, entityId);
+  expect(res.statusCode, res.body).toBe(200);
+  return res.json().unread as number;
+}
+
+/** Opening the panel, requiring success — it answers the count that
+ * remains, which is what the badge takes. */
+async function openPanel(cookies: Record<string, string>, entityId: string): Promise<number> {
+  const res = await markRead(cookies, entityId);
+  expect(res.statusCode, res.body).toBe(200);
+  return res.json().unread as number;
 }
 
 /** The three corrections (M9/4), as raw responses. */
@@ -1348,5 +1388,132 @@ describe("no comment path writes body text into an activity payload", () => {
     );
     const payloads = JSON.stringify(rows.map((row) => row.payload));
     for (const word of words) expect(payloads).not.toContain(word);
+  });
+});
+
+/**
+ * The unread badge (M9/5, CMT-004, CMT-009).
+ *
+ * The load-bearing test is two viewers with different tier reach holding
+ * different counts on the same record at the same time. A count is a
+ * leak like any other: if the Contributor's badge counted the Legal Only
+ * comment, the badge would announce a conversation the thread is at
+ * pains to hide. So each viewer's count is compared against the thread
+ * that viewer actually receives, and the two are compared against each
+ * other.
+ */
+describe("the unread badge", () => {
+  it("gives two viewers with different tier reach different counts on one record", async () => {
+    const contract = await contractWithTeam("Two badges, one record");
+    // Posted by the Administrator, so neither viewer below is the author
+    // of any of them — their own comments would not be news.
+    await comment(adminCookies, contract.id, "Working team first.", "working_team");
+    await comment(adminCookies, contract.id, "Legal only second.", "legal_only");
+    await comment(adminCookies, contract.id, "Full thread third.", "full_thread");
+
+    const memberUnread = await unread(memberCookies, contract.id);
+    const contributorUnread = await unread(contributorCookies, contract.id);
+
+    // Neither has opened the panel, so everything each can see is
+    // unread — which makes the count exactly the size of their thread.
+    expect(memberUnread).toBe(3);
+    expect(contributorUnread).toBe(2);
+    expect(memberUnread).toBe((await thread(memberCookies, contract.id)).length);
+    expect(contributorUnread).toBe((await thread(contributorCookies, contract.id)).length);
+  });
+
+  it("never counts the viewer's own comments", async () => {
+    const contract = await contractWithTeam("Own words are not news");
+    await comment(memberCookies, contract.id, "Mine, and I know it.", "working_team");
+    await comment(memberCookies, contract.id, "Mine again.", "legal_only");
+    await comment(adminCookies, contract.id, "Somebody else's.", "working_team");
+
+    // The Member wrote two of the three and hears all three.
+    expect(await unread(memberCookies, contract.id)).toBe(1);
+    // The Administrator wrote one of the three and hears all three.
+    expect(await unread(adminCookies, contract.id)).toBe(2);
+  });
+
+  it("clears when the panel is opened, and counts what is said afterwards", async () => {
+    const contract = await contractWithTeam("Open, then something new");
+    await comment(adminCookies, contract.id, "Before you looked.", "working_team");
+    expect(await unread(memberCookies, contract.id)).toBe(1);
+
+    // Opening the panel answers the count that remains, and it is the
+    // count the next read agrees with.
+    expect(await openPanel(memberCookies, contract.id)).toBe(0);
+    expect(await unread(memberCookies, contract.id)).toBe(0);
+
+    await comment(adminCookies, contract.id, "After you looked.", "legal_only");
+    expect(await unread(memberCookies, contract.id)).toBe(1);
+
+    // Opening it a second time moves the same watermark rather than
+    // adding a second one — the reader has one place in one conversation.
+    expect(await openPanel(memberCookies, contract.id)).toBe(0);
+    const rows = await harness.db
+      .select({ readAt: commentLastRead.readAt })
+      .from(commentLastRead)
+      .where(
+        and(
+          eq(commentLastRead.userId, userIds.get(MEMBER.email)!),
+          eq(commentLastRead.entityId, contract.id),
+        ),
+      );
+    expect(rows).toHaveLength(1);
+  });
+
+  it("clears one viewer's badge without touching the other's", async () => {
+    const contract = await contractWithTeam("Two watermarks");
+    await comment(adminCookies, contract.id, "Working team first.", "working_team");
+    await comment(adminCookies, contract.id, "Legal only second.", "legal_only");
+
+    expect(await openPanel(contributorCookies, contract.id)).toBe(0);
+
+    // One reader's place in the conversation is their own.
+    expect(await unread(contributorCookies, contract.id)).toBe(0);
+    expect(await unread(memberCookies, contract.id)).toBe(2);
+
+    const rows = await harness.db
+      .select({ userId: commentLastRead.userId })
+      .from(commentLastRead)
+      .where(eq(commentLastRead.entityId, contract.id));
+    expect(rows.map((row) => row.userId)).toEqual([userIds.get(CONTRIBUTOR.email)]);
+  });
+
+  it("does not let a soft-deleted or redacted comment inflate the count", async () => {
+    const contract = await contractWithTeam("Tombstones count for nothing");
+    const withdrawn = await comment(adminCookies, contract.id, "Said in error.", "working_team");
+    const misplaced = await comment(adminCookies, contract.id, "Wrong record.", "working_team");
+    const standing = await comment(adminCookies, contract.id, "Still stands.", "working_team");
+
+    // The author takes one back; an Administrator removes another for
+    // good. Both keep their place in the thread as tombstones.
+    await softDelete(adminCookies, withdrawn.id);
+    await hardRedact(adminCookies, misplaced.id);
+
+    expect((await thread(memberCookies, contract.id)).map((row) => row.id)).toEqual([
+      withdrawn.id,
+      misplaced.id,
+      standing.id,
+    ]);
+    // Three rows in the thread, one thing left to read.
+    expect(await unread(memberCookies, contract.id)).toBe(1);
+  });
+
+  it("answers 404 on a record the viewer cannot reach, and 403 to a Business User", async () => {
+    const contract = await contractWithoutTeam("No badge for the outsider");
+    await comment(adminCookies, contract.id, "Nothing for you here.", "working_team");
+
+    expect((await readUnread(outsiderCookies, contract.id)).statusCode).toBe(404);
+    expect((await markRead(outsiderCookies, contract.id)).statusCode).toBe(404);
+    expect((await readUnread(businessCookies, contract.id)).statusCode).toBe(403);
+    expect((await markRead(businessCookies, contract.id)).statusCode).toBe(403);
+
+    // And a record that cannot be reached leaves no watermark behind.
+    const rows = await harness.db
+      .select({ userId: commentLastRead.userId })
+      .from(commentLastRead)
+      .where(eq(commentLastRead.entityId, contract.id));
+    expect(rows).toEqual([]);
   });
 });

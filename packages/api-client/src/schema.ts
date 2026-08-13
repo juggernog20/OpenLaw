@@ -1011,6 +1011,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/comments/unread": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** How many comments on this record the viewer has not read — the chat applet's badge (CMT-004). Counted over the same filtered set the thread is read at, so a tier the viewer is not in the room for contributes nothing; the viewer's own comments and both kinds of tombstone contribute nothing either. A viewer who has never opened the panel has every comment they can see counted. A record they cannot reach answers 404 */
+    get: operations["readUnreadComments"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/comments/read": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Mark this record's conversation read up to now, which is what opening the chat panel does (CMT-004). Writes the viewer's `comment_last_read` watermark and answers the count that remains — normally zero, and whatever landed between the read and this call otherwise. A record the viewer cannot reach answers 404 */
+    post: operations["markCommentsRead"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/comments/{commentId}": {
     parameters: {
       query?: never;
@@ -5205,6 +5239,79 @@ export interface operations {
               image: string | null;
               tiers: ("legal_only" | "working_team" | "full_thread")[];
             }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  readUnreadComments: {
+    parameters: {
+      query: {
+        entityType: "contract";
+        entityId: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            unread: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  markCommentsRead: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          entityType: "contract";
+          entityId: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            unread: number;
           };
         };
       };

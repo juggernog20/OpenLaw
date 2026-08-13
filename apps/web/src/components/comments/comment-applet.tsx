@@ -44,6 +44,12 @@
  * back and an Administrator removing text from the record are different
  * facts. Every one of these is refused at the seam too; the menu offers
  * only what the viewer may do.
+ *
+ * The bar icon carries the unread badge (M9/5, CMT-004) — the one applet
+ * that does. It counts what the viewer has not read, over the same
+ * filtered set the thread is read at, so it can say nothing the thread
+ * would not. Opening the panel marks the record read and the badge
+ * clears.
  */
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
@@ -122,8 +128,13 @@ export interface CommentAppletOptions {
 /**
  * The chat slot, ready to hand to `RecordApplets`. The thread loads when
  * the panel opens and not before: a closed panel is a tool nobody asked
- * for yet, and M9/4's unread badge is what will read the record without
- * one.
+ * for yet.
+ *
+ * The unread count is the exception, and it is the reason for the badge
+ * (CMT-004, CMT-009): it is read as the page opens, so a Legal Team
+ * Member knows a record has something new without opening the panel.
+ * One number comes down, computed over the same filtered set the thread
+ * would be, so the badge can say nothing the thread would not.
  */
 export function useCommentApplet({
   entityType,
@@ -134,6 +145,25 @@ export function useCommentApplet({
   const [comments, setComments] = useState<Comment[] | null>(null);
   const [candidates, setCandidates] = useState<MentionCandidate[]>([]);
   const [loadFailed, setLoadFailed] = useState(false);
+  /** What the badge says. Zero draws no badge at all, which is also
+   * what a failed read leaves — a count nobody could fetch is not a
+   * number to guess at. */
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    let current = true;
+    void api
+      .GET("/api/v1/comments/unread", { params: { query: { entityType, entityId } } })
+      .catch(() => ({ data: undefined }))
+      .then(({ data }) => {
+        // The record may have changed under a slow read; the last
+        // record's count is not this one's.
+        if (current) setUnread(data?.unread ?? 0);
+      });
+    return () => {
+      current = false;
+    };
+  }, [entityType, entityId]);
 
   const load = useCallback(async () => {
     setLoadFailed(false);
@@ -159,12 +189,24 @@ export function useCommentApplet({
       return;
     }
     setComments(thread.data.comments);
+    // The thread is on screen, so it has been read — and only now. A
+    // panel that could not load its thread has shown nobody anything,
+    // and clearing the badge there would take the signal away without
+    // ever delivering what it pointed at. The seam answers the count
+    // that remains, so the badge takes the server's number rather than
+    // assuming zero.
+    const marked = await api
+      .POST("/api/v1/comments/read", { body: { entityType, entityId } })
+      .catch(() => ({ data: undefined }));
+    if (marked.data) setUnread(marked.data.unread);
   }, [entityType, entityId]);
 
   return {
     id: "chat",
     icon: MessageSquare,
     label: CHAT_LABEL,
+    // CMT-004: chat is the only applet that carries one.
+    badge: unread,
     accessory: () => (comments === null ? null : <CountPill count={comments.length} />),
     render: () => (
       <CommentThread
