@@ -25,12 +25,15 @@ import { useIntl } from "react-intl";
 export function AppletPanel({
   id,
   label,
+  accessory,
   onClose,
   children,
 }: Readonly<{
   id: string;
   /** Accessible name and header title — the active applet's label. */
   label: string;
+  /** The active applet's own header content, beside the title. */
+  accessory?: ReactNode;
   onClose: () => void;
   children: ReactNode;
 }>) {
@@ -49,7 +52,10 @@ export function AppletPanel({
       className="absolute inset-y-0 end-(--width-activitybar) z-10 flex w-(--width-panel) shrink-0 flex-col border-s border-default bg-raised @min-[1100px]/record:static @min-[1100px]/record:z-auto"
     >
       <header className="flex h-11 shrink-0 items-center justify-between border-b border-muted px-4">
-        <h2 className="text-base font-semibold">{label}</h2>
+        <div className="flex min-w-0 items-center gap-2">
+          <h2 className="truncate text-base font-semibold">{label}</h2>
+          {accessory}
+        </div>
         <button
           type="button"
           onClick={onClose}

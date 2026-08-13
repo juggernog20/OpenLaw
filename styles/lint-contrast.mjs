@@ -87,6 +87,10 @@ PAIRS.push(
   ["confidential-fg", "bg-raised", BODY],
   ["confidential-fg", "confidential-bg", BODY],
 );
+// The Legal Only comment row (DES-023) — its own wash, one step lighter
+// than the banner, so the row's own text and the DES-009-paired badge
+// sitting on top of it both keep reading.
+PAIRS.push(["text-primary", "legal-only-bg", BODY], ["text-muted", "legal-only-bg", BODY]);
 // Avatar initials — graphical identifier per DES-018/DES-019; the name
 // always accompanies the avatar in accessible contexts.
 PAIRS.push(["avatar-fg", "avatar-bg", UI]);

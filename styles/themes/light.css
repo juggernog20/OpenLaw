@@ -76,6 +76,11 @@
   --confidential-fg: #5b2b8c;
   --confidential-bg: #f5e6fa;
 
+  /* The Legal Only comment row's wash (DES-023). A step lighter than
+   * the confidential banner, so the row reads as tinted while the
+   * DES-009-paired badge on top of it still stands out. */
+  --legal-only-bg: #faf3fe;
+
   /* Avatar — uniform initials treatment per DES-018 */
   --avatar-bg: #51b3d6;
   --avatar-fg: #0d1117;

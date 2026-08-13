@@ -233,6 +233,48 @@
   "auth.twoFactor.useTotp": {
     "defaultMessage": "Use your authenticator app"
   },
+  "comments.applet": {
+    "defaultMessage": "Comments"
+  },
+  "comments.audience.fullThread": {
+    "defaultMessage": "Visible to everyone on this record, including the requester."
+  },
+  "comments.audience.legalOnly": {
+    "defaultMessage": "Visible to Administrators and Legal Team Members."
+  },
+  "comments.audience.workingTeam": {
+    "defaultMessage": "Visible to the legal team and Contributors on this record."
+  },
+  "comments.composer": {
+    "defaultMessage": "New comment"
+  },
+  "comments.empty": {
+    "defaultMessage": "Nothing has been said about this record yet. Add the first comment to keep the conversation on the record."
+  },
+  "comments.loadError": {
+    "defaultMessage": "The conversation could not be read. Reopen the panel to try again."
+  },
+  "comments.placeholder": {
+    "defaultMessage": "Add a comment…"
+  },
+  "comments.post": {
+    "defaultMessage": "Comment"
+  },
+  "comments.postError": {
+    "defaultMessage": "The comment could not be posted. Try again."
+  },
+  "comments.tier.fullThread": {
+    "defaultMessage": "Full thread"
+  },
+  "comments.tier.legalOnly": {
+    "defaultMessage": "Legal only"
+  },
+  "comments.tier.workingTeam": {
+    "defaultMessage": "Working team"
+  },
+  "comments.tierGroup": {
+    "defaultMessage": "Audience"
+  },
   "contracts.applet.settings": {
     "defaultMessage": "Contract settings"
   },

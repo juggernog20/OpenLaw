@@ -112,6 +112,14 @@
   --color-confidential-bg: var(--confidential-bg);
 
   /* ------------------------------------------------------------------ *
+   * Comment tiers (DD-016, DES-023)                                    *
+   * Only Legal Only has a surface of its own: the row wash that makes  *
+   * the tier read peripherally (CMT-003). Working Team and Full Thread *
+   * wear the neutral counter badge on the panel's own surface.         *
+   * ------------------------------------------------------------------ */
+  --color-legal-only-bg: var(--legal-only-bg);
+
+  /* ------------------------------------------------------------------ *
    * File-type icons — theme-invariant brand colors                     *
    * ------------------------------------------------------------------ */
   --color-file-word: #2b6cb0;

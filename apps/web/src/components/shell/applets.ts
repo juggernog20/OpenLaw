@@ -40,6 +40,13 @@ interface AppletBase {
 /** A slot that expands the side panel with its own content. */
 export interface PanelApplet extends AppletBase {
   render: () => ReactNode;
+  /**
+   * Rendered beside the panel's title while the applet is open. The
+   * panel header is chrome, but what sits in it is the applet's — the
+   * M3 count pill is the first user (DES-016's implementation
+   * clarification, point 5). Omit for a plain title.
+   */
+  accessory?: () => ReactNode;
   href?: never;
 }
 

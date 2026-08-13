@@ -27,6 +27,13 @@ const CHAT: Applet = {
   render: () => <p>Chat panel</p>,
 };
 
+/** An applet that puts its own content in the panel header — the M3
+ * count pill's slot (DES-016's implementation clarification, point 5). */
+const CHAT_WITH_COUNT: Applet = {
+  ...CHAT,
+  accessory: () => <span>4</span>,
+};
+
 const HISTORY: Applet = {
   id: "history",
   icon: History,
@@ -53,6 +60,16 @@ function renderApplets(applets: readonly Applet[] = [CHAT, HISTORY, SETTINGS]) {
 }
 
 describe("record applets (#47)", () => {
+  it("lets the open applet put its own content in the panel header", async () => {
+    const user = userEvent.setup();
+    renderApplets([CHAT_WITH_COUNT]);
+
+    await user.click(screen.getByRole("button", { name: "Chat (3)" }));
+    const panel = screen.getByRole("complementary", { name: "Chat" });
+    // The header is chrome; what sits beside its title is the applet's.
+    expect(within(panel).getByText("4")).toBeInTheDocument();
+  });
+
   it("renders one slot per page-scoped applet and nothing else", () => {
     renderApplets([CHAT, HISTORY]);
 

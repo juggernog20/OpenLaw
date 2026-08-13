@@ -73,11 +73,11 @@
  * Access has two floors (CTR-021). Every mutation is Member+ —
  * Administrators and Legal Team Members equally — and so is every
  * picker read behind one. The list and the record read one step wider:
- * a Contributor reaches them, and `teamScope` narrows what they reach
- * to the contracts they hold a `contract_team` row on. Being added to
- * the team is what grants the access (DD-015), so a contract a
- * Contributor is not on answers exactly as a contract that does not
- * exist. Business Users are refused everywhere. The DD-015
+ * a Contributor reaches them, and the shared `contractTeamScope` narrows
+ * what they reach to the contracts they hold a `contract_team` row on.
+ * Being added to the team is what grants the access (DD-015), so a
+ * contract a Contributor is not on answers exactly as a contract that
+ * does not exist. Business Users are refused everywhere. The DD-015
  * business/legal editable-field split is not built here: a Contributor
  * reads.
  *
@@ -115,6 +115,7 @@ import {
 } from "@openlaw/db";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
+import { contractTeamScope } from "../../lib/contract-access.js";
 import {
   AttachedCustomFieldSchema,
   assertRequiredCustomFields,
@@ -524,31 +525,10 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       )
       .leftJoin(counterparties, eq(contractCounterparties.counterpartyId, counterparties.id));
 
-  /**
-   * How far one viewer sees across the contract table (CTR-021).
-   * Member+ see every contract, so nothing narrows and this answers
-   * `undefined` — which drops out of the `and(...)` it is composed
-   * into. A Contributor sees exactly the contracts they hold a
-   * `contract_team` row on, whichever role that row carries: DD-015
-   * makes the Contributor grant per-record, and adding someone to the
-   * team is the act that grants it.
-   *
-   * The same predicate serves both readers. The list filters on it, so
-   * a Contributor's list is their work and not the whole company's; the
-   * record read applies it beside the number, so a contract they are
-   * not on 404s exactly as a contract that does not exist. One
-   * predicate is what keeps those two answers from drifting apart.
-   */
-  function teamScope(user: AuthenticatedUser) {
-    if (user.role !== "contributor") return undefined;
-    return inArray(
-      contracts.id,
-      app.db
-        .select({ contractId: contractTeam.contractId })
-        .from(contractTeam)
-        .where(eq(contractTeam.userId, user.id)),
-    );
-  }
+  /** How far this viewer sees across the contract table (CTR-021) —
+   * the shared predicate, so the list, the record read, and the comment
+   * routes all answer the same question the same way. */
+  const teamScope = (user: AuthenticatedUser) => contractTeamScope(app.db, user);
 
   /** The working group on one contract, alphabetical by name so the
    * roster reads the same on every visit; a person holding two roles

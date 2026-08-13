@@ -49,9 +49,10 @@
  * already made.
  *
  * This is the first production mount of the DES-016 record activity
- * bar. Its applet set is limited to what exists before M9: chat
- * (CMT-004) and history (DD-017) have no panels yet, so only the
- * settings deep-link slot is offered.
+ * bar. Two of its three slots exist: the chat applet (CMT-004), which
+ * is the entity-generic comment panel keyed by this record's reference,
+ * and the settings deep-link below the divider (SET-001). History
+ * (DD-017) has no panel yet.
  *
  * Archive (soft delete — for mistakes and imports, not for ending a
  * contract) and restore live in the sub-bar; an archived record reads
@@ -123,6 +124,7 @@ import { cn } from "../lib/utils";
 import { canReadContracts, isMemberPlus } from "../lib/roles";
 import { currentUser, needsSetup } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
+import { useCommentApplet } from "../components/comments/comment-applet";
 import { RecordApplets } from "../components/shell/record-applets";
 import type { Applet } from "../components/shell/applets";
 import { Avatar } from "../components/avatar";
@@ -197,8 +199,8 @@ type FieldKey =
   | "risk"
   | "value";
 
-/** The one applet the record offers before M9 — SET-001's deep link to
- * the contract configuration behind this record. */
+/** SET-001's deep link to the contract configuration behind this
+ * record — a slot that navigates rather than opening the panel. */
 const SETTINGS_APPLET: Applet = {
   id: "settings",
   icon: Settings,
@@ -234,6 +236,16 @@ function ContractRecord() {
   } = useLoaderData<typeof contractRecordLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
+
+  /** The conversation about this record (CMT-004), keyed by the
+   * entity reference the panel takes — it never learns it is a
+   * contract. Every viewer who reaches the page reaches the thread; the
+   * API decides which tiers they hear. */
+  const chatApplet = useCommentApplet({
+    entityType: "contract",
+    entityId: contract.id,
+    role: user.role,
+  });
 
   /** The saved record — the server's truth after the last commit. */
   const [saved, setSaved] = useState<ContractRow>(contract);
@@ -509,7 +521,7 @@ function ContractRecord() {
           { reference, title: saved.title },
         )}
       />
-      <RecordApplets applets={[SETTINGS_APPLET]}>
+      <RecordApplets applets={[chatApplet, SETTINGS_APPLET]}>
         <div className="flex flex-col gap-4 overflow-y-auto px-page-x py-page-y">
           {archived && (
             <p className="rounded-card bg-status-warning-bg px-3 py-2 text-md text-status-warning-fg">
