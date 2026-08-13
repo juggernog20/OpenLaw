@@ -538,7 +538,7 @@ export interface paths {
     delete: operations["detachContractTypeField"];
     options?: never;
     head?: never;
-    /** Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard enforcement arrives with the record milestone (M8) */
+    /** Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard-enforced when a record is created on this type and when one is re-typed onto it (MTR-014) */
     patch: operations["setContractTypeFieldRequired"];
     trace?: never;
   };
@@ -797,7 +797,7 @@ export interface paths {
     /** The contract list, newest reference first: number, title, type, and status; archived contracts only with includeArchived=true */
     get: operations["listContracts"];
     put?: never;
-    /** Create a contract from a title and a live type; the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward */
+    /** Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward */
     post: operations["createContract"];
     delete?: never;
     options?: never;
@@ -812,7 +812,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The live contract types and statuses in display order, and the live people the Owner and team pickers offer — the create dialog's and the record's Member+ picker source (the settings surfaces stay Administrator-only per SET-002) */
+    /** The live contract types in display order, each with the fields it attaches (CTR-016) so the create dialog can grow the ones it requires; the live statuses; and the live people the Owner and team pickers offer — the create dialog's and the record's Member+ picker source (the settings surfaces stay Administrator-only per SET-002) */
     get: operations["listContractOptions"];
     put?: never;
     post?: never;
@@ -829,14 +829,14 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** One contract by its CTR-003 number, with its Owner, its signing entity, its counterparties, and its working group — the record page's read; archived contracts answer too, so restore stays reachable */
+    /** One contract by its CTR-003 number, with its Owner, its signing entity, its counterparties, its working group, and the fields its type attaches (CTR-016) in attachment order — the record page's read; archived contracts answer too, so restore stays reachable */
     get: operations["getContract"];
     put?: never;
     post?: never;
     delete?: never;
     options?: never;
     head?: never;
-    /** Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, the value, or the status — any live status may follow any other (CTR-001). The value is one field in three parts: amount, currency, and cadence commit together and clear together. Never on an archived contract */
+    /** Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, the value, the type, a custom field, or the status — any live status may follow any other (CTR-001). The value is one field in three parts: amount, currency, and cadence commit together and clear together. Re-typing re-checks the new type's hard-required fields before it commits (CTR-016/MTR-014), so the type and the values that satisfy it may be sent together. Never on an archived contract */
     patch: operations["updateContract"];
     trace?: never;
   };
@@ -4031,6 +4031,9 @@ export interface operations {
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
               description: string | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -4063,6 +4066,9 @@ export interface operations {
         "application/json": {
           title: string;
           contractTypeId: string;
+          customFields?: {
+            [key: string]: (string | number | boolean | string[]) | null;
+          };
         };
       };
     };
@@ -4108,6 +4114,9 @@ export interface operations {
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
               description: string | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -4148,6 +4157,26 @@ export interface operations {
               id: string;
               slug: string;
               displayName: string;
+              fields: {
+                fieldId: string;
+                slug: string;
+                displayName: string;
+                description: string | null;
+                /** @enum {string} */
+                fieldType:
+                  | "text"
+                  | "long_text"
+                  | "number"
+                  | "date"
+                  | "boolean"
+                  | "single_select"
+                  | "multi_select"
+                  | "user"
+                  | "entity";
+                options: string[] | null;
+                displayOrder: number;
+                isRequired: boolean;
+              }[];
             }[];
             contractStatuses: {
               id: string;
@@ -4230,11 +4259,46 @@ export interface operations {
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
               description: string | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
+            };
+            fields: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              options: string[] | null;
+              displayOrder: number;
+              isRequired: boolean;
+            }[];
+            customFieldRefs: {
+              users: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              }[];
+              entities: {
+                id: string;
+                legalName: string;
+              }[];
             };
             team: {
               id: string;
@@ -4289,6 +4353,10 @@ export interface operations {
             /** @enum {string} */
             cadence: "one_time" | "monthly" | "annually";
           } | null;
+          contractTypeId?: string;
+          customFields?: {
+            [key: string]: (string | number | boolean | string[]) | null;
+          };
           statusId?: string;
         };
       };
@@ -4335,11 +4403,46 @@ export interface operations {
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
               description: string | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
+            };
+            fields: {
+              fieldId: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              options: string[] | null;
+              displayOrder: number;
+              isRequired: boolean;
+            }[];
+            customFieldRefs: {
+              users: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              }[];
+              entities: {
+                id: string;
+                legalName: string;
+              }[];
             };
           };
         };
@@ -4504,6 +4607,9 @@ export interface operations {
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
               description: string | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -4583,6 +4689,9 @@ export interface operations {
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
               description: string | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -4662,6 +4771,9 @@ export interface operations {
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
               description: string | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -4740,6 +4852,9 @@ export interface operations {
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
               description: string | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -4812,6 +4927,9 @@ export interface operations {
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
               description: string | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;

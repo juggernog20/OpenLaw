@@ -22,5 +22,6 @@ export const attachedFieldsRoutes = typeFieldRoutes({
   scopeRefusal: "Only contract-scoped and global fields attach to contract types.",
   scopeSummary: "contract-scoped and global fields only (CTR-016)",
   actionPrefix: "contract_type_field",
-  requiredMilestone: "M8",
+  // No `requiredMilestone`: the contract record enforces the flag from
+  // #112, at creation and at re-type (CTR-016/MTR-014).
 });

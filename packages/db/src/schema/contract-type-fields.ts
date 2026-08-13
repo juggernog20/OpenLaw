@@ -7,9 +7,11 @@
  * types, in what order, and whether each is required there. Only
  * `contract` and `global` scoped fields attach here
  * (application-enforced). Detaching deletes the join row only; the
- * catalog definition and stored values are untouched (MTR-014). Hard
- * enforcement of `is_required` arrives with the contract record
- * milestone (M8).
+ * catalog definition and stored values are untouched (MTR-014) — the
+ * values are keyed by slug in `contracts.custom_fields`, so
+ * re-attaching brings them back. `is_required` is hard-enforced from
+ * M8: a contract cannot be created on this type, or re-typed onto it,
+ * while a field it marks required has no value.
  */
 
 import { index, pgTable, primaryKey, text } from "drizzle-orm/pg-core";

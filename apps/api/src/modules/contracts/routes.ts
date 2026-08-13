@@ -53,6 +53,23 @@
  * integer count of the currency's smallest unit; no total is stored,
  * because every total (annual × term) is derivable from what is.
  *
+ * The custom fields are CTR-016's, and they are the M6 catalog finally
+ * doing work. The contract's type attaches fields through
+ * `contract_type_fields`; that join decides which render and in what
+ * order, and the values live in one jsonb column keyed by field slug.
+ * Keying by slug is what retains a value when the field is detached: the
+ * join row goes, the value stays, and re-attaching brings it back.
+ *
+ * `is_required` becomes a rule here — the M6 stub that stored the flag
+ * without enforcing it closes at two points, both at this seam rather
+ * than only in a form. **Creation** refuses a contract whose type
+ * requires a field the body leaves empty. **Re-typing** re-checks the
+ * *new* type's required fields before it commits, because a re-type that
+ * skipped the check would be the way around the rule (MTR-014). Both go
+ * through `assertRequiredCustomFields`; the SET-003 archive guard's bulk
+ * reassignment deliberately will not, since that is a system move rather
+ * than a re-type anyone chose.
+ *
  * Access is Member+ throughout — Administrators and Legal Team Members
  * equally. Contributor record-level access waits for the DD-015 grid.
  * Every mutation appends to the activity log in the same transaction
@@ -68,6 +85,7 @@ import {
   contractStatuses,
   contracts,
   contractTeam,
+  contractTypeFields,
   contractTypes,
   counterparties,
   CONTRACT_STAGES,
@@ -75,6 +93,7 @@ import {
   desc,
   entities,
   eq,
+  inArray,
   isNull,
   ne,
   SEVERITY_LEVELS,
@@ -83,9 +102,19 @@ import {
   USER_ROLES,
   VALUE_CADENCES,
   type Contract,
+  type CustomFieldValue,
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
+import {
+  AttachedCustomFieldSchema,
+  assertRequiredCustomFields,
+  coerceCustomFieldValue,
+  CustomFieldsInput,
+  CustomFieldsSchema,
+  selectAttachedFields,
+  type AttachedCustomField,
+} from "../../lib/custom-fields.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
 /** Contracts are Member+ everywhere, read and write. */
@@ -220,17 +249,50 @@ const ContractRowSchema = z.object({
    * it rides every row, not just the record's. */
   value: ContractValueSchema.nullable(),
   description: z.string().nullable(),
+  /** CTR-016's custom fields, keyed by the catalog field's slug. Which
+   * of these the record draws is the type's attachment join to say, not
+   * this map's: a value under a slug the type no longer attaches is
+   * held, not shown, and comes back the moment the field is re-attached.
+   * `{}` = nothing recorded. It rides every row for the same reason
+   * `description` does — it is a column of the record, and the
+   * per-field PATCH answers with the row. */
+  customFields: CustomFieldsSchema,
   archivedAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });
 
 const ContractEnvelope = z.object({ contract: ContractRowSchema });
-/** The record page's read: the contract, its working group, and every
- * party on the other side. Both lists ride here rather than on the row,
- * because only the record renders them — the list would carry joins it
- * never draws. */
-const ContractRecordEnvelope = ContractEnvelope.extend({
+
+/**
+ * The people and Entities the stored custom-field values name (CTR-016's
+ * `user` and `entity` types). The pickers offer live rows only, so a
+ * person or an Entity archived after being picked would drop out of the
+ * option lists and leave the control showing a bare id — the record
+ * would stop naming what it holds. These are the rows it holds,
+ * whatever their standing, which is the same move the Owner and the
+ * signing entity already make by riding the row resolved.
+ */
+const CustomFieldRefsSchema = z.object({
+  users: z.array(PersonSchema),
+  entities: z.array(SigningEntitySchema),
+});
+
+/** The contract plus the fields its type attaches (CTR-016). Every
+ * answer that can change the type carries them, because changing the
+ * type changes which fields the record renders. */
+const ContractFieldsEnvelope = ContractEnvelope.extend({
+  /** The type's live attachments in `display_order` — the order the
+   * record draws them, and the only fields it draws. */
+  fields: z.array(AttachedCustomFieldSchema),
+  customFieldRefs: CustomFieldRefsSchema,
+});
+
+/** The record page's read: the contract, the fields its type attaches,
+ * its working group, and every party on the other side. The lists ride
+ * here rather than on the row, because only the record renders them —
+ * the list would carry joins it never draws. */
+const ContractRecordEnvelope = ContractFieldsEnvelope.extend({
   team: z.array(TeamMemberSchema),
   counterparties: z.array(CounterpartySchema),
 });
@@ -247,6 +309,15 @@ const TypeOptionSchema = z.object({
   id: z.string(),
   slug: z.string(),
   displayName: z.string(),
+});
+
+/** A type as the create dialog and the re-type control read it: the
+ * name to offer, and the fields picking it will demand (CTR-016). The
+ * dialog grows the required ones so a contract cannot be born missing
+ * data its type demands — the client half of the MTR-014 rule the seam
+ * enforces either way. */
+const TypeChoiceSchema = TypeOptionSchema.extend({
+  fields: z.array(AttachedCustomFieldSchema),
 });
 
 /** The Member+ readable slice of a contract status: the label to show
@@ -349,6 +420,20 @@ function sameValue(
   );
 }
 
+/** One custom-field value equals another when it reads the same. The
+ * multi-select is the only shape that is not a primitive, and it is
+ * stored in the catalog's own option order, so comparing position by
+ * position is comparing the set. */
+function sameCustomFieldValue(
+  left: CustomFieldValue | undefined,
+  right: CustomFieldValue,
+): boolean {
+  if (Array.isArray(left) && Array.isArray(right)) {
+    return left.length === right.length && left.every((item, index) => item === right[index]);
+  }
+  return left === right;
+}
+
 function toRow(context: ContractContext) {
   const { row } = context;
   return {
@@ -367,6 +452,7 @@ function toRow(context: ContractContext) {
     risk: row.risk,
     value: toValue(row),
     description: row.description,
+    customFields: row.customFields,
     archivedAt: row.archivedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -605,6 +691,132 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     return current;
   }
 
+  /** One contract type's attached fields, in the order the record draws
+   * them (CTR-016). The join is the only thing that decides this: the
+   * jsonb column holds whatever it holds. */
+  const attachedFieldsOf = (db: Executor, contractTypeId: string) =>
+    selectAttachedFields(db, contractTypeFields, contractTypeId);
+
+  /**
+   * The people and Entities the stored values name, resolved so the
+   * record can render a name where it holds an id. Archived rows are
+   * included on purpose — the pickers stop offering them, but a record
+   * that already names one must go on naming it.
+   */
+  async function customFieldRefs(
+    db: Executor,
+    attached: readonly AttachedCustomField[],
+    values: Readonly<Record<string, CustomFieldValue>>,
+  ) {
+    const idsOfType = (fieldType: "user" | "entity") =>
+      attached
+        .filter((field) => field.fieldType === fieldType)
+        .map((field) => values[field.slug])
+        .filter((value): value is string => typeof value === "string" && value !== "");
+    const userIds = [...new Set(idsOfType("user"))];
+    const entityIds = [...new Set(idsOfType("entity"))];
+    const [people, signatories] = await Promise.all([
+      userIds.length === 0
+        ? []
+        : db
+            .select({
+              id: users.id,
+              displayName: users.displayName,
+              image: users.image,
+              archivedAt: users.archivedAt,
+            })
+            .from(users)
+            .where(inArray(users.id, userIds)),
+      entityIds.length === 0
+        ? []
+        : db
+            .select({ id: entities.id, legalName: entities.legalName })
+            .from(entities)
+            .where(inArray(entities.id, entityIds)),
+    ]);
+    return { users: people.map(toPerson), entities: signatories };
+  }
+
+  /** The whole custom-field half of an answer: the type's attachments
+   * and the rows its values name. */
+  async function customFieldsEnvelope(db: Executor, context: ContractContext) {
+    const attached = await attachedFieldsOf(db, context.row.contractTypeId);
+    return {
+      fields: attached,
+      customFieldRefs: await customFieldRefs(db, attached, context.row.customFields),
+    };
+  }
+
+  /**
+   * Applies a partial custom-field map onto the stored one and answers
+   * the result, plus the DD-017 changed entries the write should log.
+   *
+   * Three rules hold here. A key the map does not carry is untouched —
+   * that is what makes one PATCH one field (DES-017). A `null` clears
+   * the key rather than storing one, so "nothing recorded" has one
+   * shape. And a slug the type does not attach is refused, because
+   * writing under it would put a value on a record no surface could
+   * ever show or clear.
+   */
+  async function applyCustomFields(
+    tx: Tx,
+    attached: readonly AttachedCustomField[],
+    stored: Readonly<Record<string, CustomFieldValue>>,
+    incoming: Readonly<Record<string, CustomFieldValue | null>>,
+  ) {
+    const next: Record<string, CustomFieldValue> = { ...stored };
+    const changed: Record<string, { from: unknown; to: unknown }> = {};
+    for (const [slug, raw] of Object.entries(incoming)) {
+      const field = attached.find((candidate) => candidate.slug === slug);
+      if (!field) {
+        throw httpError(400, "That field is not on this contract's type.");
+      }
+      const value = coerceCustomFieldValue(field, raw);
+      if (value !== null && (field.fieldType === "user" || field.fieldType === "entity")) {
+        await lockedReference(tx, field, value as string);
+      }
+      const before = stored[slug];
+      if (value === null) {
+        if (before === undefined) continue;
+        delete next[slug];
+      } else {
+        if (sameCustomFieldValue(before, value)) continue;
+        next[slug] = value;
+      }
+      // Namespaced by slug: a custom field named "Title" and the
+      // record's own title are two different things, and the audit map
+      // must not let them collide. The M9 viewer resolves the slug to
+      // the field's display name from the catalog.
+      changed[`field.${slug}`] = { from: before ?? null, to: value };
+    }
+    return { values: next, changed };
+  }
+
+  /**
+   * The two field types that name a row: `user` and `entity` store an
+   * id, so the write checks the id is a live one. Archived is refused
+   * for the same reason the Owner and the signing entity refuse it —
+   * nothing new gets pointed at someone who has left. A row archived
+   * after the fact stays on the record untouched.
+   */
+  async function lockedReference(tx: Tx, field: AttachedCustomField, id: string) {
+    if (field.fieldType === "user") {
+      // Anyone live: a custom person field is not the Owner, so it is
+      // not held to the Member+ floor the Owner is (CTR-004).
+      await lockedUser(tx, id, USER_ROLES, `${field.displayName}: pick a live person.`);
+      return;
+    }
+    const [signatory] = await tx
+      .select({ id: entities.id, archivedAt: entities.archivedAt })
+      .from(entities)
+      .where(eq(entities.id, id))
+      .limit(1)
+      .for("update");
+    if (!signatory || signatory.archivedAt) {
+      throw httpError(400, `${field.displayName}: pick a live entity.`);
+    }
+  }
+
   app.get(
     "/contracts",
     {
@@ -639,14 +851,16 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "listContractOptions",
         summary:
-          "The live contract types and statuses in display order, and " +
-          "the live people the Owner and team pickers offer — the create " +
-          "dialog's and the record's Member+ picker source (the settings " +
-          "surfaces stay Administrator-only per SET-002)",
+          "The live contract types in display order, each with the " +
+          "fields it attaches (CTR-016) so the create dialog can grow " +
+          "the ones it requires; the live statuses; and the live people " +
+          "the Owner and team pickers offer — the create dialog's and " +
+          "the record's Member+ picker source (the settings surfaces " +
+          "stay Administrator-only per SET-002)",
         tags: ["contracts"],
         response: {
           200: z.object({
-            contractTypes: z.array(TypeOptionSchema),
+            contractTypes: z.array(TypeChoiceSchema),
             contractStatuses: z.array(StatusOptionSchema),
             users: z.array(UserOptionSchema),
           }),
@@ -689,8 +903,18 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           .where(isNull(users.archivedAt))
           .orderBy(asc(sql`lower(${users.displayName})`)),
       ]);
+      // Each type's own attachments, so the dialog knows what picking
+      // that type will demand before it asks for it. One query per live
+      // type: the taxonomy is a handful of rows, and the alternative —
+      // one join grouped in memory — buys nothing at this size.
+      const attached = await Promise.all(
+        types.map((contractType) => attachedFieldsOf(app.db, contractType.id)),
+      );
       return {
-        contractTypes: types,
+        contractTypes: types.map((contractType, index) => ({
+          ...contractType,
+          fields: attached[index]!,
+        })),
         contractStatuses: statuses,
         users: people.map((person) => ({ ...toPerson(person), role: person.role })),
       };
@@ -705,7 +929,8 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "getContract",
         summary:
           "One contract by its CTR-003 number, with its Owner, its " +
-          "signing entity, its counterparties, and its working group — " +
+          "signing entity, its counterparties, its working group, and " +
+          "the fields its type attaches (CTR-016) in attachment order — " +
           "the record page's read; archived contracts answer too, so " +
           "restore stays reachable",
         tags: ["contracts"],
@@ -718,11 +943,12 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(eq(contracts.number, request.params.number))
         .limit(1);
       if (!row) throw httpError(404, "No contract exists with this number.");
-      const [team, parties] = await Promise.all([
+      const [team, parties, custom] = await Promise.all([
         selectTeam(app.db, row.row.id),
         selectCounterparties(app.db, row.row.id),
+        customFieldsEnvelope(app.db, row),
       ]);
-      return { contract: toRow(row), team, counterparties: parties };
+      return { contract: toRow(row), ...custom, team, counterparties: parties };
     },
   );
 
@@ -733,14 +959,23 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "createContract",
         summary:
-          "Create a contract from a title and a live type; the status " +
-          "starts on the protected draft seed (CTR-001) and the number " +
-          "comes from the CTR-003 sequence. Everything else is set inline " +
-          "on the record afterward",
+          "Create a contract from a title, a live type, and any custom " +
+          "fields that type hard-requires (CTR-016/MTR-014 — creation is " +
+          "refused while one is empty); the status starts on the " +
+          "protected draft seed (CTR-001) and the number comes from the " +
+          "CTR-003 sequence. Everything else is set inline on the record " +
+          "afterward",
         tags: ["contracts"],
         // Strict: the number is the sequence's to give, so a body
         // carrying one is refused rather than silently ignored.
-        body: z.strictObject({ title: TitleSchema, contractTypeId: z.string() }),
+        body: z.strictObject({
+          title: TitleSchema,
+          contractTypeId: z.string(),
+          /** The type's fields, keyed by slug. Only the required ones
+           * have to be here — the rest are set on the record — and a
+           * slug the type does not attach is refused. */
+          customFields: CustomFieldsInput.optional(),
+        }),
         response: { 201: ContractEnvelope, default: problemResponse },
       },
     },
@@ -780,9 +1015,28 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           .limit(1);
         if (!draft) throw httpError(500, "The draft contract status is missing.");
 
+        // CTR-016's fields, and MTR-014's rule about them: the type
+        // says which fields it attaches and which of those it requires,
+        // and a record cannot be born missing data its type demands.
+        // This is the first of the rule's two enforcement points; the
+        // other is a re-type.
+        const attached = await attachedFieldsOf(tx, contractType.id);
+        const { values: customFields } = await applyCustomFields(
+          tx,
+          attached,
+          {},
+          request.body.customFields ?? {},
+        );
+        assertRequiredCustomFields(attached, customFields);
+
         const [row] = await tx
           .insert(contracts)
-          .values({ title: title.trim(), contractTypeId: contractType.id, statusId: draft.id })
+          .values({
+            title: title.trim(),
+            contractTypeId: contractType.id,
+            statusId: draft.id,
+            customFields,
+          })
           .returning();
         // Provenance, written once and never again (CTR-004): who made
         // this record survives every later owner change. It is part of
@@ -804,6 +1058,10 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             title: row!.title,
             contractType: contractType.displayName,
             status: draft.displayName,
+            // Which of the type's fields were answered at birth. The
+            // slugs, not the values: the M9 viewer narrates what was
+            // filled, and the values are on the record to be read.
+            customFields: Object.keys(customFields).sort(),
           },
         });
         return {
@@ -832,10 +1090,13 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "Commit one field of a contract in place (DES-017 per-field " +
           "commits): title, description, the Owner, the signing entity, " +
-          "priority, risk, the value, or the status — any live status " +
-          "may follow any other (CTR-001). The value is one field in " +
-          "three parts: amount, currency, and cadence commit together " +
-          "and clear together. Never on an archived contract",
+          "priority, risk, the value, the type, a custom field, or the " +
+          "status — any live status may follow any other (CTR-001). The " +
+          "value is one field in three parts: amount, currency, and " +
+          "cadence commit together and clear together. Re-typing " +
+          "re-checks the new type's hard-required fields before it " +
+          "commits (CTR-016/MTR-014), so the type and the values that " +
+          "satisfy it may be sent together. Never on an archived contract",
         tags: ["contracts"],
         params: NumberParams,
         // Strict: an unknown key is a client bug, not a silent strip.
@@ -855,9 +1116,18 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
            * whose value was taken off read the same, because both are
            * "no value is recorded". */
           value: ContractValueInput.nullable().optional(),
+          /** CTR-002's type, re-picked. Re-typing is the second place
+           * MTR-014's required rule holds, so this may travel with the
+           * `customFields` that satisfy the new type — the one compound
+           * DES-017 carves out for a purpose-built dialog. */
+          contractTypeId: z.string().optional(),
+          /** CTR-016's custom fields, keyed by slug. One key is one
+           * field committed; `null` clears it. Keys the type does not
+           * attach are refused. */
+          customFields: CustomFieldsInput.optional(),
           statusId: z.string().optional(),
         }),
-        response: { 200: ContractEnvelope, default: problemResponse },
+        response: { 200: ContractFieldsEnvelope, default: problemResponse },
       },
     },
     async (request) => {
@@ -951,6 +1221,72 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           changed.risk = { from: target.risk, to: body.risk };
         }
 
+        // CTR-002's type, re-picked — and with it the whole CTR-016
+        // question of which fields this record carries, since the
+        // attachment join hangs off the type. A re-type is the second
+        // place MTR-014's hard-required rule holds, and it is the one
+        // that matters most: without it, re-typing would be the way
+        // around a rule creation enforces.
+        let contractTypeName = current.contractTypeName;
+        const retyped =
+          body.contractTypeId !== undefined && body.contractTypeId !== target.contractTypeId;
+        if (retyped) {
+          // Lock the type row so a concurrent archive can't slip
+          // between the check and the update.
+          const [contractType] = await tx
+            .select({
+              id: contractTypes.id,
+              displayName: contractTypes.displayName,
+              archivedAt: contractTypes.archivedAt,
+            })
+            .from(contractTypes)
+            .where(eq(contractTypes.id, body.contractTypeId!))
+            .limit(1)
+            .for("update");
+          if (!contractType || contractType.archivedAt) {
+            throw httpError(400, "The contract type must be a live contract type.");
+          }
+          patch.contractTypeId = contractType.id;
+          changed.contractType = { from: current.contractTypeName, to: contractType.displayName };
+          contractTypeName = contractType.displayName;
+        }
+
+        // The fields the record carries once this write lands — the new
+        // type's when it is being re-typed, the current type's
+        // otherwise. Everything below is checked against these, so a
+        // slug is only writable while the type that attaches it is the
+        // type the contract will hold.
+        const attached = await attachedFieldsOf(tx, patch.contractTypeId ?? target.contractTypeId);
+        if (body.customFields !== undefined || retyped) {
+          const applied = await applyCustomFields(
+            tx,
+            attached,
+            target.customFields,
+            body.customFields ?? {},
+          );
+          const customFields = applied.values;
+          if (retyped) {
+            // The new type's whole required set, against the values the
+            // record will hold. Values retained from before count: a
+            // slug the old type also attached is already answered.
+            assertRequiredCustomFields(attached, customFields);
+          } else if (body.customFields !== undefined) {
+            // No re-type, so only the fields this commit touched are
+            // checked (MTR-014: the rule also holds when a required
+            // field is cleared). A record that already carries a gap —
+            // one made required after it was created — must still be
+            // editable everywhere else.
+            assertRequiredCustomFields(
+              attached.filter((field) => field.slug in body.customFields!),
+              customFields,
+            );
+          }
+          if (Object.keys(applied.changed).length > 0) {
+            patch.customFields = customFields;
+            Object.assign(changed, applied.changed);
+          }
+        }
+
         // CTR-010's value: three columns, one field. They are written as
         // a group and compared as a group, so changing the currency
         // alone is one change to "the value", not a change to a column
@@ -1005,7 +1341,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
 
         // Nothing changed: answer with the row and write no misleading
         // from==to audit entry.
-        if (Object.keys(patch).length === 0) return current;
+        if (Object.keys(patch).length === 0) return { ...current, attached };
 
         const [row] = await tx
           .update(contracts)
@@ -1034,7 +1370,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         return {
           row: row!,
-          contractTypeName: current.contractTypeName,
+          contractTypeName,
           statusName,
           stage,
           manager,
@@ -1042,9 +1378,18 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           // No field of this PATCH touches the other side — the
           // counterparties have their own routes.
           primaryCounterparty: current.primaryCounterparty,
+          attached,
         };
       });
-      return { contract: toRow(updated) };
+      const { attached, ...context } = updated;
+      // The attachments ride out because a re-type changed them: a
+      // client that adopted only the row would keep drawing the old
+      // type's fields over the new type's values.
+      return {
+        contract: toRow(context),
+        fields: attached,
+        customFieldRefs: await customFieldRefs(app.db, attached, context.row.customFields),
+      };
     },
   );
 

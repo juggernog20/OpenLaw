@@ -29,10 +29,23 @@ const CONTRIBUTOR = {
   role: "contributor",
 };
 
+/** The Governing law field, hard-required on MSAs and unattached to
+ * NDAs — the CTR-016 attachment the create dialog grows for. */
+const GOVERNING_LAW = {
+  fieldId: "f-law",
+  slug: "governing_law",
+  displayName: "Governing law",
+  description: null,
+  fieldType: "text",
+  options: null,
+  displayOrder: 1,
+  isRequired: true,
+};
+
 const OPTIONS = {
   contractTypes: [
-    { id: "t-nda", slug: "nda", displayName: "NDA" },
-    { id: "t-msa", slug: "msa", displayName: "MSA" },
+    { id: "t-nda", slug: "nda", displayName: "NDA", fields: [] },
+    { id: "t-msa", slug: "msa", displayName: "MSA", fields: [GOVERNING_LAW] },
   ],
   contractStatuses: [
     { id: "s-draft", slug: "draft", displayName: "Draft", stage: "draft" },
@@ -72,6 +85,7 @@ function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
     // (CTR-010).
     value: null,
     description: null,
+    customFields: {},
     archivedAt: null,
     createdAt: "2026-08-01T00:00:00.000Z",
     updatedAt: "2026-08-01T00:00:00.000Z",
@@ -90,19 +104,29 @@ function listApi(live: Record<string, unknown>[], archived: Record<string, unkno
     if (call.url.pathname === "/api/v1/contracts/options" && call.method === "GET") {
       return json(200, OPTIONS);
     }
+    // The create dialog can grow an `entity` field, so the list reads
+    // the M7 registry the same way the record does (CTR-016).
+    if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
+      return json(200, { entities: [] });
+    }
     if (call.url.pathname === "/api/v1/contracts" && call.method === "GET") {
       const all = call.url.searchParams.get("includeArchived") === "true";
       return json(200, { contracts: all ? [...rows, ...archived] : rows });
     }
     if (call.url.pathname === "/api/v1/contracts" && call.method === "POST") {
       creates.push(call.body);
-      const body = call.body as { title: string; contractTypeId: string };
+      const body = call.body as {
+        title: string;
+        contractTypeId: string;
+        customFields?: Record<string, unknown>;
+      };
       const created = contractRow({
         id: "c-new",
         number: 43,
         title: body.title,
         contractTypeId: body.contractTypeId,
         contractTypeName: body.contractTypeId === "t-nda" ? "NDA" : "MSA",
+        customFields: body.customFields ?? {},
       });
       rows.unshift(created);
       return json(201, { contract: created });
@@ -209,7 +233,9 @@ describe("the /contracts destination", () => {
     await user.click(screen.getByRole("button", { name: "Create" }));
 
     await waitFor(() =>
-      expect(api.creates).toEqual([{ title: "Globex NDA", contractTypeId: "t-nda" }]),
+      expect(api.creates).toEqual([
+        { title: "Globex NDA", contractTypeId: "t-nda", customFields: {} },
+      ]),
     );
     expect(await screen.findByRole("link", { name: "Globex NDA" })).toHaveAttribute(
       "href",
@@ -233,12 +259,50 @@ describe("the /contracts destination", () => {
     expect(api.creates).toEqual([]);
   });
 
+  it("grows the picked type's hard-required fields, and refuses to create while one is empty", async () => {
+    const api = listApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts");
+    const user = userEvent.setup();
+
+    await openCreateDialog(user);
+    await user.type(screen.getByLabelText("Title"), "Orion MSA");
+    // The NDA demands nothing, so the dialog asks for nothing.
+    await user.selectOptions(screen.getByLabelText("Contract type"), "t-nda");
+    expect(screen.queryByLabelText(/Governing law/)).not.toBeInTheDocument();
+
+    // The MSA demands one field, and it appears the moment it is picked.
+    await user.selectOptions(screen.getByLabelText("Contract type"), "t-msa");
+    const law = await screen.findByLabelText(/Governing law/);
+
+    await user.click(screen.getByRole("button", { name: "Create" }));
+    expect(
+      await screen.findByText("Fill Governing law — this contract type requires it."),
+    ).toBeInTheDocument();
+    expect(api.creates).toEqual([]);
+
+    await user.type(law, "England & Wales");
+    await user.click(screen.getByRole("button", { name: "Create" }));
+    await waitFor(() =>
+      expect(api.creates).toEqual([
+        {
+          title: "Orion MSA",
+          contractTypeId: "t-msa",
+          customFields: { governing_law: "England & Wales" },
+        },
+      ]),
+    );
+  });
+
   it("shows the API's refusal in the dialog", async () => {
     stubApi({
       signedIn: MEMBER,
       extra: (call) => {
         if (call.url.pathname === "/api/v1/contracts/options" && call.method === "GET") {
           return json(200, OPTIONS);
+        }
+        if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
+          return json(200, { entities: [] });
         }
         if (call.url.pathname === "/api/v1/contracts" && call.method === "GET") {
           return json(200, { contracts: [] });
@@ -302,6 +366,9 @@ describe("the /contracts destination", () => {
       extra: (call) => {
         if (call.url.pathname === "/api/v1/contracts/options" && call.method === "GET") {
           return json(200, OPTIONS);
+        }
+        if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
+          return json(200, { entities: [] });
         }
         if (call.url.pathname === "/api/v1/contracts" && call.method === "GET") {
           return call.url.searchParams.get("includeArchived") === "true"
