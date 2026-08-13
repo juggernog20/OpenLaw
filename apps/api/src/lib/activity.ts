@@ -67,8 +67,11 @@ export type ActivityAction =
   // reason (CTR-011): a party joining or leaving the other side is not
   // an edit of a field. The primary change is its own verb because it
   // also happens on its own — removing the primary promotes the next
-  // party, and the log has to say so rather than leave it implied.
-  | `contract.${"created" | "updated" | "status_changed" | "team_added" | "team_removed" | "counterparty_added" | "counterparty_removed" | "counterparty_primary_changed" | "archived" | "restored"}`
+  // party, and the log has to say so rather than leave it implied. A
+  // type reassignment (#113) keeps its own verb for the entity-record
+  // reason above: the contract moved because an Administrator archived
+  // its type, not because someone re-typed it.
+  | `contract.${"created" | "updated" | "status_changed" | "type_reassigned" | "team_added" | "team_removed" | "counterparty_added" | "counterparty_removed" | "counterparty_primary_changed" | "archived" | "restored"}`
   | "sso_provider.registered"
   | "sso_provider.updated";
 

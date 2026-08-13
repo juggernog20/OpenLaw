@@ -12,8 +12,8 @@
  * is system-protected here, not just in the UI: archive and delete
  * refuse it regardless of what a client sends. In-use counts are per
  * mount: a module whose record milestone has landed arms `usage`
- * (entities, #100) and gets genuine counts plus the live SET-003
- * guard; the others read zero until theirs does.
+ * (entities #100, contracts #113) and gets genuine counts plus the
+ * live SET-003 guard; matter types read zero until M22 arms theirs.
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -91,7 +91,8 @@ const TaxonomyRowSchema = z.object({
   displayOrder: z.number().int(),
   isSystemDefault: z.boolean(),
   archivedAt: z.iso.datetime().nullable(),
-  /** Live records on this type — the SET-003 guard number. */
+  /** The SET-003 guard number: every record holding this type,
+   * archived records included (ENT-009, CTR-020). */
   inUseCount: z.number().int(),
 });
 

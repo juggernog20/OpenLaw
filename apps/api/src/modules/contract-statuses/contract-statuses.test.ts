@@ -6,10 +6,14 @@
  * reorder, archive, restore — with the stage immutable after creation,
  * the per-stage floor (every stage keeps ≥1 unarchived status), and the
  * system-protected `draft` / `active` / `expired` rows. No reassignment
- * anywhere: structural minimums block instead (SET-003). Behind
- * SET-002's one role gate, every mutation appending to the activity log
- * (DD-017). Asserted at the HTTP seam plus direct activity_log reads —
- * the log has no read routes until M9.
+ * anywhere: structural minimums block instead (SET-003, CTR-020).
+ * Behind SET-002's one role gate, every mutation appending to the
+ * activity log (DD-017). Asserted at the HTTP seam plus direct
+ * activity_log reads — the log has no read routes until M9.
+ *
+ * From #113 the in-use count is real, and it blocks: a status contracts
+ * still hold refuses to archive, and refuses to delete, with the count
+ * in the problem detail. The Administrator moves the contracts.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -168,7 +172,8 @@ describe("GET /contract-statuses", () => {
     for (const row of rows) {
       expect(row.isSystemDefault).toBe(true);
       expect(row.archivedAt).toBeNull();
-      // No contracts exist until M8, so the live-usage count is zero.
+      // Nothing has been created on these seeds yet, so the SET-003
+      // count is zero — a real query since #113, not a placeholder.
       expect(row.inUseCount).toBe(0);
     }
     expect(rows.find((row) => row.slug === "redlining")!.displayName).toBe(
@@ -553,6 +558,155 @@ describe("DELETE /contract-statuses/:id", () => {
       cookies: adminCookies,
     });
     expect(res.statusCode, res.body).toBe(404);
+  });
+});
+
+describe("the SET-003 in-use guard over the contract record (#113)", () => {
+  const createStatus = async (displayName: string, stage: string): Promise<StatusRow> => {
+    const res = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/contract-statuses",
+      cookies: adminCookies,
+      payload: { displayName, stage },
+    });
+    expect(res.statusCode, res.body).toBe(201);
+    return res.json().contractStatus;
+  };
+
+  /** A contract, born on the protected draft seed (CTR-001). */
+  const createContract = async (title: string): Promise<{ number: number }> => {
+    const types = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/contract-types",
+      cookies: adminCookies,
+    });
+    expect(types.statusCode, types.body).toBe(200);
+    const nda = types.json().contractTypes.find((row: StatusRow) => row.slug === "nda");
+    const res = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/contracts",
+      cookies: adminCookies,
+      payload: { title, contractTypeId: nda.id },
+    });
+    expect(res.statusCode, res.body).toBe(201);
+    return res.json().contract;
+  };
+
+  const setStatus = async (number: number, statusId: string) => {
+    const res = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/contracts/${number}`,
+      cookies: adminCookies,
+      payload: { statusId },
+    });
+    expect(res.statusCode, res.body).toBe(200);
+  };
+
+  const setContractArchived = async (number: number, archived: boolean) => {
+    const res = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${number}/${archived ? "archive" : "restore"}`,
+      cookies: adminCookies,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+  };
+
+  let awaiting: StatusRow;
+  let stalled: StatusRow;
+  let parked: StatusRow;
+  let paused: { number: number };
+  let dropped: { number: number };
+
+  beforeAll(async () => {
+    awaiting = await createStatus("Awaiting counsel", "review");
+    stalled = await createStatus("Stalled", "review");
+    parked = await createStatus("Parked", "review");
+    paused = await createContract("Paused deal");
+    dropped = await createContract("Dropped deal");
+    await setStatus(paused.number, awaiting.id);
+    await setStatus(dropped.number, awaiting.id);
+    // One of the two is archived: the count and the FK cover the same
+    // set, so an archived contract's status reference is as real as a
+    // live one — a restore must never resurrect an archived status.
+    await setContractArchived(dropped.number, true);
+  });
+
+  it("answers the live usage count in the list read", async () => {
+    expect((await statusBySlug(awaiting.slug)).inUseCount).toBe(2);
+    expect((await statusBySlug(stalled.slug)).inUseCount).toBe(0);
+  });
+
+  it("refuses to archive an in-use status as 409, reporting the count", async () => {
+    const res = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contract-statuses/${awaiting.id}/archive`,
+      cookies: adminCookies,
+    });
+    expect(res.statusCode, res.body).toBe(409);
+    expect(res.headers["content-type"]).toContain("application/problem+json");
+    expect(res.json().detail).toContain("2 contracts");
+    expect((await statusBySlug(awaiting.slug)).archivedAt).toBeNull();
+  });
+
+  it("blocks rather than reassigns — a target in the body changes nothing", async () => {
+    // Statuses never take a reassignment (CTR-020): which status a
+    // contract belongs on is a judgement no bulk move can make.
+    const res = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contract-statuses/${awaiting.id}/archive`,
+      cookies: adminCookies,
+      payload: { reassignToId: stalled.id },
+    });
+    expect(res.statusCode, res.body).toBe(409);
+    expect(res.json().detail).toContain("2 contracts");
+    expect((await statusBySlug(stalled.slug)).inUseCount).toBe(0);
+  });
+
+  it("refuses to hard-delete an in-use status as 409", async () => {
+    const res = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/contract-statuses/${awaiting.id}`,
+      cookies: adminCookies,
+    });
+    expect(res.statusCode, res.body).toBe(409);
+    expect(res.json().detail).toContain("2 contracts");
+    expect((await listStatuses(true)).some((row) => row.slug === awaiting.slug)).toBe(true);
+  });
+
+  it("archives once the Administrator has moved the contracts off", async () => {
+    await setStatus(paused.number, stalled.id);
+    // The archived contract holds its status as firmly as a live one,
+    // and an archived record refuses edits — so clearing it takes a
+    // restore, a move, and an archive again. That is the price of one
+    // counting rule, and it is the honest one: a restore must never
+    // bring back a reference to an archived status.
+    await setContractArchived(dropped.number, false);
+    await setStatus(dropped.number, stalled.id);
+    await setContractArchived(dropped.number, true);
+    expect((await statusBySlug(awaiting.slug)).inUseCount).toBe(0);
+
+    const res = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contract-statuses/${awaiting.id}/archive`,
+      cookies: adminCookies,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().contractStatus.archivedAt).not.toBeNull();
+  });
+
+  it("guards a status held only by an archived contract", async () => {
+    // `stalled` now holds one live contract and one archived one; move
+    // the live one away and the archived reference alone still blocks.
+    await setStatus(paused.number, parked.id);
+    expect((await statusBySlug(stalled.slug)).inUseCount).toBe(1);
+
+    const res = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contract-statuses/${stalled.id}/archive`,
+      cookies: adminCookies,
+    });
+    expect(res.statusCode, res.body).toBe(409);
+    expect(res.json().detail).toContain("1 contract");
   });
 });
 
