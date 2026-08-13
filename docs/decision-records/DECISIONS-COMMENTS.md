@@ -57,7 +57,7 @@ _None — queue cleared 2026-08-05 (CMT-001 through CMT-005)._
 
 ## CMT-005 — Post-publish: edit with marker, soft delete, tier immutable
 
-- **Status** — Accepted; the "prior text in the audit log" clause is **amended by CMT-006**
+- **Status** — Accepted; the "prior text in the audit log" clause is **amended by CMT-006**; the mechanics are **extended by CMT-008**
 - **Date** — 2026-08-05
 - **Decision** — Authors edit their own comments (visible "edited" marker; ~~prior text in the audit log per DD-017~~ — **superseded by CMT-006**: prior text lives in `comment_revisions`). Delete is soft: a tombstone keeps thread continuity, ~~text retained in the audit log~~ (**CMT-006**: in `comment_revisions`); Admin hard-redact per the MTR-008/DOC-010 pattern. **Tier is immutable after posting** — wrong room means delete and repost.
 - **Rationale** — Widening leaks text written for a narrower room; narrowing hides what a wider room already read. Both are worse than repost.
@@ -65,7 +65,7 @@ _None — queue cleared 2026-08-05 (CMT-001 through CMT-005)._
 
 ## CMT-006 — Prior comment text lives in `comment_revisions`, never in an activity payload (amends CMT-005)
 
-- **Status** — Accepted
+- **Status** — Accepted; extended by **CMT-008** on what else a redact takes
 - **Date** — 2026-08-13
 - **Context** — CMT-005 says two things that cannot both hold. First, prior comment text lives in the audit log. Second, an Administrator can hard-redact a comment. DD-017 forbids `UPDATE` and `DELETE` on `activity_log`; corrections are appended, never applied. Text that enters a payload can therefore never leave it. A redact would remove the comment and leave what it said sitting in the log.
 - **Decision** —
@@ -90,14 +90,31 @@ _None — queue cleared 2026-08-05 (CMT-001 through CMT-005)._
 - **Alternatives considered** — **A markup token in the body** (`@[Name](id)`): exact to render and rename-proof, rejected because every other reader of `comments.body` would then be reading markup. **Offering everybody and refusing on post**: rejected — a name in a list you cannot address is a trap, and the tier confirmation cannot resolve it. **Mention adds to the team**: rejected — that grants record access as a side effect of typing a name.
 - **Consequences** — `comment_mentions` lands in M9/3 with (`comment_id`, `user_id`) and nothing else; the comment cascades, the user does not (SET-005). `GET /comments/mention-candidates` answers the candidate set with each person's tiers, so one server-side answer to "who can see what" serves the typeahead, the confirmation, and the refusal. Two display names that are identical cannot be told apart in the body, so both chip; the list still names exactly who was addressed. M18 reads `comment_mentions` for the fan-out and needs no parser.
 
+## CMT-008 — The three corrections: who owns each, what each tombstone says, and what a redact takes (extends CMT-005 and CMT-006)
+
+- **Status** — Accepted
+- **Date** — 2026-08-13
+- **Context** — CMT-005 names three corrections and their owners: an author edits, an author soft-deletes, an Administrator hard-redacts. CMT-006 says where the prior text lives so a redact can purge it. Neither says what a redact takes besides the text, whether a reader can tell the two tombstones apart, or what an edit does to the list of people the comment addressed (CMT-007). M9/4 (#130) has to answer all three before it can build the surface.
+- **Decision** —
+  - **A redact and a soft delete are different acts, and the row says which one happened.** `redacted_at` is its own column beside `deleted_at`. Reusing `deleted_at` for both would have an Administrator's removal read as the author taking their own words back, which is a lie about the record. The body is gone by then, so the row is the only place left to read the difference, and the two tombstones carry different sentences.
+  - **A redact reaches a comment already soft-deleted**, and that is the case it exists for. A soft delete only moved the text into `comment_revisions`; the redact is what takes it out of there.
+  - **A redact takes the mention list with the text.** Who a comment named is part of what was posted into the wrong record, and a chip list for a body that no longer exists says who was addressed by nothing. `comment_mentions` is ordinary application data, so it purges for CMT-006's reason.
+  - **An edit changes the text and not who the comment addressed.** The mention list is fixed at post time: it is the record of who was named when the thing was said, and the M18 fan-out has already read it. So the edit route takes a body and nothing else, and the edit box carries no typeahead. Re-addressing somebody means a new comment.
+  - **A correction on a comment the viewer is not in the room for answers 404, not 403.** A refusal would tell a Contributor that a Legal Only comment is there. The tier predicate gates the correction routes exactly as it gates the read, and one answer serves both.
+  - **An edit or a delete is the author's alone, and the Administrator role does not widen it.** An Administrator may remove what somebody said. They may not put words in their mouth.
+- **Rationale** — Each of these is the smallest rule that keeps a promise already made. The separate column keeps the log honest about who acted. Purging the mention list keeps "actually gone" true of the whole post, not just its prose. Freezing the mention list on edit keeps CMT-007's "a mention is a fact about the moment it was said" true. The 404 keeps DD-016's one leak closed on three new routes.
+- **Alternatives considered** — **One `deleted_at` for both tombstones**: rejected, it misattributes the act. **An edit that re-validates and rewrites mentions**: rejected — it re-opens the tier-promotion path on a comment whose tier is immutable, and it rewrites history about who was addressed. **403 on a comment the viewer cannot hear**: rejected, it is the leak.
+- **Consequences** — `comment_revisions` and `comments.redacted_at` land together in M9/4 (TECH-014). Three routes: `PATCH /comments/{id}`, `DELETE /comments/{id}`, and `POST /comments/{id}/redact`. Each appends its own verb — `comment.edited`, `comment.deleted`, `comment.redacted` — at the comment's own tier, carrying ids only. A second delete or a second redact writes nothing and answers the row as it stands, so a retried request is not a second log entry. The M9/6 narration layer renders a redacted comment's entry as a redacted comment, per CMT-006.
+
 ## Index of decisions
 
-| #       | Decision                                                                      | Status                        |
-| ------- | ----------------------------------------------------------------------------- | ----------------------------- |
-| CMT-001 | One comment system; anchored doc comments; thread follows the work            | Accepted                      |
-| CMT-002 | Thread shape: flat chronological, mentions, no nesting                        | Accepted                      |
-| CMT-003 | Tier rendering: badge + strong Legal-Only treatment; segmented composer       | Accepted                      |
-| CMT-004 | Home: activity-bar panel; badge = your unread, tier-filtered                  | Accepted                      |
-| CMT-005 | Post-publish: edit with marker, soft delete, tier immutable                   | Accepted (amended by CMT-006) |
-| CMT-006 | Prior comment text lives in `comment_revisions`, not the activity log         | Accepted                      |
-| CMT-007 | Mentions: a list beside plain text; reachable candidates; narrowest promotion | Accepted                      |
+| #       | Decision                                                                      | Status                                             |
+| ------- | ----------------------------------------------------------------------------- | -------------------------------------------------- |
+| CMT-001 | One comment system; anchored doc comments; thread follows the work            | Accepted                                           |
+| CMT-002 | Thread shape: flat chronological, mentions, no nesting                        | Accepted                                           |
+| CMT-003 | Tier rendering: badge + strong Legal-Only treatment; segmented composer       | Accepted                                           |
+| CMT-004 | Home: activity-bar panel; badge = your unread, tier-filtered                  | Accepted                                           |
+| CMT-005 | Post-publish: edit with marker, soft delete, tier immutable                   | Accepted (amended by CMT-006, extended by CMT-008) |
+| CMT-006 | Prior comment text lives in `comment_revisions`, not the activity log         | Accepted (extended by CMT-008)                     |
+| CMT-007 | Mentions: a list beside plain text; reachable candidates; narrowest promotion | Accepted                                           |
+| CMT-008 | The three corrections: owners, two tombstones, and what a redact takes        | Accepted                                           |

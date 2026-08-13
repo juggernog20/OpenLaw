@@ -14,8 +14,14 @@
   "action.copy": {
     "defaultMessage": "Copy"
   },
+  "action.delete": {
+    "defaultMessage": "Delete"
+  },
   "action.done": {
     "defaultMessage": "Done"
+  },
+  "action.edit": {
+    "defaultMessage": "Edit"
   },
   "action.reload": {
     "defaultMessage": "Reload"
@@ -233,6 +239,9 @@
   "auth.twoFactor.useTotp": {
     "defaultMessage": "Use your authenticator app"
   },
+  "comments.actions": {
+    "defaultMessage": "Comment actions"
+  },
   "comments.applet": {
     "defaultMessage": "Comments"
   },
@@ -247,6 +256,21 @@
   },
   "comments.composer": {
     "defaultMessage": "New comment"
+  },
+  "comments.delete.body": {
+    "defaultMessage": "A tombstone keeps its place in the thread, and nobody can read what it said. You cannot undo this."
+  },
+  "comments.delete.title": {
+    "defaultMessage": "Delete this comment?"
+  },
+  "comments.editBox": {
+    "defaultMessage": "Edit comment"
+  },
+  "comments.editError": {
+    "defaultMessage": "The comment could not be changed. Try again."
+  },
+  "comments.edited": {
+    "defaultMessage": "edited"
   },
   "comments.empty": {
     "defaultMessage": "Nothing has been said about this record yet. Add the first comment to keep the conversation on the record."
@@ -287,6 +311,18 @@
   "comments.promote.title": {
     "defaultMessage": "Widen the audience?"
   },
+  "comments.redact": {
+    "defaultMessage": "Redact"
+  },
+  "comments.redact.body": {
+    "defaultMessage": "The text and every earlier version of it are removed for good. Use this for text posted into the wrong record. You cannot undo this."
+  },
+  "comments.redact.title": {
+    "defaultMessage": "Redact this comment?"
+  },
+  "comments.removeError": {
+    "defaultMessage": "The comment could not be removed. Try again."
+  },
   "comments.tier.fullThread": {
     "defaultMessage": "Full thread"
   },
@@ -298,6 +334,12 @@
   },
   "comments.tierGroup": {
     "defaultMessage": "Audience"
+  },
+  "comments.tombstone.deleted": {
+    "defaultMessage": "Comment deleted by its author."
+  },
+  "comments.tombstone.redacted": {
+    "defaultMessage": "Comment removed by an Administrator."
   },
   "contracts.applet.settings": {
     "defaultMessage": "Contract settings"

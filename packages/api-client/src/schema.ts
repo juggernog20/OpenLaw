@@ -1011,6 +1011,41 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/comments/{commentId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Take a comment back. The author alone may. The delete is soft (CMT-005): the row keeps its place as a tombstone so the thread around it still reads, and the body moves to comment_revisions. Deleting a comment already removed writes nothing and answers the row as it stands. Appends comment.deleted at the comment's own tier */
+    delete: operations["deleteComment"];
+    options?: never;
+    head?: never;
+    /** Change what a comment says. The author alone may, and an Administrator is no exception — a correction to somebody else's words is a redact, not an edit. The prior body goes to comment_revisions and the row takes an edited marker, so a reader can tell the text moved since they read it. The tier is immutable (CMT-005): this route takes a body and nothing else. A comment already deleted or redacted has no text to change. Appends comment.edited at the comment's own tier */
+    patch: operations["editComment"];
+    trace?: never;
+  };
+  "/api/v1/comments/{commentId}/redact": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Remove what a comment said, for good. An Administrator alone may (CMT-005), on anybody's comment including their own. It clears the body, every comment_revisions row, and the list of who the text named — so text posted into the wrong record is gone rather than only hidden. This is the reason prior versions live outside the append-only log (CMT-006). The row stays as a tombstone, because the thread around it still has to read. Appends comment.redacted at the comment's own tier */
+    post: operations["redactComment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/entity-types": {
     parameters: {
       query?: never;
@@ -5061,6 +5096,9 @@ export interface operations {
               }[];
               /** Format: date-time */
               createdAt: string;
+              editedAt: string | null;
+              deletedAt: string | null;
+              redactedAt: string | null;
             }[];
           };
         };
@@ -5124,6 +5162,9 @@ export interface operations {
               }[];
               /** Format: date-time */
               createdAt: string;
+              editedAt: string | null;
+              deletedAt: string | null;
+              redactedAt: string | null;
             };
           };
         };
@@ -5164,6 +5205,180 @@ export interface operations {
               image: string | null;
               tiers: ("legal_only" | "working_team" | "full_thread")[];
             }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteComment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        commentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            comment: {
+              id: string;
+              /** @enum {string} */
+              entityType: "contract";
+              entityId: string;
+              author: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              body: string;
+              /** @enum {string} */
+              visibility: "legal_only" | "working_team" | "full_thread";
+              mentions: {
+                id: string;
+                displayName: string;
+              }[];
+              /** Format: date-time */
+              createdAt: string;
+              editedAt: string | null;
+              deletedAt: string | null;
+              redactedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  editComment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        commentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          body: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            comment: {
+              id: string;
+              /** @enum {string} */
+              entityType: "contract";
+              entityId: string;
+              author: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              body: string;
+              /** @enum {string} */
+              visibility: "legal_only" | "working_team" | "full_thread";
+              mentions: {
+                id: string;
+                displayName: string;
+              }[];
+              /** Format: date-time */
+              createdAt: string;
+              editedAt: string | null;
+              deletedAt: string | null;
+              redactedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  redactComment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        commentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            comment: {
+              id: string;
+              /** @enum {string} */
+              entityType: "contract";
+              entityId: string;
+              author: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              body: string;
+              /** @enum {string} */
+              visibility: "legal_only" | "working_team" | "full_thread";
+              mentions: {
+                id: string;
+                displayName: string;
+              }[];
+              /** Format: date-time */
+              createdAt: string;
+              editedAt: string | null;
+              deletedAt: string | null;
+              redactedAt: string | null;
+            };
           };
         };
       };

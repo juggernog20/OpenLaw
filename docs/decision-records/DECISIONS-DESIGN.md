@@ -1460,6 +1460,58 @@ The dialog is the modal because the question stops a post. DD-016's failure mode
 
 The composer's box stays a textbox, so nothing that finds it today stops finding it. The chip row is a derived view of the draft: a name deleted from the box drops its mention, and a chip removed deletes the name, so the text and the list can never disagree. Matters (M22) and documents (M11) inherit all of this by mounting the same panel. M9/4's edited marker and tombstone extend the row anatomy DES-023 set, beside the chips this record adds.
 
+## DES-025: The corrected comment row — the edited marker, the two tombstones, and the row's overflow menu (extends DES-023)
+
+- **Status:** Accepted
+- **Date:** 2026-08-13
+
+### Context
+
+DES-023 drew the comment row from `designs/contracts.pen` **C3 — Contract detail · Comments panel**: avatar, name, tier badge, timestamp, then the body. DES-024's consequences already flagged what comes next — "M9/4's edited marker and tombstone extend the row anatomy DES-023 set". M9/4 (#130) builds the three corrections CMT-005 and CMT-008 name, and C3 draws none of them: no edited marker, no tombstone, and no affordance for edit, delete, or redact. This record supplies that anatomy, in DES-023's own terms.
+
+### Decision
+
+**The edited marker rides beside the timestamp**, at the row header's trailing edge. It is the word "edited" at 11px `text-muted`, matching the timestamp it sits next to, with the edit time as its `title`. It is metadata about the row, so it takes the row's metadata treatment rather than a badge of its own — a second pill beside the tier badge would compete with the one thing DES-023 reserved for peripheral reading. It is drawn only while there is text to have been edited; a tombstone saying "edited" reports on nothing.
+
+**The trailing group.** The header's trailing edge becomes one `ms-auto` flex group at `gap-1.5`: the edited marker, then the timestamp, then the overflow trigger. Everything ahead of it — avatar, name, badge — is unchanged.
+
+**Two tombstones, and they say which hand removed the comment.** A removed row keeps its place in the thread and swaps its body for one sentence at 12px `text-muted` italic:
+
+- Deleted by its author — "Comment deleted by its author."
+- Removed by an Administrator — "Comment removed by an Administrator."
+
+Italic and `text-muted` because the sentence is the surface's, not the author's; every other body in the panel is somebody's own words in `text-primary`. Where both happened, the redaction sentence wins: it is the later act and the one that took the text away for good. A tombstone keeps its tier badge and its wash, because it is still the comment it stands for and it reaches the audience that comment reached (CMT-008).
+
+**The overflow menu** is the shipped DropdownMenu (DES-004) on a `ghost` `icon` Button carrying the 16px Lucide `MoreHorizontal`, accessible name "Comment actions". Items are 16px glyph plus verb: `Pencil` "Edit", `Trash2` "Delete", `Eraser` "Redact".
+
+- **The menu offers what this viewer may do and nothing else** — absent, not disabled, the convention the nav, the settings rail, and DES-023's composer segments already follow. A row with nothing on offer draws no trigger at all, so a Contributor reading somebody else's comment sees a clean row. The seam refuses each action regardless; the menu is a courtesy.
+- Edit and Delete appear for the author of a live comment. Redact appears for an Administrator on any comment not already redacted — including one the author soft-deleted, which is the case the redact exists for.
+
+**The edit box replaces the body in place.** The row's own textarea (the composer's `TEXTAREA_CLASS`), seeded with the text as it stands, accessible name "Edit comment", focused on open because the viewer just asked to type. Under it, "Cancel" (secondary) and "Save" (primary), both `sm`. Escape cancels locally, as DES-010 reserves the key for. Cancel restores nothing, because nothing was taken. It carries no mention typeahead: an edit changes the text and not who the comment addressed (CMT-008).
+
+**Both removals take the shipped Dialog** (DES-004), following DES-024's promotion confirmation. Each has a question for a title, one sentence of consequence, then "Cancel" (secondary) and the verb on a `danger` Button. Neither can be undone and each says so. A refusal closes the dialog and puts the reason on the row, where the unchanged text is still on screen.
+
+### Recorded normalization points
+
+1. **C3 draws none of this.** Every element above is an addition, built from components DES-023 and DES-024 already named rather than from a frame.
+2. **No typed confirmation.** DOC-010's hard-delete pattern asks the Administrator to type the name of what they are destroying. That is proportionate to a whole document with all its versions; it is not proportionate to one comment. The dialog names the consequence and takes one click.
+3. **The tombstone is italic**, which no other body text in the product is. It is the one place the panel speaks in its own voice inside a row of somebody else's words.
+
+### Rationale
+
+The row already carries three pieces of metadata at its trailing edge before anything is added, so the marker joins them rather than opening a fourth region. The two tombstones are two sentences because they are two facts, and after a redact the row is the only place either fact can be read — the body is gone. The overflow menu is the pattern because three actions on a dense 12px row have nowhere to sit inline, and Radix carries the keyboard model for free.
+
+### Alternatives considered
+
+- **Inline Edit and Delete links on hover.** Rejected: a hover-only affordance is not reachable by keyboard without extra work the menu already does, and the row is 12px dense with the trailing group already occupied.
+- **One tombstone sentence for both removals.** Rejected: it reads an Administrator's removal as the author's own, which CMT-008 rejects for the same reason.
+- **Keeping the tier badge off a tombstone.** Rejected: the row still reaches exactly the audience the comment reached, and dropping the badge would suggest otherwise.
+- **A typed confirmation on redact**, per DOC-010. Rejected as disproportionate for a single comment; see the normalization point above.
+
+### Consequences
+
+The row anatomy is now complete for M9. Matters (M22) and documents (M11) inherit it by mounting the same panel. The applet takes the viewer's id alongside their role, because "is this yours" is a per-row question the panel cannot answer from a role. M9/6's activity feed renders a redacted comment's entry as a redacted comment (CMT-006), and it will need the same two-sentence distinction the row draws here.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -1488,3 +1540,4 @@ The composer's box stays a textbox, so nothing that finds it today stops finding
 | DES-022 | The type-editor screen — identity card plus attachment table (extends DES-020)                                                                                       | Accepted |
 | DES-023 | The comment surface — tier badges, the Legal Only row wash, and the segmented composer                                                                               | Accepted |
 | DES-024 | The mention affordances — typeahead, chip, and the promotion confirmation (extends DES-023)                                                                          | Accepted |
+| DES-025 | The corrected comment row — edited marker, two tombstones, and the overflow menu (extends DES-023)                                                                   | Accepted |

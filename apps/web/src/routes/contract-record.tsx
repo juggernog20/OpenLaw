@@ -245,6 +245,7 @@ function ContractRecord() {
     entityType: "contract",
     entityId: contract.id,
     role: user.role,
+    viewerId: user.id,
   });
 
   /** The saved record — the server's truth after the last commit. */

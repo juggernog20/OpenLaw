@@ -28,10 +28,27 @@
  * M9/3 adds mentions to the same seam: who a comment addresses is a
  * `comment_mentions` row, and a comment whose mentions outrun its tier
  * is refused here, on a request no confirmation dialog ever saw.
+ *
+ * M9/4 adds the three corrections. Two assertions carry that slice, and
+ * both read tables rather than calls. No activity payload written by any
+ * comment path contains body text, because the log is append-only and
+ * text in it could never be taken out again. And a hard redact clears
+ * the body **and** every revision row, so the text is genuinely gone
+ * rather than moved somewhere quieter.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, and, asc, commentMentions, comments, desc, eq, users } from "@openlaw/db";
+import {
+  activityLog,
+  and,
+  asc,
+  commentMentions,
+  commentRevisions,
+  comments,
+  desc,
+  eq,
+  users,
+} from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -80,6 +97,9 @@ interface CommentRow {
   visibility: string;
   mentions: { id: string; displayName: string }[];
   createdAt: string;
+  editedAt: string | null;
+  deletedAt: string | null;
+  redactedAt: string | null;
 }
 
 interface MentionCandidateRow {
@@ -228,6 +248,73 @@ async function thread(cookies: Record<string, string>, entityId: string): Promis
   const res = await read(cookies, entityId);
   expect(res.statusCode, res.body).toBe(200);
   return res.json().comments as CommentRow[];
+}
+
+/** The three corrections (M9/4), as raw responses. */
+const patch = (cookies: Record<string, string>, commentId: string, body: unknown) =>
+  harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/comments/${commentId}`,
+    cookies,
+    payload: { body },
+  });
+
+const remove = (cookies: Record<string, string>, commentId: string) =>
+  harness.app.inject({ method: "DELETE", url: `/api/v1/comments/${commentId}`, cookies });
+
+const redact = (cookies: Record<string, string>, commentId: string) =>
+  harness.app.inject({
+    method: "POST",
+    url: `/api/v1/comments/${commentId}/redact`,
+    cookies,
+  });
+
+/** Each of the three, requiring success. */
+async function edit(
+  cookies: Record<string, string>,
+  commentId: string,
+  body: string,
+): Promise<CommentRow> {
+  const res = await patch(cookies, commentId, body);
+  expect(res.statusCode, res.body).toBe(200);
+  return res.json().comment as CommentRow;
+}
+
+async function softDelete(cookies: Record<string, string>, commentId: string): Promise<CommentRow> {
+  const res = await remove(cookies, commentId);
+  expect(res.statusCode, res.body).toBe(200);
+  return res.json().comment as CommentRow;
+}
+
+async function hardRedact(cookies: Record<string, string>, commentId: string): Promise<CommentRow> {
+  const res = await redact(cookies, commentId);
+  expect(res.statusCode, res.body).toBe(200);
+  return res.json().comment as CommentRow;
+}
+
+/** What a comment used to say, oldest first — the table a redact purges. */
+async function revisions(commentId: string): Promise<string[]> {
+  const rows = await harness.db
+    .select({ body: commentRevisions.body })
+    .from(commentRevisions)
+    .where(eq(commentRevisions.commentId, commentId))
+    .orderBy(asc(commentRevisions.replacedAt), asc(commentRevisions.id));
+  return rows.map((row) => row.body);
+}
+
+/** The comment as the database holds it, which is where a tombstone has
+ * to be proved: an empty body in the row is a body no read seam has. */
+async function storedComment(commentId: string) {
+  const [row] = await harness.db
+    .select({
+      body: comments.body,
+      editedAt: comments.editedAt,
+      deletedAt: comments.deletedAt,
+      redactedAt: comments.redactedAt,
+    })
+    .from(comments)
+    .where(eq(comments.id, commentId));
+  return row;
 }
 
 describe("posting a comment at a tier", () => {
@@ -443,7 +530,18 @@ describe("a posted comment's tier", () => {
     const contract = await contractWithTeam("Immutable tier");
     const posted = await comment(memberCookies, contract.id, "Said in one room.", "legal_only");
 
-    for (const method of ["PATCH", "PUT", "POST"] as const) {
+    // The edit route is the only one that takes a body on a comment, and
+    // its body is strict, so a tier cannot ride in beside the text. PUT
+    // and POST on the comment reach no route at all.
+    const edit = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/comments/${posted.id}`,
+      cookies: memberCookies,
+      payload: { body: "Moved rooms.", visibility: "full_thread" },
+    });
+    expect(edit.statusCode, edit.body).toBe(400);
+
+    for (const method of ["PUT", "POST"] as const) {
       const res = await harness.app.inject({
         method,
         url: `/api/v1/comments/${posted.id}`,
@@ -454,10 +552,24 @@ describe("a posted comment's tier", () => {
     }
 
     const [stored] = await harness.db
-      .select({ visibility: comments.visibility })
+      .select({ visibility: comments.visibility, body: comments.body })
       .from(comments)
       .where(eq(comments.id, posted.id));
+    // The refused edit wrote neither the tier nor the text.
     expect(stored!.visibility).toBe("legal_only");
+    expect(stored!.body).toBe("Said in one room.");
+  });
+
+  it("stays where it was posted when the author edits the text", async () => {
+    const contract = await contractWithTeam("Edit keeps the room");
+    const posted = await comment(memberCookies, contract.id, "First wording.", "legal_only");
+    const edited = await edit(memberCookies, posted.id, "Second wording.");
+
+    expect(edited.body).toBe("Second wording.");
+    expect(edited.visibility).toBe("legal_only");
+
+    // A Contributor on the team still gets no trace of it.
+    expect(await thread(contributorCookies, contract.id)).toEqual([]);
   });
 
   it("refuses an unknown field on the post body", async () => {
@@ -803,5 +915,438 @@ describe("the promotion rule, enforced at the seam", () => {
       mentions: Array.from({ length: 21 }, () => userIds.get(CONTRIBUTOR.email)),
     });
     expect(res.statusCode, res.body).toBe(400);
+  });
+});
+
+/**
+ * Editing, soft deleting, and hard redacting (M9/4).
+ *
+ * Three corrections, three owners. An edit and a soft delete belong to
+ * the author, and an Administrator is no exception to that — a
+ * correction to somebody else's words is a redact, not an edit. The
+ * redact belongs to the Administrator alone.
+ *
+ * The prior text lives in `comment_revisions` and nowhere else
+ * (CMT-006), which is exactly what lets a redact take it away. These
+ * tests read that table, and they read `comments.body`, because the
+ * point of a soft delete is that the row no longer carries the text at
+ * all — a tombstone that still held it would be one query from leaking.
+ */
+describe("an author editing their own comment", () => {
+  it("changes the text, marks the row edited, and keeps the prior body as a revision", async () => {
+    const contract = await contractWithTeam("Edited by its author");
+    const posted = await comment(
+      memberCookies,
+      contract.id,
+      "Redline goes back Thusday.",
+      "working_team",
+    );
+    expect(posted.editedAt).toBeNull();
+
+    const edited = await edit(memberCookies, posted.id, "Redline goes back Thursday.");
+    expect(edited.body).toBe("Redline goes back Thursday.");
+    expect(edited.editedAt).not.toBeNull();
+    expect(edited.deletedAt).toBeNull();
+
+    // The next reader sees the new text and the marker with it.
+    const [row] = await thread(memberCookies, contract.id);
+    expect(row!.body).toBe("Redline goes back Thursday.");
+    expect(row!.editedAt).toBe(edited.editedAt);
+
+    expect(await revisions(posted.id)).toEqual(["Redline goes back Thusday."]);
+  });
+
+  it("keeps one revision per edit, oldest first", async () => {
+    const contract = await contractWithTeam("Edited twice");
+    const posted = await comment(memberCookies, contract.id, "First.", "working_team");
+    await edit(memberCookies, posted.id, "Second.");
+    await edit(memberCookies, posted.id, "Third.");
+
+    expect(await revisions(posted.id)).toEqual(["First.", "Second."]);
+    expect((await storedComment(posted.id))!.body).toBe("Third.");
+  });
+
+  it("writes nothing when the text is saved unchanged", async () => {
+    const contract = await contractWithTeam("Saved unchanged");
+    const posted = await comment(memberCookies, contract.id, "As it was.", "working_team");
+    const same = await edit(memberCookies, posted.id, "As it was.");
+
+    // No marker, because nothing was edited.
+    expect(same.editedAt).toBeNull();
+    expect(await revisions(posted.id)).toEqual([]);
+    expect(
+      await harness.db
+        .select({ id: activityLog.id })
+        .from(activityLog)
+        .where(
+          and(eq(activityLog.action, "comment.edited"), eq(activityLog.entityId, contract.id)),
+        ),
+    ).toEqual([]);
+  });
+
+  it("refuses a non-author, including an Administrator, and writes nothing", async () => {
+    const contract = await contractWithTeam("Not yours to edit");
+    const posted = await comment(memberCookies, contract.id, "My own words.", "working_team");
+
+    for (const cookies of [adminCookies, contributorCookies]) {
+      const res = await patch(cookies, posted.id, "Words I am putting in your mouth.");
+      expect(res.statusCode, res.body).toBe(403);
+    }
+
+    const stored = await storedComment(posted.id);
+    expect(stored!.body).toBe("My own words.");
+    expect(stored!.editedAt).toBeNull();
+    expect(await revisions(posted.id)).toEqual([]);
+  });
+
+  it("refuses an empty body", async () => {
+    const contract = await contractWithTeam("Edited to nothing");
+    const posted = await comment(memberCookies, contract.id, "Something.", "working_team");
+    const res = await patch(memberCookies, posted.id, "   ");
+    expect(res.statusCode, res.body).toBe(400);
+    expect((await storedComment(posted.id))!.body).toBe("Something.");
+  });
+
+  it("answers 404 on a comment the viewer is not in the room for", async () => {
+    const contract = await contractWithTeam("Legal only, out of reach");
+    const posted = await comment(memberCookies, contract.id, "Privileged.", "legal_only");
+
+    // 404 and not 403: a refusal would tell a Contributor that a Legal
+    // Only comment is there, which is the leak DD-016 exists to prevent.
+    for (const res of await Promise.all([
+      patch(contributorCookies, posted.id, "Not mine to touch."),
+      remove(contributorCookies, posted.id),
+    ])) {
+      expect(res.statusCode, res.body).toBe(404);
+    }
+  });
+
+  it("answers 404 on a comment id that names nothing", async () => {
+    const res = await patch(
+      memberCookies,
+      "01890000-0000-7000-8000-000000000000",
+      "Into the void.",
+    );
+    expect(res.statusCode, res.body).toBe(404);
+  });
+});
+
+describe("an author soft-deleting their own comment", () => {
+  it("leaves a tombstone in place with no body, and moves the text to a revision", async () => {
+    const contract = await contractWithTeam("Tombstone holds its place");
+    const first = await comment(memberCookies, contract.id, "Before.", "working_team");
+    const doomed = await comment(memberCookies, contract.id, "Said in error.", "working_team");
+    const last = await comment(memberCookies, contract.id, "After.", "working_team");
+
+    const tombstone = await softDelete(memberCookies, doomed.id);
+    expect(tombstone.deletedAt).not.toBeNull();
+    expect(tombstone.body).toBe("");
+
+    // Nothing above or below shifted: the thread still reads.
+    const rows = await thread(memberCookies, contract.id);
+    expect(rows.map((row) => row.id)).toEqual([first.id, doomed.id, last.id]);
+    expect(rows.map((row) => row.body)).toEqual(["Before.", "", "After."]);
+
+    expect((await storedComment(doomed.id))!.body).toBe("");
+    expect(await revisions(doomed.id)).toEqual(["Said in error."]);
+  });
+
+  it("puts the body beyond every read seam, raw response included", async () => {
+    const contract = await contractWithTeam("Unreadable once deleted");
+    const posted = await comment(
+      memberCookies,
+      contract.id,
+      "The number nobody should have seen.",
+      "working_team",
+    );
+    await softDelete(memberCookies, posted.id);
+
+    for (const cookies of [memberCookies, adminCookies, contributorCookies]) {
+      const res = await read(cookies, contract.id);
+      expect(res.statusCode, res.body).toBe(200);
+      expect(res.body).not.toContain("nobody should have seen");
+    }
+  });
+
+  it("refuses a non-author, including an Administrator", async () => {
+    const contract = await contractWithTeam("Not yours to delete");
+    const posted = await comment(memberCookies, contract.id, "Mine to take back.", "working_team");
+
+    for (const cookies of [adminCookies, contributorCookies]) {
+      const res = await remove(cookies, posted.id);
+      expect(res.statusCode, res.body).toBe(403);
+    }
+    expect((await storedComment(posted.id))!.deletedAt).toBeNull();
+  });
+
+  it("refuses an edit of a comment already deleted", async () => {
+    const contract = await contractWithTeam("Edited after the fact");
+    const posted = await comment(memberCookies, contract.id, "Gone.", "working_team");
+    await softDelete(memberCookies, posted.id);
+
+    const res = await patch(memberCookies, posted.id, "Back again.");
+    expect(res.statusCode, res.body).toBe(409);
+    expect((await storedComment(posted.id))!.body).toBe("");
+  });
+
+  it("writes nothing on a second delete", async () => {
+    const contract = await contractWithTeam("Deleted twice");
+    const posted = await comment(memberCookies, contract.id, "Once said.", "working_team");
+    const first = await softDelete(memberCookies, posted.id);
+    const second = await softDelete(memberCookies, posted.id);
+
+    expect(second.deletedAt).toBe(first.deletedAt);
+    expect(await revisions(posted.id)).toEqual(["Once said."]);
+    expect(
+      await harness.db
+        .select({ id: activityLog.id })
+        .from(activityLog)
+        .where(
+          and(eq(activityLog.action, "comment.deleted"), eq(activityLog.entityId, contract.id)),
+        ),
+    ).toHaveLength(1);
+  });
+});
+
+describe("an Administrator hard-redacting a comment", () => {
+  it("clears the body and every revision row, so the text is genuinely gone", async () => {
+    const contract = await contractWithTeam("Redacted for good");
+    const posted = await comment(
+      memberCookies,
+      contract.id,
+      "Patient record pasted into the wrong contract.",
+      "working_team",
+    );
+    // Edited and then deleted first, so there is more than one place the
+    // text could still be sitting when the redact runs.
+    await edit(memberCookies, posted.id, "Patient record, second paste.");
+    await softDelete(memberCookies, posted.id);
+    expect(await revisions(posted.id)).toEqual([
+      "Patient record pasted into the wrong contract.",
+      "Patient record, second paste.",
+    ]);
+
+    const redacted = await hardRedact(adminCookies, posted.id);
+    expect(redacted.redactedAt).not.toBeNull();
+    expect(redacted.body).toBe("");
+
+    // The two places the text lived, both empty.
+    expect((await storedComment(posted.id))!.body).toBe("");
+    expect(await revisions(posted.id)).toEqual([]);
+
+    // And nowhere else in the system either.
+    const seam = await read(memberCookies, contract.id);
+    expect(seam.body).not.toContain("Patient record");
+    const log = await harness.db
+      .select({ payload: activityLog.payload })
+      .from(activityLog)
+      .where(eq(activityLog.entityId, contract.id));
+    expect(JSON.stringify(log)).not.toContain("Patient record");
+  });
+
+  it("redacts a live comment too, and keeps the row as a tombstone", async () => {
+    const contract = await contractWithTeam("Redacted while live");
+    const first = await comment(memberCookies, contract.id, "Before.", "working_team");
+    const posted = await comment(memberCookies, contract.id, "Wrong record.", "working_team");
+
+    const redacted = await hardRedact(adminCookies, posted.id);
+    // An author's tombstone and an Administrator's are different acts,
+    // so the row says which one happened.
+    expect(redacted.deletedAt).toBeNull();
+    expect(redacted.redactedAt).not.toBeNull();
+
+    expect((await thread(memberCookies, contract.id)).map((row) => row.id)).toEqual([
+      first.id,
+      posted.id,
+    ]);
+  });
+
+  it("takes the list of who the text named away with it", async () => {
+    const contract = await contractWithTeam("Redacted with its mentions");
+    const posted = await comment(
+      memberCookies,
+      contract.id,
+      `@${CONTRIBUTOR.displayName} see the note above.`,
+      "working_team",
+      [userIds.get(CONTRIBUTOR.email)!],
+    );
+
+    const redacted = await hardRedact(adminCookies, posted.id);
+    expect(redacted.mentions).toEqual([]);
+    expect(
+      await harness.db
+        .select({ userId: commentMentions.userId })
+        .from(commentMentions)
+        .where(eq(commentMentions.commentId, posted.id)),
+    ).toEqual([]);
+  });
+
+  it("refuses a Legal Team Member and a Contributor, and writes nothing", async () => {
+    const contract = await contractWithTeam("Redact refused");
+    const posted = await comment(memberCookies, contract.id, "Still here.", "working_team");
+
+    for (const cookies of [memberCookies, contributorCookies, businessCookies]) {
+      const res = await redact(cookies, posted.id);
+      expect(res.statusCode, res.body).toBe(403);
+    }
+    const stored = await storedComment(posted.id);
+    expect(stored!.body).toBe("Still here.");
+    expect(stored!.redactedAt).toBeNull();
+  });
+
+  it("writes nothing on a second redact", async () => {
+    const contract = await contractWithTeam("Redacted twice");
+    const posted = await comment(memberCookies, contract.id, "Once.", "working_team");
+    const first = await hardRedact(adminCookies, posted.id);
+    const second = await hardRedact(adminCookies, posted.id);
+
+    expect(second.redactedAt).toBe(first.redactedAt);
+    expect(
+      await harness.db
+        .select({ id: activityLog.id })
+        .from(activityLog)
+        .where(
+          and(eq(activityLog.action, "comment.redacted"), eq(activityLog.entityId, contract.id)),
+        ),
+    ).toHaveLength(1);
+  });
+});
+
+/**
+ * The tier predicate does not loosen because a comment was corrected.
+ * A tombstone is still the comment it stands for, so it reaches exactly
+ * the audience the comment reached and no wider one.
+ */
+describe("a corrected comment's audience", () => {
+  it("keeps a deleted and a redacted Legal Only comment out of a Contributor's thread", async () => {
+    const contract = await contractWithTeam("Tombstones obey the tier");
+    const deleted = await comment(memberCookies, contract.id, "Strategy one.", "legal_only");
+    const redacted = await comment(memberCookies, contract.id, "Strategy two.", "legal_only");
+    const seen = await comment(memberCookies, contract.id, "Coordination.", "working_team");
+    await softDelete(memberCookies, deleted.id);
+    await hardRedact(adminCookies, redacted.id);
+
+    // The Member still has all three, two of them as tombstones.
+    expect((await thread(memberCookies, contract.id)).map((row) => row.id)).toEqual([
+      deleted.id,
+      redacted.id,
+      seen.id,
+    ]);
+
+    // The Contributor has the one they were always in the room for.
+    const contributorRes = await read(contributorCookies, contract.id);
+    expect(contributorRes.statusCode, contributorRes.body).toBe(200);
+    expect((contributorRes.json().comments as CommentRow[]).map((row) => row.id)).toEqual([
+      seen.id,
+    ]);
+    expect(contributorRes.body).not.toContain(deleted.id);
+    expect(contributorRes.body).not.toContain(redacted.id);
+  });
+
+  it("logs each correction at the comment's own tier", async () => {
+    const contract = await contractWithTeam("Corrections keep the room");
+    const posted = await comment(memberCookies, contract.id, "First.", "legal_only");
+    await edit(memberCookies, posted.id, "Second.");
+    await softDelete(memberCookies, posted.id);
+    await hardRedact(adminCookies, posted.id);
+
+    const rows = await harness.db
+      .select({
+        action: activityLog.action,
+        visibility: activityLog.visibility,
+        actorId: activityLog.actorId,
+        payload: activityLog.payload,
+      })
+      .from(activityLog)
+      .where(eq(activityLog.entityId, contract.id))
+      .orderBy(asc(activityLog.createdAt), asc(activityLog.id));
+
+    expect(rows.filter((row) => row.action.startsWith("comment."))).toEqual([
+      {
+        action: "comment.posted",
+        visibility: "legal_only",
+        actorId: userIds.get(MEMBER.email),
+        payload: { commentId: posted.id },
+      },
+      {
+        action: "comment.edited",
+        visibility: "legal_only",
+        actorId: userIds.get(MEMBER.email),
+        payload: { commentId: posted.id },
+      },
+      {
+        action: "comment.deleted",
+        visibility: "legal_only",
+        actorId: userIds.get(MEMBER.email),
+        payload: { commentId: posted.id },
+      },
+      {
+        action: "comment.redacted",
+        visibility: "legal_only",
+        actorId: userIds.get(ADMIN.email),
+        payload: { commentId: posted.id },
+      },
+    ]);
+  });
+});
+
+/**
+ * The load-bearing assertion of this slice, and the reason
+ * `comment_revisions` exists (CMT-006).
+ *
+ * DD-017 forbids `UPDATE` and `DELETE` on `activity_log`. Text that
+ * enters a payload can therefore never leave it, and a redact would
+ * remove the comment while leaving what it said sitting in the log. So
+ * no comment body text ever enters a payload — asserted by reading every
+ * row the table holds for the record, not by watching what a call was
+ * given.
+ */
+describe("no comment path writes body text into an activity payload", () => {
+  it("keeps every distinctive word of every version out of the log", async () => {
+    const contract = await contractWithTeam("Nothing quotable in the log");
+    const words = ["zephyrine", "quartzose", "brumalis", "halcyonic"];
+
+    // Every comment path in the module, each with its own word.
+    const posted = await comment(
+      memberCookies,
+      contract.id,
+      `A ${words[0]} first draft.`,
+      "working_team",
+    );
+    await edit(memberCookies, posted.id, `A ${words[1]} second draft.`);
+    const deleted = await comment(
+      memberCookies,
+      contract.id,
+      `A ${words[2]} mistake.`,
+      "legal_only",
+    );
+    await softDelete(memberCookies, deleted.id);
+    const wrong = await comment(
+      contributorCookies,
+      contract.id,
+      `A ${words[3]} paste into the wrong record.`,
+      "full_thread",
+    );
+    await hardRedact(adminCookies, wrong.id);
+
+    const rows = await harness.db
+      .select({ action: activityLog.action, payload: activityLog.payload })
+      .from(activityLog)
+      .where(eq(activityLog.entityId, contract.id));
+
+    // Every comment verb this slice adds is in the log, so the assertion
+    // below is over a set that actually contains them.
+    expect(new Set(rows.map((row) => row.action))).toEqual(
+      new Set([
+        "contract.created",
+        "contract.team_added",
+        "comment.posted",
+        "comment.edited",
+        "comment.deleted",
+        "comment.redacted",
+      ]),
+    );
+    const payloads = JSON.stringify(rows.map((row) => row.payload));
+    for (const word of words) expect(payloads).not.toContain(word);
   });
 });

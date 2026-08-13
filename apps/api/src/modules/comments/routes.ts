@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The comment thread (M9/2) — reading it and posting into it.
+ * The comment thread (M9/2, M9/4) — reading it, posting into it, and the
+ * three ways to correct what was said.
  *
  * The routes are keyed by an entity reference rather than by a record's
  * own address, because the thread is one machinery across matters,
@@ -27,13 +28,22 @@
  * that hides Legal Only comments from them — the client's own composer
  * offering two segments is a convenience, never the enforcement.
  *
- * **The tier is immutable after posting** (CMT-005). There is no update
- * route on this module at all, so no request body can reach one: a
- * comment in the wrong room is deleted and reposted.
+ * **The tier is immutable after posting** (CMT-005). The edit route
+ * takes a body and nothing else, and the body schema is strict, so no
+ * request can reach the column: a comment in the wrong room is deleted
+ * and reposted.
  *
- * Posting appends a `comment.posted` activity entry at the comment's own
- * tier, in the same transaction, so a Legal Only comment leaves no trace
- * in anyone else's feed. The entry carries ids only — no comment text
+ * **Three corrections, three owners** (M9/4). An edit is the author's,
+ * and so is a soft delete; each writes the prior body to
+ * `comment_revisions` and leaves the row in the thread. A hard redact is
+ * an Administrator's, and it clears the body and every revision row, so
+ * text posted into the wrong record is gone rather than only hidden.
+ * `comment_revisions` is where the prior text lives precisely so that a
+ * redact can purge it (CMT-006) — the activity log never could.
+ *
+ * Every path appends its own activity entry at the comment's own tier,
+ * in the same transaction, so a Legal Only comment leaves no trace in
+ * anyone else's feed. Every entry carries ids only — no comment text
  * ever enters an activity payload, because the log is append-only
  * (DD-017) and a hard redact has to be able to remove what was said
  * (CMT-006).
@@ -56,14 +66,16 @@ import {
   and,
   asc,
   commentMentions,
+  commentRevisions,
   comments,
   COMMENT_VISIBILITIES,
   eq,
   inArray,
   sql,
   users,
+  type CommentVisibility,
 } from "@openlaw/db";
-import { requireRole } from "../../auth/guards.js";
+import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { contractAudience, contractMentionCandidates } from "../../lib/contract-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -76,6 +88,10 @@ import { httpError, problemResponse } from "../../lib/problem.js";
  * on every contract surface in M9.
  */
 const requireCommentReader = requireRole("administrator", "legal_team_member", "contributor");
+
+/** The hard redact is an Administrator's alone (CMT-005). The role gate
+ * refuses everyone else before the route reads a row. */
+const requireAdministrator = requireRole("administrator");
 
 /**
  * What a comment can hang off, as the API accepts it. The table's CHECK
@@ -122,12 +138,26 @@ const CommentSchema = z.object({
   entityType: CommentEntityType,
   entityId: z.string(),
   author: AuthorSchema,
+  /** What the comment says now. **Empty once the text is gone** — a soft
+   * delete moves it to `comment_revisions` and a redact purges it from
+   * there too, so the tombstone carries no body to leak. */
   body: z.string(),
   visibility: VisibilitySchema,
   /** Who the comment addresses (CMT-007), alphabetical. Empty for a
-   * comment that names nobody. */
+   * comment that names nobody, and emptied by a redact along with the
+   * text it named them in. */
   mentions: z.array(MentionSchema),
   createdAt: z.iso.datetime({ offset: true }),
+  /** NULL until the author changes the text; a time draws the "edited"
+   * marker, so a reader can tell the text moved since they read it. */
+  editedAt: z.iso.datetime({ offset: true }).nullable(),
+  /** NULL while the comment stands; a time draws the author's own
+   * tombstone, which holds the comment's place in the thread. */
+  deletedAt: z.iso.datetime({ offset: true }).nullable(),
+  /** NULL until an Administrator removes the text; a time draws the
+   * other tombstone. The two are different acts by different people, so
+   * the row says which one happened. */
+  redactedAt: z.iso.datetime({ offset: true }).nullable(),
 });
 
 /**
@@ -155,6 +185,11 @@ const EntityRefQuery = z.object({
  * exist. A refusal would tell them it is there. */
 const NO_RECORD = "No record exists with this reference.";
 
+/** And a comment a viewer is not in the room for reads the same way. A
+ * 403 on a Legal Only comment would say a Legal Only comment is there,
+ * which is the one thing DD-016 will not have leak. */
+const NO_COMMENT = "No comment exists with this id.";
+
 export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
   type Tx = Parameters<Parameters<typeof app.db.transaction>[0]>[0];
   type Executor = typeof app.db | Tx;
@@ -170,6 +205,9 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         body: comments.body,
         visibility: comments.visibility,
         createdAt: comments.createdAt,
+        editedAt: comments.editedAt,
+        deletedAt: comments.deletedAt,
+        redactedAt: comments.redactedAt,
         author: {
           id: users.id,
           displayName: users.displayName,
@@ -232,6 +270,9 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       visibility: row.visibility,
       mentions: [...mentions],
       createdAt: row.createdAt.toISOString(),
+      editedAt: row.editedAt?.toISOString() ?? null,
+      deletedAt: row.deletedAt?.toISOString() ?? null,
+      redactedAt: row.redactedAt?.toISOString() ?? null,
     };
   }
 
@@ -427,6 +468,234 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       });
 
       return reply.status(201).send({ comment });
+    },
+  );
+
+  /** The one comment a correction route addresses, named by its own id. */
+  const CommentParams = z.object({ commentId: RecordIdSchema });
+
+  /** What every correction answers with: the row as it now stands, read
+   * back through the thread's own projection. */
+  const CommentEnvelope = z.object({ comment: CommentSchema });
+
+  /** The comment as a correction route needs it before it writes. */
+  interface HeldComment {
+    id: string;
+    entityType: "contract";
+    entityId: string;
+    authorId: string;
+    body: string;
+    visibility: CommentVisibility;
+    deletedAt: Date | null;
+    redactedAt: Date | null;
+  }
+
+  /**
+   * One comment, locked for the write that follows, or 404.
+   *
+   * Reach is the same one gate the thread uses. The viewer must reach
+   * the record (CTR-021) **and** be in the room for the comment's tier
+   * (DD-016) — a comment they cannot hear does not exist for them, so it
+   * answers 404 and not 403. A refusal would say a Legal Only comment is
+   * there, which is exactly the leak the tier model exists to prevent.
+   *
+   * The row is read inside the caller's transaction and locked, so two
+   * corrections on one comment take turns rather than each overwriting
+   * the other's revision row.
+   */
+  async function heldComment(
+    tx: Tx,
+    user: AuthenticatedUser,
+    commentId: string,
+  ): Promise<HeldComment> {
+    const [row] = await tx
+      .select({
+        id: comments.id,
+        entityType: comments.entityType,
+        entityId: comments.entityId,
+        authorId: comments.authorId,
+        body: comments.body,
+        visibility: comments.visibility,
+        deletedAt: comments.deletedAt,
+        redactedAt: comments.redactedAt,
+      })
+      .from(comments)
+      .where(eq(comments.id, commentId))
+      .limit(1)
+      .for("update");
+    // Only contracts are reachable, so a comment on anything else is a
+    // comment this API cannot answer for.
+    if (!row || row.entityType !== "contract") throw httpError(404, NO_COMMENT);
+    // Asked on the same snapshot the write lands on, and on the same
+    // connection: a team row dropped between the check and the update
+    // must not authorize the correction, and a second pool connection
+    // taken while this one holds a lock is a way to run the pool dry.
+    const audience = await contractAudience(tx, user, row.entityId);
+    if (!audience || !audience.tiers.includes(row.visibility)) throw httpError(404, NO_COMMENT);
+    return { ...row, entityType: "contract" };
+  }
+
+  /** The comment as it now stands, through the thread's own projection,
+   * so a corrected row is the row the next load will draw. */
+  async function readBack(tx: Tx, commentId: string) {
+    const [row] = await selectComments(tx).where(eq(comments.id, commentId));
+    const mentions = await mentionsOf(tx, [commentId]);
+    return toComment(row!, mentions.get(commentId));
+  }
+
+  app.patch(
+    "/comments/:commentId",
+    {
+      preHandler: requireCommentReader,
+      schema: {
+        operationId: "editComment",
+        summary:
+          "Change what a comment says. The author alone may, and an " +
+          "Administrator is no exception — a correction to somebody " +
+          "else's words is a redact, not an edit. The prior body goes to " +
+          "comment_revisions and the row takes an edited marker, so a " +
+          "reader can tell the text moved since they read it. The tier is " +
+          "immutable (CMT-005): this route takes a body and nothing else. " +
+          "A comment already deleted or redacted has no text to change. " +
+          "Appends comment.edited at the comment's own tier",
+        tags: ["comments"],
+        params: CommentParams,
+        body: z.strictObject({ body: CommentBodySchema }),
+        response: { 200: CommentEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const comment = await app.db.transaction(async (tx) => {
+        const held = await heldComment(tx, request.user, request.params.commentId);
+        // Author-only, and the role does not widen it. An Administrator
+        // may remove what somebody said; they may not put words in
+        // their mouth.
+        if (held.authorId !== request.user.id) {
+          throw httpError(403, "Only the author can edit a comment.");
+        }
+        if (held.deletedAt !== null || held.redactedAt !== null) {
+          throw httpError(409, "This comment has been removed. Its text cannot be changed.");
+        }
+        // Nothing changed, so nothing is written: an author who saves the
+        // text they started with has not edited it, and the marker would
+        // say they had.
+        if (request.body.body === held.body) return readBack(tx, held.id);
+
+        await tx.insert(commentRevisions).values({ commentId: held.id, body: held.body });
+        await tx
+          .update(comments)
+          .set({ body: request.body.body, editedAt: new Date() })
+          .where(eq(comments.id, held.id));
+        await recordActivity(tx, {
+          entityType: held.entityType,
+          entityId: held.entityId,
+          actorId: request.user.id,
+          action: "comment.edited",
+          visibility: held.visibility,
+          // Ids only. The prior text is in comment_revisions, where a
+          // redact can still reach it (CMT-006).
+          payload: { commentId: held.id },
+        });
+        return readBack(tx, held.id);
+      });
+      return { comment };
+    },
+  );
+
+  app.delete(
+    "/comments/:commentId",
+    {
+      preHandler: requireCommentReader,
+      schema: {
+        operationId: "deleteComment",
+        summary:
+          "Take a comment back. The author alone may. The delete is soft " +
+          "(CMT-005): the row keeps its place as a tombstone so the " +
+          "thread around it still reads, and the body moves to " +
+          "comment_revisions. Deleting a comment already removed writes " +
+          "nothing and answers the row as it stands. Appends " +
+          "comment.deleted at the comment's own tier",
+        tags: ["comments"],
+        params: CommentParams,
+        response: { 200: CommentEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const comment = await app.db.transaction(async (tx) => {
+        const held = await heldComment(tx, request.user, request.params.commentId);
+        if (held.authorId !== request.user.id) {
+          throw httpError(403, "Only the author can delete a comment.");
+        }
+        // Already gone, by either hand. Nothing to move and nothing to
+        // say, so the second delete is the first one's answer.
+        if (held.deletedAt !== null || held.redactedAt !== null) return readBack(tx, held.id);
+
+        await tx.insert(commentRevisions).values({ commentId: held.id, body: held.body });
+        // The body moves rather than being hidden: what the row carries
+        // is what every read seam can answer with, so a tombstone that
+        // still held the text would be one query from leaking it.
+        await tx
+          .update(comments)
+          .set({ body: "", deletedAt: new Date() })
+          .where(eq(comments.id, held.id));
+        await recordActivity(tx, {
+          entityType: held.entityType,
+          entityId: held.entityId,
+          actorId: request.user.id,
+          action: "comment.deleted",
+          visibility: held.visibility,
+          payload: { commentId: held.id },
+        });
+        return readBack(tx, held.id);
+      });
+      return { comment };
+    },
+  );
+
+  app.post(
+    "/comments/:commentId/redact",
+    {
+      preHandler: requireAdministrator,
+      schema: {
+        operationId: "redactComment",
+        summary:
+          "Remove what a comment said, for good. An Administrator alone " +
+          "may (CMT-005), on anybody's comment including their own. It " +
+          "clears the body, every comment_revisions row, and the list of " +
+          "who the text named — so text posted into the wrong record is " +
+          "gone rather than only hidden. This is the reason prior " +
+          "versions live outside the append-only log (CMT-006). The row " +
+          "stays as a tombstone, because the thread around it still has " +
+          "to read. Appends comment.redacted at the comment's own tier",
+        tags: ["comments"],
+        params: CommentParams,
+        response: { 200: CommentEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const comment = await app.db.transaction(async (tx) => {
+        const held = await heldComment(tx, request.user, request.params.commentId);
+        if (held.redactedAt !== null) return readBack(tx, held.id);
+
+        // The three places the text and its addressees live. All of them
+        // are ordinary application data, which is the whole point.
+        await tx.delete(commentRevisions).where(eq(commentRevisions.commentId, held.id));
+        await tx.delete(commentMentions).where(eq(commentMentions.commentId, held.id));
+        await tx
+          .update(comments)
+          .set({ body: "", redactedAt: new Date() })
+          .where(eq(comments.id, held.id));
+        await recordActivity(tx, {
+          entityType: held.entityType,
+          entityId: held.entityId,
+          actorId: request.user.id,
+          action: "comment.redacted",
+          visibility: held.visibility,
+          payload: { commentId: held.id },
+        });
+        return readBack(tx, held.id);
+      });
+      return { comment };
     },
   );
 };
