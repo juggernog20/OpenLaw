@@ -206,14 +206,17 @@ async function reviewStatusId(): Promise<string> {
 
 const DRAFT_SLUG = "draft";
 
-/** Creates a contract as the Administrator, requiring success. The
- * creator takes the `creator` team row, which is how every contract in
- * the product is born. */
-async function newContract(title: string): Promise<ContractRow> {
+/** Creates a contract, requiring success — as the Administrator unless
+ * a test needs another creator. The creator takes the `creator` team
+ * row, which is how every contract in the product is born. */
+async function newContract(
+  title: string,
+  cookies: Record<string, string> = adminCookies,
+): Promise<ContractRow> {
   const res = await harness.app.inject({
     method: "POST",
     url: "/api/v1/contracts",
-    cookies: adminCookies,
+    cookies,
     payload: { title, contractTypeId: await ndaTypeId() },
   });
   expect(res.statusCode, res.body).toBe(201);
@@ -904,9 +907,12 @@ type Mutation = readonly [
  * status change, the team add and remove, the counterparty add, remove
  * and primary change, and archive and restore.
  *
- * The ids the calls carry are real, so each one would land if reach let
- * it through — a matrix built out of ids that name nothing would pass on
- * the wrong refusal.
+ * The ids the calls carry are real. Past the reach question, every call
+ * would be answered on the record's own terms — most would land, and the
+ * rest (a restore of a record that is not archived, a custom field the
+ * type does not attach) would carry the record's own refusal. Either
+ * answer differs from the missing-record 404 the matrix requires, so a
+ * wrong refusal cannot pass as the right one.
  */
 async function everyMutation(
   cookies: Record<string, string>,
@@ -1032,12 +1038,16 @@ describe("every mutation against a confidential contract (M10/3)", () => {
 
 describe("who still mutates a confidential contract (M10/3)", () => {
   it("leaves a team-row holder, the Owner, and the Administrator writing everything as before", async () => {
-    for (const [who, cookies, onTeam] of [
-      ["a team Member", memberCookies, true],
-      ["the Owner with no team row", ownerCookies, false],
-      ["the Administrator with neither", adminCookies, false],
+    for (const [who, cookies, onTeam, creatorCookies] of [
+      ["a team Member", memberCookies, true, adminCookies],
+      ["the Owner with no team row", ownerCookies, false, adminCookies],
+      // Made by a Legal Team Member on purpose: the Administrator then
+      // holds no `creator` row and is not the Owner, so their reach here
+      // is the role alone (DD-014) — the row a creator would hold could
+      // not stand in for it.
+      ["the Administrator with neither", adminCookies, false, memberCookies],
     ] as const) {
-      const walled = await newContract(`Confi writes: ${who} keeps working`);
+      const walled = await newContract(`Confi writes: ${who} keeps working`, creatorCookies);
       await setOwner(walled.number, idOf(OWNER));
       if (onTeam) await putOnTeam(walled.number, idOf(MEMBER), "member");
       const first = await putCounterpartyOn(walled.number, `Confi Keeps Primary ${who} Ltd`);
