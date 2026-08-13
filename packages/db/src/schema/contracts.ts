@@ -6,10 +6,10 @@
  * step reads land here, per the incremental-schema doctrine (TECH-014)
  * — `number`, `title`, the type and status FKs, `manager_id`,
  * `priority`, `risk`, the CTR-010 value trio, `description`,
- * `custom_fields`, timestamps, and the soft-delete stamp. Term,
- * confidentiality, parent, and matter linking arrive with their own
- * milestones. SCHEMA.md is the naming reference, never a migration to
- * transcribe.
+ * `custom_fields`, timestamps, and the soft-delete stamp. M10 adds
+ * `is_confidential`, the one column DD-014's gate needs. Term, parent,
+ * and matter linking arrive with their own milestones. SCHEMA.md is the
+ * naming reference, never a migration to transcribe.
  *
  * `number` is CTR-003's global reference: a dedicated Postgres identity
  * sequence, independent of the future matters sequence, rendered C-###
@@ -25,6 +25,7 @@
 import { sql } from "drizzle-orm";
 import {
   bigint,
+  boolean,
   char,
   check,
   index,
@@ -108,6 +109,14 @@ export const contracts = pgTable(
     valueCurrency: char("value_currency", { length: 3 }),
     /** What the amount is per (CTR-010). */
     valueCadence: text("value_cadence", { enum: VALUE_CADENCES }),
+    /** DD-014's opt-in gate, and the whole of it: when set, only the
+     * named team, the Owner, and Administrators reach the record or
+     * anything attached to it. Not null with a `false` default because
+     * open is the product's default (DD-014) and a NULL here would be a
+     * third state the reach predicate would have to guess at. The flag
+     * never cascades to or from a linked record (CTR-018), so no other
+     * table reads this column. */
+    isConfidential: boolean("is_confidential").notNull().default(false),
     /** Long-form context that fits no other field. NULL = nothing was
      * written; the write path normalizes a blank string to NULL, so an
      * empty string never reaches the column and readers have one

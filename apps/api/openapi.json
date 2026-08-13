@@ -5459,7 +5459,7 @@
     "/api/v1/contracts": {
       "get": {
         "operationId": "listContracts",
-        "summary": "The contract list, newest reference first: number, title, type, and status; archived contracts only with includeArchived=true. Member+ read every contract; a Contributor reads exactly the contracts they hold a contract_team row on, archived ones behind the same flag",
+        "summary": "The contract list, newest reference first: number, title, type, and status; archived contracts only with includeArchived=true. Member+ read every contract that is not confidential; a Contributor reads exactly the contracts they hold a contract_team row on, archived ones behind the same flag. A confidential contract is listed only for its named team, its Owner, and Administrators — silently absent for everyone else, so no count can reveal it",
         "tags": ["contracts"],
         "parameters": [
           {
@@ -6227,7 +6227,7 @@
     "/api/v1/contracts/{number}": {
       "get": {
         "operationId": "getContract",
-        "summary": "One contract by its CTR-003 number, with its Owner, its signing entity, its counterparties, its working group, and the fields its type attaches (CTR-016) in attachment order — the record page's read; archived contracts answer too, so restore stays reachable. A Contributor reads a contract they hold a contract_team row on, and is answered 404 on one they do not",
+        "summary": "One contract by its CTR-003 number, with its Owner, its signing entity, its counterparties, its working group, and the fields its type attaches (CTR-016) in attachment order — the record page's read; archived contracts answer too, so restore stays reachable. A Contributor reads a contract they hold a contract_team row on, and is answered 404 on one they do not. A confidential contract answers the same 404 to anyone outside its named team, its Owner, and Administrators",
         "tags": ["contracts"],
         "parameters": [
           {
