@@ -13,34 +13,9 @@
  * pages when #48 closed — so anything reported here is new.
  */
 
-import { test, expect, type Page, type TestInfo } from "@playwright/test";
-import { AxeBuilder } from "@axe-core/playwright";
+import { test, expect } from "@playwright/test";
 import { z } from "zod";
-import { ADMIN, ensureAdminExists, signInAs } from "./helpers.js";
-
-/** Scans the page and reports violations without failing the run. */
-async function reportAxeViolations(
-  page: Page,
-  testInfo: TestInfo,
-  label: string,
-  options: { disableRules?: string[] } = {},
-): Promise<void> {
-  const results = await new AxeBuilder({ page }).disableRules(options.disableRules ?? []).analyze();
-  await testInfo.attach(`axe-${label}`, {
-    body: JSON.stringify(results.violations, null, 2),
-    contentType: "application/json",
-  });
-  if (results.violations.length === 0) {
-    console.log(`axe(${label}): no violations.`);
-    return;
-  }
-  for (const violation of results.violations) {
-    const targets = violation.nodes.map((n) => n.target.join(" ")).join("; ");
-    const line = `axe(${label}): [${violation.impact ?? "unknown"}] ${violation.id} — ${violation.help} (${targets})`;
-    console.log(line);
-    if (process.env.CI) console.log(`::warning title=New axe violation::${line}`);
-  }
-}
+import { ADMIN, ensureAdminExists, reportAxeViolations, signInAs } from "./helpers.js";
 
 test.describe("accessibility floor", () => {
   test("login page: axe scan, title, and document language", async ({ page }, testInfo) => {
