@@ -20,7 +20,7 @@
  */
 
 import { sql } from "drizzle-orm";
-import { check, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { check, index, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
 import { users } from "./auth.js";
 import { uuidPk } from "./helpers.js";
 
@@ -79,3 +79,38 @@ export const comments = pgTable(
 );
 
 export type Comment = typeof comments.$inferSelect;
+
+/**
+ * Who a comment addresses (CMT-002, CMT-007) — the mentioned people as
+ * a queryable list rather than a substring of prose.
+ *
+ * Two readers need this list, and neither should have to re-parse a
+ * body. Tier promotion reads it at post time: a mention that outruns
+ * the comment's tier is refused at the seam, whatever the client sent.
+ * The M18 notification fan-out reads it afterwards.
+ *
+ * The key is the whole row. One person is mentioned on one comment once
+ * — naming them twice in a sentence is still one person to reach — so
+ * there is nothing to add beside the pair. The mention's time is the
+ * comment's time, which is why there is no timestamp here.
+ *
+ * The comment cascades: a hard redact (CMT-006) removes what was said,
+ * and the list of who it was said to goes with it. The user does not: a
+ * person is archived, never deleted (SET-005).
+ */
+export const commentMentions = pgTable(
+  "comment_mentions",
+  {
+    commentId: text("comment_id")
+      .notNull()
+      .references(() => comments.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+  },
+  (table) => [
+    primaryKey({ name: "comment_mentions_pkey", columns: [table.commentId, table.userId] }),
+  ],
+);
+
+export type CommentMention = typeof commentMentions.$inferSelect;

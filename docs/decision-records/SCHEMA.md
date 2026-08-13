@@ -852,7 +852,7 @@ Source: **INT-002**
 
 ### `comments`
 
-Source: **DD-016**, **CMT-001–006**
+Source: **DD-016**, **CMT-001–007**
 
 Audience-tiered comments — one system across record threads, document annotations, and the portal request thread. Flat chronological (no `parent_comment_id` by design, CMT-002). On request conversion, comment rows **re-parent** to the converted matter/contract with tiers preserved (CMT-001); `request` remains a target only for never-converted requests. The portal renders the record thread filtered to `full_thread`.
 
@@ -868,6 +868,8 @@ Audience-tiered comments — one system across record threads, document annotati
 | `edited_at`                | timestamptz | nullable per **CMT-005**; "edited" marker, prior text in `comment_revisions` per **CMT-006**                                                                               |
 | `deleted_at`               | timestamptz | nullable per **CMT-005**; soft delete → tombstone in thread; Admin hard-redact per MTR-008/DOC-010 pattern                                                                 |
 | `created_at`, `updated_at` | timestamptz |                                                                                                                                                                            |
+
+Mentions (CMT-007): `comment_mentions` (`comment_id` FK → `comments.id` ON DELETE CASCADE, `user_id` FK → `users.id` with no delete action, so a person cannot be deleted out from under a mention — they are archived, never deleted, per SET-005), compound PK on both. Who a comment addresses is a queryable list, never a substring of the body — tier promotion reads it at post time, and the M18 notification fan-out reads it afterwards. The body stays plain text; a mention is written into it as `@` and the person's display name.
 
 Unread tracking (CMT-004 working default): `comment_last_read` (`user_id`, `entity_type`, `entity_id`, `read_at`, compound PK on first three). Badges count unread within tiers the viewer can see — hidden-tier counts never leak.
 

@@ -74,13 +74,30 @@ _None — queue cleared 2026-08-05 (CMT-001 through CMT-005)._
 - **Rationale** — Append-only stays absolute. Redaction stays real. Each rule keeps its full strength, because the two now apply to different tables.
 - **Consequences** — `comment_revisions` lands with edit and soft delete (M9/4), not before (TECH-014's incremental-schema rule). Every `comment.*` activity payload carries ids only; M9/2 already writes them that way. The M9/6 narration layer renders a comment entry from the comment it names, never from text in the payload. A redacted comment's feed entry therefore reads as a redacted comment, instead of quoting what was removed.
 
+## CMT-007 — Mentions: a list beside plain text, a candidate set the record can reach, and promotion to the narrowest tier
+
+- **Status** — Accepted
+- **Date** — 2026-08-13
+- **Context** — DD-016 and CMT-002 both say @-mentions auto-promote with confirmation. Neither says who the typeahead offers, what a mention is stored as, or which tier the confirmation proposes. M9/3 (#129) has to answer all three before it can build the surface.
+- **Decision** —
+  - **The mentioned people are a list, never a substring of prose.** A post names them by id, and each one becomes a `comment_mentions` row keyed on (`comment_id`, `user_id`). Tier promotion reads the list at post time; the M18 notification fan-out reads it later. Neither re-parses a body.
+  - **The body stays plain text.** A mention is written into it as `@` and the person's display name, exactly as it would be typed — no markup, no token, no id. A body read anywhere else (an export, a SIEM line, an M18 email) still reads as a sentence. The comment surface draws a chip wherever a name on the list appears in the body; a person renamed since no longer matches, and their `@Old Name` stays as the author typed it, because the record of what was said does not change when somebody changes their name.
+  - **The typeahead offers everybody the record can reach, and nobody else.** The candidate set is the DD-016 tier predicate run over people instead of rows: a person belongs when they hear at least one tier on this contract. That is every live Member+ user, whether or not they are on the team (CTR-021 already opens the record to them), plus every Contributor holding a `contract_team` row on it. A Contributor with no row, a Business User, and an archived person are left out.
+  - **Mentioning somebody does not put them on the team.** Adding a person to `contract_team` is the act that grants them the record (CTR-021), and a mention is not that act. This is why an off-team Contributor is not offered: a name no tier reaches is exactly the trap the confirmation exists to avoid.
+  - **The confirmation offers the narrowest tier that includes everybody named**, and only tiers this author may post at. Never a jump to Full Thread. Confirming posts at the promoted tier; cancelling posts nothing and leaves the composer with its text and its mentions intact.
+  - **The seam re-checks and refuses.** A post whose mentions outrun its tier is answered 403 naming the people, whatever the client sent. The confirmation explains the promotion; it never enforces it.
+- **Rationale** — A queryable list is what makes promotion and fan-out cheap and exact; parsing prose for names is neither. Plain text keeps the body honest everywhere it is read. Offering only reachable people means the typeahead never produces a mention the product cannot deliver. The narrowest tier is the smallest widening that works, which is what DD-016 asks for.
+- **Alternatives considered** — **A markup token in the body** (`@[Name](id)`): exact to render and rename-proof, rejected because every other reader of `comments.body` would then be reading markup. **Offering everybody and refusing on post**: rejected — a name in a list you cannot address is a trap, and the tier confirmation cannot resolve it. **Mention adds to the team**: rejected — that grants record access as a side effect of typing a name.
+- **Consequences** — `comment_mentions` lands in M9/3 with (`comment_id`, `user_id`) and nothing else; the comment cascades, the user does not (SET-005). `GET /comments/mention-candidates` answers the candidate set with each person's tiers, so one server-side answer to "who can see what" serves the typeahead, the confirmation, and the refusal. Two display names that are identical cannot be told apart in the body, so both chip; the list still names exactly who was addressed. M18 reads `comment_mentions` for the fan-out and needs no parser.
+
 ## Index of decisions
 
-| #       | Decision                                                                | Status                        |
-| ------- | ----------------------------------------------------------------------- | ----------------------------- |
-| CMT-001 | One comment system; anchored doc comments; thread follows the work      | Accepted                      |
-| CMT-002 | Thread shape: flat chronological, mentions, no nesting                  | Accepted                      |
-| CMT-003 | Tier rendering: badge + strong Legal-Only treatment; segmented composer | Accepted                      |
-| CMT-004 | Home: activity-bar panel; badge = your unread, tier-filtered            | Accepted                      |
-| CMT-005 | Post-publish: edit with marker, soft delete, tier immutable             | Accepted (amended by CMT-006) |
-| CMT-006 | Prior comment text lives in `comment_revisions`, not the activity log   | Accepted                      |
+| #       | Decision                                                                      | Status                        |
+| ------- | ----------------------------------------------------------------------------- | ----------------------------- |
+| CMT-001 | One comment system; anchored doc comments; thread follows the work            | Accepted                      |
+| CMT-002 | Thread shape: flat chronological, mentions, no nesting                        | Accepted                      |
+| CMT-003 | Tier rendering: badge + strong Legal-Only treatment; segmented composer       | Accepted                      |
+| CMT-004 | Home: activity-bar panel; badge = your unread, tier-filtered                  | Accepted                      |
+| CMT-005 | Post-publish: edit with marker, soft delete, tier immutable                   | Accepted (amended by CMT-006) |
+| CMT-006 | Prior comment text lives in `comment_revisions`, not the activity log         | Accepted                      |
+| CMT-007 | Mentions: a list beside plain text; reachable candidates; narrowest promotion | Accepted                      |

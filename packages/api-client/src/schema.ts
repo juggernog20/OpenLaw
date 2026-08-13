@@ -986,8 +986,25 @@ export interface paths {
     /** One record's comment thread, flat and oldest first (CMT-002), filtered at query time to the DD-016 tiers the viewer is in the room for. A tier they are not in is omitted entirely — no placeholder, no gap, and no count. A record they cannot reach answers 404, exactly as one that does not exist */
     get: operations["listComments"];
     put?: never;
-    /** Post a comment on a record at one of the DD-016 tiers. The seam refuses a tier the poster is not in the room for, so a Contributor cannot post Legal Only whatever the client sends. The tier is immutable afterwards (CMT-005) — there is no route that changes it. Appends a comment.posted activity entry at the comment's own tier, in the same transaction */
+    /** Post a comment on a record at one of the DD-016 tiers. The seam refuses a tier the poster is not in the room for, so a Contributor cannot post Legal Only whatever the client sends, and it refuses a comment whose mentions outrun its tier (CMT-007), so the composer's confirmation explains the promotion rather than enforcing it. The tier is immutable afterwards (CMT-005) — there is no route that changes it. Writes one comment_mentions row per person named, and appends a comment.posted activity entry at the comment's own tier, all in the same transaction */
     post: operations["postComment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/comments/mention-candidates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The people a comment on this record can address (CMT-007), each with the DD-016 tiers they hear on it — the @-typeahead's list, and what the promotion confirmation reads to work out the narrowest tier that includes everyone named. Somebody no tier reaches is left out rather than offered and refused. A record the viewer cannot reach answers 404 */
+    get: operations["listMentionCandidates"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -5038,6 +5055,10 @@ export interface operations {
               body: string;
               /** @enum {string} */
               visibility: "legal_only" | "working_team" | "full_thread";
+              mentions: {
+                id: string;
+                displayName: string;
+              }[];
               /** Format: date-time */
               createdAt: string;
             }[];
@@ -5071,6 +5092,7 @@ export interface operations {
           body: string;
           /** @enum {string} */
           visibility: "legal_only" | "working_team" | "full_thread";
+          mentions?: string[];
         };
       };
     };
@@ -5096,9 +5118,52 @@ export interface operations {
               body: string;
               /** @enum {string} */
               visibility: "legal_only" | "working_team" | "full_thread";
+              mentions: {
+                id: string;
+                displayName: string;
+              }[];
               /** Format: date-time */
               createdAt: string;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listMentionCandidates: {
+    parameters: {
+      query: {
+        entityType: "contract";
+        entityId: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            candidates: {
+              id: string;
+              displayName: string;
+              image: string | null;
+              tiers: ("legal_only" | "working_team" | "full_thread")[];
+            }[];
           };
         };
       };

@@ -24,10 +24,14 @@
  * Posting lands a `comment.posted` activity row at the comment's own
  * tier in the same transaction, asserted by reading the table — the log
  * has no read routes until M9/6.
+ *
+ * M9/3 adds mentions to the same seam: who a comment addresses is a
+ * `comment_mentions` row, and a comment whose mentions outrun its tier
+ * is refused here, on a request no confirmation dialog ever saw.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, and, asc, comments, desc, eq, users } from "@openlaw/db";
+import { activityLog, and, asc, commentMentions, comments, desc, eq, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -74,7 +78,15 @@ interface CommentRow {
   author: { id: string; displayName: string; image: string | null; archived: boolean };
   body: string;
   visibility: string;
+  mentions: { id: string; displayName: string }[];
   createdAt: string;
+}
+
+interface MentionCandidateRow {
+  id: string;
+  displayName: string;
+  image: string | null;
+  tiers: string[];
 }
 
 beforeAll(async () => {
@@ -85,6 +97,11 @@ beforeAll(async () => {
     payload: ADMIN,
   });
   expect(setup.statusCode, setup.body).toBe(201);
+  const [admin] = await harness.db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, ADMIN.email));
+  userIds.set(ADMIN.email, admin!.id);
 
   for (const [fixture, role] of [
     [MEMBER, "legal_team_member"],
@@ -163,6 +180,23 @@ async function contractWithoutTeam(title: string): Promise<{ id: string; number:
 const post = (cookies: Record<string, string>, payload: Record<string, unknown>) =>
   harness.app.inject({ method: "POST", url: "/api/v1/comments", cookies, payload });
 
+const readCandidates = (cookies: Record<string, string>, entityId: string) =>
+  harness.app.inject({
+    method: "GET",
+    url: `/api/v1/comments/mention-candidates?entityType=contract&entityId=${entityId}`,
+    cookies,
+  });
+
+/** The typeahead's list, requiring success. */
+async function candidates(
+  cookies: Record<string, string>,
+  entityId: string,
+): Promise<MentionCandidateRow[]> {
+  const res = await readCandidates(cookies, entityId);
+  expect(res.statusCode, res.body).toBe(200);
+  return res.json().candidates as MentionCandidateRow[];
+}
+
 const read = (cookies: Record<string, string>, entityId: string, entityType = "contract") =>
   harness.app.inject({
     method: "GET",
@@ -176,8 +210,15 @@ async function comment(
   entityId: string,
   body: string,
   visibility: string,
+  mentions?: readonly string[],
 ): Promise<CommentRow> {
-  const res = await post(cookies, { entityType: "contract", entityId, body, visibility });
+  const res = await post(cookies, {
+    entityType: "contract",
+    entityId,
+    body,
+    visibility,
+    ...(mentions ? { mentions } : {}),
+  });
   expect(res.statusCode, res.body).toBe(201);
   return res.json().comment as CommentRow;
 }
@@ -530,5 +571,237 @@ describe("the entity reference", () => {
     // so an unknown one is still "no record here".
     const res = await read(memberCookies, "not-a-uuid-but-plausible");
     expect(res.statusCode, res.body).toBe(404);
+  });
+});
+
+/**
+ * Mentions and tier promotion (M9/3).
+ *
+ * The mentioned people are a list, so these tests read the
+ * `comment_mentions` table rather than the body. And the promotion rule
+ * is proved where it has to hold: at the seam, on a request no dialog
+ * ever saw. A Legal Only comment naming a Contributor is refused,
+ * whatever the client sends — the confirmation in the composer explains
+ * the promotion, it does not enforce it.
+ *
+ * The typeahead's list is the tier predicate run over people instead of
+ * rows (CMT-007). Somebody no tier on the record reaches — a Contributor
+ * with no team row, a Business User, an archived person — is left out of
+ * it, because offering a name a mention cannot reach is the trap the
+ * confirmation exists to avoid.
+ */
+describe("who a comment on a record can address", () => {
+  it("offers Member+ and the Contributors on the team, each with the tiers they hear", async () => {
+    const contract = await contractWithTeam("Who can be named");
+    const list = await candidates(memberCookies, contract.id);
+
+    expect(list.map((row) => [row.displayName, row.tiers])).toEqual([
+      [ADMIN.displayName, ["legal_only", "working_team", "full_thread"]],
+      [CONTRIBUTOR.displayName, ["working_team", "full_thread"]],
+      [MEMBER.displayName, ["legal_only", "working_team", "full_thread"]],
+    ]);
+  });
+
+  it("leaves out a Contributor with no team row, and a Business User", async () => {
+    const contract = await contractWithTeam("Nobody a mention can reach");
+    const named = (await candidates(memberCookies, contract.id)).map((row) => row.id);
+
+    // Read out first: `not.toContain(undefined)` would pass on a
+    // fixture that never got provisioned, which is not the assertion.
+    const outsider = userIds.get(OUTSIDER.email);
+    const business = userIds.get(BUSINESS.email);
+    expect(outsider).toBeDefined();
+    expect(business).toBeDefined();
+    expect(named).not.toContain(outsider);
+    expect(named).not.toContain(business);
+  });
+
+  it("gives a Contributor on the team the same list, all of it reachable at Working Team", async () => {
+    const contract = await contractWithTeam("Contributor's typeahead");
+    const theirs = await candidates(contributorCookies, contract.id);
+    const ours = await candidates(memberCookies, contract.id);
+    expect(theirs).toEqual(ours);
+    // Which is why a Contributor's typeahead can never produce a mention
+    // that would need Legal Only: everyone it offers hears Working Team,
+    // and Working Team is a segment their composer has.
+    expect(theirs.every((row) => row.tiers.includes("working_team"))).toBe(true);
+  });
+
+  it("answers 404 on a record the viewer cannot reach", async () => {
+    const contract = await contractWithoutTeam("Not their record");
+    const res = await readCandidates(outsiderCookies, contract.id);
+    expect(res.statusCode, res.body).toBe(404);
+  });
+});
+
+describe("posting a comment that names someone", () => {
+  it("writes one comment_mentions row per person, keyed on comment and user", async () => {
+    const contract = await contractWithTeam("Named on the record");
+    const posted = await comment(
+      memberCookies,
+      contract.id,
+      `@${CONTRIBUTOR.displayName} @${ADMIN.displayName} can one of you take the redline?`,
+      "working_team",
+      [userIds.get(CONTRIBUTOR.email)!, userIds.get(ADMIN.email)!],
+    );
+
+    const rows = await harness.db
+      .select({ commentId: commentMentions.commentId, userId: commentMentions.userId })
+      .from(commentMentions)
+      .where(eq(commentMentions.commentId, posted.id))
+      .orderBy(asc(commentMentions.userId));
+    expect(rows.map((row) => row.userId).sort()).toEqual(
+      [userIds.get(CONTRIBUTOR.email)!, userIds.get(ADMIN.email)!].sort(),
+    );
+    expect(rows.every((row) => row.commentId === posted.id)).toBe(true);
+  });
+
+  it("collapses a repeated name into one row", async () => {
+    const contract = await contractWithTeam("Named twice");
+    const casey = userIds.get(CONTRIBUTOR.email)!;
+    const posted = await comment(
+      memberCookies,
+      contract.id,
+      `@${CONTRIBUTOR.displayName}, and again @${CONTRIBUTOR.displayName}.`,
+      "working_team",
+      [casey, casey],
+    );
+
+    const rows = await harness.db
+      .select({ userId: commentMentions.userId })
+      .from(commentMentions)
+      .where(eq(commentMentions.commentId, posted.id));
+    expect(rows).toEqual([{ userId: casey }]);
+  });
+
+  it("carries the mentioned people out on the post and on the next read", async () => {
+    const contract = await contractWithTeam("Mentions come back");
+    const posted = await comment(
+      memberCookies,
+      contract.id,
+      `@${CONTRIBUTOR.displayName} over to you.`,
+      "working_team",
+      [userIds.get(CONTRIBUTOR.email)!],
+    );
+    expect(posted.mentions).toEqual([
+      { id: userIds.get(CONTRIBUTOR.email), displayName: CONTRIBUTOR.displayName },
+    ]);
+
+    const [row] = await thread(memberCookies, contract.id);
+    expect(row!.mentions).toEqual(posted.mentions);
+  });
+
+  it("carries an empty list for a comment that names nobody", async () => {
+    const contract = await contractWithTeam("Nobody named");
+    const posted = await comment(memberCookies, contract.id, "Just thinking aloud.", "legal_only");
+    expect(posted.mentions).toEqual([]);
+  });
+});
+
+describe("the promotion rule, enforced at the seam", () => {
+  it("refuses a Legal Only comment that names a Contributor, and writes nothing", async () => {
+    const contract = await contractWithTeam("Mention outruns the tier");
+    // Posted straight at the seam. No confirmation was shown, and none
+    // is what makes this refusal hold.
+    const res = await post(memberCookies, {
+      entityType: "contract",
+      entityId: contract.id,
+      body: `@${CONTRIBUTOR.displayName} what did procurement say?`,
+      visibility: "legal_only",
+      mentions: [userIds.get(CONTRIBUTOR.email)],
+    });
+    expect(res.statusCode, res.body).toBe(403);
+    // The refusal names the person, so the client can say who.
+    expect(res.json().detail).toContain(CONTRIBUTOR.displayName);
+
+    expect(
+      await harness.db
+        .select({ id: comments.id })
+        .from(comments)
+        .where(eq(comments.entityId, contract.id)),
+    ).toEqual([]);
+    expect(
+      await harness.db
+        .select({ id: activityLog.id })
+        .from(activityLog)
+        .where(
+          and(eq(activityLog.action, "comment.posted"), eq(activityLog.entityId, contract.id)),
+        ),
+    ).toEqual([]);
+  });
+
+  it("takes the same comment at the narrowest tier that includes them", async () => {
+    const contract = await contractWithTeam("Promoted and posted");
+    const posted = await comment(
+      memberCookies,
+      contract.id,
+      `@${CONTRIBUTOR.displayName} what did procurement say?`,
+      "working_team",
+      [userIds.get(CONTRIBUTOR.email)!],
+    );
+    expect(posted.visibility).toBe("working_team");
+
+    const [stored] = await harness.db
+      .select({ visibility: comments.visibility })
+      .from(comments)
+      .where(eq(comments.id, posted.id));
+    expect(stored!.visibility).toBe("working_team");
+  });
+
+  it("takes a Legal Only comment that names a Legal Team Member", async () => {
+    const contract = await contractWithTeam("Both in the room");
+    const posted = await comment(
+      memberCookies,
+      contract.id,
+      `@${ADMIN.displayName} hold the 1x cap.`,
+      "legal_only",
+      [userIds.get(ADMIN.email)!],
+    );
+    expect(posted.visibility).toBe("legal_only");
+  });
+
+  it("refuses a mention of somebody no tier on the record reaches", async () => {
+    const contract = await contractWithTeam("Unreachable name");
+    for (const stranger of [OUTSIDER, BUSINESS]) {
+      const res = await post(memberCookies, {
+        entityType: "contract",
+        entityId: contract.id,
+        body: `@${stranger.displayName} are you across this?`,
+        visibility: "full_thread",
+        mentions: [userIds.get(stranger.email)],
+      });
+      expect(res.statusCode, res.body).toBe(400);
+    }
+
+    expect(
+      await harness.db
+        .select({ id: comments.id })
+        .from(comments)
+        .where(eq(comments.entityId, contract.id)),
+    ).toEqual([]);
+  });
+
+  it("refuses a mention of an id that names nobody", async () => {
+    const contract = await contractWithTeam("Ghost mention");
+    const res = await post(memberCookies, {
+      entityType: "contract",
+      entityId: contract.id,
+      body: "Addressed to nobody.",
+      visibility: "working_team",
+      mentions: ["01890000-0000-7000-8000-000000000000"],
+    });
+    expect(res.statusCode, res.body).toBe(400);
+  });
+
+  it("refuses more names than one comment may carry", async () => {
+    const contract = await contractWithTeam("Too many names");
+    const res = await post(memberCookies, {
+      entityType: "contract",
+      entityId: contract.id,
+      body: "Everyone.",
+      visibility: "working_team",
+      mentions: Array.from({ length: 21 }, () => userIds.get(CONTRIBUTOR.email)),
+    });
+    expect(res.statusCode, res.body).toBe(400);
   });
 });

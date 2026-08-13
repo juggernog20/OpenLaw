@@ -1628,18 +1628,52 @@ describe("the contract record's comment applet (M9/2)", () => {
     visibility: string,
     author = AUTHOR,
     createdAt = "2026-08-12T09:00:00.000Z",
+    mentions: { id: string; displayName: string }[] = [],
   ) {
-    return { id, entityType: "contract", entityId: "c1", author, body, visibility, createdAt };
+    return {
+      id,
+      entityType: "contract",
+      entityId: "c1",
+      author,
+      body,
+      visibility,
+      mentions,
+      createdAt,
+    };
   }
+
+  /** The @-typeahead's list, as the seam answers it: everybody a
+   * comment on this record reaches, with the tiers they hear. Nadia is
+   * Member+ and hears all three; Casey is a Contributor on the team and
+   * hears the two wider ones. */
+  const NADIA_CANDIDATE = {
+    id: "u2",
+    displayName: "Nadia Counsel",
+    image: null,
+    tiers: ["legal_only", "working_team", "full_thread"],
+  };
+  const CASEY_CANDIDATE = {
+    id: "u3",
+    displayName: "Casey Contributor",
+    image: null,
+    tiers: ["working_team", "full_thread"],
+  };
+  const CANDIDATES = [CASEY_CANDIDATE, NADIA_CANDIDATE];
 
   /** The thread seam, stateful the way the API is: a post appends, and
    * the next read answers what the poster now sees. The handler only
    * answers; what it was asked is recorded for the test to assert. */
-  function commentsApi(initial: ReturnType<typeof comment>[] = []) {
+  function commentsApi(
+    initial: ReturnType<typeof comment>[] = [],
+    candidates: typeof CANDIDATES = CANDIDATES,
+  ) {
     let thread = initial;
     const posts: unknown[] = [];
     const reads: Record<string, string | null>[] = [];
     const handler = (call: StubCall): Response | undefined => {
+      if (call.url.pathname === "/api/v1/comments/mention-candidates" && call.method === "GET") {
+        return json(200, { candidates });
+      }
       if (call.url.pathname !== "/api/v1/comments") return undefined;
       if (call.method === "GET") {
         reads.push({
@@ -1650,13 +1684,21 @@ describe("the contract record's comment applet (M9/2)", () => {
       }
       if (call.method === "POST") {
         posts.push(call.body);
-        const body = call.body as { body: string; visibility: string };
+        const body = call.body as {
+          body: string;
+          visibility: string;
+          mentions?: string[];
+        };
         const posted = comment(
           `c-new-${thread.length}`,
           body.body,
           body.visibility,
           AUTHOR,
           "2026-08-12T12:00:00.000Z",
+          (body.mentions ?? []).map((id) => ({
+            id,
+            displayName: candidates.find((person) => person.id === id)!.displayName,
+          })),
         );
         thread = [...thread, posted];
         return json(201, { comment: posted });
@@ -1800,6 +1842,7 @@ describe("the contract record's comment applet (M9/2)", () => {
           entityId: "c1",
           body: "Hold the 1x cap.",
           visibility: "legal_only",
+          mentions: [],
         },
       ]);
     });
@@ -1879,6 +1922,7 @@ describe("the contract record's comment applet (M9/2)", () => {
           entityId: "c1",
           body: "Procurement has the PO ready.",
           visibility: "working_team",
+          mentions: [],
         },
       ]);
     });
@@ -1945,5 +1989,273 @@ describe("the contract record's comment applet (M9/2)", () => {
       "You cannot post a comment at that visibility tier.",
     );
     expect(within(panel).getByLabelText("New comment")).toHaveValue("Into a room I am not in.");
+  });
+
+  /**
+   * Mentions and tier promotion (M9/3).
+   *
+   * The composer stays plain text. Typing `@` opens the typeahead over
+   * the people this record can reach; picking one writes their name into
+   * the box and puts them on the list the post carries, so who a comment
+   * addresses is a list and not a substring of prose (CMT-007).
+   *
+   * The promotion confirmation is asserted as what it is: an
+   * explanation. It names who cannot hear the comment, offers the
+   * narrowest tier that reaches them, and on cancel leaves the box
+   * untouched and posts nothing. The refusal that holds when no dialog
+   * was shown lives at the API seam, and is asserted there.
+   */
+  describe("mentions and tier promotion (M9/3)", () => {
+    /** Opens the panel and answers the composer's box. */
+    async function composerIn(user: ReturnType<typeof userEvent.setup>) {
+      await openChat(user);
+      const panel = await screen.findByRole("complementary", { name: "Comments" });
+      return { panel, box: within(panel).getByLabelText("New comment") };
+    }
+
+    it("opens a typeahead on @ and turns a pick into a chip carrying the person's name", async () => {
+      const user = userEvent.setup();
+      stubApi({ signedIn: MEMBER, extra: pageApi(commentsApi()) });
+      renderAt("/contracts/42");
+      const { panel, box } = await composerIn(user);
+
+      await user.type(box, "@Cas");
+      const list = await within(panel).findByRole("listbox", { name: "People you can mention" });
+      // Narrowed to what was typed: the other candidate is not offered.
+      expect(within(list).getAllByRole("option")).toHaveLength(1);
+      expect(within(list).getByRole("option", { name: "Casey Contributor" })).toBeInTheDocument();
+
+      await user.click(within(list).getByRole("option", { name: "Casey Contributor" }));
+      // The name goes into the text, where the author is typing.
+      expect(box).toHaveValue("@Casey Contributor ");
+      // And the person goes onto the list the post will carry, drawn as
+      // a chip rather than as raw text.
+      const mentioned = within(panel).getByRole("list", { name: "Mentioned" });
+      expect(within(mentioned).getByText("Casey Contributor")).toBeInTheDocument();
+    });
+
+    it("picks the active row with Enter rather than posting a half-written comment", async () => {
+      const user = userEvent.setup();
+      const comments = commentsApi();
+      stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+      renderAt("/contracts/42");
+      const { box } = await composerIn(user);
+
+      await user.type(box, "@Nadia{Enter}");
+      expect(box).toHaveValue("@Nadia Counsel ");
+      expect(comments.posts).toEqual([]);
+    });
+
+    it("posts the mentioned people as a list beside the plain-text body", async () => {
+      const user = userEvent.setup();
+      const comments = commentsApi();
+      stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+      renderAt("/contracts/42");
+      const { panel, box } = await composerIn(user);
+
+      await user.type(box, "@Casey{Enter}");
+      await user.type(box, "what did procurement say?");
+      await user.click(within(panel).getByRole("button", { name: "Comment" }));
+
+      await waitFor(() => {
+        expect(comments.posts).toEqual([
+          {
+            entityType: "contract",
+            entityId: "c1",
+            body: "@Casey Contributor what did procurement say?",
+            visibility: "working_team",
+            mentions: ["u3"],
+          },
+        ]);
+      });
+    });
+
+    it("drops a mention when its name is taken out of the box", async () => {
+      const user = userEvent.setup();
+      const comments = commentsApi();
+      stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+      renderAt("/contracts/42");
+      const { panel, box } = await composerIn(user);
+
+      await user.type(box, "@Casey{Enter}over to you.");
+      expect(within(panel).getByRole("list", { name: "Mentioned" })).toBeInTheDocument();
+
+      // The chip's own control takes the name out of the text too, so
+      // nothing is left addressing somebody the post does not name.
+      await user.click(within(panel).getByRole("button", { name: "Remove Casey Contributor" }));
+      expect(box).toHaveValue("over to you.");
+      expect(within(panel).queryByRole("list", { name: "Mentioned" })).not.toBeInTheDocument();
+
+      await user.click(within(panel).getByRole("button", { name: "Comment" }));
+      await waitFor(() => {
+        expect(comments.posts).toEqual([
+          {
+            entityType: "contract",
+            entityId: "c1",
+            body: "over to you.",
+            visibility: "working_team",
+            mentions: [],
+          },
+        ]);
+      });
+    });
+
+    it("asks before posting a Legal Only comment that names a Contributor, and offers the narrowest tier", async () => {
+      const user = userEvent.setup();
+      const comments = commentsApi();
+      stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+      renderAt("/contracts/42");
+      const { panel, box } = await composerIn(user);
+
+      await user.click(within(panel).getByRole("radio", { name: "Legal only" }));
+      await user.type(box, "@Casey{Enter}what did procurement say?");
+      await user.click(within(panel).getByRole("button", { name: "Comment" }));
+
+      const dialog = await screen.findByRole("dialog");
+      expect(within(dialog).getByText("Widen the audience?")).toBeInTheDocument();
+      // It names the person, and it offers Working team — the narrowest
+      // tier that includes them, never a jump to Full thread.
+      expect(dialog.textContent).toContain("Casey Contributor cannot see a legal only comment");
+      expect(dialog.textContent).toContain("working team");
+      expect(dialog.textContent).not.toContain("full thread");
+      // Nothing is posted while the question is open.
+      expect(comments.posts).toEqual([]);
+
+      await user.click(within(dialog).getByRole("button", { name: "Widen and post" }));
+      await waitFor(() => {
+        expect(comments.posts).toEqual([
+          {
+            entityType: "contract",
+            entityId: "c1",
+            body: "@Casey Contributor what did procurement say?",
+            visibility: "working_team",
+            mentions: ["u3"],
+          },
+        ]);
+      });
+    });
+
+    it("cancels the promotion, posting nothing and keeping the text and the mention", async () => {
+      const user = userEvent.setup();
+      const comments = commentsApi();
+      stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+      renderAt("/contracts/42");
+      const { panel, box } = await composerIn(user);
+
+      await user.click(within(panel).getByRole("radio", { name: "Legal only" }));
+      await user.type(box, "@Casey{Enter}what did procurement say?");
+      await user.click(within(panel).getByRole("button", { name: "Comment" }));
+
+      const dialog = await screen.findByRole("dialog");
+      await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      });
+      expect(comments.posts).toEqual([]);
+      // The composer is exactly as it was, so changing the mention is as
+      // available as widening the room.
+      expect(within(panel).getByLabelText("New comment")).toHaveValue(
+        "@Casey Contributor what did procurement say?",
+      );
+      expect(
+        within(within(panel).getByRole("list", { name: "Mentioned" })).getByText(
+          "Casey Contributor",
+        ),
+      ).toBeInTheDocument();
+      expect(within(panel).getByRole("radio", { name: "Legal only" })).toBeChecked();
+    });
+
+    it("asks nothing when everybody named already hears the selected tier", async () => {
+      const user = userEvent.setup();
+      const comments = commentsApi();
+      stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+      renderAt("/contracts/42");
+      const { panel, box } = await composerIn(user);
+
+      await user.click(within(panel).getByRole("radio", { name: "Legal only" }));
+      await user.type(box, "@Nadia{Enter}hold the 1x cap.");
+      await user.click(within(panel).getByRole("button", { name: "Comment" }));
+
+      await waitFor(() => {
+        expect(comments.posts).toEqual([
+          {
+            entityType: "contract",
+            entityId: "c1",
+            body: "@Nadia Counsel hold the 1x cap.",
+            visibility: "legal_only",
+            mentions: ["u2"],
+          },
+        ]);
+      });
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    it("renders a posted comment's mentions as chips, not as raw text", async () => {
+      const user = userEvent.setup();
+      stubApi({
+        signedIn: MEMBER,
+        extra: pageApi(
+          commentsApi([
+            comment(
+              "c-1",
+              "@Casey Contributor what did procurement say?",
+              "working_team",
+              AUTHOR,
+              "2026-08-12T09:00:00.000Z",
+              [{ id: "u3", displayName: "Casey Contributor" }],
+            ),
+          ]),
+        ),
+      });
+      renderAt("/contracts/42");
+      await openChat(user);
+
+      const row = within(await screen.findByRole("list", { name: "Comments" })).getAllByRole(
+        "listitem",
+      )[0]!;
+      // The name is its own element, so it reads as a person; the rest
+      // of the sentence is still the author's plain text.
+      const chip = within(row).getByText("@Casey Contributor");
+      expect(chip.tagName).toBe("SPAN");
+      expect(row.textContent).toContain("@Casey Contributor what did procurement say?");
+    });
+
+    it("never asks a Contributor to promote, because every name they are offered hears their tiers", async () => {
+      const user = userEvent.setup();
+      const comments = commentsApi();
+      const record = recordApi(contractRow(), [
+        person("u1", "creator"),
+        person("u3", "contributor"),
+      ]);
+      stubApi({
+        signedIn: CONTRIBUTOR,
+        extra: (call: StubCall) =>
+          comments.handler(call) ??
+          (["/api/v1/contracts/options", "/api/v1/entities"].includes(call.url.pathname)
+            ? problem(403, "You do not have permission to perform this action.")
+            : record.handler(call)),
+      });
+      renderAt("/contracts/42");
+      const { panel, box } = await composerIn(user);
+
+      // No Legal Only segment to select, so no mention can need one.
+      expect(within(panel).queryByRole("radio", { name: "Legal only" })).not.toBeInTheDocument();
+      await user.type(box, "@Nadia{Enter}we are ready.");
+      await user.click(within(panel).getByRole("button", { name: "Comment" }));
+
+      await waitFor(() => {
+        expect(comments.posts).toEqual([
+          {
+            entityType: "contract",
+            entityId: "c1",
+            body: "@Nadia Counsel we are ready.",
+            visibility: "working_team",
+            mentions: ["u2"],
+          },
+        ]);
+      });
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
   });
 });

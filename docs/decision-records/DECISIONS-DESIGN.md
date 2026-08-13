@@ -1406,6 +1406,60 @@ Native radios cost nothing to make keyboard-accessible, because DES-010 leans on
 
 `--legal-only-bg` joins the DES-005 token system. It is registered in `styles/globals.css` `@theme` as `--color-legal-only-bg`, valued in all three theme files, and gated in `styles/lint-contrast.mjs` against `--text-primary` and `--text-muted`. `PanelApplet` gains an optional `accessory` slot, so an applet can put content in the panel header. DES-016's implementation clarification, point 5, anticipated exactly that. The panel is entity-generic: matters (M22) and documents (M11) mount the same component. The mention chips (M9/3) and the edited marker and tombstone (M9/4) extend this anatomy rather than replacing it.
 
+## DES-024: The mention affordances — typeahead, chip, and the promotion confirmation (extends DES-023)
+
+- **Status:** Accepted
+- **Date:** 2026-08-13
+
+### Context
+
+DES-023 drew the comment surface from `designs/contracts.pen` **C3 — Contract detail · Comments panel**. C3 draws no mention affordance at all: the composer is a two-segment control, a box, an audience line, and a submit. M9/3 (#129) adds the `@`-typeahead, the mention chip, and the promotion confirmation, and none of them has a frame. This record supplies the anatomy, in DES-023's own terms.
+
+### Decision
+
+**The typeahead is a listbox the composer's box drives, not a combobox.** The counterparty picker and the DES-014 timezone picker are hand-rolled comboboxes on an `input`. This one cannot be: ARIA in HTML permits no role on a `textarea` other than its implicit `textbox`, so `role="combobox"` and `aria-expanded` are both out. The inline-mention pattern uses what `textbox` does support.
+
+- The composer's textarea keeps its own role and takes `aria-autocomplete="list"`, `aria-controls`, and `aria-activedescendant` — all three are supported on `textbox`. The list is a sibling `ul role="listbox"`, labelled "People you can mention".
+- **A polite live region replaces `aria-expanded`.** With the list open it says how many people match and that the arrow keys choose one. Without it, a screen-reader user typing `@` would get the active-row announcements with no account of where they came from.
+- The list **opens above the box**, not below it. The composer sits at the foot of the panel, so a list drawn downward would leave the panel.
+- The list is DES-020's option chrome: `rounded-card` on `bg-raised` with the default border, rows at 12px `text-primary`, the active row on `bg-control`. Each row carries a 20px avatar (DES-018) ahead of the name.
+- Keys: Arrow walks, Enter and Tab pick, Escape closes locally (DES-010). Enter with the list open never posts a half-written comment.
+
+**The mention chip** is the neutral counter pair, `bg-badge-count-bg` / `text-badge-count-fg`, on a `rounded-chip`. It carries the person's name and nothing else — no avatar, no `@`-prefixed style, and no link colour, because a mention is a person and not a destination.
+
+- **In a posted comment** the chip is inline in the body, drawn wherever a name on the comment's mention list appears in the text (CMT-007). The rest of the sentence is the author's plain text.
+- **In the composer** the picked people sit in their own chip row under the box, labelled "Mentioned". Each chip carries a remove control: a 12px Lucide `X` on a 24×24 hit target, which is DES-011's floor, so the glyph carries padding rather than being the target itself. The lock in DES-023's badge is the precedent for a sub-16px glyph inside a chip.
+
+**The promotion confirmation** is the shipped Dialog (DES-004), not a popover or an inline banner. It has a title, the sentence that names who cannot hear the comment and the tier that would reach them, the audience line for that tier in the composer's own words, and two buttons: "Cancel" (secondary) and "Widen and post" (primary).
+
+- The title is a question — "Widen the audience?" — because the dialog asks for a decision rather than reports a fact.
+- The tier names inside the sentence are the DD-016 audience labels, lowercased into the prose. The button says what the confirm does, not which tier it does it at; the sentence above it already said the tier.
+- Cancelling restores nothing, because nothing was taken: the composer keeps its text, its mentions, and its selected segment.
+
+### Recorded normalization points
+
+1. **C3 draws none of this.** Every element above is an addition, built from the components DES-023 already named rather than from a frame.
+2. **The typeahead is not the app's combobox pattern**, for the ARIA reason above. It keeps that pattern's keyboard model — Arrow, Enter, Tab, Escape — and swaps `aria-expanded` for a live region. The box's accessible name stays "New comment", and its role stays `textbox`.
+
+### Rationale
+
+The mention is the one place in the comment surface where the composer has to offer a choice while the author is mid-sentence. Everything else about the panel is a control you touch before you write. Keeping the combobox pattern's keyboard model means the keys are ones the app already teaches, even though the role is not the same one; the list-above placement is forced by where the composer sits.
+
+The chip is neutral rather than accented for the same reason the tier badge's two wider tiers are: an accented chip would compete with the Legal Only pair that DES-023 reserved for the one thing that must be read peripherally.
+
+The dialog is the modal because the question stops a post. DD-016's failure mode is saying something in the wrong room; a dismissible popover next to a submit button is not the shape of a question you must answer.
+
+### Alternatives considered
+
+- **A `contenteditable` composer with real inline chips.** Rejected: it buys a truer chip and costs the plain-text body (CMT-007), the textarea's native keyboard model, and a large accessibility surface with no frame to build it against.
+- **An inline warning strip instead of a dialog.** Rejected: the post is stopped either way, and a strip that stops a submit without taking focus reads as a bug.
+- **Naming the promoted tier on the confirm button** ("Post at working team"). Rejected as a phrase where DES-015 wants a verb; the sentence above the button already names the tier.
+- **Loading the candidate list on the first `@`.** Rejected: the list is one working group, so it rides down with the thread and the typeahead is instant at the moment somebody is being addressed.
+
+### Consequences
+
+The composer's box stays a textbox, so nothing that finds it today stops finding it. The chip row is a derived view of the draft: a name deleted from the box drops its mention, and a chip removed deletes the name, so the text and the list can never disagree. Matters (M22) and documents (M11) inherit all of this by mounting the same panel. M9/4's edited marker and tombstone extend the row anatomy DES-023 set, beside the chips this record adds.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -1433,3 +1487,4 @@ Native radios cost nothing to make keyboard-accessible, because DES-010 leans on
 | DES-021 | List-editor table variant and the field-editor dialog (extends DES-020)                                                                                              | Accepted |
 | DES-022 | The type-editor screen — identity card plus attachment table (extends DES-020)                                                                                       | Accepted |
 | DES-023 | The comment surface — tier badges, the Legal Only row wash, and the segmented composer                                                                               | Accepted |
+| DES-024 | The mention affordances — typeahead, chip, and the promotion confirmation (extends DES-023)                                                                          | Accepted |
