@@ -13,7 +13,12 @@
 
 import { Readable } from "node:stream";
 import { randomUUID } from "node:crypto";
-import { CreateBucketCommand, GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  CreateBucketCommand,
+  GetObjectCommand,
+  ListMultipartUploadsCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { MinioContainer, type StartedMinioContainer } from "@testcontainers/minio";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { describeStorageAdapterContract } from "../../testing/storage-contract.js";
@@ -134,6 +139,15 @@ describe("S3-compatible driver", () => {
     await expect(
       store.client.send(new GetObjectCommand({ Bucket: store.bucket, Key: key })),
     ).rejects.toThrow();
+    // No completed object is only half of "left nothing behind": an
+    // uncompleted multipart upload is invisible to GetObject whether it
+    // was aborted or leaked, and a leaked one keeps its parts in the
+    // store until a lifecycle rule reaps them. The store must show the
+    // upload itself gone.
+    const inProgress = await store.client.send(
+      new ListMultipartUploadsCommand({ Bucket: store.bucket }),
+    );
+    expect(inProgress.Uploads ?? []).toEqual([]);
   }, 60_000);
 
   it("lets exactly one of two writers of the same key win", async () => {
