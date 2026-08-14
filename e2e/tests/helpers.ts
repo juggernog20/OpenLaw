@@ -22,8 +22,10 @@ import { z } from "zod";
 import { extractLink, waitForMailTo } from "./mailpit.js";
 
 /** Mirrors playwright.config.ts — helpers that build their own request
- * context need the stack's origin outside any fixture. */
-const BASE_URL = process.env.E2E_BASE_URL ?? "http://localhost:3000";
+ * context need the stack's origin outside any fixture, and so does a
+ * spec that reaches the stack outside the browser (the M11 demo polls
+ * the readiness probe across a container restart). */
+export const BASE_URL = process.env.E2E_BASE_URL ?? "http://localhost:3000";
 
 /**
  * The instance's Administrator. Stable across runs on purpose — the
