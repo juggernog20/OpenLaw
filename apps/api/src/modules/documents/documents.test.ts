@@ -2163,4 +2163,14 @@ describe("the bounded document list (CTR-024)", () => {
     expect(nowhere.json().documents).toEqual([]);
     expect(nowhere.json().nextCursor).toBeNull();
   });
+
+  it("refuses a cursor outside its own bound before it reaches the database", async () => {
+    // A cursor that names nothing is a page of nothing; a cursor that is
+    // not a cursor at all is a bad request.
+    for (const shape of ["", "x".repeat(65)]) {
+      const bad = await listPage(contract.number, shape);
+      expect(bad.statusCode, bad.body).toBe(400);
+      expect(bad.headers["content-type"]).toContain("application/problem+json");
+    }
+  });
 });

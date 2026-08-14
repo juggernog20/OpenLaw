@@ -652,6 +652,57 @@ describe("the paged contract list (CTR-024, DES-031)", () => {
     expect(screen.getByText("1 more contract. 2 shown.")).toBeInTheDocument();
   });
 
+  it("keeps the foot and the cursor when a page fails, so the retry is the same button", async () => {
+    // The first reach for the next page is refused; the second is not.
+    // A failed page must not consume the cursor, or the rest of the
+    // list becomes unreachable from a control that is still on screen.
+    let reached = 0;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call: StubCall): Response | undefined => {
+        if (call.url.pathname === "/api/v1/contracts/options" && call.method === "GET") {
+          return json(200, OPTIONS);
+        }
+        if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
+          return json(200, { entities: [] });
+        }
+        if (call.url.pathname === "/api/v1/contracts" && call.method === "GET") {
+          if (call.url.searchParams.get("cursor") === null) {
+            return json(200, { contracts: FIRST, nextCursor: "c-1" });
+          }
+          reached += 1;
+          return reached === 1
+            ? problem(503, "The list is not available.")
+            : json(200, { contracts: SECOND, nextCursor: null });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/contracts");
+    const user = userEvent.setup();
+
+    await screen.findByRole("link", { name: FIRST[0]!.title });
+    await user.click(screen.getByRole("button", { name: "Show more" }));
+
+    // The failure is spoken beside the control, and the control stays.
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The next contracts could not be read. Try again.",
+    );
+    const again = screen.getByRole("button", { name: "Show more" });
+    expect(again).toBeInTheDocument();
+    // Nothing was appended, and the count still hedges.
+    expect(screen.queryByRole("link", { name: SECOND[0]!.title })).not.toBeInTheDocument();
+    expect(screen.getByText("1 contract shown")).toBeInTheDocument();
+
+    await user.click(again);
+
+    // The same cursor carried again, so the retry lands where the
+    // failure left off rather than at the top of the list.
+    expect(await screen.findByRole("link", { name: SECOND[0]!.title })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: FIRST[0]!.title })).toBeInTheDocument();
+    expect(screen.getByText("2 contracts")).toBeInTheDocument();
+  });
+
   it("draws no foot at all when the first page is the whole list", async () => {
     stubApi({ signedIn: MEMBER, extra: listApi([contractRow()]).handler });
     renderAt("/contracts");

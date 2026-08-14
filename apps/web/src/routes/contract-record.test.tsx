@@ -2938,6 +2938,54 @@ describe("the contract record's comment applet (M9/2)", () => {
       await waitFor(() => expect(landed).toHaveFocus());
     });
 
+    it("keeps the control and the cursor when an older page fails", async () => {
+      const user = userEvent.setup();
+      const NEWEST = [comment("c-newest", "The last word.", "working_team")];
+      const OLDER = [comment("c-older", "The first word.", "working_team")];
+      // The first reach backwards is refused; the second is not.
+      let reached = 0;
+      const paging = (call: StubCall): Response | undefined => {
+        if (call.url.pathname === "/api/v1/comments/mention-candidates") {
+          return json(200, { candidates: [] });
+        }
+        if (call.url.pathname === "/api/v1/comments/unread") return json(200, { unread: 0 });
+        if (call.url.pathname === "/api/v1/comments/read") return json(200, { unread: 0 });
+        if (call.url.pathname !== "/api/v1/comments" || call.method !== "GET") return undefined;
+        if (call.url.searchParams.get("cursor") === null) {
+          return json(200, { comments: NEWEST, nextCursor: "c-newest" });
+        }
+        reached += 1;
+        return reached === 1
+          ? problem(503, "The thread is not available.")
+          : json(200, { comments: OLDER, nextCursor: null });
+      };
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call: StubCall) => paging(call) ?? recordApi(contractRow()).handler(call),
+      });
+      renderAt("/contracts/42");
+      await openChat(user);
+
+      const panel = await screen.findByRole("complementary", { name: "Comments" });
+      await within(panel).findByText("The last word.");
+      await user.click(within(panel).getByRole("button", { name: "Show older" }));
+
+      // The failure is spoken beside the control, and the control stays
+      // — a thread that swallowed its cursor would strand the reader at
+      // the newest page with no way back.
+      expect(await within(panel).findByRole("alert")).toHaveTextContent(
+        "The earlier comments could not be read. Try again.",
+      );
+      const again = within(panel).getByRole("button", { name: "Show older" });
+      expect(within(panel).queryByText("The first word.")).not.toBeInTheDocument();
+
+      await user.click(again);
+
+      const rows = await within(panel).findAllByRole("listitem");
+      expect(rows[0]).toHaveTextContent("The first word.");
+      expect(rows[1]).toHaveTextContent("The last word.");
+    });
+
     it("draws no control at all when the first page is the whole thread", async () => {
       const user = userEvent.setup();
       const comments = commentsApi([comment("c1", "Only this.", "working_team")]);
@@ -4727,5 +4775,47 @@ describe("the paged Documents section (CTR-024, DES-031)", () => {
     const landed = (await within(section).findByRole("link", { name: SECOND.title })).closest("tr");
     await waitFor(() => expect(landed).toHaveFocus());
     expect(within(section).getByText("1 more document. 2 shown.")).toBeInTheDocument();
+  });
+
+  it("keeps the foot and the cursor when a page fails, so the retry is the same button", async () => {
+    // The first reach for the next page is refused; the second is not.
+    let reached = 0;
+    const record = recordApi(contractRow());
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call: StubCall): Response | undefined => {
+        if (call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
+          if (call.url.searchParams.get("cursor") === null) {
+            return json(200, { documents: [FIRST], nextCursor: "doc-first" });
+          }
+          reached += 1;
+          return reached === 1
+            ? problem(503, "The documents are not available.")
+            : json(200, { documents: [SECOND], nextCursor: null });
+        }
+        return record.handler(call);
+      },
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await screen.findByRole("region", { name: /^Documents/ });
+    await within(section).findByRole("link", { name: FIRST.title });
+    await user.click(within(section).getByRole("button", { name: "Show more" }));
+
+    // The failure is spoken beside the control, and the control stays.
+    expect(await within(section).findByRole("alert")).toHaveTextContent(
+      "The documents are not available.",
+    );
+    const again = within(section).getByRole("button", { name: "Show more" });
+    // Nothing was appended, and the count still counts only what is here.
+    expect(within(section).queryByRole("link", { name: SECOND.title })).not.toBeInTheDocument();
+    expect(within(section).getByRole("img", { name: "1 document" })).toBeVisible();
+
+    await user.click(again);
+
+    expect(await within(section).findByRole("link", { name: SECOND.title })).toBeInTheDocument();
+    expect(within(section).getByRole("link", { name: FIRST.title })).toBeInTheDocument();
+    expect(within(section).getByRole("img", { name: "2 documents" })).toBeVisible();
   });
 });

@@ -2096,6 +2096,17 @@ describe("the bounded contract list (CTR-024)", () => {
     expect(nowhere.json().contracts).toEqual([]);
     expect(nowhere.json().nextCursor).toBeNull();
   });
+
+  it("refuses a cursor outside its own bound before it reaches the database", async () => {
+    // A cursor that names nothing is a page of nothing; a cursor that is
+    // not a cursor at all is a bad request. The bound is what keeps the
+    // second from becoming an unbounded string in a query.
+    for (const shape of ["", "x".repeat(65)]) {
+      const bad = await page(adminCookies, shape);
+      expect(bad.statusCode, bad.body).toBe(400);
+      expect(bad.headers["content-type"]).toContain("application/problem+json");
+    }
+  });
 });
 
 describe("the DD-017 activity trail", () => {

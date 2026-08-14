@@ -1819,7 +1819,7 @@ M12's document panel gets its own scroll container inside the record body and in
 
 ### Context
 
-CTR-024 bounds three lists that had no ceiling: the contract list, one record's comment thread, and one record's paper. Each now answers one page and says where the next one starts, so each needs a way to ask for the rest.
+CTR-024 bounds three lists that had no ceiling: the contract list, one record's comment thread, and one record's documents. Each now answers one page and says where the next one starts, so each needs a way to ask for the rest.
 
 DES-026 already decided that shape for the history panel: "the list ends in a secondary Button labelled 'Show older' whenever a further page exists, and in nothing when it does not", and rejected infinite scroll because a scroll sentinel is not keyboard-reachable and DES-010 requires that it be. That rejection was written about the feed, but nothing in the reasoning is feed-specific, and it holds here unchanged.
 
