@@ -225,6 +225,13 @@
       "when": 1786697971001,
       "tag": "0031_documents_designations",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1786700413069,
+      "tag": "0032_document_archive",
+      "breakpoints": true
     }
   ]
 }

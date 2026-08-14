@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * A contract's paper (M11/2, M11/3, M11/4) — the first path in the
- * codebase that puts a file anywhere: upload a draft, append the next
- * revision, read the chain, download any version of it, keep the
- * record's metadata legible without touching the files, and say which
- * document is the instrument and which of its versions is signed.
+ * A contract's paper (M11/2, M11/3, M11/4, M11/5) — the first path in
+ * the codebase that puts a file anywhere: upload a draft, append the
+ * next revision, read the chain, download any version of it, keep the
+ * record's metadata legible without touching the files, say which
+ * document is the instrument and which of its versions is signed, and
+ * take a document off the record either way DOC-010 gives.
  *
  * **Two tables, one logical record** (DOC-001). A `documents` row is the
  * thing the contract links to; the bytes live in `document_versions`,
@@ -64,12 +65,28 @@
  * access predicate. There are no presigned URLs — one authentication
  * path, and the local filesystem driver has no other way anyway.
  *
+ * **Two removals, for two different problems** (DOC-010). Archive is the
+ * soft delete and it answers the wrong upload: anyone who can reach and
+ * write the record archives a document, it leaves the list and the
+ * count, and nothing is destroyed — restore is one write, so a wrong
+ * archive is a two-second fix. Hard delete is the lawful-erasure answer:
+ * Administrator-only, whole-document, typed confirmation, and it takes
+ * the version rows and the stored blobs with it. There is no per-version
+ * delete, because a chain you can cut pieces out of is not negotiation
+ * history.
+ *
+ * **The activity and audit entries survive the erasure and name what was
+ * deleted.** Entries hang off the owning contract, never off the
+ * document, and every one of them carries the document's title in its
+ * payload — so the record still says which file was uploaded, revised,
+ * and finally destroyed after there is no row left to read a name from.
+ *
  * **Every mutation writes its own activity action** on the owning
  * contract (DD-017): creating a document, adding a version to one,
- * editing what the record says, naming the instrument, and pinning or
- * clearing the signed copy are five different things that happened, so
- * the feed narrates five different sentences rather than one generic
- * edit.
+ * editing what the record says, naming the instrument, pinning or
+ * clearing the signed copy, and the two removals are eight different
+ * things that happened, so the feed narrates eight different sentences
+ * rather than one generic edit.
  */
 
 import { createHash } from "node:crypto";
@@ -88,6 +105,7 @@ import {
   DOCUMENT_VERSION_KINDS,
   eq,
   inArray,
+  isNull,
   users,
   type DocumentVersionKind,
 } from "@openlaw/db";
@@ -106,6 +124,12 @@ const requireDocumentReader = requireRole("administrator", "legal_team_member", 
 /** Uploading is Member+ in M11: Contributors read and download, and
  * their write grid arrives with M23 (DD-015). */
 const requireMember = requireRole("administrator", "legal_team_member");
+
+/** Hard deletion is the Administrator's alone (DOC-010). It is the only
+ * act in this module that destroys anything, and it is refused for
+ * every other role plainly — a viewer who reaches the record already
+ * knows the document is there, so a 404 would read as a bug. */
+const requireAdministrator = requireRole("administrator");
 
 /** A contract a viewer cannot reach reads exactly as one that does not
  * exist — for the list, the upload, and the download alike (DD-014). */
@@ -212,6 +236,16 @@ const DocumentSchema = z.object({
    * the table in round two is reading round two's row.
    */
   versions: z.array(VersionSchema),
+  /**
+   * When this document was archived — DOC-010's soft delete — or NULL
+   * while it is on the record's list and in its count.
+   *
+   * Stated rather than left to be inferred from which list the row came
+   * back in: the archived view draws live and archived rows together,
+   * and it has to be able to tell them apart without counting on the
+   * order they arrived in.
+   */
+  archivedAt: z.iso.datetime({ offset: true }).nullable(),
   createdBy: PersonSchema,
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -235,6 +269,33 @@ const DescriptionSchema = z.string().trim().max(10_000);
 const MetadataPatch = z.object({
   title: TitleSchema.optional(),
   description: DescriptionSchema.nullable().optional(),
+});
+
+/**
+ * DOC-010's typed confirmation, as the seam takes it: the Administrator
+ * sends back the title of the document they are destroying.
+ *
+ * It is a server rule rather than a dialog's manners. The dialog can be
+ * skipped — this route is one `DELETE` away from any tool that holds an
+ * Administrator's cookie — and the whole point of the ceremony is that
+ * nothing this irreversible happens without the actor naming its
+ * subject. Comparison is exact after trimming: a near-miss is refused
+ * rather than accepted, because "close enough" is not a thing to say
+ * about an erasure.
+ */
+const HardDeleteBody = z.object({
+  confirmTitle: TitleSchema,
+});
+
+/** What a hard delete answers: the whole record's paper, as it stands
+ * with the document gone. The list, because the erasure may also have
+ * left the record without an instrument. */
+const HardDeleteResponse = DocumentsEnvelope;
+
+/** Whether a read wants the archived rows beside the live ones — the
+ * same query the contracts list and the registry take. */
+const ArchivedQuery = z.object({
+  includeArchived: z.enum(["true", "false"]).optional(),
 });
 
 /**
@@ -343,6 +404,10 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     description: string | null;
     contractId: string;
     /** The owning contract's SET-003 soft delete (CTR-021). */
+    contractArchivedAt: Date | null;
+    /** This document's own DOC-010 soft delete, which is a different
+     * fact from the contract's above: one hides a file, the other
+     * freezes the whole record. */
     archivedAt: Date | null;
     /** Which version of *this* document is pinned as signed, or NULL
      * (CTR-014). */
@@ -377,7 +442,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         title: documents.title,
         description: documents.description,
         contractId: documents.contractId,
-        archivedAt: contracts.archivedAt,
+        contractArchivedAt: contracts.archivedAt,
+        archivedAt: documents.archivedAt,
         executedVersionId: documents.executedVersionId,
         primaryDocumentId: contracts.primaryDocumentId,
       })
@@ -401,6 +467,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         /** CTR-014's pin, read here so the chain below can mark the row
          * it names without a second query. */
         executedVersionId: documents.executedVersionId,
+        /** DOC-010's soft delete, so the archived view can mark the rows
+         * that are off the record's list rather than guess at them. */
+        archivedAt: documents.archivedAt,
         createdAt: documents.createdAt,
         updatedAt: documents.updatedAt,
         createdBy: {
@@ -500,6 +569,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       versions: chain.map((version, index) =>
         toVersion(version, index === last, version.id === row.executedVersionId),
       ),
+      archivedAt: row.archivedAt?.toISOString() ?? null,
       createdBy: toPerson(row.createdBy),
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
@@ -557,15 +627,26 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
    * All the paper on one contract, newest first, each document with its
    * whole chain.
    *
-   * Shared by the list read and by the primary designation, which is
-   * the one write that changes two rows at once — the document that
-   * takes the designation and the one that loses it. Answering the whole
-   * record's paper means the caller replaces what it holds rather than
-   * working out for itself which other row moved.
+   * Shared by the list read, by the primary designation, and by the hard
+   * delete — the three answers that are about the record's paper as a
+   * whole rather than about one document. The designation changes two
+   * rows at once, and an erasure can leave the record without an
+   * instrument, so both answer the whole list and the caller replaces
+   * what it holds rather than working out for itself which other row
+   * moved.
+   *
+   * **Archived documents are left out unless they are asked for**
+   * (DOC-010). That is the soft delete: the row is still there, the
+   * chain is still there, and the blobs are still there — it is off the
+   * list and out of the count until somebody restores it.
    */
-  async function paperOf(db: Executor, contract: ReachedContract) {
+  async function paperOf(db: Executor, contract: ReachedContract, includeArchived = false) {
     const rows = await selectDocuments(db)
-      .where(eq(documents.contractId, contract.id))
+      .where(
+        includeArchived
+          ? eq(documents.contractId, contract.id)
+          : and(eq(documents.contractId, contract.id), isNull(documents.archivedAt)),
+      )
       // Newest first, as the record's Documents section reads. The id
       // breaks a same-instant tie: uuidv7 is time-ordered, so that
       // order is still the upload order.
@@ -601,9 +682,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "the list, and anyone who cannot reach the contract — a " +
           "Contributor who is not on it, a Legal Team Member outside a " +
           "confidential record's audience — is answered 404, exactly as " +
-          "for a contract that does not exist",
+          "for a contract that does not exist. Archived documents " +
+          "(DOC-010) are left out; includeArchived=true draws them " +
+          "beside the live ones, which is where restoring one is offered",
         tags: ["documents"],
         params: NumberParams,
+        querystring: ArchivedQuery,
         response: { 200: DocumentsEnvelope, default: problemResponse },
       },
     },
@@ -612,7 +696,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!contract) throw httpError(404, NO_CONTRACT);
       // An archived record still reads: archiving is a soft delete for
       // mistakes and imports, and restore has to be reachable.
-      return { documents: await paperOf(app.db, contract) };
+      return {
+        documents: await paperOf(app.db, contract, request.query.includeArchived === "true"),
+      };
     },
   );
 
@@ -980,7 +1066,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
 
           return paperOf(tx, {
             id: target.contractId,
-            archivedAt: target.archivedAt,
+            archivedAt: target.contractArchivedAt,
             primaryDocumentId: documentId,
           });
         }),
@@ -1133,6 +1219,218 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           });
 
           return documentWithChain(tx, documentId, target.primaryDocumentId);
+        }),
+      };
+    },
+  );
+
+  app.post(
+    "/documents/:documentId/archive",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "archiveDocument",
+        summary:
+          "Archive a document (DOC-010's soft delete, for the wrong " +
+          "upload): it leaves the record's document list and its count, " +
+          "and nothing is destroyed. The row stays, the whole version " +
+          "chain stays, and every stored file stays — restoring it puts " +
+          "it back, so a wrong archive is a two-second fix. It is not " +
+          "the erasure path: that is the Administrator's hard delete, " +
+          "which leaves no row at all. Appends document.archived on the " +
+          "owning contract (DD-017). An Administrator or a Legal Team " +
+          "Member who reaches the contract may archive; a Contributor " +
+          "on the team reads the record and is refused 403, because " +
+          "their write grid arrives with M23 (DD-015). An archived " +
+          "contract keeps its paper as it stands until it is restored. " +
+          "A document on a contract the actor cannot reach answers 404, " +
+          "exactly as one that does not exist",
+        tags: ["documents"],
+        params: DocumentParams,
+        response: { 200: DocumentEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const { documentId } = request.params;
+      return {
+        document: await app.db.transaction(async (tx) => {
+          const target = await reachedDocument(tx, request.user, documentId, true);
+          // Not `assertOpenDocument`: the already-archived case is its
+          // own answer below, and it has to be told apart from a
+          // document somebody is trying to edit while it is hidden.
+          assertReachedDocument(target);
+          assertLiveContract(target);
+          if (target.archivedAt) throw httpError(409, "This document is already archived.");
+
+          await tx
+            .update(documents)
+            .set({ archivedAt: new Date() })
+            .where(eq(documents.id, documentId));
+          await recordActivity(tx, {
+            entityType: "contract",
+            entityId: target.contractId,
+            actorId: request.user.id,
+            action: "document.archived",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: { documentId, title: target.title },
+          });
+
+          return documentWithChain(tx, documentId, target.primaryDocumentId);
+        }),
+      };
+    },
+  );
+
+  app.post(
+    "/documents/:documentId/restore",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "restoreDocument",
+        summary:
+          "Restore an archived document (DOC-010): it rejoins the " +
+          "record's document list and its count exactly as it was. " +
+          "Nothing had to be rebuilt, because archiving destroyed " +
+          "nothing — the chain, the notes, and the two CTR-014 " +
+          "designations come back with it. Appends document.restored on " +
+          "the owning contract (DD-017). An Administrator or a Legal " +
+          "Team Member who reaches the contract may restore; a " +
+          "Contributor on the team is refused 403 (DD-015). An archived " +
+          "contract is restored first, because a frozen record takes no " +
+          "change to its paper. A document on a contract the actor " +
+          "cannot reach answers 404, exactly as one that does not exist",
+        tags: ["documents"],
+        params: DocumentParams,
+        response: { 200: DocumentEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const { documentId } = request.params;
+      return {
+        document: await app.db.transaction(async (tx) => {
+          const target = await reachedDocument(tx, request.user, documentId, true);
+          assertReachedDocument(target);
+          assertLiveContract(target);
+          if (!target.archivedAt) throw httpError(409, "This document is not archived.");
+
+          await tx.update(documents).set({ archivedAt: null }).where(eq(documents.id, documentId));
+          await recordActivity(tx, {
+            entityType: "contract",
+            entityId: target.contractId,
+            actorId: request.user.id,
+            action: "document.restored",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: { documentId, title: target.title },
+          });
+
+          return documentWithChain(tx, documentId, target.primaryDocumentId);
+        }),
+      };
+    },
+  );
+
+  app.delete(
+    "/documents/:documentId",
+    {
+      preHandler: requireAdministrator,
+      schema: {
+        operationId: "hardDeleteDocument",
+        summary:
+          "Destroy a whole document — the lawful-erasure answer " +
+          "(DOC-010). It removes the document row, every version row " +
+          "under it, and every stored blob those versions name, through " +
+          "the storage adapter. It is whole-document by design: there " +
+          "is no route that deletes one version, because a chain " +
+          "somebody can cut pieces out of is not negotiation history " +
+          "(DOC-001), so the whole document goes or nothing does. It " +
+          "takes a typed confirmation: confirmTitle must be the " +
+          "document's own title, exactly. It is the Administrator's " +
+          "alone; every other role is refused 403, a Contributor and a " +
+          "Legal Team Member alike. The activity and audit entries " +
+          "written before it survive it and still name what was " +
+          "deleted, and the erasure appends document.hard_deleted " +
+          "beside them (DD-017) — the record stays accountable after " +
+          "the files are gone. It reaches an archived contract too, " +
+          "because erasure is compelled from outside the record and a " +
+          "frozen record is not a place to hide from it. A document on " +
+          "a contract the Administrator cannot reach answers 404",
+        tags: ["documents"],
+        params: DocumentParams,
+        body: HardDeleteBody,
+        // The whole record's paper, because the erasure may have taken
+        // the instrument with it: `contracts.primary_document_id` is
+        // SET NULL, so the row that was Primary is gone and no other
+        // row took the mark.
+        response: { 200: HardDeleteResponse, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const { documentId } = request.params;
+      const { confirmTitle } = request.body;
+      return {
+        documents: await app.db.transaction(async (tx) => {
+          // The contract row is held for the whole erasure, so nothing
+          // can append a version to a document that is being destroyed.
+          const target = await reachedDocument(tx, request.user, documentId, true);
+          // Reach and nothing else: an archived document is erasable
+          // without being restored first, and so is one on an archived
+          // contract.
+          assertReachedDocument(target);
+          if (confirmTitle.trim() !== target.title.trim()) {
+            throw httpError(400, "Type the document's name exactly to delete it.");
+          }
+
+          // Read before anything is destroyed: the blobs cannot be
+          // found once the rows are gone, and the entry has to be able
+          // to say how much paper this took with it.
+          const chain = await tx
+            .select({ fileRef: documentVersions.fileRef })
+            .from(documentVersions)
+            .where(eq(documentVersions.documentId, documentId));
+
+          // The entry is written first and it hangs off the owning
+          // contract, never off the document (DOC-008), so nothing
+          // cascades it away with the row it describes. It names the
+          // title because in a moment there will be no row to read a
+          // name from — which is the whole reason every other entry in
+          // this module carries the title too.
+          await recordActivity(tx, {
+            entityType: "contract",
+            entityId: target.contractId,
+            actorId: request.user.id,
+            action: "document.hard_deleted",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: { documentId, title: target.title, versionCount: chain.length },
+          });
+
+          // The rows: the document, and its whole chain behind the
+          // cascade. `contracts.primary_document_id` and
+          // `documents.executed_version_id` are both SET NULL, so a
+          // record whose instrument was erased has no instrument rather
+          // than a dangling one.
+          await tx.delete(documents).where(eq(documents.id, documentId));
+
+          // The blobs, inside the transaction and before the commit
+          // (DOC-012). Order is the whole argument. A delete that
+          // failed after the commit would leave the files on disk with
+          // no row left to name them — an erasure that reports success
+          // and is not one, with nothing to retry from. Here a failure
+          // rolls the rows back instead, so the record still holds
+          // every file it can still name, and running the erasure
+          // again converges: deleting a key that is already gone
+          // succeeds, which is exactly what DOC-012 defines that
+          // behaviour for.
+          for (const version of chain) await app.storage.delete(version.fileRef);
+
+          return paperOf(tx, {
+            id: target.contractId,
+            archivedAt: target.contractArchivedAt,
+            // Derived rather than re-read: `contracts.primary_document_id`
+            // is SET NULL, so the record has no instrument exactly when
+            // the erased document held the designation.
+            primaryDocumentId:
+              target.primaryDocumentId === documentId ? null : target.primaryDocumentId,
+          });
         }),
       };
     },
@@ -1381,13 +1679,42 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     }
   }
 
-  /** The same two refusals, in the same order, for a write addressed at
-   * a document rather than at its contract. */
+  /**
+   * The refusals a write addressed at a document shares, in the order
+   * they have to be asked in.
+   *
+   * Reach first, for the reason above. Then the contract's freeze. Then
+   * the document's own archive (DOC-010): an archived document is off
+   * the record's list, so adding a round to it or renaming it would be
+   * work done on something nobody can see. Restoring it and erasing it
+   * are the two things that may still reach it, and neither comes
+   * through here.
+   */
   function assertOpenDocument(
     document: ReachedDocument | null,
   ): asserts document is ReachedDocument {
-    if (!document) throw httpError(404, NO_DOCUMENT);
+    assertReachedDocument(document);
+    assertLiveContract(document);
     if (document.archivedAt) {
+      throw httpError(409, "This document is archived. Restore it before changing it.");
+    }
+  }
+
+  /** Reach and nothing else, for the two writes an archived document
+   * still takes: restoring it, and erasing it. */
+  function assertReachedDocument(
+    document: ReachedDocument | null,
+  ): asserts document is ReachedDocument {
+    if (!document) throw httpError(404, NO_DOCUMENT);
+  }
+
+  /** The owning contract's freeze, on its own. Archive and restore ask
+   * for this one without the archived-document check above, because
+   * whether the document is archived is the very thing they are
+   * changing — and they must tell "already archived" apart from "on a
+   * frozen record" rather than answering both with one sentence. */
+  function assertLiveContract(document: ReachedDocument): void {
+    if (document.contractArchivedAt) {
       throw httpError(409, "This contract is archived. Restore it before changing its paper.");
     }
   }

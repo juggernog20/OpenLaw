@@ -205,6 +205,22 @@ function versionNumber(payload: Payload): string {
   return typeof value === "number" && Number.isInteger(value) ? String(value) : "unknown";
 }
 
+/**
+ * How many rounds an erasure took with it (DOC-010), as a quantity.
+ *
+ * A number here, where `versionNumber` above is a string, because these
+ * are two different things wearing the same word: one names a round in
+ * the chain, and this one counts them, so it pluralizes and it is
+ * locale-formatted. Zero is the arm an entry with no count falls into —
+ * the log is append-only, so a payload an older build wrote has to still
+ * read as a sentence — and the message says "and its files" there rather
+ * than naming a number nobody recorded.
+ */
+function versionCount(payload: Payload): number {
+  const value = payload.versionCount;
+  return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : 0;
+}
+
 /** What an unrecorded value reads as, on either side of a change. */
 function notSet(intl: IntlShape): string {
   return intl.formatMessage({ id: "activity.notSet", defaultMessage: "Not set" });
@@ -867,6 +883,45 @@ const ARMS: Readonly<Record<string, Arm>> = {
       defaultMessage: "{actor} cleared the executed copy of {title}",
     }),
     values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+  },
+  // DOC-010's two removals (M11/5). They take the record's own archive
+  // glyphs, because they are the same act one level down: a document
+  // leaves the record's lists exactly as a contract leaves the list of
+  // contracts, and nothing is destroyed either time.
+  "document.archived": {
+    icon: Archive,
+    message: defineMessage({
+      id: "activity.document.archived",
+      defaultMessage: "{actor} archived {title}",
+    }),
+    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+  },
+  "document.restored": {
+    icon: ArchiveRestore,
+    message: defineMessage({
+      id: "activity.document.restored",
+      defaultMessage: "{actor} restored {title}",
+    }),
+    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+  },
+  // The erasure (DOC-010). It reads as "deleted", not as "archived",
+  // because the two are different facts and this is the row an auditor
+  // is looking for. The sentence names the document and how many rounds
+  // went with it: after this entry there is no row left anywhere that
+  // says either, which is why the payload carries both.
+  "document.hard_deleted": {
+    icon: Trash2,
+    message: defineMessage({
+      id: "activity.document.hardDeleted",
+      defaultMessage:
+        "{versions, plural, =0 {{actor} deleted {title} and its files} " +
+        "one {{actor} deleted {title} and its # version} " +
+        "other {{actor} deleted {title} and its # versions}}",
+    }),
+    values: (intl, payload) => ({
+      title: named(intl, payload, "title"),
+      versions: versionCount(payload),
+    }),
   },
 
   // Ids only, never text (CMT-006). A redacted comment's entry reads as

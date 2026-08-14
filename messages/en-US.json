@@ -95,6 +95,9 @@
   "activity.contract.updated": {
     "defaultMessage": "{actor} changed {count, plural, =0 {this contract} one {{field}} other {# fields}}"
   },
+  "activity.document.archived": {
+    "defaultMessage": "{actor} archived {title}"
+  },
   "activity.document.created": {
     "defaultMessage": "{actor} uploaded {title}"
   },
@@ -104,8 +107,14 @@
   "activity.document.executedSet": {
     "defaultMessage": "{version, select, unknown {{actor} pinned the executed copy of {title}} other {{actor} pinned version {version} of {title} as the executed copy}}"
   },
+  "activity.document.hardDeleted": {
+    "defaultMessage": "{versions, plural, =0 {{actor} deleted {title} and its files} one {{actor} deleted {title} and its # version} other {{actor} deleted {title} and its # versions}}"
+  },
   "activity.document.primarySet": {
     "defaultMessage": "{actor} made {title} the primary document"
+  },
+  "activity.document.restored": {
+    "defaultMessage": "{actor} restored {title}"
   },
   "activity.document.updated": {
     "defaultMessage": "{actor} edited the details of {title}"
@@ -959,8 +968,29 @@
   "dialog.close": {
     "defaultMessage": "Close"
   },
-  "documents.addVersionFor": {
-    "defaultMessage": "Add a version to {title}"
+  "documents.action.addVersion": {
+    "defaultMessage": "Add version"
+  },
+  "documents.action.archive": {
+    "defaultMessage": "Archive"
+  },
+  "documents.action.delete": {
+    "defaultMessage": "Delete"
+  },
+  "documents.action.editDetails": {
+    "defaultMessage": "Edit details"
+  },
+  "documents.action.makePrimary": {
+    "defaultMessage": "Make primary"
+  },
+  "documents.action.restore": {
+    "defaultMessage": "Restore"
+  },
+  "documents.actionsFor": {
+    "defaultMessage": "Actions for {title}"
+  },
+  "documents.archivedPill": {
+    "defaultMessage": "Archived"
   },
   "documents.chain.toggle": {
     "defaultMessage": "{open, select, true {Hide} other {Show}} the {count, plural, one {# earlier version} other {# earlier versions}} of {title}"
@@ -1019,6 +1049,18 @@
   "documents.current": {
     "defaultMessage": "Current"
   },
+  "documents.delete.body": {
+    "defaultMessage": "{title} and its {count, plural, one {# version} other {# versions}} are removed, and the stored files with them. You cannot undo this."
+  },
+  "documents.delete.confirmAction": {
+    "defaultMessage": "Delete {title}"
+  },
+  "documents.delete.confirmLabel": {
+    "defaultMessage": "Type {title} to confirm"
+  },
+  "documents.delete.title": {
+    "defaultMessage": "Delete this document?"
+  },
   "documents.descriptionPrefix": {
     "defaultMessage": "Description:"
   },
@@ -1040,9 +1082,6 @@
   "documents.details.title": {
     "defaultMessage": "Edit details"
   },
-  "documents.editDetailsFor": {
-    "defaultMessage": "Edit the details of {title}"
-  },
   "documents.empty": {
     "defaultMessage": "No documents on this contract yet."
   },
@@ -1051,9 +1090,6 @@
   },
   "documents.kind": {
     "defaultMessage": "{kind, select, draft_ours {Draft · ours} redline_theirs {Redline · theirs} redline_ours {Redline · ours} executed {Executed} amendment {Amendment} other {Unknown}}"
-  },
-  "documents.makePrimary": {
-    "defaultMessage": "Make {title} the primary document"
   },
   "documents.notePrefix": {
     "defaultMessage": "Note:"
@@ -1066,6 +1102,9 @@
   },
   "documents.section": {
     "defaultMessage": "Documents"
+  },
+  "documents.showArchived": {
+    "defaultMessage": "Show archived"
   },
   "documents.upload": {
     "defaultMessage": "Upload"

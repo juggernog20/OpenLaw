@@ -44,7 +44,7 @@
 
 import { createHash } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { eq, sql, users } from "@openlaw/db";
+import { documents, documentVersions, eq, sql, users } from "@openlaw/db";
 import { buildApp } from "../../app.js";
 import { provisionUser } from "../../auth/instance.js";
 import {
@@ -125,6 +125,7 @@ interface DocumentRow {
   description: string | null;
   isPrimary: boolean;
   versions: VersionRow[];
+  archivedAt: string | null;
   createdBy: { id: string; displayName: string };
   createdAt: string;
   updatedAt: string;
@@ -403,8 +404,72 @@ const clearExecuted = (cookies: Record<string, string>, documentId: string) =>
 const executedOf = (document: DocumentRow): VersionRow[] =>
   document.versions.filter((version) => version.isExecuted);
 
-const listDocuments = (cookies: Record<string, string>, number: number) =>
-  harness.app.inject({ method: "GET", url: `/api/v1/contracts/${number}/documents`, cookies });
+/** The raw answer to archiving a document (DOC-010's soft delete). */
+const archiveDocument = (cookies: Record<string, string>, documentId: string) =>
+  harness.app.inject({ method: "POST", url: `/api/v1/documents/${documentId}/archive`, cookies });
+
+/** The raw answer to restoring an archived document. */
+const restoreDocument = (cookies: Record<string, string>, documentId: string) =>
+  harness.app.inject({ method: "POST", url: `/api/v1/documents/${documentId}/restore`, cookies });
+
+/** The raw answer to the Administrator's hard delete, with whatever was
+ * typed into the confirmation. */
+const hardDelete = (cookies: Record<string, string>, documentId: string, confirmTitle: string) =>
+  harness.app.inject({
+    method: "DELETE",
+    url: `/api/v1/documents/${documentId}`,
+    cookies,
+    payload: { confirmTitle },
+  });
+
+/** Archives a document, requiring success. */
+async function archived(cookies: Record<string, string>, documentId: string): Promise<DocumentRow> {
+  const res = await archiveDocument(cookies, documentId);
+  expect(res.statusCode, res.body).toBe(200);
+  return res.json().document as DocumentRow;
+}
+
+/** Every stored reference under one document, read from the table. The
+ * blobs are what an erasure has to remove, and no response ever names
+ * them — so the only place to take them from is the rows, before they
+ * are gone. */
+const fileRefsOf = (documentId: string): Promise<string[]> =>
+  harness.db
+    .select({ fileRef: documentVersions.fileRef })
+    .from(documentVersions)
+    .where(eq(documentVersions.documentId, documentId))
+    .then((rows) => rows.map((row) => row.fileRef));
+
+/** Whether a stored blob is still readable. The adapter answers
+ * not-found for a reference it never wrote (DOC-012), which is the same
+ * answer it gives for one that has been erased. */
+async function blobExists(fileRef: string): Promise<boolean> {
+  try {
+    const body = await harness.storage.get(fileRef);
+    body.destroy();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const listDocuments = (cookies: Record<string, string>, number: number, includeArchived = false) =>
+  harness.app.inject({
+    method: "GET",
+    url: `/api/v1/contracts/${number}/documents${includeArchived ? "?includeArchived=true" : ""}`,
+    cookies,
+  });
+
+/** The record's paper as the section draws it, requiring success. */
+async function paper(
+  cookies: Record<string, string>,
+  number: number,
+  includeArchived = false,
+): Promise<DocumentRow[]> {
+  const res = await listDocuments(cookies, number, includeArchived);
+  expect(res.statusCode, res.body).toBe(200);
+  return res.json().documents as DocumentRow[];
+}
 
 const download = (cookies: Record<string, string>, documentId: string, versionId: string) =>
   harness.app.inject({
@@ -798,15 +863,17 @@ describe("a version is never edited and never deleted", () => {
         false,
       );
       // The document's own address is where metadata is edited, and
-      // that is a different row: no verb there reaches a version, and
-      // deleting a whole document is DOC-010's own route in M11/5.
+      // that is a different row: no verb there reaches a version.
       expect(
         harness.app.hasRoute({ method, url: `${VERSION_URL}/download` }),
         `${method} ${VERSION_URL}/download`,
       ).toBe(false);
     }
+    // DELETE at the document's own address is DOC-010's hard delete, and
+    // it is whole-document by design: the erasure exists, and there is
+    // still no way to cut one round out of a chain.
     expect(harness.app.hasRoute({ method: "DELETE", url: "/api/v1/documents/:documentId" })).toBe(
-      false,
+      true,
     );
   });
 
@@ -1588,6 +1655,365 @@ describe("the executed pin", () => {
     const rows = (await listDocuments(adminCookies, contract.number)).json()
       .documents as DocumentRow[];
     expect(rows.flatMap(executedOf)).toEqual([]);
+  });
+});
+
+/**
+ * Archive and restore (DOC-010, M11/5): the soft delete, and its undo.
+ *
+ * The claim is that archiving destroys nothing. So the assertions here
+ * are not only that the row left the list — they are that everything it
+ * held is still there and comes back untouched: the whole chain, byte
+ * for byte, with its notes and both CTR-014 designations still on it.
+ */
+describe("archiving a document", () => {
+  it("takes it off the list and out of the count, and keeps it whole", async () => {
+    const contract = await newContract("Orion Cloud — the wrong upload");
+    const keep = await uploaded(adminCookies, contract.number, { filename: "keep.pdf" });
+    const wrong = await uploaded(adminCookies, contract.number, {
+      filename: "wrong_contract.pdf",
+      note: "Uploaded to the wrong record.",
+    });
+
+    const row = await archived(adminCookies, wrong.id);
+    expect(row.archivedAt).not.toBeNull();
+
+    // Off the list, which is what the section counts.
+    expect((await paper(adminCookies, contract.number)).map((each) => each.id)).toEqual([keep.id]);
+    // And still there in full, for whoever comes to restore it.
+    const shown = await paper(adminCookies, contract.number, true);
+    expect(shown.map((each) => each.id).sort()).toEqual([keep.id, wrong.id].sort());
+    const stored = shown.find((each) => each.id === wrong.id)!;
+    expect(stored.versions).toEqual(wrong.versions);
+    expect(stored.archivedAt).toBe(row.archivedAt);
+  });
+
+  it("keeps every version downloadable, because nothing was destroyed", async () => {
+    const contract = await newContract("Orion Cloud — archived and still readable");
+    const content = Buffer.from("the draft that was archived by mistake");
+    const document = await uploaded(adminCookies, contract.number, { content });
+
+    await archived(adminCookies, document.id);
+
+    const file = await download(adminCookies, document.id, currentOf(document).id);
+    expect(file.statusCode, file.body).toBe(200);
+    expect(file.rawPayload.equals(content)).toBe(true);
+  });
+
+  it("puts it back on the list, whole, when it is restored", async () => {
+    const contract = await newContract("Orion Cloud — the two-second fix");
+    const document = await uploaded(adminCookies, contract.number, { filename: "draft.docx" });
+    const revised = await versionAdded(adminCookies, document.id, {
+      kind: "redline_theirs",
+      note: "Their pass.",
+    });
+    const pinned = await pinExecuted(adminCookies, document.id, revised.versions[0]!.id);
+    expect(pinned.statusCode, pinned.body).toBe(200);
+    const before = pinned.json().document as DocumentRow;
+
+    await archived(adminCookies, document.id);
+    const res = await restoreDocument(adminCookies, document.id);
+
+    expect(res.statusCode, res.body).toBe(200);
+    const after = res.json().document as DocumentRow;
+    expect(after.archivedAt).toBeNull();
+    // Nothing had to be rebuilt: the chain, the notes, and both
+    // designations are exactly what they were.
+    expect(after.versions).toEqual(before.versions);
+    expect(after.isPrimary).toBe(before.isPrimary);
+    expect((await paper(adminCookies, contract.number)).map((each) => each.id)).toEqual([
+      document.id,
+    ]);
+  });
+
+  it("refuses a second archive and a restore of a document that is on the list", async () => {
+    const contract = await newContract("Orion Cloud — twice over");
+    const document = await uploaded(adminCookies, contract.number);
+
+    const early = await restoreDocument(adminCookies, document.id);
+    expect(early.statusCode, early.body).toBe(409);
+
+    await archived(adminCookies, document.id);
+    const again = await archiveDocument(adminCookies, document.id);
+    expect(again.statusCode, again.body).toBe(409);
+  });
+
+  it("refuses every edit to an archived document until it is restored", async () => {
+    const contract = await newContract("Orion Cloud — hidden and frozen");
+    const document = await uploaded(adminCookies, contract.number);
+    const other = await uploaded(adminCookies, contract.number, { filename: "other.pdf" });
+    await archived(adminCookies, document.id);
+
+    // A round added to a document nobody can see is work that goes
+    // nowhere, and so is a rename.
+    expect((await addVersion(adminCookies, document.id)).statusCode).toBe(409);
+    expect((await patchDocument(adminCookies, document.id, { title: "New" })).statusCode).toBe(409);
+    expect((await makePrimary(adminCookies, document.id)).statusCode).toBe(409);
+    expect((await pinExecuted(adminCookies, document.id, currentOf(document).id)).statusCode).toBe(
+      409,
+    );
+
+    // The document beside it is untouched by any of that.
+    expect((await addVersion(adminCookies, other.id)).statusCode).toBe(201);
+  });
+
+  it("lets a Member on the team archive and restore, and refuses a Contributor", async () => {
+    const contract = await newContract("Orion Cloud — who may archive");
+    await putOnTeam(contract.number, idOf(MEMBER), "member");
+    await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+    const document = await uploaded(adminCookies, contract.number);
+
+    // 403, not 404: a Contributor already reads the record, so hiding
+    // it would make a real boundary read as a bug (DD-015).
+    expect((await archiveDocument(contributorCookies, document.id)).statusCode).toBe(403);
+
+    expect((await archiveDocument(memberCookies, document.id)).statusCode).toBe(200);
+    expect((await restoreDocument(memberCookies, document.id)).statusCode).toBe(200);
+  });
+
+  it("refuses both on an archived contract, because a frozen record takes no change", async () => {
+    const contract = await newContract("Orion Cloud — frozen record");
+    const document = await uploaded(adminCookies, contract.number);
+    const freeze = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/archive`,
+      cookies: adminCookies,
+    });
+    expect(freeze.statusCode, freeze.body).toBe(200);
+
+    expect((await archiveDocument(adminCookies, document.id)).statusCode).toBe(409);
+    expect((await restoreDocument(adminCookies, document.id)).statusCode).toBe(409);
+  });
+
+  it("writes its own activity action for each of the two", async () => {
+    const contract = await newContract("Orion Cloud — the archive's narration");
+    const document = await uploaded(adminCookies, contract.number, { filename: "misfiled.pdf" });
+
+    await archived(adminCookies, document.id);
+    expect((await restoreDocument(adminCookies, document.id)).statusCode).toBe(200);
+
+    const entries = await feed(adminCookies, contract.id);
+    const archiveEntry = entries.find((entry) => entry.action === "document.archived");
+    const restoreEntry = entries.find((entry) => entry.action === "document.restored");
+    expect(archiveEntry?.payload.title).toBe("misfiled.pdf");
+    expect(restoreEntry?.payload.title).toBe("misfiled.pdf");
+    expect(archiveEntry?.payload.documentId).toBe(document.id);
+  });
+
+  it("answers a viewer who cannot reach the contract as it answers for a document that does not exist", async () => {
+    const contract = await newContract("Project Nightingale — archiving");
+    const document = await uploaded(adminCookies, contract.number, {
+      filename: "nightingale.docx",
+    });
+    await markConfidential(contract.number);
+    const missing = "01920000-0000-7000-8000-0000000000fa";
+
+    for (const call of [archiveDocument, restoreDocument]) {
+      const walled = await call(outsiderCookies, document.id);
+      const nowhere = await call(outsiderCookies, missing);
+      expect(walled.statusCode).toBe(404);
+      expect(withoutInstance(walled.json())).toEqual(withoutInstance(nowhere.json()));
+      expect(walled.body).not.toContain("nightingale");
+    }
+
+    // And nothing happened to the record.
+    expect((await paper(adminCookies, contract.number)).map((each) => each.id)).toEqual([
+      document.id,
+    ]);
+  });
+});
+
+/**
+ * The Administrator's hard delete (DOC-010, M11/5): the lawful-erasure
+ * answer.
+ *
+ * Two claims are the subject. The first is that the erasure is complete:
+ * the document row, every version row under it, and every stored blob
+ * those versions named are gone, and the blobs are checked through the
+ * adapter rather than inferred from a 404. The second is that the
+ * erasure stays accountable: the entries written before it are still
+ * readable afterwards and still name what was destroyed, which is the
+ * only thing left that can.
+ */
+describe("the Administrator's hard delete", () => {
+  it("removes the document row, its version rows, and its stored blobs", async () => {
+    const contract = await newContract("Orion Cloud — the erasure");
+    const document = await uploaded(adminCookies, contract.number, { filename: "personal.pdf" });
+    await versionAdded(adminCookies, document.id, { kind: "redline_theirs" });
+    const refs = await fileRefsOf(document.id);
+    expect(refs.length).toBe(2);
+    for (const ref of refs) expect(await blobExists(ref)).toBe(true);
+
+    const res = await hardDelete(adminCookies, document.id, "personal.pdf");
+
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().documents).toEqual([]);
+    // The rows, both tables.
+    expect(
+      await harness.db
+        .select({ id: documents.id })
+        .from(documents)
+        .where(eq(documents.id, document.id)),
+    ).toEqual([]);
+    expect(await fileRefsOf(document.id)).toEqual([]);
+    // The blobs, asked of the adapter itself.
+    for (const ref of refs) expect(await blobExists(ref)).toBe(false);
+    // And nothing answers at the old address.
+    expect((await download(adminCookies, document.id, currentOf(document).id)).statusCode).toBe(
+      404,
+    );
+  });
+
+  it("takes an archived document too, and leaves the rest of the record alone", async () => {
+    const contract = await newContract("Orion Cloud — erasing the archived");
+    const keep = await uploaded(adminCookies, contract.number, { filename: "keep.pdf" });
+    const keepRefs = await fileRefsOf(keep.id);
+    const gone = await uploaded(adminCookies, contract.number, { filename: "gone.pdf" });
+    await archived(adminCookies, gone.id);
+
+    const res = await hardDelete(adminCookies, gone.id, "gone.pdf");
+
+    expect(res.statusCode, res.body).toBe(200);
+    expect((res.json().documents as DocumentRow[]).map((row) => row.id)).toEqual([keep.id]);
+    expect(await paper(adminCookies, contract.number, true)).toHaveLength(1);
+    for (const ref of keepRefs) expect(await blobExists(ref)).toBe(true);
+  });
+
+  it("reaches a document on an archived contract, because erasure is compelled from outside", async () => {
+    const contract = await newContract("Orion Cloud — frozen and still erasable");
+    const document = await uploaded(adminCookies, contract.number, { filename: "personal.pdf" });
+    const refs = await fileRefsOf(document.id);
+    const freeze = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/archive`,
+      cookies: adminCookies,
+    });
+    expect(freeze.statusCode, freeze.body).toBe(200);
+
+    const res = await hardDelete(adminCookies, document.id, "personal.pdf");
+
+    // A frozen record refuses every other write on its paper. It is not
+    // a place to hide from a lawful erasure.
+    expect(res.statusCode, res.body).toBe(200);
+    for (const ref of refs) expect(await blobExists(ref)).toBe(false);
+  });
+
+  it("refuses a confirmation that is not the document's own name, and destroys nothing", async () => {
+    const contract = await newContract("Orion Cloud — a near miss");
+    const document = await uploaded(adminCookies, contract.number, { filename: "personal.pdf" });
+    const refs = await fileRefsOf(document.id);
+
+    const res = await hardDelete(adminCookies, document.id, "personal.pd");
+
+    expect(res.statusCode, res.body).toBe(400);
+    expect(res.headers["content-type"]).toContain("application/problem+json");
+    // The whole outcome is the refusal: the row, the chain, and the
+    // files are exactly as they were.
+    expect((await paper(adminCookies, contract.number)).map((row) => row.id)).toEqual([
+      document.id,
+    ]);
+    for (const ref of refs) expect(await blobExists(ref)).toBe(true);
+  });
+
+  it("takes the confirmation with surrounding whitespace, because that is not a different name", async () => {
+    const contract = await newContract("Orion Cloud — a trailing space");
+    const document = await uploaded(adminCookies, contract.number, { filename: "personal.pdf" });
+
+    const res = await hardDelete(adminCookies, document.id, "  personal.pdf  ");
+
+    expect(res.statusCode, res.body).toBe(200);
+    expect(await paper(adminCookies, contract.number, true)).toEqual([]);
+  });
+
+  it("is refused for every role except Administrator", async () => {
+    const contract = await newContract("Orion Cloud — not yours to destroy");
+    await putOnTeam(contract.number, idOf(MEMBER), "member");
+    await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+    const document = await uploaded(adminCookies, contract.number, { filename: "personal.pdf" });
+
+    // A Legal Team Member on the team archives all day and destroys
+    // nothing: 403, not 404, because they can see the record and the
+    // boundary is a real one (DOC-010).
+    expect((await hardDelete(memberCookies, document.id, "personal.pdf")).statusCode).toBe(403);
+    expect((await hardDelete(contributorCookies, document.id, "personal.pdf")).statusCode).toBe(
+      403,
+    );
+    expect((await paper(adminCookies, contract.number)).map((row) => row.id)).toEqual([
+      document.id,
+    ]);
+  });
+
+  it("leaves the contract without an instrument when the primary document was the one erased", async () => {
+    const contract = await newContract("Orion Cloud — the instrument erased");
+    const instrument = await uploaded(adminCookies, contract.number, { filename: "msa.pdf" });
+    const schedule = await uploaded(adminCookies, contract.number, { filename: "schedule.pdf" });
+    expect(instrument.isPrimary).toBe(true);
+
+    const res = await hardDelete(adminCookies, instrument.id, "msa.pdf");
+
+    expect(res.statusCode, res.body).toBe(200);
+    const rows = res.json().documents as DocumentRow[];
+    expect(rows.map((row) => row.id)).toEqual([schedule.id]);
+    // No dangling designation, and no row that quietly inherited it.
+    expect(rows.filter((row) => row.isPrimary)).toEqual([]);
+    expect((await paper(adminCookies, contract.number)).filter((row) => row.isPrimary)).toEqual([]);
+  });
+
+  it("keeps the activity and audit entries written before it, still naming what was deleted", async () => {
+    const contract = await newContract("Orion Cloud — accountable after the files");
+    const document = await uploaded(adminCookies, contract.number, { filename: "erased.pdf" });
+    await versionAdded(adminCookies, document.id, { kind: "redline_theirs" });
+    const rename = await patchDocument(adminCookies, document.id, { title: "Erased instrument" });
+    expect(rename.statusCode, rename.body).toBe(200);
+
+    const res = await hardDelete(adminCookies, document.id, "Erased instrument");
+    expect(res.statusCode, res.body).toBe(200);
+
+    const entries = await feed(adminCookies, contract.id);
+    const mine = entries.filter((entry) => entry.payload.documentId === document.id);
+    // Everything that happened to it is still readable, and each entry
+    // still says which document it was about.
+    expect(mine.map((entry) => entry.action).sort()).toEqual(
+      [
+        "document.created",
+        "document.hard_deleted",
+        "document.primary_set",
+        "document.updated",
+        "document.version_added",
+      ].sort(),
+    );
+    expect(entries.find((entry) => entry.action === "document.created")?.payload.title).toBe(
+      "erased.pdf",
+    );
+    const erasure = entries.find((entry) => entry.action === "document.hard_deleted");
+    expect(erasure?.payload.title).toBe("Erased instrument");
+    expect(erasure?.payload.versionCount).toBe(2);
+
+    // The Administrator's audit log holds the same entry, filterable by
+    // its own verb.
+    const audit = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/audit-log?action=document.hard_deleted",
+      cookies: adminCookies,
+    });
+    expect(audit.statusCode, audit.body).toBe(200);
+    const logged = (audit.json().entries as { payload: Record<string, unknown> }[]).filter(
+      (entry) => entry.payload.documentId === document.id,
+    );
+    expect(logged).toHaveLength(1);
+    expect(logged[0]!.payload.title).toBe("Erased instrument");
+  });
+
+  it("answers an Administrator who cannot reach the contract as it answers for a document that does not exist", async () => {
+    // Administrators reach every contract (DD-014), so the walled case
+    // here is the id nothing was created under — the one address an
+    // Administrator is refused at, and the refusal must name nothing.
+    const missing = "01920000-0000-7000-8000-0000000000fb";
+
+    const res = await hardDelete(adminCookies, missing, "anything");
+
+    expect(res.statusCode, res.body).toBe(404);
+    expect(res.headers["content-type"]).toContain("application/problem+json");
   });
 });
 

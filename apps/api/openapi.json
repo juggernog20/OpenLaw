@@ -8985,9 +8985,18 @@
     "/api/v1/contracts/{number}/documents": {
       "get": {
         "operationId": "listContractDocuments",
-        "summary": "The paper on one contract (DOC-008), newest first, each with its whole version chain in order 1..n and one version of it marked current. Exactly one document is marked primary — the instrument the contract is — and any version the team has pinned as the signed copy is marked executed. A contract holds as many documents as it needs: a loose attachment such as a schedule or a certificate is its own document with its own chain, beside the main instrument rather than inside its history (CTR-014). Access is inherited from the contract and nothing else: a Contributor on the team reads the list, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist",
+        "summary": "The paper on one contract (DOC-008), newest first, each with its whole version chain in order 1..n and one version of it marked current. Exactly one document is marked primary — the instrument the contract is — and any version the team has pinned as the signed copy is marked executed. A contract holds as many documents as it needs: a loose attachment such as a schedule or a certificate is its own document with its own chain, beside the main instrument rather than inside its history (CTR-014). Access is inherited from the contract and nothing else: a Contributor on the team reads the list, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. Archived documents (DOC-010) are left out; includeArchived=true draws them beside the live ones, which is where restoring one is offered",
         "tags": ["documents"],
         "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "in": "query",
+            "name": "includeArchived",
+            "required": false
+          },
           {
             "schema": {
               "type": "integer",
@@ -9133,6 +9142,18 @@
                               "additionalProperties": false
                             }
                           },
+                          "archivedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "createdBy": {
                             "type": "object",
                             "properties": {
@@ -9176,6 +9197,7 @@
                           "description",
                           "isPrimary",
                           "versions",
+                          "archivedAt",
                           "createdBy",
                           "createdAt",
                           "updatedAt"
@@ -9384,6 +9406,18 @@
                             "additionalProperties": false
                           }
                         },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "createdBy": {
                           "type": "object",
                           "properties": {
@@ -9427,6 +9461,7 @@
                         "description",
                         "isPrimary",
                         "versions",
+                        "archivedAt",
                         "createdBy",
                         "createdAt",
                         "updatedAt"
@@ -9636,6 +9671,18 @@
                             "additionalProperties": false
                           }
                         },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "createdBy": {
                           "type": "object",
                           "properties": {
@@ -9679,6 +9726,7 @@
                         "description",
                         "isPrimary",
                         "versions",
+                        "archivedAt",
                         "createdBy",
                         "createdAt",
                         "updatedAt"
@@ -9882,6 +9930,18 @@
                             "additionalProperties": false
                           }
                         },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "createdBy": {
                           "type": "object",
                           "properties": {
@@ -9925,6 +9985,7 @@
                         "description",
                         "isPrimary",
                         "versions",
+                        "archivedAt",
                         "createdBy",
                         "createdAt",
                         "updatedAt"
@@ -9933,6 +9994,256 @@
                     }
                   },
                   "required": ["document"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "hardDeleteDocument",
+        "summary": "Destroy a whole document — the lawful-erasure answer (DOC-010). It removes the document row, every version row under it, and every stored blob those versions name, through the storage adapter. It is whole-document by design: there is no route that deletes one version, because a chain somebody can cut pieces out of is not negotiation history (DOC-001), so the whole document goes or nothing does. It takes a typed confirmation: confirmTitle must be the document's own title, exactly. It is the Administrator's alone; every other role is refused 403, a Contributor and a Legal Team Member alike. The activity and audit entries written before it survive it and still name what was deleted, and the erasure appends document.hard_deleted beside them (DD-017) — the record stays accountable after the files are gone. It reaches an archived contract too, because erasure is compelled from outside the record and a frozen record is not a place to hide from it. A document on a contract the Administrator cannot reach answers 404",
+        "tags": ["documents"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "confirmTitle": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                },
+                "required": ["confirmTitle"]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "documentId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documents": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "isPrimary": {
+                            "type": "boolean"
+                          },
+                          "versions": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "versionNumber": {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "kind": {
+                                  "type": "string",
+                                  "enum": [
+                                    "draft_ours",
+                                    "redline_theirs",
+                                    "redline_ours",
+                                    "executed",
+                                    "amendment"
+                                  ]
+                                },
+                                "note": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "originalFilename": {
+                                  "type": "string"
+                                },
+                                "mimeType": {
+                                  "type": "string"
+                                },
+                                "byteSize": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "checksumSha256": {
+                                  "type": "string"
+                                },
+                                "uploadedBy": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "displayName": {
+                                      "type": "string"
+                                    },
+                                    "image": {
+                                      "anyOf": [
+                                        {
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
+                                    },
+                                    "archived": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": ["id", "displayName", "image", "archived"],
+                                  "additionalProperties": false
+                                },
+                                "createdAt": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                                },
+                                "isCurrent": {
+                                  "type": "boolean"
+                                },
+                                "isExecuted": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "versionNumber",
+                                "kind",
+                                "note",
+                                "originalFilename",
+                                "mimeType",
+                                "byteSize",
+                                "checksumSha256",
+                                "uploadedBy",
+                                "createdAt",
+                                "isCurrent",
+                                "isExecuted"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "archivedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "createdBy": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              },
+                              "image": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "archived": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": ["id", "displayName", "image", "archived"],
+                            "additionalProperties": false
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "title",
+                          "description",
+                          "isPrimary",
+                          "versions",
+                          "archivedAt",
+                          "createdBy",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["documents"],
                   "additionalProperties": false
                 }
               }
@@ -10102,6 +10413,18 @@
                               "additionalProperties": false
                             }
                           },
+                          "archivedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "createdBy": {
                             "type": "object",
                             "properties": {
@@ -10145,6 +10468,7 @@
                           "description",
                           "isPrimary",
                           "versions",
+                          "archivedAt",
                           "createdBy",
                           "createdAt",
                           "updatedAt"
@@ -10339,6 +10663,18 @@
                             "additionalProperties": false
                           }
                         },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "createdBy": {
                           "type": "object",
                           "properties": {
@@ -10382,6 +10718,7 @@
                         "description",
                         "isPrimary",
                         "versions",
+                        "archivedAt",
                         "createdBy",
                         "createdAt",
                         "updatedAt"
@@ -10555,6 +10892,18 @@
                             "additionalProperties": false
                           }
                         },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "createdBy": {
                           "type": "object",
                           "properties": {
@@ -10598,6 +10947,469 @@
                         "description",
                         "isPrimary",
                         "versions",
+                        "archivedAt",
+                        "createdBy",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["document"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{documentId}/archive": {
+      "post": {
+        "operationId": "archiveDocument",
+        "summary": "Archive a document (DOC-010's soft delete, for the wrong upload): it leaves the record's document list and its count, and nothing is destroyed. The row stays, the whole version chain stays, and every stored file stays — restoring it puts it back, so a wrong archive is a two-second fix. It is not the erasure path: that is the Administrator's hard delete, which leaves no row at all. Appends document.archived on the owning contract (DD-017). An Administrator or a Legal Team Member who reaches the contract may archive; a Contributor on the team reads the record and is refused 403, because their write grid arrives with M23 (DD-015). An archived contract keeps its paper as it stands until it is restored. A document on a contract the actor cannot reach answers 404, exactly as one that does not exist",
+        "tags": ["documents"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "documentId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "document": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "isPrimary": {
+                          "type": "boolean"
+                        },
+                        "versions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "versionNumber": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "draft_ours",
+                                  "redline_theirs",
+                                  "redline_ours",
+                                  "executed",
+                                  "amendment"
+                                ]
+                              },
+                              "note": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "originalFilename": {
+                                "type": "string"
+                              },
+                              "mimeType": {
+                                "type": "string"
+                              },
+                              "byteSize": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "checksumSha256": {
+                                "type": "string"
+                              },
+                              "uploadedBy": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "displayName": {
+                                    "type": "string"
+                                  },
+                                  "image": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "archived": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": ["id", "displayName", "image", "archived"],
+                                "additionalProperties": false
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                              },
+                              "isCurrent": {
+                                "type": "boolean"
+                              },
+                              "isExecuted": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "versionNumber",
+                              "kind",
+                              "note",
+                              "originalFilename",
+                              "mimeType",
+                              "byteSize",
+                              "checksumSha256",
+                              "uploadedBy",
+                              "createdAt",
+                              "isCurrent",
+                              "isExecuted"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdBy": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "image": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "archived": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": ["id", "displayName", "image", "archived"],
+                          "additionalProperties": false
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "title",
+                        "description",
+                        "isPrimary",
+                        "versions",
+                        "archivedAt",
+                        "createdBy",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["document"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{documentId}/restore": {
+      "post": {
+        "operationId": "restoreDocument",
+        "summary": "Restore an archived document (DOC-010): it rejoins the record's document list and its count exactly as it was. Nothing had to be rebuilt, because archiving destroyed nothing — the chain, the notes, and the two CTR-014 designations come back with it. Appends document.restored on the owning contract (DD-017). An Administrator or a Legal Team Member who reaches the contract may restore; a Contributor on the team is refused 403 (DD-015). An archived contract is restored first, because a frozen record takes no change to its paper. A document on a contract the actor cannot reach answers 404, exactly as one that does not exist",
+        "tags": ["documents"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "documentId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "document": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "isPrimary": {
+                          "type": "boolean"
+                        },
+                        "versions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "versionNumber": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "draft_ours",
+                                  "redline_theirs",
+                                  "redline_ours",
+                                  "executed",
+                                  "amendment"
+                                ]
+                              },
+                              "note": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "originalFilename": {
+                                "type": "string"
+                              },
+                              "mimeType": {
+                                "type": "string"
+                              },
+                              "byteSize": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "checksumSha256": {
+                                "type": "string"
+                              },
+                              "uploadedBy": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "displayName": {
+                                    "type": "string"
+                                  },
+                                  "image": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "archived": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": ["id", "displayName", "image", "archived"],
+                                "additionalProperties": false
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                              },
+                              "isCurrent": {
+                                "type": "boolean"
+                              },
+                              "isExecuted": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "versionNumber",
+                              "kind",
+                              "note",
+                              "originalFilename",
+                              "mimeType",
+                              "byteSize",
+                              "checksumSha256",
+                              "uploadedBy",
+                              "createdAt",
+                              "isCurrent",
+                              "isExecuted"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdBy": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "image": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "archived": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": ["id", "displayName", "image", "archived"],
+                          "additionalProperties": false
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "title",
+                        "description",
+                        "isPrimary",
+                        "versions",
+                        "archivedAt",
                         "createdBy",
                         "createdAt",
                         "updatedAt"
