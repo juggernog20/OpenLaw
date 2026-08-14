@@ -87,10 +87,18 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
     void (async () => {
       try {
         await pipeline.stop();
-        await db.$client.end();
       } catch (error) {
         log.error({ reason: reasonOf(error) }, "the worker did not stop cleanly");
         process.exitCode = 1;
+      } finally {
+        // Closed even when the drain above failed. An open pool keeps
+        // the event loop alive, so a worker that skipped this would
+        // hang until the grace period kills it — and the exit code the
+        // failure just set would be lost with it.
+        await db.$client.end().catch((error: unknown) => {
+          log.error({ reason: reasonOf(error) }, "the worker did not close its database pool");
+          process.exitCode = 1;
+        });
       }
     })();
   });
