@@ -26,6 +26,14 @@ export interface FixtureAttachment {
   /** A content id makes it a part the body refers to rather than an
    * enclosure beside it. */
   contentId?: string;
+  /**
+   * MSG only: name the file but write no content stream, which is what a
+   * damaged compound file looks like to the reader — an attachment entry
+   * whose bytes cannot be given up. It is the case the parser must keep
+   * at its own position rather than drop, so every attachment after it
+   * keeps its address.
+   */
+  omitContent?: boolean;
 }
 
 /** What either builder is told. Every field is optional, because half
@@ -156,8 +164,10 @@ export function msgFixture(email: EmailFixture): Buffer {
       unicode("3707", attachment.filename),
       unicode("3704", attachment.filename),
       unicode("370E", attachment.mimeType),
-      { name: "__substg1.0_37010102", bytes: new Uint8Array(attachment.content) },
     ];
+    if (attachment.omitContent !== true) {
+      streams.push({ name: "__substg1.0_37010102", bytes: new Uint8Array(attachment.content) });
+    }
     if (attachment.contentId !== undefined) streams.push(unicode("3712", attachment.contentId));
     folders.push({ name: `__attach_version1.0_#${index(position)}`, streams });
   });

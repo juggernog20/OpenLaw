@@ -212,6 +212,38 @@ describe("reading an uploaded email", () => {
     expect(email.html).toContain("Written as bytes.");
   });
 
+  it("keeps an attachment whose bytes the container cannot give up, at its own position", async () => {
+    // One damaged stream must not cost the message: the body, the
+    // headers, and every other file on it are still exactly what was
+    // sent. And it must not shift the list — dropping position 0 would
+    // repoint every later attachment's address at another file.
+    const bytes = msgFixture({
+      from: { address: "sender@example.com" },
+      text: "Both files attached.",
+      attachments: [
+        {
+          filename: "damaged.pdf",
+          mimeType: "application/pdf",
+          content: Buffer.alloc(0),
+          omitContent: true,
+        },
+        { filename: "whole.pdf", mimeType: "application/pdf", content: Buffer.from("%PDF-1.4") },
+      ],
+    });
+
+    const email = await parseEmail(bytes, MSG, "damaged.msg");
+
+    expect(email.text).toBe("Both files attached.");
+    expect(email.attachments).toHaveLength(2);
+    expect(email.attachments[0]).toMatchObject({
+      index: 0,
+      filename: "damaged.pdf",
+      content: null,
+    });
+    expect(email.attachments[1]).toMatchObject({ index: 1, filename: "whole.pdf" });
+    expect(email.attachments[1]!.content?.toString()).toBe("%PDF-1.4");
+  });
+
   it("refuses a stored email past the parsing limit before it holds all of it", async () => {
     // The bound is applied while the bytes arrive, not after: a file this
     // size must never be held whole on its way to being refused.
@@ -287,6 +319,19 @@ describe("the words an email body yields", () => {
     // a document's text. `&hellip;` is one the parser itself knows, and
     // `&amp;` is one this pass decodes.
     expect(emailHtmlToText("<p>&constructor; &hellip; &amp;</p>")).toBe("&constructor; … &");
+  });
+
+  it("never yields a NUL or a lone surrogate, whatever a reference names", () => {
+    // `&#0;` is NUL, which Postgres refuses in a text value, and
+    // `&#55296;` is a lone surrogate, which is not a character at all.
+    // The HTML parser itself normalizes both to the replacement
+    // character before this file's own decoder ever sees them — and the
+    // decoder's numeric branch refuses to manufacture either, so neither
+    // path can put a value in a document's text that the database would
+    // refuse or rewrite.
+    expect(emailHtmlToText("<p>&#0; and &#55296; come out replaced</p>")).toBe(
+      "� and � come out replaced",
+    );
   });
 
   it("keeps nothing a sender hid in markup", () => {

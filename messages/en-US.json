@@ -1016,6 +1016,9 @@
   "docPanel.email.back": {
     "defaultMessage": "Back to the message"
   },
+  "docPanel.email.bcc": {
+    "defaultMessage": "Bcc"
+  },
   "docPanel.email.body": {
     "defaultMessage": "Message body"
   },

@@ -5313,8 +5313,36 @@ describe("the doc panel (M12/2)", () => {
     expect(within(reading).getByText("legal@aldgate.co.uk")).toBeVisible();
     expect(within(reading).getByText("Sarah Chen <s.chen@aldgate.co.uk>")).toBeVisible();
     expect(within(reading).getByText(/Attaching the June delivery log/)).toBeVisible();
+    // No Bcc row for a message that carries none: an empty label would
+    // read as a redaction.
+    expect(within(reading).queryByText("Bcc")).toBeNull();
     // Never a download card: the message is being drawn, not offered.
     expect(within(reading).queryByText(/could not be prepared/)).toBeNull();
+  });
+
+  it("shows who a message was blind-copied to, when the file says", async () => {
+    // A MSG saved from the sender's own mailbox — Sent Items, not an
+    // inbox — names its Bcc recipients, and hiding a recipient class the
+    // server handed over would misread the message for whoever it
+    // matters most to.
+    stubApi({
+      signedIn: MEMBER,
+      extra: emailApi(
+        [thread()],
+        message({ bcc: [{ name: "Iris Auditor", address: "i.auditor@brightline.com" }] }),
+      ),
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(
+      within(list).getByRole("button", { name: "Delivery dispute — correspondence" }),
+    );
+    const reading = await panel(/Delivery dispute — correspondence, version 1/);
+
+    expect(await within(reading).findByText("Bcc")).toBeVisible();
+    expect(within(reading).getByText("Iris Auditor <i.auditor@brightline.com>")).toBeVisible();
   });
 
   it("draws an HTML body where it can reach nothing", async () => {

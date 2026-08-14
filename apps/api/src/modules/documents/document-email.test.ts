@@ -586,6 +586,52 @@ describe("what an email read refuses (M12/5)", () => {
     expect(text.text).toBeNull();
   });
 
+  it("refuses the one attachment a damaged container cannot give up, and no other", async () => {
+    const { document, version } = await contractWithFile("A message with a damaged file", {
+      filename: "damaged.msg",
+      contentType: MSG,
+      content: msgFixture({
+        from: { address: "sender@example.com" },
+        text: "Both files attached.",
+        attachments: [
+          {
+            filename: "damaged.pdf",
+            mimeType: "application/pdf",
+            content: Buffer.alloc(0),
+            omitContent: true,
+          },
+          {
+            filename: "whole.pdf",
+            mimeType: "application/pdf",
+            content: Buffer.from("%PDF-1.4 whole"),
+          },
+        ],
+      }),
+    });
+
+    // The message still reads, and the damaged entry is kept at its own
+    // position — dropping it would repoint every later attachment's
+    // address at another file.
+    const listed = await readEmail(memberCookies, document.id, version.id);
+    expect(listed.statusCode, listed.body).toBe(200);
+    const email = listed.json().email as EmailRow;
+    expect(email.text).toBe("Both files attached.");
+    expect(email.attachments.map((a) => a.filename)).toEqual(["damaged.pdf", "whole.pdf"]);
+
+    // The entry that cannot be served says so — the same fact as an
+    // unreadable email, one file down — and its neighbour still streams
+    // from the address the list gave it.
+    expect((await downloadAttachment(memberCookies, document.id, version.id, 0)).statusCode).toBe(
+      422,
+    );
+    expect((await previewAttachment(memberCookies, document.id, version.id, 0)).statusCode).toBe(
+      422,
+    );
+    const whole = await downloadAttachment(memberCookies, document.id, version.id, 1);
+    expect(whole.statusCode, whole.body).toBe(200);
+    expect(whole.rawPayload.toString()).toBe("%PDF-1.4 whole");
+  });
+
   it("answers no attachment at a position the message has none at", async () => {
     const { document, version } = await contractWithFile("A message with one attachment", {
       filename: "one.eml",

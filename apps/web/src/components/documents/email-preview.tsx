@@ -167,6 +167,19 @@ function Message({
               <Addresses addresses={email.cc} />
             </HeaderRow>
           )}
+          {/* A message read out of a recipient's mailbox carries no Bcc,
+              but one saved from the sender's own — which is what a MSG
+              dragged out of Sent Items is — names everybody it was
+              blind-copied to. The server hands the list over either way,
+              and a row the panel held back would be the one recipient
+              class a reader could not see. */}
+          {email.bcc.length > 0 && (
+            <HeaderRow
+              label={intl.formatMessage({ id: "docPanel.email.bcc", defaultMessage: "Bcc" })}
+            >
+              <Addresses addresses={email.bcc} />
+            </HeaderRow>
+          )}
           {email.date !== null && (
             <HeaderRow
               label={intl.formatMessage({ id: "docPanel.email.date", defaultMessage: "Date" })}

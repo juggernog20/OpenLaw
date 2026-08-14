@@ -247,9 +247,14 @@ function decodeTextEntities(text: string): string {
 }
 
 /** One character from its code point, or `undefined` when the reference
- * names no character at all. */
+ * names no character at all. NUL is refused because Postgres refuses a
+ * text value holding it, and the surrogate range because a lone
+ * surrogate is not a character: it would go to the database as a
+ * replacement character and out over the API as itself, and a document's
+ * stored text must not disagree with its read. */
 function codePoint(value: number): string | undefined {
-  return Number.isInteger(value) && value > 0 && value <= 0x10ffff
+  const surrogate = value >= 0xd800 && value <= 0xdfff;
+  return Number.isInteger(value) && value > 0 && value <= 0x10ffff && !surrogate
     ? String.fromCodePoint(value)
     : undefined;
 }
