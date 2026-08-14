@@ -85,6 +85,12 @@ export function PdfPreview({
    * a value anything renders from, and putting it in state would redraw
    * the surface every time it is opened. */
   const loaded = useRef<LoadedDocument | null>(null);
+  /** The draws, one after another. pdf.js refuses a second `render()`
+   * into a canvas whose previous paint is still in flight, so a page
+   * turn pressed mid-paint must queue behind the paint it replaces —
+   * started concurrently it would reject, and the surface would read
+   * that as a PDF that cannot be shown. */
+  const draws = useRef<Promise<void>>(Promise.resolve());
 
   // Opening the file, and closing it again. Keyed on the address alone:
   // a new version in the panel is a new document, and the page and the
@@ -124,9 +130,10 @@ export function PdfPreview({
   }, [src]);
 
   // Drawing the page that is showing, at the zoom that is set. It runs
-  // again on every page turn and every zoom step, and each run cancels
-  // the one before it by refusing to write into a canvas that has moved
-  // on.
+  // again on every page turn and every zoom step. Each run queues
+  // behind the one before it — the canvas takes one paint at a time —
+  // and a run that went stale while it waited refuses to write into a
+  // canvas that has moved on.
   useEffect(() => {
     if (stage !== "ready") return;
     const document = loaded.current;
@@ -134,16 +141,18 @@ export function PdfPreview({
     if (!document || !target) return;
 
     let live = true;
-    void drawPage({
-      document,
-      pageNumber,
-      scale: ZOOM_STEPS[zoomIndex] ?? 1,
-      canvas: target,
-      textLayer: textLayer.current,
-      isLive: () => live,
-    }).catch(() => {
-      if (live) setStage("failed");
-    });
+    draws.current = draws.current.then(() =>
+      drawPage({
+        document,
+        pageNumber,
+        scale: ZOOM_STEPS[zoomIndex] ?? 1,
+        canvas: target,
+        textLayer: textLayer.current,
+        isLive: () => live,
+      }).catch(() => {
+        if (live) setStage("failed");
+      }),
+    );
     return () => {
       live = false;
     };
@@ -166,7 +175,7 @@ export function PdfPreview({
       {/* The reading controls, over the page rather than in the panel's
           own toolbar: they are facts about this PDF, and a PNG in the
           same panel has none of them. */}
-      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-muted bg-canvas px-3 py-1.5">
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border-muted bg-canvas px-3 py-1.5">
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
