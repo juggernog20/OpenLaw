@@ -424,9 +424,14 @@ export async function contractAudience(
  * Administrator, or somebody the contract names — which drops out of the
  * `and(...)` it composes into.
  *
- * The match is on the payload's own `documentId`. An entry that carries
- * no such key is left alone: it is not about a document, so no rule here
- * reaches it.
+ * The match is on the payload's own document keys — `documentId`, and
+ * `fromDocumentId` where a pin move names the document the designation
+ * left (CTR-014). **Every document an entry names must pass**, because
+ * the entry carries a title for each one it names: a pin move whose new
+ * primary is open but whose old primary is walled off would otherwise
+ * ride into an outsider's feed with the walled file's title in `from`.
+ * An entry that carries neither key is left alone: it is not about a
+ * document, so no rule here reaches it.
  *
  * **An entry naming a document that is no longer there is hidden too**,
  * and that is the decision rather than an accident. DOC-010's hard
@@ -451,17 +456,19 @@ export function confidentialDocumentEntryScope(
   audience: ContractAudience,
 ): SQL<unknown> | undefined {
   if (audience.seesConfidentialDocuments) return undefined;
-  // Parenthesised here rather than left to the caller: this is one
-  // `or`, and an unbracketed `or` composed into an `and` list would bind
-  // the wrong way and admit every entry in the feed.
-  return sql`(
-    ${activityLog.payload} ->> 'documentId' is null
+  // One clause per document key the payloads use. Parenthesised here
+  // rather than left to the caller: each is one `or`, and an unbracketed
+  // `or` composed into an `and` list would bind the wrong way and admit
+  // every entry in the feed.
+  const backedByAnOpenRow = (key: string) => sql`(
+    ${activityLog.payload} ->> ${key} is null
     or exists (
       select 1 from ${documents}
-      where ${documents.id} = ${activityLog.payload} ->> 'documentId'
+      where ${documents.id} = ${activityLog.payload} ->> ${key}
         and ${documents.isConfidential} = false
     )
   )`;
+  return sql`(${backedByAnOpenRow("documentId")} and ${backedByAnOpenRow("fromDocumentId")})`;
 }
 
 /**

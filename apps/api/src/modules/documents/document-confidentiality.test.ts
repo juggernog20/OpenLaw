@@ -959,6 +959,43 @@ describe("the feed omits the entries that name a confidential document (M11/6, D
     ).toBe(true);
   });
 
+  it("omits a pin move whose old primary is the walled file — the entry names both documents", async () => {
+    const contract = await newContract("Doc confi feed: the instrument moved off a walled file");
+    await putOnTeam(contract.number, idOf(UPLOADER), "member");
+    // The first upload takes the primary designation (CTR-014), so the
+    // walled file is the instrument the move below leaves.
+    const walled = await uploaded(uploaderCookies, contract.number, "sealed-instrument.txt");
+    const open = await uploaded(uploaderCookies, contract.number, "open-successor.txt");
+    await setFlag(uploaderCookies, walled.id, true);
+
+    const pinned = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/documents/${open.id}/primary`,
+      cookies: uploaderCookies,
+    });
+    expect(pinned.statusCode, pinned.body).toBe(200);
+
+    // The move's entry says which document the designation left, title
+    // and all — `fromDocumentId` and `from` — while its own documentId
+    // is the open successor. The scope must ask about every document an
+    // entry names, or this one entry hands an outsider the walled
+    // file's title.
+    const theirs = await feed(outsiderCookies, contract.id);
+    expect(theirs.some((entry) => entry.action === "document.primary_set")).toBe(false);
+    expect(JSON.stringify(theirs)).not.toContain("sealed-instrument");
+    // The open successor's own story is still theirs to read.
+    expect(theirs.some((entry) => entry.payload.documentId === open.id)).toBe(true);
+
+    // The named team reads the move as it was written.
+    const inside = await feed(uploaderCookies, contract.id);
+    expect(
+      inside.some(
+        (entry) =>
+          entry.action === "document.primary_set" && entry.payload.fromDocumentId === walled.id,
+      ),
+    ).toBe(true);
+  });
+
   it("hides the entries the moment the flag is set, and shows them again when it is cleared", async () => {
     const contract = await newContract("Doc confi feed: set then cleared again");
     const document = await uploaded(adminCookies, contract.number, "toggled.txt");
