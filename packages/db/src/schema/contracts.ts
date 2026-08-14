@@ -35,10 +35,17 @@ import {
   text,
   timestamp,
   uniqueIndex,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { users } from "./auth.js";
 import { contractStatuses } from "./contract-statuses.js";
 import { contractTypes } from "./contract-types.js";
+// A cycle on purpose: a document names its owning contract (DOC-008)
+// and a contract names its primary document (CTR-014). Both sides are
+// read inside `references(() => …)`, which Drizzle resolves after both
+// modules have finished loading, so neither file touches the other's
+// bindings while it is still evaluating.
+import { documents } from "./documents.js";
 import { entities } from "./entities.js";
 import type { CustomFieldValue } from "./fields.js";
 import { uuidPk } from "./helpers.js";
@@ -117,6 +124,35 @@ export const contracts = pgTable(
      * never cascades to or from a linked record (CTR-018), so no other
      * table reads this column. */
     isConfidential: boolean("is_confidential").notNull().default(false),
+    /**
+     * CTR-014's primary document: which of this contract's documents is
+     * the instrument (M11/4). Everything else on the record is a loose
+     * attachment, outside the primary chain.
+     *
+     * **The designation is one column, so exactly one document holds it
+     * — the rule is the shape rather than a check.** A flag on
+     * `documents` would need a partial unique index to say the same
+     * thing, and could still be written twice between two transactions.
+     *
+     * NULL until the record has paper: the first upload takes the
+     * designation (M11/4), and from there it moves to another document
+     * or it stays where it is. That the named document is a document of
+     * *this* contract is enforced at write time, the way DOC-008's
+     * one-owner rule is — the route that sets it addresses the document
+     * and derives the contract from it, so no request can name a
+     * mismatched pair.
+     *
+     * SET NULL on delete: hard deletion (DOC-010) takes the whole
+     * document, and a contract whose instrument was erased has no
+     * primary rather than a dangling one.
+     */
+    // The return type is written out because the reference closes a
+    // cycle — a contract names its primary document, and a document
+    // names its owning contract — and TypeScript cannot infer a type
+    // that depends on itself.
+    primaryDocumentId: text("primary_document_id").references((): AnyPgColumn => documents.id, {
+      onDelete: "set null",
+    }),
     /** Long-form context that fits no other field. NULL = nothing was
      * written; the write path normalizes a blank string to NULL, so an
      * empty string never reaches the column and readers have one
@@ -162,6 +198,14 @@ export const contracts = pgTable(
     // (`custom_fields ? slug`) over every row, which is what the
     // default jsonb GIN opclass indexes.
     index("contracts_custom_fields_idx").using("gin", table.customFields),
+    // The primary-document designation's own column — the referencing
+    // side of the foreign key into `documents` (M11/5). No read filters
+    // on it, because the record page reads it off the contract row it
+    // already has, so it carried no index until now. What needs one is
+    // DOC-010's hard delete: removing a document row makes Postgres
+    // check every contract for one naming it as its instrument, and
+    // without an index that check is a sequential scan of `contracts`.
+    index("contracts_primary_document_idx").on(table.primaryDocumentId),
     // `entity_id` carries no index yet: nothing in M8 reads contracts by
     // the entity that signs them. The roll-up that will (ENT-007, M27)
     // brings its own, per the incremental-schema doctrine.

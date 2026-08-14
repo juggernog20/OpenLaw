@@ -18,7 +18,9 @@ Decisions are numbered `DOC-###`.
 
 ## Open questions queued for the next grill-me session
 
-_None — queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/precedents routed to the Knowledge module per DOC-002; storage/search engine picks routed to the tech-stack grill per DOC-009. New questions from screen batches or other module grills queue here._
+_Queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/precedents routed to the Knowledge module per DOC-002; storage/search engine picks routed to the tech-stack grill per DOC-009. New questions from screen batches or other module grills queue here._
+
+- **SharePoint as a storage driver** (raised 2026-08-14, during the M11 spec): SharePoint is a commonly requested file home for the kind of org OpenLaw targets. It speaks Microsoft Graph with token auth — a third driver with its own decision, not an S3 variant. DOC-009's adapter interface must stay implementable by a Graph-backed driver; the driver itself needs a grill (auth model, tenant setup, latency, whether OpenLaw or SharePoint is the source of truth).
 
 ---
 
@@ -28,7 +30,7 @@ _None — queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/preceden
 - **Date** — 2026-08-04
 - **Context** — The foundational shape for the module; must satisfy CTR-014's contract-side requirements (version kinds, executed pin, generated-redline provenance). Gates grill-plan K.H3.
 - **Decision** —
-  - **`documents`** is the logical record: title, ownership links (`matter_id` / `contract_id` / `entity_id` / `knowledge_item_id`, exactly one set per **DOC-008** — every document has exactly one owning record), metadata, and an explicit executed pin: `executed_version_id` FK (**same-document invariant**: the pinned row must be a version of this document — enforced at write time, like DOC-008's one-owner rule; a composite FK is the implementer's option).
+  - **`documents`** is the logical record: title, ownership links (`matter_id` / `contract_id` / `entity_id` / `knowledge_item_id`, exactly one set per **DOC-008** — every document has exactly one owning record), metadata, and an explicit executed pin: `executed_version_id` FK (**same-document invariant**: the pinned row must be a version of this document — enforced at write time, like DOC-008's one-owner rule; a composite FK is the implementer's option). _Settled in M11/4: the invariant is enforced in the write path — the route reads the version by its own id **and** the document's, inside the locked transaction that then writes it. The composite FK is declined, because `(id, executed_version_id) → (document_id, id)` cannot carry the plain `ON DELETE SET NULL` that DOC-010's hard delete needs without nulling the primary key beside it._
   - **`document_versions`** are immutable file snapshots in a **strictly linear** chain (`version_number` 1..n): `kind` (`draft_ours | redline_theirs | redline_ours | executed | amendment | generated_redline`), `source` (`uploaded | generated`), `compared_from_version_id` + `compared_to_version_id` (provenance for generated redlines — both comparison operands: the redline shows changes from the older `from` version to the newer `to` version, so the original comparison is reconstructable even after the result is appended to the chain), `note`, `created_by`. Individual versions are never edited or deleted; corrections add a new version.
   - The K.H3 version pill renders `version_number` of the viewed version.
 - **Rationale** — A stable logical identity is what contracts/matters link to (CTR-014's primary-document designation); immutable snapshots make the chain trustworthy as negotiation history. Linear beats DAG: real negotiation rounds supersede each other, and the rare parallel-drafts case is servable with a second document record instead of branch/merge UI.
@@ -114,7 +116,14 @@ _None — queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/preceden
   - The repository destination is Member+ (legal staff); Contributors/Business Users see documents only through records they're on.
 - **Rationale** — One rule source for permissions (no drift between a record's team and its files); "where does this live?" at upload is cheap now that owners include entities and knowledge (the old orphan cases all have homes).
 - **Alternatives considered** — Standalone with default-team-wide visibility (recommended, declined). Per-document teams: permission drift by design.
-- **Consequences** — DD-007 annotated (stand-alone clause revised); DOC-002's standalone bullet superseded; SCHEMA.md documents section gains the exactly-one-owner rule and future `entity_id` / knowledge FKs; MTR-007's "standalone contract" is unaffected (the _contract_ stands alone; its documents belong to it).
+- **Consequences** — DD-007 annotated (stand-alone clause revised); DOC-002's standalone bullet superseded; SCHEMA.md documents section gains the exactly-one-owner rule and future `entity_id` / knowledge FKs; MTR-007's "standalone contract" is unaffected (the _contract_ stands alone; its documents belong to it). _Settled in M11/6, where DD-014's per-document flag lands on `documents.is_confidential`._
+
+- _The flag **composes in front of** the owning record's gate. It does not replace it. A viewer must pass both gates, so the flag only narrows what the record already allows._
+- _A confidential document's audience is the owning contract's named team, the contract's Owner, and Administrators. That is the same audience a confidential contract has, so one predicate in the shared access module answers both levels. Two copies of it would drift._
+- _The actor set mirrors CTR-022 one level down: an Administrator, the contract's Owner, and the person who uploaded the document. A contract reads its `creator` team row for that middle actor; a document reads `created_by`. An upload is one act with one actor, and a document has no team to hold a role on._
+- _An uploader who holds no team row can therefore wall themselves out of their own file. An Administrator or the Owner opens it again. Widening the audience to include the uploader was rejected: it would grant access from an act that grants none._
+- _The flag rides the document's own per-field PATCH, as the contract's flag rides the record's. It keeps its own two activity verbs and stays out of the `document.updated` changed map._
+- _An activity entry that names a document is hidden from a viewer outside that document's audience. **Every** document the entry names must pass — a pin move names two, by `documentId` and `fromDocumentId`, and each carries a title. An entry is also hidden once a document it names is hard-deleted. The row is gone, so nothing is left to ask whether the file was confidential, and every entry still carries its title. This over-hides an erased **open** document's story from a viewer the contract does not name. The Administrator's audit log is untouched, which is where DOC-010 puts the accountability._
 
 ## DOC-009 — Storage & search: requirements here, engine picks routed to tech-stack
 
@@ -126,7 +135,7 @@ _None — queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/preceden
   - **Search**: full-text search covers title, description, owning-record context, and **extracted text** (native text layers + DOC-005 OCR output). Working default: Postgres FTS first (no extra infrastructure for self-hosters); a dedicated engine (Tantivy/Meilisearch) only if relevance/scale demands it later. Extraction runs on the background job pipeline (same worker as OCR).
 - **Rationale** — Both choices follow PRODUCT.md's "working install in under an hour from a clean VM" principle: zero extra services in the default path, adapters where deployments differ.
 - **Alternatives considered** — S3-only (hosted assumption — wrong default for self-host); dedicated search engine in v1 (another service to run before the first document is findable).
-- **Consequences** — Tech-stack queue already carries the engine questions; this decision pre-loads the defaults. `document_versions.file_ref` format finalizes with the adapter decision.
+- **Consequences** — Tech-stack queue already carries the engine questions; this decision pre-loads the defaults. `document_versions.file_ref` format finalizes with the adapter decision — _settled by **DOC-012**: `<driver>:<key>`_.
 
 ## DOC-010 — Deletion: soft delete + Admin hard delete; versions immutable
 
@@ -136,7 +145,7 @@ _None — queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/preceden
 - **Decision** — Archive (soft delete, Member+) hides from lists/search, recoverable, logged. Hard delete is Admin-only, whole-document (all versions), typed-confirmation + activity-logged — the compliance/redaction path (DD-017/MTR-008 pattern). Individual versions can never be deleted. Retention rules and legal holds stay parked (FUTURE-FEATURES).
 - **Rationale** — Chain trustworthiness requires version immutability; lawful-erasure (GDPR) requires a real hard-delete path.
 - **Alternatives considered** — Soft-only: no erasure path. Per-version delete: breaks the negotiation record.
-- **Consequences** — Matches `archived_at` on `documents`; hard delete cascades `document_versions` + stored blobs.
+- **Consequences** — Matches `archived_at` on `documents`; hard delete cascades `document_versions` + stored blobs. _Settled in M11/5: the typed confirmation is a **server** rule, not a dialog's manners — the route takes the document's own title and refuses anything else, because the dialog can be skipped and the ceremony is what stops an irreversible act happening without the actor naming its subject. The blobs are deleted **inside** the transaction that removes the rows, before it commits, where deleting after the commit would leave files with no row left to name them — an erasure that reports success, is not one, and has nothing left to retry from. This order is chosen between two bad failures, not against a clean one. A storage failure part way through destroys the blobs behind the versions already reached and then rolls **every** row back, including those, so the record names files that no longer exist and their downloads fail until the erasure is run again. That is accepted: the retry converges, because deleting a key that is already gone succeeds (DOC-012). It is not a claim that a failed erasure leaves the record whole. Hard delete reaches a document on an **archived** contract, which refuses every other write on its paper — erasure is compelled from outside the record, so a frozen record is not a place to hide from it._
 
 ## DOC-011 — Bulk upload: multi-file drop + folder drop retaining structure (revises DOC-006 to nested folders)
 
@@ -151,6 +160,22 @@ _None — queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/preceden
 - **Rationale** — Legacy books arrive as folder trees on someone's drive; structure-retaining drop is the lowest-friction migration path — no mapping file, no per-file ceremony.
 - **Alternatives considered** — Drag-drop only (no structure): flattens legacy organization. CSV-mapped migration flow (recommended, not requested): can layer later if metadata-rich migration demand appears.
 - **Consequences** — `document_folders.parent_id` added in SCHEMA.md; DOC-006 annotated. Upload pipeline handles directory traversal + batch job queuing (background pipeline per DOC-005/009).
+
+## DOC-012 — Storage adapter: three operations, and `file_ref` = `<driver>:<key>`
+
+- **Status** — Accepted
+- **Date** — 2026-08-14
+- **Context** — DOC-009 fixed the storage requirements and left the `file_ref` format to "the adapter decision"; TECH-014 confirmed a driver-prefixed key. M11 is the first milestone that stores a file, so the shape is now real code and changing it later means a data migration.
+- **Decision** —
+  - The adapter has **three operations and nothing else**: put a blob, get a blob as a stream, delete a blob. It carries **no S3-shaped concepts** — no bucket, no presigned URL, no multipart part numbers — so a Graph-backed SharePoint driver (queued above) stays implementable behind it.
+  - **`file_ref` is `<driver>:<key>`.** The driver name is lowercase `[a-z][a-z0-9-]*`; the local filesystem driver is `local`. A reference is split at its first colon, and a driver refuses a reference that names another driver rather than guessing at it.
+  - **Keys** are slash-separated segments of `A-Z a-z 0-9 . _ -`, each segment starting with a letter or a digit, at most 512 characters. The charset is smaller than any one driver needs: safe as a filesystem path, safe as an object name, and unable to hold the separator or escape a root.
+  - **Defined failures**, the same on every driver: getting a key that was never written fails as not-found; putting a key that is already written fails as already-exists and leaves the stored blob untouched; deleting a key that was never written succeeds, because hard deletion (DOC-010) must be repeatable after a partial failure. A write that fails part way leaves nothing at the key.
+  - **Blobs are immutable and keys are never reused.** This is what makes an orphaned blob — written, then the database commit failed — harmless.
+  - **One shared contract-test suite** defines all of the above. Every driver passes the same suite: the local driver against a temporary directory, the S3 driver against a MinIO container.
+- **Rationale** — A narrow interface is the only one three unlike backends can all honour. Prefixing the driver into the stored reference means a deployment that changes drivers can still tell where each old blob lives, which is the difference between a migration and a data loss.
+- **Alternatives considered** — A bare key with the driver read from configuration: cheaper to write, but a deployment that switches drivers can no longer read its own history. A richer interface (copy, list, signed URLs): S3 gives them free, SharePoint does not, and v1 needs none of them.
+- **Consequences** — `document_versions.file_ref` stores `<driver>:<key>`. The Compose stack mounts the `openlaw-files` named volume at `STORAGE_PATH` (default `/var/lib/openlaw/files`), and DEPLOYMENT.md backs it up beside the database. Widening the key charset later is safe; narrowing it is not. _Settled in M11/7, where the second driver landed and the interface did not move: the driver is named `s3` and is chosen by `STORAGE_DRIVER`, which defaults to `local` — so the zero-configuration install is still the filesystem one (DOC-009). The bucket is **not** part of the reference: a reference names the driver and the key, and where that driver points is configuration, exactly as the local driver's root is. The already-exists failure is kept atomic the way the local driver keeps it, by asking the store to write only if nothing is there (`If-None-Match: *`) as well as asking first whether anything is — one lock would leave a window in which two writers of one key both believe they won and an immutable blob is overwritten. Bucket creation is the operator's job; the driver never makes one, because an application that can create buckets is an application whose credentials can._
 
 ## Index of decisions
 
@@ -167,3 +192,4 @@ _None — queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/preceden
 | DOC-009 | Storage & search: requirements here, engine picks routed to tech-stack         | Accepted |
 | DOC-010 | Deletion: soft delete + Admin hard delete; versions immutable                  | Accepted |
 | DOC-011 | Bulk upload: multi-file + folder drop retaining structure (folders nest)       | Accepted |
+| DOC-012 | Storage adapter: three operations, and `file_ref` = `<driver>:<key>`           | Accepted |

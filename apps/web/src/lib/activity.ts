@@ -60,14 +60,17 @@ import {
   MessageSquare,
   Palette,
   PencilLine,
+  Pin,
   Settings,
   ShieldCheck,
   ShieldOff,
   SquareCheck,
+  Star,
   Tag,
   Tags,
   Trash2,
   Unlink,
+  Upload,
   UserCog,
   UserMinus,
   UserPlus,
@@ -187,6 +190,37 @@ function text(payload: Payload, key: string): string | null {
   return typeof value === "string" && value.length > 0 ? value : null;
 }
 
+/**
+ * Which version of the chain an entry is about (DOC-001), as the
+ * sentence selects on it.
+ *
+ * A string, because ICU `select` takes one, and version numbers are
+ * references rather than quantities — `v3` is a name, so it is not
+ * locale-formatted the way a count would be. `unknown` is the arm a row
+ * that carries no number falls into: the log is append-only, so a
+ * payload written by an older build has to still read as a sentence.
+ */
+function versionNumber(payload: Payload): string {
+  const value = payload.versionNumber;
+  return typeof value === "number" && Number.isInteger(value) ? String(value) : "unknown";
+}
+
+/**
+ * How many rounds an erasure took with it (DOC-010), as a quantity.
+ *
+ * A number here, where `versionNumber` above is a string, because these
+ * are two different things wearing the same word: one names a round in
+ * the chain, and this one counts them, so it pluralizes and it is
+ * locale-formatted. Zero is the arm an entry with no count falls into —
+ * the log is append-only, so a payload an older build wrote has to still
+ * read as a sentence — and the message says "and its files" there rather
+ * than naming a number nobody recorded.
+ */
+function versionCount(payload: Payload): number {
+  const value = payload.versionCount;
+  return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : 0;
+}
+
 /** What an unrecorded value reads as, on either side of a change. */
 function notSet(intl: IntlShape): string {
   return intl.formatMessage({ id: "activity.notSet", defaultMessage: "Not set" });
@@ -215,6 +249,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "entity {Signing entity} priority {Priority} risk {Risk} " +
         "contractType {Contract type} value {Value} status {Status} " +
         "primaryCounterparty {Primary counterparty} " +
+        "primaryDocument {Primary document} " +
         "displayName {Name} display_name {Display name} name {Name} " +
         "role {Role} email {Email} " +
         "stage {Stage} moduleScope {Scope} isRequired {Required} " +
@@ -767,6 +802,153 @@ const ARMS: Readonly<Record<string, Arm>> = {
       defaultMessage: "{actor} restored this contract",
     }),
   },
+  // The record's paper (M11/2, M11/3, M11/4). The entry hangs off the owning
+  // contract — a document's access is its owner's and nothing else
+  // (DOC-008) — and it names the document, because hard deletion
+  // (DOC-010) will one day take the row and the entry has to still say
+  // what was uploaded.
+  "document.created": {
+    icon: Upload,
+    message: defineMessage({
+      id: "activity.document.created",
+      defaultMessage: "{actor} uploaded {title}",
+    }),
+    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+  },
+  // A round of the negotiation, narrated as one: which document, and
+  // which version of it. The number is what makes the feed readable as
+  // a history rather than as a run of identical uploads.
+  "document.version_added": {
+    icon: FilePlus2,
+    message: defineMessage({
+      id: "activity.document.versionAdded",
+      defaultMessage:
+        "{version, select, unknown {{actor} added a version of {title}} " +
+        "other {{actor} added version {version} of {title}}}",
+    }),
+    values: (intl, payload) => ({
+      title: named(intl, payload, "title"),
+      version: versionNumber(payload),
+    }),
+  },
+  // The metadata edit (DOC-007). It says the document's details changed,
+  // never that a file did: the stored versions are immutable, and a
+  // rename touches none of them. The old→new pairs come off the
+  // `changed` map like every other edit's.
+  "document.updated": {
+    icon: PencilLine,
+    message: defineMessage({
+      id: "activity.document.updated",
+      defaultMessage: "{actor} edited the details of {title}",
+    }),
+    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+    changes: changesFrom,
+  },
+  // Which document *is* the contract (CTR-014). The first upload takes
+  // the designation without anybody asking for it, so the log says so
+  // rather than leaving it implied by the upload above — the
+  // counterparty promotion is written the same way, and the old→new
+  // pair rides the same `from`/`to` helper.
+  "document.primary_set": {
+    icon: Star,
+    message: defineMessage({
+      id: "activity.document.primarySet",
+      defaultMessage: "{actor} made {title} the primary document",
+    }),
+    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+    changes: (intl, payload, context) => directChange(intl, payload, "primaryDocument", context),
+  },
+  // One glyph for the pin everywhere, the way DES-009 gives
+  // confidentiality one Lock: the set and the clear are two states of
+  // one fact, so the sentence is what tells them apart. The set names
+  // the round, because a chain reads as a history and "version 3" is
+  // what makes it one.
+  "document.executed_set": {
+    icon: Pin,
+    message: defineMessage({
+      id: "activity.document.executedSet",
+      defaultMessage:
+        "{version, select, unknown {{actor} pinned the executed copy of {title}} " +
+        "other {{actor} pinned version {version} of {title} as the executed copy}}",
+    }),
+    values: (intl, payload) => ({
+      title: named(intl, payload, "title"),
+      version: versionNumber(payload),
+    }),
+  },
+  "document.executed_cleared": {
+    icon: Pin,
+    message: defineMessage({
+      id: "activity.document.executedCleared",
+      defaultMessage: "{actor} cleared the executed copy of {title}",
+    }),
+    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+  },
+  // DOC-010's two removals (M11/5). They take the record's own archive
+  // glyphs, because they are the same act one level down: a document
+  // leaves the record's lists exactly as a contract leaves the list of
+  // contracts, and nothing is destroyed either time.
+  "document.archived": {
+    icon: Archive,
+    message: defineMessage({
+      id: "activity.document.archived",
+      defaultMessage: "{actor} archived {title}",
+    }),
+    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+  },
+  "document.restored": {
+    icon: ArchiveRestore,
+    message: defineMessage({
+      id: "activity.document.restored",
+      defaultMessage: "{actor} restored {title}",
+    }),
+    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+  },
+  // The erasure (DOC-010). It reads as "deleted", not as "archived",
+  // because the two are different facts and this is the row an auditor
+  // is looking for. The sentence names the document and how many rounds
+  // went with it: after this entry there is no row left anywhere that
+  // says either, which is why the payload carries both.
+  "document.hard_deleted": {
+    icon: Trash2,
+    message: defineMessage({
+      id: "activity.document.hardDeleted",
+      defaultMessage:
+        "{versions, plural, =0 {{actor} deleted {title} and its files} " +
+        "one {{actor} deleted {title} and its # version} " +
+        "other {{actor} deleted {title} and its # versions}}",
+    }),
+    values: (intl, payload) => ({
+      title: named(intl, payload, "title"),
+      versions: versionCount(payload),
+    }),
+  },
+  // DD-014's per-document flag (M11/6). It takes the record's own Lock,
+  // for the reason the record's pair gives: one glyph for
+  // confidentiality everywhere, and the sentence is what tells the set
+  // from the clear.
+  //
+  // Both entries only ever reach a reader who is inside the document's
+  // audience. Anyone the flag walls out is not shown the row at all —
+  // the feed leaves it out at query time, because an entry saying a
+  // file was made confidential says the file is there.
+  "document.confidentiality_set": {
+    icon: Lock,
+    message: defineMessage({
+      id: "activity.document.confidentialitySet",
+      defaultMessage: "{actor} marked {title} confidential",
+    }),
+    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+  },
+  "document.confidentiality_cleared": {
+    icon: Lock,
+    message: defineMessage({
+      id: "activity.document.confidentialityCleared",
+      defaultMessage: "{actor} cleared the confidential mark on {title}",
+    }),
+    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+  },
+
   // Ids only, never text (CMT-006). A redacted comment's entry reads as
   // a comment that was removed, never as what the comment said.
   "comment.posted": {

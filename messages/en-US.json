@@ -95,6 +95,39 @@
   "activity.contract.updated": {
     "defaultMessage": "{actor} changed {count, plural, =0 {this contract} one {{field}} other {# fields}}"
   },
+  "activity.document.archived": {
+    "defaultMessage": "{actor} archived {title}"
+  },
+  "activity.document.confidentialityCleared": {
+    "defaultMessage": "{actor} cleared the confidential mark on {title}"
+  },
+  "activity.document.confidentialitySet": {
+    "defaultMessage": "{actor} marked {title} confidential"
+  },
+  "activity.document.created": {
+    "defaultMessage": "{actor} uploaded {title}"
+  },
+  "activity.document.executedCleared": {
+    "defaultMessage": "{actor} cleared the executed copy of {title}"
+  },
+  "activity.document.executedSet": {
+    "defaultMessage": "{version, select, unknown {{actor} pinned the executed copy of {title}} other {{actor} pinned version {version} of {title} as the executed copy}}"
+  },
+  "activity.document.hardDeleted": {
+    "defaultMessage": "{versions, plural, =0 {{actor} deleted {title} and its files} one {{actor} deleted {title} and its # version} other {{actor} deleted {title} and its # versions}}"
+  },
+  "activity.document.primarySet": {
+    "defaultMessage": "{actor} made {title} the primary document"
+  },
+  "activity.document.restored": {
+    "defaultMessage": "{actor} restored {title}"
+  },
+  "activity.document.updated": {
+    "defaultMessage": "{actor} edited the details of {title}"
+  },
+  "activity.document.versionAdded": {
+    "defaultMessage": "{version, select, unknown {{actor} added a version of {title}} other {{actor} added version {version} of {title}}}"
+  },
   "activity.empty": {
     "defaultMessage": "Nothing has happened to this record yet. Every change to it shows up here."
   },
@@ -120,7 +153,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} primaryCounterparty {Primary counterparty} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -940,6 +973,165 @@
   },
   "dialog.close": {
     "defaultMessage": "Close"
+  },
+  "documents.action.addVersion": {
+    "defaultMessage": "Add version"
+  },
+  "documents.action.archive": {
+    "defaultMessage": "Archive"
+  },
+  "documents.action.clearConfidential": {
+    "defaultMessage": "Clear confidential mark"
+  },
+  "documents.action.delete": {
+    "defaultMessage": "Delete"
+  },
+  "documents.action.editDetails": {
+    "defaultMessage": "Edit details"
+  },
+  "documents.action.makePrimary": {
+    "defaultMessage": "Make primary"
+  },
+  "documents.action.markConfidential": {
+    "defaultMessage": "Mark confidential"
+  },
+  "documents.action.restore": {
+    "defaultMessage": "Restore"
+  },
+  "documents.actionsFor": {
+    "defaultMessage": "Actions for {title}"
+  },
+  "documents.archivedPill": {
+    "defaultMessage": "Archived"
+  },
+  "documents.chain.toggle": {
+    "defaultMessage": "{open, select, true {Hide} other {Show}} the {count, plural, one {# earlier version} other {# earlier versions}} of {title}"
+  },
+  "documents.column.actions": {
+    "defaultMessage": "Actions"
+  },
+  "documents.column.kind": {
+    "defaultMessage": "Kind"
+  },
+  "documents.column.modified": {
+    "defaultMessage": "Modified"
+  },
+  "documents.column.name": {
+    "defaultMessage": "Name"
+  },
+  "documents.column.size": {
+    "defaultMessage": "Size"
+  },
+  "documents.column.uploadedBy": {
+    "defaultMessage": "Uploaded by"
+  },
+  "documents.column.version": {
+    "defaultMessage": "Version"
+  },
+  "documents.composer.choose": {
+    "defaultMessage": "Choose file"
+  },
+  "documents.composer.file": {
+    "defaultMessage": "File"
+  },
+  "documents.composer.fileRequired": {
+    "defaultMessage": "Choose a file to upload."
+  },
+  "documents.composer.kind": {
+    "defaultMessage": "Kind"
+  },
+  "documents.composer.noFile": {
+    "defaultMessage": "No file chosen"
+  },
+  "documents.composer.note": {
+    "defaultMessage": "Note"
+  },
+  "documents.composer.notePlaceholder": {
+    "defaultMessage": "What changed in this round"
+  },
+  "documents.composer.submit": {
+    "defaultMessage": "Upload"
+  },
+  "documents.composer.uploadTitle": {
+    "defaultMessage": "Upload document"
+  },
+  "documents.composer.versionTitle": {
+    "defaultMessage": "Add version"
+  },
+  "documents.current": {
+    "defaultMessage": "Current"
+  },
+  "documents.delete.body": {
+    "defaultMessage": "{title} and its {count, plural, one {# version} other {# versions}} are removed, and the stored files with them. You cannot undo this."
+  },
+  "documents.delete.confirmAction": {
+    "defaultMessage": "Delete {title}"
+  },
+  "documents.delete.confirmLabel": {
+    "defaultMessage": "Type {title} to confirm"
+  },
+  "documents.delete.error": {
+    "defaultMessage": "That document could not be deleted. Try again."
+  },
+  "documents.delete.title": {
+    "defaultMessage": "Delete this document?"
+  },
+  "documents.descriptionPrefix": {
+    "defaultMessage": "Description:"
+  },
+  "documents.details.description": {
+    "defaultMessage": "Description"
+  },
+  "documents.details.error": {
+    "defaultMessage": "Those details could not be saved. Try again."
+  },
+  "documents.details.name": {
+    "defaultMessage": "Name"
+  },
+  "documents.details.nameRequired": {
+    "defaultMessage": "Give the document a name."
+  },
+  "documents.details.submit": {
+    "defaultMessage": "Save"
+  },
+  "documents.details.title": {
+    "defaultMessage": "Edit details"
+  },
+  "documents.empty": {
+    "defaultMessage": "No documents on this contract yet."
+  },
+  "documents.executed": {
+    "defaultMessage": "Executed"
+  },
+  "documents.kind": {
+    "defaultMessage": "{kind, select, draft_ours {Draft · ours} redline_theirs {Redline · theirs} redline_ours {Redline · ours} executed {Executed} amendment {Amendment} other {Unknown}}"
+  },
+  "documents.notePrefix": {
+    "defaultMessage": "Note:"
+  },
+  "documents.pinExecuted": {
+    "defaultMessage": "Pin version {number} of {title} as the executed copy"
+  },
+  "documents.primary": {
+    "defaultMessage": "Primary"
+  },
+  "documents.section": {
+    "defaultMessage": "Documents"
+  },
+  "documents.showArchived": {
+    "defaultMessage": "Show archived"
+  },
+  "documents.upload": {
+    "defaultMessage": "Upload"
+  },
+  "documents.uploadError": {
+    "defaultMessage": "That file could not be uploaded. Try again."
+  },
+  "documents.uploadedBy": {
+    "defaultMessage": "Uploaded by {name}"
+  },
+  "documents.versionNumber": {
+    "defaultMessage": "v{number}"
   },
   "entities.archivedPill": {
     "defaultMessage": "Archived"

@@ -3472,3 +3472,1014 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
     expect(view.container.querySelector("svg.lucide-eye-off")).toBeNull();
   });
 });
+
+/**
+ * The Documents section of the record body (M11/2, M11/3, M11/4), drawn
+ * from the C4 mock: the heading with a count of what is on the record,
+ * the upload composer beside it, and one row per document — the version
+ * that matters now, with the rounds it supersedes opening underneath it.
+ *
+ * The panel DES-016 places in a wider sibling layer is not here — it
+ * lands with M12's rendering. What this asserts is the section, the
+ * count, the chain with its pin, a download per version, the composer
+ * that sends the kind and the note, the metadata edit, and the two
+ * CTR-014 designations: which document is the instrument, and which of
+ * its versions is the signed copy.
+ */
+describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)", () => {
+  /** One version of a chain, as the API answers it. */
+  const version = (over: Record<string, unknown> = {}) => ({
+    id: "ver-1",
+    versionNumber: 1,
+    kind: "draft_ours",
+    note: null,
+    originalFilename: "Orion_MSA_2026_draft.docx",
+    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    byteSize: 88_000,
+    checksumSha256: "a".repeat(64),
+    uploadedBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+    createdAt: "2026-08-11T09:00:00.000Z",
+    isCurrent: true,
+    /** The CTR-014 pin, which no upload ever sets: it is the team's own
+     * decision, never read off the round's kind. */
+    isExecuted: false,
+    ...over,
+  });
+
+  const DRAFT = {
+    id: "doc-1",
+    title: "Orion_MSA_2026_draft.docx",
+    description: null,
+    /** The first document uploaded is the instrument (CTR-014). */
+    isPrimary: true,
+    versions: [version()],
+    /** On the record's list and in its count (DOC-010). */
+    archivedAt: null,
+    /** Open to whoever reaches the contract, which is where every
+     * document starts (DD-014). */
+    isConfidential: false,
+    createdBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+    createdAt: "2026-08-11T09:00:00.000Z",
+    updatedAt: "2026-08-11T09:00:00.000Z",
+  };
+
+  const THEIRS = {
+    ...DRAFT,
+    id: "doc-2",
+    title: "Orion_MSA_2026_redline_orion.docx",
+    // A loose attachment beside the instrument, not the instrument.
+    isPrimary: false,
+    versions: [
+      version({
+        id: "ver-2",
+        kind: "redline_theirs",
+        originalFilename: "Orion_MSA_2026_redline_orion.docx",
+        byteSize: 102_000,
+      }),
+    ],
+  };
+
+  /** A document somebody else put on the record. The signed-in Legal
+   * Team Member is neither its uploader nor the record's Owner, so
+   * DD-014's flag is not theirs to decide (CTR-022). */
+  const SOMEONE_ELSES = {
+    ...DRAFT,
+    id: "doc-4",
+    title: "board_pack.pdf",
+    isPrimary: false,
+    createdBy: { id: "u1", displayName: "Ada Admin", image: null, archived: false },
+    versions: [version({ id: "ver-4", originalFilename: "board_pack.pdf" })],
+  };
+
+  /** One file narrowed to the contract's named team, on a record
+   * everybody can open (DD-014, M11/6). */
+  const WALLED = {
+    ...DRAFT,
+    id: "doc-5",
+    title: "board-memo.txt",
+    isPrimary: false,
+    isConfidential: true,
+    versions: [version({ id: "ver-5", originalFilename: "board-memo.txt" })],
+  };
+
+  /** Three rounds on one document, the third of them current — the
+   * chain a negotiation actually leaves behind. */
+  const CHAIN = {
+    ...DRAFT,
+    id: "doc-3",
+    title: "Orion Cloud — master services agreement",
+    description: "The main instrument. Clause 8 was the fight.",
+    versions: [
+      version({
+        id: "ver-a",
+        versionNumber: 1,
+        originalFilename: "round_1.docx",
+        isCurrent: false,
+      }),
+      version({
+        id: "ver-b",
+        versionNumber: 2,
+        kind: "redline_theirs",
+        note: "Their first pass. Clause 8 is the fight.",
+        originalFilename: "round_2.docx",
+        isCurrent: false,
+      }),
+      version({
+        id: "ver-c",
+        versionNumber: 3,
+        kind: "redline_ours",
+        note: "Held the indemnity.",
+        originalFilename: "round_3.docx",
+      }),
+    ],
+  };
+
+  /** The record stub, plus the documents read, the two uploads, the
+   * metadata edit, and DOC-010's two removals. */
+  function documentsApi(
+    rows: Record<string, unknown>[],
+    options: {
+      uploadFails?: string;
+      designationFails?: string;
+      removalFails?: string;
+      /** CTR-004's Owner, who is one of DD-014's three actors on every
+       * document of the record (CTR-022). Unassigned unless a test
+       * needs them. */
+      ownerId?: string;
+      /** The seam's own refusal of a metadata patch, which is the route
+       * DD-014's flag rides. */
+      editFails?: string;
+    } = {},
+    team = [person("u1", "creator")],
+  ) {
+    const record = recordApi(
+      contractRow(options.ownerId ? { manager: person(options.ownerId) } : {}),
+      team,
+    );
+    /** Every write the section made, in order, so a test can assert
+     * both the address and what rode in the form. */
+    const writes: { url: string; body: unknown }[] = [];
+    let current = rows;
+    /** The record's paper as the seam answers it: archived rows are off
+     * the list unless they were asked for (DOC-010). */
+    const paper = (includeArchived: boolean) =>
+      includeArchived ? current : current.filter((row) => row.archivedAt === null);
+    const handler = (call: StubCall): Response | undefined => {
+      const { pathname } = call.url;
+      if (pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
+        return json(200, {
+          documents: paper(call.url.searchParams.get("includeArchived") === "true"),
+        });
+      }
+      if (pathname === "/api/v1/contracts/42/documents" && call.method === "POST") {
+        writes.push({ url: pathname, body: call.body });
+        if (options.uploadFails) return problem(413, options.uploadFails);
+        const added = {
+          ...DRAFT,
+          id: "doc-new",
+          title: "counter_redline.docx",
+          // The first document on a record takes the designation; every
+          // one after it is a loose attachment (CTR-014).
+          isPrimary: current.length === 0,
+          versions: [version({ id: "ver-new", originalFilename: "counter_redline.docx" })],
+        };
+        current = [added, ...current];
+        return json(201, { document: added });
+      }
+      // Appending the next round to a document that already exists. The
+      // number is the server's to assign, so the answer states it.
+      const appended = /^\/api\/v1\/documents\/([^/]+)\/versions$/.exec(pathname);
+      if (appended && call.method === "POST") {
+        writes.push({ url: pathname, body: call.body });
+        if (options.uploadFails) return problem(413, options.uploadFails);
+        const target = current.find((row) => row.id === appended[1]);
+        if (!target) return problem(404, "No document exists with this reference.");
+        const chain = target.versions as Record<string, unknown>[];
+        const next = {
+          ...target,
+          versions: [
+            ...chain.map((row) => ({ ...row, isCurrent: false })),
+            version({
+              id: "ver-appended",
+              versionNumber: chain.length + 1,
+              kind: "redline_ours",
+              note: "Our counter.",
+              originalFilename: "counter_redline.docx",
+            }),
+          ],
+        };
+        current = current.map((row) => (row === target ? next : row));
+        return json(201, { document: next });
+      }
+      // Which document is the instrument (CTR-014). The seam answers
+      // the record's whole paper, because two rows move: the one that
+      // takes the designation and the one that loses it.
+      const named = /^\/api\/v1\/documents\/([^/]+)\/primary$/.exec(pathname);
+      if (named && call.method === "POST") {
+        writes.push({ url: pathname, body: call.body });
+        if (options.designationFails) return problem(409, options.designationFails);
+        current = current.map((row) => ({ ...row, isPrimary: row.id === named[1] }));
+        return json(200, { documents: paper(false) });
+      }
+      // DOC-010's soft delete and its undo. Both answer the one
+      // document, because neither changes any other row.
+      const removed = /^\/api\/v1\/documents\/([^/]+)\/(archive|restore)$/.exec(pathname);
+      if (removed && call.method === "POST") {
+        writes.push({ url: `${pathname}`, body: call.body });
+        if (options.removalFails) return problem(409, options.removalFails);
+        const target = current.find((row) => row.id === removed[1]);
+        if (!target) return problem(404, "No document exists with this reference.");
+        const next = {
+          ...target,
+          archivedAt: removed[2] === "archive" ? "2026-08-14T10:00:00.000Z" : null,
+        };
+        current = current.map((row) => (row === target ? next : row));
+        return json(200, { document: next });
+      }
+      // The Administrator's erasure. It answers the record's whole
+      // paper, because the instrument may have gone with it.
+      const erased = /^\/api\/v1\/documents\/([^/]+)$/.exec(pathname);
+      if (erased && call.method === "DELETE") {
+        writes.push({ url: `${pathname}:DELETE`, body: call.body });
+        if (options.removalFails) return problem(400, options.removalFails);
+        current = current.filter((row) => row.id !== erased[1]);
+        return json(200, { documents: paper(false) });
+      }
+      // The executed pin (CTR-014), set and cleared at the document's
+      // own address: the pin is one column on the document, and no
+      // version row is touched by either.
+      const pinned = /^\/api\/v1\/documents\/([^/]+)\/executed-version$/.exec(pathname);
+      if (pinned && (call.method === "POST" || call.method === "DELETE")) {
+        writes.push({ url: `${pathname}:${call.method}`, body: call.body });
+        if (options.designationFails) return problem(409, options.designationFails);
+        const target = current.find((row) => row.id === pinned[1]);
+        if (!target) return problem(404, "No document exists with this reference.");
+        const wanted =
+          call.method === "POST" ? (call.body as { versionId: string }).versionId : null;
+        const next = {
+          ...target,
+          versions: (target.versions as Record<string, unknown>[]).map((row) => ({
+            ...row,
+            isExecuted: row.id === wanted,
+          })),
+        };
+        current = current.map((row) => (row === target ? next : row));
+        return json(200, { document: next });
+      }
+      const edited = /^\/api\/v1\/documents\/([^/]+)$/.exec(pathname);
+      if (edited && call.method === "PATCH") {
+        writes.push({ url: pathname, body: call.body });
+        if (options.editFails) return problem(403, options.editFails);
+        const target = current.find((row) => row.id === edited[1]);
+        if (!target) return problem(404, "No document exists with this reference.");
+        const next = { ...target, ...(call.body as Record<string, unknown>) };
+        current = current.map((row) => (row.id === next.id ? next : row));
+        return json(200, { document: next });
+      }
+      return record.handler(call);
+    };
+    return { handler, writes };
+  }
+
+  const documentsSection = () => screen.findByRole("region", { name: /^Documents/ });
+
+  /** The composer, opened from whichever control opens it. */
+  async function compose(
+    user: ReturnType<typeof userEvent.setup>,
+    section: HTMLElement,
+    name: string,
+  ) {
+    await user.click(within(section).getByRole("button", { name }));
+    return screen.findByRole("dialog");
+  }
+
+  /**
+   * One act from a document row's overflow menu.
+   *
+   * Everything a viewer may do to a document lives behind one trigger
+   * (DES-025's pattern), so a test reaches it the way a person does:
+   * open the row's menu, then pick the verb.
+   */
+  async function act(
+    user: ReturnType<typeof userEvent.setup>,
+    section: HTMLElement,
+    title: string,
+    verb: string,
+  ) {
+    await user.click(within(section).getByRole("button", { name: `Actions for ${title}` }));
+    await user.click(await screen.findByRole("menuitem", { name: verb }));
+  }
+
+  /** The verbs one document row's menu offers this viewer. */
+  async function menuVerbs(
+    user: ReturnType<typeof userEvent.setup>,
+    section: HTMLElement,
+    title: string,
+  ): Promise<string[]> {
+    await user.click(within(section).getByRole("button", { name: `Actions for ${title}` }));
+    const menu = await screen.findByRole("menu");
+    return within(menu)
+      .getAllByRole("menuitem")
+      .map((item) => item.textContent ?? "");
+  }
+
+  it("draws the section with a count of the paper on the record", async () => {
+    stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT, THEIRS]).handler });
+    renderAt("/contracts/42");
+
+    const section = await documentsSection();
+    expect(within(section).getByRole("heading", { level: 2, name: "Documents" })).toBeVisible();
+    // The count is what the list holds — the API leaves out what this
+    // viewer may not see, so it can never announce an omission.
+    expect(within(section).getByText("2")).toBeVisible();
+    expect(within(section).getAllByRole("row")).toHaveLength(3); // header + two
+  });
+
+  it("names each document, marks the version that matters now, and makes the name its download", async () => {
+    stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT]).handler });
+    renderAt("/contracts/42");
+
+    const section = await documentsSection();
+    const link = within(section).getByRole("link", { name: "Orion_MSA_2026_draft.docx" });
+    // Straight at the version's own address: every open is a download
+    // in M11, and there is no presigned URL to build.
+    expect(link).toHaveAttribute("href", "/api/v1/documents/doc-1/versions/ver-1/download");
+    expect(link).toHaveAttribute("download", "Orion_MSA_2026_draft.docx");
+    // The kind, the number, the pin, the size, and when it landed, as
+    // the C4 mock draws them.
+    expect(within(section).getByText("Draft · ours")).toBeVisible();
+    expect(within(section).getByText("v1")).toBeVisible();
+    expect(within(section).getByText("Current")).toBeVisible();
+    expect(within(section).getByText("88 kB")).toBeVisible();
+  });
+
+  it("says so plainly when the record has no paper on it", async () => {
+    stubApi({ signedIn: MEMBER, extra: documentsApi([]).handler });
+    renderAt("/contracts/42");
+
+    const section = await documentsSection();
+    expect(within(section).getByText("No documents on this contract yet.")).toBeVisible();
+    expect(within(section).getByText("0")).toBeVisible();
+  });
+
+  it("shows the current version first and opens the rounds it supersedes", async () => {
+    stubApi({ signedIn: MEMBER, extra: documentsApi([CHAIN]).handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    // Collapsed, the section answers "which file matters now" and
+    // nothing else: the current round, under the document's own name.
+    expect(within(section).getAllByRole("row")).toHaveLength(2); // header + current
+    expect(within(section).getByText("v3")).toBeVisible();
+    expect(within(section).getByText("Current")).toBeVisible();
+    expect(within(section).getByText("The main instrument. Clause 8 was the fight.")).toBeVisible();
+    expect(within(section).getByText("Held the indemnity.")).toBeVisible();
+
+    const toggle = within(section).getByRole("button", {
+      name: /Show the 2 earlier versions of Orion Cloud/,
+    });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await user.click(toggle);
+
+    // The whole chain, newest of the superseded rounds first, each its
+    // own download — a superseded version is not a hidden one.
+    expect(within(section).getAllByRole("row")).toHaveLength(4);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    const second = within(section).getByRole("link", { name: "round_2.docx" });
+    expect(second).toHaveAttribute("href", "/api/v1/documents/doc-3/versions/ver-b/download");
+    expect(within(section).getByText("Their first pass. Clause 8 is the fight.")).toBeVisible();
+    expect(within(section).getByRole("link", { name: "round_1.docx" })).toHaveAttribute(
+      "href",
+      "/api/v1/documents/doc-3/versions/ver-a/download",
+    );
+    // Ordered newest first under the current round, and the pin is on
+    // the round that leads.
+    const rows = within(section).getAllByRole("row").slice(1);
+    expect(rows.map((row) => within(row).getByText(/^v\d+$/).textContent)).toEqual([
+      "v3",
+      "v2",
+      "v1",
+    ]);
+    expect(within(rows[0]!).getByText("Current")).toBeVisible();
+    for (const row of rows.slice(1)) {
+      expect(within(row).queryByText("Current")).not.toBeInTheDocument();
+    }
+  });
+
+  it("draws no disclosure for a document with one version", async () => {
+    stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT]).handler });
+    renderAt("/contracts/42");
+
+    const section = await documentsSection();
+    expect(
+      within(section).queryByRole("button", { name: /earlier version/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("uploads through the composer, sending the kind and the note with the file", async () => {
+    const api = documentsApi([DRAFT]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    const dialog = await compose(user, section, "Upload");
+    await user.upload(
+      within(dialog).getByLabelText("File"),
+      new File(["counter redline bytes"], "counter_redline.docx", {
+        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      }),
+    );
+    await user.selectOptions(within(dialog).getByLabelText("Kind"), "redline_ours");
+    await user.type(within(dialog).getByLabelText("Note"), "Our counter to their clause 8.");
+    await user.click(within(dialog).getByRole("button", { name: "Upload" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    const form = api.writes[0]!.body as FormData;
+    expect(api.writes[0]!.url).toBe("/api/v1/contracts/42/documents");
+    expect(form.get("kind")).toBe("redline_ours");
+    expect(form.get("note")).toBe("Our counter to their clause 8.");
+    // The fields ride before the file, which is the order the seam
+    // reads them in.
+    expect([...form.keys()]).toEqual(["kind", "note", "file"]);
+    // Newest first, and the count follows.
+    expect(
+      await within(section).findByRole("link", { name: "counter_redline.docx" }),
+    ).toBeInTheDocument();
+    expect(within(section).getByText("2")).toBeVisible();
+  });
+
+  it("refuses to send a composer with no file on it", async () => {
+    const api = documentsApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    const dialog = await compose(user, section, "Upload");
+    await user.click(within(dialog).getByRole("button", { name: "Upload" }));
+
+    expect(await within(dialog).findByText("Choose a file to upload.")).toBeVisible();
+    expect(api.writes).toEqual([]);
+  });
+
+  it("appends the next version to a document from its own row", async () => {
+    const api = documentsApi([DRAFT]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Add version");
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("heading", { name: "Add version" })).toBeVisible();
+    await user.upload(
+      within(dialog).getByLabelText("File"),
+      new File(["our counter"], "counter_redline.docx", { type: "application/pdf" }),
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Upload" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    // The document's own address, not the contract's: the chain it
+    // appends to is the one this row draws.
+    expect(api.writes[0]!.url).toBe("/api/v1/documents/doc-1/versions");
+    // The new round is current, and the one before it is now history —
+    // still there, still a document of its own count of one.
+    expect(await within(section).findByText("v2")).toBeVisible();
+    expect(within(section).getByText("1")).toBeVisible();
+    expect(
+      within(section).getByRole("button", { name: /Show the 1 earlier version of/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("renames a document and edits its description, leaving the file's own name alone", async () => {
+    const api = documentsApi([DRAFT]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Edit details");
+    const dialog = await screen.findByRole("dialog");
+    const name = within(dialog).getByLabelText("Name");
+    await user.clear(name);
+    await user.type(name, "Orion Cloud — MSA");
+    await user.type(within(dialog).getByLabelText("Description"), "The main instrument.");
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]).toEqual({
+      url: "/api/v1/documents/doc-1",
+      body: { title: "Orion Cloud — MSA", description: "The main instrument." },
+    });
+    // The record reads as renamed, and the download still offers the
+    // file under the name it arrived with.
+    const link = await within(section).findByRole("link", { name: "Orion Cloud — MSA" });
+    expect(link).toHaveAttribute("download", "Orion_MSA_2026_draft.docx");
+    expect(within(section).getByText("The main instrument.")).toBeVisible();
+  });
+
+  it("refuses to send a rename with no name in it", async () => {
+    const api = documentsApi([DRAFT]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Edit details");
+    const dialog = await screen.findByRole("dialog");
+    await user.clear(within(dialog).getByLabelText("Name"));
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    expect(await within(dialog).findByText("Give the document a name.")).toBeVisible();
+    expect(api.writes).toEqual([]);
+  });
+
+  it("reports the seam's own refusal when the file is turned away", async () => {
+    const api = documentsApi([], { uploadFails: "That file is over the 100 MB upload limit." });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    const dialog = await compose(user, section, "Upload");
+    await user.upload(
+      within(dialog).getByLabelText("File"),
+      new File(["far too much"], "enormous.pdf", { type: "application/pdf" }),
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Upload" }));
+
+    expect(
+      await within(dialog).findByText("That file is over the 100 MB upload limit."),
+    ).toBeVisible();
+    expect(within(section).getByText("No documents on this contract yet.")).toBeVisible();
+  });
+
+  it("marks the document the record calls its instrument", async () => {
+    stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT, THEIRS]).handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    // One mark on the record, on the row it is about.
+    expect(within(section).getAllByText("Primary")).toHaveLength(1);
+    // And no act offered on the row that already holds it: absent, not
+    // disabled, and the mark beside the name is what says why.
+    expect(await menuVerbs(user, section, "Orion_MSA_2026_draft.docx")).not.toContain(
+      "Make primary",
+    );
+    await user.keyboard("{Escape}");
+    expect(await menuVerbs(user, section, "Orion_MSA_2026_redline_orion.docx")).toContain(
+      "Make primary",
+    );
+  });
+
+  it("moves the designation to another document on the record", async () => {
+    const api = documentsApi([DRAFT, THEIRS]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await act(user, section, "Orion_MSA_2026_redline_orion.docx", "Make primary");
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]!.url).toBe("/api/v1/documents/doc-2/primary");
+    // Still exactly one mark, and it is on the other row now: the
+    // section redraws from the whole list the seam answered with, so
+    // the row that lost the designation is not left claiming it.
+    await waitFor(() => expect(within(section).getAllByText("Primary")).toHaveLength(1));
+    expect(await menuVerbs(user, section, "Orion_MSA_2026_draft.docx")).toContain("Make primary");
+  });
+
+  it("pins a superseded round as the executed copy, and clears it again", async () => {
+    const api = documentsApi([CHAIN]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(
+      within(section).getByRole("button", { name: /Show the 2 earlier versions of/ }),
+    );
+    // The signed copy is often not the last round: this contract was
+    // signed in round two and redlined again in round three.
+    await user.click(
+      within(section).getByRole("button", {
+        name: "Pin version 2 of Orion Cloud — master services agreement as the executed copy",
+      }),
+    );
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]).toEqual({
+      url: "/api/v1/documents/doc-3/executed-version:POST",
+      body: { versionId: "ver-b" },
+    });
+    expect(await within(section).findByText("Executed")).toBeVisible();
+    // Current and executed are two marks on two rows, not one fact.
+    expect(within(section).getByText("Current")).toBeVisible();
+
+    // The same control, named for what it toggles: the state is on
+    // `aria-pressed`, not in the name.
+    const pin = within(section).getByRole("button", {
+      name: "Pin version 2 of Orion Cloud — master services agreement as the executed copy",
+    });
+    await waitFor(() => expect(pin).toHaveAttribute("aria-pressed", "true"));
+    await user.click(pin);
+
+    await waitFor(() => expect(api.writes).toHaveLength(2));
+    expect(api.writes[1]!.url).toBe("/api/v1/documents/doc-3/executed-version:DELETE");
+    // Every round is still there: the pin is one column on the
+    // document, and clearing it takes nothing else with it.
+    await waitFor(() => expect(within(section).queryByText("Executed")).not.toBeInTheDocument());
+    expect(within(section).getByRole("link", { name: "round_2.docx" })).toBeInTheDocument();
+  });
+
+  it("never reads the pin off a round's kind", async () => {
+    const signed = {
+      ...DRAFT,
+      id: "doc-signed",
+      title: "Orion_MSA_2026_signed.pdf",
+      versions: [version({ id: "ver-signed", kind: "executed" })],
+    };
+    stubApi({ signedIn: MEMBER, extra: documentsApi([signed]).handler });
+    renderAt("/contracts/42");
+
+    const section = await documentsSection();
+    // The kind is what the uploader called this round; the pin is what
+    // the team decided, and nobody has decided yet. One "Executed" on
+    // the row — the kind pill — and none beside the version number.
+    expect(within(section).getAllByText("Executed")).toHaveLength(1);
+    expect(
+      within(section).getByRole("button", {
+        name: "Pin version 1 of Orion_MSA_2026_signed.pdf as the executed copy",
+      }),
+    ).toBeVisible();
+  });
+
+  it("reports the seam's own refusal when a designation is turned down", async () => {
+    const api = documentsApi([DRAFT, THEIRS], {
+      designationFails: "That document is already the contract's primary document.",
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await act(user, section, "Orion_MSA_2026_redline_orion.docx", "Make primary");
+
+    expect(
+      await within(section).findByText("That document is already the contract's primary document."),
+    ).toBeVisible();
+    // Nothing moved: the section draws what the record says, not what
+    // the click hoped for.
+    expect(within(section).getAllByText("Primary")).toHaveLength(1);
+  });
+
+  it("offers a Contributor the list and the download, and no control that writes", async () => {
+    const api = documentsApi([CHAIN], {}, [person("u1", "creator"), person("u3", "contributor")]);
+    stubApi({
+      signedIn: CONTRIBUTOR,
+      extra: (call) =>
+        ["/api/v1/contracts/options", "/api/v1/entities"].includes(call.url.pathname)
+          ? problem(403, "You do not have permission to perform this action.")
+          : api.handler(call),
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    // They read and download what they were added to work on (DD-015),
+    // history included.
+    await user.click(
+      within(section).getByRole("button", { name: /Show the 2 earlier versions of/ }),
+    );
+    expect(within(section).getByRole("link", { name: "round_1.docx" })).toBeInTheDocument();
+    // Every control that writes is absent rather than disabled — the
+    // convention every other card on this page follows. Their write
+    // grid arrives in M23.
+    expect(within(section).queryByRole("button", { name: "Upload" })).not.toBeInTheDocument();
+    expect(within(section).queryByRole("button", { name: /^Actions for/ })).not.toBeInTheDocument();
+    expect(within(section).queryByRole("button", { name: /^Pin version/ })).not.toBeInTheDocument();
+    expect(within(section).queryByRole("switch")).not.toBeInTheDocument();
+  });
+
+  it("freezes the section's controls on an archived record", async () => {
+    const record = recordApi(contractRow({ archivedAt: "2026-08-02T00:00:00.000Z" }));
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "GET"
+          ? json(200, { documents: [DRAFT] })
+          : record.handler(call),
+    });
+    renderAt("/contracts/42");
+
+    const section = await documentsSection();
+    expect(within(section).queryByRole("button", { name: "Upload" })).not.toBeInTheDocument();
+    expect(within(section).queryByRole("button", { name: /^Actions for/ })).not.toBeInTheDocument();
+    expect(within(section).queryByRole("button", { name: /^Pin version/ })).not.toBeInTheDocument();
+    expect(within(section).queryByRole("switch")).not.toBeInTheDocument();
+    // Reading it is not editing it: the download and the marks stay.
+    expect(
+      within(section).getByRole("link", { name: "Orion_MSA_2026_draft.docx" }),
+    ).toBeInTheDocument();
+    expect(within(section).getByText("Primary")).toBeVisible();
+  });
+
+  it("archives a document off the list and out of the count", async () => {
+    const api = documentsApi([DRAFT, THEIRS]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    expect(within(section).getByText("2")).toBeVisible();
+    // No confirmation: archiving destroys nothing, and Restore is the
+    // way back (DOC-010).
+    await act(user, section, "Orion_MSA_2026_redline_orion.docx", "Archive");
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]!.url).toBe("/api/v1/documents/doc-2/archive");
+    await waitFor(() =>
+      expect(
+        within(section).queryByRole("link", { name: "Orion_MSA_2026_redline_orion.docx" }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(within(section).getByText("1")).toBeVisible();
+  });
+
+  it("shows the archived rows on demand and restores one back onto the list", async () => {
+    const api = documentsApi([DRAFT, { ...THEIRS, archivedAt: "2026-08-13T09:00:00.000Z" }]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    // Off the list and out of the count until they are asked for.
+    expect(within(section).getByText("1")).toBeVisible();
+    expect(
+      within(section).queryByRole("link", { name: "Orion_MSA_2026_redline_orion.docx" }),
+    ).not.toBeInTheDocument();
+
+    await user.click(within(section).getByRole("switch"));
+
+    // Drawn beside the live ones, marked for what they are, and still
+    // downloadable — nothing was destroyed.
+    const link = await within(section).findByRole("link", {
+      name: "Orion_MSA_2026_redline_orion.docx",
+    });
+    expect(link).toHaveAttribute("href", "/api/v1/documents/doc-2/versions/ver-2/download");
+    expect(within(section).getByText("Archived")).toBeVisible();
+    // The count still says what is on the record, not what is on screen.
+    expect(within(section).getByText("1")).toBeVisible();
+
+    await act(user, section, "Orion_MSA_2026_redline_orion.docx", "Restore");
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]!.url).toBe("/api/v1/documents/doc-2/restore");
+    await waitFor(() => expect(within(section).getByText("2")).toBeVisible());
+    expect(within(section).queryByText("Archived")).not.toBeInTheDocument();
+  });
+
+  it("offers an archived document its way back and nothing that would be refused", async () => {
+    const api = documentsApi([{ ...DRAFT, archivedAt: "2026-08-13T09:00:00.000Z" }]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(within(section).getByRole("switch"));
+    await within(section).findByText("Archived");
+
+    // A Legal Team Member gets the one act the seam still takes. Every
+    // other write on an archived document is refused until it is
+    // restored, so a control for one would be a dead end — and the
+    // erasure is the Administrator's, not theirs.
+    expect(await menuVerbs(user, section, "Orion_MSA_2026_draft.docx")).toEqual(["Restore"]);
+    await user.keyboard("{Escape}");
+    expect(within(section).queryByRole("button", { name: /^Pin version/ })).not.toBeInTheDocument();
+  });
+
+  it("keeps the erasure off a Legal Team Member's menu", async () => {
+    stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT]).handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    // They archive all day and destroy nothing (DOC-010). The seam
+    // refuses them regardless; the menu is what keeps a control from
+    // offering a dead end. The Administrator's own menu is asserted by
+    // the typed-confirmation test below.
+    const member = await documentsSection();
+    expect(await menuVerbs(user, member, "Orion_MSA_2026_draft.docx")).toEqual([
+      "Add version",
+      "Edit details",
+      // They uploaded this one, so the flag is theirs to decide
+      // (CTR-022). The next test is the row where it is not.
+      "Mark confidential",
+      "Archive",
+    ]);
+  });
+
+  it("marks a confidential document, and draws nothing where one was left out", async () => {
+    stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT, WALLED]).handler });
+    renderAt("/contracts/42");
+
+    // DES-009 Tier 1, on the row it is about: this file is narrowed to
+    // the contract's named team even though the record is open.
+    const section = await documentsSection();
+    const marks = within(section).getAllByRole("img", { name: "Confidential" });
+    expect(marks).toHaveLength(1);
+    expect(within(section).getByText("board-memo.txt").closest("tr")).toContainElement(marks[0]!);
+    expect(within(section).getByText("2")).toBeVisible();
+  });
+
+  it("draws no placeholder for a document the seam left out, and counts what it was given", async () => {
+    // What an outside viewer's request actually answers: the walled row
+    // is not in it. The section has no hidden state to draw, so the
+    // omission is silent by construction (DD-014).
+    stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT]).handler });
+    renderAt("/contracts/42");
+
+    const section = await documentsSection();
+    expect(within(section).queryByRole("img", { name: "Confidential" })).not.toBeInTheDocument();
+    expect(within(section).queryByText("board-memo.txt")).not.toBeInTheDocument();
+    expect(within(section).getByText("1")).toBeVisible();
+    expect(within(section).getAllByRole("row")).toHaveLength(2); // header + one
+  });
+
+  it("lets the person who uploaded a document mark it confidential, and clear it again", async () => {
+    const api = documentsApi([DRAFT]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Mark confidential");
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]).toEqual({
+      url: "/api/v1/documents/doc-1",
+      body: { isConfidential: true },
+    });
+    expect(await within(section).findByRole("img", { name: "Confidential" })).toBeVisible();
+
+    // One item, two states: the words are what tell the set from the
+    // clear, because DES-009 gives confidentiality one glyph.
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Clear confidential mark");
+    await waitFor(() => expect(api.writes).toHaveLength(2));
+    expect(api.writes[1]).toEqual({
+      url: "/api/v1/documents/doc-1",
+      body: { isConfidential: false },
+    });
+    await waitFor(() =>
+      expect(within(section).queryByRole("img", { name: "Confidential" })).not.toBeInTheDocument(),
+    );
+  });
+
+  it("offers the flag to the record's Owner, who uploaded nothing", async () => {
+    const api = documentsApi([SOMEONE_ELSES], { ownerId: "u2" });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    // CTR-022's clause: the person accountable for the record decides
+    // its files' audience, team row or no team row.
+    const section = await documentsSection();
+    expect(await menuVerbs(user, section, "board_pack.pdf")).toContain("Mark confidential");
+  });
+
+  it("reports the seam's own refusal when the flag is turned down, and keeps the mark as it was", async () => {
+    const api = documentsApi([WALLED], {
+      editFails:
+        "Only an Administrator, the person who uploaded this document, or " +
+        "the contract's Owner can change this.",
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await act(user, section, "board-memo.txt", "Clear confidential mark");
+
+    // The seam is the rule; the menu only keeps a control from offering
+    // a dead end. When the two disagree, the seam's words are what the
+    // section says.
+    expect(
+      await within(section).findByText(
+        "Only an Administrator, the person who uploaded this document, or " +
+          "the contract's Owner can change this.",
+      ),
+    ).toBeVisible();
+    expect(within(section).getByRole("img", { name: "Confidential" })).toBeVisible();
+  });
+
+  it("keeps the flag off the menu for a viewer who is none of the three", async () => {
+    stubApi({ signedIn: MEMBER, extra: documentsApi([SOMEONE_ELSES]).handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    // On the record, working on it, and that is not a claim on who else
+    // may see this file. The seam refuses them 403 regardless; the menu
+    // is what keeps a control from offering a dead end.
+    const section = await documentsSection();
+    expect(await menuVerbs(user, section, "board_pack.pdf")).not.toContain("Mark confidential");
+  });
+
+  it("takes a typed name before it destroys a document, and sends it to the seam", async () => {
+    const api = documentsApi([DRAFT, THEIRS]);
+    stubApi({ signedIn: ADMIN, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    expect(await menuVerbs(user, section, "Orion_MSA_2026_draft.docx")).toContain("Delete");
+    await user.keyboard("{Escape}");
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Delete");
+
+    const dialog = await screen.findByRole("dialog");
+    // The consequence before the verb: the chain and the stored files
+    // go, and there is no undo.
+    expect(
+      within(dialog).getByText(/Orion_MSA_2026_draft.docx and its 1 version are removed/),
+    ).toBeVisible();
+    const confirm = within(dialog).getByRole("button", {
+      name: "Delete Orion_MSA_2026_draft.docx",
+    });
+    expect(confirm).toBeDisabled();
+
+    // A near miss is not the name.
+    const box = within(dialog).getByLabelText("Type Orion_MSA_2026_draft.docx to confirm");
+    await user.type(box, "Orion_MSA_2026_draft.doc");
+    expect(confirm).toBeDisabled();
+    await user.type(box, "x");
+    await waitFor(() => expect(confirm).toBeEnabled());
+    await user.click(confirm);
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    // The typed name rides to the seam: the dialog is one half of the
+    // rule, and the seam is where it holds.
+    expect(api.writes[0]).toEqual({
+      url: "/api/v1/documents/doc-1:DELETE",
+      body: { confirmTitle: "Orion_MSA_2026_draft.docx" },
+    });
+    await waitFor(() =>
+      expect(
+        within(section).queryByRole("link", { name: "Orion_MSA_2026_draft.docx" }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(within(section).getByText("1")).toBeVisible();
+  });
+
+  it("reads a refused erasure inside the dialog, where the dialog has not covered it", async () => {
+    // The refusal is reachable: a rename that lands between the dialog
+    // opening and Delete arriving makes the typed name the wrong one.
+    // The section's own note sits behind the open dialog, so a refusal
+    // reported there reads nowhere at all.
+    const api = documentsApi([DRAFT], {
+      removalFails: "Type the document's name exactly to delete it.",
+    });
+    stubApi({ signedIn: ADMIN, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Delete");
+
+    const dialog = await screen.findByRole("dialog");
+    await user.type(
+      within(dialog).getByLabelText("Type Orion_MSA_2026_draft.docx to confirm"),
+      "Orion_MSA_2026_draft.docx",
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: "Delete Orion_MSA_2026_draft.docx" }),
+    );
+
+    expect(
+      await within(dialog).findByText("Type the document's name exactly to delete it."),
+    ).toBeVisible();
+    // The dialog stays: the typing is still there to correct.
+    expect(screen.getByRole("dialog")).toBeVisible();
+    // Nothing moved. Queried by text, not by role: the open dialog
+    // hides the rest of the page from the accessibility tree.
+    expect(within(section).getByText("Orion_MSA_2026_draft.docx")).toBeInTheDocument();
+  });
+
+  it("reports the seam's own refusal when a removal is turned down", async () => {
+    const api = documentsApi([DRAFT], { removalFails: "This document is already archived." });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Archive");
+
+    expect(await within(section).findByText("This document is already archived.")).toBeVisible();
+    // Nothing moved: the section draws what the record says.
+    expect(
+      within(section).getByRole("link", { name: "Orion_MSA_2026_draft.docx" }),
+    ).toBeInTheDocument();
+    expect(within(section).getByText("1")).toBeVisible();
+  });
+});

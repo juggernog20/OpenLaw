@@ -12,6 +12,8 @@ import { fileURLToPath } from "node:url";
 import { createDb, runMigrations } from "@openlaw/db";
 import { buildApp } from "./app.js";
 import { createMailerResolver } from "./lib/mailer.js";
+import { createStorageFromEnv } from "./lib/storage/config.js";
+import { maxUploadBytes } from "./lib/uploads.js";
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -34,6 +36,27 @@ const resolveMailer = createMailerResolver(db, {
   url: process.env.SMTP_URL,
   from: process.env.SMTP_FROM,
 });
+
+// DOC-009/TECH-014: the storage driver is chosen here, at startup, and
+// the adapter is injected — no module below ever reads the environment
+// for it, or knows which driver it got. The local filesystem driver is
+// the default; STORAGE_DRIVER=s3 points the install at an object store.
+// A configuration fault stops the boot rather than silently falling back
+// to a local disk nobody would think to look at.
+const storage = (function readStorage() {
+  try {
+    return createStorageFromEnv(process.env);
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  }
+})();
+
+// The upload ceiling, in whole mebibytes, read here for the storage
+// root's reason: startup reads the environment, and no module does. An
+// unreadable value falls back to the default rather than refusing to
+// boot (see maxUploadBytes).
+const uploadCeiling = maxUploadBytes(process.env.MAX_UPLOAD_MB);
 
 // BASE_URL anchors emailed links (set-password, magic links) and origin
 // checks. The localhost default exists for development; a production
@@ -71,6 +94,8 @@ const app = await buildApp(
       disableRateLimit: process.env.AUTH_RATE_LIMIT === "off",
     },
     resolveMailer,
+    storage,
+    maxUploadBytes: uploadCeiling,
     webDist: webDistPresent ? webDist : undefined,
   },
   { logger: true },

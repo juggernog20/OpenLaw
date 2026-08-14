@@ -91,6 +91,7 @@ describe("requireRole", () => {
       db: harness.db,
       config: TEST_AUTH_CONFIG,
       resolveMailer: fixedMailerResolver(new CapturingMailer()),
+      storage: harness.storage,
     });
     guarded.get(
       "/api/v1/admin-only",

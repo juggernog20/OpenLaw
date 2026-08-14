@@ -6,6 +6,9 @@
  * factory production uses. Tests assert only at the HTTP seam.
  */
 
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 import { activityLog, asc, createDb, eq, orgSettings, runMigrations, type Db } from "@openlaw/db";
 import { buildApp } from "../app.js";
@@ -16,6 +19,8 @@ import {
   type MailerResolver,
   type MailMessage,
 } from "../lib/mailer.js";
+import type { StorageAdapter } from "../lib/storage/adapter.js";
+import { createLocalStorage } from "../lib/storage/local.js";
 
 /** Shared by every test app so session cookies verify across instances. */
 export const TEST_AUTH_CONFIG: AuthConfig = {
@@ -123,6 +128,26 @@ export function fixedMailerResolver(mailer: Mailer): MailerResolver {
   return () => Promise.resolve({ source: "env", from: TEST_SMTP_ENV.from, mailer });
 }
 
+export interface TestStorage {
+  storage: StorageAdapter;
+  /** Removes the temporary root. Safe to call more than once. */
+  cleanup: () => Promise<void>;
+}
+
+/**
+ * The storage double is the real local filesystem driver over a
+ * temporary directory (DOC-009): the TECH-014 rule that tests run
+ * production code, applied to files as it is to Postgres. Nothing here
+ * is a mock — only the root is throwaway.
+ */
+export async function createTestStorage(): Promise<TestStorage> {
+  const root = await mkdtemp(join(tmpdir(), "openlaw-test-files-"));
+  return {
+    storage: createLocalStorage({ root }),
+    cleanup: () => rm(root, { recursive: true, force: true }),
+  };
+}
+
 export interface TestHarness {
   app: Awaited<ReturnType<typeof buildApp>>;
   db: Db;
@@ -135,15 +160,30 @@ export interface TestHarness {
    * like production, with sends still captured when configured.
    */
   smtpEnv: { url: string; from: string } | null;
+  /** The injected storage adapter — the local driver over a temporary root. */
+  storage: StorageAdapter;
   stop: () => Promise<void>;
 }
 
-export async function startHarness(): Promise<TestHarness> {
+/** What a suite may vary about the app the harness builds. */
+export interface HarnessOptions {
+  /**
+   * The upload ceiling in bytes. Left unset, the production default
+   * applies. A suite that has to see an oversized upload refused sets a
+   * small one, so the refusal is tested with a handful of bytes rather
+   * than with a hundred megabytes of them.
+   */
+  maxUploadBytes?: number;
+}
+
+export async function startHarness(options: HarnessOptions = {}): Promise<TestHarness> {
   const container: StartedPostgreSqlContainer = await new PostgreSqlContainer(
     "postgres:16-alpine",
   ).start();
-  // The container must come down on every path: a leaked container masks
-  // the original failure in the suite output and outlives the test run.
+  // The container and the temporary storage root must come down on every
+  // path: a leak masks the original failure in the suite output and
+  // outlives the test run.
+  let cleanupStorage: (() => Promise<void>) | undefined;
   try {
     const db = createDb(container.getConnectionUri());
     await runMigrations(db);
@@ -163,12 +203,21 @@ export async function startHarness(): Promise<TestHarness> {
         ? { source: "app", from: row.smtpFrom, mailer }
         : { source: "unset", from: null, mailer: createUnconfiguredMailer() };
     };
-    const app = await buildApp({ db, config: TEST_AUTH_CONFIG, resolveMailer });
+    const { storage, cleanup } = await createTestStorage();
+    cleanupStorage = cleanup;
+    const app = await buildApp({
+      db,
+      config: TEST_AUTH_CONFIG,
+      resolveMailer,
+      storage,
+      maxUploadBytes: options.maxUploadBytes,
+    });
     await app.ready();
     return {
       app,
       db,
       mailer,
+      storage,
       get smtpEnv() {
         return smtpEnv;
       },
@@ -180,12 +229,20 @@ export async function startHarness(): Promise<TestHarness> {
           await app.close();
           await db.$client.end();
         } finally {
-          await container.stop();
+          try {
+            await cleanup();
+          } finally {
+            await container.stop();
+          }
         }
       },
     };
   } catch (error) {
-    await container.stop();
+    try {
+      await cleanupStorage?.();
+    } finally {
+      await container.stop();
+    }
     throw error;
   }
 }
