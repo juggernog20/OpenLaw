@@ -1062,11 +1062,12 @@ describe("who still mutates a confidential contract (M10/3)", () => {
           200,
         ],
         ["the status", () => patchContract(cookies, walled.number, { statusId }), 200],
-        [
-          "a team add",
-          () => addTeamMember(cookies, walled.number, { userId: idOf(TEAMMATE), role: "watcher" }),
-          201,
-        ],
+        // The roster is not here. CTR-023 took it out of the writes all
+        // three make alike: on a walled record, changing the team is
+        // deciding the audience, so a plain team Member is refused it
+        // while the Owner and the Administrator are not. It has its own
+        // test below, where that split can be stated rather than hidden
+        // behind one expected status.
         [
           "a counterparty add",
           () => addCounterparty(cookies, walled.number, { name: `Confi Keeps Added ${who} Ltd` }),
@@ -1079,8 +1080,6 @@ describe("who still mutates a confidential contract (M10/3)", () => {
       }
 
       // The sequenced writes, which each need the one before it.
-      const dropped = await removeTeamMember(cookies, walled.number, idOf(TEAMMATE), "watcher");
-      expect(dropped.statusCode, `${who}: ${dropped.body}`).toBe(200);
       const promoted = await setPrimaryCounterparty(cookies, walled.number, second.id);
       expect(promoted.statusCode, `${who}: ${promoted.body}`).toBe(200);
       const dismissed = await removeCounterparty(cookies, walled.number, first.id);
@@ -1094,6 +1093,107 @@ describe("who still mutates a confidential contract (M10/3)", () => {
         `Renamed by ${who}`,
       );
     }
+  });
+
+  /**
+   * CTR-023, and the amendment it makes to M10/3's own criterion.
+   *
+   * #147 accepted "team-row holders, the Owner, and Administrators
+   * mutate unchanged". On the roster of a **confidential** contract that
+   * is no longer true, and deliberately so: putting somebody on the team
+   * clears the flag for them, which CTR-022 already says is the three
+   * actors' decision alone. The generous rule stands everywhere else,
+   * including on the roster of every open contract.
+   */
+  describe("the roster of a confidential contract (CTR-023)", () => {
+    it("refuses a plain team Member the add and the remove, and refuses them plainly", async () => {
+      const walled = await newContract("Confi roster: the team Member's own reach", adminCookies);
+      await putOnTeam(walled.number, idOf(MEMBER), "member");
+      await putOnTeam(walled.number, idOf(TEAMMATE), "watcher");
+      await markConfidential(walled.id);
+
+      const added = await addTeamMember(memberCookies, walled.number, {
+        userId: idOf(OUTSIDER),
+        role: "watcher",
+      });
+      // 403 and not 404: they reach the record, so hiding it would hide
+      // nothing and would make a real boundary read as a bug (CTR-022).
+      expect(added.statusCode, added.body).toBe(403);
+      expect(added.headers["content-type"]).toContain("application/problem+json");
+      expect(added.json().detail).toContain("confidential contract");
+
+      const dropped = await removeTeamMember(
+        memberCookies,
+        walled.number,
+        idOf(TEAMMATE),
+        "watcher",
+      );
+      expect(dropped.statusCode, dropped.body).toBe(403);
+
+      // Neither refusal is a half-write: the roster is as it was.
+      const roster = await getContract(adminCookies, walled.number);
+      const held = (roster.json().team as { id: string; role: string }[]).map(
+        (row) => `${row.id}:${row.role}`,
+      );
+      expect(held).toContain(`${idOf(TEAMMATE)}:watcher`);
+      expect(held).not.toContain(`${idOf(OUTSIDER)}:watcher`);
+    });
+
+    it("lets the Owner and the Administrator change it, because the audience is theirs", async () => {
+      for (const [who, cookies, creatorCookies] of [
+        ["the Owner with no team row", ownerCookies, adminCookies],
+        ["the Administrator with neither", adminCookies, memberCookies],
+      ] as const) {
+        const walled = await newContract(`Confi roster: ${who} decides`, creatorCookies);
+        await setOwner(walled.number, idOf(OWNER));
+        await markConfidential(walled.id);
+
+        const added = await addTeamMember(cookies, walled.number, {
+          userId: idOf(TEAMMATE),
+          role: "watcher",
+        });
+        expect(added.statusCode, `${who}: ${added.body}`).toBe(201);
+        const dropped = await removeTeamMember(cookies, walled.number, idOf(TEAMMATE), "watcher");
+        expect(dropped.statusCode, `${who}: ${dropped.body}`).toBe(200);
+      }
+    });
+
+    it("lets the creator change it, which is the third actor and the one with no other claim", async () => {
+      // Made by the Legal Team Member, so their `creator` row is the
+      // whole of their standing here: not an Administrator, and the
+      // Owner is somebody else.
+      const walled = await newContract("Confi roster: the creator decides", memberCookies);
+      await setOwner(walled.number, idOf(OWNER));
+      await markConfidential(walled.id);
+
+      const added = await addTeamMember(memberCookies, walled.number, {
+        userId: idOf(TEAMMATE),
+        role: "watcher",
+      });
+      expect(added.statusCode, added.body).toBe(201);
+    });
+
+    it("leaves an open contract's roster on CTR-004's generous rule", async () => {
+      const open = await newContract("Open roster: any Member still edits it", adminCookies);
+      await putOnTeam(open.number, idOf(MEMBER), "member");
+
+      // The same person, the same act, on a record with no flag on it.
+      const added = await addTeamMember(memberCookies, open.number, {
+        userId: idOf(TEAMMATE),
+        role: "watcher",
+      });
+      expect(added.statusCode, added.body).toBe(201);
+      const dropped = await removeTeamMember(memberCookies, open.number, idOf(TEAMMATE), "watcher");
+      expect(dropped.statusCode, dropped.body).toBe(200);
+
+      // And the gate arrives with the flag, on the very same record.
+      await setFlag(adminCookies, open.number, true);
+      const refused = await addTeamMember(memberCookies, open.number, {
+        userId: idOf(TEAMMATE),
+        role: "watcher",
+      });
+      expect(refused.statusCode, refused.body).toBe(403);
+    });
   });
 
   it("keeps a Contributor on the team refused at the Member+ floor, flag or no flag", async () => {

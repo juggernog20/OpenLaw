@@ -3365,6 +3365,59 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
     expect(within(strip).queryByRole("link", { name: "Manage team" })).not.toBeInTheDocument();
   });
 
+  it("draws the Team card's controls inert for that same viewer (CTR-023)", async () => {
+    // The viewer of the test above: on the team, and none of the three
+    // actors. The banner hides "Manage team" from them, so the card
+    // below it must not let them do it anyway.
+    stubApi({
+      signedIn: MEMBER,
+      extra: recordApi(contractRow({ isConfidential: true }), [
+        person("u1", "creator"),
+        person("u3", "member"),
+      ]).handler,
+    });
+    renderAt("/contracts/42");
+
+    const team = await screen.findByRole("region", { name: "Team" });
+    // Inert, not absent: who is on the contract is a fact, and only the
+    // deciding is withheld.
+    expect(within(team).getByRole("button", { name: "Add team member" })).toBeDisabled();
+    expect(
+      within(team).getByRole("button", { name: "Take Casey Contributor off the team as Member" }),
+    ).toBeDisabled();
+    // The roster still reads.
+    expect(within(team).getByText("Casey Contributor")).toBeVisible();
+  });
+
+  it("leaves the Team card live for an actor, and live on an open record for anybody", async () => {
+    // The creator, on the same walled record.
+    const asActor = recordApi(contractRow({ isConfidential: true }), [
+      person("u2", "creator"),
+      person("u3", "member"),
+    ]);
+    stubApi({ signedIn: MEMBER, extra: asActor.handler });
+    const walled = renderAt("/contracts/42");
+    const team = await screen.findByRole("region", { name: "Team" });
+    expect(within(team).getByRole("button", { name: "Add team member" })).toBeEnabled();
+    expect(
+      within(team).getByRole("button", { name: "Take Casey Contributor off the team as Member" }),
+    ).toBeEnabled();
+    walled.view.unmount();
+
+    // The same non-actor viewer, on a record with no flag on it: the
+    // gate arrives with the flag and nowhere else (CTR-004 stands).
+    stubApi({
+      signedIn: MEMBER,
+      extra: recordApi(contractRow(), [person("u1", "creator"), person("u3", "member")]).handler,
+    });
+    renderAt("/contracts/42");
+    const open = await screen.findByRole("region", { name: "Team" });
+    expect(within(open).getByRole("button", { name: "Add team member" })).toBeEnabled();
+    expect(
+      within(open).getByRole("button", { name: "Take Casey Contributor off the team as Member" }),
+    ).toBeEnabled();
+  });
+
   it("sets the flag through the record, and the banner follows the commit", async () => {
     const api = recordApi(contractRow(), [person("u2", "creator")]);
     stubApi({ signedIn: MEMBER, extra: api.handler });

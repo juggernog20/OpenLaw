@@ -814,20 +814,58 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
    * It runs before the archived refusal, because a 409 on a record the
    * viewer may not decide the audience of would tell them the flag write
    * was theirs to make.
+   *
+   * The refusal sentence is the caller's, because two acts decide the
+   * audience and each has to name itself. The rule behind them is one
+   * rule, asked in one place.
    */
-  async function assertMayFlagConfidential(
+  async function assertAudienceActor(
     tx: Tx,
     current: ContractContext,
     user: AuthenticatedUser,
+    refusal: string,
   ) {
     const verdict = await confidentialityWrite(tx, user, current.row);
     if (verdict === "unreachable") throw httpError(404, "No contract exists with this number.");
-    if (verdict === "refused") {
-      throw httpError(
-        403,
-        "Only an Administrator, the contract's creator, or its Owner can change this.",
-      );
-    }
+    if (verdict === "refused") throw httpError(403, refusal);
+  }
+
+  /** Setting and clearing the flag itself (CTR-022). */
+  const assertMayFlagConfidential = (tx: Tx, current: ContractContext, user: AuthenticatedUser) =>
+    assertAudienceActor(
+      tx,
+      current,
+      user,
+      "Only an Administrator, the contract's creator, or its Owner can change this.",
+    );
+
+  /**
+   * Changing the team on a **Confidential** contract (CTR-023).
+   *
+   * Putting somebody on a walled record's team is deciding the audience:
+   * it clears the flag for one person. CTR-022 says nobody outside the
+   * three actors may do that, and being on the team is not enough — so
+   * the roster is theirs to change too, or the switch is a gate with a
+   * door beside it.
+   *
+   * An open contract is untouched. CTR-004's generous rule is right for
+   * the rest: any Member+ edits the roster, and nothing about it is
+   * withheld from anybody.
+   *
+   * It runs before the archived refusal, for the flag guard's reason.
+   */
+  async function assertMayChangeTeam(
+    tx: Tx,
+    current: ContractContext,
+    user: AuthenticatedUser,
+  ): Promise<void> {
+    if (!current.row.isConfidential) return;
+    await assertAudienceActor(
+      tx,
+      current,
+      user,
+      "Only an Administrator, the contract's creator, or its Owner can change the team on a confidential contract.",
+    );
   }
 
   /** One contract type's attached fields, in the order the record draws
@@ -1647,7 +1685,12 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request, reply) => {
       const { userId, role } = request.body;
       const team = await app.db.transaction(async (tx) => {
-        const current = await editableContract(tx, request.params.number, request.user);
+        const current = await lockedContract(tx, request.params.number, request.user);
+        // On a walled record this add is an audience decision (CTR-023),
+        // so it is asked before the archived refusal — the same order the
+        // flag's own write takes, for the same reason.
+        await assertMayChangeTeam(tx, current, request.user);
+        assertEditable(current);
         if (role === CREATOR_TEAM_ROLE) {
           throw httpError(400, "The creator is recorded when the contract is created.");
         }
@@ -1704,7 +1747,11 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const { userId, role } = request.params;
       const team = await app.db.transaction(async (tx) => {
-        const current = await editableContract(tx, request.params.number, request.user);
+        const current = await lockedContract(tx, request.params.number, request.user);
+        // Taking somebody off a walled record's team is the same
+        // decision as putting them on it, read the other way (CTR-023).
+        await assertMayChangeTeam(tx, current, request.user);
+        assertEditable(current);
         if (role === CREATOR_TEAM_ROLE) {
           throw httpError(409, "The creator stays on the record — it is who made it.");
         }
