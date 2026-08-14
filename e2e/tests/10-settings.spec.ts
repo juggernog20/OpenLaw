@@ -158,7 +158,10 @@ test.describe.serial("the settings destination", () => {
 
     /** Leaves the shared instance in built-in mode whatever happened. */
     const leaveInert = async () => {
-      await page.request.patch("/api/v1/auth/mode", { data: { mode: "built_in" } });
+      const reverted = await page.request.patch("/api/v1/auth/mode", {
+        data: { mode: "built_in" },
+      });
+      expect(reverted.status(), await reverted.text()).toBe(200);
     };
 
     try {
@@ -234,12 +237,14 @@ test.describe.serial("the settings destination", () => {
      */
     const leaveInert = async () => {
       const listed = await page.request.get("/api/v1/users");
-      if (!listed.ok()) return;
+      expect(listed.status(), await listed.text()).toBe(200);
       const { users } = z
         .object({ users: z.array(z.object({ id: z.string(), email: z.string() })) })
         .parse(await listed.json());
       const leftover = users.find((user) => user.email === email);
-      if (leftover) await page.request.delete(`/api/v1/auth/invites/${leftover.id}`);
+      if (!leftover) return;
+      const revoked = await page.request.delete(`/api/v1/auth/invites/${leftover.id}`);
+      expect(revoked.status(), await revoked.text()).toBe(204);
     };
 
     try {

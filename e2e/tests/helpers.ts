@@ -327,17 +327,25 @@ export async function onboardActivatedMember(
  * carry an Administrator session.
  */
 export async function ensureMemberInert(request: APIRequestContext, email: string): Promise<void> {
+  // Every seam is asserted. `APIRequestContext` answers a non-2xx
+  // without rejecting, so a sweep that quietly failed would report
+  // success and leave the shared instance dirty for the next run — the
+  // one thing this function exists to prevent.
   const listed = await request.get("/api/v1/users");
-  if (!listed.ok()) return;
+  expect(listed.status(), await listed.text()).toBe(200);
   const { users } = z
     .object({ users: z.array(z.object({ id: z.string(), email: z.string(), status: z.string() })) })
     .parse(await listed.json());
   const member = users.find((user) => user.email === email);
+  // Nobody under that address is the resting state itself, not a
+  // failure: a run that died before the invite landed leaves none.
   if (!member) return;
   if (member.status === "invited") {
-    await request.delete(`/api/v1/auth/invites/${member.id}`);
+    const revoked = await request.delete(`/api/v1/auth/invites/${member.id}`);
+    expect(revoked.status(), await revoked.text()).toBe(204);
   } else if (member.status !== "archived") {
-    await request.post(`/api/v1/users/${member.id}/archive`);
+    const archived = await request.post(`/api/v1/users/${member.id}/archive`);
+    expect(archived.status(), await archived.text()).toBe(200);
   }
 }
 

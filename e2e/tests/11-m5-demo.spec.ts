@@ -73,7 +73,10 @@ test.describe.serial("M5 demo path", () => {
      * member inert (TECH-018), whatever happened above. */
     const leaveInert = async () => {
       await member?.context.close();
-      await page.request.patch("/api/v1/auth/mode", { data: { mode: "built_in" } });
+      const reverted = await page.request.patch("/api/v1/auth/mode", {
+        data: { mode: "built_in" },
+      });
+      expect(reverted.status(), await reverted.text()).toBe(200);
       await ensureMemberInert(page.request, email);
     };
 

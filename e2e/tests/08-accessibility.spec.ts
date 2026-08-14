@@ -84,7 +84,8 @@ test.describe("accessibility floor", () => {
     const { user } = z.object({ user: z.object({ id: z.string() }) }).parse(await invited.json());
 
     const leaveInert = async () => {
-      await page.request.delete(`/api/v1/auth/invites/${user.id}`);
+      const revoked = await page.request.delete(`/api/v1/auth/invites/${user.id}`);
+      expect(revoked.status(), await revoked.text()).toBe(204);
     };
 
     try {
