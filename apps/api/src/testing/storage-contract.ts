@@ -22,6 +22,9 @@ import {
   BlobExistsError,
   BlobNotFoundError,
   InvalidBlobRefError,
+  // Imported, never restated: the boundary tests below must measure the
+  // bound the adapter enforces, not a copy of it that can drift.
+  MAX_KEY_LENGTH,
   type StorageAdapter,
 } from "../lib/storage/adapter.js";
 
@@ -70,9 +73,6 @@ const MALFORMED_KEYS = [
   "holds-a-tab\tcharacter",
   "unicode-é",
 ] as const;
-
-/** The longest key DOC-012 allows. */
-const MAX_KEY_LENGTH = 512;
 
 /**
  * A key of exactly `length` characters, in segments short enough that no

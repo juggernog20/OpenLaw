@@ -1560,15 +1560,26 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           await tx.delete(documents).where(eq(documents.id, documentId));
 
           // The blobs, inside the transaction and before the commit
-          // (DOC-012). Order is the whole argument. A delete that
-          // failed after the commit would leave the files on disk with
-          // no row left to name them — an erasure that reports success
-          // and is not one, with nothing to retry from. Here a failure
-          // rolls the rows back instead, so the record still holds
-          // every file it can still name, and running the erasure
-          // again converges: deleting a key that is already gone
-          // succeeds, which is exactly what DOC-012 defines that
-          // behaviour for.
+          // (DOC-012). Order is the whole argument, and the trade is
+          // between two bad failures rather than between a bad one and
+          // a clean one.
+          //
+          // Deleting after the commit would leave files on disk with no
+          // row left to name them — an erasure that reports success, is
+          // not one, and has nothing left to retry from. That is the
+          // failure with no way back.
+          //
+          // Deleting here fails the other way. If the loop destroys the
+          // blobs behind versions 1..k and then fails on k+1, the
+          // rollback restores **every** row, including the k whose
+          // bytes are already gone. The record then names files that no
+          // longer exist and their downloads fail. That state is ugly
+          // and it is recoverable: the erasure is still on the table,
+          // and running it again converges, because deleting a key that
+          // is already gone succeeds — which is exactly what DOC-012
+          // defines that behaviour for. This window is accepted and
+          // recorded in DOC-010; it is not a guarantee that the record
+          // still holds every file it names.
           for (const version of chain) await app.storage.delete(version.fileRef);
 
           return paperOf(tx, request.user, {

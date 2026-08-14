@@ -4432,6 +4432,40 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(within(section).getByText("1")).toBeVisible();
   });
 
+  it("reads a refused erasure inside the dialog, where the dialog has not covered it", async () => {
+    // The refusal is reachable: a rename that lands between the dialog
+    // opening and Delete arriving makes the typed name the wrong one.
+    // The section's own note sits behind the open dialog, so a refusal
+    // reported there reads nowhere at all.
+    const api = documentsApi([DRAFT], {
+      removalFails: "Type the document's name exactly to delete it.",
+    });
+    stubApi({ signedIn: ADMIN, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Delete");
+
+    const dialog = await screen.findByRole("dialog");
+    await user.type(
+      within(dialog).getByLabelText("Type Orion_MSA_2026_draft.docx to confirm"),
+      "Orion_MSA_2026_draft.docx",
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: "Delete Orion_MSA_2026_draft.docx" }),
+    );
+
+    expect(
+      await within(dialog).findByText("Type the document's name exactly to delete it."),
+    ).toBeVisible();
+    // The dialog stays: the typing is still there to correct.
+    expect(screen.getByRole("dialog")).toBeVisible();
+    // Nothing moved. Queried by text, not by role: the open dialog
+    // hides the rest of the page from the accessibility tree.
+    expect(within(section).getByText("Orion_MSA_2026_draft.docx")).toBeInTheDocument();
+  });
+
   it("reports the seam's own refusal when a removal is turned down", async () => {
     const api = documentsApi([DRAFT], { removalFails: "This document is already archived." });
     stubApi({ signedIn: MEMBER, extra: api.handler });

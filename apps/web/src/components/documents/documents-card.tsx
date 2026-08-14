@@ -402,9 +402,19 @@ export function DocumentsCard({
    * The typed name goes to the seam rather than being checked only here.
    * The dialog can be skipped, and the seam is where the ceremony has to
    * hold — this is the client half of one rule, not the rule itself.
+   *
+   * A refusal is handed back to the dialog rather than written to the
+   * section note, because the dialog covers the spot that note reads in.
+   * The refusal is reachable: a rename that lands between the dialog
+   * opening and Delete arriving makes the typed name the wrong one, and
+   * a role taken away in the same window answers 403. Success keeps the
+   * note — by then the dialog is gone and the note is what is left.
    */
-  async function erase(document: ContractDocument, confirmTitle: string) {
-    if (busy) return;
+  async function erase(
+    document: ContractDocument,
+    confirmTitle: string,
+  ): Promise<string | null> {
+    if (busy) return null;
     setBusy(true);
     setStatus("saving");
     setDetail(null);
@@ -414,10 +424,18 @@ export function DocumentsCard({
     if (outcome.ok) {
       setDeleting(null);
       setStatus("saved");
-      return;
+      return null;
     }
-    setStatus("error");
-    setDetail(outcome.detail ?? null);
+    // Back to idle, not to error: the dialog says what happened, and a
+    // note behind it would say it again to whoever closes the dialog.
+    setStatus("idle");
+    return (
+      outcome.detail ??
+      intl.formatMessage({
+        id: "documents.delete.error",
+        defaultMessage: "That document could not be deleted. Try again.",
+      })
+    );
   }
 
   /**
@@ -806,7 +824,7 @@ export function DocumentsCard({
           document={deleting}
           busy={busy}
           onClose={() => setDeleting(null)}
-          onConfirm={(confirmTitle) => void erase(deleting, confirmTitle)}
+          onConfirm={(confirmTitle) => erase(deleting, confirmTitle)}
         />
       )}
     </section>
@@ -980,11 +998,19 @@ function DeleteDialog({
   document: ContractDocument;
   busy: boolean;
   onClose: () => void;
-  onConfirm: (confirmTitle: string) => void;
+  /** Answers with the refusal to show, or `null` when the erasure landed. */
+  onConfirm: (confirmTitle: string) => Promise<string | null>;
 }>) {
   const intl = useIntl();
   const [typed, setTyped] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const matches = typed.trim() === document.title.trim();
+
+  async function submit() {
+    if (busy || !matches) return;
+    setError(null);
+    setError(await onConfirm(typed.trim()));
+  }
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -1006,7 +1032,7 @@ function DeleteDialog({
           className="mt-4 flex flex-col gap-1.5"
           onSubmit={(event) => {
             event.preventDefault();
-            if (matches && !busy) onConfirm(typed.trim());
+            void submit();
           }}
         >
           <Label htmlFor="document-delete-confirm">
@@ -1029,8 +1055,16 @@ function DeleteDialog({
             // has to be able to hold every name a document can carry —
             // a shorter cap would leave this button disabled forever.
             maxLength={255}
-            onChange={(event) => setTyped(event.target.value)}
+            onChange={(event) => {
+              setTyped(event.target.value);
+              setError(null);
+            }}
           />
+          {error && (
+            <p role="alert" className="mt-2.5 text-xs text-status-danger-fg">
+              {error}
+            </p>
+          )}
           <div className="mt-4 flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={onClose}>
               <FormattedMessage id="action.cancel" defaultMessage="Cancel" />

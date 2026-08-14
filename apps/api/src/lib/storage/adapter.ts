@@ -71,8 +71,15 @@ const DRIVER_PATTERN = /^[a-z][a-z0-9-]*$/;
  */
 const KEY_SEGMENT_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
-/** A key long enough for any layout we mint, short enough to index. */
-const MAX_KEY_LENGTH = 512;
+/**
+ * A key long enough for any layout we mint, short enough to index.
+ *
+ * Exported because the shared driver contract suite tests this exact
+ * boundary. If the suite restated the number, raising it here would
+ * leave the boundary tests green while pinning a rule no driver
+ * enforces — the one thing a contract suite must not do.
+ */
+export const MAX_KEY_LENGTH = 512;
 
 /** Whether `key` satisfies the key rules above. */
 export function isValidBlobKey(key: string): boolean {

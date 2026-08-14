@@ -1070,6 +1070,9 @@
   "documents.delete.confirmLabel": {
     "defaultMessage": "Type {title} to confirm"
   },
+  "documents.delete.error": {
+    "defaultMessage": "That document could not be deleted. Try again."
+  },
   "documents.delete.title": {
     "defaultMessage": "Delete this document?"
   },
