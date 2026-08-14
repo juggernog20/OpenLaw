@@ -2090,3 +2090,77 @@ describe("the upload ceiling", () => {
     expect(list.json().documents).toEqual([]);
   });
 });
+
+/**
+ * The bound on one record's paper (CTR-024).
+ *
+ * A contract can hold as many documents as it needs (CTR-014), so the
+ * list is one that grows without a ceiling and has to be paged like the
+ * contract list it hangs off. The page counts **documents**: a chain
+ * rides with its document whole, because a negotiation history split
+ * across two pages is not a history.
+ */
+describe("the bounded document list (CTR-024)", () => {
+  const PAGE = 50;
+
+  const listPage = (number: number, cursor?: string) =>
+    harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts/${number}/documents${cursor === undefined ? "" : `?cursor=${cursor}`}`,
+      cookies: adminCookies,
+    });
+
+  let contract: ContractRow;
+
+  beforeAll(async () => {
+    contract = await newContract("Paging: the record with a lot of paper");
+    for (let made = 0; made < 55; made += 1) {
+      await uploaded(adminCookies, contract.number, { filename: `round_${made}.docx` });
+    }
+  }, 120_000);
+
+  it("answers at most one page, newest first, and says where the next one starts", async () => {
+    const first = await listPage(contract.number);
+    expect(first.statusCode, first.body).toBe(200);
+    const rows = first.json().documents as DocumentRow[];
+    expect(rows).toHaveLength(PAGE);
+    expect(first.json().nextCursor).toBe(rows.at(-1)!.id);
+    // Every chain arrived whole with its document.
+    for (const row of rows) expect(row.versions.length).toBeGreaterThan(0);
+  });
+
+  it("walks the whole record through the cursor, each document once", async () => {
+    const seen: string[] = [];
+    let cursor: string | null = null;
+    do {
+      const res = await listPage(contract.number, cursor ?? undefined);
+      expect(res.statusCode, res.body).toBe(200);
+      seen.push(...(res.json().documents as DocumentRow[]).map((row) => row.id));
+      cursor = res.json().nextCursor as string | null;
+    } while (cursor !== null);
+    expect(seen).toHaveLength(55);
+    expect(new Set(seen).size).toBe(55);
+  });
+
+  it("answers the first page again after a write over the whole record", async () => {
+    const page = (await listPage(contract.number)).json().documents as DocumentRow[];
+    const taking = page.at(-1)!;
+
+    // The designation moves, and the answer is the record's paper as it
+    // now stands — one page of it, with its own cursor.
+    const primary = await makePrimary(adminCookies, taking.id);
+    expect(primary.statusCode, primary.body).toBe(200);
+    const answered = primary.json().documents as DocumentRow[];
+    expect(answered).toHaveLength(PAGE);
+    expect(answered.map((row) => row.id)).toEqual(page.map((row) => row.id));
+    expect(primary.json().nextCursor).toBe(answered.at(-1)!.id);
+    expect(answered.find((row) => row.id === taking.id)?.isPrimary).toBe(true);
+  });
+
+  it("refuses a cursor that names nothing with an empty page, not an error", async () => {
+    const nowhere = await listPage(contract.number, "00000000-0000-7000-8000-000000000000");
+    expect(nowhere.statusCode, nowhere.body).toBe(200);
+    expect(nowhere.json().documents).toEqual([]);
+    expect(nowhere.json().nextCursor).toBeNull();
+  });
+});

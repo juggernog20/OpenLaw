@@ -204,6 +204,35 @@ const listContracts = async (
   return res.json().contracts;
 };
 
+/**
+ * Every contract this viewer reaches, walked page by page (CTR-024).
+ *
+ * The list is bounded, so a test that needs the whole of it has to say
+ * so — `listContracts` answers a page, and a page is not the table.
+ */
+const everyContract = async (
+  cookies: Record<string, string>,
+  includeArchived = false,
+): Promise<ContractRow[]> => {
+  const all: ContractRow[] = [];
+  let cursor: string | null = null;
+  do {
+    const query = new URLSearchParams({
+      ...(includeArchived ? { includeArchived: "true" } : {}),
+      ...(cursor === null ? {} : { cursor }),
+    });
+    const res = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts?${query.toString()}`,
+      cookies,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    all.push(...(res.json().contracts as ContractRow[]));
+    cursor = res.json().nextCursor as string | null;
+  } while (cursor !== null);
+  return all;
+};
+
 const createContract = (cookies: Record<string, string>, payload: Record<string, unknown>) =>
   harness.app.inject({ method: "POST", url: "/api/v1/contracts", cookies, payload });
 
@@ -2009,11 +2038,73 @@ describe("GET /contracts/options — the Owner and team picker source", () => {
   });
 });
 
+describe("the bounded contract list (CTR-024)", () => {
+  /** One page, raw, so the envelope can be read as well as the rows. */
+  const page = (cookies: Record<string, string>, cursor?: string) =>
+    harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts${cursor === undefined ? "" : `?cursor=${cursor}`}`,
+      cookies,
+    });
+
+  it("answers at most one page, and says where the next one starts", async () => {
+    // Past the page size, so the first read cannot be the whole list
+    // however many contracts the rest of the suite left behind.
+    for (let made = 0; made < 55; made += 1) {
+      await newContract(`Paged contract ${made}`);
+    }
+
+    const first = await page(adminCookies);
+    expect(first.statusCode, first.body).toBe(200);
+    const rows = first.json().contracts as ContractRow[];
+    expect(rows).toHaveLength(50);
+    // The reference is monotonic, so the page reads newest first with
+    // no tie to break.
+    expect(rows.map((row) => row.number)).toEqual(
+      [...rows.map((row) => row.number)].sort((a, b) => b - a),
+    );
+    expect(first.json().nextCursor).toBe(rows.at(-1)!.id);
+  });
+
+  it("walks the whole list through the cursor, each contract once and in order", async () => {
+    const all = await everyContract(adminCookies, true);
+    expect(all.length).toBeGreaterThan(50);
+    expect(new Set(all.map((row) => row.id)).size).toBe(all.length);
+    expect(all.map((row) => row.number)).toEqual(
+      [...all.map((row) => row.number)].sort((a, b) => b - a),
+    );
+  });
+
+  it("ends the walk with a null cursor rather than an empty page", async () => {
+    let cursor: string | null = (await page(adminCookies)).json().nextCursor;
+    let last = null as null | ReturnType<typeof JSON.parse>;
+    while (cursor !== null) {
+      const next = await page(adminCookies, cursor);
+      expect(next.statusCode, next.body).toBe(200);
+      last = next.json();
+      cursor = last.nextCursor as string | null;
+    }
+    // The last page carried rows and then said it was the last. A
+    // cursor on it would have sent the client for a page of nothing.
+    expect(last!.contracts.length).toBeGreaterThan(0);
+    expect(last!.nextCursor).toBeNull();
+  });
+
+  it("refuses a cursor that names nothing with an empty page, not an error", async () => {
+    const nowhere = await page(adminCookies, "00000000-0000-7000-8000-000000000000");
+    expect(nowhere.statusCode, nowhere.body).toBe(200);
+    expect(nowhere.json().contracts).toEqual([]);
+    expect(nowhere.json().nextCursor).toBeNull();
+  });
+});
+
 describe("the DD-017 activity trail", () => {
   it("keys every contract entry to a listable contract", async () => {
     const rows = await contractAuditRows();
     expect(rows.length).toBeGreaterThan(0);
-    const ids = new Set((await listContracts(adminCookies, true)).map((row) => row.id));
+    // Every page of it: the trail names contracts made across the whole
+    // suite, and one page stopped being the whole table at CTR-024.
+    const ids = new Set((await everyContract(adminCookies, true)).map((row) => row.id));
     for (const row of rows) {
       expect(row.entityType).toBe("contract");
       expect(row.visibility).toBe("working_team");

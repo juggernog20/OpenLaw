@@ -27,7 +27,7 @@
  * 403 is the real refusal.
  */
 
-import { useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, redirect, useLoaderData, useNavigate } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { FilePen, FileText, Plus } from "lucide-react";
@@ -94,6 +94,9 @@ export async function contractsLoader() {
     user,
     canEdit,
     contracts: list.data.contracts,
+    /** Where the next page starts, or null when the first page is the
+     * whole list (CTR-024). */
+    nextCursor: list.data.nextCursor,
     contractTypes: options?.data?.contractTypes ?? [],
     users: options?.data?.users ?? [],
     entities: registry?.data?.entities ?? [],
@@ -101,14 +104,23 @@ export async function contractsLoader() {
 }
 
 export function ContractsPage() {
-  const { user, canEdit, contracts, contractTypes, users, entities } =
+  const { user, canEdit, contracts, nextCursor, contractTypes, users, entities } =
     useLoaderData<typeof contractsLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
   const [rows, setRows] = useState<ContractRow[]>(contracts);
+  /** Where the next page starts, or null at the end of the list
+   * (CTR-024). */
+  const [cursor, setCursor] = useState<string | null>(nextCursor);
+  /** How many rows the last page brought, and the reference it started
+   * at. The first is what the live region announces; the second is the
+   * row focus moves to, because that is where what the reader asked for
+   * begins (DES-031). */
+  const [appended, setAppended] = useState<{ count: number; from: number } | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
+  const [pageError, setPageError] = useState<string | null>(null);
   /** One list-level request at a time: a second toggle or restore
    * launched mid-flight would race the first, and the loser's answer
    * would overwrite the winner's list. */
@@ -146,7 +158,49 @@ export function ContractsPage() {
       return;
     }
     setRows(data.contracts);
+    setCursor(data.nextCursor);
+    setAppended(null);
+    setPageError(null);
     setShowArchived(next);
+  }
+
+  /**
+   * One more page, appended in place (CTR-024, DES-031).
+   *
+   * The archived view is carried back, because the cursor is a position
+   * in whichever list is on screen and a page read without the filter
+   * would be a page of a different list.
+   */
+  async function showMore() {
+    if (listBusy || cursor === null) return;
+    setPageError(null);
+    setListBusy(true);
+    const { data } = await api
+      .GET("/api/v1/contracts", {
+        params: {
+          query: {
+            cursor,
+            ...(showArchived ? { includeArchived: "true" as const } : {}),
+          },
+        },
+      })
+      .catch(() => ({ data: undefined }))
+      .finally(() => setListBusy(false));
+    if (!data) {
+      // Beside the control that failed, and the control stays: the
+      // retry is the button already under the reader's hand.
+      setPageError(
+        intl.formatMessage({
+          id: "contracts.moreError",
+          defaultMessage: "The next contracts could not be read. Try again.",
+        }),
+      );
+      return;
+    }
+    const first = data.contracts[0];
+    setRows((current) => [...current, ...data.contracts]);
+    setCursor(data.nextCursor);
+    setAppended(first ? { count: data.contracts.length, from: first.number } : null);
   }
 
   /** Row-level restore, offered in the archived view — archiving is for
@@ -193,11 +247,23 @@ export function ContractsPage() {
         <PageSubBar
           title={<FormattedMessage id="contracts.title" defaultMessage="Contracts" />}
           subtitle={
-            <FormattedMessage
-              id="contracts.count"
-              defaultMessage="{count, plural, one {# contract} other {# contracts}}"
-              values={{ count: liveCount }}
-            />
+            // What is on screen, and it says so whenever that is not the
+            // whole list. There is no total to state (CTR-024), and a
+            // bare "50 contracts" over a list of three hundred would be
+            // a number the page cannot stand behind.
+            cursor === null ? (
+              <FormattedMessage
+                id="contracts.count"
+                defaultMessage="{count, plural, one {# contract} other {# contracts}}"
+                values={{ count: liveCount }}
+              />
+            ) : (
+              <FormattedMessage
+                id="contracts.countShown"
+                defaultMessage="{count, plural, one {# contract shown} other {# contracts shown}}"
+                values={{ count: liveCount }}
+              />
+            )
           }
           primaryAction={createButton}
         />
@@ -236,8 +302,35 @@ export function ContractsPage() {
             // Restore is a mutation, so a read-only viewer is offered
             // no way to ask for one.
             onRestore={canEdit ? (row) => void restoreRow(row) : undefined}
+            focusRow={appended?.from}
+            foot={
+              cursor === null ? undefined : (
+                <>
+                  {pageError && (
+                    <p role="alert" className="text-xs text-status-danger-fg">
+                      {pageError}
+                    </p>
+                  )}
+                  <Button variant="secondary" disabled={listBusy} onClick={() => void showMore()}>
+                    <FormattedMessage id="contracts.more" defaultMessage="Show more" />
+                  </Button>
+                </>
+              )
+            }
           />
         )}
+        {/* What the press did, for a reader who cannot see the rows
+            arrive. Focus lands on the first of them, so this says how
+            many followed it (DES-031). */}
+        <p aria-live="polite" className="sr-only">
+          {appended && (
+            <FormattedMessage
+              id="contracts.moreAdded"
+              defaultMessage="{count, plural, one {# more contract} other {# more contracts}}. {total} shown."
+              values={{ count: appended.count, total: rows.length }}
+            />
+          )}
+        </p>
       </div>
       {createOpen && (
         <CreateContractDialog
@@ -331,9 +424,18 @@ function ContractsTable({
   showArchived,
   busy,
   onRestore,
+  focusRow,
+  foot,
 }: Readonly<{
   rows: ContractRow[];
   showArchived: boolean;
+  /** The reference of the first row of the page just appended. Focus
+   * moves to it, because the rows are what the reader asked for and
+   * their first one is where the answer starts (DES-031). */
+  focusRow?: number;
+  /** The paging foot, or absent at the end of the list. It rides under
+   * the table's last rule, inside the same card. */
+  foot?: ReactNode;
   /** A list-level request is in flight; row actions stand down. */
   busy: boolean;
   /** Absent for a read-only viewer, so no restore is offered at all. */
@@ -342,153 +444,185 @@ function ContractsTable({
   const intl = useIntl();
   /** The actions column exists only where an action does. */
   const actions = showArchived && onRestore !== undefined;
+  /** The row focus is moved to after a page appends. A `tr` is the
+   * focus target rather than a cell or the title link, because the row
+   * is what arrived — a screen reader lands on the whole of it. */
+  const landing = useRef<HTMLTableRowElement>(null);
+  useEffect(() => {
+    if (focusRow !== undefined) landing.current?.focus();
+  }, [focusRow]);
   return (
-    <div className="overflow-x-auto rounded-card border border-border-default bg-raised">
-      <table className="w-full">
-        <thead>
-          <tr className="bg-section-header text-start text-sm font-medium text-muted">
-            <th scope="col" className="w-24 px-4 py-2 text-start font-medium">
-              <FormattedMessage id="contracts.column.reference" defaultMessage="Reference" />
-            </th>
-            <th scope="col" className="px-4 py-2 text-start font-medium">
-              <FormattedMessage id="contracts.column.title" defaultMessage="Title" />
-            </th>
-            {/* Their side, where the C1 mock draws it: straight after
+    <div className="rounded-card border border-border-default bg-raised">
+      {/* The horizontal scroll belongs to the table, not to the card:
+          the paging foot below must not slide out of reach sideways. */}
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-section-header text-start text-sm font-medium text-muted">
+              <th scope="col" className="w-24 px-4 py-2 text-start font-medium">
+                <FormattedMessage id="contracts.column.reference" defaultMessage="Reference" />
+              </th>
+              <th scope="col" className="px-4 py-2 text-start font-medium">
+                <FormattedMessage id="contracts.column.title" defaultMessage="Title" />
+              </th>
+              {/* Their side, where the C1 mock draws it: straight after
                 the title, because "who is this with" is the second
                 thing a reader scans for. */}
-            <th scope="col" className="w-44 px-4 py-2 text-start font-medium">
-              <FormattedMessage id="contracts.column.counterparty" defaultMessage="Counterparty" />
-            </th>
-            <th scope="col" className="w-32 px-4 py-2 text-start font-medium">
-              <FormattedMessage id="contracts.column.type" defaultMessage="Type" />
-            </th>
-            <th scope="col" className="w-44 px-4 py-2 text-start font-medium">
-              <FormattedMessage id="contracts.column.status" defaultMessage="Status" />
-            </th>
-            {/* What the contract is worth, where the C1 mock draws it:
-                after the status and before the Owner. */}
-            <th scope="col" className="w-40 px-4 py-2 text-start font-medium">
-              <FormattedMessage id="contracts.column.value" defaultMessage="Value" />
-            </th>
-            <th scope="col" className="w-48 px-4 py-2 text-start font-medium">
-              <FormattedMessage id="contracts.column.owner" defaultMessage="Owner" />
-            </th>
-            {actions && (
-              <th scope="col" className="w-24 px-4 py-2 text-end font-medium">
-                <span className="sr-only">
-                  <FormattedMessage id="contracts.column.actions" defaultMessage="Actions" />
-                </span>
+              <th scope="col" className="w-44 px-4 py-2 text-start font-medium">
+                <FormattedMessage
+                  id="contracts.column.counterparty"
+                  defaultMessage="Counterparty"
+                />
               </th>
-            )}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.id} className="border-t border-border-default">
-              <td className="px-4 py-2.5 text-sm text-muted">
-                {contractReference(intl, row.number)}
-              </td>
-              <td className="px-4 py-2.5">
-                <span className="flex items-center gap-2.5">
-                  <FileText size={16} aria-hidden="true" className="shrink-0 text-muted" />
-                  <Link
-                    to={`/contracts/${row.number}`}
-                    className="rounded-chip font-medium text-primary hover:text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
-                  >
-                    {row.title}
-                  </Link>
-                  {/* DES-009 Tier 1, where the C1 mock draws it: beside
+              <th scope="col" className="w-32 px-4 py-2 text-start font-medium">
+                <FormattedMessage id="contracts.column.type" defaultMessage="Type" />
+              </th>
+              <th scope="col" className="w-44 px-4 py-2 text-start font-medium">
+                <FormattedMessage id="contracts.column.status" defaultMessage="Status" />
+              </th>
+              {/* What the contract is worth, where the C1 mock draws it:
+                after the status and before the Owner. */}
+              <th scope="col" className="w-40 px-4 py-2 text-start font-medium">
+                <FormattedMessage id="contracts.column.value" defaultMessage="Value" />
+              </th>
+              <th scope="col" className="w-48 px-4 py-2 text-start font-medium">
+                <FormattedMessage id="contracts.column.owner" defaultMessage="Owner" />
+              </th>
+              {actions && (
+                <th scope="col" className="w-24 px-4 py-2 text-end font-medium">
+                  <span className="sr-only">
+                    <FormattedMessage id="contracts.column.actions" defaultMessage="Actions" />
+                  </span>
+                </th>
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr
+                key={row.id}
+                // Focusable only while it is the landing row: a table of
+                // fifty tab stops nobody asked for is worse than none.
+                ref={row.number === focusRow ? landing : undefined}
+                tabIndex={row.number === focusRow ? -1 : undefined}
+                className="border-t border-border-default"
+              >
+                <td className="px-4 py-2.5 text-sm text-muted">
+                  {contractReference(intl, row.number)}
+                </td>
+                <td className="px-4 py-2.5">
+                  <span className="flex items-center gap-2.5">
+                    <FileText size={16} aria-hidden="true" className="shrink-0 text-muted" />
+                    <Link
+                      to={`/contracts/${row.number}`}
+                      className="rounded-chip font-medium text-primary hover:text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+                    >
+                      {row.title}
+                    </Link>
+                    {/* DES-009 Tier 1, where the C1 mock draws it: beside
                       the title, so a walled-off record is told apart
                       while scanning thirty rows. A row is here only
                       because this viewer reaches the record — the API
                       answers no row at all to anyone else — so the
                       marker never doubles as a placeholder (DD-014). */}
-                  {row.isConfidential && <ConfidentialMarker />}
-                  {row.archivedAt !== null && (
-                    <span className="inline-flex rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
-                      <FormattedMessage id="contracts.archivedPill" defaultMessage="Archived" />
+                    {row.isConfidential && <ConfidentialMarker />}
+                    {row.archivedAt !== null && (
+                      <span className="inline-flex rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
+                        <FormattedMessage id="contracts.archivedPill" defaultMessage="Archived" />
+                      </span>
+                    )}
+                  </span>
+                </td>
+                <td className="px-4 py-2.5 text-sm">
+                  {row.primaryCounterparty ? (
+                    // One name per row: the primary is what a list can
+                    // show, and the record holds the rest (CTR-011).
+                    // The width rides the cell's own content, not the
+                    // column hint: a table cell grows to fit, so a long
+                    // name needs something to be truncated against.
+                    <span className="block w-44 truncate">{row.primaryCounterparty.name}</span>
+                  ) : (
+                    <span className="text-muted">
+                      <FormattedMessage
+                        id="contracts.counterpartyNone"
+                        defaultMessage="None recorded"
+                      />
                     </span>
                   )}
-                </span>
-              </td>
-              <td className="px-4 py-2.5 text-sm">
-                {row.primaryCounterparty ? (
-                  // One name per row: the primary is what a list can
-                  // show, and the record holds the rest (CTR-011).
-                  // The width rides the cell's own content, not the
-                  // column hint: a table cell grows to fit, so a long
-                  // name needs something to be truncated against.
-                  <span className="block w-44 truncate">{row.primaryCounterparty.name}</span>
-                ) : (
-                  <span className="text-muted">
-                    <FormattedMessage
-                      id="contracts.counterpartyNone"
-                      defaultMessage="None recorded"
-                    />
-                  </span>
-                )}
-              </td>
-              <td className="px-4 py-2.5 text-sm text-muted">{row.contractTypeName}</td>
-              <td className="px-4 py-2.5">
-                <span
-                  className={`inline-flex rounded-pill px-2 py-0.5 text-xs font-medium ${STAGE_PILL[row.stage]}`}
-                >
-                  {row.statusName}
-                </span>
-              </td>
-              <td className="px-4 py-2.5 text-sm">
-                {row.value ? (
-                  formatContractValue(intl, row.value)
-                ) : (
-                  // No value recorded is a real state, not a gap: an
-                  // NDA is worth nothing and says nothing (CTR-010).
-                  <span className="text-muted">
-                    <FormattedMessage id="contracts.valueNone" defaultMessage="No value" />
-                  </span>
-                )}
-              </td>
-              <td className="px-4 py-2.5">
-                {row.manager ? (
+                </td>
+                <td className="px-4 py-2.5 text-sm text-muted">{row.contractTypeName}</td>
+                <td className="px-4 py-2.5">
                   <span
-                    className={`flex min-w-0 items-center gap-2 ${row.manager.archived ? "opacity-50" : ""}`}
+                    className={`inline-flex rounded-pill px-2 py-0.5 text-xs font-medium ${STAGE_PILL[row.stage]}`}
                   >
-                    <Avatar
-                      name={row.manager.displayName}
-                      image={row.manager.image}
-                      className="size-6"
-                    />
-                    <span className="truncate text-sm">{row.manager.displayName}</span>
+                    {row.statusName}
                   </span>
-                ) : (
-                  // Unassigned is a real state — the contract is in
-                  // triage until someone takes it (CTR-004).
-                  <span className="text-sm text-muted">
-                    <FormattedMessage id="contracts.ownerUnassigned" defaultMessage="Unassigned" />
-                  </span>
-                )}
-              </td>
-              {actions && (
-                <td className="px-4 py-2.5 text-end">
-                  {row.archivedAt !== null && (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      disabled={busy}
-                      aria-label={intl.formatMessage(
-                        { id: "contracts.restoreRow", defaultMessage: "Restore {title}" },
-                        { title: row.title },
-                      )}
-                      onClick={() => onRestore(row)}
-                    >
-                      <FormattedMessage id="contracts.record.restore" defaultMessage="Restore" />
-                    </Button>
+                </td>
+                <td className="px-4 py-2.5 text-sm">
+                  {row.value ? (
+                    formatContractValue(intl, row.value)
+                  ) : (
+                    // No value recorded is a real state, not a gap: an
+                    // NDA is worth nothing and says nothing (CTR-010).
+                    <span className="text-muted">
+                      <FormattedMessage id="contracts.valueNone" defaultMessage="No value" />
+                    </span>
                   )}
                 </td>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                <td className="px-4 py-2.5">
+                  {row.manager ? (
+                    <span
+                      className={`flex min-w-0 items-center gap-2 ${row.manager.archived ? "opacity-50" : ""}`}
+                    >
+                      <Avatar
+                        name={row.manager.displayName}
+                        image={row.manager.image}
+                        className="size-6"
+                      />
+                      <span className="truncate text-sm">{row.manager.displayName}</span>
+                    </span>
+                  ) : (
+                    // Unassigned is a real state — the contract is in
+                    // triage until someone takes it (CTR-004).
+                    <span className="text-sm text-muted">
+                      <FormattedMessage
+                        id="contracts.ownerUnassigned"
+                        defaultMessage="Unassigned"
+                      />
+                    </span>
+                  )}
+                </td>
+                {actions && (
+                  <td className="px-4 py-2.5 text-end">
+                    {row.archivedAt !== null && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        disabled={busy}
+                        aria-label={intl.formatMessage(
+                          { id: "contracts.restoreRow", defaultMessage: "Restore {title}" },
+                          { title: row.title },
+                        )}
+                        onClick={() => onRestore(row)}
+                      >
+                        <FormattedMessage id="contracts.record.restore" defaultMessage="Restore" />
+                      </Button>
+                    )}
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {/* Under the table's last rule and inside its card, so the control
+          reads as part of the list rather than as a page action
+          (DES-031). */}
+      {foot && (
+        <div className="flex items-center justify-between gap-3 border-t border-border-default px-4 py-3">
+          {foot}
+        </div>
+      )}
     </div>
   );
 }

@@ -721,7 +721,11 @@ describe("the flag on the contract row (M10/2)", () => {
       cookies: adminCookies,
     });
     expect(res.statusCode, res.body).toBe(200);
-    expect(Object.keys(res.json())).toEqual(["contracts"]);
+    // The cursor CTR-024 added is a position, not a number: it says
+    // where the next page starts and nothing about how many rows exist
+    // beyond it. The property this test is about — that no total rides
+    // out to be scrubbed — is unchanged.
+    expect(Object.keys(res.json())).toEqual(["contracts", "nextCursor"]);
   });
 });
 
@@ -1256,5 +1260,91 @@ describe("what a set and a clear leave behind (M10/2, DD-017)", () => {
 
     await setFlag(adminCookies, contract.number, false);
     expect(await flagEntriesInFeed(adminCookies, contract.id)).toEqual([]);
+  });
+});
+
+/**
+ * The one property CTR-024 asked to be tested by name rather than
+ * commented: the scope filters **before** the limit.
+ *
+ * An implementation that limited first and filtered after would answer
+ * pages that shrink by however many confidential contracts happened to
+ * sit in the window. A viewer could then read the length of their own
+ * pages and count records they were never told exist — which is the
+ * whole thing DD-014 closes. The page has to be a page of rows they can
+ * reach, full until the list runs out.
+ *
+ * It runs last in this file, because it makes more contracts than every
+ * test above it put together and the list-shape tests count rows.
+ */
+describe("the bound and the gate, in that order (CTR-024)", () => {
+  const PAGE = 50;
+
+  const listPage = (cookies: Record<string, string>, cursor?: string) =>
+    harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts${cursor === undefined ? "" : `?cursor=${cursor}`}`,
+      cookies,
+    });
+
+  /** Every id the outsider is answered, page by page, with each page's
+   * length recorded so the shrinking can be caught. */
+  async function walk(cookies: Record<string, string>) {
+    const lengths: number[] = [];
+    const ids: string[] = [];
+    let cursor: string | null = null;
+    do {
+      const res = await listPage(cookies, cursor ?? undefined);
+      expect(res.statusCode, res.body).toBe(200);
+      const rows = res.json().contracts as ContractRow[];
+      lengths.push(rows.length);
+      ids.push(...rows.map((row) => row.id));
+      cursor = res.json().nextCursor as string | null;
+    } while (cursor !== null);
+    return { lengths, ids };
+  }
+
+  const walled: string[] = [];
+
+  beforeAll(async () => {
+    // Confidential and open contracts interleaved, and enough of both
+    // that the outsider's reachable set still spans several pages after
+    // the walled ones are taken out of it.
+    for (let made = 0; made < 120; made += 1) {
+      const contract = await newContract(`Confi paging: contract ${made}`);
+      if (made % 2 === 0) {
+        await markConfidential(contract.id);
+        walled.push(contract.id);
+      }
+    }
+  }, 120_000);
+
+  it("gives the outsider full pages, not pages shortened by what is hidden", async () => {
+    const { lengths, ids } = await walk(outsiderCookies);
+    // Every page but the last is full. A single short page in the
+    // middle is the leak: it would say how many walled records sat in
+    // that window.
+    expect(lengths.length).toBeGreaterThan(1);
+    expect(lengths.slice(0, -1)).toEqual(lengths.slice(0, -1).map(() => PAGE));
+    expect(lengths.at(-1)).toBeLessThanOrEqual(PAGE);
+    // And nothing walled arrived on any of them.
+    for (const hidden of walled) expect(ids).not.toContain(hidden);
+  });
+
+  it("answers an empty page for a cursor naming a contract the viewer cannot reach", async () => {
+    // The cursor is a position, and a position in a list they are not
+    // shown is not a position they may page from — otherwise the cursor
+    // is an oracle for the numbers of records they cannot see.
+    const hidden = walled[0]!;
+    const refused = await listPage(outsiderCookies, hidden);
+    expect(refused.statusCode, refused.body).toBe(200);
+    expect(refused.json().contracts).toEqual([]);
+    expect(refused.json().nextCursor).toBeNull();
+
+    // The same cursor works for an Administrator, who reaches it — so
+    // the empty page above is the gate answering, not a broken cursor.
+    const allowed = await listPage(adminCookies, hidden);
+    expect(allowed.statusCode, allowed.body).toBe(200);
+    expect((allowed.json().contracts as ContractRow[]).length).toBeGreaterThan(0);
   });
 });

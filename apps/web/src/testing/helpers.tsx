@@ -170,7 +170,7 @@ export function stubApi(state: ApiState) {
     // every suite that is not about documents needs no stub of its own;
     // the ones that are supply rows through `extra`, which runs first.
     if (/^\/api\/v1\/contracts\/\d+\/documents$/.test(call.url.pathname) && call.method === "GET") {
-      return json(200, { documents: [] });
+      return json(200, { documents: [], nextCursor: null });
     }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
       return json(200, state.onboarding ?? { completed: true, emailConfigured: true });
