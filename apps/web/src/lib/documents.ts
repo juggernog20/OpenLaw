@@ -2,18 +2,22 @@
 
 /**
  * The documents vocabulary the contract record's Documents section
- * reads: the row shape the API answers, the address a download is
- * fetched from, and the one upload call.
+ * reads: the row shape the API answers, the chain split into the version
+ * that matters now and the ones it supersedes, the address a download is
+ * fetched from, and the three calls the section makes.
  *
- * The upload does not go through the generated client. `openapi-fetch`
- * types a `format: binary` field as a string, and the thing being sent
- * is a `File` — so the call is a plain same-origin `fetch` with a
- * `FormData` body, which is also what carries the session cookie and
- * lets the browser write the multipart boundary. Everything else on
- * this page still goes through the typed client.
+ * The two uploads do not go through the generated client.
+ * `openapi-fetch` types a `format: binary` field as a string, and the
+ * thing being sent is a `File` — so those calls are plain same-origin
+ * `fetch`es with a `FormData` body, which is also what carries the
+ * session cookie and lets the browser write the multipart boundary. The
+ * metadata edit is ordinary JSON and goes through the typed client, like
+ * everything else on this page.
  */
 
 import type { paths } from "@openlaw/api-client";
+import { api } from "./api";
+import { problemDetail } from "./messages";
 
 /** The API's answer for one contract's paper, aliased to the generated
  * schema so an API change surfaces as a compile error here rather than
@@ -21,14 +25,50 @@ import type { paths } from "@openlaw/api-client";
 type ListResponse =
   paths["/api/v1/contracts/{number}/documents"]["get"]["responses"]["200"]["content"]["application/json"];
 
-/** One document on a record, with the version that is current. */
+/** One document on a record, with its whole version chain. */
 export type ContractDocument = ListResponse["documents"][number];
 
 /** One immutable file snapshot (DOC-001). */
-export type DocumentVersion = ContractDocument["currentVersion"];
+export type DocumentVersion = ContractDocument["versions"][number];
 
 /** What a version is in the negotiation (CTR-014). */
 export type DocumentVersionKind = DocumentVersion["kind"];
+
+/** The five CTR-014 kinds, in the order a negotiation walks them — the
+ * order the composer offers and the order the chain usually reads in. */
+export const DOCUMENT_VERSION_KINDS = [
+  "draft_ours",
+  "redline_theirs",
+  "redline_ours",
+  "amendment",
+  "executed",
+] as const satisfies readonly DocumentVersionKind[];
+
+/**
+ * One document's chain, split the way the section draws it: the version
+ * that matters now, and the rounds it supersedes newest first.
+ *
+ * `current` is the row the API marked, not the last one in the array —
+ * the pin is the server's answer to "which file matters now" (DOC-001),
+ * and reading it rather than re-deriving it means the section cannot
+ * disagree with the record.
+ *
+ * A document always has at least one version, so `undefined` here means
+ * a broken record rather than an empty one, and the caller draws nothing
+ * for it.
+ */
+export function chainOf(
+  document: ContractDocument,
+): { current: DocumentVersion; superseded: DocumentVersion[] } | undefined {
+  const current = document.versions.find((version) => version.isCurrent);
+  if (!current) return undefined;
+  return {
+    current,
+    // Newest first: the round before this one is the one a reader
+    // reaches for, and it should not be at the bottom of a long chain.
+    superseded: document.versions.filter((version) => version.id !== current.id).reverse(),
+  };
+}
 
 /**
  * Where one version's bytes are read from.
@@ -42,30 +82,56 @@ export function documentDownloadHref(documentId: string, versionId: string): str
   return `/api/v1/documents/${encodeURIComponent(documentId)}/versions/${encodeURIComponent(versionId)}/download`;
 }
 
-/** What an upload answers: the created document, or why not. */
+/** What the composer collects beside the file itself: what this version
+ * is in the negotiation, and what changed in this round. */
+export interface UploadDraft {
+  file: File;
+  kind: DocumentVersionKind;
+  /** Empty when the uploader wrote nothing — the seam stores NULL. */
+  note: string;
+}
+
+/** What an upload answers: the document as it now stands, or why not. */
 export type UploadOutcome =
   { ok: true; document: ContractDocument } | { ok: false; detail?: string };
 
 /**
  * Sends one file to a contract, creating a document with version 1.
  *
- * The kind and the note are not collected here: the M11/2 control is
- * the file and nothing else, and the seam defaults the kind to
- * `draft_ours`. When the composer for them lands (M11/3) they go into
- * this form **before** the file part, which is the order the seam reads
- * them in.
+ * The kind and the note are written into the form **before** the file
+ * part, which is the order the seam reads them in: the parser reports
+ * the fields it has already seen, and the file part ends the ones it can
+ * report.
  */
-export async function uploadContractDocument(
+export function uploadContractDocument(
   contractNumber: number,
-  file: File,
+  draft: UploadDraft,
 ): Promise<UploadOutcome> {
+  return send(`/api/v1/contracts/${contractNumber}/documents`, draft);
+}
+
+/**
+ * Appends the next version to a document (DOC-001).
+ *
+ * The number is the server's to assign — it takes it under the owning
+ * contract's row lock — so nothing here counts the chain or guesses at
+ * what comes next.
+ */
+export function uploadDocumentVersion(
+  documentId: string,
+  draft: UploadDraft,
+): Promise<UploadOutcome> {
+  return send(`/api/v1/documents/${encodeURIComponent(documentId)}/versions`, draft);
+}
+
+/** The one multipart POST both uploads are. */
+async function send(url: string, draft: UploadDraft): Promise<UploadOutcome> {
   const form = new FormData();
-  form.append("file", file, file.name);
+  form.append("kind", draft.kind);
+  if (draft.note.trim().length > 0) form.append("note", draft.note.trim());
+  form.append("file", draft.file, draft.file.name);
   try {
-    const response = await fetch(`/api/v1/contracts/${contractNumber}/documents`, {
-      method: "POST",
-      body: form,
-    });
+    const response = await fetch(url, { method: "POST", body: form });
     if (!response.ok) return { ok: false, detail: await problemDetailOf(response) };
     const document = documentIn(await response.json());
     // A 201 whose body is not a document is not a success this caller
@@ -78,6 +144,22 @@ export async function uploadContractDocument(
   }
 }
 
+/**
+ * Renames a document or edits its description (DOC-007), one field per
+ * call as DES-017 commits them. The stored files are untouched: a
+ * version keeps the filename it arrived under.
+ */
+export async function updateDocument(
+  documentId: string,
+  patch: Readonly<{ title?: string; description?: string | null }>,
+): Promise<UploadOutcome> {
+  const { data, error } = await api.PATCH("/api/v1/documents/{documentId}", {
+    params: { path: { documentId } },
+    body: patch,
+  });
+  return data ? { ok: true, document: data.document } : { ok: false, detail: problemDetail(error) };
+}
+
 /** One field off a parsed JSON body, without asserting its shape. */
 function field(body: unknown, name: string): unknown {
   return typeof body === "object" && body !== null
@@ -86,7 +168,7 @@ function field(body: unknown, name: string): unknown {
 }
 
 /**
- * The created document out of an upload's answer, or `undefined`.
+ * The document out of an upload's answer, or `undefined`.
  *
  * The typed client validates nothing at runtime and neither does this —
  * what it does is refuse to *assert*. The one field the caller acts on

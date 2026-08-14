@@ -98,6 +98,12 @@
   "activity.document.created": {
     "defaultMessage": "{actor} uploaded {title}"
   },
+  "activity.document.updated": {
+    "defaultMessage": "{actor} edited the details of {title}"
+  },
+  "activity.document.versionAdded": {
+    "defaultMessage": "{version, select, unknown {{actor} added a version of {title}} other {{actor} added version {version} of {title}}}"
+  },
   "activity.empty": {
     "defaultMessage": "Nothing has happened to this record yet. Every change to it shows up here."
   },
@@ -944,6 +950,15 @@
   "dialog.close": {
     "defaultMessage": "Close"
   },
+  "documents.addVersionFor": {
+    "defaultMessage": "Add a version to {title}"
+  },
+  "documents.chain.toggle": {
+    "defaultMessage": "{open, select, true {Hide} other {Show}} the {count, plural, one {# earlier version} other {# earlier versions}} of {title}"
+  },
+  "documents.column.actions": {
+    "defaultMessage": "Actions"
+  },
   "documents.column.kind": {
     "defaultMessage": "Kind"
   },
@@ -959,11 +974,74 @@
   "documents.column.uploadedBy": {
     "defaultMessage": "Uploaded by"
   },
+  "documents.column.version": {
+    "defaultMessage": "Version"
+  },
+  "documents.composer.choose": {
+    "defaultMessage": "Choose file"
+  },
+  "documents.composer.file": {
+    "defaultMessage": "File"
+  },
+  "documents.composer.fileRequired": {
+    "defaultMessage": "Choose a file to upload."
+  },
+  "documents.composer.kind": {
+    "defaultMessage": "Kind"
+  },
+  "documents.composer.noFile": {
+    "defaultMessage": "No file chosen"
+  },
+  "documents.composer.note": {
+    "defaultMessage": "Note"
+  },
+  "documents.composer.notePlaceholder": {
+    "defaultMessage": "What changed in this round"
+  },
+  "documents.composer.submit": {
+    "defaultMessage": "Upload"
+  },
+  "documents.composer.uploadTitle": {
+    "defaultMessage": "Upload document"
+  },
+  "documents.composer.versionTitle": {
+    "defaultMessage": "Add version"
+  },
+  "documents.current": {
+    "defaultMessage": "Current"
+  },
+  "documents.descriptionPrefix": {
+    "defaultMessage": "Description:"
+  },
+  "documents.details.description": {
+    "defaultMessage": "Description"
+  },
+  "documents.details.error": {
+    "defaultMessage": "Those details could not be saved. Try again."
+  },
+  "documents.details.name": {
+    "defaultMessage": "Name"
+  },
+  "documents.details.nameRequired": {
+    "defaultMessage": "Give the document a name."
+  },
+  "documents.details.submit": {
+    "defaultMessage": "Save"
+  },
+  "documents.details.title": {
+    "defaultMessage": "Edit details"
+  },
+  "documents.editDetailsFor": {
+    "defaultMessage": "Edit the details of {title}"
+  },
   "documents.empty": {
     "defaultMessage": "No documents on this contract yet."
   },
   "documents.kind": {
     "defaultMessage": "{kind, select, draft_ours {Draft · ours} redline_theirs {Redline · theirs} redline_ours {Redline · ours} executed {Executed} amendment {Amendment} other {Unknown}}"
+  },
+  "documents.notePrefix": {
+    "defaultMessage": "Note:"
   },
   "documents.section": {
     "defaultMessage": "Documents"
@@ -974,11 +1052,11 @@
   "documents.uploadError": {
     "defaultMessage": "That file could not be uploaded. Try again."
   },
-  "documents.uploadField": {
-    "defaultMessage": "File to upload"
-  },
   "documents.uploadedBy": {
     "defaultMessage": "Uploaded by {name}"
+  },
+  "documents.versionNumber": {
+    "defaultMessage": "v{number}"
   },
   "entities.archivedPill": {
     "defaultMessage": "Archived"

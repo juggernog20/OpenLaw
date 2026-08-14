@@ -1,15 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * A contract's paper (M11/2) — the first path in the codebase that puts
- * a file anywhere: upload a draft, list what is on the record, download
- * it back.
+ * A contract's paper (M11/2, M11/3) — the first path in the codebase
+ * that puts a file anywhere: upload a draft, append the next revision,
+ * read the chain, download any version of it, and keep the record's
+ * metadata legible without touching the files.
  *
  * **Two tables, one logical record** (DOC-001). A `documents` row is the
  * thing the contract links to; the bytes live in `document_versions`,
- * numbered 1..n and immutable. There is no route here that edits or
- * deletes a version, and that absence is the decision — a correction
- * appends a new version (M11/3).
+ * numbered 1..n and immutable.
+ *
+ * **There is no route here that edits or deletes a version, and that
+ * absence is the decision.** A correction appends a new version, which
+ * is what makes the chain dependable as negotiation history — so the
+ * suite asserts the absence rather than trusting it, by asking the route
+ * table whether such a route exists. Metadata edits reach the
+ * `documents` row and never a version row.
+ *
+ * **The next version number is assigned under the owning contract's row
+ * lock.** Two people uploading a revision at the same moment serialize
+ * behind that lock and take consecutive numbers, so the chain has
+ * neither a collision nor a gap. The unique index on (document,
+ * number) stands behind it as the database's own last word.
  *
  * **Access is inherited, never held here** (DOC-008, DD-014). There is
  * no document team. Every read and every write first answers the owning
@@ -41,12 +53,16 @@
  * access predicate. There are no presigned URLs — one authentication
  * path, and the local filesystem driver has no other way anyway.
  *
- * Creating a document appends `document.created` on the owning contract
- * (DD-017), at the tier every other record action rides.
+ * **Every mutation writes its own activity action** on the owning
+ * contract (DD-017): creating a document, adding a version to one, and
+ * editing what the record says are three different things that happened,
+ * so the feed narrates three different sentences rather than one generic
+ * edit.
  */
 
 import { createHash } from "node:crypto";
 import { Readable } from "node:stream";
+import type { FastifyRequest } from "fastify";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { uuidv7 } from "uuidv7";
 import { z } from "zod";
@@ -96,6 +112,8 @@ const NumberParams = z.object({ number: z.coerce.number().int().positive() });
  * viewer cannot reach answers 404 anyway. */
 const RecordIdSchema = z.string().min(1).max(64);
 
+const DocumentParams = z.object({ documentId: RecordIdSchema });
+
 const VersionParams = z.object({
   documentId: RecordIdSchema,
   versionId: RecordIdSchema,
@@ -138,14 +156,30 @@ const VersionSchema = z.object({
   checksumSha256: z.string(),
   uploadedBy: PersonSchema,
   createdAt: z.iso.datetime({ offset: true }),
+  /**
+   * Which one of the chain is current — the highest version number
+   * (DOC-001), and the answer to "which file matters now".
+   *
+   * Said here rather than left to be inferred from the ordering. A
+   * client that read the chain and took the last row would be right
+   * only for as long as the order holds, and the pin is the one fact
+   * the whole view is built around, so the server states it.
+   */
+  isCurrent: z.boolean(),
 });
 
 const DocumentSchema = z.object({
   id: z.string(),
   title: z.string(),
-  /** The highest-numbered version — "which file matters now" (DOC-001).
-   * The whole chain is the version-chain read (M11/3). */
-  currentVersion: VersionSchema,
+  /** What the record is, in the team's own words (DOC-007). */
+  description: z.string().nullable(),
+  /**
+   * The whole chain, in order 1..n, exactly one row of it current
+   * (DOC-001). Superseded versions stay in it and stay downloadable:
+   * the chain is the negotiation history, so reconstructing what was on
+   * the table in round two is reading round two's row.
+   */
+  versions: z.array(VersionSchema),
   createdBy: PersonSchema,
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -153,6 +187,23 @@ const DocumentSchema = z.object({
 
 const DocumentsEnvelope = z.object({ documents: z.array(DocumentSchema) });
 const DocumentEnvelope = z.object({ document: DocumentSchema });
+
+/** What the record is called, and what it says about itself (DOC-007).
+ * The title is bounded where the contract's own is; the description is
+ * the same free text at the same ceiling. */
+const TitleSchema = z.string().trim().min(1).max(200);
+const DescriptionSchema = z.string().trim().max(10_000);
+
+/**
+ * The metadata edit — the two things about a document that are editable
+ * at all. Both are optional, because DES-017 commits one field at a
+ * time; a body carrying neither changes nothing and is answered with the
+ * row as it stands.
+ */
+const MetadataPatch = z.object({
+  title: TitleSchema.optional(),
+  description: DescriptionSchema.nullable().optional(),
+});
 
 /**
  * The multipart form, described for the OpenAPI document only.
@@ -247,13 +298,59 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     return row ?? null;
   }
 
-  /** The one document projection, joined to its creator and to the
-   * version that is current. Callers add the scope. */
+  /** One document this viewer reaches, as the routes here need it. */
+  interface ReachedDocument {
+    id: string;
+    title: string;
+    description: string | null;
+    contractId: string;
+    /** The owning contract's SET-003 soft delete (CTR-021). */
+    archivedAt: Date | null;
+  }
+
+  /**
+   * One document this viewer reaches, by its own id, or `null`.
+   *
+   * The owning contract is joined in and the scope rides beside the id,
+   * so a document on a contract the viewer cannot reach is not
+   * distinguishable from one that was never created (DOC-008, DD-014).
+   * A document's id says nothing about which record it is on, so
+   * refusing it any other way would be the leak the 404 prevents.
+   *
+   * `lock` holds the **contract** row — not the document row. That is
+   * the lock every write on a contract's paper serializes behind, so a
+   * version number assigned under it cannot be assigned twice.
+   */
+  async function reachedDocument(
+    db: ContractAccessReader & Executor,
+    user: AuthenticatedUser,
+    documentId: string,
+    lock = false,
+  ): Promise<ReachedDocument | null> {
+    const query = db
+      .select({
+        id: documents.id,
+        title: documents.title,
+        description: documents.description,
+        contractId: documents.contractId,
+        archivedAt: contracts.archivedAt,
+      })
+      .from(documents)
+      .innerJoin(contracts, eq(documents.contractId, contracts.id))
+      .where(and(eq(documents.id, documentId), contractTeamScope(db, user)))
+      .limit(1);
+    const [row] = await (lock ? query.for("update", { of: contracts }) : query);
+    return row ?? null;
+  }
+
+  /** The one document projection, joined to its creator. The chain is
+   * read beside it. Callers add the scope. */
   const selectDocuments = (db: Executor) =>
     db
       .select({
         id: documents.id,
         title: documents.title,
+        description: documents.description,
         contractId: documents.contractId,
         createdAt: documents.createdAt,
         updatedAt: documents.updatedAt,
@@ -307,7 +404,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     };
   }
 
-  function toVersion(row: VersionRow) {
+  function toVersion(row: VersionRow, isCurrent: boolean) {
     return {
       id: row.id,
       versionNumber: row.versionNumber,
@@ -319,14 +416,25 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       checksumSha256: row.checksumSha256,
       uploadedBy: toPerson(row.uploadedBy),
       createdAt: row.createdAt.toISOString(),
+      isCurrent,
     };
   }
 
-  function toDocument(row: DocumentRow, current: VersionRow) {
+  /**
+   * One document with its chain, ordered 1..n and pinned.
+   *
+   * The chain arrives in version order, so the current version is its
+   * last row — that is what "current is the highest version number"
+   * means (DOC-001). The pin is computed once, here, so no surface has
+   * to work it out again.
+   */
+  function toDocument(row: DocumentRow, chain: readonly VersionRow[]) {
+    const last = chain.length - 1;
     return {
       id: row.id,
       title: row.title,
-      currentVersion: toVersion(current),
+      description: row.description,
+      versions: chain.map((version, index) => toVersion(version, index === last)),
       createdBy: toPerson(row.createdBy),
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
@@ -334,35 +442,46 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
   }
 
   /**
-   * The current version of each of these documents, in one read.
+   * The whole chain of each of these documents, in one read, each in
+   * version order.
    *
-   * "Current" is the highest version number (DOC-001), and `DISTINCT ON`
-   * is that sentence in SQL: the database keeps the first row of each
-   * document's ordered group and discards the rest, so a document with a
-   * long chain still costs one row here. Doing the same thing in
-   * JavaScript would mean reading every version of every document to
-   * throw all but one away.
+   * One read for every document on the record rather than one per
+   * document: the record page draws them all, and a query per row is
+   * how a section with six documents on it becomes seven round trips.
    *
    * A document always has at least one version — the upload writes both
-   * rows in one transaction — so a document with no row here would be a
+   * rows in one transaction — so a document with no rows here would be a
    * broken record, and it is left out of the answer rather than drawn
    * without a file.
    */
-  async function currentVersionsOf(
+  async function chainsOf(
     db: Executor,
     documentIds: readonly string[],
-  ): Promise<Map<string, VersionRow>> {
+  ): Promise<Map<string, VersionRow[]>> {
     if (documentIds.length === 0) return new Map();
-    const rows = await db
-      // The distinct-on expression has to lead the ordering, which is
-      // exactly the order wanted anyway: group by document, and take
-      // the top of each chain.
-      .selectDistinctOn([documentVersions.documentId], versionColumns)
-      .from(documentVersions)
-      .innerJoin(users, eq(documentVersions.createdBy, users.id))
+    const rows = await selectVersions(db)
       .where(inArray(documentVersions.documentId, [...documentIds]))
-      .orderBy(asc(documentVersions.documentId), desc(documentVersions.versionNumber));
-    return new Map(rows.map((row) => [row.documentId, row]));
+      // 1..n within each document, which is the order the chain reads
+      // in and the order the pin is taken from.
+      .orderBy(asc(documentVersions.documentId), asc(documentVersions.versionNumber));
+    const chains = new Map<string, VersionRow[]>();
+    for (const row of rows) {
+      const chain = chains.get(row.documentId);
+      if (chain) chain.push(row);
+      else chains.set(row.documentId, [row]);
+    }
+    return chains;
+  }
+
+  /** One document with its chain, read back through the projection the
+   * list answers with, so what a write returns is what the next load
+   * will draw. */
+  async function documentWithChain(db: Executor, documentId: string) {
+    const [row] = await selectDocuments(db).where(eq(documents.id, documentId));
+    const chain = (await chainsOf(db, [documentId])).get(documentId);
+    // Both are written in one transaction, so neither can be missing
+    // for a document this code just wrote or edited.
+    return toDocument(row!, chain!);
   }
 
   app.get(
@@ -373,7 +492,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "listContractDocuments",
         summary:
           "The paper on one contract (DOC-008), newest first, each with " +
-          "the version that is current. Access is inherited from the " +
+          "its whole version chain in order 1..n and one version of it " +
+          "marked current. A contract holds as many documents as it " +
+          "needs: a loose attachment such as a schedule or a " +
+          "certificate is its own document with its own chain, beside " +
+          "the main instrument rather than inside its history " +
+          "(CTR-014). Access is inherited from the " +
           "contract and nothing else: a Contributor on the team reads " +
           "the list, and anyone who cannot reach the contract — a " +
           "Contributor who is not on it, a Legal Team Member outside a " +
@@ -395,14 +519,14 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         // breaks a same-instant tie: uuidv7 is time-ordered, so that
         // order is still the upload order.
         .orderBy(desc(documents.createdAt), desc(documents.id));
-      const current = await currentVersionsOf(
+      const chains = await chainsOf(
         app.db,
         rows.map((row) => row.id),
       );
       return {
         documents: rows.flatMap((row) => {
-          const version = current.get(row.id);
-          return version ? [toDocument(row, version)] : [];
+          const chain = chains.get(row.id);
+          return chain ? [toDocument(row, chain)] : [];
         }),
       };
     },
@@ -442,73 +566,11 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       // that must not go stale, and the frozen answer rides with it.
       assertOpen(await reachedContract(app.db, request.user, request.params.number));
 
-      const part = await request.file().catch((error: unknown) => {
-        throw asUploadRefusal(error);
-      });
-      if (!part) throw httpError(400, "Attach a file to upload.");
-
-      // Read before the file is consumed. The parser reports the fields
-      // it has already seen, and the file part ends the ones it can
-      // report — which is why the form has to put them first.
-      const rawKind = fieldValue(part.fields, "kind");
-      const rawNote = fieldValue(part.fields, "note");
-      const kind: DocumentVersionKind = rawKind
-        ? (KindSchema.safeParse(rawKind).data ?? refuseKind())
-        : "draft_ours";
-      const note = rawNote?.trim() ? rawNote.trim().slice(0, MAX_NOTE_LENGTH) : null;
-
-      // A part with no `filename` at all is still a file part when it
-      // declares `application/octet-stream`, so the name has to be
-      // treated as absent rather than assumed present — an unnamed
-      // upload is refused, not crashed on.
-      const filename = (part.filename ?? "").trim().slice(0, MAX_FILENAME_LENGTH);
-      if (filename.length === 0) throw httpError(400, "The uploaded file has no name.");
-      // Client-supplied and unverified, so it is stored as a hint and
-      // never acted on. An upload that declares nothing is stored as
-      // the type that means "bytes".
-      const mimeType = part.mimetype.trim() || "application/octet-stream";
-
       // Both ids are minted here, because the storage key is built from
       // them and the blob is written before the rows exist (DOC-012).
       const documentId = uuidv7();
       const versionId = uuidv7();
-      const key = `documents/${documentId}/${versionId}`;
-
-      const digest = createHash("sha256");
-      let byteSize = 0;
-      // One pass: the bytes are hashed and counted on their way to the
-      // driver, so nothing is read twice and nothing is held whole in
-      // memory. An error on the source — a cut-off upload, the size
-      // limit tripping — is thrown out of the iterator, so `put`
-      // rejects and the driver leaves nothing at the key.
-      async function* metered(source: AsyncIterable<Buffer>) {
-        for await (const chunk of source) {
-          digest.update(chunk);
-          byteSize += chunk.length;
-          yield chunk;
-        }
-      }
-
-      let fileRef: string;
-      try {
-        fileRef = await app.storage.put(key, Readable.from(metered(part.file)));
-      } catch (error) {
-        throw asUploadRefusal(error);
-      }
-      // The ceiling, enforced. The parser stops the stream at the limit
-      // and marks it truncated rather than throwing at whoever is
-      // reading it, so what reached the driver is the first N bytes of a
-      // longer file — a silent corruption if it were kept. It is deleted
-      // here rather than left as an orphan, because this is the one case
-      // where the writer knows the blob is worthless. The key is not
-      // written again (DOC-012): the retry mints its own.
-      if (part.file.truncated) {
-        await app.storage.delete(fileRef).catch((error: unknown) => {
-          request.log.warn({ err: error, fileRef }, "could not remove a truncated upload");
-        });
-        throw refuseOversize();
-      }
-      const checksumSha256 = digest.digest("hex");
+      const file = await receiveUpload(request, storageKey(documentId, versionId));
 
       const created = await app.db.transaction(async (tx) => {
         // The contract row is held for the write, and reach is asked
@@ -522,24 +584,19 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           id: documentId,
           // Seeded from the filename: the record has to be called
           // something, and what the uploader recognises is the name
-          // they chose on their own machine. The rename path (DOC-007)
-          // lands with the metadata edit.
-          title: filename,
+          // they chose on their own machine. It is renameable from
+          // there (DOC-007), and renaming leaves the file's own name
+          // alone.
+          title: file.filename,
           contractId: locked.id,
           createdBy: request.user.id,
         });
-        await tx.insert(documentVersions).values({
-          id: versionId,
+        await insertVersion(tx, {
           documentId,
+          versionId,
           versionNumber: 1,
-          fileRef,
-          kind,
-          note,
-          originalFilename: filename,
-          mimeType,
-          byteSize,
-          checksumSha256,
-          createdBy: request.user.id,
+          file,
+          by: request.user,
         });
         // On the owning contract, at the tier every record action rides
         // (DD-017). The title is in the payload on purpose: hard
@@ -551,17 +608,170 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           actorId: request.user.id,
           action: "document.created",
           visibility: RECORD_ACTIVITY_TIER,
-          payload: { documentId, versionId, title: filename },
+          payload: { documentId, versionId, title: file.filename },
         });
 
         // Read back through the list's own projection, so the row the
         // uploader gets is the row the next load will draw.
-        const [row] = await selectDocuments(tx).where(eq(documents.id, documentId));
-        const [version] = await selectVersions(tx).where(eq(documentVersions.id, versionId));
-        return toDocument(row!, version!);
+        return documentWithChain(tx, documentId);
       });
 
       return reply.status(201).send({ document: created });
+    },
+  );
+
+  app.post(
+    "/documents/:documentId/versions",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "uploadDocumentVersion",
+        summary:
+          "Append the next version to an existing document (DOC-001). " +
+          "The number is assigned under the owning contract's row lock, " +
+          "so two revisions uploaded at the same moment take consecutive " +
+          "numbers rather than colliding, and the chain runs 1..n with " +
+          "no gaps. The version carries one of the five CTR-014 kinds " +
+          "and, when the uploader wrote one, a short note saying what " +
+          "changed in this round. Nothing about the versions already in " +
+          "the chain is touched: they are immutable, and a correction is " +
+          "another version. Appends document.version_added on the owning " +
+          "contract (DD-017). The kind and note fields must be sent " +
+          "before the file part. An archived contract takes no new paper " +
+          "until it is restored. A document on a contract the uploader " +
+          "cannot reach answers 404, exactly as one that does not exist",
+        tags: ["documents"],
+        consumes: ["multipart/form-data"],
+        params: DocumentParams,
+        body: UploadForm,
+        response: { 201: DocumentEnvelope, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      const { documentId } = request.params;
+      // Before a byte is read, for the reason the create path gives.
+      assertOpenDocument(await reachedDocument(app.db, request.user, documentId));
+
+      const versionId = uuidv7();
+      const file = await receiveUpload(request, storageKey(documentId, versionId));
+
+      const updated = await app.db.transaction(async (tx) => {
+        // The owning contract's row is held here, and this is the lock
+        // the version number is assigned under: two uploaders reading
+        // the chain's high-water mark at the same moment would both see
+        // the same number, so the second one waits here until the first
+        // has committed its row and then reads the number it wrote.
+        const locked = await reachedDocument(tx, request.user, documentId, true);
+        assertOpenDocument(locked);
+
+        const [high] = await tx
+          .select({ versionNumber: documentVersions.versionNumber })
+          .from(documentVersions)
+          .where(eq(documentVersions.documentId, documentId))
+          .orderBy(desc(documentVersions.versionNumber))
+          .limit(1);
+        // A document always has version 1, so this is a step up from a
+        // number that is really there rather than a count of rows.
+        const versionNumber = (high?.versionNumber ?? 0) + 1;
+
+        await insertVersion(tx, { documentId, versionId, versionNumber, file, by: request.user });
+        // The document's own row is touched so that "when did this
+        // document last change" answers with the new round rather than
+        // with the day it was created.
+        await tx
+          .update(documents)
+          .set({ updatedAt: new Date() })
+          .where(eq(documents.id, documentId));
+        await recordActivity(tx, {
+          entityType: "contract",
+          entityId: locked.contractId,
+          actorId: request.user.id,
+          action: "document.version_added",
+          visibility: RECORD_ACTIVITY_TIER,
+          payload: {
+            documentId,
+            versionId,
+            title: locked.title,
+            versionNumber,
+            kind: file.kind,
+          },
+        });
+        return documentWithChain(tx, documentId);
+      });
+
+      return reply.status(201).send({ document: updated });
+    },
+  );
+
+  app.patch(
+    "/documents/:documentId",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "updateDocument",
+        summary:
+          "Rename a document or edit its description (DOC-007), one " +
+          "field per request as DES-017 commits them. The stored files " +
+          "are untouched by either: a version's own filename is what it " +
+          "arrived as and stays that, and a download still offers it " +
+          "back. Appends document.updated on the owning contract " +
+          "(DD-017), naming what changed. An archived contract takes no " +
+          "edit until it is restored. A document on a contract the " +
+          "editor cannot reach answers 404, exactly as one that does not " +
+          "exist",
+        tags: ["documents"],
+        params: DocumentParams,
+        body: MetadataPatch,
+        response: { 200: DocumentEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const { documentId } = request.params;
+      const body = request.body;
+
+      return {
+        document: await app.db.transaction(async (tx) => {
+          const target = await reachedDocument(tx, request.user, documentId, true);
+          assertOpenDocument(target);
+
+          const patch: { title?: string; description?: string | null } = {};
+          /** The DD-017 changed map — old and new per edited field,
+           * feeding the M9 viewer's narration. */
+          const changed: Record<string, { from: unknown; to: unknown }> = {};
+
+          if (body.title !== undefined && body.title !== target.title) {
+            patch.title = body.title;
+            changed.title = { from: target.title, to: body.title };
+          }
+          if (body.description !== undefined) {
+            // Blank normalizes to NULL; null clears deliberately.
+            const next = body.description || null;
+            if (next !== target.description) {
+              patch.description = next;
+              changed.description = { from: target.description, to: next };
+            }
+          }
+
+          // Nothing changed: answer with the row and write no
+          // misleading from==to entry.
+          if (Object.keys(changed).length > 0) {
+            await tx.update(documents).set(patch).where(eq(documents.id, documentId));
+            await recordActivity(tx, {
+              entityType: "contract",
+              entityId: target.contractId,
+              actorId: request.user.id,
+              action: "document.updated",
+              visibility: RECORD_ACTIVITY_TIER,
+              // The title as it stands after the edit, so the entry
+              // still names the document after DOC-010's hard delete
+              // has taken the row.
+              payload: { documentId, title: patch.title ?? target.title, changed },
+            });
+          }
+
+          return documentWithChain(tx, documentId);
+        }),
+      };
     },
   );
 
@@ -635,6 +845,157 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
+  /** Where one version's blob lives (DOC-012): minted from the two ids,
+   * never from the uploaded filename, so no name a person chose can
+   * shape a storage key. */
+  function storageKey(documentId: string, versionId: string): string {
+    return `documents/${documentId}/${versionId}`;
+  }
+
+  /** One uploaded file, once its bytes are stored and described. */
+  interface StoredUpload {
+    filename: string;
+    mimeType: string;
+    kind: DocumentVersionKind;
+    note: string | null;
+    fileRef: string;
+    byteSize: number;
+    checksumSha256: string;
+  }
+
+  /**
+   * Takes one multipart upload off the request, stores its bytes through
+   * the adapter, and answers what arrived.
+   *
+   * Shared by the two upload paths — creating a document and appending
+   * to one — because the file half of both is the same act, and the
+   * refusals have to be too: a person who is told a 300-character name
+   * is too long on their first upload must be told the same thing on
+   * their fourth.
+   *
+   * The bytes are streamed straight through: never buffered whole in
+   * memory, never staged on disk, hashed and counted on the same pass.
+   */
+  async function receiveUpload(request: FastifyRequest, key: string): Promise<StoredUpload> {
+    const part = await request.file().catch((error: unknown) => {
+      throw asUploadRefusal(error);
+    });
+    if (!part) throw httpError(400, "Attach a file to upload.");
+
+    // Read before the file is consumed. The parser reports the fields
+    // it has already seen, and the file part ends the ones it can
+    // report — which is why the form has to put them first.
+    const rawKind = fieldValue(part.fields, "kind");
+    const rawNote = fieldValue(part.fields, "note");
+    const kind: DocumentVersionKind = rawKind
+      ? (KindSchema.safeParse(rawKind).data ?? refuseKind())
+      : "draft_ours";
+    // Refused rather than shortened. A note is what the uploader wrote
+    // about this round, and silently keeping the first 2000 characters
+    // of it would put words on the record that nobody chose to stop
+    // at — the composer bounds its own control, so a note this long is
+    // a client that ignored the bound and is told so.
+    const trimmedNote = rawNote?.trim() ?? "";
+    if (trimmedNote.length > MAX_NOTE_LENGTH) {
+      throw httpError(400, `Shorten the note to ${MAX_NOTE_LENGTH} characters or fewer.`);
+    }
+    const note = trimmedNote || null;
+
+    // A part with no `filename` at all is still a file part when it
+    // declares `application/octet-stream`, so the name has to be
+    // treated as absent rather than assumed present — an unnamed
+    // upload is refused, not crashed on.
+    const filename = (part.filename ?? "").trim();
+    if (filename.length === 0) throw httpError(400, "The uploaded file has no name.");
+    // Refused rather than shortened, for the note's reason and one of
+    // its own: cutting the end off a filename takes its extension with
+    // it, which is the part a later download and M12's rendering both
+    // read.
+    if (filename.length > MAX_FILENAME_LENGTH) {
+      throw httpError(
+        400,
+        `Rename the file to ${MAX_FILENAME_LENGTH} characters or fewer before uploading it.`,
+      );
+    }
+    // Client-supplied and unverified, so it is stored as a hint and
+    // never acted on. An upload that declares nothing is stored as
+    // the type that means "bytes".
+    const mimeType = part.mimetype.trim() || "application/octet-stream";
+
+    const digest = createHash("sha256");
+    let byteSize = 0;
+    // One pass: the bytes are hashed and counted on their way to the
+    // driver, so nothing is read twice and nothing is held whole in
+    // memory. An error on the source — a cut-off upload, the size
+    // limit tripping — is thrown out of the iterator, so `put`
+    // rejects and the driver leaves nothing at the key.
+    async function* metered(source: AsyncIterable<Buffer>) {
+      for await (const chunk of source) {
+        digest.update(chunk);
+        byteSize += chunk.length;
+        yield chunk;
+      }
+    }
+
+    let fileRef: string;
+    try {
+      fileRef = await app.storage.put(key, Readable.from(metered(part.file)));
+    } catch (error) {
+      throw asUploadRefusal(error);
+    }
+    // The ceiling, enforced. The parser stops the stream at the limit
+    // and marks it truncated rather than throwing at whoever is
+    // reading it, so what reached the driver is the first N bytes of a
+    // longer file — a silent corruption if it were kept. It is deleted
+    // here rather than left as an orphan, because this is the one case
+    // where the writer knows the blob is worthless. The key is not
+    // written again (DOC-012): the retry mints its own.
+    if (part.file.truncated) {
+      await app.storage.delete(fileRef).catch((error: unknown) => {
+        request.log.warn({ err: error, fileRef }, "could not remove a truncated upload");
+      });
+      throw refuseOversize();
+    }
+
+    return {
+      filename,
+      mimeType,
+      kind,
+      note,
+      fileRef,
+      byteSize,
+      checksumSha256: digest.digest("hex"),
+    };
+  }
+
+  /** One row in the chain, written from what arrived. The only INSERT
+   * into `document_versions` there is, and there is no UPDATE and no
+   * DELETE anywhere beside it (DOC-001). */
+  function insertVersion(
+    tx: Tx,
+    row: Readonly<{
+      documentId: string;
+      versionId: string;
+      versionNumber: number;
+      file: StoredUpload;
+      by: AuthenticatedUser;
+    }>,
+  ) {
+    return tx.insert(documentVersions).values({
+      id: row.versionId,
+      documentId: row.documentId,
+      versionNumber: row.versionNumber,
+      fileRef: row.file.fileRef,
+      kind: row.file.kind,
+      note: row.file.note,
+      originalFilename: row.file.filename,
+      mimeType: row.file.mimeType,
+      byteSize: row.file.byteSize,
+      checksumSha256: row.file.checksumSha256,
+      createdBy: row.by.id,
+    });
+  }
+
   /** The one refusal a bad `kind` earns, thrown rather than returned so
    * the expression above stays one line. */
   function refuseKind(): never {
@@ -654,6 +1015,17 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     if (!contract) throw httpError(404, NO_CONTRACT);
     if (contract.archivedAt) {
       throw httpError(409, "This contract is archived. Restore it before uploading.");
+    }
+  }
+
+  /** The same two refusals, in the same order, for a write addressed at
+   * a document rather than at its contract. */
+  function assertOpenDocument(
+    document: ReachedDocument | null,
+  ): asserts document is ReachedDocument {
+    if (!document) throw httpError(404, NO_DOCUMENT);
+    if (document.archivedAt) {
+      throw httpError(409, "This contract is archived. Restore it before changing its paper.");
     }
   }
 

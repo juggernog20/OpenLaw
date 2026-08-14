@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * A contract's paper (M11/2) at the HTTP seam: upload a draft, see it on
- * the record, and get the same bytes back.
+ * A contract's paper (M11/2, M11/3) at the HTTP seam: upload a draft,
+ * append the rounds that follow, read the chain, and get any round's
+ * bytes back.
  *
  * The whole path is exercised through injected requests against real
  * Postgres and the committed migrations, with the production local
@@ -11,14 +12,22 @@
  * adapter: the file that comes back is byte-for-byte the file that went
  * in, and its SHA-256 is the one the row recorded.
  *
- * Access is the second subject, and it is written the M10 way. A viewer
- * who cannot reach the owning contract must get, for the list, the
- * download, and the upload alike, exactly the answer a contract that was
- * never created gives. Each refusal is therefore asserted twice — once
- * at a walled record and once at a number nothing was ever made under —
- * and the two answers must be one answer.
+ * The chain is the second subject. Numbers run 1..n with the highest one
+ * current; four appends fired at once still produce consecutive numbers,
+ * because the number is assigned under the owning contract's row lock;
+ * every version stays downloadable, superseded ones included; and no
+ * route edits or deletes one, which is asserted against the route table
+ * rather than trusted.
  *
- * The third subject is the ceiling (story 24). An oversized upload is
+ * Access is the third subject, and it is written the M10 way. A viewer
+ * who cannot reach the owning contract must get, for the list, the
+ * download, the upload, the append, and the metadata edit alike, exactly
+ * the answer a contract that was never created gives. Each refusal is
+ * therefore asserted twice — once at a walled record and once at an
+ * address nothing was ever made under — and the two answers must be one
+ * answer.
+ *
+ * The fourth subject is the ceiling (story 24). An oversized upload is
  * refused with a problem response that names the limit, and nothing is
  * left on the record. It runs against a second app over the same
  * database with a small ceiling, because the refusal is worth testing
@@ -98,15 +107,27 @@ interface VersionRow {
   checksumSha256: string;
   uploadedBy: { id: string; displayName: string; archived: boolean };
   createdAt: string;
+  isCurrent: boolean;
 }
 
 interface DocumentRow {
   id: string;
   title: string;
-  currentVersion: VersionRow;
+  description: string | null;
+  versions: VersionRow[];
   createdBy: { id: string; displayName: string };
   createdAt: string;
   updatedAt: string;
+}
+
+/** The version the chain pins, as every assertion about "which file
+ * matters now" reads it. Required rather than found-if-present: a
+ * document with no current version is a broken record, not a state a
+ * test should tolerate quietly. */
+function currentOf(document: DocumentRow): VersionRow {
+  const current = document.versions.filter((version) => version.isCurrent);
+  expect(current.length, "exactly one current version").toBe(1);
+  return current[0]!;
 }
 
 /** A number nothing was ever created under — the control every refusal
@@ -250,14 +271,12 @@ interface UploadOptions {
   note?: string;
 }
 
-/** The raw upload answer — the refusals are as much the subject as the
- * successes, so nothing here requires a status. */
-function upload(
-  cookies: Record<string, string>,
-  number: number,
-  options: UploadOptions = {},
-  app = harness.app,
-) {
+/** The parts of one upload, in the order the seam reads them: the kind
+ * and the note first, the file last. */
+function uploadParts(options: UploadOptions): {
+  payload: Buffer;
+  headers: Record<string, string>;
+} {
   const parts: Part[] = [];
   if (options.kind !== undefined) parts.push({ field: "kind", value: options.kind });
   if (options.note !== undefined) parts.push({ field: "note", value: options.note });
@@ -269,7 +288,18 @@ function upload(
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     content: options.content ?? Buffer.from("the first draft"),
   });
-  const { payload, headers } = multipartForm(parts);
+  return multipartForm(parts);
+}
+
+/** The raw upload answer — the refusals are as much the subject as the
+ * successes, so nothing here requires a status. */
+function upload(
+  cookies: Record<string, string>,
+  number: number,
+  options: UploadOptions = {},
+  app = harness.app,
+) {
+  const { payload, headers } = uploadParts(options);
   return app.inject({
     method: "POST",
     url: `/api/v1/contracts/${number}/documents`,
@@ -289,6 +319,47 @@ async function uploaded(
   expect(res.statusCode, res.body).toBe(201);
   return res.json().document as DocumentRow;
 }
+
+/** The raw answer to appending the next version to a document. */
+function addVersion(
+  cookies: Record<string, string>,
+  documentId: string,
+  options: UploadOptions = {},
+) {
+  const { payload, headers } = uploadParts(options);
+  return harness.app.inject({
+    method: "POST",
+    url: `/api/v1/documents/${documentId}/versions`,
+    cookies,
+    headers,
+    payload,
+  });
+}
+
+/** Appends a version, requiring success, and answers the document with
+ * its whole chain. */
+async function versionAdded(
+  cookies: Record<string, string>,
+  documentId: string,
+  options: UploadOptions = {},
+): Promise<DocumentRow> {
+  const res = await addVersion(cookies, documentId, options);
+  expect(res.statusCode, res.body).toBe(201);
+  return res.json().document as DocumentRow;
+}
+
+/** The raw answer to a metadata edit (DOC-007). */
+const patchDocument = (
+  cookies: Record<string, string>,
+  documentId: string,
+  payload: Record<string, unknown>,
+) =>
+  harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/documents/${documentId}`,
+    cookies,
+    payload,
+  });
 
 const listDocuments = (cookies: Record<string, string>, number: number) =>
   harness.app.inject({ method: "GET", url: `/api/v1/contracts/${number}/documents`, cookies });
@@ -334,17 +405,17 @@ describe("uploading a draft", () => {
 
     expect(document.title).toBe("Orion_MSA_2026_draft.docx");
     expect(document.createdBy.id).toBe(idOf(ADMIN));
-    expect(document.currentVersion.versionNumber).toBe(1);
-    expect(document.currentVersion.originalFilename).toBe("Orion_MSA_2026_draft.docx");
-    expect(document.currentVersion.mimeType).toBe(
+    expect(currentOf(document).versionNumber).toBe(1);
+    expect(currentOf(document).originalFilename).toBe("Orion_MSA_2026_draft.docx");
+    expect(currentOf(document).mimeType).toBe(
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     );
-    expect(document.currentVersion.byteSize).toBe(content.byteLength);
-    expect(document.currentVersion.checksumSha256).toBe(sha256(content));
-    expect(document.currentVersion.uploadedBy.id).toBe(idOf(ADMIN));
+    expect(currentOf(document).byteSize).toBe(content.byteLength);
+    expect(currentOf(document).checksumSha256).toBe(sha256(content));
+    expect(currentOf(document).uploadedBy.id).toBe(idOf(ADMIN));
     // The default kind, and no note: the M11/2 control sends neither.
-    expect(document.currentVersion.kind).toBe("draft_ours");
-    expect(document.currentVersion.note).toBeNull();
+    expect(currentOf(document).kind).toBe("draft_ours");
+    expect(currentOf(document).note).toBeNull();
   });
 
   it("takes the kind and the note when the form sends them before the file", async () => {
@@ -355,8 +426,8 @@ describe("uploading a draft", () => {
       note: "Their first pass. Clause 8 is the fight.",
     });
 
-    expect(document.currentVersion.kind).toBe("redline_theirs");
-    expect(document.currentVersion.note).toBe("Their first pass. Clause 8 is the fight.");
+    expect(currentOf(document).kind).toBe("redline_theirs");
+    expect(currentOf(document).note).toBe("Their first pass. Clause 8 is the fight.");
   });
 
   it("refuses a kind that is not one of the five", async () => {
@@ -366,6 +437,32 @@ describe("uploading a draft", () => {
 
     expect(res.statusCode, res.body).toBe(400);
     expect(res.headers["content-type"]).toContain("application/problem+json");
+  });
+
+  it("refuses a note longer than the field holds, rather than shortening it", async () => {
+    const contract = await newContract("Orion Cloud — a long note");
+
+    const res = await upload(adminCookies, contract.number, { note: "x".repeat(2001) });
+
+    expect(res.statusCode, res.body).toBe(400);
+    expect(res.json().detail).toContain("2000");
+    // Nothing landed: a refusal is the whole outcome, so nobody has to
+    // wonder whether their words were kept in part.
+    const list = await listDocuments(adminCookies, contract.number);
+    expect(list.json().documents).toEqual([]);
+  });
+
+  it("refuses a filename longer than the field holds", async () => {
+    const contract = await newContract("Orion Cloud — a long name");
+
+    // Long enough to be refused, and with the extension at the end that
+    // shortening would have thrown away.
+    const res = await upload(adminCookies, contract.number, {
+      filename: `${"n".repeat(260)}.docx`,
+    });
+
+    expect(res.statusCode, res.body).toBe(400);
+    expect(res.json().detail).toContain("255");
   });
 
   it("refuses a request that carries no file", async () => {
@@ -402,10 +499,10 @@ describe("uploading a draft", () => {
         contentType,
         content: Buffer.from(`bytes of ${filename}`),
       });
-      expect(document.currentVersion.originalFilename).toBe(filename);
+      expect(currentOf(document).originalFilename).toBe(filename);
       // Recorded as declared, whatever it is: the type is a rendering
       // hint for M12 and never a gate on what may be stored.
-      expect(document.currentVersion.mimeType).toBe(contentType);
+      expect(currentOf(document).mimeType).toBe(contentType);
     }
 
     const res = await listDocuments(adminCookies, contract.number);
@@ -422,10 +519,381 @@ describe("uploading a draft", () => {
     const entry = entries.find((row) => row.action === "document.created");
     expect(entry, "a document.created entry on the contract").toBeDefined();
     expect(entry!.payload.documentId).toBe(document.id);
-    expect(entry!.payload.versionId).toBe(document.currentVersion.id);
+    expect(entry!.payload.versionId).toBe(currentOf(document).id);
     // The title survives the rows, because hard deletion (DOC-010)
     // will not.
     expect(entry!.payload.title).toBe("draft_v1.pdf");
+  });
+});
+
+describe("appending the next version", () => {
+  it("numbers the next version and leaves the chain before it untouched", async () => {
+    const contract = await newContract("Orion Cloud — round two");
+    const first = Buffer.from("our first draft");
+    const second = Buffer.from("their redline of our first draft");
+    const document = await uploaded(adminCookies, contract.number, {
+      filename: "Orion_MSA_draft.docx",
+      content: first,
+    });
+    const v1 = currentOf(document);
+
+    const updated = await versionAdded(adminCookies, document.id, {
+      filename: "Orion_MSA_redline.docx",
+      content: second,
+      kind: "redline_theirs",
+    });
+
+    expect(updated.versions.map((version) => version.versionNumber)).toEqual([1, 2]);
+    const v2 = currentOf(updated);
+    expect(v2.versionNumber).toBe(2);
+    expect(v2.kind).toBe("redline_theirs");
+    expect(v2.byteSize).toBe(second.byteLength);
+    expect(v2.checksumSha256).toBe(sha256(second));
+    // The row that was current a moment ago is the same row it was:
+    // versions are immutable (DOC-001), so nothing about version 1 moved
+    // except that it is no longer the one that matters now.
+    const stillV1 = updated.versions[0]!;
+    expect(stillV1.id).toBe(v1.id);
+    expect(stillV1.kind).toBe(v1.kind);
+    expect(stillV1.originalFilename).toBe("Orion_MSA_draft.docx");
+    expect(stillV1.checksumSha256).toBe(sha256(first));
+    expect(stillV1.isCurrent).toBe(false);
+    // The record's own name does not follow the newest file: the
+    // document is renamed deliberately or not at all.
+    expect(updated.title).toBe("Orion_MSA_draft.docx");
+  });
+
+  it("runs the chain 1..n with the highest number current", async () => {
+    const contract = await newContract("Orion Cloud — five rounds");
+    const document = await uploaded(adminCookies, contract.number, { filename: "v1.docx" });
+    for (const kind of ["redline_theirs", "redline_ours", "amendment", "executed"] as const) {
+      await versionAdded(adminCookies, document.id, { kind });
+    }
+
+    const res = await listDocuments(adminCookies, contract.number);
+
+    expect(res.statusCode, res.body).toBe(200);
+    const [row] = res.json().documents as DocumentRow[];
+    expect(row!.versions.map((version) => version.versionNumber)).toEqual([1, 2, 3, 4, 5]);
+    // The five CTR-014 kinds, each on the round it belongs to.
+    expect(row!.versions.map((version) => version.kind)).toEqual([
+      "draft_ours",
+      "redline_theirs",
+      "redline_ours",
+      "amendment",
+      "executed",
+    ]);
+    expect(currentOf(row!).versionNumber).toBe(5);
+    expect(row!.versions.filter((version) => version.isCurrent).length).toBe(1);
+  });
+
+  it("takes a note on the round, and keeps it beside the file", async () => {
+    const contract = await newContract("Orion Cloud — what changed");
+    const document = await uploaded(adminCookies, contract.number);
+
+    const updated = await versionAdded(adminCookies, document.id, {
+      kind: "redline_ours",
+      note: "Accepted their cap, held the indemnity. Clause 8 still open.",
+    });
+
+    expect(currentOf(updated).note).toBe(
+      "Accepted their cap, held the indemnity. Clause 8 still open.",
+    );
+    // And it survives the read, not only the write.
+    const res = await listDocuments(adminCookies, contract.number);
+    const [row] = res.json().documents as DocumentRow[];
+    expect(currentOf(row!).note).toBe(
+      "Accepted their cap, held the indemnity. Clause 8 still open.",
+    );
+  });
+
+  it("refuses a kind that is not one of the five", async () => {
+    const contract = await newContract("Orion Cloud — round two, bad kind");
+    const document = await uploaded(adminCookies, contract.number);
+
+    const res = await addVersion(adminCookies, document.id, { kind: "generated_redline" });
+
+    expect(res.statusCode, res.body).toBe(400);
+    // And the chain is as it was.
+    const list = await listDocuments(adminCookies, contract.number);
+    const [row] = list.json().documents as DocumentRow[];
+    expect(row!.versions.length).toBe(1);
+  });
+
+  it("gives concurrent uploads consecutive numbers, with no collision and no gap", async () => {
+    const contract = await newContract("Orion Cloud — two at once");
+    const document = await uploaded(adminCookies, contract.number, { filename: "v1.docx" });
+
+    // Four appends in flight at the same moment. The number is assigned
+    // under the owning contract's row lock, so they serialize there:
+    // every one lands, and no two land on the same number.
+    const answers = await Promise.all(
+      [1, 2, 3, 4].map((round) =>
+        addVersion(adminCookies, document.id, {
+          filename: `round_${round}.docx`,
+          content: Buffer.from(`round ${round}`),
+        }),
+      ),
+    );
+
+    for (const res of answers) expect(res.statusCode, res.body).toBe(201);
+    const list = await listDocuments(adminCookies, contract.number);
+    const [row] = list.json().documents as DocumentRow[];
+    expect(row!.versions.map((version) => version.versionNumber)).toEqual([1, 2, 3, 4, 5]);
+    // Five files, five different blobs: nobody overwrote anybody.
+    const contents = new Set(row!.versions.map((version) => version.checksumSha256));
+    expect(contents.size).toBe(5);
+  });
+
+  it("keeps every version downloadable, superseded ones included", async () => {
+    const contract = await newContract("Orion Cloud — the whole history");
+    const rounds = [
+      Buffer.from("what we sent them"),
+      Buffer.from("what they sent back"),
+      Buffer.from("what we signed"),
+    ];
+    const document = await uploaded(adminCookies, contract.number, {
+      filename: "round_1.docx",
+      content: rounds[0],
+    });
+    await versionAdded(adminCookies, document.id, {
+      filename: "round_2.docx",
+      content: rounds[1],
+      kind: "redline_theirs",
+    });
+    const final = await versionAdded(adminCookies, document.id, {
+      filename: "round_3.pdf",
+      content: rounds[2],
+      kind: "executed",
+    });
+
+    // Every round comes back as itself, which is what "reconstruct what
+    // was on the table" means.
+    for (const [index, version] of final.versions.entries()) {
+      const res = await download(adminCookies, document.id, version.id);
+      expect(res.statusCode, res.body).toBe(200);
+      expect(res.rawPayload.equals(rounds[index]!)).toBe(true);
+      expect(res.headers["content-disposition"]).toContain(
+        `filename="${version.originalFilename}"`,
+      );
+    }
+  });
+
+  it("gives each document on a contract its own chain", async () => {
+    const contract = await newContract("Orion Cloud — the main paper and the schedules");
+    const instrument = await uploaded(adminCookies, contract.number, { filename: "msa.docx" });
+    // A loose attachment beside it (CTR-014): supporting papers do not
+    // pollute the negotiation.
+    const certificate = await uploaded(adminCookies, contract.number, {
+      filename: "insurance_cert.pdf",
+    });
+    await versionAdded(adminCookies, instrument.id, { kind: "redline_theirs" });
+    await versionAdded(adminCookies, instrument.id, { kind: "redline_ours" });
+
+    const res = await listDocuments(adminCookies, contract.number);
+
+    const rows = res.json().documents as DocumentRow[];
+    const chains = new Map(rows.map((row) => [row.id, row.versions.length]));
+    expect(chains.get(instrument.id)).toBe(3);
+    expect(chains.get(certificate.id)).toBe(1);
+  });
+
+  it("appends document.version_added on the owning contract", async () => {
+    const contract = await newContract("Orion Cloud — the feed, round two");
+    const document = await uploaded(adminCookies, contract.number, { filename: "draft_v1.pdf" });
+
+    const updated = await versionAdded(adminCookies, document.id, { kind: "redline_theirs" });
+
+    const entries = await feed(adminCookies, contract.id);
+    const entry = entries.find((row) => row.action === "document.version_added");
+    expect(entry, "a document.version_added entry on the contract").toBeDefined();
+    expect(entry!.payload.documentId).toBe(document.id);
+    expect(entry!.payload.versionId).toBe(currentOf(updated).id);
+    expect(entry!.payload.versionNumber).toBe(2);
+    expect(entry!.payload.kind).toBe("redline_theirs");
+    // Its own verb, not a second document.created: putting the first
+    // file on a record and adding a round to it are different events.
+    expect(entries.filter((row) => row.action === "document.created").length).toBe(1);
+  });
+
+  it("refuses an append onto an archived contract", async () => {
+    const contract = await newContract("Orion Cloud — frozen, round two");
+    const document = await uploaded(adminCookies, contract.number);
+    const archive = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/archive`,
+      cookies: adminCookies,
+    });
+    expect(archive.statusCode, archive.body).toBe(200);
+
+    const res = await addVersion(adminCookies, document.id);
+
+    expect(res.statusCode, res.body).toBe(409);
+  });
+
+  it("answers 404 for a document that does not exist", async () => {
+    const res = await addVersion(adminCookies, "01920000-0000-7000-8000-000000000000");
+
+    expect(res.statusCode, res.body).toBe(404);
+  });
+});
+
+/**
+ * Immutability, asserted rather than intended (DOC-001).
+ *
+ * The claim is about what the API does *not* offer, so the assertion is
+ * about the route table itself. Injecting the verbs proves what happens
+ * when somebody tries them; asking the route table proves that no such
+ * route was declared at all, which is the sentence the decision makes —
+ * and it fails the day somebody adds one, which is the point.
+ */
+describe("a version is never edited and never deleted", () => {
+  const VERSION_URL = "/api/v1/documents/:documentId/versions/:versionId";
+
+  it("declares no route that edits or deletes one version", () => {
+    for (const method of ["PATCH", "PUT", "DELETE"] as const) {
+      expect(harness.app.hasRoute({ method, url: VERSION_URL }), `${method} ${VERSION_URL}`).toBe(
+        false,
+      );
+      // The document's own address is where metadata is edited, and
+      // that is a different row: no verb there reaches a version, and
+      // deleting a whole document is DOC-010's own route in M11/5.
+      expect(
+        harness.app.hasRoute({ method, url: `${VERSION_URL}/download` }),
+        `${method} ${VERSION_URL}/download`,
+      ).toBe(false);
+    }
+    expect(harness.app.hasRoute({ method: "DELETE", url: "/api/v1/documents/:documentId" })).toBe(
+      false,
+    );
+  });
+
+  it("answers a request that tries anyway as a route that is not there", async () => {
+    const contract = await newContract("Orion Cloud — nothing to edit");
+    const document = await uploaded(adminCookies, contract.number);
+    const version = currentOf(document);
+
+    for (const method of ["PATCH", "PUT", "DELETE"] as const) {
+      const res = await harness.app.inject({
+        method,
+        url: `/api/v1/documents/${document.id}/versions/${version.id}`,
+        cookies: adminCookies,
+        payload: method === "DELETE" ? undefined : { kind: "executed", note: "changed my mind" },
+      });
+      expect(res.statusCode, `${method}: ${res.body}`).toBe(404);
+    }
+
+    // And the version is as it was.
+    const list = await listDocuments(adminCookies, contract.number);
+    const [row] = list.json().documents as DocumentRow[];
+    expect(currentOf(row!).id).toBe(version.id);
+    expect(currentOf(row!).kind).toBe("draft_ours");
+    expect(currentOf(row!).note).toBeNull();
+  });
+});
+
+describe("a document's own metadata", () => {
+  it("renames a document and leaves the stored files alone", async () => {
+    const contract = await newContract("Orion Cloud — the rename");
+    const content = Buffer.from("the bytes nobody touched");
+    const document = await uploaded(adminCookies, contract.number, {
+      filename: "Orion_MSA_2026_draft_FINAL_v3.docx",
+      content,
+    });
+
+    const res = await patchDocument(adminCookies, document.id, {
+      title: "Orion Cloud — master services agreement",
+    });
+
+    expect(res.statusCode, res.body).toBe(200);
+    const renamed = res.json().document as DocumentRow;
+    expect(renamed.title).toBe("Orion Cloud — master services agreement");
+    // The version's own filename is what it arrived as, and a download
+    // still offers it back under that name with those bytes.
+    const version = currentOf(renamed);
+    expect(version.originalFilename).toBe("Orion_MSA_2026_draft_FINAL_v3.docx");
+    expect(version.checksumSha256).toBe(sha256(content));
+    const file = await download(adminCookies, document.id, version.id);
+    expect(file.rawPayload.equals(content)).toBe(true);
+    expect(file.headers["content-disposition"]).toContain(
+      'filename="Orion_MSA_2026_draft_FINAL_v3.docx"',
+    );
+  });
+
+  it("edits the description and clears it again", async () => {
+    const contract = await newContract("Orion Cloud — the description");
+    const document = await uploaded(adminCookies, contract.number);
+    expect(document.description).toBeNull();
+
+    const set = await patchDocument(adminCookies, document.id, {
+      description: "Signed copy lives with the schedules; clause 8 was the fight.",
+    });
+    expect(set.statusCode, set.body).toBe(200);
+    expect((set.json().document as DocumentRow).description).toBe(
+      "Signed copy lives with the schedules; clause 8 was the fight.",
+    );
+
+    const cleared = await patchDocument(adminCookies, document.id, { description: null });
+    expect(cleared.statusCode, cleared.body).toBe(200);
+    expect((cleared.json().document as DocumentRow).description).toBeNull();
+  });
+
+  it("refuses a title that says nothing", async () => {
+    const contract = await newContract("Orion Cloud — the empty name");
+    const document = await uploaded(adminCookies, contract.number, { filename: "named.docx" });
+
+    const res = await patchDocument(adminCookies, document.id, { title: "   " });
+
+    expect(res.statusCode, res.body).toBe(400);
+    const list = await listDocuments(adminCookies, contract.number);
+    const [row] = list.json().documents as DocumentRow[];
+    expect(row!.title).toBe("named.docx");
+  });
+
+  it("appends document.updated naming what changed", async () => {
+    const contract = await newContract("Orion Cloud — the feed, renamed");
+    const document = await uploaded(adminCookies, contract.number, { filename: "draft.docx" });
+
+    await patchDocument(adminCookies, document.id, {
+      title: "Master services agreement",
+      description: "The main instrument.",
+    });
+
+    const entries = await feed(adminCookies, contract.id);
+    const entry = entries.find((row) => row.action === "document.updated");
+    expect(entry, "a document.updated entry on the contract").toBeDefined();
+    expect(entry!.payload.documentId).toBe(document.id);
+    expect(entry!.payload.title).toBe("Master services agreement");
+    expect(entry!.payload.changed).toEqual({
+      title: { from: "draft.docx", to: "Master services agreement" },
+      description: { from: null, to: "The main instrument." },
+    });
+  });
+
+  it("writes no entry for an edit that changes nothing", async () => {
+    const contract = await newContract("Orion Cloud — the no-op");
+    const document = await uploaded(adminCookies, contract.number, { filename: "draft.docx" });
+
+    const res = await patchDocument(adminCookies, document.id, { title: "draft.docx" });
+
+    expect(res.statusCode, res.body).toBe(200);
+    const entries = await feed(adminCookies, contract.id);
+    expect(entries.filter((row) => row.action === "document.updated")).toEqual([]);
+  });
+
+  it("refuses an edit on an archived contract", async () => {
+    const contract = await newContract("Orion Cloud — frozen, renamed");
+    const document = await uploaded(adminCookies, contract.number);
+    const archive = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/archive`,
+      cookies: adminCookies,
+    });
+    expect(archive.statusCode, archive.body).toBe(200);
+
+    const res = await patchDocument(adminCookies, document.id, { title: "Renamed while frozen" });
+
+    expect(res.statusCode, res.body).toBe(409);
   });
 });
 
@@ -464,7 +932,7 @@ describe("listing a contract's documents", () => {
     expect(res.statusCode, res.body).toBe(200);
     const rows = res.json().documents as DocumentRow[];
     expect(rows.map((row) => row.id)).toEqual([second.id, first.id]);
-    expect(rows.every((row) => row.currentVersion.versionNumber === 1)).toBe(true);
+    expect(rows.every((row) => currentOf(row).versionNumber === 1)).toBe(true);
   });
 
   it("answers an empty list for a contract with no paper on it", async () => {
@@ -497,7 +965,7 @@ describe("downloading a version", () => {
       content,
     });
 
-    const res = await download(adminCookies, document.id, document.currentVersion.id);
+    const res = await download(adminCookies, document.id, currentOf(document).id);
 
     expect(res.statusCode, res.body).toBe(200);
     expect(res.rawPayload.equals(content)).toBe(true);
@@ -516,7 +984,7 @@ describe("downloading a version", () => {
       filename: "Résumé — Ørsted.pdf",
     });
 
-    const res = await download(adminCookies, document.id, document.currentVersion.id);
+    const res = await download(adminCookies, document.id, currentOf(document).id);
 
     const disposition = String(res.headers["content-disposition"]);
     // The plain form is printable ASCII and carries no quote that would
@@ -532,7 +1000,7 @@ describe("downloading a version", () => {
     const one = await uploaded(adminCookies, contract.number, { filename: "one.pdf" });
     const two = await uploaded(adminCookies, contract.number, { filename: "two.pdf" });
 
-    const res = await download(adminCookies, one.id, two.currentVersion.id);
+    const res = await download(adminCookies, one.id, currentOf(two).id);
 
     expect(res.statusCode).toBe(404);
   });
@@ -549,7 +1017,7 @@ describe("who reaches a contract's paper", () => {
     expect(list.statusCode, list.body).toBe(200);
     expect((list.json().documents as DocumentRow[]).map((row) => row.id)).toEqual([document.id]);
 
-    const file = await download(contributorCookies, document.id, document.currentVersion.id);
+    const file = await download(contributorCookies, document.id, currentOf(document).id);
     expect(file.statusCode).toBe(200);
     expect(file.rawPayload.equals(content)).toBe(true);
   });
@@ -575,7 +1043,7 @@ describe("who reaches a contract's paper", () => {
     expect(walled.statusCode).toBe(missing.statusCode);
     expect(withoutInstance(walled.json())).toEqual(withoutInstance(missing.json()));
 
-    const file = await download(strangerCookies, document.id, document.currentVersion.id);
+    const file = await download(strangerCookies, document.id, currentOf(document).id);
     expect(file.statusCode).toBe(404);
   });
 
@@ -601,7 +1069,7 @@ describe("who reaches a contract's paper", () => {
     expect(list.statusCode).toBe(missingList.statusCode);
     expect(withoutInstance(list.json())).toEqual(withoutInstance(missingList.json()));
 
-    const file = await download(outsiderCookies, document.id, document.currentVersion.id);
+    const file = await download(outsiderCookies, document.id, currentOf(document).id);
     expect(file.statusCode).toBe(404);
     expect(file.json().detail).not.toContain("nightingale");
 
@@ -610,6 +1078,63 @@ describe("who reaches a contract's paper", () => {
     expect(write.statusCode).toBe(missingWrite.statusCode);
     expect(withoutInstance(write.json())).toEqual(withoutInstance(missingWrite.json()));
     expect(write.statusCode).toBe(404);
+  });
+
+  it("refuses a Contributor's version upload and metadata edit without hiding the record", async () => {
+    const contract = await newContract("Orion Cloud — the Contributor's revision");
+    await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+    const document = await uploaded(adminCookies, contract.number);
+
+    // 403 on both, for the reason the first upload gives: they can
+    // already see the record, so a missing-record answer would make a
+    // real boundary read as a bug. Their write grid arrives with M23.
+    const version = await addVersion(contributorCookies, document.id);
+    expect(version.statusCode, version.body).toBe(403);
+    const rename = await patchDocument(contributorCookies, document.id, { title: "Mine now" });
+    expect(rename.statusCode, rename.body).toBe(403);
+  });
+
+  it("hides a confidential contract's chain and metadata from a Member outside its team", async () => {
+    const contract = await newContract("Project Nightingale — the chain");
+    const document = await uploaded(adminCookies, contract.number, {
+      filename: "nightingale_draft.docx",
+    });
+    await versionAdded(adminCookies, document.id, { kind: "redline_theirs" });
+    await markConfidential(contract.number);
+
+    // A document id nobody outside the audience should be able to do
+    // anything with, and a well-formed id nothing was ever created
+    // under. The two answers must be one answer.
+    const missing = "01920000-0000-7000-8000-0000000000ff";
+    const walledVersion = await addVersion(outsiderCookies, document.id);
+    const missingVersion = await addVersion(outsiderCookies, missing);
+    expect(walledVersion.statusCode).toBe(404);
+    expect(withoutInstance(walledVersion.json())).toEqual(withoutInstance(missingVersion.json()));
+
+    const walledEdit = await patchDocument(outsiderCookies, document.id, { title: "Seen it" });
+    const missingEdit = await patchDocument(outsiderCookies, missing, { title: "Seen it" });
+    expect(walledEdit.statusCode).toBe(404);
+    expect(withoutInstance(walledEdit.json())).toEqual(withoutInstance(missingEdit.json()));
+
+    // And the record is as it was: nothing landed, nothing was renamed.
+    const list = await listDocuments(adminCookies, contract.number);
+    const [row] = list.json().documents as DocumentRow[];
+    expect(row!.versions.length).toBe(2);
+    expect(row!.title).toBe("nightingale_draft.docx");
+  });
+
+  it("lets a Member on the team append and rename", async () => {
+    const contract = await newContract("Project Nightingale — the included Member");
+    await putOnTeam(contract.number, idOf(MEMBER), "member");
+    const document = await uploaded(adminCookies, contract.number);
+    await markConfidential(contract.number);
+
+    const appended = await versionAdded(memberCookies, document.id, { kind: "redline_ours" });
+    expect(currentOf(appended).versionNumber).toBe(2);
+    expect(currentOf(appended).uploadedBy.id).toBe(idOf(MEMBER));
+
+    const renamed = await patchDocument(memberCookies, document.id, { title: "Nightingale MSA" });
+    expect(renamed.statusCode, renamed.body).toBe(200);
   });
 
   it("refuses an upload onto an archived contract, and still answers its list", async () => {
@@ -631,7 +1156,7 @@ describe("who reaches a contract's paper", () => {
     const list = await listDocuments(adminCookies, contract.number);
     expect(list.statusCode, list.body).toBe(200);
     expect((list.json().documents as DocumentRow[]).map((row) => row.id)).toEqual([document.id]);
-    const file = await download(adminCookies, document.id, document.currentVersion.id);
+    const file = await download(adminCookies, document.id, currentOf(document).id);
     expect(file.statusCode).toBe(200);
   });
 
@@ -679,7 +1204,7 @@ describe("the upload ceiling", () => {
     );
 
     expect(res.statusCode, res.body).toBe(201);
-    expect(res.json().document.currentVersion.byteSize).toBe(LIMIT - 1);
+    expect(currentOf(res.json().document as DocumentRow).byteSize).toBe(LIMIT - 1);
   });
 
   it("refuses a file over the limit with a problem response that names it", async () => {

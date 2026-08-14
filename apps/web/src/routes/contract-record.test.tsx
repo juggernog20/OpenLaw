@@ -3474,32 +3474,38 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
 });
 
 /**
- * The Documents section of the record body (M11/2), drawn from the C4
- * mock: the heading with a count of what is on the record, the upload
- * control beside it, and one row per document whose name is the
- * download.
+ * The Documents section of the record body (M11/2, M11/3), drawn from
+ * the C4 mock: the heading with a count of what is on the record, the
+ * upload composer beside it, and one row per document — the version that
+ * matters now, with the rounds it supersedes opening underneath it.
  *
  * The panel DES-016 places in a wider sibling layer is not here — it
- * lands with M12's rendering — and neither is the version chain, which
- * lands with revision upload. What this asserts is the section, the
- * count, the upload, and the download link.
+ * lands with M12's rendering. What this asserts is the section, the
+ * count, the chain with its pin, a download per version, the composer
+ * that sends the kind and the note, and the metadata edit.
  */
-describe("the contract record's Documents section (M11/2)", () => {
+describe("the contract record's Documents section (M11/2, M11/3)", () => {
+  /** One version of a chain, as the API answers it. */
+  const version = (over: Record<string, unknown> = {}) => ({
+    id: "ver-1",
+    versionNumber: 1,
+    kind: "draft_ours",
+    note: null,
+    originalFilename: "Orion_MSA_2026_draft.docx",
+    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    byteSize: 88_000,
+    checksumSha256: "a".repeat(64),
+    uploadedBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+    createdAt: "2026-08-11T09:00:00.000Z",
+    isCurrent: true,
+    ...over,
+  });
+
   const DRAFT = {
     id: "doc-1",
     title: "Orion_MSA_2026_draft.docx",
-    currentVersion: {
-      id: "ver-1",
-      versionNumber: 1,
-      kind: "draft_ours",
-      note: null,
-      originalFilename: "Orion_MSA_2026_draft.docx",
-      mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      byteSize: 88_000,
-      checksumSha256: "a".repeat(64),
-      uploadedBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
-      createdAt: "2026-08-11T09:00:00.000Z",
-    },
+    description: null,
+    versions: [version()],
     createdBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
     createdAt: "2026-08-11T09:00:00.000Z",
     updatedAt: "2026-08-11T09:00:00.000Z",
@@ -3509,50 +3515,127 @@ describe("the contract record's Documents section (M11/2)", () => {
     ...DRAFT,
     id: "doc-2",
     title: "Orion_MSA_2026_redline_orion.docx",
-    currentVersion: {
-      ...DRAFT.currentVersion,
-      id: "ver-2",
-      kind: "redline_theirs",
-      originalFilename: "Orion_MSA_2026_redline_orion.docx",
-      byteSize: 102_000,
-    },
+    versions: [
+      version({
+        id: "ver-2",
+        kind: "redline_theirs",
+        originalFilename: "Orion_MSA_2026_redline_orion.docx",
+        byteSize: 102_000,
+      }),
+    ],
   };
 
-  /** The record stub, plus the documents read and the upload. */
+  /** Three rounds on one document, the third of them current — the
+   * chain a negotiation actually leaves behind. */
+  const CHAIN = {
+    ...DRAFT,
+    id: "doc-3",
+    title: "Orion Cloud — master services agreement",
+    description: "The main instrument. Clause 8 was the fight.",
+    versions: [
+      version({
+        id: "ver-a",
+        versionNumber: 1,
+        originalFilename: "round_1.docx",
+        isCurrent: false,
+      }),
+      version({
+        id: "ver-b",
+        versionNumber: 2,
+        kind: "redline_theirs",
+        note: "Their first pass. Clause 8 is the fight.",
+        originalFilename: "round_2.docx",
+        isCurrent: false,
+      }),
+      version({
+        id: "ver-c",
+        versionNumber: 3,
+        kind: "redline_ours",
+        note: "Held the indemnity.",
+        originalFilename: "round_3.docx",
+      }),
+    ],
+  };
+
+  /** The record stub, plus the documents read, the two uploads, and the
+   * metadata edit. */
   function documentsApi(
     rows: Record<string, unknown>[],
     options: { uploadFails?: string } = {},
     team = [person("u1", "creator")],
   ) {
     const record = recordApi(contractRow(), team);
-    const uploads: string[] = [];
+    /** Every write the section made, in order, so a test can assert
+     * both the address and what rode in the form. */
+    const writes: { url: string; body: unknown }[] = [];
     let current = rows;
     const handler = (call: StubCall): Response | undefined => {
-      if (call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
+      const { pathname } = call.url;
+      if (pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
         return json(200, { documents: current });
       }
-      if (call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "POST") {
-        uploads.push(call.url.pathname);
+      if (pathname === "/api/v1/contracts/42/documents" && call.method === "POST") {
+        writes.push({ url: pathname, body: call.body });
         if (options.uploadFails) return problem(413, options.uploadFails);
         const added = {
           ...DRAFT,
           id: "doc-new",
           title: "counter_redline.docx",
-          currentVersion: {
-            ...DRAFT.currentVersion,
-            id: "ver-new",
-            originalFilename: "counter_redline.docx",
-          },
+          versions: [version({ id: "ver-new", originalFilename: "counter_redline.docx" })],
         };
         current = [added, ...current];
         return json(201, { document: added });
       }
+      // Appending the next round to a document that already exists. The
+      // number is the server's to assign, so the answer states it.
+      const appended = /^\/api\/v1\/documents\/([^/]+)\/versions$/.exec(pathname);
+      if (appended && call.method === "POST") {
+        writes.push({ url: pathname, body: call.body });
+        if (options.uploadFails) return problem(413, options.uploadFails);
+        const target = current.find((row) => row.id === appended[1]);
+        if (!target) return problem(404, "No document exists with this reference.");
+        const chain = target.versions as Record<string, unknown>[];
+        const next = {
+          ...target,
+          versions: [
+            ...chain.map((row) => ({ ...row, isCurrent: false })),
+            version({
+              id: "ver-appended",
+              versionNumber: chain.length + 1,
+              kind: "redline_ours",
+              note: "Our counter.",
+              originalFilename: "counter_redline.docx",
+            }),
+          ],
+        };
+        current = current.map((row) => (row === target ? next : row));
+        return json(201, { document: next });
+      }
+      const edited = /^\/api\/v1\/documents\/([^/]+)$/.exec(pathname);
+      if (edited && call.method === "PATCH") {
+        writes.push({ url: pathname, body: call.body });
+        const target = current.find((row) => row.id === edited[1]);
+        if (!target) return problem(404, "No document exists with this reference.");
+        const next = { ...target, ...(call.body as Record<string, unknown>) };
+        current = current.map((row) => (row.id === next.id ? next : row));
+        return json(200, { document: next });
+      }
       return record.handler(call);
     };
-    return { handler, uploads };
+    return { handler, writes };
   }
 
   const documentsSection = () => screen.findByRole("region", { name: /^Documents/ });
+
+  /** The composer, opened from whichever control opens it. */
+  async function compose(
+    user: ReturnType<typeof userEvent.setup>,
+    section: HTMLElement,
+    name: string,
+  ) {
+    await user.click(within(section).getByRole("button", { name }));
+    return screen.findByRole("dialog");
+  }
 
   it("draws the section with a count of the paper on the record", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT, THEIRS]).handler });
@@ -3566,7 +3649,7 @@ describe("the contract record's Documents section (M11/2)", () => {
     expect(within(section).getAllByRole("row")).toHaveLength(3); // header + two
   });
 
-  it("names each document and makes the name its download", async () => {
+  it("names each document, marks the version that matters now, and makes the name its download", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT]).handler });
     renderAt("/contracts/42");
 
@@ -3576,8 +3659,11 @@ describe("the contract record's Documents section (M11/2)", () => {
     // in M11, and there is no presigned URL to build.
     expect(link).toHaveAttribute("href", "/api/v1/documents/doc-1/versions/ver-1/download");
     expect(link).toHaveAttribute("download", "Orion_MSA_2026_draft.docx");
-    // The kind, the size, and when it landed, as the C4 mock draws them.
+    // The kind, the number, the pin, the size, and when it landed, as
+    // the C4 mock draws them.
     expect(within(section).getByText("Draft · ours")).toBeVisible();
+    expect(within(section).getByText("v1")).toBeVisible();
+    expect(within(section).getByText("Current")).toBeVisible();
     expect(within(section).getByText("88 kB")).toBeVisible();
   });
 
@@ -3590,26 +3676,175 @@ describe("the contract record's Documents section (M11/2)", () => {
     expect(within(section).getByText("0")).toBeVisible();
   });
 
-  it("uploads a picked file and puts the new document on top", async () => {
+  it("shows the current version first and opens the rounds it supersedes", async () => {
+    stubApi({ signedIn: MEMBER, extra: documentsApi([CHAIN]).handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    // Collapsed, the section answers "which file matters now" and
+    // nothing else: the current round, under the document's own name.
+    expect(within(section).getAllByRole("row")).toHaveLength(2); // header + current
+    expect(within(section).getByText("v3")).toBeVisible();
+    expect(within(section).getByText("Current")).toBeVisible();
+    expect(within(section).getByText("The main instrument. Clause 8 was the fight.")).toBeVisible();
+    expect(within(section).getByText("Held the indemnity.")).toBeVisible();
+
+    const toggle = within(section).getByRole("button", {
+      name: /Show the 2 earlier versions of Orion Cloud/,
+    });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await user.click(toggle);
+
+    // The whole chain, newest of the superseded rounds first, each its
+    // own download — a superseded version is not a hidden one.
+    expect(within(section).getAllByRole("row")).toHaveLength(4);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    const second = within(section).getByRole("link", { name: "round_2.docx" });
+    expect(second).toHaveAttribute("href", "/api/v1/documents/doc-3/versions/ver-b/download");
+    expect(within(section).getByText("Their first pass. Clause 8 is the fight.")).toBeVisible();
+    expect(within(section).getByRole("link", { name: "round_1.docx" })).toHaveAttribute(
+      "href",
+      "/api/v1/documents/doc-3/versions/ver-a/download",
+    );
+    // Ordered newest first under the current round, and the pin is on
+    // the round that leads.
+    const rows = within(section).getAllByRole("row").slice(1);
+    expect(rows.map((row) => within(row).getByText(/^v\d+$/).textContent)).toEqual([
+      "v3",
+      "v2",
+      "v1",
+    ]);
+    expect(within(rows[0]!).getByText("Current")).toBeVisible();
+    for (const row of rows.slice(1)) {
+      expect(within(row).queryByText("Current")).not.toBeInTheDocument();
+    }
+  });
+
+  it("draws no disclosure for a document with one version", async () => {
+    stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT]).handler });
+    renderAt("/contracts/42");
+
+    const section = await documentsSection();
+    expect(
+      within(section).queryByRole("button", { name: /earlier version/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("uploads through the composer, sending the kind and the note with the file", async () => {
     const api = documentsApi([DRAFT]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42");
     const user = userEvent.setup();
 
     const section = await documentsSection();
+    const dialog = await compose(user, section, "Upload");
     await user.upload(
-      within(section).getByLabelText("File to upload"),
+      within(dialog).getByLabelText("File"),
       new File(["counter redline bytes"], "counter_redline.docx", {
         type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       }),
     );
+    await user.selectOptions(within(dialog).getByLabelText("Kind"), "redline_ours");
+    await user.type(within(dialog).getByLabelText("Note"), "Our counter to their clause 8.");
+    await user.click(within(dialog).getByRole("button", { name: "Upload" }));
 
-    await waitFor(() => expect(api.uploads).toHaveLength(1));
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    const form = api.writes[0]!.body as FormData;
+    expect(api.writes[0]!.url).toBe("/api/v1/contracts/42/documents");
+    expect(form.get("kind")).toBe("redline_ours");
+    expect(form.get("note")).toBe("Our counter to their clause 8.");
+    // The fields ride before the file, which is the order the seam
+    // reads them in.
+    expect([...form.keys()]).toEqual(["kind", "note", "file"]);
+    // Newest first, and the count follows.
     expect(
       await within(section).findByRole("link", { name: "counter_redline.docx" }),
     ).toBeInTheDocument();
-    // Newest first, and the count follows.
     expect(within(section).getByText("2")).toBeVisible();
+  });
+
+  it("refuses to send a composer with no file on it", async () => {
+    const api = documentsApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    const dialog = await compose(user, section, "Upload");
+    await user.click(within(dialog).getByRole("button", { name: "Upload" }));
+
+    expect(await within(dialog).findByText("Choose a file to upload.")).toBeVisible();
+    expect(api.writes).toEqual([]);
+  });
+
+  it("appends the next version to a document from its own row", async () => {
+    const api = documentsApi([DRAFT]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    const dialog = await compose(user, section, "Add a version to Orion_MSA_2026_draft.docx");
+    expect(within(dialog).getByRole("heading", { name: "Add version" })).toBeVisible();
+    await user.upload(
+      within(dialog).getByLabelText("File"),
+      new File(["our counter"], "counter_redline.docx", { type: "application/pdf" }),
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Upload" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    // The document's own address, not the contract's: the chain it
+    // appends to is the one this row draws.
+    expect(api.writes[0]!.url).toBe("/api/v1/documents/doc-1/versions");
+    // The new round is current, and the one before it is now history —
+    // still there, still a document of its own count of one.
+    expect(await within(section).findByText("v2")).toBeVisible();
+    expect(within(section).getByText("1")).toBeVisible();
+    expect(
+      within(section).getByRole("button", { name: /Show the 1 earlier version of/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("renames a document and edits its description, leaving the file's own name alone", async () => {
+    const api = documentsApi([DRAFT]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    const dialog = await compose(user, section, "Edit the details of Orion_MSA_2026_draft.docx");
+    const name = within(dialog).getByLabelText("Name");
+    await user.clear(name);
+    await user.type(name, "Orion Cloud — MSA");
+    await user.type(within(dialog).getByLabelText("Description"), "The main instrument.");
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]).toEqual({
+      url: "/api/v1/documents/doc-1",
+      body: { title: "Orion Cloud — MSA", description: "The main instrument." },
+    });
+    // The record reads as renamed, and the download still offers the
+    // file under the name it arrived with.
+    const link = await within(section).findByRole("link", { name: "Orion Cloud — MSA" });
+    expect(link).toHaveAttribute("download", "Orion_MSA_2026_draft.docx");
+    expect(within(section).getByText("The main instrument.")).toBeVisible();
+  });
+
+  it("refuses to send a rename with no name in it", async () => {
+    const api = documentsApi([DRAFT]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    const dialog = await compose(user, section, "Edit the details of Orion_MSA_2026_draft.docx");
+    await user.clear(within(dialog).getByLabelText("Name"));
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    expect(await within(dialog).findByText("Give the document a name.")).toBeVisible();
+    expect(api.writes).toEqual([]);
   });
 
   it("reports the seam's own refusal when the file is turned away", async () => {
@@ -3619,19 +3854,21 @@ describe("the contract record's Documents section (M11/2)", () => {
     const user = userEvent.setup();
 
     const section = await documentsSection();
+    const dialog = await compose(user, section, "Upload");
     await user.upload(
-      within(section).getByLabelText("File to upload"),
+      within(dialog).getByLabelText("File"),
       new File(["far too much"], "enormous.pdf", { type: "application/pdf" }),
     );
+    await user.click(within(dialog).getByRole("button", { name: "Upload" }));
 
     expect(
-      await within(section).findByText("That file is over the 100 MB upload limit."),
+      await within(dialog).findByText("That file is over the 100 MB upload limit."),
     ).toBeVisible();
     expect(within(section).getByText("No documents on this contract yet.")).toBeVisible();
   });
 
-  it("offers a Contributor the list and the download, and no upload control", async () => {
-    const api = documentsApi([DRAFT], {}, [person("u1", "creator"), person("u3", "contributor")]);
+  it("offers a Contributor the list and the download, and no control that writes", async () => {
+    const api = documentsApi([CHAIN], {}, [person("u1", "creator"), person("u3", "contributor")]);
     stubApi({
       signedIn: CONTRIBUTOR,
       extra: (call) =>
@@ -3640,18 +3877,28 @@ describe("the contract record's Documents section (M11/2)", () => {
           : api.handler(call),
     });
     renderAt("/contracts/42");
+    const user = userEvent.setup();
 
     const section = await documentsSection();
-    // They read and download what they were added to work on (DD-015).
-    expect(
-      within(section).getByRole("link", { name: "Orion_MSA_2026_draft.docx" }),
-    ).toBeInTheDocument();
-    // The control is absent rather than disabled — the convention every
-    // other card on this page follows. Their write grid arrives in M23.
+    // They read and download what they were added to work on (DD-015),
+    // history included.
+    await user.click(
+      within(section).getByRole("button", { name: /Show the 2 earlier versions of/ }),
+    );
+    expect(within(section).getByRole("link", { name: "round_1.docx" })).toBeInTheDocument();
+    // Every control that writes is absent rather than disabled — the
+    // convention every other card on this page follows. Their write
+    // grid arrives in M23.
     expect(within(section).queryByRole("button", { name: "Upload" })).not.toBeInTheDocument();
+    expect(
+      within(section).queryByRole("button", { name: /^Add a version/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(section).queryByRole("button", { name: /^Edit the details/ }),
+    ).not.toBeInTheDocument();
   });
 
-  it("freezes the upload control on an archived record", async () => {
+  it("freezes the section's controls on an archived record", async () => {
     const record = recordApi(contractRow({ archivedAt: "2026-08-02T00:00:00.000Z" }));
     stubApi({
       signedIn: MEMBER,
@@ -3664,6 +3911,12 @@ describe("the contract record's Documents section (M11/2)", () => {
 
     const section = await documentsSection();
     expect(within(section).queryByRole("button", { name: "Upload" })).not.toBeInTheDocument();
+    expect(
+      within(section).queryByRole("button", { name: /^Add a version/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(section).queryByRole("button", { name: /^Edit the details/ }),
+    ).not.toBeInTheDocument();
     // Reading it is not editing it: the download stays.
     expect(
       within(section).getByRole("link", { name: "Orion_MSA_2026_draft.docx" }),
