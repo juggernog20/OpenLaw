@@ -33,6 +33,7 @@ import {
   type ActivityEvent,
 } from "./lib/activity-emitter.js";
 import type { MailerResolver } from "./lib/mailer.js";
+import type { StorageAdapter } from "./lib/storage/adapter.js";
 import { metaRoutes } from "./modules/meta/routes.js";
 import { authRoutes } from "./modules/auth/routes.js";
 import { contractStatusesRoutes } from "./modules/contract-statuses/routes.js";
@@ -66,6 +67,13 @@ export interface AppDeps {
    */
   resolveMailer: MailerResolver;
   /**
+   * File storage (DOC-009, TECH-014): one narrow interface over
+   * immutable blobs, with a driver chosen by the deployment. Injected
+   * like the database and the mailer, so application code never learns
+   * which driver is behind it.
+   */
+  storage: StorageAdapter;
+  /**
    * Directory of the built SPA (TECH-017: the app serves the web bundle
    * same-origin). Unset — e.g. API-only development — leaves every
    * non-API path a JSON 404.
@@ -78,6 +86,7 @@ declare module "fastify" {
     db: Db;
     auth: Auth;
     resolveMailer: MailerResolver;
+    storage: StorageAdapter;
   }
 }
 
@@ -85,6 +94,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   const app = Fastify(opts).withTypeProvider<ZodTypeProvider>();
   app.decorate("db", deps.db);
   app.decorate("resolveMailer", deps.resolveMailer);
+  app.decorate("storage", deps.storage);
   app.decorate("auth", createAuth(deps.db, deps.config, deps.resolveMailer, app.log));
   // Shape hints for V8; guards assign the real values per request.
   app.decorateRequest("user", undefined as unknown as AuthenticatedUser);
