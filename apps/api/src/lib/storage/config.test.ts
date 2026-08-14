@@ -112,9 +112,15 @@ describe("the S3 driver's environment", () => {
     });
   });
 
-  it("refuses addressing that says neither yes nor no", () => {
+  it("refuses addressing that says neither yes nor no, without repeating what it was given", () => {
+    // The message reaches stderr at boot. It names the variable and what
+    // the variable accepts, and it does not echo a value read out of the
+    // environment back into the log.
     expect(() => readStorageConfig({ ...S3_ENV, S3_FORCE_PATH_STYLE: "maybe" })).toThrow(
       StorageConfigError,
+    );
+    expect(() => readStorageConfig({ ...S3_ENV, S3_FORCE_PATH_STYLE: "maybe" })).toThrow(
+      /^S3_FORCE_PATH_STYLE must be true, false, 1, or 0\.$/,
     );
   });
 

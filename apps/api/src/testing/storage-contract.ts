@@ -106,7 +106,11 @@ export function describeStorageAdapterContract(
     }, options.startTimeoutMs ?? 120_000);
 
     afterAll(async () => {
-      await harness.stop?.();
+      // Optional on the harness too, not only on `stop`: if `start`
+      // rejected, `harness` was never assigned, and reaching through it
+      // here would make a TypeError the thing the run reports — burying
+      // the container or directory failure that actually happened.
+      await harness?.stop?.();
     });
 
     describe("put", () => {

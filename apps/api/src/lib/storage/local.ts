@@ -45,6 +45,24 @@ function errorCode(error: unknown): string | undefined {
     : undefined;
 }
 
+/**
+ * Pushes a file or a directory to the disk itself.
+ *
+ * Everything above assumes a write that has returned is a write that
+ * survives the machine losing power, because the row naming the blob
+ * commits on that assumption. `fsync` is what makes it true. A
+ * directory is opened read-only, which is all fsync needs and all this
+ * has any business asking for.
+ */
+async function flush(path: string): Promise<void> {
+  const handle = await open(path, "r");
+  try {
+    await handle.sync();
+  } finally {
+    await handle.close();
+  }
+}
+
 export interface LocalStorageOptions {
   /** The directory every blob is stored under. */
   root: string;
@@ -90,7 +108,21 @@ export function createLocalStorage({ root }: LocalStorageOptions): StorageAdapte
       try {
         // `wx` — a temporary name that already exists is a bug, not a
         // file to overwrite.
+        //
+        // Written through a handle so the bytes can be flushed before
+        // `put` answers. `pipeline` resolves when the operating system
+        // has the write, not when the disk does, and the caller commits
+        // a `document_versions` row on that answer. Lose power in that
+        // window and the row survives on the database's volume while
+        // the blob does not — a version that names bytes nobody can
+        // read. The orphan this driver's doc calls harmless is the
+        // other direction, and it is the one that is recoverable.
         await pipeline(body, createWriteStream(temporary, { flags: "wx" }));
+        // Flushed through a second handle rather than the stream's own:
+        // a write stream owns its descriptor and closes it when the
+        // pipeline finishes, and fsync answers for the file, not for
+        // the descriptor it is asked through.
+        await flush(temporary);
         // `link`, not `rename`: rename replaces whatever is at the
         // destination, and blobs are immutable. link refuses an
         // existing destination in one atomic step, so two writers of
@@ -103,6 +135,10 @@ export function createLocalStorage({ root }: LocalStorageOptions): StorageAdapte
           }
           throw error;
         }
+        // The link is a change to the directory, not to the file, so it
+        // needs its own flush. Without it the durable bytes can still
+        // be reachable by no name.
+        await flush(directory);
       } finally {
         await rm(temporary, { force: true });
       }

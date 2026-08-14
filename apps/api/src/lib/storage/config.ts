@@ -62,7 +62,10 @@ function readFlag(env: StorageEnvironment, name: string): boolean | undefined {
   if (value === undefined) return undefined;
   if (value === "true" || value === "1") return true;
   if (value === "false" || value === "0") return false;
-  throw new StorageConfigError(`${name} must be true or false, not ${JSON.stringify(value)}.`);
+  // The name and what it accepts, never what it was given. This message
+  // reaches stderr at boot, and a value read out of the environment is
+  // not ours to print — the operator knows what they set.
+  throw new StorageConfigError(`${name} must be true, false, 1, or 0.`);
 }
 
 /** The S3 driver's configuration, as the environment states it. */

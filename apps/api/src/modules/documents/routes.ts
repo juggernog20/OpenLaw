@@ -185,6 +185,23 @@ const MAX_FILENAME_LENGTH = 255;
  * other short free text is. */
 const MAX_NOTE_LENGTH = 2000;
 
+/**
+ * The longest media type worth storing. RFC 6838 caps each half of a
+ * type at 127 characters, and parameters take the rest; anything past
+ * this is not a declaration a client meant.
+ */
+const MAX_MIME_TYPE_LENGTH = 255;
+
+/**
+ * The shape of a media type: `type/subtype`, then any number of
+ * `; parameter=value`, all of it drawn from the RFC 9110 token charset.
+ *
+ * This checks the shape of the declaration, never the file. Any *type*
+ * is still accepted (DOC-004) — the value is a client-supplied hint,
+ * stored unverified and never acted on.
+ */
+const MIME_TYPE_PATTERN = /^[!#$%&'*+.^_`|~\w-]+\/[!#$%&'*+.^_`|~\w-]+(?:\s*;[ -~]*)?$/;
+
 const KindSchema = z.enum(DOCUMENT_VERSION_KINDS);
 
 /** The uploader, as every person on a record is drawn (DES-018). */
@@ -1742,7 +1759,20 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     // Client-supplied and unverified, so it is stored as a hint and
     // never acted on. An upload that declares nothing is stored as
     // the type that means "bytes".
-    const mimeType = part.mimetype.trim() || "application/octet-stream";
+    //
+    // Bounded and shape-checked before it is stored, because this value
+    // is written to a row and then echoed into the download's
+    // `content-type` on every open. A declaration that is not a media
+    // type is treated as no declaration at all rather than refused: the
+    // bytes are what the uploader came to store, and the hint is the
+    // one field here that nothing downstream may trust anyway.
+    const declared = part.mimetype.trim();
+    const mimeType =
+      declared.length > 0 &&
+      declared.length <= MAX_MIME_TYPE_LENGTH &&
+      MIME_TYPE_PATTERN.test(declared)
+        ? declared
+        : "application/octet-stream";
 
     const digest = createHash("sha256");
     let byteSize = 0;

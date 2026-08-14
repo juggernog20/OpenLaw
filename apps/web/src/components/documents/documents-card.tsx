@@ -410,10 +410,7 @@ export function DocumentsCard({
    * a role taken away in the same window answers 403. Success keeps the
    * note — by then the dialog is gone and the note is what is left.
    */
-  async function erase(
-    document: ContractDocument,
-    confirmTitle: string,
-  ): Promise<string | null> {
+  async function erase(document: ContractDocument, confirmTitle: string): Promise<string | null> {
     if (busy) return null;
     setBusy(true);
     setStatus("saving");

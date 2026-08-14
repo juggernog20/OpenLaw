@@ -201,6 +201,11 @@ async function storedFilesCarrying(
     const [root, marker] = process.argv.slice(1);
     const hits = [];
     const walk = (dir) => {
+      // A storage root that is not there is the assertion's answer, not
+      // a crash: returning empty lets the caller report "no stored file
+      // holds these bytes", where an ENOENT out of readdir would report
+      // only itself.
+      if (!fs.existsSync(dir)) return;
       for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
         const full = path.join(dir, entry.name);
         if (entry.isDirectory()) walk(full);

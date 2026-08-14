@@ -95,6 +95,22 @@ function isPreconditionFailed(error: unknown): boolean {
 }
 
 /**
+ * Whether the store refused the write because something else touched the
+ * key while the conditional completion was in flight.
+ *
+ * S3 answers a conditional `CompleteMultipartUpload` two ways. 412 is
+ * the condition failing — the key was already taken. 409 is a conflict:
+ * a concurrent operation landed mid-flight, and the outcome is not
+ * stated by the status alone.
+ */
+function isConditionalConflict(error: unknown): boolean {
+  return (
+    (error instanceof Error && error.name === "ConditionalRequestConflict") ||
+    statusOf(error) === 409
+  );
+}
+
+/**
  * Builds the S3-compatible driver over one bucket.
  *
  * The bucket is not created here, and its existence is not checked.
@@ -151,6 +167,20 @@ export function createS3Storage(options: S3StorageOptions): StorageAdapter {
         }).done();
       } catch (error) {
         if (isPreconditionFailed(error)) throw new BlobExistsError(ref);
+        // A 409 says a concurrent operation landed while the conditional
+        // completion was in flight. AWS's own answer is to start the
+        // whole multipart upload again, which this driver cannot do:
+        // the body is a request stream and it has already been read.
+        //
+        // So ask the store what actually happened. A blob at the key
+        // means another writer won the race, which is already-exists
+        // under a different status. Nothing at the key means the write
+        // is genuinely lost, and that is not an already-exists — the
+        // caller gets the store's own error rather than a wrong answer
+        // that would make an immutable blob look written.
+        if (isConditionalConflict(error) && (await exists(key))) {
+          throw new BlobExistsError(ref);
+        }
         throw error;
       }
 
