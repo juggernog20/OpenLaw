@@ -188,14 +188,19 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     // its own the way it does for the Administrator-only taxonomies.
     canEdit ? api.GET("/api/v1/entities") : undefined,
   ]);
-  if (!record.data || (canEdit && !(options?.data && registry?.data))) {
+  // The documents read is required, like the record read: every viewer
+  // who reaches this page reads the paper on it (DD-015). A failure
+  // here must not render as "No documents on this contract yet" — an
+  // empty list is a fact about the record, not a fallback for a read
+  // that did not happen.
+  if (!record.data || !documents.data || (canEdit && !(options?.data && registry?.data))) {
     throw new Error("The contract could not be read.");
   }
   return {
     user,
     canEdit,
     contract: record.data.contract,
-    documents: documents.data?.documents ?? [],
+    documents: documents.data.documents,
     fields: record.data.fields,
     customFieldRefs: record.data.customFieldRefs,
     team: record.data.team,
