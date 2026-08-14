@@ -484,8 +484,25 @@ export function DocumentsCard({
               leaves out what this viewer may not see, so a count taken
               here can never announce what was left out — minus whatever
               is archived, because being off the count is what archiving
-              a document means (DOC-010). */}
-          <span className="rounded-chip bg-badge-count-bg px-1.5 py-px text-xs font-medium text-badge-count-fg">
+              a document means (DOC-010).
+
+              The badge draws a bare number and says a whole phrase, the
+              same split the confidential marker takes: on screen the
+              heading beside it supplies the noun, and to a screen reader
+              a lone "3" after a heading says nothing. `role="img"` is
+              what lets the name replace the digits rather than sit
+              beside them. */}
+          <span
+            role="img"
+            aria-label={intl.formatMessage(
+              {
+                id: "documents.countLabel",
+                defaultMessage: "{count, plural, one {# document} other {# documents}}",
+              },
+              { count: liveCount },
+            )}
+            className="rounded-chip bg-badge-count-bg px-1.5 py-px text-xs font-medium text-badge-count-fg"
+          >
             {intl.formatNumber(liveCount)}
           </span>
         </div>
@@ -1306,7 +1323,7 @@ function UploadDialog({
           }}
         >
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="document-file">
+            <Label id="document-file-label" htmlFor="document-file">
               <FormattedMessage id="documents.composer.file" defaultMessage="File" />
             </Label>
             <span className="flex items-center gap-2">
@@ -1327,7 +1344,21 @@ function UploadDialog({
                   setFile(chosen);
                 }}
               />
-              <Button type="button" variant="secondary" onClick={() => picker.current?.click()}>
+              {/* The label points at the input, but the input is out of
+                  the tab order — this button is the control a keyboard
+                  reaches, so it has to carry the field's name itself, or
+                  the dialog opens on "Choose file, button" with nothing
+                  saying which field it fills. The refusal below is about
+                  this field too, so the button describes itself with it
+                  rather than leaving it to be found by sight. */}
+              <Button
+                type="button"
+                variant="secondary"
+                id="document-file-choose"
+                aria-labelledby="document-file-label document-file-choose"
+                aria-describedby={error ? "document-upload-error" : undefined}
+                onClick={() => picker.current?.click()}
+              >
                 <FormattedMessage id="documents.composer.choose" defaultMessage="Choose file" />
               </Button>
               <span className="min-w-0 truncate text-sm text-muted">
@@ -1374,7 +1405,7 @@ function UploadDialog({
             />
           </div>
           {error && (
-            <p role="alert" className="text-xs text-status-danger-fg">
+            <p id="document-upload-error" role="alert" className="text-xs text-status-danger-fg">
               {error}
             </p>
           )}
