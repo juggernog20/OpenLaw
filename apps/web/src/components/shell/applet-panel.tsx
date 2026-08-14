@@ -49,9 +49,9 @@ export function AppletPanel({
       onKeyDown={(event) => {
         if (event.key === "Escape" && !event.defaultPrevented) onClose();
       }}
-      className="absolute inset-y-0 end-(--width-activitybar) z-10 flex w-(--width-panel) shrink-0 flex-col border-s border-default bg-raised @min-[1100px]/record:static @min-[1100px]/record:z-auto"
+      className="absolute inset-y-0 end-(--width-activitybar) z-10 flex w-(--width-panel) shrink-0 flex-col border-s border-border-default bg-raised @min-[1100px]/record:static @min-[1100px]/record:z-auto"
     >
-      <header className="flex h-11 shrink-0 items-center justify-between border-b border-muted px-4">
+      <header className="flex h-11 shrink-0 items-center justify-between border-b border-border-muted px-4">
         <div className="flex min-w-0 items-center gap-2">
           <h2 className="truncate text-base font-semibold">{label}</h2>
           {accessory}

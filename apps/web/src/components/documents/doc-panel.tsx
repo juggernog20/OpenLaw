@@ -94,9 +94,9 @@ export function DocPanel({
       onKeyDown={(event) => {
         if (event.key === "Escape" && !event.defaultPrevented) onClose();
       }}
-      className="absolute inset-y-0 start-0 end-(--width-activitybar) z-20 flex flex-col border-s border-default bg-raised outline-none @min-[1400px]/record:static @min-[1400px]/record:z-auto @min-[1400px]/record:w-(--width-docpanel) @min-[1400px]/record:shrink-0"
+      className="absolute inset-y-0 start-0 end-(--width-activitybar) z-20 flex flex-col border-s border-border-default bg-raised outline-none @min-[1400px]/record:static @min-[1400px]/record:z-auto @min-[1400px]/record:w-(--width-docpanel) @min-[1400px]/record:shrink-0"
     >
-      <header className="flex h-11 shrink-0 items-center justify-between gap-2 border-b border-muted px-4">
+      <header className="flex h-11 shrink-0 items-center justify-between gap-2 border-b border-border-muted px-4">
         <div className="flex min-w-0 items-center gap-2">
           <FileText size={16} aria-hidden="true" className="shrink-0 text-muted" />
           <h2 className="truncate text-base font-semibold">{title}</h2>
@@ -127,7 +127,7 @@ export function DocPanel({
           left, and the one control that is true of every family on the
           right. Reading controls belong to the surface that has them,
           so page and zoom live inside the PDF view rather than here. */}
-      <div className="flex h-10 shrink-0 items-center justify-between gap-2 border-b border-muted bg-canvas px-3">
+      <div className="flex h-10 shrink-0 items-center justify-between gap-2 border-b border-border-muted bg-canvas px-3">
         <span className="truncate text-sm text-muted">{version.originalFilename}</span>
         <a
           href={documentDownloadHref(documentId, version.id)}
