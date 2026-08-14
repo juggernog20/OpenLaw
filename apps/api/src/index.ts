@@ -13,6 +13,7 @@ import { createDb, runMigrations } from "@openlaw/db";
 import { buildApp } from "./app.js";
 import { createMailerResolver } from "./lib/mailer.js";
 import { DEFAULT_STORAGE_PATH, createLocalStorage } from "./lib/storage/local.js";
+import { maxUploadBytes } from "./lib/uploads.js";
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -44,6 +45,12 @@ const resolveMailer = createMailerResolver(db, {
 const storage = createLocalStorage({
   root: process.env.STORAGE_PATH || DEFAULT_STORAGE_PATH,
 });
+
+// The upload ceiling, in whole mebibytes, read here for the storage
+// root's reason: startup reads the environment, and no module does. An
+// unreadable value falls back to the default rather than refusing to
+// boot (see maxUploadBytes).
+const uploadCeiling = maxUploadBytes(process.env.MAX_UPLOAD_MB);
 
 // BASE_URL anchors emailed links (set-password, magic links) and origin
 // checks. The localhost default exists for development; a production
@@ -82,6 +89,7 @@ const app = await buildApp(
     },
     resolveMailer,
     storage,
+    maxUploadBytes: uploadCeiling,
     webDist: webDistPresent ? webDist : undefined,
   },
   { logger: true },

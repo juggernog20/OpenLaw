@@ -68,6 +68,7 @@ import {
   Tags,
   Trash2,
   Unlink,
+  Upload,
   UserCog,
   UserMinus,
   UserPlus,
@@ -767,6 +768,19 @@ const ARMS: Readonly<Record<string, Arm>> = {
       defaultMessage: "{actor} restored this contract",
     }),
   },
+  // The record's paper (M11/2). The entry hangs off the owning contract
+  // — a document's access is its owner's and nothing else (DOC-008) —
+  // and it names the document, because hard deletion (DOC-010) will one
+  // day take the row and the entry has to still say what was uploaded.
+  "document.created": {
+    icon: Upload,
+    message: defineMessage({
+      id: "activity.document.created",
+      defaultMessage: "{actor} uploaded {title}",
+    }),
+    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+  },
+
   // Ids only, never text (CMT-006). A redacted comment's entry reads as
   // a comment that was removed, never as what the comment said.
   "comment.posted": {

@@ -87,6 +87,13 @@ export type ActivityAction =
   // a comment keeps its own verb from taking it back: an edit and a
   // delete are the author's acts, and a redact is an Administrator's.
   | `comment.${"posted" | "edited" | "deleted" | "redacted"}`
+  // The record's paper (M11/2, DD-017). The entry hangs off the owning
+  // contract, not off the document: access to a document is the owning
+  // record's access and nothing else (DOC-008), so its story belongs in
+  // that record's feed. The payload names the document, because hard
+  // deletion (DOC-010) removes the rows and the entry still has to say
+  // what was deleted.
+  | "document.created"
   | "sso_provider.registered"
   | "sso_provider.updated"
   // Data leaving the system (M9/7, DD-017). An export is a security

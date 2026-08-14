@@ -165,7 +165,18 @@ export interface TestHarness {
   stop: () => Promise<void>;
 }
 
-export async function startHarness(): Promise<TestHarness> {
+/** What a suite may vary about the app the harness builds. */
+export interface HarnessOptions {
+  /**
+   * The upload ceiling in bytes. Left unset, the production default
+   * applies. A suite that has to see an oversized upload refused sets a
+   * small one, so the refusal is tested with a handful of bytes rather
+   * than with a hundred megabytes of them.
+   */
+  maxUploadBytes?: number;
+}
+
+export async function startHarness(options: HarnessOptions = {}): Promise<TestHarness> {
   const container: StartedPostgreSqlContainer = await new PostgreSqlContainer(
     "postgres:16-alpine",
   ).start();
@@ -194,7 +205,13 @@ export async function startHarness(): Promise<TestHarness> {
     };
     const { storage, cleanup } = await createTestStorage();
     cleanupStorage = cleanup;
-    const app = await buildApp({ db, config: TEST_AUTH_CONFIG, resolveMailer, storage });
+    const app = await buildApp({
+      db,
+      config: TEST_AUTH_CONFIG,
+      resolveMailer,
+      storage,
+      maxUploadBytes: options.maxUploadBytes,
+    });
     await app.ready();
     return {
       app,

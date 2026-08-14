@@ -160,6 +160,12 @@ export function stubApi(state: ApiState) {
       };
       return json(200, { ...methods, emailConfigured: methods.emailConfigured ?? true });
     }
+    // A contract record reads its paper (M11/2). Empty by default, so
+    // every suite that is not about documents needs no stub of its own;
+    // the ones that are supply rows through `extra`, which runs first.
+    if (/^\/api\/v1\/contracts\/\d+\/documents$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { documents: [] });
+    }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
       return json(200, state.onboarding ?? { completed: true, emailConfigured: true });
     }

@@ -3472,3 +3472,201 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
     expect(view.container.querySelector("svg.lucide-eye-off")).toBeNull();
   });
 });
+
+/**
+ * The Documents section of the record body (M11/2), drawn from the C4
+ * mock: the heading with a count of what is on the record, the upload
+ * control beside it, and one row per document whose name is the
+ * download.
+ *
+ * The panel DES-016 places in a wider sibling layer is not here — it
+ * lands with M12's rendering — and neither is the version chain, which
+ * lands with revision upload. What this asserts is the section, the
+ * count, the upload, and the download link.
+ */
+describe("the contract record's Documents section (M11/2)", () => {
+  const DRAFT = {
+    id: "doc-1",
+    title: "Orion_MSA_2026_draft.docx",
+    currentVersion: {
+      id: "ver-1",
+      versionNumber: 1,
+      kind: "draft_ours",
+      note: null,
+      originalFilename: "Orion_MSA_2026_draft.docx",
+      mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      byteSize: 88_000,
+      checksumSha256: "a".repeat(64),
+      uploadedBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+      createdAt: "2026-08-11T09:00:00.000Z",
+    },
+    createdBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+    createdAt: "2026-08-11T09:00:00.000Z",
+    updatedAt: "2026-08-11T09:00:00.000Z",
+  };
+
+  const THEIRS = {
+    ...DRAFT,
+    id: "doc-2",
+    title: "Orion_MSA_2026_redline_orion.docx",
+    currentVersion: {
+      ...DRAFT.currentVersion,
+      id: "ver-2",
+      kind: "redline_theirs",
+      originalFilename: "Orion_MSA_2026_redline_orion.docx",
+      byteSize: 102_000,
+    },
+  };
+
+  /** The record stub, plus the documents read and the upload. */
+  function documentsApi(
+    rows: Record<string, unknown>[],
+    options: { uploadFails?: string } = {},
+    team = [person("u1", "creator")],
+  ) {
+    const record = recordApi(contractRow(), team);
+    const uploads: string[] = [];
+    let current = rows;
+    const handler = (call: StubCall): Response | undefined => {
+      if (call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
+        return json(200, { documents: current });
+      }
+      if (call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "POST") {
+        uploads.push(call.url.pathname);
+        if (options.uploadFails) return problem(413, options.uploadFails);
+        const added = {
+          ...DRAFT,
+          id: "doc-new",
+          title: "counter_redline.docx",
+          currentVersion: {
+            ...DRAFT.currentVersion,
+            id: "ver-new",
+            originalFilename: "counter_redline.docx",
+          },
+        };
+        current = [added, ...current];
+        return json(201, { document: added });
+      }
+      return record.handler(call);
+    };
+    return { handler, uploads };
+  }
+
+  const documentsSection = () => screen.findByRole("region", { name: /^Documents/ });
+
+  it("draws the section with a count of the paper on the record", async () => {
+    stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT, THEIRS]).handler });
+    renderAt("/contracts/42");
+
+    const section = await documentsSection();
+    expect(within(section).getByRole("heading", { level: 2, name: "Documents" })).toBeVisible();
+    // The count is what the list holds — the API leaves out what this
+    // viewer may not see, so it can never announce an omission.
+    expect(within(section).getByText("2")).toBeVisible();
+    expect(within(section).getAllByRole("row")).toHaveLength(3); // header + two
+  });
+
+  it("names each document and makes the name its download", async () => {
+    stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT]).handler });
+    renderAt("/contracts/42");
+
+    const section = await documentsSection();
+    const link = within(section).getByRole("link", { name: "Orion_MSA_2026_draft.docx" });
+    // Straight at the version's own address: every open is a download
+    // in M11, and there is no presigned URL to build.
+    expect(link).toHaveAttribute("href", "/api/v1/documents/doc-1/versions/ver-1/download");
+    expect(link).toHaveAttribute("download", "Orion_MSA_2026_draft.docx");
+    // The kind, the size, and when it landed, as the C4 mock draws them.
+    expect(within(section).getByText("Draft · ours")).toBeVisible();
+    expect(within(section).getByText("88 kB")).toBeVisible();
+  });
+
+  it("says so plainly when the record has no paper on it", async () => {
+    stubApi({ signedIn: MEMBER, extra: documentsApi([]).handler });
+    renderAt("/contracts/42");
+
+    const section = await documentsSection();
+    expect(within(section).getByText("No documents on this contract yet.")).toBeVisible();
+    expect(within(section).getByText("0")).toBeVisible();
+  });
+
+  it("uploads a picked file and puts the new document on top", async () => {
+    const api = documentsApi([DRAFT]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.upload(
+      within(section).getByLabelText("File to upload"),
+      new File(["counter redline bytes"], "counter_redline.docx", {
+        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      }),
+    );
+
+    await waitFor(() => expect(api.uploads).toHaveLength(1));
+    expect(
+      await within(section).findByRole("link", { name: "counter_redline.docx" }),
+    ).toBeInTheDocument();
+    // Newest first, and the count follows.
+    expect(within(section).getByText("2")).toBeVisible();
+  });
+
+  it("reports the seam's own refusal when the file is turned away", async () => {
+    const api = documentsApi([], { uploadFails: "That file is over the 100 MB upload limit." });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.upload(
+      within(section).getByLabelText("File to upload"),
+      new File(["far too much"], "enormous.pdf", { type: "application/pdf" }),
+    );
+
+    expect(
+      await within(section).findByText("That file is over the 100 MB upload limit."),
+    ).toBeVisible();
+    expect(within(section).getByText("No documents on this contract yet.")).toBeVisible();
+  });
+
+  it("offers a Contributor the list and the download, and no upload control", async () => {
+    const api = documentsApi([DRAFT], {}, [person("u1", "creator"), person("u3", "contributor")]);
+    stubApi({
+      signedIn: CONTRIBUTOR,
+      extra: (call) =>
+        ["/api/v1/contracts/options", "/api/v1/entities"].includes(call.url.pathname)
+          ? problem(403, "You do not have permission to perform this action.")
+          : api.handler(call),
+    });
+    renderAt("/contracts/42");
+
+    const section = await documentsSection();
+    // They read and download what they were added to work on (DD-015).
+    expect(
+      within(section).getByRole("link", { name: "Orion_MSA_2026_draft.docx" }),
+    ).toBeInTheDocument();
+    // The control is absent rather than disabled — the convention every
+    // other card on this page follows. Their write grid arrives in M23.
+    expect(within(section).queryByRole("button", { name: "Upload" })).not.toBeInTheDocument();
+  });
+
+  it("freezes the upload control on an archived record", async () => {
+    const record = recordApi(contractRow({ archivedAt: "2026-08-02T00:00:00.000Z" }));
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "GET"
+          ? json(200, { documents: [DRAFT] })
+          : record.handler(call),
+    });
+    renderAt("/contracts/42");
+
+    const section = await documentsSection();
+    expect(within(section).queryByRole("button", { name: "Upload" })).not.toBeInTheDocument();
+    // Reading it is not editing it: the download stays.
+    expect(
+      within(section).getByRole("link", { name: "Orion_MSA_2026_draft.docx" }),
+    ).toBeInTheDocument();
+  });
+});

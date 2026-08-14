@@ -13,6 +13,7 @@
 import { sep } from "node:path";
 import Fastify, { type FastifyError, type FastifyServerOptions } from "fastify";
 import { pingDb, type Db } from "@openlaw/db";
+import fastifyMultipart from "@fastify/multipart";
 import fastifyStatic from "@fastify/static";
 import fastifySwagger from "@fastify/swagger";
 import scalarApiReference from "@scalar/fastify-api-reference";
@@ -34,6 +35,7 @@ import {
 } from "./lib/activity-emitter.js";
 import type { MailerResolver } from "./lib/mailer.js";
 import type { StorageAdapter } from "./lib/storage/adapter.js";
+import { DEFAULT_MAX_UPLOAD_MB, MEGABYTE } from "./lib/uploads.js";
 import { metaRoutes } from "./modules/meta/routes.js";
 import { authRoutes } from "./modules/auth/routes.js";
 import { contractStatusesRoutes } from "./modules/contract-statuses/routes.js";
@@ -43,6 +45,7 @@ import { activityRoutes } from "./modules/activity/routes.js";
 import { auditLogRoutes } from "./modules/audit-log/routes.js";
 import { commentsRoutes } from "./modules/comments/routes.js";
 import { contractsRoutes } from "./modules/contracts/routes.js";
+import { documentsRoutes } from "./modules/documents/routes.js";
 import { counterpartiesRoutes } from "./modules/counterparties/routes.js";
 import { entitiesRoutes } from "./modules/entities/routes.js";
 import { entityTypesRoutes } from "./modules/entity-types/routes.js";
@@ -74,6 +77,14 @@ export interface AppDeps {
    */
   storage: StorageAdapter;
   /**
+   * The largest file one upload may carry, in bytes (story 24). Read
+   * from `MAX_UPLOAD_MB` at startup and injected, like the storage root
+   * — no module reads the environment for it. Unset here, the default
+   * applies, which is what the OpenAPI emitter and the test harness
+   * take.
+   */
+  maxUploadBytes?: number;
+  /**
    * Directory of the built SPA (TECH-017: the app serves the web bundle
    * same-origin). Unset — e.g. API-only development — leaves every
    * non-API path a JSON 404.
@@ -87,6 +98,9 @@ declare module "fastify" {
     auth: Auth;
     resolveMailer: MailerResolver;
     storage: StorageAdapter;
+    /** The upload ceiling in bytes, so the routes that refuse an
+     * oversized file can name the limit they refused it against. */
+    maxUploadBytes: number;
   }
 }
 
@@ -95,6 +109,8 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   app.decorate("db", deps.db);
   app.decorate("resolveMailer", deps.resolveMailer);
   app.decorate("storage", deps.storage);
+  const maxUploadBytes = deps.maxUploadBytes ?? DEFAULT_MAX_UPLOAD_MB * MEGABYTE;
+  app.decorate("maxUploadBytes", maxUploadBytes);
   app.decorate("auth", createAuth(deps.db, deps.config, deps.resolveMailer, app.log));
   // Shape hints for V8; guards assign the real values per request.
   app.decorateRequest("user", undefined as unknown as AuthenticatedUser);
@@ -115,6 +131,21 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   // owns the sink now, and closing this one must not silence it.
   app.addHook("onClose", () => {
     clearActivityEmitter(emitActivity);
+  });
+
+  // The first multipart path in the codebase (M11/2). The ceiling is
+  // enforced here, while the bytes stream past, so an oversized upload
+  // is refused rather than stored and then deleted. One file and a
+  // handful of small fields is the whole shape any route needs; a
+  // request that carries more is refused before a handler sees it.
+  await app.register(fastifyMultipart, {
+    limits: {
+      fileSize: maxUploadBytes,
+      files: 1,
+      fields: 8,
+      fieldSize: 8192,
+      parts: 16,
+    },
   });
 
   app.setValidatorCompiler(validatorCompiler);
@@ -286,6 +317,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(contractStatusesRoutes, { prefix: "/api/v1" });
   await app.register(contractsRoutes, { prefix: "/api/v1" });
   await app.register(counterpartiesRoutes, { prefix: "/api/v1" });
+  await app.register(documentsRoutes, { prefix: "/api/v1" });
   await app.register(commentsRoutes, { prefix: "/api/v1" });
   await app.register(activityRoutes, { prefix: "/api/v1" });
   await app.register(auditLogRoutes, { prefix: "/api/v1" });
