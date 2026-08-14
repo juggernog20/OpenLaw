@@ -14,6 +14,7 @@ import { join } from "node:path";
 import { buildApp } from "../src/app.js";
 import { createUnconfiguredMailer } from "../src/lib/mailer.js";
 import { createLocalStorage } from "../src/lib/storage/local.js";
+import { createFakeDocEngine } from "../src/lib/doc-engine/fake.js";
 
 // Rendering the document only registers routes; nothing connects to the
 // database, sends mail, or stores a file, so inert stand-in dependencies
@@ -25,6 +26,7 @@ const app = await buildApp(
     resolveMailer: () =>
       Promise.resolve({ source: "unset", from: null, mailer: createUnconfiguredMailer() }),
     storage: createLocalStorage({ root: join(tmpdir(), "openlaw-openapi-emit-never-written") }),
+    docEngine: createFakeDocEngine(),
   },
   { logger: false },
 );

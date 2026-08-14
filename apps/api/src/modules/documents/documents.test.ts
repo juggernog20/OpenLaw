@@ -2047,6 +2047,7 @@ describe("the upload ceiling", () => {
       config: TEST_AUTH_CONFIG,
       resolveMailer: fixedMailerResolver(new CapturingMailer()),
       storage: harness.storage,
+      docEngine: harness.docEngine,
       maxUploadBytes: LIMIT,
     });
     await small.ready();

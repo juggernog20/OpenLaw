@@ -12,6 +12,7 @@ import { fileURLToPath } from "node:url";
 import { createDb, runMigrations } from "@openlaw/db";
 import { buildApp } from "./app.js";
 import { createMailerResolver } from "./lib/mailer.js";
+import { createDocEngineFromEnv } from "./lib/doc-engine/config.js";
 import { createStorageFromEnv } from "./lib/storage/config.js";
 import { maxUploadBytes } from "./lib/uploads.js";
 
@@ -46,6 +47,21 @@ const resolveMailer = createMailerResolver(db, {
 const storage = (function readStorage() {
   try {
     return createStorageFromEnv(process.env);
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  }
+})();
+
+// TECH-010: the doc engine is chosen here too, and injected. Nothing is
+// contacted at startup — building the client only parses its URL — so a
+// sidecar that is still coming up does not hold the API's boot. A
+// malformed DOC_ENGINE_URL is a configuration fault and stops the boot,
+// for the storage driver's reason: an install told to reach the engine
+// somewhere specific must not quietly call somewhere else.
+const docEngine = (function readDocEngine() {
+  try {
+    return createDocEngineFromEnv(process.env);
   } catch (error) {
     console.error(error instanceof Error ? error.message : error);
     process.exit(1);
@@ -95,6 +111,7 @@ const app = await buildApp(
     },
     resolveMailer,
     storage,
+    docEngine,
     maxUploadBytes: uploadCeiling,
     webDist: webDistPresent ? webDist : undefined,
   },

@@ -108,6 +108,9 @@ importers:
       oauth2-mock-server:
         specifier: ^9.1.0
         version: 9.1.0
+      testcontainers:
+        specifier: ^12.1.0
+        version: 12.1.0
       tsx:
         specifier: ^4.23.12
         version: 4.23.12
@@ -279,6 +282,12 @@ importers:
         version: 0.31.10
 
   packages/shared: {}
+
+  services/doc-engine:
+    devDependencies:
+      tsx:
+        specifier: ^4.23.12
+        version: 4.23.12
 
 packages:
 

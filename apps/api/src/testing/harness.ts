@@ -21,6 +21,8 @@ import {
 } from "../lib/mailer.js";
 import type { StorageAdapter } from "../lib/storage/adapter.js";
 import { createLocalStorage } from "../lib/storage/local.js";
+import type { DocEngine } from "../lib/doc-engine/engine.js";
+import { createFakeDocEngine } from "../lib/doc-engine/fake.js";
 
 /** Shared by every test app so session cookies verify across instances. */
 export const TEST_AUTH_CONFIG: AuthConfig = {
@@ -162,6 +164,14 @@ export interface TestHarness {
   smtpEnv: { url: string; from: string } | null;
   /** The injected storage adapter — the local driver over a temporary root. */
   storage: StorageAdapter;
+  /**
+   * The injected doc engine (TECH-010): the deterministic fake, not the
+   * sidecar. The rule that tests run production code stops at the
+   * engine binaries — booting LibreOffice for every API suite would buy
+   * nothing an API test can assert. The real image has its own contract
+   * suite, and the fake satisfies the same shape.
+   */
+  docEngine: DocEngine;
   stop: () => Promise<void>;
 }
 
@@ -205,11 +215,13 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
     };
     const { storage, cleanup } = await createTestStorage();
     cleanupStorage = cleanup;
+    const docEngine = createFakeDocEngine();
     const app = await buildApp({
       db,
       config: TEST_AUTH_CONFIG,
       resolveMailer,
       storage,
+      docEngine,
       maxUploadBytes: options.maxUploadBytes,
     });
     await app.ready();
@@ -218,6 +230,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       db,
       mailer,
       storage,
+      docEngine,
       get smtpEnv() {
         return smtpEnv;
       },

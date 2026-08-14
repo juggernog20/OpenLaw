@@ -1,0 +1,89 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * Where the doc engine is, read from the environment (TECH-010).
+ *
+ * The choice is made once, at startup, and the engine is injected — no
+ * module below this one reads the environment for it, and no module
+ * below this one knows there is a sidecar at all.
+ *
+ * The default is the sidecar's name on the compose network, so the
+ * blessed stack needs no configuration for it: `docker compose up` and
+ * the engine is there. `DOC_ENGINE_URL` exists for the deployment that
+ * runs the sidecar somewhere else.
+ */
+
+import {
+  DEFAULT_DOC_ENGINE_TIMEOUT_MS,
+  DEFAULT_DOC_ENGINE_URL,
+  createHttpDocEngine,
+  type HttpDocEngineOptions,
+} from "./http.js";
+import type { DocEngine } from "./engine.js";
+
+/** The process environment, or a stand-in for it in a test. */
+export type DocEngineEnvironment = Readonly<Record<string, string | undefined>>;
+
+/**
+ * A configuration fault the operator has to fix. Thrown rather than
+ * defaulted around: an install told to reach the engine somewhere
+ * specific must stop rather than quietly call the compose default,
+ * which on that deployment is nothing at all.
+ */
+export class DocEngineConfigError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "DocEngineConfigError";
+  }
+}
+
+/**
+ * Reads one variable, treating empty as unset.
+ *
+ * Under Compose every declared variable exists and is empty when the
+ * `.env` file leaves it out, so empty has to mean "not configured" here
+ * as it does for `SMTP_URL` and `STORAGE_PATH`.
+ */
+function read(env: DocEngineEnvironment, name: string): string | undefined {
+  const value = env[name]?.trim();
+  return value ? value : undefined;
+}
+
+/**
+ * Reads the doc-engine configuration out of the environment, without
+ * building anything from it.
+ *
+ * Throws {@link DocEngineConfigError} when the URL is malformed or names
+ * a scheme the client cannot speak.
+ */
+export function readDocEngineConfig(env: DocEngineEnvironment): HttpDocEngineOptions {
+  const baseUrl = read(env, "DOC_ENGINE_URL") ?? DEFAULT_DOC_ENGINE_URL;
+  let parsed: URL;
+  try {
+    parsed = new URL(baseUrl);
+  } catch {
+    // The name and what it accepts, never what it was given: this
+    // message reaches stderr at boot, and the operator knows what they
+    // set.
+    throw new DocEngineConfigError("DOC_ENGINE_URL must be an absolute http or https URL.");
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new DocEngineConfigError("DOC_ENGINE_URL must be an absolute http or https URL.");
+  }
+
+  const timeout = read(env, "DOC_ENGINE_TIMEOUT_MS");
+  if (timeout === undefined) return { baseUrl };
+  const timeoutMs = Number(timeout);
+  if (!Number.isSafeInteger(timeoutMs) || timeoutMs <= 0) {
+    throw new DocEngineConfigError("DOC_ENGINE_TIMEOUT_MS must be a whole number of milliseconds.");
+  }
+  return { baseUrl, timeoutMs };
+}
+
+/** The default bound, for the deployment that sets no timeout of its own. */
+export { DEFAULT_DOC_ENGINE_TIMEOUT_MS, DEFAULT_DOC_ENGINE_URL };
+
+/** Builds the doc engine this install is configured for. */
+export function createDocEngineFromEnv(env: DocEngineEnvironment): DocEngine {
+  return createHttpDocEngine(readDocEngineConfig(env));
+}
