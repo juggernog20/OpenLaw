@@ -33,6 +33,7 @@ import {
   counterparties,
   eq,
   inArray,
+  sql,
   users,
 } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
@@ -2019,5 +2020,63 @@ describe("the DD-017 activity trail", () => {
       expect(row.actorId).not.toBeNull();
       expect(ids.has(row.entityId!)).toBe(true);
     }
+  });
+});
+
+describe("the shared locked read under a concurrent writer (#154)", () => {
+  /**
+   * Waits until a backend is blocked on the transaction that `holder` runs.
+   *
+   * The mutation under test has to reach the contract row and start
+   * waiting on it before the holding transaction commits — otherwise the
+   * two never overlap and the test proves nothing. Postgres says so
+   * itself, so this asks it rather than sleeping and hoping.
+   *
+   * It asks who each waiter is blocked *by*, not merely whether anything
+   * anywhere waits. A lock taken by an unrelated suite would otherwise
+   * end the wait early and let the test pass without the overlap it
+   * exists to create.
+   */
+  const waitForALockWaiter = async (holder: number): Promise<void> => {
+    for (let attempt = 0; attempt < 400; attempt += 1) {
+      const waiting = await harness.db.execute(
+        sql`select count(*)::int as waiting from pg_stat_activity
+            where ${holder} = any(pg_blocking_pids(pid))`,
+      );
+      if (Number(waiting.rows[0]?.waiting ?? 0) > 0) return;
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+    throw new Error("no statement ever waited on the contract row lock");
+  };
+
+  it("answers a viewer who can reach the record, not the missing-record 404", async () => {
+    const contract = await newContract("Helix under two writers");
+    const redlining = await statusBySlug("redlining");
+
+    // The first writer takes the row and changes its status — the join
+    // key the shared locked read carries. The second writer arrives
+    // while that is uncommitted, so it blocks on the row.
+    let patched: ReturnType<typeof patchContract> | undefined;
+    await harness.db.transaction(async (tx) => {
+      const holding = await tx.execute(sql`select pg_backend_pid()::int as pid`);
+      const holder = Number(holding.rows[0]?.pid);
+      await tx
+        .update(contracts)
+        .set({ statusId: redlining.id })
+        .where(eq(contracts.number, contract.number));
+      patched = patchContract(adminCookies, contract.number, {
+        title: "Renamed by the second writer",
+      });
+      await waitForALockWaiter(holder);
+    });
+
+    // The waiting statement re-checks its qualification against the row
+    // it waited for. An Administrator reaches every contract, so the one
+    // answer this must never give is the one reserved for a contract
+    // that was never made.
+    const response = await patched!;
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json().contract.title).toBe("Renamed by the second writer");
+    expect(response.json().contract.statusName).toBe(redlining.displayName);
   });
 });

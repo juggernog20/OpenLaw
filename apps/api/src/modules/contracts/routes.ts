@@ -717,11 +717,23 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
 
   /**
    * Locks one contract by number and returns it with its display
-   * names, or 404s — every mutation starts here. One query, the same
-   * join the reads use; `of: contracts` locks the contract row alone,
-   * because the joined taxonomy rows are only read here.
+   * names, or 404s — every mutation starts here.
    *
-   * Reach is asked next, on the row this just locked and inside the same
+   * Two statements, and the split is the fix for #154. The lock is taken
+   * on `contracts` alone, with no join in the statement. A statement
+   * that waits on a locked row re-checks its qualification against the
+   * row it waited for, but it re-checks the *join* against the tuples it
+   * had already fetched — so when the writer ahead committed a status
+   * change, the status row it holds no longer matches, the contract
+   * drops out of the result, and the caller is told the contract does
+   * not exist. Locking one table cannot say that: `number` is immutable,
+   * so the re-check always holds.
+   *
+   * The display names come second, on the row this now holds. That read
+   * takes its own snapshot, so it answers the state the writer ahead
+   * committed rather than the state this transaction first saw.
+   *
+   * Reach is asked last, on the row just locked and inside the same
    * transaction (CTR-021, DD-014). Member+ was a sufficient grant until
    * M10, so this read carried no row scope at all; the Confidential flag
    * is the one thing that takes a contract away from a Legal Team
@@ -740,10 +752,20 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     number: number,
     user: AuthenticatedUser,
   ): Promise<ContractContext> {
-    const [target] = await selectContracts(tx)
+    const [locked] = await tx
+      .select({ id: contracts.id })
+      .from(contracts)
       .where(eq(contracts.number, number))
       .limit(1)
-      .for("update", { of: contracts });
+      .for("update");
+    if (!locked) throw httpError(404, "No contract exists with this number.");
+
+    // The row is held, and a type and a status are both non-null FKs, so
+    // the inner joins cannot fail to match. The guard stays because the
+    // answer for "the contract is not there" has one home, and a caller
+    // that trusted the row to exist would be one schema change away from
+    // a crash instead of a refusal.
+    const [target] = await selectContracts(tx).where(eq(contracts.id, locked.id)).limit(1);
     if (!target) throw httpError(404, "No contract exists with this number.");
     if (!(await reachesLockedContract(tx, user, target.row))) {
       throw httpError(404, "No contract exists with this number.");
