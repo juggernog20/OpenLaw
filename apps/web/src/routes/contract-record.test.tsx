@@ -3682,9 +3682,9 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     note: null,
     originalFilename: "Orion_MSA_2026_draft.docx",
     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    /** DOC-004's family, routed by the server (M12/2). Word is
-     * download-only until M12/3, so most fixtures here keep the name a
-     * plain download link. */
+    /** DOC-004's family, routed by the server (M12/2). Word reads in
+     * the app from M12/4, converted for display — so the row's name is
+     * a button that opens the panel, not a download link. */
     renderFamily: "word",
     byteSize: 88_000,
     checksumSha256: "a".repeat(64),
@@ -4007,16 +4007,18 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(within(section).getAllByRole("row")).toHaveLength(3); // header + two
   });
 
-  it("names each document, marks the version that matters now, and makes the name its download", async () => {
+  it("names each document, marks the version that matters now, and opens the name", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT]).handler });
     renderAt("/contracts/42");
 
     const section = await documentsSection();
-    const link = within(section).getByRole("link", { name: "Orion_MSA_2026_draft.docx" });
-    // Straight at the version's own address: every open is a download
-    // in M11, and there is no presigned URL to build.
-    expect(link).toHaveAttribute("href", "/api/v1/documents/doc-1/versions/ver-1/download");
-    expect(link).toHaveAttribute("download", "Orion_MSA_2026_draft.docx");
+    // A Word draft reads in the app (DOC-004, M12/4), so its name is a
+    // button that opens the panel rather than the download link it was
+    // in M11. What the panel then draws — a converted PDF, a preparing
+    // state, or an honest card — is the doc-panel suite's subject.
+    expect(
+      within(section).getByRole("button", { name: "Orion_MSA_2026_draft.docx" }),
+    ).toBeVisible();
     // The kind, the number, the pin, the size, and when it landed, as
     // the C4 mock draws them.
     expect(within(section).getByText("Draft · ours")).toBeVisible();
@@ -4054,17 +4056,13 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(toggle).toHaveAttribute("aria-expanded", "false");
     await user.click(toggle);
 
-    // The whole chain, newest of the superseded rounds first, each its
-    // own download — a superseded version is not a hidden one.
+    // The whole chain, newest of the superseded rounds first, each of
+    // them openable — a superseded version is not a hidden one.
     expect(within(section).getAllByRole("row")).toHaveLength(4);
     expect(toggle).toHaveAttribute("aria-expanded", "true");
-    const second = within(section).getByRole("link", { name: "round_2.docx" });
-    expect(second).toHaveAttribute("href", "/api/v1/documents/doc-3/versions/ver-b/download");
+    expect(within(section).getByRole("button", { name: "round_2.docx" })).toBeVisible();
     expect(within(section).getByText("Their first pass. Clause 8 is the fight.")).toBeVisible();
-    expect(within(section).getByRole("link", { name: "round_1.docx" })).toHaveAttribute(
-      "href",
-      "/api/v1/documents/doc-3/versions/ver-a/download",
-    );
+    expect(within(section).getByRole("button", { name: "round_1.docx" })).toBeVisible();
     // Ordered newest first under the current round, and the pin is on
     // the round that leads.
     const rows = within(section).getAllByRole("row").slice(1);
@@ -4117,7 +4115,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect([...form.keys()]).toEqual(["kind", "note", "file"]);
     // Newest first, and the count follows.
     expect(
-      await within(section).findByRole("link", { name: "counter_redline.docx" }),
+      await within(section).findByRole("button", { name: "counter_redline.docx" }),
     ).toBeInTheDocument();
     expect(countBadge(section, "2 documents")).toBeVisible();
   });
@@ -4190,10 +4188,10 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       url: "/api/v1/documents/doc-1",
       body: { title: "Orion Cloud — MSA", description: "The main instrument." },
     });
-    // The record reads as renamed, and the download still offers the
-    // file under the name it arrived with.
-    const link = await within(section).findByRole("link", { name: "Orion Cloud — MSA" });
-    expect(link).toHaveAttribute("download", "Orion_MSA_2026_draft.docx");
+    // The record reads as renamed, and the file's own name is untouched
+    // — a rename changes what the record calls the document, never what
+    // the stored file is called.
+    expect(await within(section).findByRole("button", { name: "Orion Cloud — MSA" })).toBeVisible();
     expect(within(section).getByText("The main instrument.")).toBeVisible();
   });
 
@@ -4310,7 +4308,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     // Every round is still there: the pin is one column on the
     // document, and clearing it takes nothing else with it.
     await waitFor(() => expect(within(section).queryByText("Executed")).not.toBeInTheDocument());
-    expect(within(section).getByRole("link", { name: "round_2.docx" })).toBeInTheDocument();
+    expect(within(section).getByRole("button", { name: "round_2.docx" })).toBeInTheDocument();
   });
 
   it("never reads the pin off a round's kind", async () => {
@@ -4372,7 +4370,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     await user.click(
       within(section).getByRole("button", { name: /Show the 2 earlier versions of/ }),
     );
-    expect(within(section).getByRole("link", { name: "round_1.docx" })).toBeInTheDocument();
+    expect(within(section).getByRole("button", { name: "round_1.docx" })).toBeInTheDocument();
     // Every control that writes is absent rather than disabled — the
     // convention every other card on this page follows. Their write
     // grid arrives in M23.
@@ -4398,9 +4396,9 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(within(section).queryByRole("button", { name: /^Actions for/ })).not.toBeInTheDocument();
     expect(within(section).queryByRole("button", { name: /^Pin version/ })).not.toBeInTheDocument();
     expect(within(section).queryByRole("switch")).not.toBeInTheDocument();
-    // Reading it is not editing it: the download and the marks stay.
+    // Reading it is not editing it: the file opens and the marks stay.
     expect(
-      within(section).getByRole("link", { name: "Orion_MSA_2026_draft.docx" }),
+      within(section).getByRole("button", { name: "Orion_MSA_2026_draft.docx" }),
     ).toBeInTheDocument();
     expect(within(section).getByText("Primary")).toBeVisible();
   });
@@ -4437,17 +4435,16 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     // Off the list and out of the count until they are asked for.
     expect(countBadge(section, "1 document")).toBeVisible();
     expect(
-      within(section).queryByRole("link", { name: "Orion_MSA_2026_redline_orion.docx" }),
+      within(section).queryByRole("button", { name: "Orion_MSA_2026_redline_orion.docx" }),
     ).not.toBeInTheDocument();
 
     await user.click(within(section).getByRole("switch"));
 
     // Drawn beside the live ones, marked for what they are, and still
-    // downloadable — nothing was destroyed.
-    const link = await within(section).findByRole("link", {
-      name: "Orion_MSA_2026_redline_orion.docx",
-    });
-    expect(link).toHaveAttribute("href", "/api/v1/documents/doc-2/versions/ver-2/download");
+    // readable — nothing was destroyed.
+    expect(
+      await within(section).findByRole("button", { name: "Orion_MSA_2026_redline_orion.docx" }),
+    ).toBeVisible();
     expect(within(section).getByText("Archived")).toBeVisible();
     // The count still says what is on the record, not what is on screen.
     expect(countBadge(section, "1 document")).toBeVisible();
@@ -4695,7 +4692,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(await within(section).findByText("This document is already archived.")).toBeVisible();
     // Nothing moved: the section draws what the record says.
     expect(
-      within(section).getByRole("link", { name: "Orion_MSA_2026_draft.docx" }),
+      within(section).getByRole("button", { name: "Orion_MSA_2026_draft.docx" }),
     ).toBeInTheDocument();
     expect(countBadge(section, "1 document")).toBeVisible();
   });
@@ -4887,14 +4884,27 @@ describe("the doc panel (M12/2)", () => {
     ...over,
   });
 
-  /** The record's three loader reads plus the paper, and nothing else:
-   * the panel makes no call of its own — the preview is an address the
-   * browser fetches, not a client call. */
-  function panelApi(rows: Record<string, unknown>[]) {
+  /**
+   * The record's three loader reads plus the paper, and — for a file
+   * that has to be converted — the rendition read the panel polls
+   * (M12/4). The preview itself is never stubbed: it is an address the
+   * browser fetches, not a client call.
+   *
+   * `renditionStates` is read one answer per poll, and the last one
+   * repeats — so a test states "pending, then ready" and the panel walks
+   * it the way it would walk a real conversion.
+   */
+  function panelApi(rows: Record<string, unknown>[], renditionStates?: readonly string[]) {
     const record = recordApi(contractRow(), [person("u1", "creator"), person("u2", "member")]);
+    let poll = 0;
     return (call: StubCall): Response | undefined => {
       if (call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
         return json(200, { documents: rows, nextCursor: null });
+      }
+      if (renditionStates && call.url.pathname.endsWith("/rendition") && call.method === "GET") {
+        const state = renditionStates[Math.min(poll, renditionStates.length - 1)];
+        poll += 1;
+        return json(200, { rendition: { state, updatedAt: null } });
       }
       return record.handler(call);
     };
@@ -5126,5 +5136,125 @@ describe("the doc panel (M12/2)", () => {
     // Read access means reading, on every surface: the panel is not a
     // write and is offered to everyone the record names.
     expect(await panel(/master services agreement, version 1/)).toBeVisible();
+  });
+
+  /**
+   * Word and PowerPoint, converted for display (M12/4, DOC-004).
+   *
+   * The demand is the milestone's first sentence: a Legal Team Member
+   * previews a Word draft in-app without downloading it. No browser
+   * draws a DOCX, so what the panel promises this layer is the three
+   * states of the conversion behind it — preparing while it runs, the
+   * PDF surface when it lands, and an honest card with the download when
+   * it gave up.
+   *
+   * The conversion's own fidelity is not asserted here and cannot be:
+   * the tracked changes and comments live in bytes a real LibreOffice
+   * produced, which is the doc-engine contract suite's subject, and the
+   * demo spec is where the whole stack is watched drawing them.
+   */
+  const wordDraft = () =>
+    document({
+      id: "pdoc-w",
+      title: "Counterparty redline",
+      versions: [
+        version({
+          id: "pv-w",
+          originalFilename: "nda-redline.docx",
+          mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          renderFamily: "word",
+        }),
+      ],
+    });
+
+  it("shows a preparing state while a Word draft converts, and draws it when it lands", async () => {
+    stubApi({ signedIn: MEMBER, extra: panelApi([wordDraft()], ["pending", "ready"]) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    // A Word draft reads in the app, so its name opens the panel rather
+    // than saving the file.
+    await user.click(within(list).getByRole("button", { name: "Counterparty redline" }));
+    const reading = await panel(/Counterparty redline, version 1/);
+
+    // While the conversion runs the panel says so, rather than showing
+    // nothing or a broken surface.
+    expect(await within(reading).findByText("Preparing this document for reading…")).toBeVisible();
+    // And it keeps asking until the answer changes — live push is M30's
+    // job, so this is a poll.
+    await waitFor(
+      () => expect(within(reading).queryByText("Preparing this document for reading…")).toBeNull(),
+      { timeout: 5000 },
+    );
+    // No download card: the file is being drawn, not offered.
+    expect(within(reading).queryByText(/could not be prepared/)).toBeNull();
+  });
+
+  it("offers the download when a conversion failed, and says so plainly", async () => {
+    stubApi({ signedIn: MEMBER, extra: panelApi([wordDraft()], ["failed"]) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(within(list).getByRole("button", { name: "Counterparty redline" }));
+    const reading = await panel(/Counterparty redline, version 1/);
+
+    // One click, not a support ticket: the card says what happened and
+    // the download is on it.
+    expect(
+      await within(reading).findByText(
+        "This file could not be prepared for reading here. Download it to read it.",
+      ),
+    ).toBeVisible();
+    expect(within(reading).getAllByRole("link", { name: "Download" }).at(-1)).toHaveAttribute(
+      "href",
+      "/api/v1/documents/pdoc-w/versions/pv-w/download",
+    );
+  });
+
+  it("stops asking when nothing answers, and ends at the download", async () => {
+    // The rendition read is stubbed away entirely, so every poll comes
+    // back with nothing. A reader must never be left in front of a
+    // preparing state that will never resolve: the asking is bounded and
+    // ends where every path with no preview ends.
+    stubApi({ signedIn: MEMBER, extra: panelApi([wordDraft()]) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(within(list).getByRole("button", { name: "Counterparty redline" }));
+    const reading = await panel(/Counterparty redline, version 1/);
+
+    expect(
+      await within(reading).findByText(
+        "This file could not be prepared for reading here. Download it to read it.",
+        undefined,
+        { timeout: 15_000 },
+      ),
+    ).toBeVisible();
+  }, 30_000);
+
+  it("draws a PowerPoint deck the same way", async () => {
+    const deck = document({
+      id: "pdoc-p",
+      title: "Board pack",
+      versions: [
+        version({
+          id: "pv-p",
+          originalFilename: "board-pack.pptx",
+          mimeType: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          renderFamily: "presentation",
+        }),
+      ],
+    });
+    stubApi({ signedIn: MEMBER, extra: panelApi([deck], ["pending"]) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(within(list).getByRole("button", { name: "Board pack" }));
+    const reading = await panel(/Board pack, version 1/);
+    expect(await within(reading).findByText("Preparing this document for reading…")).toBeVisible();
   });
 });

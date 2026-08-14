@@ -21,10 +21,19 @@
  *
  * **The family decides the surface, and the server decides the family.**
  * `renderFamily` is routed on the server from the declared type and the
- * filename together (DOC-004), so this component holds no MIME table and
- * a family added in M12/3 or M12/4 arrives without a change here. PDFs
- * get pdf.js, raster images get an `img`, and everything else gets an
- * honest download card that says plainly why — never a broken preview.
+ * filename together (DOC-004), so this component holds no MIME table.
+ * PDFs get pdf.js, raster images get an `img`, and everything else gets
+ * an honest download card that says plainly why — never a broken
+ * preview.
+ *
+ * **Word and PowerPoint are read from a conversion** (M12/4). No browser
+ * draws a DOCX, so the pipeline converts each one to a PDF and this
+ * panel draws that with the same surface it draws a stored PDF with —
+ * tracked changes and comments included, because they are in the
+ * conversion. The panel does not fetch those bytes until the server says
+ * they are there: it polls the rendition read, shows a preparing state
+ * while the job runs, and offers the download if the job gave up. Live
+ * push is M30's job.
  *
  * **Any version in the chain opens**, superseded rounds included: the
  * panel is handed one version and reads that one, so round two of a
@@ -36,14 +45,17 @@
  * caller puts focus back where it came from.
  */
 
-import { lazy, Suspense, useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Download, FileText, X } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { formatFileSize } from "../../lib/format";
 import {
   documentDownloadHref,
   documentPreviewHref,
+  isConverted,
+  readRenditionState,
   type DocumentVersion,
+  type RenditionState,
 } from "../../lib/documents";
 
 /**
@@ -156,19 +168,12 @@ function Surface({
   version: DocumentVersion;
   previewHref: string;
 }>) {
+  if (isConverted(version)) {
+    return <ConvertedSurface documentId={documentId} version={version} previewHref={previewHref} />;
+  }
   switch (version.renderFamily) {
     case "pdf":
-      return (
-        <Suspense
-          fallback={
-            <p role="status" className="px-4 py-6 text-base text-muted">
-              <FormattedMessage id="docPanel.pdf.loading" defaultMessage="Opening…" />
-            </p>
-          }
-        >
-          <PdfPreview src={previewHref} filename={version.originalFilename} />
-        </Suspense>
-      );
+      return <PdfSurface src={previewHref} filename={version.originalFilename} />;
     case "image":
       return (
         // The well takes focus and a name of its own, so a keyboard can
@@ -197,33 +202,169 @@ function Surface({
   }
 }
 
+/** The PDF surface, and the one line shown while its parser is being
+ * fetched. Shared by a stored PDF and by a converted rendition, because
+ * a rendition is a PDF and reads exactly like one. */
+function PdfSurface({ src, filename }: Readonly<{ src: string; filename: string }>) {
+  return (
+    <Suspense
+      fallback={
+        <p role="status" className="px-4 py-6 text-base text-muted">
+          <FormattedMessage id="docPanel.pdf.loading" defaultMessage="Opening…" />
+        </p>
+      }
+    >
+      <PdfPreview src={src} filename={filename} />
+    </Suspense>
+  );
+}
+
 /**
- * The honest card a file outside the render set gets (DOC-004).
+ * How often the panel asks whether a conversion has landed (M12/4).
+ *
+ * Short enough that a Word document that converted in two seconds does
+ * not sit behind a preparing state for five, long enough that a panel
+ * left open on a long deck is not a load. Polling is the mechanism on
+ * purpose: live push is M30's job, and a panel that waited for it would
+ * ship nothing until then.
+ */
+const RENDITION_POLL_MS = 1500;
+
+/**
+ * How many polls in a row may go unanswered before the panel stops
+ * asking.
+ *
+ * A dropped request says nothing about the conversion, so one of them is
+ * worth waiting through — but a reader must never be left in front of a
+ * preparing state that will never resolve, so the asking is bounded.
+ * When it runs out the panel says what a failed conversion says and
+ * offers the download, which is the honest end of every path that does
+ * not produce a preview.
+ */
+const MAX_UNANSWERED_POLLS = 3;
+
+/**
+ * The surface for a file that had to be converted before it could be
+ * read (DOC-004, M12/4): Word documents and PowerPoint decks.
+ *
+ * Three states and nothing else. While the conversion runs the panel
+ * says so and keeps asking. When it lands the panel draws the PDF, which
+ * is where DOC-004's promise about tracked changes and comments is kept
+ * — they are in the conversion. When it fails terminally the panel says
+ * that plainly and offers the download, because a LibreOffice failure
+ * should cost one click, not a support ticket.
+ *
+ * Nothing here fetches the rendition's bytes. `src` is an address the
+ * browser fetches once the state says the bytes are there.
+ */
+function ConvertedSurface({
+  documentId,
+  version,
+  previewHref,
+}: Readonly<{ documentId: string; version: DocumentVersion; previewHref: string }>) {
+  const [state, setState] = useState<RenditionState>("pending");
+
+  useEffect(() => {
+    let live = true;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let unanswered = 0;
+    // Reset on the way in: the panel can move from one version to
+    // another without unmounting, and a ready state carried over would
+    // point pdf.js at a rendition that is not there yet.
+    setState("pending");
+
+    const ask = async () => {
+      const answer = await readRenditionState(documentId, version.id);
+      // The panel closed, or moved to another version, while the answer
+      // was in flight. Writing state here would set it on a surface that
+      // is gone and schedule a poll nobody is watching.
+      if (!live) return;
+      if (answer === "unreachable") {
+        unanswered += 1;
+        // Out of patience: say what a failed conversion says, because a
+        // preview that is not coming and a preview nobody can ask about
+        // are the same thing to somebody standing in front of the panel.
+        if (unanswered >= MAX_UNANSWERED_POLLS) setState("failed");
+        else timer = setTimeout(() => void ask(), RENDITION_POLL_MS);
+        return;
+      }
+      unanswered = 0;
+      setState(answer);
+      // Only a pending conversion is worth asking about again. Ready and
+      // failed are both settled, and `unsupported` means this file was
+      // never being converted at all.
+      if (answer === "pending") timer = setTimeout(() => void ask(), RENDITION_POLL_MS);
+    };
+    void ask();
+
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
+  }, [documentId, version.id]);
+
+  if (state === "ready") {
+    return <PdfSurface src={previewHref} filename={version.originalFilename} />;
+  }
+  if (state === "pending") {
+    return (
+      <p role="status" className="px-4 py-6 text-base text-muted">
+        <FormattedMessage
+          id="docPanel.converting"
+          defaultMessage="Preparing this document for reading…"
+        />
+      </p>
+    );
+  }
+  // Failed, or a file the server says is not being converted at all.
+  // Both mean the same thing to a reader standing in front of the
+  // panel: this is not going to appear, and the download is here.
+  return <DownloadCard documentId={documentId} version={version} reason="conversionFailed" />;
+}
+
+/**
+ * The honest card a file the panel cannot draw gets (DOC-004).
  *
  * It says what the file is, why it is not on screen, and offers the
  * download. Never a broken preview and never a silent blank: a
  * spreadsheet that shows nothing reads as a bug, and a spreadsheet that
  * says it downloads reads as a decision.
  *
- * Word, PowerPoint, and email each get their own sentence, because each
- * of them becomes a rendered surface in a later ticket and "not yet" is
- * a different fact from "not ever".
+ * Two reasons reach it, and they are different facts. A spreadsheet or
+ * an archive does not open here at all. A Word document whose conversion
+ * failed was supposed to open here and could not — so it is told that,
+ * rather than being told its whole file type is unreadable. Email keeps
+ * its own "not yet" sentence until M12/5 renders it.
  */
 function DownloadCard({
   documentId,
   version,
-}: Readonly<{ documentId: string; version: DocumentVersion }>) {
+  reason = "downloadOnly",
+}: Readonly<{
+  documentId: string;
+  version: DocumentVersion;
+  /** Why there is no preview: this file type never opens here, or this
+   * one file could not be converted. */
+  reason?: "downloadOnly" | "conversionFailed";
+}>) {
   return (
     <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-canvas p-6">
       <div className="flex max-w-sm flex-col items-center gap-3 rounded-card border border-border-default bg-raised px-6 py-8 text-center">
         <FileText size={24} aria-hidden="true" className="text-muted" />
         <p className="text-md font-semibold break-all">{version.originalFilename}</p>
         <p className="text-base text-muted">
-          <FormattedMessage
-            id="docPanel.downloadOnly"
-            defaultMessage="{family, select, word {Word documents do not open here yet. Download it to read it.} presentation {Presentations do not open here yet. Download it to read it.} email {Emails do not open here yet. Download it to read it.} other {This file type does not open here. Download it to read it.}}"
-            values={{ family: version.renderFamily }}
-          />
+          {reason === "conversionFailed" ? (
+            <FormattedMessage
+              id="docPanel.conversionFailed"
+              defaultMessage="This file could not be prepared for reading here. Download it to read it."
+            />
+          ) : (
+            <FormattedMessage
+              id="docPanel.downloadOnly"
+              defaultMessage="{family, select, email {Emails do not open here yet. Download it to read it.} other {This file type does not open here. Download it to read it.}}"
+              values={{ family: version.renderFamily }}
+            />
+          )}
         </p>
         <p className="text-sm text-muted">{formatFileSize(version.byteSize)}</p>
         <a

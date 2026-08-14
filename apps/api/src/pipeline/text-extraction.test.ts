@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The three decisions text extraction makes before it touches anything,
+ * The two decisions text extraction makes before it touches anything,
  * stated on their own.
  *
  * They are asserted here rather than only through the pipeline because
@@ -11,19 +11,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import {
-  DocEngineTimeoutError,
-  DocEngineUnavailableError,
-  SourceUnreadableError,
-  unsupportedFormat,
-} from "../lib/doc-engine/engine.js";
-import { BlobNotFoundError, InvalidBlobRefError } from "../lib/storage/adapter.js";
-import {
-  extractsText,
-  hasUsableTextLayer,
-  isTerminalFailure,
-  MIN_NATIVE_TEXT_CHARACTERS,
-} from "./text-extraction.js";
+import { extractsText, hasUsableTextLayer, MIN_NATIVE_TEXT_CHARACTERS } from "./text-extraction.js";
 
 describe("is this PDF's own text layer the document's text?", () => {
   it("takes a page of words as they are", () => {
@@ -88,45 +76,24 @@ describe("which files have text to read", () => {
     expect(extractsText("application/vnd.ms-excel", "schedule.xls")).toBe(false);
   });
 
-  it("leaves Word and PowerPoint to the step that converts them", () => {
-    // M12/4 converts these to a PDF rendition and extracts from that —
-    // one extraction path, over PDF. Until then they have no derivation
-    // and the read says so plainly.
-    expect(extractsText("application/msword", "draft.docx")).toBe(false);
-    expect(extractsText("application/vnd.ms-powerpoint", "board.pptx")).toBe(false);
-  });
-});
-
-describe("is this failure the file's fault or the moment's?", () => {
-  it("gives up on a format no engine converts", () => {
-    expect(isTerminalFailure(unsupportedFormat("xlsx"))).toBe(true);
-  });
-
-  it("gives up on bytes that are not the document they claim to be", () => {
-    expect(isTerminalFailure(new SourceUnreadableError("The source is not a PDF."))).toBe(true);
+  it("reads Word and PowerPoint, out of the rendition they are converted to", () => {
+    // M12/4 converts these to a PDF rendition and reads that — one
+    // extraction path, over PDF. Their text is owed from the moment they
+    // are uploaded, so the read answers `pending` rather than
+    // `unsupported`, even though this handler never touches them.
+    expect(extractsText("application/msword", "draft.doc")).toBe(true);
+    expect(
+      extractsText(
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "draft.docx",
+      ),
+    ).toBe(true);
+    expect(extractsText("application/vnd.ms-powerpoint", "board.ppt")).toBe(true);
+    expect(extractsText("application/octet-stream", "board.pptx")).toBe(true);
   });
 
-  it("gives up when the stored blob is not there", () => {
-    // No retry puts bytes back.
-    expect(isTerminalFailure(new BlobNotFoundError("local:documents/a/b"))).toBe(true);
-    expect(isTerminalFailure(new InvalidBlobRefError("not a reference"))).toBe(true);
-  });
-
-  it("tries again after a timeout", () => {
-    expect(isTerminalFailure(new DocEngineTimeoutError("OCR ran past its bound."))).toBe(false);
-  });
-
-  it("tries again when the engine could not be reached", () => {
-    // A sidecar restarting during a deploy is exactly what a retry
-    // heals.
-    expect(isTerminalFailure(new DocEngineUnavailableError("connect ECONNREFUSED"))).toBe(false);
-  });
-
-  it("tries again after anything nobody has classified", () => {
-    // Retrying something permanent wastes a couple of attempts and then
-    // records the failure anyway; giving up on something temporary loses
-    // a document's text until somebody notices.
-    expect(isTerminalFailure(new Error("the pool is exhausted"))).toBe(false);
-    expect(isTerminalFailure("something threw a string")).toBe(false);
+  it("reads nothing from an email until the step that parses it", () => {
+    // M12/5 parses MSG/EML in process and the parsed body is the text.
+    expect(extractsText("message/rfc822", "dispute.eml")).toBe(false);
   });
 });

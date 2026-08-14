@@ -83,6 +83,17 @@
  * access predicate. There are no presigned URLs — one authentication
  * path, and the local filesystem driver has no other way anyway.
  *
+ * **What a preview streams is not always what was uploaded** (DOC-004,
+ * M12/4). A PDF and a raster image are drawn as they are. A Word
+ * document and a PowerPoint deck are drawn from the PDF rendition the
+ * pipeline converted them to, because no browser draws a DOCX — and
+ * that conversion is what carries the tracked changes and the comments
+ * DOC-004 promises are visible. The download is untouched by any of it:
+ * it always answers the bytes a person uploaded. The rendition read says
+ * where the conversion has got to, so the panel can show a preparing
+ * state and poll; both new reads sit behind the same two predicates
+ * every other document read does, so rendering opens no side door.
+ *
  * **Two removals, for two different problems** (DOC-010). Archive is the
  * soft delete and it answers the wrong upload: anyone who can reach and
  * write the record archives a document, it leaves the list and the
@@ -119,11 +130,13 @@ import {
   contracts,
   desc,
   documents,
+  documentVersionRenditions,
   documentVersions,
   documentVersionText,
   DOCUMENT_VERSION_KINDS,
   eq,
   inArray,
+  isNotNull,
   isNull,
   sql,
   TEXT_SOURCES,
@@ -140,8 +153,15 @@ import {
   type ContractAccessReader,
 } from "../../lib/contract-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
-import { previewContentType, RENDER_FAMILIES, renderFamilyOf } from "../../lib/render-family.js";
+import {
+  conversionFormatOf,
+  previewContentType,
+  RENDER_FAMILIES,
+  renderFamilyOf,
+  RENDITION_CONTENT_TYPE,
+} from "../../lib/render-family.js";
 import { attachmentDisposition, inlineDisposition, MEGABYTE } from "../../lib/uploads.js";
+import { needsDisplayRendition, recordRenditionOwed } from "../../pipeline/display-conversion.js";
 import { extractsText, recordTextOwed } from "../../pipeline/text-extraction.js";
 
 /** The contract read floor (CTR-021), which is the document floor too:
@@ -375,6 +395,31 @@ const ExtractedTextSchema = z.object({
 });
 
 const ExtractedTextEnvelope = z.object({ text: ExtractedTextSchema });
+
+/**
+ * What the display-rendition read can say (DOC-004, M12/4).
+ *
+ * The same four answers the extracted-text read gives, and for the same
+ * reason. `pending`, `ready`, and `failed` are the conversion's own three
+ * states, so the panel can show a preparing state and poll until the
+ * preview lands. `unsupported` is the file that needs no conversion at
+ * all — a PDF, an image, a spreadsheet — and it is said plainly so a
+ * caller stops asking.
+ *
+ * None of them is `404`. A document the reader cannot reach has one
+ * answer here and it is the silent-omission one (DD-014).
+ */
+const RENDITION_STATES = ["pending", "ready", "failed", "unsupported"] as const;
+
+const RenditionSchema = z.object({
+  state: z.enum(RENDITION_STATES),
+  /** When the conversion last moved, so a poller can tell a job that is
+   * working from one that is wedged. NULL for a file that has no
+   * conversion at all. */
+  updatedAt: z.iso.datetime({ offset: true }).nullable(),
+});
+
+const RenditionEnvelope = z.object({ rendition: RenditionSchema });
 
 /** What the record is called, and what it says about itself (DOC-007).
  * The title is bounded where the contract's own is; the description is
@@ -1051,7 +1096,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         return documentWithChain(tx, documentId, primaryDocumentId);
       });
 
-      await askForText(versionId, file);
+      await askForDerivations(versionId, file);
       return reply.status(201).send({ document: created });
     },
   );
@@ -1135,7 +1180,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         return documentWithChain(tx, documentId, locked.primaryDocumentId);
       });
 
-      await askForText(versionId, file);
+      await askForDerivations(versionId, file);
       return reply.status(201).send({ document: updated });
     },
   );
@@ -1629,8 +1674,10 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "Destroy a whole document — the lawful-erasure answer " +
           "(DOC-010). It removes the document row, every version row " +
-          "under it, and every stored blob those versions name, through " +
-          "the storage adapter. It is whole-document by design: there " +
+          "under it, every stored blob those versions name, and " +
+          "everything the pipeline derived from them: the extracted " +
+          "text and the display renditions, rows and blobs alike. It " +
+          "is whole-document by design: there " +
           "is no route that deletes one version, because a chain " +
           "somebody can cut pieces out of is not negotiation history " +
           "(DOC-001), so the whole document goes or nothing does. It " +
@@ -1681,6 +1728,22 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           .from(documentVersions)
           .where(eq(documentVersions.documentId, documentId));
 
+        // And what the machine derived (DOC-004, M12/4). A display
+        // rendition is a second blob beside its version, and no database
+        // cascade can reach a storage driver — so it is read here and
+        // deleted below with the rest. Lawful erasure erases everything,
+        // including the PDF a converter made of a Word draft.
+        const renditions = await tx
+          .select({ fileRef: documentVersionRenditions.fileRef })
+          .from(documentVersionRenditions)
+          .innerJoin(documentVersions, eq(documentVersionRenditions.versionId, documentVersions.id))
+          .where(
+            and(
+              eq(documentVersions.documentId, documentId),
+              isNotNull(documentVersionRenditions.fileRef),
+            ),
+          );
+
         // The entry is written first and it hangs off the owning
         // contract, never off the document (DOC-008), so nothing
         // cascades it away with the row it describes. It names the
@@ -1696,8 +1759,11 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           payload: { documentId, title: target.title, versionCount: chain.length },
         });
 
-        // The rows: the document, and its whole chain behind the
-        // cascade. `contracts.primary_document_id` and
+        // The rows: the document, its whole chain behind the cascade,
+        // and behind that chain everything the pipeline derived — the
+        // extracted text and the rendition rows, each keyed by a version
+        // id and each cascading with it (DOC-005, DOC-004).
+        // `contracts.primary_document_id` and
         // `documents.executed_version_id` are both SET NULL, so a
         // record whose instrument was erased has no instrument rather
         // than a dangling one.
@@ -1724,7 +1790,19 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         // defines that behaviour for. This window is accepted and
         // recorded in DOC-010; it is not a guarantee that the record
         // still holds every file it names.
-        for (const version of chain) await app.storage.delete(version.fileRef);
+        //
+        // The renditions go the same way and in the same loop, because
+        // they are the same problem: a derived blob left on disk after
+        // an erasure reported success is an erasure that did not
+        // happen. They go first, so a failure part way through has
+        // destroyed derived copies rather than originals — a rendition
+        // can be made again from its source, and a source cannot be
+        // made again from anything.
+        const blobs = [
+          ...renditions.flatMap((row) => (row.fileRef === null ? [] : [row.fileRef])),
+          ...chain.map((version) => version.fileRef),
+        ];
+        for (const fileRef of blobs) await app.storage.delete(fileRef);
 
         return paperOf(tx, request.user, {
           id: target.contractId,
@@ -1802,7 +1880,13 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "declaration and the filename together — a hint, never a " +
           "security decision — so a file that lies about itself can " +
           "change which card the panel draws and can never change what " +
-          "the browser is told to do with it. A family with no in-app " +
+          "the browser is told to do with it. A Word document and a " +
+          "PowerPoint deck stream the PDF rendition the pipeline " +
+          "converted them to (M12/4, DOC-004) rather than their own " +
+          "bytes, so the tracked changes and comments a conversion " +
+          "carries are what a reader sees; while that conversion is " +
+          "still running the answer is 409, and the rendition read is " +
+          "what a client polls. A family with no in-app " +
           "preview is refused 415 and the panel offers the download " +
           "instead: PDFs and raster images render today, and SVG does " +
           "not, because an inline SVG is a script. Any version in the " +
@@ -1836,11 +1920,20 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request, reply) => {
       const row = await reachedVersion(request.user, request.params);
 
-      // Chosen from the table, never echoed from the row. This is the
-      // whole of what "a hint, never a security decision" buys: the
-      // uploader's string reaches the routing and never the header.
-      const contentType = previewContentType(row.mimeType, row.originalFilename);
-      if (!contentType) {
+      // Which bytes this file previews as, and what to call them. Both
+      // are chosen from the routing table and never echoed from the row.
+      // This is the whole of what "a hint, never a security decision"
+      // buys: the uploader's string reaches the routing and never the
+      // header.
+      const served = conversionFormatOf(row.mimeType, row.originalFilename)
+        ? await renditionToServe(request.params.versionId, row)
+        : {
+            contentType: previewContentType(row.mimeType, row.originalFilename),
+            fileRef: row.fileRef,
+            byteSize: row.byteSize,
+            filename: row.originalFilename,
+          };
+      if (!served.contentType) {
         // Plainly, not as a 404. The reader can already see the
         // document — they were handed its row — so hiding here would
         // hide nothing and would make an honest "this does not preview"
@@ -1848,12 +1941,17 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         throw httpError(415, "This file type has no in-app preview. Download it instead.");
       }
 
-      const body = await app.storage.get(row.fileRef);
+      const body = await app.storage.get(served.fileRef);
       return (
         reply
-          .header("content-type", contentType)
-          .header("content-length", String(row.byteSize))
-          .header("content-disposition", inlineDisposition(row.originalFilename))
+          .header("content-type", served.contentType)
+          .header("content-length", String(served.byteSize))
+          // The uploaded file's own name, and `.pdf` on the end of it
+          // when what is going out is a rendition. A reader who saves
+          // what the panel is showing them gets a name they recognise
+          // that also says what the bytes are — and the rendition's
+          // storage key stays ours, never theirs to see.
+          .header("content-disposition", inlineDisposition(served.filename))
           // Belt and braces on a server-set type: the browser must use
           // the type it was given rather than sniffing the bytes for a
           // more interesting one.
@@ -1947,6 +2045,132 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       };
     },
   );
+
+  app.get(
+    "/documents/:documentId/versions/:versionId/rendition",
+    {
+      preHandler: requireDocumentReader,
+      schema: {
+        operationId: "readDocumentVersionRendition",
+        summary:
+          "Say whether this version's display rendition is ready to " +
+          "preview (M12/4, DOC-004). A Word document and a PowerPoint " +
+          "deck do not draw in a browser, so the pipeline converts each " +
+          "one to a PDF in the background and the panel draws that — " +
+          "tracked changes and comments included. This is the state of " +
+          "that conversion, and it is what the panel polls while it " +
+          "shows its preparing state; live push is M30's job. The " +
+          "answer is a state, never a status code: pending while the " +
+          "job is owed, ready once the preview address will stream it, " +
+          "failed when the job gave up, and unsupported for a file that " +
+          "needs no conversion at all — a PDF, an image, a spreadsheet. " +
+          "A version whose conversion failed is offered its download " +
+          "instead; the upload itself is never blocked or failed by " +
+          "its pipeline. It sits behind the same two predicates every " +
+          "document read does: a Contributor on the team reads what " +
+          "they may download, and anyone who cannot reach the contract " +
+          "— or is outside a confidential document's audience — is " +
+          "answered 404, exactly as for a document that was never " +
+          "uploaded",
+        tags: ["documents"],
+        params: VersionParams,
+        response: { 200: RenditionEnvelope, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      // The same read the preview, the download, and the text read make,
+      // so the four cannot drift into four answers. A version this
+      // viewer cannot reach is a 404 from here, before anything is said
+      // about a conversion.
+      const version = await reachedVersion(request.user, request.params);
+
+      // As every other read on a version sets it, and for both of their
+      // reasons. Who may read a document changes, so this is private to
+      // the browser that asked; and a client polls this address, so a
+      // cached answer would have it poll a stale one for ever.
+      void reply.header("cache-control", "private, max-age=0, must-revalidate");
+
+      if (!needsDisplayRendition(version.mimeType, version.originalFilename)) {
+        // Nothing is being converted and nothing ever will be. Said
+        // plainly, so a caller stops asking rather than polling for
+        // something that is not coming.
+        return { rendition: { state: "unsupported" as const, updatedAt: null } };
+      }
+
+      const [row] = await app.db
+        .select({
+          state: documentVersionRenditions.state,
+          updatedAt: documentVersionRenditions.updatedAt,
+        })
+        .from(documentVersionRenditions)
+        .where(eq(documentVersionRenditions.versionId, request.params.versionId))
+        .limit(1);
+
+      // No row, for one of two reasons. Either the version predates the
+      // pipeline and M12/6's sweep has not reached it yet, or the queue
+      // send was lost — and both read as pending, because that is what
+      // they are.
+      if (!row) return { rendition: { state: "pending" as const, updatedAt: null } };
+      return { rendition: { state: row.state, updatedAt: row.updatedAt.toISOString() } };
+    },
+  );
+
+  /** What the preview streams for one version, and what to call it. */
+  interface ServedPreview {
+    contentType: string | null;
+    fileRef: string;
+    byteSize: number;
+    filename: string;
+  }
+
+  /**
+   * The display rendition the preview streams for a converted family
+   * (M12/4, DOC-004), or the refusal its state has earned.
+   *
+   * A conversion that is still running is a 409 rather than a 415: the
+   * two say different things, and only one of them is worth polling. The
+   * panel does not usually arrive here in that state — it polls the
+   * rendition read and opens this address once it says ready — but a
+   * browser pointed straight at it must be told which of the two it has
+   * hit.
+   *
+   * A conversion that failed is a 415 with the download offered, which
+   * is DOC-004's honest card in the words of a status code: a LibreOffice
+   * failure costs one click, not a support ticket.
+   */
+  async function renditionToServe(
+    versionId: string,
+    version: ReachedVersion,
+  ): Promise<ServedPreview> {
+    const [row] = await app.db
+      .select({
+        state: documentVersionRenditions.state,
+        fileRef: documentVersionRenditions.fileRef,
+        byteSize: documentVersionRenditions.byteSize,
+      })
+      .from(documentVersionRenditions)
+      .where(eq(documentVersionRenditions.versionId, versionId))
+      .limit(1);
+
+    if (row?.state === "ready" && row.fileRef !== null && row.byteSize !== null) {
+      return {
+        contentType: RENDITION_CONTENT_TYPE,
+        fileRef: row.fileRef,
+        byteSize: row.byteSize,
+        filename: `${version.originalFilename}.pdf`,
+      };
+    }
+    if (row?.state === "failed") {
+      throw httpError(
+        415,
+        "This file could not be converted for reading in the app. Download it instead.",
+      );
+    }
+    // Pending, or no row at all — a version that predates the pipeline,
+    // or one whose queue send was lost. Both are "not yet", and both are
+    // worth asking about again.
+    throw httpError(409, "This file is still being prepared for reading. Try again in a moment.");
+  }
 
   /** One stored version, as the two byte reads need it described. */
   interface ReachedVersion {
@@ -2171,10 +2395,25 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     if (extractsText(row.file.mimeType, row.file.filename)) {
       await recordTextOwed(tx, row.versionId);
     }
+    // And a display rendition for a file a browser cannot draw
+    // (DOC-004). Written here for the same reason and in the same
+    // transaction: a rolled-back upload owes no conversion, and a
+    // committed one always does.
+    if (needsDisplayRendition(row.file.mimeType, row.file.filename)) {
+      await recordRenditionOwed(tx, row.versionId);
+    }
   }
 
   /**
-   * Wakes the pipeline for a version whose text is owed (DOC-005).
+   * Wakes the pipeline for whatever a freshly uploaded version is owed —
+   * its text (DOC-005), or its display rendition (DOC-004).
+   *
+   * **One job per version, chosen by family.** A PDF's text is read
+   * straight off the file, so it asks for extraction. A Word document
+   * and a PowerPoint deck have to be converted before anything can read
+   * them, so they ask for conversion — and the conversion job reads the
+   * rendition's text at the end of its own work, which is why nothing
+   * asks for both. Everything else asks for nothing.
    *
    * Called after the transaction has committed, and never inside it. Two
    * things follow from that, and both are the decision:
@@ -2186,18 +2425,21 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
    * holds it up. The file is stored, the chain is written, and the
    * person who uploaded it is owed a 201 — a pipeline that is down is
    * not their problem (story 11). A refusal is logged, and so is a
-   * wake-up that takes too long: the pending row is already committed,
+   * wake-up that takes too long: the pending rows are already committed,
    * so the request survives either, and M12/6's sweep is what picks it
    * up.
    */
-  async function askForText(versionId: string, file: StoredUpload): Promise<void> {
-    if (!extractsText(file.mimeType, file.filename)) return;
+  async function askForDerivations(versionId: string, file: StoredUpload): Promise<void> {
+    const converts = needsDisplayRendition(file.mimeType, file.filename);
+    if (!converts && !extractsText(file.mimeType, file.filename)) return;
     // The bound is the point. The queue is an interface, so what is
     // behind it might one day be something that hangs rather than
     // refuses, and "an upload is never delayed by its pipeline" has to
     // hold whichever it is.
     let timer: NodeJS.Timeout | undefined;
-    const asked = app.jobs.requestTextExtraction(versionId);
+    const asked = converts
+      ? app.jobs.requestDisplayConversion(versionId)
+      : app.jobs.requestTextExtraction(versionId);
     // Whichever side loses settles later, unobserved — both get a
     // handler up front so neither becomes an unhandled rejection. Same
     // shape as the readiness probe in app.ts.
@@ -2210,7 +2452,10 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     try {
       await Promise.race([asked, bound]);
     } catch (error) {
-      app.log.error({ err: error, versionId }, "could not ask the pipeline for a version's text");
+      app.log.error(
+        { err: error, versionId },
+        "could not ask the pipeline for a version's derivations",
+      );
     } finally {
       clearTimeout(timer);
     }

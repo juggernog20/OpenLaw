@@ -814,16 +814,41 @@ One version's extracted text, landed in M12/3. It sits **beside** the version ch
 
 The row is the record of work **owed**, not only of work done. It is written `pending` inside the upload's own transaction, so a rolled-back upload leaves nothing and a committed one always says a derivation is due — the queue send that follows only wakes a worker, and a lost send leaves a row for the M12/6 backfill sweep to find.
 
-| Column       | Type        | Notes                                                                                                                                                                                                                                                                                                      |
-| ------------ | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `version_id` | UUID        | PK and FK → `document_versions.id`, `ON DELETE CASCADE` — one text row per version, and lawful erasure (DOC-010) takes what the machine read along with what the person uploaded                                                                                                                           |
-| `state`      | text (enum) | `pending` \| `ready` \| `failed` — code branches on all three, so the set is fixed                                                                                                                                                                                                                         |
-| `source`     | text (enum) | `native_layer` \| `ocr`, nullable — where the text came from. Recorded rather than inferred: OCR text is a machine's reading of a photograph, and a later feature that weighs a match has to know which it holds. `rendition` (M12/4) and `email_body` (M12/5) join the set with the step that writes them |
-| `text`       | text        | nullable; NULL unless `ready`. An empty string is a different and legitimate fact — a blank page read successfully                                                                                                                                                                                         |
-| `created_at` | timestamptz |                                                                                                                                                                                                                                                                                                            |
-| `updated_at` | timestamptz | when the state last moved; the panel polls on it                                                                                                                                                                                                                                                           |
+| Column       | Type        | Notes                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------ | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version_id` | UUID        | PK and FK → `document_versions.id`, `ON DELETE CASCADE` — one text row per version, and lawful erasure (DOC-010) takes what the machine read along with what the person uploaded                                                                                                                                                                                                                         |
+| `state`      | text (enum) | `pending` \| `ready` \| `failed` — code branches on all three, so the set is fixed                                                                                                                                                                                                                                                                                                                       |
+| `source`     | text (enum) | `native_layer` \| `ocr` \| `rendition`, nullable — where the text came from. Recorded rather than inferred: OCR text is a machine's reading of a photograph and a rendition's text has been through a converter, and a later feature that weighs a match has to know which it holds. `rendition` landed in M12/4 with the conversion job that writes it; `email_body` (M12/5) joins the set the same way |
+| `text`       | text        | nullable; NULL unless `ready`. An empty string is a different and legitimate fact — a blank page read successfully                                                                                                                                                                                                                                                                                       |
+| `created_at` | timestamptz |                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `updated_at` | timestamptz | when the state last moved; the panel polls on it                                                                                                                                                                                                                                                                                                                                                         |
 
 A check constraint holds `state = 'ready'` and "has text from a named source" together, so a `ready` row can never answer a reader with silence and a `pending` row can never sit on an answer it already has.
+
+---
+
+### `document_version_rendition`
+
+Source: **DOC-004**
+
+One version's display rendition, landed in M12/4. A Word document and a PowerPoint deck do not draw in a browser, so the pipeline converts each one to a PDF and the doc panel draws that — tracked changes and comments included, because they are in the conversion.
+
+It sits **beside** the version chain and never in it, for `document_version_text`'s reason: a `document_versions` row is immutable (DOC-001), and a PDF a machine made afterwards is not the bytes a person uploaded. The row is the record of work **owed**, written `pending` inside the upload's own transaction.
+
+The rendition is for display; the original is the record. The download always answers the uploaded bytes, and a rendition can be thrown away and made again from its source.
+
+| Column       | Type        | Notes                                                                                                                                                                                                                            |
+| ------------ | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version_id` | UUID        | PK and FK → `document_versions.id`, `ON DELETE CASCADE` — one rendition per version, and lawful erasure (DOC-010) takes what the machine made along with what the person uploaded                                                |
+| `state`      | text (enum) | `pending` \| `ready` \| `failed` — the same three the extracted text carries, and code branches on all three                                                                                                                     |
+| `file_ref`   | text        | nullable; NULL unless `ready`. Storage reference, `<driver>:<key>` per DOC-012. The key is `renditions/<version id>/<fresh id>` — minted from the version, and given a fresh tail on every attempt because a key is never reused |
+| `byte_size`  | bigint      | nullable; NULL unless `ready`. Counted as the conversion streamed to the driver, and what the preview's `content-length` is set from                                                                                             |
+| `created_at` | timestamptz |                                                                                                                                                                                                                                  |
+| `updated_at` | timestamptz | when the state last moved; the panel polls on it                                                                                                                                                                                 |
+
+A check constraint holds `state = 'ready'` and "has a stored blob of a known size" together, so a `ready` row can never send the panel at a preview that streams nothing.
+
+The blob behind `file_ref` is **not** cascaded — no database reaches a storage driver — so the hard-delete route destroys it explicitly, before its commit and ahead of the source blobs.
 
 ---
 

@@ -97,6 +97,8 @@ Set `DATABASE_URL` in `.env` to any reachable PostgreSQL 16+ and the app uses it
 
 Uploaded files go through one storage driver (DOC-009, TECH-014), chosen by `STORAGE_DRIVER`. There are two.
 
+The store holds more than what people upload. A Word document or a PowerPoint deck is converted to a PDF so it can be read in the app (DOC-004), and that rendition is written beside the original under `renditions/`. Back it up with everything else — it is cheaper than converting the whole repository again — but nothing is lost if it goes: a rendition is made from its source, and the source is what the download and the record always answer.
+
 ### The local filesystem driver (the default)
 
 Files are stored on disk — no object store, no extra service. The stack mounts the `openlaw-files` named volume at `STORAGE_PATH` (default `/var/lib/openlaw/files`), so files survive `docker compose down`, image upgrades, and rebuilds, exactly like the database volume. (`docker compose down -v` deletes both — don't.)

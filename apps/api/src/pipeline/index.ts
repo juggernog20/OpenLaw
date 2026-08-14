@@ -21,10 +21,18 @@
 // API chooses them (DOC-009, TECH-010).
 export { createDocEngineFromEnv } from "../lib/doc-engine/config.js";
 export { createStorageFromEnv } from "../lib/storage/config.js";
-export { JOB_QUEUES, type JobQueue, type TextExtractionJob } from "./jobs.js";
+export { isTerminalFailure, type DerivationDeps } from "./derivations.js";
+export { needsDisplayRendition, recordRenditionOwed } from "./display-conversion.js";
+export {
+  JOB_QUEUES,
+  type DisplayConversionJob,
+  type JobQueue,
+  type TextExtractionJob,
+} from "./jobs.js";
 export { createConsoleLogger, type PipelineLogger } from "./logger.js";
 export {
   startPipeline,
+  DISPLAY_CONVERSION_QUEUE_OPTIONS,
   TEXT_EXTRACTION_QUEUE_OPTIONS,
   type Pipeline,
   type PipelineOptions,
@@ -32,8 +40,6 @@ export {
 export {
   extractsText,
   hasUsableTextLayer,
-  isTerminalFailure,
   MIN_NATIVE_TEXT_CHARACTERS,
   recordTextOwed,
-  type DerivationDeps,
 } from "./text-extraction.js";

@@ -1021,7 +1021,7 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
-    /** Destroy a whole document — the lawful-erasure answer (DOC-010). It removes the document row, every version row under it, and every stored blob those versions name, through the storage adapter. It is whole-document by design: there is no route that deletes one version, because a chain somebody can cut pieces out of is not negotiation history (DOC-001), so the whole document goes or nothing does. It takes a typed confirmation: confirmTitle must be the document's own title, exactly. It is the Administrator's alone; every other role is refused 403, a Contributor and a Legal Team Member alike. The activity and audit entries written before it survive it and still name what was deleted, and the erasure appends document.hard_deleted beside them (DD-017) — the record stays accountable after the files are gone. It reaches an archived contract too, because erasure is compelled from outside the record and a frozen record is not a place to hide from it. A document on a contract the Administrator cannot reach answers 404 */
+    /** Destroy a whole document — the lawful-erasure answer (DOC-010). It removes the document row, every version row under it, every stored blob those versions name, and everything the pipeline derived from them: the extracted text and the display renditions, rows and blobs alike. It is whole-document by design: there is no route that deletes one version, because a chain somebody can cut pieces out of is not negotiation history (DOC-001), so the whole document goes or nothing does. It takes a typed confirmation: confirmTitle must be the document's own title, exactly. It is the Administrator's alone; every other role is refused 403, a Contributor and a Legal Team Member alike. The activity and audit entries written before it survive it and still name what was deleted, and the erasure appends document.hard_deleted beside them (DD-017) — the record stays accountable after the files are gone. It reaches an archived contract too, because erasure is compelled from outside the record and a frozen record is not a place to hide from it. A document on a contract the Administrator cannot reach answers 404 */
     delete: operations["hardDeleteDocument"];
     options?: never;
     head?: never;
@@ -1122,7 +1122,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Stream one version's file back for display in place — what the doc panel reads (M12/2, DOC-004). It is the download's twin and differs in exactly two headers: the disposition is inline, and the content type is the server's own rather than the one the upload declared. The type is routed from that declaration and the filename together — a hint, never a security decision — so a file that lies about itself can change which card the panel draws and can never change what the browser is told to do with it. A family with no in-app preview is refused 415 and the panel offers the download instead: PDFs and raster images render today, and SVG does not, because an inline SVG is a script. Any version in the chain previews, superseded rounds included. It sits behind the same two predicates every document read does: a Contributor on the team previews what they may download, and anyone who cannot reach the contract — or is outside a confidential document's audience — is answered 404, exactly as for a document that was never uploaded */
+    /** Stream one version's file back for display in place — what the doc panel reads (M12/2, DOC-004). It is the download's twin and differs in exactly two headers: the disposition is inline, and the content type is the server's own rather than the one the upload declared. The type is routed from that declaration and the filename together — a hint, never a security decision — so a file that lies about itself can change which card the panel draws and can never change what the browser is told to do with it. A Word document and a PowerPoint deck stream the PDF rendition the pipeline converted them to (M12/4, DOC-004) rather than their own bytes, so the tracked changes and comments a conversion carries are what a reader sees; while that conversion is still running the answer is 409, and the rendition read is what a client polls. A family with no in-app preview is refused 415 and the panel offers the download instead: PDFs and raster images render today, and SVG does not, because an inline SVG is a script. Any version in the chain previews, superseded rounds included. It sits behind the same two predicates every document read does: a Contributor on the team previews what they may download, and anyone who cannot reach the contract — or is outside a confidential document's audience — is answered 404, exactly as for a document that was never uploaded */
     get: operations["previewDocumentVersion"];
     put?: never;
     post?: never;
@@ -1141,6 +1141,23 @@ export interface paths {
     };
     /** Read one version's extracted text (M12/3, DOC-005). Every uploaded PDF has its text read in the background: a native text layer is taken as it is, and a PDF that is only pictures of pages is read with OCR. The original is always what the preview serves — this text is an index, never a displayed conversion, and no OCR'd file is stored. The answer is a state, never a status code: pending while the job is owed, ready with the words, failed when the job gave up, and unsupported for a file that will never have text, so a caller polls until it lands and stops when it will not. It sits behind the same two predicates every document read does: a Contributor on the team reads what they may download, and anyone who cannot reach the contract — or is outside a confidential document's audience — is answered 404, exactly as for a document that was never uploaded */
     get: operations["readDocumentVersionText"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/{documentId}/versions/{versionId}/rendition": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Say whether this version's display rendition is ready to preview (M12/4, DOC-004). A Word document and a PowerPoint deck do not draw in a browser, so the pipeline converts each one to a PDF in the background and the panel draws that — tracked changes and comments included. This is the state of that conversion, and it is what the panel polls while it shows its preparing state; live push is M30's job. The answer is a state, never a status code: pending while the job is owed, ready once the preview address will stream it, failed when the job gave up, and unsupported for a file that needs no conversion at all — a PDF, an image, a spreadsheet. A version whose conversion failed is offered its download instead; the upload itself is never blocked or failed by its pipeline. It sits behind the same two predicates every document read does: a Contributor on the team reads what they may download, and anyone who cannot reach the contract — or is outside a confidential document's audience — is answered 404, exactly as for a document that was never uploaded */
+    get: operations["readDocumentVersionRendition"];
     put?: never;
     post?: never;
     delete?: never;
@@ -6227,8 +6244,46 @@ export interface operations {
             text: {
               /** @enum {string} */
               state: "pending" | "ready" | "failed" | "unsupported";
-              source: ("native_layer" | "ocr") | null;
+              source: ("native_layer" | "ocr" | "rendition") | null;
               text: string | null;
+              updatedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  readDocumentVersionRendition: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        documentId: string;
+        versionId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            rendition: {
+              /** @enum {string} */
+              state: "pending" | "ready" | "failed" | "unsupported";
               updatedAt: string | null;
             };
           };
