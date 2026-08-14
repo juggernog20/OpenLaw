@@ -211,6 +211,12 @@ The queue and the worker container this decision named both shipped, with text e
 
 **The test harness runs the real queue and the real handlers in-process.** pg-boss installs its schema in about a tenth of a second on the harness's Postgres testcontainer, so every API suite runs the production pipeline rather than a double that would have to be kept in step with it. Suites upload over HTTP and poll the same read the panel polls; only the doc engine is faked.
 
+### Addendum (2026-08-15) — settled in M12/4: what makes a second queue
+
+Display conversion (DOC-004) is the pipeline's second job, and it took a **queue of its own** rather than a branch inside extraction. The line is what a job produces, not what it reads: extraction answers text and writes no blob, conversion writes a blob the panel then reads, and the two have bounds an operator may want to move independently — an install that finds LibreOffice slow on a 300-page deed should be able to raise the conversion ceiling without also telling every OCR pass it may run longer. So the bounds are stated twice rather than shared.
+
+The seam grew one method, `requestDisplayConversion`, on the same rule: one method per thing the domain asks for. **An upload asks for exactly one job.** A PDF asks for extraction; a Word document or a deck asks for conversion, and the conversion job reads its rendition's text at the end of its own work — that is the only moment anything knows the rendition exists, and chaining a second queue send from a handler would put a queue failure between a rendition and its text. What every derivation job shares — the four dependencies, the terminal-or-transient question, opening a stored blob without leaking a handle — moved into one module both handlers import, so a third derivation starts from it unchanged.
+
 ## TECH-008: Authentication — onboarding-selectable: built-in basic or bring-your-own IdP (OIDC)
 
 - **Status:** Accepted

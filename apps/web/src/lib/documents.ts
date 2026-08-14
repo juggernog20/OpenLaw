@@ -47,17 +47,87 @@ export type DocumentVersionKind = DocumentVersion["kind"];
 export type RenderFamily = DocumentVersion["renderFamily"];
 
 /**
- * The families the doc panel renders in place today (M12/2).
+ * The families the doc panel renders in place today (M12/2, M12/4).
  *
- * Everything else — Word and PowerPoint until M12/3, email until M12/4,
- * and the long tail for good — gets the honest download card DOC-004
- * asks for, never a broken preview.
+ * Word and PowerPoint are in it because DOC-004 promises they read in
+ * the app: they do not draw in a browser, so the pipeline converts each
+ * one to a PDF and the panel draws that — tracked changes and comments
+ * included. Email joins them in M12/5. The long tail never does, and
+ * gets the honest download card DOC-004 asks for, never a broken
+ * preview.
+ *
+ * A conversion that has not landed yet — or one that failed — is a state
+ * inside the panel, not a reason to keep the row a download link. What
+ * this list answers is "does this file read in the app at all".
  */
-export const PREVIEWABLE_FAMILIES = ["pdf", "image"] as const satisfies readonly RenderFamily[];
+export const PREVIEWABLE_FAMILIES = [
+  "pdf",
+  "image",
+  "word",
+  "presentation",
+] as const satisfies readonly RenderFamily[];
 
 /** Whether this version opens in the panel or offers its download. */
 export function isPreviewable(version: DocumentVersion): boolean {
   return (PREVIEWABLE_FAMILIES as readonly RenderFamily[]).includes(version.renderFamily);
+}
+
+/**
+ * The families whose preview is a converted PDF rather than the stored
+ * file (DOC-004, M12/4).
+ *
+ * The panel polls the rendition read for these and draws nothing until
+ * it says ready. Everything else in {@link PREVIEWABLE_FAMILIES} is
+ * drawn straight from the stored bytes.
+ */
+export const CONVERTED_FAMILIES = [
+  "word",
+  "presentation",
+] as const satisfies readonly RenderFamily[];
+
+/** Whether this version has to be converted before the panel can draw
+ * it. */
+export function isConverted(version: DocumentVersion): boolean {
+  return (CONVERTED_FAMILIES as readonly RenderFamily[]).includes(version.renderFamily);
+}
+
+/** Where one version's display conversion has got to (M12/4). */
+export type RenditionState =
+  paths["/api/v1/documents/{documentId}/versions/{versionId}/rendition"]["get"]["responses"]["200"]["content"]["application/json"]["rendition"]["state"];
+
+/**
+ * One poll's outcome: what the server said, or that it said nothing.
+ *
+ * `unreachable` is deliberately not one of the four states. A dropped
+ * request and a refusal are not facts about the conversion, and folding
+ * either into `pending` would have a caller poll for ever at an address
+ * that is never going to answer.
+ */
+export type RenditionPoll = RenditionState | "unreachable";
+
+/**
+ * Asks how far one version's display conversion has got (DOC-004).
+ *
+ * The panel polls this while it shows its preparing state; live push is
+ * M30's job.
+ */
+export async function readRenditionState(
+  documentId: string,
+  versionId: string,
+): Promise<RenditionPoll> {
+  try {
+    const { data } = await api.GET(
+      "/api/v1/documents/{documentId}/versions/{versionId}/rendition",
+      {
+        params: { path: { documentId, versionId } },
+      },
+    );
+    return data?.rendition.state ?? "unreachable";
+  } catch {
+    // No answer at all — a dropped connection. Reported as itself, and
+    // the caller decides how many of these are worth waiting through.
+    return "unreachable";
+  }
 }
 
 /** The five CTR-014 kinds, in the order a negotiation walks them — the

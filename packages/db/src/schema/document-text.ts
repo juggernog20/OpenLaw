@@ -22,10 +22,10 @@
  * yet.
  *
  * What is deliberately not here, and the step that brings it: the
- * display rendition's own table (M12/4), and the `rendition` and
- * `email_body` sources that M12/4 and M12/5 write. Each arrives with the
- * feature that writes it, exactly as `generated_redline` waits for M32
- * in `document_versions.kind`.
+ * `email_body` source that M12/5 writes. It arrives with the feature
+ * that writes it, exactly as `generated_redline` waits for M32 in
+ * `document_versions.kind`. The display rendition's own table landed in
+ * M12/4 beside this one, in `document-rendition.ts`.
  */
 
 import { sql } from "drizzle-orm";
@@ -48,13 +48,18 @@ export type DerivationState = (typeof DERIVATION_STATES)[number];
  * Where the text came from (DOC-005).
  *
  * `native_layer` is a PDF that already carried its words. `ocr` is an
- * image-only scan the doc engine read as pictures of pages. The two are
- * recorded rather than inferred because they are not equally
- * trustworthy: OCR text is a machine's reading of a photograph, and a
- * later feature that weighs a match — search ranking, AI analysis — has
- * to be able to tell which it is holding.
+ * image-only scan the doc engine read as pictures of pages.
+ * `rendition` is a Word document or a PowerPoint deck, read from the
+ * PDF the pipeline converted it to (M12/4) — one extraction path, over
+ * PDF, rather than a second reader per office format.
+ *
+ * The three are recorded rather than inferred because they are not
+ * equally trustworthy: OCR text is a machine's reading of a photograph,
+ * a rendition's text has been through a conversion, and a later feature
+ * that weighs a match — search ranking, AI analysis — has to be able to
+ * tell which it is holding.
  */
-export const TEXT_SOURCES = ["native_layer", "ocr"] as const;
+export const TEXT_SOURCES = ["native_layer", "ocr", "rendition"] as const;
 export type TextSource = (typeof TEXT_SOURCES)[number];
 
 /**
@@ -97,7 +102,7 @@ export const documentVersionText = pgTable(
     ),
     check(
       "document_version_text_source_check",
-      sql`${table.source} is null or ${table.source} in ('native_layer', 'ocr')`,
+      sql`${table.source} is null or ${table.source} in ('native_layer', 'ocr', 'rendition')`,
     ),
     // Ready and "has text from a named source" are the same fact, so the
     // database holds them together rather than trusting every writer to.

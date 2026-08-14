@@ -11,7 +11,9 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { isConvertibleFormat } from "./doc-engine/engine.js";
 import {
+  conversionFormatOf,
   extensionOf,
   previewContentType,
   RENDER_FAMILIES,
@@ -116,6 +118,101 @@ describe("render family", () => {
         expect(previewType === null || typeof previewType === "string").toBe(true);
       }
     }
+  });
+
+  describe("the format a file is converted from (M12/4)", () => {
+    it("names the source format for every Word and PowerPoint route", () => {
+      expect(
+        conversionFormatOf(
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "draft.docx",
+        ),
+      ).toBe("docx");
+      expect(
+        conversionFormatOf(
+          "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "board.pptx",
+        ),
+      ).toBe("pptx");
+      expect(conversionFormatOf("application/msword", "old.doc")).toBe("doc");
+      expect(conversionFormatOf("application/vnd.ms-powerpoint", "old.ppt")).toBe("ppt");
+      expect(conversionFormatOf("application/vnd.oasis.opendocument.text", "notes.odt")).toBe(
+        "odt",
+      );
+      expect(
+        conversionFormatOf("application/vnd.oasis.opendocument.presentation", "deck.odp"),
+      ).toBe("odp");
+      expect(conversionFormatOf("application/rtf", "memo.rtf")).toBe("rtf");
+      expect(conversionFormatOf("text/rtf", "memo.rtf")).toBe("rtf");
+    });
+
+    it("names it from the filename when the upload declared nothing", () => {
+      // A file dragged out of an archive arrives as octet-stream. The
+      // name is what routes it, and the format has to ride along or the
+      // engine would be asked to convert "".
+      expect(conversionFormatOf("application/octet-stream", "draft.docx")).toBe("docx");
+      expect(conversionFormatOf("application/octet-stream", "board.pptx")).toBe("pptx");
+    });
+
+    it("takes the format from the declared type, not from a name that disagrees", () => {
+      // The declaration is the more specific of the two, and it is what
+      // chose the family. The format has to come from the same row, or a
+      // DOCX called `.pdf` would be sent to the engine as a PDF.
+      expect(
+        conversionFormatOf(
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "draft.pdf",
+        ),
+      ).toBe("docx");
+    });
+
+    it("answers nothing for a file whose preview is the stored file itself", () => {
+      // PDFs and images are served as they are, so there is nothing to
+      // convert and nothing to store.
+      expect(conversionFormatOf("application/pdf", "msa.pdf")).toBeNull();
+      expect(conversionFormatOf("image/png", "signature-page.png")).toBeNull();
+      expect(conversionFormatOf("message/rfc822", "dispute.eml")).toBeNull();
+      expect(conversionFormatOf("application/zip", "bundle.zip")).toBeNull();
+    });
+
+    it("only ever names a format the doc engine actually converts", () => {
+      // The type holds this for a route somebody writes; this holds it
+      // for a route somebody reaches. A format the engine refuses would
+      // fail every conversion terminally rather than loudly, so the
+      // answer is checked at the two doors the table has.
+      for (const declared of [
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.oasis.opendocument.text",
+        "application/rtf",
+        "text/rtf",
+        "application/vnd.ms-powerpoint",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "application/vnd.oasis.opendocument.presentation",
+      ]) {
+        const format = conversionFormatOf(declared, "file.bin");
+        expect(format, declared).not.toBeNull();
+        expect(isConvertibleFormat(format!), declared).toBe(true);
+      }
+      for (const name of ["a.doc", "a.docx", "a.odt", "a.rtf", "a.ppt", "a.pptx", "a.odp"]) {
+        const format = conversionFormatOf("application/octet-stream", name);
+        expect(format, name).not.toBeNull();
+        expect(isConvertibleFormat(format!), name).toBe(true);
+      }
+    });
+
+    it("converts exactly the two families DOC-004 promises are converted", () => {
+      for (const declared of [
+        "application/pdf",
+        "image/png",
+        "message/rfc822",
+        "application/zip",
+      ]) {
+        const converted = conversionFormatOf(declared, "file.bin") !== null;
+        const family = renderFamilyOf(declared, "file.bin");
+        expect(converted, declared).toBe(family === "word" || family === "presentation");
+      }
+    });
   });
 
   describe("extensionOf", () => {

@@ -23,9 +23,16 @@
  */
 
 import { PgBoss, type JobWithMetadata } from "pg-boss";
-import { JOB_QUEUES, type JobQueue, type TextExtractionJob } from "./jobs.js";
+import type { DerivationDeps } from "./derivations.js";
+import { handleDisplayConversion } from "./display-conversion.js";
+import {
+  JOB_QUEUES,
+  type DisplayConversionJob,
+  type JobQueue,
+  type TextExtractionJob,
+} from "./jobs.js";
 import { createConsoleLogger, type PipelineLogger } from "./logger.js";
-import { handleTextExtraction, type DerivationDeps } from "./text-extraction.js";
+import { handleTextExtraction } from "./text-extraction.js";
 
 /**
  * How long a job may run, and how often it is tried.
@@ -67,6 +74,28 @@ export const TEXT_EXTRACTION_QUEUE_OPTIONS = {
    * minutes, hammering it does not bring it back sooner, and the jitter
    * keeps a backlog of jobs from returning together.
    */
+  retryBackoff: true,
+} as const;
+
+/**
+ * The same bounds for display conversion (M12/4), stated separately
+ * because they bound different work.
+ *
+ * A conversion makes **two** engine calls in the worst case — convert
+ * the source to a PDF, then read that PDF's text — so the ceiling is the
+ * extraction queue's, for the same arithmetic: each call is bounded by
+ * `DOC_ENGINE_TIMEOUT_MS`, and fifteen minutes leaves room for both plus
+ * the reads and the write around them.
+ *
+ * They are a copy rather than a shared constant on purpose. The two
+ * queues bound two different pieces of work, and an install that finds
+ * LibreOffice slow on a 300-page deed should be able to raise this one
+ * without also telling every OCR pass it may run for longer.
+ */
+export const DISPLAY_CONVERSION_QUEUE_OPTIONS = {
+  expireInSeconds: 900,
+  retryLimit: 2,
+  retryDelay: 30,
   retryBackoff: true,
 } as const;
 
@@ -168,15 +197,25 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       notify: true,
       ...TEXT_EXTRACTION_QUEUE_OPTIONS,
     });
+    await boss.createQueue(JOB_QUEUES.displayConversion, {
+      policy: "short",
+      notify: true,
+      ...DISPLAY_CONVERSION_QUEUE_OPTIONS,
+    });
+    await boss.updateQueue(JOB_QUEUES.displayConversion, {
+      notify: true,
+      ...DISPLAY_CONVERSION_QUEUE_OPTIONS,
+    });
 
     if (handlers) {
+      // One at a time, with the job's own counters. The counters are
+      // what let a handler tell "try again" from "this was the last
+      // try", which is the difference between a derivation that is still
+      // coming and one that is marked failed.
+      const oneAtATime = { batchSize: 1, includeMetadata: true } as const;
       await boss.work(
         JOB_QUEUES.textExtraction,
-        // One at a time, with the job's own counters. The counters are
-        // what let a handler tell "try again" from "this was the last
-        // try", which is the difference between a derivation that is
-        // still coming and one that is marked failed.
-        { batchSize: 1, includeMetadata: true } as const,
+        oneAtATime,
         async (jobs: JobWithMetadata<TextExtractionJob>[]) => {
           for (const job of jobs) {
             await handleTextExtraction(handlers, {
@@ -187,7 +226,23 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
           }
         },
       );
-      log.info({ queue: JOB_QUEUES.textExtraction }, "working the job queue");
+      await boss.work(
+        JOB_QUEUES.displayConversion,
+        oneAtATime,
+        async (jobs: JobWithMetadata<DisplayConversionJob>[]) => {
+          for (const job of jobs) {
+            await handleDisplayConversion(handlers, {
+              versionId: job.data.versionId,
+              retryCount: job.retryCount,
+              retryLimit: job.retryLimit,
+            });
+          }
+        },
+      );
+      log.info(
+        { queues: [JOB_QUEUES.textExtraction, JOB_QUEUES.displayConversion] },
+        "working the job queue",
+      );
     }
   } catch (error) {
     // The original failure is what the operator needs; a tidy-up that
@@ -202,6 +257,10 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // The version is the key the `short` policy collapses on, so
       // asking twice for a version nobody has started yet costs one job.
       await boss.send(JOB_QUEUES.textExtraction, job, { singletonKey: versionId });
+    },
+    async requestDisplayConversion(versionId: string): Promise<void> {
+      const job: DisplayConversionJob = { versionId };
+      await boss.send(JOB_QUEUES.displayConversion, job, { singletonKey: versionId });
     },
     stop: async () => {
       // Graceful by default: it stops taking work, waits for the jobs
