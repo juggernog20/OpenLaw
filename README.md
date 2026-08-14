@@ -10,6 +10,7 @@ Open-source, self-hosted legal operations platform: contract lifecycle managemen
 apps/api      Fastify REST API (OpenAPI-described)
 apps/web      Vite + React SPA (staff app + requester portal)
 apps/worker   Background jobs (pg-boss)
+services/     Sidecar containers (doc-engine: LibreOffice + OCR)
 packages/     Shared types and utilities
 styles/       Theme substrate (Tailwind v4 CSS-first, three themes)
 docs/         Product & decision records (DECISIONS*.md, PRODUCT.md, SCHEMA.md)

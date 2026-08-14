@@ -8,7 +8,7 @@
 # then reach http://<host>:3000 for first-run setup. TLS and the public
 # hostname belong to your reverse proxy — see docs/DEPLOYMENT.md for the
 # proxy contract. Services land here in the same change as the feature
-# that needs them (TECH-017); worker and doc-engine join later.
+# that needs them (TECH-017); the worker joins later.
 #
 # Development and E2E add Mailpit via the overlay:
 #
@@ -47,6 +47,11 @@ services:
       # The upload ceiling in whole MB (story 24). Empty means unset:
       # the app falls back to its own default.
       MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-}
+      # The doc-engine sidecar (TECH-010). Unset in .env = the sidecar
+      # below, reached by its service name on the compose network; set it
+      # there to point at an engine you run yourself.
+      DOC_ENGINE_URL: ${DOC_ENGINE_URL:-http://doc-engine:8080}
+      DOC_ENGINE_TIMEOUT_MS: ${DOC_ENGINE_TIMEOUT_MS:-}
       # In-container listen address is fixed; PORT in .env moves the
       # published host port instead (see ports below).
       PORT: 3000
@@ -61,6 +66,13 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      # Start order only, not a health gate. The database is what the app
+      # cannot run without; the doc engine is not. A conversion that
+      # cannot reach it falls back to download-only, so a doc-engine that
+      # is slow to come up — or wedged — must never hold the whole
+      # install down with it.
+      doc-engine:
+        condition: service_started
     restart: unless-stopped
     healthcheck:
       # The image has node and no curl; readiness = the DB answers (TECH-014).
@@ -74,6 +86,38 @@ services:
       interval: 30s
       timeout: 5s
       start_period: 30s
+      retries: 3
+
+  doc-engine:
+    # The document engine (TECH-010): headless LibreOffice for DOCX/PPTX
+    # display conversion, OCRmyPDF/Tesseract for image-only PDFs, and a
+    # thin HTTP wrapper over both. Our own image, built from this repo.
+    #
+    # No `ports` — like Postgres, it is reachable only on the compose
+    # network and never published to the host. It carries no
+    # authentication, because it has nothing to authorise: the app
+    # decided who may read a file long before it sent the bytes. A
+    # published port would turn that into an open conversion service.
+    image: ghcr.io/juggernog20/openlaw-doc-engine:latest
+    build:
+      context: .
+      dockerfile: services/doc-engine/Dockerfile
+    # Stateless by design: it streams a file in, runs one tool, streams
+    # the answer out, and keeps nothing. No volume, and nothing to back
+    # up.
+    restart: unless-stopped
+    healthcheck:
+      # The image has node, so the probe is the same shape as the app's.
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:8080/healthz').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
       retries: 3
 
   postgres:

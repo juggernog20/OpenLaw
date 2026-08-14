@@ -34,6 +34,7 @@ import {
   type ActivityEvent,
 } from "./lib/activity-emitter.js";
 import type { MailerResolver } from "./lib/mailer.js";
+import type { DocEngine } from "./lib/doc-engine/engine.js";
 import type { StorageAdapter } from "./lib/storage/adapter.js";
 import { DEFAULT_MAX_UPLOAD_MB, MEGABYTE } from "./lib/uploads.js";
 import { metaRoutes } from "./modules/meta/routes.js";
@@ -77,6 +78,14 @@ export interface AppDeps {
    */
   storage: StorageAdapter;
   /**
+   * The doc engine (TECH-010): one narrow interface over conversion,
+   * OCR, and text extraction, with the sidecar behind it. Injected like
+   * storage and the mailer, so application code never learns that a
+   * LibreOffice container is what answers — which is what keeps the
+   * documented Aspose-class swap-in a swap rather than a rewrite.
+   */
+  docEngine: DocEngine;
+  /**
    * The largest file one upload may carry, in bytes (story 24). Read
    * from `MAX_UPLOAD_MB` at startup and injected, like the storage root
    * — no module reads the environment for it. Unset here, the default
@@ -98,6 +107,7 @@ declare module "fastify" {
     auth: Auth;
     resolveMailer: MailerResolver;
     storage: StorageAdapter;
+    docEngine: DocEngine;
     /** The upload ceiling in bytes, so the routes that refuse an
      * oversized file can name the limit they refused it against. */
     maxUploadBytes: number;
@@ -109,6 +119,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   app.decorate("db", deps.db);
   app.decorate("resolveMailer", deps.resolveMailer);
   app.decorate("storage", deps.storage);
+  app.decorate("docEngine", deps.docEngine);
   const maxUploadBytes = deps.maxUploadBytes ?? DEFAULT_MAX_UPLOAD_MB * MEGABYTE;
   app.decorate("maxUploadBytes", maxUploadBytes);
   app.decorate("auth", createAuth(deps.db, deps.config, deps.resolveMailer, app.log));
