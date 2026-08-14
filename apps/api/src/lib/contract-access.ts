@@ -155,7 +155,7 @@ export function contractTeamScope(
         eq(contracts.managerId, user.id),
       );
     case "contributor":
-      return or(contractsTheyAreOn(db, user), eq(contracts.managerId, user.id));
+      return contractsTheyAreOn(db, user);
     case "business_user":
       return sql`false`;
     default: {

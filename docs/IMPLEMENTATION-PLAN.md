@@ -41,7 +41,7 @@ authentication chain, the Compose stack a deployer actually runs, the themed app
 `/settings` destination with its Personal and Organization rails. Arc 2 is done too: the
 configurable types and statuses, the Entities registry, the contract record, the conversation on a
 record with the two read surfaces over the activity log, and — with M10 — the confidentiality gate
-that takes a Confidential contract out of the reach of everyone outside its team.
+that takes a walled-off contract out of the reach of everyone outside its team.
 
 ---
 
@@ -143,13 +143,11 @@ every later module reuses, so it is slower than it looks and pays for itself thr
   - _Decisions:_ CMT-001 to CMT-009, CTR-021, DD-016, DD-017, DES-023 to DES-027
 
 - [x] **M10 — Confidentiality**
-      _Demo:_ Mark a contract confidential; a Legal Team Member who isn't on it can't see it in the list or
-      reach it by URL — with no placeholder revealing that it exists.
+      _Demo:_ Mark a contract confidential; a Legal Team Member who isn't on it can't see it in the list, in
+      search, or anywhere else — with no placeholder revealing that it exists.
   - The opt-in per-record flag on contracts; silent omission, never a locked placeholder — the list, the
-    record URL, the comments, the activity feed, the unread counts, and the mention candidates answer as
-    for a record that does not exist; mutations return 403 when a viewer can reach the contract but is
-    not an authorized confidentiality actor, and return the indistinguishable 404 only when the viewer
-    cannot reach the contract at all
+    record URL, the comments, the activity feed, the unread counts, the mention candidates, and every
+    mutation all answer as for a record that does not exist
   - One predicate for all of them: confidentiality composes in front of the M9 contract-access module
   - The three-tier affordance: inline marker, record banner, composer notice
   - Three actors decide the audience — an Administrator, the creator, and the Owner — and each set and

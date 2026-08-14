@@ -545,7 +545,7 @@ The icon library for v1 is **Lucide** (`lucide-react` package).
 
 ## DES-009: Confidentiality affordance — 3-tier pattern (inline marker / detail banner / composer warning)
 
-- **Status:** Accepted (Tier 3 watcher-grant clause superseded by CMT-007 and CTR-022 for contracts; scoped to matters for other aspects)
+- **Status:** Accepted
 - **Date:** 2026-05-03
 
 ### Context
@@ -1674,7 +1674,7 @@ The mocks predate two decisions that changed what is true about a confidential c
 3. **The banner's lock is 16px** where the C8 frame draws 14. DES-009's own banner layout says 16, and DES-008's ramp floors there. The 12px carve-out is for the badges and the inline marker, where a 16px lock is taller than the text it marks; a 36px strip has the room.
 4. **The banner carries a bottom rule** in `border-default`, which the C8 frame omits and DES-009 specifies.
 5. **The banner copy names the whole audience**: "Confidential contract — the contract team, the Owner, and Administrators see it." The frame's "visible to the contract team only" was true when it was drawn and is not now — CTR-022 put the Owner in the access set, and DD-014 always kept Administrators there. A reminder that misstates who can see the record is worse than none.
-6. **The control's caption is rewritten** from the C10 frame's "Hidden from shared lists and reports." There are no reports, and the caption has to say what setting the flag actually does: the record, its comments, and its history are visible only to the Confidential contract audience.
+6. **The control's caption is rewritten** from the C10 frame's "Hidden from shared lists and reports." There are no reports, and the caption has to say what setting the flag actually does: the record, its comments, and its history leave everyone outside the team.
 7. **No confidential chip is drawn beside the record's own title**, where the C8 frame draws `S8 ConfChip` in the sub-bar. DES-009 scopes Tier 1 to "wherever the title appears **outside** the record's own detail page", and the banner 36px above already carries the statement. The list row's marker is unaffected and lands with M10/5.
 
 ### Rationale
