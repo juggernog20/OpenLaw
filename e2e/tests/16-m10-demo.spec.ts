@@ -61,6 +61,7 @@ import {
   onboardActivatedMember,
   reportAxeViolations,
   signInAs,
+  sweepOrSay,
   type OnboardedMember,
 } from "./helpers.js";
 
@@ -221,6 +222,19 @@ test.describe.serial("M10 demo path", () => {
     const title = `${CONTRACT_PREFIX} ${stamp}`;
     let creator: OnboardedMember | undefined;
     let outsider: OnboardedMember | undefined;
+
+    /**
+     * Leaves the shared instance as the run found it (TECH-018): the
+     * per-run contract archived with its conversation on it, and both
+     * per-run people archived (an activated user has no hard delete).
+     */
+    const leaveInert = async () => {
+      await creator?.context.close();
+      await outsider?.context.close();
+      await ensureDemoContractsInert(page.request);
+      await ensureMemberInert(page.request, creatorEmail);
+      await ensureMemberInert(page.request, outsiderEmail);
+    };
 
     try {
       creator = await onboardActivatedMember(page.request, browser, {
@@ -485,15 +499,14 @@ test.describe.serial("M10 demo path", () => {
       // A record action, at the record-action tier (DD-017) — which is
       // also what puts it in the Administrator-only audit log.
       expect(walled!.visibility).toBe("working_team");
-    } finally {
-      // Leave the shared instance as the run found it (TECH-018): the
-      // per-run contract archived with its conversation on it, and both
-      // per-run people archived (an activated user has no hard delete).
-      await ensureDemoContractsInert(page.request);
-      await creator?.context.close();
-      await outsider?.context.close();
-      await ensureMemberInert(page.request, creatorEmail);
-      await ensureMemberInert(page.request, outsiderEmail);
+    } catch (error) {
+      // A cleanup that throws here would replace the failure that caused
+      // it, and the failure is the one worth reading.
+      await sweepOrSay("M10 demo", leaveInert);
+      throw error;
     }
+    // The journey passed, so a cleanup that fails is a failure of its
+    // own: it leaves the shared instance dirty for the next run.
+    await leaveInert();
   });
 });

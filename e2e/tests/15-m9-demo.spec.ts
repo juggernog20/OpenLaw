@@ -42,6 +42,7 @@ import {
   ensureMemberInert,
   onboardActivatedMember,
   signInAs,
+  sweepOrSay,
   type OnboardedMember,
 } from "./helpers.js";
 
@@ -210,6 +211,19 @@ test.describe.serial("M9 demo path", () => {
     const contributorEmail = `e2e-m9-contributor-${stamp}@e2e.example`;
     let lawyer: OnboardedMember | undefined;
     let contributor: OnboardedMember | undefined;
+
+    /**
+     * Leaves the shared instance as the run found it (TECH-018): the
+     * per-run contract archived with its conversation on it, and both
+     * per-run people archived (an activated user has no hard delete).
+     */
+    const leaveInert = async () => {
+      await lawyer?.context.close();
+      await contributor?.context.close();
+      await ensureDemoContractsInert(page.request);
+      await ensureMemberInert(page.request, lawyerEmail);
+      await ensureMemberInert(page.request, contributorEmail);
+    };
 
     try {
       lawyer = await onboardActivatedMember(page.request, browser, {
@@ -386,16 +400,15 @@ test.describe.serial("M9 demo path", () => {
         },
       });
       expect(refused.status(), "posting Legal Only must be refused for a Contributor").toBe(403);
-    } finally {
-      // Leave the shared instance as the run found it (TECH-018): the
-      // per-run contract archived with its conversation on it, and both
-      // per-run people archived (an activated user has no hard delete).
-      await ensureDemoContractsInert(page.request);
-      await lawyer?.context.close();
-      await contributor?.context.close();
-      await ensureMemberInert(page.request, lawyerEmail);
-      await ensureMemberInert(page.request, contributorEmail);
+    } catch (error) {
+      // A cleanup that throws here would replace the failure that caused
+      // it, and the failure is the one worth reading.
+      await sweepOrSay("M9 demo", leaveInert);
+      throw error;
     }
+    // The journey passed, so a cleanup that fails is a failure of its
+    // own: it leaves the shared instance dirty for the next run.
+    await leaveInert();
   });
 
   test("the Administrator's audit log reads the same table, and its export is itself an entry (DD-017)", async ({

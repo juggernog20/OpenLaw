@@ -340,3 +340,23 @@ export async function ensureMemberInert(request: APIRequestContext, email: strin
     await request.post(`/api/v1/users/${member.id}/archive`);
   }
 }
+
+/**
+ * Runs a sweep after a journey that has already failed, and reports a
+ * failing sweep rather than throwing it.
+ *
+ * A journey wrapped in a bare `finally` loses its own failure whenever
+ * the sweep throws too: the sweep's error is the one that propagates,
+ * and the report names a cleanup problem instead of the reason the run
+ * failed. The failure is the one worth reading, so this says the sweep
+ * went wrong on the console and lets the caller re-throw the original.
+ *
+ * A sweep after a *passing* journey is not this — call it directly, so
+ * that it fails the test. Leaving the never-reset instance (TECH-018)
+ * dirty for the next run is a failure of its own.
+ */
+export async function sweepOrSay(label: string, sweep: () => Promise<void>): Promise<void> {
+  await sweep().catch((swept: unknown) => {
+    console.log(`${label} cleanup failed after the journey did: ${String(swept)}`);
+  });
+}

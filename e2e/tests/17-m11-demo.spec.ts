@@ -65,6 +65,7 @@ import {
   onboardActivatedMember,
   reportAxeViolations,
   signInAs,
+  sweepOrSay,
   type OnboardedMember,
 } from "./helpers.js";
 
@@ -708,9 +709,7 @@ test.describe.serial("M11 demo path", () => {
       // A cleanup that throws here would replace the failure that caused
       // it, and the failure is the one worth reading. It says so out
       // loud instead.
-      await leaveInert().catch((swept: unknown) => {
-        console.log(`M11 demo cleanup failed after the journey did: ${String(swept)}`);
-      });
+      await sweepOrSay("M11 demo", leaveInert);
       throw error;
     }
     // The journey passed, so a cleanup that fails is a failure of its

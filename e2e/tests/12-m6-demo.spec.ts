@@ -22,6 +22,7 @@ import {
   ensureMemberInert,
   onboardActivatedMember,
   signInAs,
+  sweepOrSay,
   type OnboardedMember,
 } from "./helpers.js";
 
@@ -147,6 +148,16 @@ test.describe.serial("M6 demo path", () => {
 
     const typeName = `${TYPE_PREFIX} ${Date.now()}`;
     const fieldName = `${FIELD_PREFIX} ${Date.now()}`;
+
+    /** Leaves the shared instance as the run found it (TECH-018):
+     * canonical status name back, the per-run type hard-deleted
+     * (attachments cascade), the per-run field archived. */
+    const leaveInert = async () => {
+      await ensureCanonicalStatusName(page.request);
+      await ensureDemoTypesAbsent(page.request);
+      await ensureDemoFieldsInert(page.request);
+    };
+
     try {
       // Into settings from its way in (SET-001), then the Organization
       // rail's Contracts section — its URL forwards to the Types pane.
@@ -247,14 +258,15 @@ test.describe.serial("M6 demo path", () => {
       expect((await attached).ok()).toBe(true);
       await expect(page.getByRole("checkbox", { name: `${fieldName} required` })).toBeVisible();
       await expect(page.getByRole("button", { name: `Detach ${fieldName}` })).toBeVisible();
-    } finally {
-      // Leave the shared instance as the run found it (TECH-018):
-      // canonical status name back, the per-run type hard-deleted
-      // (attachments cascade), the per-run field archived.
-      await ensureCanonicalStatusName(page.request);
-      await ensureDemoTypesAbsent(page.request);
-      await ensureDemoFieldsInert(page.request);
+    } catch (error) {
+      // A cleanup that throws here would replace the failure that caused
+      // it, and the failure is the one worth reading.
+      await sweepOrSay("M6 demo", leaveInert);
+      throw error;
     }
+    // The journey passed, so a cleanup that fails is a failure of its
+    // own: it leaves the shared instance dirty for the next run.
+    await leaveInert();
   });
 
   test("a Legal Team Member sees no Matters or Contracts sections and is refused on their URLs", async ({
@@ -267,6 +279,12 @@ test.describe.serial("M6 demo path", () => {
 
     const email = `e2e-m6-member-${Date.now()}@e2e.example`;
     let member: OnboardedMember | undefined;
+
+    const leaveInert = async () => {
+      await member?.context.close();
+      await ensureMemberInert(page.request, email);
+    };
+
     try {
       member = await onboardActivatedMember(page.request, browser, {
         email,
@@ -306,9 +324,10 @@ test.describe.serial("M6 demo path", () => {
         const refused = await memberPage.request.get(`/api/v1/${path}`);
         expect(refused.status(), `/api/v1/${path} must refuse a Legal Team Member`).toBe(403);
       }
-    } finally {
-      await member?.context.close();
-      await ensureMemberInert(page.request, email);
+    } catch (error) {
+      await sweepOrSay("M6 demo", leaveInert);
+      throw error;
     }
+    await leaveInert();
   });
 });
