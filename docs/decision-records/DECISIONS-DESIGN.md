@@ -1278,6 +1278,8 @@ The M6 build diverged from four clauses above. The build stands; the superseded 
 3. **Archive guard.** A third guard outcome shipped beside reassign and block. The policy is SET-003's, not new here — an in-use archive requires a reassignment target, so with no other live row to take the records the archive cannot proceed. This record covers only how the modal draws that state: select and danger CTA disabled, with an explanatory line ("No other active type can take its contracts. Add or restore another type first."). At a zero count the select stays drawn and disabled with a "No reassignment" placeholder, as written.
 4. **Show archived.** The header-strip toggle renders only when archived rows exist. A taxonomy with nothing archived draws no toggle.
 
+## DES-021: List-editor table variant and the field-editor dialog (extends DES-020)
+
 - **Status:** Accepted
 - **Date:** 2026-08-12
 
