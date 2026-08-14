@@ -12,6 +12,16 @@
  * thing a page draws because it is chrome — it belongs with the nav
  * above it and the sub-bar below it, and the C8 mock stacks the three
  * in exactly that order.
+ *
+ * **The shell owns the scroll, and gives it to `main` alone** (DES-030).
+ * The column is exactly one viewport tall and never scrolls itself; the
+ * four strips above `main` each hold their own height and cannot be
+ * pushed off it. This is what DES-009 Tier 2 and DES-028 already claim
+ * — a statement that stays put through a long record — and what the
+ * document-scrolling shell they were written against never delivered.
+ * A page that wants a finer split says `flush` and builds its own
+ * containers inside a `main` that is already bounded, which is how the
+ * record body scrolls under a fixed activity bar (DES-016).
  */
 
 import { useCallback, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
@@ -79,7 +89,11 @@ export function AppShell({
 
   return (
     <ShellThemeContext.Provider value={shellTheme}>
-      <div className="@container/shell flex min-h-screen flex-col bg-canvas text-primary">
+      {/* `h-dvh`, not `h-screen`: on a phone the viewport is the one the
+          browser's own bars leave behind, and `vh` measures the one
+          before they arrive. `overflow-hidden` is what makes the chrome
+          fixed — there is no document scroll left for it to ride. */}
+      <div className="@container/shell flex h-dvh flex-col overflow-hidden bg-canvas text-primary">
         <SkipLink />
         <AppHeader user={user} onSignOut={onSignOut} />
         <TopNav role={user.role} />
@@ -89,10 +103,16 @@ export function AppShell({
             focusable, so activating the link moves keyboard focus here in
             every browser — not only the ones that reset the sequential
             focus start point on fragment navigation. */}
+        {/* `min-h-0` is what lets it shrink: a flex item's floor is its
+            content, so without this the region grows past the column and
+            takes the scroll back to the document. */}
         <main
           id="main"
           tabIndex={-1}
-          className={cn("@container/page flex-1", flush ? "flex flex-col" : "px-page-x py-page-y")}
+          className={cn(
+            "@container/page min-h-0 flex-1 overflow-y-auto",
+            flush ? "flex flex-col" : "px-page-x py-page-y",
+          )}
         >
           {children}
         </main>

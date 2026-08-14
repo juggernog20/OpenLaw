@@ -1758,6 +1758,60 @@ Tier 3 is the leak-prevention surface DES-009 rationale 3 describes, minus the m
 
 _M11/6 adds the inline variant's second surface: a **document** row in the contract record's Documents section, where DD-014's per-document flag is set. It is Tier 1 unchanged rather than a new pattern — the row is a list row, and the thing it marks is not the record the page is about, so DES-028 point 7 does not reach it and the record's own banner says nothing about one file inside an open contract. The marker still marks nothing absent: a viewer outside a confidential document's audience is answered no row, so the section has no hidden state to draw. Setting and clearing the flag is a verb in the row's overflow menu rather than a switch on the row, following the same DES-025 pattern the section's other five acts already follow, and drawn for DD-014's three actors alone — absent, not disabled._
 
+## DES-030: The shell scroll model — one viewport tall, and `main` owns the scroll
+
+- **Status:** Accepted
+- **Date:** 2026-08-14
+
+### Context
+
+The shell has never had a scroll model. `app-shell.tsx` was `flex min-h-screen flex-col` with `main` as `flex-1`. Nothing was `position: sticky`, and nothing owned a scroll container, so the **document** scrolled and all four strips — header, top nav, banner slot, sub-bar — left the screen together on a long page. A search of this file for "scroll" or "sticky" returned nothing about the shell.
+
+Two accepted decisions already depend on a model that was never built. DES-009's whole reason for having a Tier 2 banner is that a marker beside a title cannot help somebody who has been inside one record for half an hour. DES-028 states it outright: "the record's body scrolls; the strip must not, and a component that lives above the scroll container cannot be scrolled off by accident." Both describe a scroll container that did not exist.
+
+DES-016 has the same shape. The activity bar is drawn on the trailing edge of the record page and is meant to stay there; `RecordApplets` and `AppletPanel` were built with `min-h-0 flex-1 overflow-y-auto` on their bodies, which is exactly right and did nothing, because no ancestor bounded their height.
+
+M12 forces the question. The document panel will be the tallest record surface built so far, and a preview pane wants its own scroll independent of the page around it.
+
+### Decision
+
+**1. The shell column is exactly one viewport tall and never scrolls.** `h-dvh flex flex-col overflow-hidden`. `dvh` and not `vh`: on a phone the usable viewport is the one the browser's own bars leave behind, and `vh` measures the one before they arrive.
+
+**2. `main` is the one scroll container the shell makes.** `min-h-0 flex-1 overflow-y-auto`. The `min-h-0` is load-bearing — a flex item's floor is its content, so without it the region grows past the column and hands the scroll back to the document.
+
+**3. The four chrome strips hold their own height.** Each already carries `shrink-0` and a fixed height token. Nothing is `position: sticky` and nothing is `position: fixed`; they stay because there is no scroll left for them to ride.
+
+**4. A page that wants a finer split says `flush` and builds its own containers inside a bounded `main`.** This is how the record body scrolls under a fixed activity bar (DES-016): `RecordApplets` fills the region, its body scrolls, and the bar and the panel do not. A page never reaches for the document scroll, because there is none to reach for.
+
+**5. Fragment links and `scrollIntoView` need no offset compensation.** The browser scrolls the nearest scrollable ancestor, which is the page's own container, and the chrome is outside it. `scroll-mt-*` on a jump target — DES-028's "Manage team →" into the Team card — is breathing room so the card's top edge does not sit flush against the container's, not clearance for a strip that could otherwise cover it.
+
+**6. DES-028's rationale stands as written, unamended.** It was a correct statement about an unbuilt model, and it is now a correct statement about a built one.
+
+### Rationale
+
+The shell is chrome, and chrome that can be scrolled away is not chrome. Every persistence claim in this file — the banner that survives half an hour inside a record, the activity bar that is always on the trailing edge, the sub-bar that says which record you are on — is a claim about something that stays. One bounded column is the cheapest way to make all of them true at once, and it makes them true for surfaces not built yet without those tickets having to remember.
+
+Giving the scroll to `main` rather than to each page keeps the decision in one file. A page opts into more structure by asking for `flush`; it cannot opt out of the model, because the model is the column above it.
+
+`overflow-hidden` on the column rather than `overflow-clip` or nothing at all: it is the declaration that says the document has no scroll, and it also stops a mis-sized child from quietly restoring one.
+
+### Alternatives considered
+
+- **Making the four strips `position: sticky`.** Rejected. Sticky chrome still scrolls when its container runs out, it stacks badly with three strips of different heights, and it leaves the document as the scroll container — so a record page still cannot give its panel an independent scroll. It treats the symptom the banner has and leaves DES-016 unserved.
+- **Making only the banner sticky.** Rejected in the ticket, and correctly: it would glue the confidentiality statement under a header that had already scrolled away.
+- **Amending DES-028's rationale to describe what the shell did.** Rejected. DES-009 rationale 2 is the entire reason Tier 2 exists; rewriting the claim to match the defect turns a safety statement into a description of a bug.
+- **`position: fixed` chrome with matching top padding on `main`.** Rejected: the padding is a copy of four height tokens kept in a second place, and it drifts the first time one of them changes.
+- **`h-screen` instead of `h-dvh`.** Rejected: on mobile Safari and Chrome it is taller than the visible viewport, so the bottom of `main` sits under the browser's own bar.
+- **Leaving the model to each page.** Rejected: it is the same decision made once per route, and a route that forgets it silently gives the chrome back to the document scroll — which is exactly how this defect survived eleven milestones.
+
+### Consequences
+
+`apps/web/src/components/shell/app-shell.tsx` carries the whole model in two class lists. No page changed: `RecordApplets`, `AppletPanel`, the comment and activity panels, and the settings rail were all already written for a bounded height and simply start working. The record page's `scroll-mt-4` on the Team card stays, with its comment corrected to say what it is now for.
+
+The scroll model is proved in `e2e/tests/05-app-shell.spec.ts`, at the layer where layout exists: overflow is forced into `main`, and the test asserts that the document cannot scroll, that the region can, and that the three strips have not moved a pixel. The M10 demo spec's "Manage team →" leg now asserts the Team card is in the viewport after the jump rather than merely visible, which is what makes it a check of the fragment behaviour.
+
+M12's document panel gets its own scroll container inside the record body and inherits this contract rather than negotiating one. Any future full-height surface — a split view, a preview pane, a board — does the same: bound your own height from `main`, and never reach for the window.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -1791,3 +1845,4 @@ _M11/6 adds the inline variant's second surface: a **document** row in the contr
 | DES-027 | The audit-log pane — filter bar, narrated table row, and the export foot (extends DES-021, DES-026)                                                                  | Accepted |
 | DES-028 | The confidential record page — the Tier 2 banner and the flag control (extends DES-009)                                                                              | Accepted |
 | DES-029 | The confidential marker and the composer notice — DES-009's Tier 1 and Tier 3                                                                                        | Accepted |
+| DES-030 | The shell scroll model — one viewport tall, and `main` owns the scroll                                                                                               | Accepted |

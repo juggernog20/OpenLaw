@@ -1175,8 +1175,10 @@ function TeamCard({
       // holds it (DD-014's story 18).
       id={TEAM_CARD_ID}
       aria-labelledby="contract-team-heading"
-      // A fragment link scrolls the card under the sticky chrome
-      // without this; the shell's own strips are what it clears.
+      // The jump lands the card's own top edge against the top of the
+      // scrolling body, which reads as clipped. The margin is breathing
+      // room, not a clearance: the shell's strips are outside this
+      // container and nothing can be scrolled under them (DES-030).
       className="w-full shrink-0 scroll-mt-4 overflow-hidden rounded-card border border-border-default bg-raised @4xl/page:w-80"
     >
       <header className="flex h-section-header items-center justify-between gap-2 rounded-t-card border-b border-border-default bg-section-header px-4">
