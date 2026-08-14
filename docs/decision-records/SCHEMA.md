@@ -806,6 +806,27 @@ Immutable file snapshots, strictly linear per document (`version_number` 1..n). 
 
 ---
 
+### `document_version_text`
+
+Source: **DOC-005**
+
+One version's extracted text, landed in M12/3. It sits **beside** the version chain and never in it: a `document_versions` row is immutable (DOC-001), so nothing a background job derives afterwards is written onto it.
+
+The row is the record of work **owed**, not only of work done. It is written `pending` inside the upload's own transaction, so a rolled-back upload leaves nothing and a committed one always says a derivation is due — the queue send that follows only wakes a worker, and a lost send leaves a row for the M12/6 backfill sweep to find.
+
+| Column       | Type        | Notes                                                                                                                                                                                                                                                                                                      |
+| ------------ | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version_id` | UUID        | PK and FK → `document_versions.id`, `ON DELETE CASCADE` — one text row per version, and lawful erasure (DOC-010) takes what the machine read along with what the person uploaded                                                                                                                           |
+| `state`      | text (enum) | `pending` \| `ready` \| `failed` — code branches on all three, so the set is fixed                                                                                                                                                                                                                         |
+| `source`     | text (enum) | `native_layer` \| `ocr`, nullable — where the text came from. Recorded rather than inferred: OCR text is a machine's reading of a photograph, and a later feature that weighs a match has to know which it holds. `rendition` (M12/4) and `email_body` (M12/5) join the set with the step that writes them |
+| `text`       | text        | nullable; NULL unless `ready`. An empty string is a different and legitimate fact — a blank page read successfully                                                                                                                                                                                         |
+| `created_at` | timestamptz |                                                                                                                                                                                                                                                                                                            |
+| `updated_at` | timestamptz | when the state last moved; the panel polls on it                                                                                                                                                                                                                                                           |
+
+A check constraint holds `state = 'ready'` and "has text from a named source" together, so a `ready` row can never answer a reader with silence and a `pending` row can never sit on an answer it already has.
+
+---
+
 ### `notifications` / `notification_preferences`
 
 Source: **NOT-001**

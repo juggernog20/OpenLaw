@@ -93,6 +93,7 @@ describe("requireRole", () => {
       resolveMailer: fixedMailerResolver(new CapturingMailer()),
       storage: harness.storage,
       docEngine: harness.docEngine,
+      jobs: harness.pipeline,
     });
     guarded.get(
       "/api/v1/admin-only",

@@ -120,11 +120,13 @@ import {
   desc,
   documents,
   documentVersions,
+  documentVersionText,
   DOCUMENT_VERSION_KINDS,
   eq,
   inArray,
   isNull,
   sql,
+  TEXT_SOURCES,
   users,
   type DocumentVersionKind,
   type SQL,
@@ -140,6 +142,7 @@ import {
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { previewContentType, RENDER_FAMILIES, renderFamilyOf } from "../../lib/render-family.js";
 import { attachmentDisposition, inlineDisposition, MEGABYTE } from "../../lib/uploads.js";
+import { extractsText, recordTextOwed } from "../../pipeline/text-extraction.js";
 
 /** The contract read floor (CTR-021), which is the document floor too:
  * a Contributor reads and downloads the paper on a contract they are
@@ -329,6 +332,49 @@ const DocumentsEnvelope = z.object({
   nextCursor: z.string().nullable(),
 });
 const DocumentEnvelope = z.object({ document: DocumentSchema });
+
+/**
+ * What the extracted-text read can say (DOC-005, M12/3).
+ *
+ * Four answers, and the fourth is why this is a state rather than a
+ * status code. `pending`, `ready`, and `failed` are the derivation's own
+ * three states. `unsupported` is the file that will never have text — an
+ * image, a spreadsheet — and it is said plainly so a caller stops asking
+ * rather than polling for something that is not coming.
+ *
+ * None of them is `404`. A missing document has one answer here and it
+ * is the silent-omission one (DD-014), so a state and an absence must
+ * never be the same response.
+ */
+const TEXT_STATES = ["pending", "ready", "failed", "unsupported"] as const;
+
+const ExtractedTextSchema = z.object({
+  state: z.enum(TEXT_STATES),
+  /**
+   * Where the text came from (DOC-005): a PDF's own text layer, or OCR
+   * over pictures of pages. NULL unless the state is `ready`.
+   *
+   * Stated because the two are not equally trustworthy — OCR text is a
+   * machine's reading of a photograph — and a surface that quotes it
+   * should be able to say so.
+   */
+  source: z.enum(TEXT_SOURCES).nullable(),
+  /**
+   * The words. NULL unless the state is `ready`; an empty string is a
+   * different answer and a legitimate one, because a blank page was read
+   * successfully and had nothing on it.
+   *
+   * It is an index, never a rendering (DOC-005). What a reader sees is
+   * always the original file the preview streams.
+   */
+  text: z.string().nullable(),
+  /** When the derivation last moved, so a poller can tell a job that is
+   * working from one that is wedged. NULL for a file that has no
+   * derivation at all. */
+  updatedAt: z.iso.datetime({ offset: true }).nullable(),
+});
+
+const ExtractedTextEnvelope = z.object({ text: ExtractedTextSchema });
 
 /** What the record is called, and what it says about itself (DOC-007).
  * The title is bounded where the contract's own is; the description is
@@ -1005,6 +1051,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         return documentWithChain(tx, documentId, primaryDocumentId);
       });
 
+      await askForText(versionId, file);
       return reply.status(201).send({ document: created });
     },
   );
@@ -1088,6 +1135,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         return documentWithChain(tx, documentId, locked.primaryDocumentId);
       });
 
+      await askForText(versionId, file);
       return reply.status(201).send({ document: updated });
     },
   );
@@ -1821,6 +1869,85 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
+  app.get(
+    "/documents/:documentId/versions/:versionId/text",
+    {
+      preHandler: requireDocumentReader,
+      schema: {
+        operationId: "readDocumentVersionText",
+        summary:
+          "Read one version's extracted text (M12/3, DOC-005). Every " +
+          "uploaded PDF has its text read in the background: a native " +
+          "text layer is taken as it is, and a PDF that is only " +
+          "pictures of pages is read with OCR. The original is always " +
+          "what the preview serves — this text is an index, never a " +
+          "displayed conversion, and no OCR'd file is stored. The " +
+          "answer is a state, never a status code: pending while the " +
+          "job is owed, ready with the words, failed when the job gave " +
+          "up, and unsupported for a file that will never have text, " +
+          "so a caller polls until it lands and stops when it will not. " +
+          "It sits behind the same two predicates every document read " +
+          "does: a Contributor on the team reads what they may " +
+          "download, and anyone who cannot reach the contract — or is " +
+          "outside a confidential document's audience — is answered " +
+          "404, exactly as for a document that was never uploaded",
+        tags: ["documents"],
+        params: VersionParams,
+        response: { 200: ExtractedTextEnvelope, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      // The same read the preview and the download make, so the three
+      // cannot drift into three answers. A version this viewer cannot
+      // reach is a 404 from here, before anything is said about text.
+      const version = await reachedVersion(request.user, request.params);
+
+      // As the two byte reads set it, and for both of their reasons. Who
+      // may read a document changes, so this is private to the browser
+      // that asked; and a client polls this address, so a cached answer
+      // would have it poll a stale one for ever.
+      void reply.header("cache-control", "private, max-age=0, must-revalidate");
+
+      const [row] = await app.db
+        .select({
+          state: documentVersionText.state,
+          source: documentVersionText.source,
+          text: documentVersionText.text,
+          updatedAt: documentVersionText.updatedAt,
+        })
+        .from(documentVersionText)
+        .where(eq(documentVersionText.versionId, request.params.versionId))
+        .limit(1);
+
+      if (!row) {
+        // No derivation, for one of two reasons. Either this file has no
+        // text to read — an image, a spreadsheet — or it predates the
+        // pipeline and M12/6's sweep has not reached it yet. The first
+        // is the honest answer for a reader; the second reads as pending
+        // because that is what it is.
+        return {
+          text: {
+            state: extractsText(version.mimeType, version.originalFilename)
+              ? ("pending" as const)
+              : ("unsupported" as const),
+            source: null,
+            text: null,
+            updatedAt: null,
+          },
+        };
+      }
+
+      return {
+        text: {
+          state: row.state,
+          source: row.source,
+          text: row.text,
+          updatedAt: row.updatedAt.toISOString(),
+        },
+      };
+    },
+  );
+
   /** One stored version, as the two byte reads need it described. */
   interface ReachedVersion {
     fileRef: string;
@@ -1833,8 +1960,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
    * One version this viewer reaches, by its own id and its document's,
    * or a 404.
    *
-   * Shared by the download and the preview, because they ask one
-   * question and must not drift into two answers. Document, owning
+   * Shared by the download, the preview, and the extracted-text read,
+   * because they ask one question and must not drift into three
+   * answers. Document, owning
    * contract, and both scopes ride in one read: a version on a contract
    * the viewer cannot reach, and a version of a confidential document
    * they are outside the audience of, are each answered exactly as one
@@ -2007,7 +2135,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
   /** One row in the chain, written from what arrived. The only INSERT
    * into `document_versions` there is, and there is no UPDATE and no
    * DELETE anywhere beside it (DOC-001). */
-  function insertVersion(
+  async function insertVersion(
     tx: Tx,
     row: Readonly<{
       documentId: string;
@@ -2017,7 +2145,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       by: AuthenticatedUser;
     }>,
   ) {
-    return tx.insert(documentVersions).values({
+    await tx.insert(documentVersions).values({
       id: row.versionId,
       documentId: row.documentId,
       versionNumber: row.versionNumber,
@@ -2030,6 +2158,62 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       checksumSha256: row.file.checksumSha256,
       createdBy: row.by.id,
     });
+    // What the pipeline owes this version (DOC-005), written here so it
+    // is written in the upload's own transaction. A rolled-back upload
+    // asks for nothing, and a committed one always leaves the request on
+    // the record — the queue send that follows the commit only wakes a
+    // worker, and a lost send leaves a pending row for the M12/6
+    // backfill sweep rather than a version nobody will ever read.
+    //
+    // Only a file that has text to read gets a row. An image or a
+    // spreadsheet gets none, and the text read says so plainly rather
+    // than leaving a caller polling for an answer that is not coming.
+    if (extractsText(row.file.mimeType, row.file.filename)) {
+      await recordTextOwed(tx, row.versionId);
+    }
+  }
+
+  /**
+   * Wakes the pipeline for a version whose text is owed (DOC-005).
+   *
+   * Called after the transaction has committed, and never inside it. Two
+   * things follow from that, and both are the decision:
+   *
+   * A rolled-back upload asks for nothing, because there was no commit
+   * to ask after.
+   *
+   * A queue that cannot be reached never fails the upload, and never
+   * holds it up. The file is stored, the chain is written, and the
+   * person who uploaded it is owed a 201 — a pipeline that is down is
+   * not their problem (story 11). A refusal is logged, and so is a
+   * wake-up that takes too long: the pending row is already committed,
+   * so the request survives either, and M12/6's sweep is what picks it
+   * up.
+   */
+  async function askForText(versionId: string, file: StoredUpload): Promise<void> {
+    if (!extractsText(file.mimeType, file.filename)) return;
+    // The bound is the point. The queue is an interface, so what is
+    // behind it might one day be something that hangs rather than
+    // refuses, and "an upload is never delayed by its pipeline" has to
+    // hold whichever it is.
+    let timer: NodeJS.Timeout | undefined;
+    const asked = app.jobs.requestTextExtraction(versionId);
+    // Whichever side loses settles later, unobserved — both get a
+    // handler up front so neither becomes an unhandled rejection. Same
+    // shape as the readiness probe in app.ts.
+    asked.catch(() => {});
+    const bound = new Promise<never>((_resolve, reject) => {
+      timer = setTimeout(() => reject(new Error("the queue did not answer in time")), 2000);
+      timer.unref();
+    });
+    bound.catch(() => {});
+    try {
+      await Promise.race([asked, bound]);
+    } catch (error) {
+      app.log.error({ err: error, versionId }, "could not ask the pipeline for a version's text");
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   /** The one refusal a bad `kind` earns, thrown rather than returned so

@@ -2048,6 +2048,7 @@ describe("the upload ceiling", () => {
       resolveMailer: fixedMailerResolver(new CapturingMailer()),
       storage: harness.storage,
       docEngine: harness.docEngine,
+      jobs: harness.pipeline,
       maxUploadBytes: LIMIT,
     });
     await small.ready();

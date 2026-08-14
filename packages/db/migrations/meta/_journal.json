@@ -239,6 +239,13 @@
       "when": 1786703174841,
       "tag": "0033_document_confidential",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1786740142507,
+      "tag": "0034_document_version_text",
+      "breakpoints": true
     }
   ]
 }

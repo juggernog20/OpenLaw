@@ -35,6 +35,7 @@ import {
 } from "./lib/activity-emitter.js";
 import type { MailerResolver } from "./lib/mailer.js";
 import type { DocEngine } from "./lib/doc-engine/engine.js";
+import type { JobQueue } from "./pipeline/jobs.js";
 import type { StorageAdapter } from "./lib/storage/adapter.js";
 import { DEFAULT_MAX_UPLOAD_MB, MEGABYTE } from "./lib/uploads.js";
 import { metaRoutes } from "./modules/meta/routes.js";
@@ -86,6 +87,13 @@ export interface AppDeps {
    */
   docEngine: DocEngine;
   /**
+   * The background pipeline (TECH-007), as the API sees it: a queue it
+   * asks for a derivation after an upload commits. Injected like the
+   * others, so a route never learns that pg-boss is behind it and never
+   * runs a job itself — nothing a request does waits on the pipeline.
+   */
+  jobs: JobQueue;
+  /**
    * The largest file one upload may carry, in bytes (story 24). Read
    * from `MAX_UPLOAD_MB` at startup and injected, like the storage root
    * — no module reads the environment for it. Unset here, the default
@@ -108,6 +116,7 @@ declare module "fastify" {
     resolveMailer: MailerResolver;
     storage: StorageAdapter;
     docEngine: DocEngine;
+    jobs: JobQueue;
     /** The upload ceiling in bytes, so the routes that refuse an
      * oversized file can name the limit they refused it against. */
     maxUploadBytes: number;
@@ -120,6 +129,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   app.decorate("resolveMailer", deps.resolveMailer);
   app.decorate("storage", deps.storage);
   app.decorate("docEngine", deps.docEngine);
+  app.decorate("jobs", deps.jobs);
   const maxUploadBytes = deps.maxUploadBytes ?? DEFAULT_MAX_UPLOAD_MB * MEGABYTE;
   app.decorate("maxUploadBytes", maxUploadBytes);
   app.decorate("auth", createAuth(deps.db, deps.config, deps.resolveMailer, app.log));

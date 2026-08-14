@@ -41,6 +41,21 @@ import {
  */
 const MARKER = "% openlaw-fake-doc-engine: ";
 
+/**
+ * The comment line that makes a PDF an image-only scan to this engine.
+ *
+ * DOC-005's branch is decided by what extraction answers, not by what a
+ * file says it is, so a suite that has to exercise the OCR path needs a
+ * PDF whose text layer really does come back with nothing. A real scan
+ * is a picture of a page and the fake cannot make one, so the fact is
+ * written into the file the same way the conversion marker is — the fake
+ * reads the bytes and answers what they say, which is the one thing it
+ * has ever done.
+ *
+ * {@link fakeImageOnlyPdf} builds one.
+ */
+const IMAGE_ONLY_MARKER = "% openlaw-fake-doc-engine-image-only: ";
+
 /** The formats that are ZIP packages, and so can be checked for one. */
 const PACKAGED_FORMATS = new Set(["docx", "pptx", "odt", "odp"]);
 
@@ -100,8 +115,13 @@ function pdfString(text: string): string {
  * like any rendition, and byte-for-byte the same for the same text, so
  * the fake stays deterministic. No date, no identifier, no compression.
  */
-function onePagePdf(text: string): Buffer {
-  const content = `BT /F1 12 Tf 72 760 Td (${pdfString(text)}) Tj ET\n`;
+function onePagePdf(marker: string, text: string, words: boolean): Buffer {
+  // With words, the page draws them. Without, it draws a grey block —
+  // which is what a scanned page is to a PDF reader: a picture, with
+  // nothing in the file that says what it shows.
+  const content = words
+    ? `BT /F1 12 Tf 72 760 Td (${pdfString(text)}) Tj ET\n`
+    : "0.8 g 72 560 451 200 re f\n";
   const objects = [
     "<< /Type /Catalog /Pages 2 0 R >>",
     "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
@@ -112,7 +132,7 @@ function onePagePdf(text: string): Buffer {
 
   // The marker rides in a header comment, where the format allows any
   // bytes and no reader will render it.
-  let body = `%PDF-1.7\n${MARKER}${text}\n`;
+  let body = `%PDF-1.7\n${marker}${text}\n`;
   const offsets: number[] = [];
   objects.forEach((object, index) => {
     offsets.push(Buffer.byteLength(body, "latin1"));
@@ -127,13 +147,29 @@ function onePagePdf(text: string): Buffer {
   return Buffer.from(body + table + trailer, "latin1");
 }
 
-/** The marker text a fake-produced PDF carries, if it carries one. */
-function markerOf(pdf: Buffer): string | undefined {
-  const start = pdf.indexOf(MARKER);
+/** The text one of this engine's markers carries, if the PDF carries it. */
+function markerOf(pdf: Buffer, marker: string): string | undefined {
+  const start = pdf.indexOf(marker);
   if (start < 0) return undefined;
-  const from = start + MARKER.length;
+  const from = start + marker.length;
   const end = pdf.indexOf("\n", from);
   return pdf.toString("utf8", from, end < 0 ? pdf.byteLength : end);
+}
+
+/**
+ * A PDF this engine reads as an image-only scan: pictures of pages, and
+ * no text layer at all (DOC-005).
+ *
+ * `label` names the scan, so two of them are different files and each
+ * one OCRs to its own text. Nothing renders the label — the page it
+ * builds carries no words, which is the whole point.
+ *
+ * This is what a suite uploads to make the pipeline take the OCR branch.
+ * Extraction answers it with an empty string, exactly as the real engine
+ * answers a real scan, and that nothing is the signal to read the pages.
+ */
+export function fakeImageOnlyPdf(label: string): Buffer {
+  return onePagePdf(IMAGE_ONLY_MARKER, label, false);
 }
 
 /** Refuses bytes that are plainly not the source they were declared to be. */
@@ -175,7 +211,7 @@ export function createFakeDocEngine(): DocEngine {
       // has to know which failures consume the stream and which do not.
       const bytes = await collect(source);
       assertReadableSource(bytes, format);
-      return Readable.from([onePagePdf(fakeConversionText(format, bytes))]);
+      return Readable.from([onePagePdf(MARKER, fakeConversionText(format, bytes), true)]);
     },
 
     async ocrPdf(pdf) {
@@ -187,10 +223,13 @@ export function createFakeDocEngine(): DocEngine {
     async extractPdfText(pdf) {
       const bytes = await collect(pdf);
       assertReadablePdf(bytes);
+      // A scan has no text layer, and saying so is not a failure — it is
+      // DOC-005's branch, and the caller reads the pages instead.
+      if (markerOf(bytes, IMAGE_ONLY_MARKER) !== undefined) return "";
       // A rendition this engine produced answers the text it was made
       // with, so the pipeline's one real round trip — convert, then
       // extract from the conversion — holds end to end.
-      return markerOf(bytes) ?? fakeExtractedText(bytes);
+      return markerOf(bytes, MARKER) ?? fakeExtractedText(bytes);
     },
   };
 }

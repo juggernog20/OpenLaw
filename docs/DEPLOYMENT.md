@@ -1,6 +1,6 @@
 # Deploying OpenLaw
 
-The blessed path is Docker Compose (TECH-005): one documented `docker compose up` from a clean Linux VM to the first-run setup screen. The stack today is three services — the app (API + built SPA in one container, TECH-017), Postgres, and the doc-engine sidecar — and grows a service only when a feature needs it.
+The blessed path is Docker Compose (TECH-005): one documented `docker compose up` from a clean Linux VM to the first-run setup screen. The stack today is four services — the app (API + built SPA in one container, TECH-017), the background worker (the same image, a different command, TECH-007), Postgres, and the doc-engine sidecar — and grows a service only when a feature needs it.
 
 ## Requirements
 
@@ -139,6 +139,24 @@ Two properties are worth knowing about, because both are deliberate:
 - **It holds nothing.** Every call streams a file in, runs one tool, streams the answer back, and removes what it wrote. There is no volume and nothing to back up. Restarting it loses no data; a conversion that was in flight is retried by the job that asked for it.
 
 Set `DOC_ENGINE_URL` only if you run the engine somewhere else — a shared host, or outside Compose. `DOC_ENGINE_TIMEOUT_MS` bounds one call, and defaults to five minutes.
+
+## The background worker
+
+Some of what OpenLaw does cannot happen while somebody waits: reading a scanned contract with OCR takes seconds per page, and an upload must finish at the speed it always did. That work runs in the `worker` service (TECH-007).
+
+There is nothing to configure. It is the same image as the app, started with a different command, and it reads the same `.env` — the same database, the same storage, and the same doc engine.
+
+Three properties are worth knowing about:
+
+- **The queue is Postgres.** Jobs are rows in the database you already run, kept by pg-boss in its own schema. There is no Redis and no broker to operate, and a queue backup is the database backup you already take.
+- **It listens on nothing.** No port, no healthcheck, no HTTP surface. It is up when it is running, and what it did is in `docker compose logs worker`.
+- **A failed job is retried, and a permanent failure is recorded.** A transient failure — a doc engine restarting mid-deploy — is tried again with a delay. A failure that no retry would change is recorded against the file it belongs to, and the version, its download, and the record itself are untouched. An upload is never blocked or failed by the work that follows it.
+
+Running more than one worker is supported and needs no configuration — they take jobs off the same queue and never take the same one twice:
+
+```bash
+docker compose up -d --scale worker=2
+```
 
 ## Email
 

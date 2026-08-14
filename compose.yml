@@ -8,11 +8,40 @@
 # then reach http://<host>:3000 for first-run setup. TLS and the public
 # hostname belong to your reverse proxy — see docs/DEPLOYMENT.md for the
 # proxy contract. Services land here in the same change as the feature
-# that needs them (TECH-017); the worker joins later.
+# that needs them (TECH-017).
 #
 # Development and E2E add Mailpit via the overlay:
 #
 #   docker compose -f compose.yml -f compose.dev.yml up
+
+# What the app and the worker both need. They are the same image running
+# two commands (TECH-007), so they read the same database, the same
+# storage, and the same doc engine — and a variable added to one and
+# forgotten on the other is a worker that writes files somewhere the app
+# cannot read them.
+x-openlaw-environment: &openlaw-environment
+  # Unset in .env = the bundled Postgres below; set it there for
+  # external/managed Postgres (TECH-004 — both equally supported).
+  DATABASE_URL: ${DATABASE_URL:-postgres://openlaw:openlaw@postgres:5432/openlaw}
+  # Uploaded files (DOC-009, TECH-014). The default driver is the
+  # local filesystem one — no extra service to run. STORAGE_PATH is
+  # its root and the mount point of the named volume below; the two
+  # must agree, so both read the same variable.
+  STORAGE_DRIVER: ${STORAGE_DRIVER:-}
+  STORAGE_PATH: ${STORAGE_PATH:-/var/lib/openlaw/files}
+  # The S3-compatible driver, read only when STORAGE_DRIVER=s3.
+  # Empty means unset — see .env.example for what each one means.
+  S3_BUCKET: ${S3_BUCKET:-}
+  S3_ENDPOINT: ${S3_ENDPOINT:-}
+  S3_REGION: ${S3_REGION:-}
+  S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-}
+  S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+  S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+  # The doc-engine sidecar (TECH-010). Unset in .env = the sidecar
+  # below, reached by its service name on the compose network; set it
+  # there to point at an engine you run yourself.
+  DOC_ENGINE_URL: ${DOC_ENGINE_URL:-http://doc-engine:8080}
+  DOC_ENGINE_TIMEOUT_MS: ${DOC_ENGINE_TIMEOUT_MS:-}
 
 services:
   app:
@@ -20,9 +49,7 @@ services:
     build: .
     env_file: .env
     environment:
-      # Unset in .env = the bundled Postgres below; set it there for
-      # external/managed Postgres (TECH-004 — both equally supported).
-      DATABASE_URL: ${DATABASE_URL:-postgres://openlaw:openlaw@postgres:5432/openlaw}
+      <<: *openlaw-environment
       AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET is required — generate one with `openssl rand -base64 32` and set it in .env}
       # Public origin (emailed links, Origin/CSRF checks — TECH-008),
       # interpolated from .env or the shell — the shell wins, so a stack
@@ -30,28 +57,9 @@ services:
       # origin. Empty means unset: the app falls back to its localhost
       # default and warns in production.
       BASE_URL: ${BASE_URL:-}
-      # Uploaded files (DOC-009, TECH-014). The default driver is the
-      # local filesystem one — no extra service to run. STORAGE_PATH is
-      # its root and the mount point of the named volume below; the two
-      # must agree, so both read the same variable.
-      STORAGE_DRIVER: ${STORAGE_DRIVER:-}
-      STORAGE_PATH: ${STORAGE_PATH:-/var/lib/openlaw/files}
-      # The S3-compatible driver, read only when STORAGE_DRIVER=s3.
-      # Empty means unset — see .env.example for what each one means.
-      S3_BUCKET: ${S3_BUCKET:-}
-      S3_ENDPOINT: ${S3_ENDPOINT:-}
-      S3_REGION: ${S3_REGION:-}
-      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-}
-      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
-      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
       # The upload ceiling in whole MB (story 24). Empty means unset:
       # the app falls back to its own default.
       MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-}
-      # The doc-engine sidecar (TECH-010). Unset in .env = the sidecar
-      # below, reached by its service name on the compose network; set it
-      # there to point at an engine you run yourself.
-      DOC_ENGINE_URL: ${DOC_ENGINE_URL:-http://doc-engine:8080}
-      DOC_ENGINE_TIMEOUT_MS: ${DOC_ENGINE_TIMEOUT_MS:-}
       # In-container listen address is fixed; PORT in .env moves the
       # published host port instead (see ports below).
       PORT: 3000
@@ -87,6 +95,46 @@ services:
       timeout: 5s
       start_period: 30s
       retries: 3
+
+  worker:
+    # The background worker (TECH-007): the same image as the app, run
+    # with the worker command. It takes derivation jobs — text
+    # extraction today (DOC-005) — off the queue pg-boss keeps in the
+    # Postgres below. There is no broker and no fourth datastore: the
+    # queue is tables in the database the install already runs.
+    #
+    # No published port and no healthcheck: it listens on nothing. It is
+    # up when it is running, and what it did is in its logs.
+    image: ghcr.io/juggernog20/openlaw:latest
+    build: .
+    command: ["node", "apps/worker/dist/index.js"]
+    env_file: .env
+    environment: *openlaw-environment
+    volumes:
+      # The same files the app wrote. A worker that could not read the
+      # uploaded blob would fail every job it was given.
+      - openlaw-files:${STORAGE_PATH:-/var/lib/openlaw/files}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      # Start order only, for the app's reason: a doc engine that is slow
+      # to come up is a job that retries, not an install that is down.
+      doc-engine:
+        condition: service_started
+      # The app is the one process that migrates (TECH-005), so the
+      # worker starts after it. Order only — a worker that comes up
+      # before the schema does finds no work and waits, which is the
+      # right answer, and gating on the app's health would hold the
+      # worker down for the app's whole start period.
+      app:
+        condition: service_started
+    restart: unless-stopped
+    # Compose sends SIGKILL ten seconds after SIGTERM by default, which
+    # would cut the drain short. On a signal the worker stops taking new
+    # jobs and waits for the one in hand, and the queue gives that wait
+    # thirty seconds before it gives up on it — so the grace period has
+    # to be longer than that or a stop is a kill.
+    stop_grace_period: 60s
 
   doc-engine:
     # The document engine (TECH-010): headless LibreOffice for DOCX/PPTX
