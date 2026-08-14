@@ -5,6 +5,11 @@
  * header, top nav from the destination registry, page sub-bar — at the
  * DES-007 normalized geometry, rendered in self-hosted Inter with no
  * outbound font request.
+ *
+ * The second test is the scroll model (DES-030, #158). It belongs here
+ * because it is a fact about the shell rather than about any page, and
+ * because layout is the only way to prove it — a class name on a `div`
+ * says nothing about what actually moves.
  */
 
 import { test, expect } from "@playwright/test";
@@ -58,5 +63,53 @@ test.describe("application shell", () => {
       ),
     ).toBe(true);
     expect(offOrigin).toEqual([]);
+  });
+
+  test("the chrome holds its place while the main region scrolls", async ({ page, request }) => {
+    await ensureAdminExists(request);
+    await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+
+    const header = page.getByRole("banner");
+    const nav = page.getByRole("navigation");
+    const subbar = page.locator("#page-title");
+    const main = page.locator("main#main");
+
+    // The overflow is made rather than waited for. Home is shorter than
+    // the viewport on a fresh install, and the model has to hold for the
+    // tallest surface the product will ever draw — not for whatever rows
+    // this instance happens to be carrying today.
+    await main.evaluate((region) => {
+      const filler = document.createElement("div");
+      filler.style.height = "4000px";
+      region.append(filler);
+    });
+
+    // The document has no scroll to give away, which is what makes the
+    // chrome fixed. Nothing here is `position: sticky`.
+    expect(
+      await page.evaluate(() => {
+        const root = document.documentElement;
+        return root.scrollHeight <= root.clientHeight;
+      }),
+    ).toBe(true);
+
+    const chromeBefore = [
+      await header.boundingBox(),
+      await nav.boundingBox(),
+      await subbar.boundingBox(),
+    ];
+
+    await main.evaluate((region) => region.scrollTo(0, region.scrollHeight));
+
+    // The region moved, the window did not, and the three strips are
+    // exactly where they were — DES-009 Tier 2 and DES-028 both promise
+    // a statement that survives a long record.
+    expect(await main.evaluate((region) => region.scrollTop)).toBeGreaterThan(0);
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    expect([
+      await header.boundingBox(),
+      await nav.boundingBox(),
+      await subbar.boundingBox(),
+    ]).toEqual(chromeBefore);
   });
 });
