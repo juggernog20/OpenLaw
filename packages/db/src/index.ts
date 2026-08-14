@@ -20,6 +20,7 @@ import * as contractTypeFieldsSchema from "./schema/contract-type-fields.js";
 import * as contractTypesSchema from "./schema/contract-types.js";
 import * as contractsSchema from "./schema/contracts.js";
 import * as counterpartiesSchema from "./schema/counterparties.js";
+import * as documentTextSchema from "./schema/document-text.js";
 import * as documentsSchema from "./schema/documents.js";
 import * as entitiesSchema from "./schema/entities.js";
 import * as entityTypesSchema from "./schema/entity-types.js";
@@ -38,6 +39,7 @@ export * from "./schema/contract-type-fields.js";
 export * from "./schema/contract-types.js";
 export * from "./schema/contracts.js";
 export * from "./schema/counterparties.js";
+export * from "./schema/document-text.js";
 export * from "./schema/documents.js";
 export * from "./schema/entities.js";
 export * from "./schema/entity-types.js";
@@ -56,6 +58,7 @@ export const schema = {
   ...contractTypesSchema,
   ...contractsSchema,
   ...counterpartiesSchema,
+  ...documentTextSchema,
   ...documentsSchema,
   ...entitiesSchema,
   ...entityTypesSchema,

@@ -1,0 +1,114 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * One version's extracted text (DOC-005), landed in M12/3.
+ *
+ * **It sits beside the version chain, never in it.** A `document_versions`
+ * row is immutable (DOC-001): it describes bytes a person uploaded, and
+ * nothing a machine derives afterwards belongs on it. So the derivation
+ * gets its own table, keyed by the version it was derived from, and the
+ * chain is never rewritten by a background job.
+ *
+ * **The row is the record of work owed, not only of work done.** It is
+ * written `pending` inside the upload's own transaction, so a rolled-back
+ * upload leaves nothing behind and a committed one always says a
+ * derivation is due. The queue only wakes a worker; this row is what
+ * makes the work durable, and what the M12/6 backfill sweep reads to
+ * find versions that never got theirs.
+ *
+ * **The text is an index, never a displayed conversion** (DOC-005). What
+ * renders is always the original a person uploaded. This table exists so
+ * a scanned contract can be found in M25's search, and for nothing else
+ * yet.
+ *
+ * What is deliberately not here, and the step that brings it: the
+ * display rendition's own table (M12/4), and the `rendition` and
+ * `email_body` sources that M12/4 and M12/5 write. Each arrives with the
+ * feature that writes it, exactly as `generated_redline` waits for M32
+ * in `document_versions.kind`.
+ */
+
+import { sql } from "drizzle-orm";
+import { check, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { documentVersions } from "./documents.js";
+
+/**
+ * Where a derivation has got to.
+ *
+ * Three states and no fourth: the work is owed, the text is there, or
+ * the job gave up. Code branches on all three — the read answers
+ * `pending` distinctly from a missing document so a caller can poll, and
+ * the panel says "preparing" or "unavailable" from the same value — so
+ * the set is fixed rather than admin-configurable.
+ */
+export const DERIVATION_STATES = ["pending", "ready", "failed"] as const;
+export type DerivationState = (typeof DERIVATION_STATES)[number];
+
+/**
+ * Where the text came from (DOC-005).
+ *
+ * `native_layer` is a PDF that already carried its words. `ocr` is an
+ * image-only scan the doc engine read as pictures of pages. The two are
+ * recorded rather than inferred because they are not equally
+ * trustworthy: OCR text is a machine's reading of a photograph, and a
+ * later feature that weighs a match — search ranking, AI analysis — has
+ * to be able to tell which it is holding.
+ */
+export const TEXT_SOURCES = ["native_layer", "ocr"] as const;
+export type TextSource = (typeof TEXT_SOURCES)[number];
+
+/**
+ * The extracted text of one version.
+ *
+ * The primary key is the version's own id, so a version has exactly one
+ * text row and re-running its extraction rewrites that row rather than
+ * growing a pile of attempts.
+ *
+ * Cascades: a hard-deleted document (DOC-010) takes its chain, and the
+ * chain takes what was derived from it. Lawful erasure has to erase what
+ * the machine read as well as what the person uploaded.
+ */
+export const documentVersionText = pgTable(
+  "document_version_text",
+  {
+    versionId: text("version_id")
+      .primaryKey()
+      .references(() => documentVersions.id, { onDelete: "cascade" }),
+    state: text("state", { enum: DERIVATION_STATES }).notNull(),
+    /** NULL until the text is there — a pending or failed row has read
+     * nothing, so it can name no source. */
+    source: text("source", { enum: TEXT_SOURCES }),
+    /** The words themselves. NULL for the same reason `source` is. An
+     * empty string is a different fact and a legitimate one: a blank
+     * scan was read successfully and had nothing on it. */
+    text: text("text"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    /** When the state last moved. The panel polls on it, and an operator
+     * reads it to tell a job that is running from one that is wedged. */
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    check(
+      "document_version_text_state_check",
+      sql`${table.state} in ('pending', 'ready', 'failed')`,
+    ),
+    check(
+      "document_version_text_source_check",
+      sql`${table.source} is null or ${table.source} in ('native_layer', 'ocr')`,
+    ),
+    // Ready and "has text from a named source" are the same fact, so the
+    // database holds them together rather than trusting every writer to.
+    // A `ready` row with no text would answer a reader with silence that
+    // looks like a blank page, and a `pending` row carrying text would
+    // make a caller poll forever past an answer it already has.
+    check(
+      "document_version_text_ready_check",
+      sql`(${table.state} = 'ready') = (${table.text} is not null and ${table.source} is not null)`,
+    ),
+  ],
+);
+
+export type DocumentVersionText = typeof documentVersionText.$inferSelect;

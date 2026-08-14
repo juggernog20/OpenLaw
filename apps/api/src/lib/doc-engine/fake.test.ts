@@ -16,7 +16,7 @@ import {
   DOC_ENGINE_FIXTURES,
   describeDocEngineContract,
 } from "../../testing/doc-engine-contract.js";
-import { createFakeDocEngine, fakeConversionText, fakeOcrText } from "./fake.js";
+import { createFakeDocEngine, fakeConversionText, fakeImageOnlyPdf, fakeOcrText } from "./fake.js";
 
 describeDocEngineContract("deterministic fake", () =>
   Promise.resolve({ engine: createFakeDocEngine() }),
@@ -83,5 +83,30 @@ describe("deterministic fake", () => {
     expect(pdf.subarray(Number(startxref?.[1]), Number(startxref?.[1]) + 4).toString()).toBe(
       "xref",
     );
+  });
+
+  describe("an image-only PDF", () => {
+    it("has no text layer to read, which is DOC-005's branch", async () => {
+      const scan = fakeImageOnlyPdf("a signed page, photographed");
+      // Empty, not a failure. The pipeline reads this nothing as "these
+      // are pictures of pages" and goes to OCR.
+      expect(await engine.extractPdfText(Readable.from([scan]))).toBe("");
+    });
+
+    it("reads with OCR, to text a suite can state in advance", async () => {
+      const scan = fakeImageOnlyPdf("a signed page, photographed");
+      expect(await engine.ocrPdf(Readable.from([scan]))).toBe(fakeOcrText(scan));
+    });
+
+    it("is a different file for a different label", () => {
+      expect(fakeImageOnlyPdf("round one").equals(fakeImageOnlyPdf("round two"))).toBe(false);
+      expect(fakeImageOnlyPdf("round one").equals(fakeImageOnlyPdf("round one"))).toBe(true);
+    });
+
+    it("is a PDF a reader would accept, like every other one this fake makes", () => {
+      const scan = fakeImageOnlyPdf("a signed page, photographed");
+      expect(scan.subarray(0, 8).toString()).toBe("%PDF-1.7");
+      expect(scan.subarray(-6).toString().trim()).toBe("%%EOF");
+    });
   });
 });

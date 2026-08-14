@@ -11729,6 +11729,105 @@
         }
       }
     },
+    "/api/v1/documents/{documentId}/versions/{versionId}/text": {
+      "get": {
+        "operationId": "readDocumentVersionText",
+        "summary": "Read one version's extracted text (M12/3, DOC-005). Every uploaded PDF has its text read in the background: a native text layer is taken as it is, and a PDF that is only pictures of pages is read with OCR. The original is always what the preview serves — this text is an index, never a displayed conversion, and no OCR'd file is stored. The answer is a state, never a status code: pending while the job is owed, ready with the words, failed when the job gave up, and unsupported for a file that will never have text, so a caller polls until it lands and stops when it will not. It sits behind the same two predicates every document read does: a Contributor on the team reads what they may download, and anyone who cannot reach the contract — or is outside a confidential document's audience — is answered 404, exactly as for a document that was never uploaded",
+        "tags": ["documents"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "documentId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "versionId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "object",
+                      "properties": {
+                        "state": {
+                          "type": "string",
+                          "enum": ["pending", "ready", "failed", "unsupported"]
+                        },
+                        "source": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["native_layer", "ocr"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "text": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "updatedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": ["state", "source", "text", "updatedAt"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["text"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/comments": {
       "get": {
         "operationId": "listComments",

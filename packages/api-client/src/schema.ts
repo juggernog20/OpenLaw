@@ -1132,6 +1132,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/documents/{documentId}/versions/{versionId}/text": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Read one version's extracted text (M12/3, DOC-005). Every uploaded PDF has its text read in the background: a native text layer is taken as it is, and a PDF that is only pictures of pages is read with OCR. The original is always what the preview serves — this text is an index, never a displayed conversion, and no OCR'd file is stored. The answer is a state, never a status code: pending while the job is owed, ready with the words, failed when the job gave up, and unsupported for a file that will never have text, so a caller polls until it lands and stops when it will not. It sits behind the same two predicates every document read does: a Contributor on the team reads what they may download, and anyone who cannot reach the contract — or is outside a confidential document's audience — is answered 404, exactly as for a document that was never uploaded */
+    get: operations["readDocumentVersionText"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/comments": {
     parameters: {
       query?: never;
@@ -6175,6 +6192,46 @@ export interface operations {
           "image/webp": string;
           "image/bmp": string;
           "image/avif": string;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  readDocumentVersionText: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        documentId: string;
+        versionId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            text: {
+              /** @enum {string} */
+              state: "pending" | "ready" | "failed" | "unsupported";
+              source: ("native_layer" | "ocr") | null;
+              text: string | null;
+              updatedAt: string | null;
+            };
+          };
         };
       };
       /** @description Problem details (RFC 9457) */
