@@ -1061,6 +1061,12 @@ function ContractRecord() {
               roster={roster}
               users={users}
               frozen={frozen}
+              // On a walled record the roster is the audience, and the
+              // audience is the three actors' to decide (CTR-023). The
+              // same `canFlag` twin the switch above uses, so the banner
+              // cannot hide "Manage team" from somebody the card below
+              // would then let manage it.
+              audienceLocked={saved.isConfidential && !canFlag}
               onRoster={setRoster}
             />
           </div>
@@ -1118,6 +1124,7 @@ function TeamCard({
   roster,
   users,
   frozen,
+  audienceLocked,
   onRoster,
 }: Readonly<{
   /** CTR-003's reference — the address every contract route takes. */
@@ -1128,6 +1135,14 @@ function TeamCard({
   /** The record is frozen: it is archived, or this viewer reads it
    * rather than edits it. Either way it renders as facts. */
   frozen: boolean;
+  /** The record is confidential and this viewer is none of CTR-022's
+   * three actors, so the roster is not theirs to change (CTR-023).
+   *
+   * Inert, not absent — the same treatment DES-028 gives the flag
+   * control on the card above, for the same reason: the roster is a
+   * statement of fact, and who is on the contract is not the part being
+   * withheld. Only the deciding is. */
+  audienceLocked: boolean;
   onRoster: (team: ContractTeamMember[]) => void;
 }>) {
   const intl = useIntl();
@@ -1189,7 +1204,7 @@ function TeamCard({
           ref={addControl}
           variant="ghost"
           size="icon"
-          disabled={frozen}
+          disabled={frozen || audienceLocked}
           aria-label={intl.formatMessage({
             id: "contracts.team.add",
             defaultMessage: "Add team member",
@@ -1221,6 +1236,9 @@ function TeamCard({
             // `remove` itself, so the control stays enabled and keeps
             // the focus its owner put on it.
             onRemove={frozen || member.role === "creator" ? undefined : () => void remove(member)}
+            // Drawn and inert rather than gone: the row is a fact, and
+            // only the deciding is withheld (CTR-023).
+            removeDisabled={audienceLocked}
             // The role is selected inside the message, not pasted in as
             // a translated fragment — a locale that inflects the role
             // after "as" needs the raw value to work with (DES-013).
@@ -1271,6 +1289,7 @@ function PersonRow({
   role,
   onRemove,
   removeLabel,
+  removeDisabled = false,
 }: Readonly<{
   name: string;
   image: string | null;
@@ -1278,6 +1297,10 @@ function PersonRow({
   role: string;
   onRemove?: () => void;
   removeLabel?: string;
+  /** The control is offered but refused. Absent and inert say different
+   * things: absent is "this row has no remove", inert is "this remove is
+   * not yours". */
+  removeDisabled?: boolean;
 }>) {
   return (
     <div className={`flex h-10 items-center gap-2.5 px-4 ${archived ? "opacity-50" : ""}`}>
@@ -1291,6 +1314,7 @@ function PersonRow({
           variant="ghost"
           size="icon"
           className="ms-auto"
+          disabled={removeDisabled}
           aria-label={removeLabel}
           onClick={onRemove}
         >
