@@ -125,7 +125,7 @@ function listApi(live: Record<string, unknown>[], archived: Record<string, unkno
     }
     if (call.url.pathname === "/api/v1/contracts" && call.method === "GET") {
       const all = call.url.searchParams.get("includeArchived") === "true";
-      return json(200, { contracts: all ? [...rows, ...archived] : rows, cursor: null });
+      return json(200, { contracts: all ? [...rows, ...archived] : rows, nextCursor: null });
     }
     if (call.url.pathname === "/api/v1/contracts" && call.method === "POST") {
       creates.push(call.body);
@@ -350,7 +350,7 @@ describe("the /contracts destination", () => {
           return json(200, { entities: [] });
         }
         if (call.url.pathname === "/api/v1/contracts" && call.method === "GET") {
-          return json(200, { contracts: [], cursor: null });
+          return json(200, { contracts: [], nextCursor: null });
         }
         if (call.url.pathname === "/api/v1/contracts" && call.method === "POST") {
           return problem(400, "The contract type must be a live contract type.");
@@ -418,7 +418,7 @@ describe("the /contracts destination", () => {
         if (call.url.pathname === "/api/v1/contracts" && call.method === "GET") {
           return call.url.searchParams.get("includeArchived") === "true"
             ? problem(500, "The contract list could not be read.")
-            : json(200, { contracts: [contractRow()], cursor: null });
+            : json(200, { contracts: [contractRow()], nextCursor: null });
         }
         return undefined;
       },
@@ -577,5 +577,138 @@ describe("a Contributor on the /contracts destination (M9/1)", () => {
     // column never appears.
     expect(screen.queryByRole("button", { name: /Restore/ })).not.toBeInTheDocument();
     expect(api.restores).toEqual([]);
+  });
+});
+
+/**
+ * The bound and its foot (CTR-024, DES-031).
+ *
+ * The list is paged from a server-fixed page size, so the page can no
+ * longer say how many contracts exist — only how many are on screen —
+ * and the way to the rest is a control under the table rather than a
+ * scroll sentinel nobody can reach with a keyboard.
+ */
+describe("the paged contract list (CTR-024, DES-031)", () => {
+  const FIRST = [contractRow({ id: "c-1", number: 42, title: "Acme master services agreement" })];
+  const SECOND = [contractRow({ id: "c-2", number: 41, title: "Orion supply agreement" })];
+
+  /** Two pages, the second reached only with the first's cursor. */
+  function pagedApi() {
+    const cursors: (string | null)[] = [];
+    const handler = (call: StubCall): Response | undefined => {
+      if (call.url.pathname === "/api/v1/contracts/options" && call.method === "GET") {
+        return json(200, OPTIONS);
+      }
+      if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
+        return json(200, { entities: [] });
+      }
+      if (call.url.pathname === "/api/v1/contracts" && call.method === "GET") {
+        const cursor = call.url.searchParams.get("cursor");
+        cursors.push(cursor);
+        return cursor === null
+          ? json(200, { contracts: FIRST, nextCursor: "c-1" })
+          : json(200, { contracts: SECOND, nextCursor: null });
+      }
+      return undefined;
+    };
+    return { handler, cursors };
+  }
+
+  it("appends the next page in place, and says what is on screen rather than a total", async () => {
+    const api = pagedApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts");
+    const user = userEvent.setup();
+
+    // One row, and the page says so without claiming to be the list.
+    expect(await screen.findByRole("link", { name: FIRST[0]!.title })).toBeInTheDocument();
+    expect(screen.getByText("1 contract shown")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Show more" }));
+
+    // Appended, not replaced: the first page is still there above it.
+    expect(await screen.findByRole("link", { name: SECOND[0]!.title })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: FIRST[0]!.title })).toBeInTheDocument();
+    // The read carried the first page's cursor.
+    expect(api.cursors).toEqual([null, "c-1"]);
+    // The end of the list: the foot goes, and the count stops hedging
+    // because it is now the whole of it.
+    expect(screen.queryByRole("button", { name: "Show more" })).not.toBeInTheDocument();
+    expect(screen.getByText("2 contracts")).toBeInTheDocument();
+  });
+
+  it("puts focus on the first row it appended, and says how many followed", async () => {
+    stubApi({ signedIn: MEMBER, extra: pagedApi().handler });
+    renderAt("/contracts");
+    const user = userEvent.setup();
+
+    await screen.findByRole("link", { name: FIRST[0]!.title });
+    await user.click(screen.getByRole("button", { name: "Show more" }));
+
+    // The rows are the answer, so focus lands where the answer starts —
+    // the row itself, so a screen reader hears the whole of it.
+    const landed = (await screen.findByRole("link", { name: SECOND[0]!.title })).closest("tr");
+    await waitFor(() => expect(landed).toHaveFocus());
+    expect(screen.getByText("1 more contract. 2 shown.")).toBeInTheDocument();
+  });
+
+  it("keeps the foot and the cursor when a page fails, so the retry is the same button", async () => {
+    // The first reach for the next page is refused; the second is not.
+    // A failed page must not consume the cursor, or the rest of the
+    // list becomes unreachable from a control that is still on screen.
+    let reached = 0;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call: StubCall): Response | undefined => {
+        if (call.url.pathname === "/api/v1/contracts/options" && call.method === "GET") {
+          return json(200, OPTIONS);
+        }
+        if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
+          return json(200, { entities: [] });
+        }
+        if (call.url.pathname === "/api/v1/contracts" && call.method === "GET") {
+          if (call.url.searchParams.get("cursor") === null) {
+            return json(200, { contracts: FIRST, nextCursor: "c-1" });
+          }
+          reached += 1;
+          return reached === 1
+            ? problem(503, "The list is not available.")
+            : json(200, { contracts: SECOND, nextCursor: null });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/contracts");
+    const user = userEvent.setup();
+
+    await screen.findByRole("link", { name: FIRST[0]!.title });
+    await user.click(screen.getByRole("button", { name: "Show more" }));
+
+    // The failure is spoken beside the control, and the control stays.
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The next contracts could not be read. Try again.",
+    );
+    const again = screen.getByRole("button", { name: "Show more" });
+    expect(again).toBeInTheDocument();
+    // Nothing was appended, and the count still hedges.
+    expect(screen.queryByRole("link", { name: SECOND[0]!.title })).not.toBeInTheDocument();
+    expect(screen.getByText("1 contract shown")).toBeInTheDocument();
+
+    await user.click(again);
+
+    // The same cursor carried again, so the retry lands where the
+    // failure left off rather than at the top of the list.
+    expect(await screen.findByRole("link", { name: SECOND[0]!.title })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: FIRST[0]!.title })).toBeInTheDocument();
+    expect(screen.getByText("2 contracts")).toBeInTheDocument();
+  });
+
+  it("draws no foot at all when the first page is the whole list", async () => {
+    stubApi({ signedIn: MEMBER, extra: listApi([contractRow()]).handler });
+    renderAt("/contracts");
+
+    await screen.findByRole("link", { name: /Acme master services agreement/ });
+    expect(screen.queryByRole("button", { name: "Show more" })).not.toBeInTheDocument();
+    expect(screen.getByText("1 contract")).toBeInTheDocument();
   });
 });

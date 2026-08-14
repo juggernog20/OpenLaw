@@ -473,7 +473,13 @@ describe("the DD-016 tier filter, proved with two viewers on one record", () => 
     // count for a hidden row to be missing from.
     expect(contributorRes.body).not.toContain(legal.id);
     expect(contributorRes.body).not.toContain("board sign-off");
-    expect(Object.keys(contributorRes.json())).toEqual(["comments"]);
+    // The cursor CTR-024 added is a position, not a number: it says
+    // where the page before this one starts and nothing about how many
+    // comments are there. And it is null here, because both viewers'
+    // threads fit one page — so it cannot differ between the two and
+    // announce the row one of them was not given.
+    expect(Object.keys(contributorRes.json())).toEqual(["comments", "nextCursor"]);
+    expect(contributorRes.json().nextCursor).toBeNull();
     expect(contributorThread.every((row) => row.visibility !== "legal_only")).toBe(true);
   });
 
@@ -1515,5 +1521,94 @@ describe("the unread badge", () => {
       .from(commentLastRead)
       .where(eq(commentLastRead.entityId, contract.id));
     expect(rows).toEqual([]);
+  });
+});
+
+/**
+ * The bound on one thread (CTR-024).
+ *
+ * A thread grows for as long as the record lives, so it is paged like
+ * the lists it hangs beside. The direction is the difference: a page is
+ * the **newest** end, answered oldest-first inside itself, and the
+ * cursor walks backwards. The panel opens on the conversation as it
+ * stands, and a two-year thread does not arrive in one response.
+ */
+describe("the bounded comment thread (CTR-024)", () => {
+  const PAGE = 50;
+
+  const readPage = (cookies: Record<string, string>, entityId: string, cursor?: string) =>
+    harness.app.inject({
+      method: "GET",
+      url:
+        `/api/v1/comments?entityType=contract&entityId=${entityId}` +
+        (cursor === undefined ? "" : `&cursor=${cursor}`),
+      cookies,
+    });
+
+  let contract: { id: string; number: number };
+  /** Every comment on it, oldest first, as they were posted. */
+  const posted: CommentRow[] = [];
+
+  beforeAll(async () => {
+    contract = await contractWithTeam("Paging: the long conversation");
+    for (let said = 0; said < 55; said += 1) {
+      posted.push(await comment(memberCookies, contract.id, `Point ${said}.`, "working_team"));
+    }
+  }, 120_000);
+
+  it("opens on the newest end, in the order the conversation was had", async () => {
+    const first = await readPage(memberCookies, contract.id);
+    expect(first.statusCode, first.body).toBe(200);
+    const rows = first.json().comments as CommentRow[];
+    expect(rows).toHaveLength(PAGE);
+    // The last thing said is the last row: this is the end of the
+    // thread, not the start of it.
+    expect(rows.at(-1)!.id).toBe(posted.at(-1)!.id);
+    // And inside the page it still reads oldest to newest (CMT-002).
+    expect(rows.map((row) => row.id)).toEqual(posted.slice(-PAGE).map((row) => row.id));
+    // The cursor is the oldest row of the page — the boundary for the
+    // page before it.
+    expect(first.json().nextCursor).toBe(rows[0]!.id);
+  });
+
+  it("walks backwards through the whole thread, each comment once", async () => {
+    const seen: string[] = [];
+    let cursor: string | null = null;
+    do {
+      const res = await readPage(memberCookies, contract.id, cursor ?? undefined);
+      expect(res.statusCode, res.body).toBe(200);
+      // Each page goes in front of the ones already read, which is how
+      // the panel prepends them.
+      seen.unshift(...(res.json().comments as CommentRow[]).map((row) => row.id));
+      cursor = res.json().nextCursor as string | null;
+    } while (cursor !== null);
+    expect(seen).toEqual(posted.map((row) => row.id));
+  });
+
+  it("answers an empty page for a cursor naming a comment in a room the viewer is not in", async () => {
+    const hidden = await comment(memberCookies, contract.id, "Board only.", "legal_only");
+    // The Contributor is not in the Legal Only room, so the comment is
+    // not theirs to page from — a cursor that resolved outside the tier
+    // filter would confirm that a Legal Only comment is there, which is
+    // the one thing DD-016 will not have leak.
+    const refused = await readPage(contributorCookies, contract.id, hidden.id);
+    expect(refused.statusCode, refused.body).toBe(200);
+    expect(refused.json().comments).toEqual([]);
+    expect(refused.json().nextCursor).toBeNull();
+
+    // The Member is in that room, so the same cursor pages for them.
+    const allowed = await readPage(memberCookies, contract.id, hidden.id);
+    expect(allowed.statusCode, allowed.body).toBe(200);
+    expect((allowed.json().comments as CommentRow[]).length).toBeGreaterThan(0);
+  });
+
+  it("refuses a cursor outside its own bound before it reaches the database", async () => {
+    // A cursor the reader cannot reach is a page of nothing; a cursor
+    // that is not a cursor at all is a bad request.
+    for (const shape of ["", "x".repeat(65)]) {
+      const bad = await readPage(memberCookies, contract.id, shape);
+      expect(bad.statusCode, bad.body).toBe(400);
+      expect(bad.headers["content-type"]).toContain("application/problem+json");
+    }
   });
 });

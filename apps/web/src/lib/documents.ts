@@ -168,10 +168,13 @@ export async function updateDocument(
   return data ? { ok: true, document: data.document } : { ok: false, detail: problemDetail(error) };
 }
 
-/** What a write over the whole record's paper answers: the list as it
- * now stands, or why not. */
+/** What a read or a write over the whole record's paper answers: one
+ * page of the list as it now stands, where the next one starts, or why
+ * not. A write answers the **first** page (CTR-024), so a section that
+ * had paged further down starts again from the top. */
 export type PaperOutcome =
-  { ok: true; documents: ContractDocument[] } | { ok: false; detail?: string };
+  | { ok: true; documents: ContractDocument[]; nextCursor: string | null }
+  | { ok: false; detail?: string };
 
 /**
  * Names one document the contract's instrument (CTR-014).
@@ -186,7 +189,7 @@ export async function setPrimaryDocument(documentId: string): Promise<PaperOutco
     params: { path: { documentId } },
   });
   return data
-    ? { ok: true, documents: data.documents }
+    ? { ok: true, documents: data.documents, nextCursor: data.nextCursor }
     : { ok: false, detail: problemDetail(error) };
 }
 
@@ -229,15 +232,19 @@ export async function clearExecutedVersion(documentId: string): Promise<UploadOu
 export async function readContractDocuments(
   contractNumber: number,
   includeArchived: boolean,
+  cursor?: string,
 ): Promise<PaperOutcome> {
   const { data, error } = await api.GET("/api/v1/contracts/{number}/documents", {
     params: {
       path: { number: contractNumber },
-      query: includeArchived ? { includeArchived: "true" } : {},
+      query: {
+        ...(includeArchived ? { includeArchived: "true" as const } : {}),
+        ...(cursor ? { cursor } : {}),
+      },
     },
   });
   return data
-    ? { ok: true, documents: data.documents }
+    ? { ok: true, documents: data.documents, nextCursor: data.nextCursor }
     : { ok: false, detail: problemDetail(error) };
 }
 
@@ -283,7 +290,7 @@ export async function hardDeleteDocument(
     body: { confirmTitle },
   });
   return data
-    ? { ok: true, documents: data.documents }
+    ? { ok: true, documents: data.documents, nextCursor: data.nextCursor }
     : { ok: false, detail: problemDetail(error) };
 }
 

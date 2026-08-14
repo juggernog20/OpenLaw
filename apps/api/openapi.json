@@ -5470,6 +5470,16 @@
             "in": "query",
             "name": "includeArchived",
             "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "query",
+            "name": "cursor",
+            "required": false
           }
         ],
         "responses": {
@@ -5711,9 +5721,19 @@
                         ],
                         "additionalProperties": false
                       }
+                    },
+                    "nextCursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
-                  "required": ["contracts"],
+                  "required": ["contracts", "nextCursor"],
                   "additionalProperties": false
                 }
               }
@@ -8999,6 +9019,16 @@
           },
           {
             "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "query",
+            "name": "cursor",
+            "required": false
+          },
+          {
+            "schema": {
               "type": "integer",
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
@@ -9208,9 +9238,19 @@
                         ],
                         "additionalProperties": false
                       }
+                    },
+                    "nextCursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
-                  "required": ["documents"],
+                  "required": ["documents", "nextCursor"],
                   "additionalProperties": false
                 }
               }
@@ -10264,9 +10304,19 @@
                         ],
                         "additionalProperties": false
                       }
+                    },
+                    "nextCursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
-                  "required": ["documents"],
+                  "required": ["documents", "nextCursor"],
                   "additionalProperties": false
                 }
               }
@@ -10502,9 +10552,19 @@
                         ],
                         "additionalProperties": false
                       }
+                    },
+                    "nextCursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
-                  "required": ["documents"],
+                  "required": ["documents", "nextCursor"],
                   "additionalProperties": false
                 }
               }
@@ -11534,7 +11594,7 @@
     "/api/v1/comments": {
       "get": {
         "operationId": "listComments",
-        "summary": "One record's comment thread, flat and oldest first (CMT-002), filtered at query time to the DD-016 tiers the viewer is in the room for. A tier they are not in is omitted entirely — no placeholder, no gap, and no count. A record they cannot reach answers 404, exactly as one that does not exist",
+        "summary": "One record's comment thread, flat and oldest first (CMT-002), filtered at query time to the DD-016 tiers the viewer is in the room for. A tier they are not in is omitted entirely — no placeholder, no gap, and no count. A record they cannot reach answers 404, exactly as one that does not exist. Paged from a server-fixed page size, newest end first (CTR-024): the page reads oldest-first inside itself, and `nextCursor` walks back into the older thread",
         "tags": ["comments"],
         "parameters": [
           {
@@ -11555,6 +11615,16 @@
             "in": "query",
             "name": "entityId",
             "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "query",
+            "name": "cursor",
+            "required": false
           }
         ],
         "responses": {
@@ -11686,9 +11756,19 @@
                         ],
                         "additionalProperties": false
                       }
+                    },
+                    "nextCursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
-                  "required": ["comments"],
+                  "required": ["comments", "nextCursor"],
                   "additionalProperties": false
                 }
               }

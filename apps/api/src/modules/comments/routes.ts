@@ -11,9 +11,16 @@
  * table admits is the full four, and the API accepts `contract` alone
  * until the other records exist.
  *
- * The thread is flat and chronological (CMT-002). There is no nesting,
- * no `parent_comment_id`, and no paging: a short conversation between a
- * handful of people is read top to bottom.
+ * The thread is flat and chronological (CMT-002). There is no nesting
+ * and no `parent_comment_id`: a conversation between a handful of people
+ * is read top to bottom.
+ *
+ * It **is** paged, from the newest end (CTR-024). A read answers the
+ * last 50 comments, in the order they were said, and `nextCursor` walks
+ * backwards into the older thread — so the panel opens on the
+ * conversation as it stands and a thread that has run for two years does
+ * not arrive in one response. The bound is the server's: no client can
+ * ask for more.
  *
  * **Every read is filtered at query time** (DD-016). What the viewer may
  * not hear never leaves the database, so the thread carries no
@@ -79,6 +86,7 @@ import {
   comments,
   COMMENT_VISIBILITIES,
   count,
+  desc,
   eq,
   gt,
   inArray,
@@ -87,6 +95,7 @@ import {
   sql,
   users,
   type CommentVisibility,
+  type SQL,
 } from "@openlaw/db";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
@@ -198,6 +207,48 @@ const EntityRefQuery = z.object({
   entityId: RecordIdSchema,
 });
 
+/**
+ * How many comments one read answers (CTR-024).
+ *
+ * Server-fixed, so no client can turn one request into a whole-thread
+ * scan. 50 matches the contract list rather than the activity feed's 25:
+ * a thread is read in one sitting, and a page that ends mid-conversation
+ * more often is worse than a page that is a little long.
+ *
+ * The page is the **newest** 50, answered oldest-first inside itself, so
+ * the panel opens on the conversation as it stands. Paging walks
+ * backwards through the thread, which is the direction a reader goes
+ * when they want more of it.
+ */
+const PAGE_SIZE = 50;
+
+/** A cursor is a comment id, and nothing longer is worth reading. */
+const CursorSchema = z.string().min(1).max(64);
+
+/**
+ * The keyset boundary: every comment strictly older than one of them,
+ * in the order the thread is read back (CTR-024).
+ *
+ * `(created_at, id)` is the pair the audit log and the record feed both
+ * use, and the id breaks a same-instant tie — uuidv7 is time-ordered, so
+ * that order is still the order things were said in.
+ *
+ * The boundary's own position is read from the table rather than taken
+ * from the client, and it is read **under the same scope the page is
+ * read under**: a cursor naming a comment in a tier this viewer is not
+ * in the room for resolves to NULL, the comparison answers nothing, and
+ * they get an empty page. A boundary that resolved outside the tier
+ * filter would let a cursor confirm that a Legal Only comment exists,
+ * which is the one thing DD-016 will not have leak.
+ */
+function olderThan(commentId: string, scope: SQL | undefined): SQL {
+  return sql`(${comments.createdAt}, ${comments.id}) < (
+    select ${comments.createdAt}, ${comments.id}
+    from ${comments}
+    where ${and(eq(comments.id, commentId), scope)}
+  )`;
+}
+
 /** A record a viewer cannot reach reads exactly as one that does not
  * exist. A refusal would tell them it is there. */
 const NO_RECORD = "No record exists with this reference.";
@@ -304,11 +355,22 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "filtered at query time to the DD-016 tiers the viewer is in " +
           "the room for. A tier they are not in is omitted entirely — no " +
           "placeholder, no gap, and no count. A record they cannot reach " +
-          "answers 404, exactly as one that does not exist",
+          "answers 404, exactly as one that does not exist. Paged from a " +
+          "server-fixed page size, newest end first (CTR-024): the page " +
+          "reads oldest-first inside itself, and `nextCursor` walks back " +
+          "into the older thread",
         tags: ["comments"],
-        querystring: EntityRefQuery,
+        querystring: EntityRefQuery.extend({
+          /** The previous page's `nextCursor`. Omit for the newest page. */
+          cursor: CursorSchema.optional(),
+        }),
         response: {
-          200: z.object({ comments: z.array(CommentSchema) }),
+          200: z.object({
+            comments: z.array(CommentSchema),
+            /** Pass back as `cursor` for the page before this one. NULL
+             * when this page reaches the start of the thread. */
+            nextCursor: z.string().nullable(),
+          }),
           default: problemResponse,
         },
       },
@@ -316,23 +378,49 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const audience = await contractAudience(app.db, request.user, request.query.entityId);
       if (!audience) throw httpError(404, NO_RECORD);
+      const scope = and(
+        eq(comments.entityType, request.query.entityType),
+        eq(comments.entityId, audience.contractId),
+        // The tier filter is in the WHERE clause, so the limit below
+        // cuts rows this viewer is already in the room for. A read that
+        // limited first and filtered after would answer pages that
+        // shrink by however many Legal Only comments sat in the window,
+        // and a page length that varies with what is hidden is the leak
+        // DD-016 exists to close (CTR-024).
+        inArray(comments.visibility, [...audience.tiers]),
+      );
       const rows = await selectComments(app.db)
         .where(
           and(
-            eq(comments.entityType, request.query.entityType),
-            eq(comments.entityId, audience.contractId),
-            inArray(comments.visibility, [...audience.tiers]),
+            scope,
+            request.query.cursor === undefined ? undefined : olderThan(request.query.cursor, scope),
           ),
         )
-        // Oldest first, as a conversation is read. The id breaks a
-        // same-instant tie: uuidv7 is time-ordered, so that order is
-        // still the posting order.
-        .orderBy(asc(comments.createdAt), asc(comments.id));
+        // Read from the newest end, because that is the end a reader
+        // opens the panel on. The id breaks a same-instant tie: uuidv7
+        // is time-ordered, so that order is still the posting order.
+        // One past the page, which is how the answer knows whether
+        // there is more without counting anything.
+        .orderBy(desc(comments.createdAt), desc(comments.id))
+        .limit(PAGE_SIZE + 1);
+      const page = rows.slice(0, PAGE_SIZE);
       const mentions = await mentionsOf(
         app.db,
-        rows.map((row) => row.id),
+        page.map((row) => row.id),
       );
-      return { comments: rows.map((row) => toComment(row, mentions.get(row.id))) };
+      return {
+        // Turned back into the order a conversation is read in
+        // (CMT-002). The page is a window on the thread, not a feed:
+        // what the reader sees inside it runs oldest to newest exactly
+        // as it always has.
+        comments: page
+          .slice()
+          .reverse()
+          .map((row) => toComment(row, mentions.get(row.id))),
+        // The oldest row of this page is the boundary for the page
+        // before it, and only when a further row was actually read.
+        nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.id ?? null) : null,
+      };
     },
   );
 

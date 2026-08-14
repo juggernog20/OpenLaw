@@ -127,6 +127,7 @@ import {
   VALUE_CADENCES,
   type Contract,
   type CustomFieldValue,
+  type SQL,
 } from "@openlaw/db";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
@@ -164,6 +165,19 @@ const requireContractReader = requireRole("administrator", "legal_team_member", 
 
 /** The protected CTR-001 seed every contract is born on. */
 const DRAFT_STATUS_SLUG = "draft";
+
+/**
+ * How many contracts one read answers (CTR-024).
+ *
+ * Server-fixed, like the audit log's — the client cannot ask for more,
+ * so no client can turn one request into a whole-table scan. 50 rather
+ * than the activity feed's 25 because this is a table somebody scans,
+ * not a feed somebody reads.
+ */
+const PAGE_SIZE = 50;
+
+/** A cursor is a contract id, and nothing longer is worth reading. */
+const CursorSchema = z.string().min(1).max(64);
 
 /** Only a Member+ user can be the Owner: the Owner runs the contract,
  * and a read-only viewer cannot run one (CTR-004, DD-013). */
@@ -555,6 +569,31 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
    * the shared predicate, so the list, the record read, and the comment
    * routes all answer the same question the same way. */
   const teamScope = (user: AuthenticatedUser) => contractTeamScope(app.db, user);
+
+  /**
+   * The keyset boundary: every contract strictly further down the list
+   * than one of them, in the order the list reads (CTR-024).
+   *
+   * `number` is monotonic and unique, so the boundary needs no tie-break
+   * — which is the whole reason the cursor works on this table and would
+   * not on a table ordered by a timestamp alone.
+   *
+   * The boundary's own position is read from the table rather than taken
+   * from the client, so nobody can page from a reference that was never
+   * written. It is read **under this viewer's own scope**: a cursor
+   * naming a contract they cannot reach resolves to NULL, the comparison
+   * answers nothing, and they get an empty page — the same nothing the
+   * record itself answers them (DD-014). A boundary that resolved
+   * outside the scope would turn the cursor into an oracle for the
+   * numbers of contracts the viewer is not allowed to know exist.
+   */
+  function furtherDownThan(cursor: string, user: AuthenticatedUser): SQL {
+    const scope = teamScope(user);
+    return sql`${contracts.number} < (
+      select ${contracts.number} from ${contracts}
+      where ${and(eq(contracts.id, cursor), scope)}
+    )`;
+  }
 
   /** The working group on one contract, alphabetical by name so the
    * roster reads the same on every visit; a person holding two roles
@@ -1010,9 +1049,18 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           "team, its Owner, and Administrators — silently absent for " +
           "everyone else, so no count can reveal it",
         tags: ["contracts"],
-        querystring: z.object({ includeArchived: z.enum(["true", "false"]).optional() }),
+        querystring: z.object({
+          includeArchived: z.enum(["true", "false"]).optional(),
+          /** The previous page's `nextCursor`. Omit for the first page. */
+          cursor: CursorSchema.optional(),
+        }),
         response: {
-          200: z.object({ contracts: z.array(ContractRowSchema) }),
+          200: z.object({
+            contracts: z.array(ContractRowSchema),
+            /** Pass back as `cursor` for the next page. NULL when this
+             * page is the end of the list. */
+            nextCursor: z.string().nullable(),
+          }),
           default: problemResponse,
         },
       },
@@ -1025,13 +1073,32 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             // A Contributor's list is the contracts they are on. An
             // empty answer is a real state — the list's own empty
             // state, never a refusal.
+            //
+            // The scope is in the WHERE clause, so the limit below cuts
+            // rows this viewer can already reach. A read that limited
+            // first and filtered after would answer pages that shrink by
+            // however many confidential contracts sat in the window, and
+            // a page length that varies with what is hidden is the
+            // existence leak DD-014 exists to close (CTR-024).
             teamScope(request.user),
+            request.query.cursor === undefined
+              ? undefined
+              : furtherDownThan(request.query.cursor, request.user),
           ),
         )
         // The reference is monotonic, so newest-first is the number
         // descending — no second sort key can tie.
-        .orderBy(desc(contracts.number));
-      return { contracts: rows.map(toRow) };
+        .orderBy(desc(contracts.number))
+        // One past the page, which is how the answer knows whether there
+        // is more without counting anything.
+        .limit(PAGE_SIZE + 1);
+      const page = rows.slice(0, PAGE_SIZE);
+      return {
+        contracts: page.map(toRow),
+        // Only when a further row was actually read. A cursor on the
+        // last page would send the client for an empty one.
+        nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.row.id ?? null) : null,
+      };
     },
   );
 

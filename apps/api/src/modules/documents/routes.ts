@@ -124,8 +124,10 @@ import {
   eq,
   inArray,
   isNull,
+  sql,
   users,
   type DocumentVersionKind,
+  type SQL,
 } from "@openlaw/db";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
@@ -302,7 +304,14 @@ const DocumentSchema = z.object({
   updatedAt: z.iso.datetime({ offset: true }),
 });
 
-const DocumentsEnvelope = z.object({ documents: z.array(DocumentSchema) });
+const DocumentsEnvelope = z.object({
+  documents: z.array(DocumentSchema),
+  /** Pass back as `cursor` for the next page. NULL when this page is the
+   * end of the record's paper (CTR-024). A write answers the first page
+   * and its cursor, so a section that had paged further starts again
+   * from the top — the list it is given is the list it draws. */
+  nextCursor: z.string().nullable(),
+});
 const DocumentEnvelope = z.object({ document: DocumentSchema });
 
 /** What the record is called, and what it says about itself (DOC-007).
@@ -362,6 +371,19 @@ const HardDeleteResponse = DocumentsEnvelope;
 const ArchivedQuery = z.object({
   includeArchived: z.enum(["true", "false"]).optional(),
 });
+
+/**
+ * How many documents one read answers (CTR-024).
+ *
+ * Server-fixed, matching the contract list. It counts **documents**, not
+ * versions: a document's chain rides with it whole, because a chain
+ * split across two pages is not a negotiation history. A chain long
+ * enough to matter on its own is a bound of its own, and this is not it.
+ */
+const PAGE_SIZE = 50;
+
+/** A cursor is a document id, and nothing longer is worth reading. */
+const CursorSchema = z.string().min(1).max(64);
 
 /**
  * The multipart form, described for the OpenAPI document only.
@@ -739,27 +761,62 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     user: AuthenticatedUser,
     contract: ReachedContract,
     includeArchived = false,
+    cursor?: string,
   ) {
+    const scope = and(
+      eq(documents.contractId, contract.id),
+      includeArchived ? undefined : isNull(documents.archivedAt),
+      // The per-document audience is in the WHERE clause, so the limit
+      // below cuts rows this viewer can already see. A read that limited
+      // first and filtered after would answer pages that shrink by
+      // however many walled documents sat in the window, and a page
+      // length that varies with what is hidden is the existence leak
+      // DD-014 exists to close (CTR-024).
+      documentAudienceScope(db, user),
+    );
     const rows = await selectDocuments(db)
-      .where(
-        and(
-          eq(documents.contractId, contract.id),
-          includeArchived ? undefined : isNull(documents.archivedAt),
-          documentAudienceScope(db, user),
-        ),
-      )
+      .where(and(scope, cursor === undefined ? undefined : olderThan(cursor, scope)))
       // Newest first, as the record's Documents section reads. The id
       // breaks a same-instant tie: uuidv7 is time-ordered, so that
       // order is still the upload order.
-      .orderBy(desc(documents.createdAt), desc(documents.id));
+      .orderBy(desc(documents.createdAt), desc(documents.id))
+      // One past the page, which is how the answer knows whether there
+      // is more without counting anything.
+      .limit(PAGE_SIZE + 1);
+    const page = rows.slice(0, PAGE_SIZE);
     const chains = await chainsOf(
       db,
-      rows.map((row) => row.id),
+      page.map((row) => row.id),
     );
-    return rows.flatMap((row) => {
-      const chain = chains.get(row.id);
-      return chain ? [toDocument(row, chain, contract.primaryDocumentId)] : [];
-    });
+    return {
+      documents: page.flatMap((row) => {
+        const chain = chains.get(row.id);
+        return chain ? [toDocument(row, chain, contract.primaryDocumentId)] : [];
+      }),
+      // Only when a further row was actually read. A cursor on the last
+      // page would send the client for an empty one.
+      nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.id ?? null) : null,
+    };
+  }
+
+  /**
+   * The keyset boundary: every document strictly older than one of them,
+   * in the order the section reads (CTR-024).
+   *
+   * The boundary's own position is read from the table rather than taken
+   * from the client, and it is read **under the same scope the page is
+   * read under** — the contract, the archived filter, and DD-014's
+   * per-document audience. A cursor naming a walled document this viewer
+   * is outside resolves to NULL and answers an empty page, so a cursor
+   * cannot confirm that a document they were told nothing about is
+   * there.
+   */
+  function olderThan(documentId: string, scope: SQL | undefined): SQL {
+    return sql`(${documents.createdAt}, ${documents.id}) < (
+      select ${documents.createdAt}, ${documents.id}
+      from ${documents}
+      where ${and(eq(documents.id, documentId), scope)}
+    )`;
   }
 
   app.get(
@@ -788,7 +845,10 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "beside the live ones, which is where restoring one is offered",
         tags: ["documents"],
         params: NumberParams,
-        querystring: ArchivedQuery,
+        querystring: ArchivedQuery.extend({
+          /** The previous page's `nextCursor`. Omit for the first page. */
+          cursor: CursorSchema.optional(),
+        }),
         response: { 200: DocumentsEnvelope, default: problemResponse },
       },
     },
@@ -797,14 +857,13 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!contract) throw httpError(404, NO_CONTRACT);
       // An archived record still reads: archiving is a soft delete for
       // mistakes and imports, and restore has to be reachable.
-      return {
-        documents: await paperOf(
-          app.db,
-          request.user,
-          contract,
-          request.query.includeArchived === "true",
-        ),
-      };
+      return await paperOf(
+        app.db,
+        request.user,
+        contract,
+        request.query.includeArchived === "true",
+        request.query.cursor,
+      );
     },
   );
 
@@ -1183,60 +1242,61 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const { documentId } = request.params;
-      return {
-        documents: await app.db.transaction(async (tx) => {
-          // The contract row is held, which is what makes "exactly one"
-          // true under two people clicking at once: the second waits
-          // and then writes over what the first left.
-          const target = await reachedDocument(tx, request.user, documentId, true);
-          assertOpenDocument(target);
-          if (target.primaryDocumentId === documentId) {
-            throw httpError(409, "That document is already the contract's primary document.");
-          }
+      // The whole envelope out of the transaction: the answer is the
+      // record's first page and its cursor, so a section that had paged
+      // further down starts again from the top (CTR-024).
+      return await app.db.transaction(async (tx) => {
+        // The contract row is held, which is what makes "exactly one"
+        // true under two people clicking at once: the second waits
+        // and then writes over what the first left.
+        const target = await reachedDocument(tx, request.user, documentId, true);
+        assertOpenDocument(target);
+        if (target.primaryDocumentId === documentId) {
+          throw httpError(409, "That document is already the contract's primary document.");
+        }
 
-          // The document the designation is leaving, named for the
-          // entry. Read before the write, and it may be absent: a
-          // record whose paper was all hard-deleted (DOC-010) has no
-          // primary until the next upload.
-          const previous = target.primaryDocumentId
-            ? ((
-                await tx
-                  .select({ title: documents.title })
-                  .from(documents)
-                  .where(eq(documents.id, target.primaryDocumentId))
-                  .limit(1)
-              )[0] ?? null)
-            : null;
+        // The document the designation is leaving, named for the
+        // entry. Read before the write, and it may be absent: a
+        // record whose paper was all hard-deleted (DOC-010) has no
+        // primary until the next upload.
+        const previous = target.primaryDocumentId
+          ? ((
+              await tx
+                .select({ title: documents.title })
+                .from(documents)
+                .where(eq(documents.id, target.primaryDocumentId))
+                .limit(1)
+            )[0] ?? null)
+          : null;
 
-          await tx
-            .update(contracts)
-            .set({ primaryDocumentId: documentId })
-            .where(eq(contracts.id, target.contractId));
-          await recordActivity(tx, {
-            entityType: "contract",
-            entityId: target.contractId,
-            actorId: request.user.id,
-            action: "document.primary_set",
-            visibility: RECORD_ACTIVITY_TIER,
-            // Both titles, because hard deletion (DOC-010) takes the
-            // rows and the entry has to keep saying which document the
-            // instrument moved from and which it moved to.
-            payload: {
-              documentId,
-              title: target.title,
-              fromDocumentId: target.primaryDocumentId,
-              from: previous?.title ?? null,
-              to: target.title,
-            },
-          });
+        await tx
+          .update(contracts)
+          .set({ primaryDocumentId: documentId })
+          .where(eq(contracts.id, target.contractId));
+        await recordActivity(tx, {
+          entityType: "contract",
+          entityId: target.contractId,
+          actorId: request.user.id,
+          action: "document.primary_set",
+          visibility: RECORD_ACTIVITY_TIER,
+          // Both titles, because hard deletion (DOC-010) takes the
+          // rows and the entry has to keep saying which document the
+          // instrument moved from and which it moved to.
+          payload: {
+            documentId,
+            title: target.title,
+            fromDocumentId: target.primaryDocumentId,
+            from: previous?.title ?? null,
+            to: target.title,
+          },
+        });
 
-          return paperOf(tx, request.user, {
-            id: target.contractId,
-            archivedAt: target.contractArchivedAt,
-            primaryDocumentId: documentId,
-          });
-        }),
-      };
+        return paperOf(tx, request.user, {
+          id: target.contractId,
+          archivedAt: target.contractArchivedAt,
+          primaryDocumentId: documentId,
+        });
+      });
     },
   );
 
@@ -1533,83 +1593,84 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const { documentId } = request.params;
       const { confirmTitle } = request.body;
-      return {
-        documents: await app.db.transaction(async (tx) => {
-          // The contract row is held for the whole erasure, so nothing
-          // can append a version to a document that is being destroyed.
-          const target = await reachedDocument(tx, request.user, documentId, true);
-          // Reach and nothing else: an archived document is erasable
-          // without being restored first, and so is one on an archived
-          // contract.
-          assertReachedDocument(target);
-          if (confirmTitle.trim() !== target.title.trim()) {
-            throw httpError(400, "Type the document's name exactly to delete it.");
-          }
+      // The whole envelope out of the transaction, for the primary
+      // write's reason: the answer is the record's first page and its
+      // cursor (CTR-024).
+      return await app.db.transaction(async (tx) => {
+        // The contract row is held for the whole erasure, so nothing
+        // can append a version to a document that is being destroyed.
+        const target = await reachedDocument(tx, request.user, documentId, true);
+        // Reach and nothing else: an archived document is erasable
+        // without being restored first, and so is one on an archived
+        // contract.
+        assertReachedDocument(target);
+        if (confirmTitle.trim() !== target.title.trim()) {
+          throw httpError(400, "Type the document's name exactly to delete it.");
+        }
 
-          // Read before anything is destroyed: the blobs cannot be
-          // found once the rows are gone, and the entry has to be able
-          // to say how much paper this took with it.
-          const chain = await tx
-            .select({ fileRef: documentVersions.fileRef })
-            .from(documentVersions)
-            .where(eq(documentVersions.documentId, documentId));
+        // Read before anything is destroyed: the blobs cannot be
+        // found once the rows are gone, and the entry has to be able
+        // to say how much paper this took with it.
+        const chain = await tx
+          .select({ fileRef: documentVersions.fileRef })
+          .from(documentVersions)
+          .where(eq(documentVersions.documentId, documentId));
 
-          // The entry is written first and it hangs off the owning
-          // contract, never off the document (DOC-008), so nothing
-          // cascades it away with the row it describes. It names the
-          // title because in a moment there will be no row to read a
-          // name from — which is the whole reason every other entry in
-          // this module carries the title too.
-          await recordActivity(tx, {
-            entityType: "contract",
-            entityId: target.contractId,
-            actorId: request.user.id,
-            action: "document.hard_deleted",
-            visibility: RECORD_ACTIVITY_TIER,
-            payload: { documentId, title: target.title, versionCount: chain.length },
-          });
+        // The entry is written first and it hangs off the owning
+        // contract, never off the document (DOC-008), so nothing
+        // cascades it away with the row it describes. It names the
+        // title because in a moment there will be no row to read a
+        // name from — which is the whole reason every other entry in
+        // this module carries the title too.
+        await recordActivity(tx, {
+          entityType: "contract",
+          entityId: target.contractId,
+          actorId: request.user.id,
+          action: "document.hard_deleted",
+          visibility: RECORD_ACTIVITY_TIER,
+          payload: { documentId, title: target.title, versionCount: chain.length },
+        });
 
-          // The rows: the document, and its whole chain behind the
-          // cascade. `contracts.primary_document_id` and
-          // `documents.executed_version_id` are both SET NULL, so a
-          // record whose instrument was erased has no instrument rather
-          // than a dangling one.
-          await tx.delete(documents).where(eq(documents.id, documentId));
+        // The rows: the document, and its whole chain behind the
+        // cascade. `contracts.primary_document_id` and
+        // `documents.executed_version_id` are both SET NULL, so a
+        // record whose instrument was erased has no instrument rather
+        // than a dangling one.
+        await tx.delete(documents).where(eq(documents.id, documentId));
 
-          // The blobs, inside the transaction and before the commit
-          // (DOC-012). Order is the whole argument, and the trade is
-          // between two bad failures rather than between a bad one and
-          // a clean one.
-          //
-          // Deleting after the commit would leave files on disk with no
-          // row left to name them — an erasure that reports success, is
-          // not one, and has nothing left to retry from. That is the
-          // failure with no way back.
-          //
-          // Deleting here fails the other way. If the loop destroys the
-          // blobs behind versions 1..k and then fails on k+1, the
-          // rollback restores **every** row, including the k whose
-          // bytes are already gone. The record then names files that no
-          // longer exist and their downloads fail. That state is ugly
-          // and it is recoverable: the erasure is still on the table,
-          // and running it again converges, because deleting a key that
-          // is already gone succeeds — which is exactly what DOC-012
-          // defines that behaviour for. This window is accepted and
-          // recorded in DOC-010; it is not a guarantee that the record
-          // still holds every file it names.
-          for (const version of chain) await app.storage.delete(version.fileRef);
+        // The blobs, inside the transaction and before the commit
+        // (DOC-012). Order is the whole argument, and the trade is
+        // between two bad failures rather than between a bad one and
+        // a clean one.
+        //
+        // Deleting after the commit would leave files on disk with no
+        // row left to name them — an erasure that reports success, is
+        // not one, and has nothing left to retry from. That is the
+        // failure with no way back.
+        //
+        // Deleting here fails the other way. If the loop destroys the
+        // blobs behind versions 1..k and then fails on k+1, the
+        // rollback restores **every** row, including the k whose
+        // bytes are already gone. The record then names files that no
+        // longer exist and their downloads fail. That state is ugly
+        // and it is recoverable: the erasure is still on the table,
+        // and running it again converges, because deleting a key that
+        // is already gone succeeds — which is exactly what DOC-012
+        // defines that behaviour for. This window is accepted and
+        // recorded in DOC-010; it is not a guarantee that the record
+        // still holds every file it names.
+        for (const version of chain) await app.storage.delete(version.fileRef);
 
-          return paperOf(tx, request.user, {
-            id: target.contractId,
-            archivedAt: target.contractArchivedAt,
-            // Derived rather than re-read: `contracts.primary_document_id`
-            // is SET NULL, so the record has no instrument exactly when
-            // the erased document held the designation.
-            primaryDocumentId:
-              target.primaryDocumentId === documentId ? null : target.primaryDocumentId,
-          });
-        }),
-      };
+        return paperOf(tx, request.user, {
+          id: target.contractId,
+          archivedAt: target.contractArchivedAt,
+          // Derived rather than re-read: `contracts.primary_document_id`
+          // is SET NULL, so the record has no instrument exactly when
+          // the erased document held the designation.
+          primaryDocumentId:
+            target.primaryDocumentId === documentId ? null : target.primaryDocumentId,
+        });
+      });
     },
   );
 

@@ -86,7 +86,7 @@
  * (CTR-022) — so that item is drawn for those three and nobody else.
  */
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import {
   Archive,
@@ -186,6 +186,7 @@ type Composer = { document: ContractDocument } | { document: undefined };
 export function DocumentsCard({
   contractNumber,
   documents,
+  nextCursor,
   frozen,
   role,
   viewerId,
@@ -195,6 +196,9 @@ export function DocumentsCard({
   /** CTR-003's reference — the address the upload route takes. */
   contractNumber: number;
   documents: readonly ContractDocument[];
+  /** Where the next page starts, or null at the end of the record's
+   * paper (CTR-024). */
+  nextCursor: string | null;
   /** The record is frozen: it is archived, or this viewer reads it
    * rather than edits it. Either way it renders as facts. */
   frozen: boolean;
@@ -209,7 +213,10 @@ export function DocumentsCard({
   /** The contract's Owner (CTR-004), or none. The record holds it, so
    * it is passed down rather than read again per row. */
   ownerId: string | null;
-  onDocuments: (documents: ContractDocument[]) => void;
+  /** The list as it now stands, and where the next page starts. The
+   * cursor is omitted by a write that changed rows without moving the
+   * position — a metadata edit is not a page. */
+  onDocuments: (documents: ContractDocument[], nextCursor?: string | null) => void;
 }>) {
   const intl = useIntl();
   const [status, setStatus] = useState<FieldStatus>("idle");
@@ -232,6 +239,44 @@ export function DocumentsCard({
   const [showArchived, setShowArchived] = useState(false);
   /** The document a typed confirmation is open for, or none. */
   const [deleting, setDeleting] = useState<ContractDocument | null>(null);
+  /** How many rows the last page brought, and the id it started at. The
+   * first is what the live region announces; the second is the row focus
+   * moves to, because that is where what the reader asked for begins
+   * (DES-031). */
+  const [appended, setAppended] = useState<{ count: number; from: string } | null>(null);
+  /** A failed "Show more", said beside the control that failed. The
+   * control stays, so the retry is the button already under the
+   * reader's hand. */
+  const [pageError, setPageError] = useState<string | null>(null);
+  /** The row focus is moved to after a page appends. */
+  const landing = useRef<HTMLTableRowElement>(null);
+  useEffect(() => {
+    if (appended) landing.current?.focus();
+  }, [appended]);
+
+  /** One more page of paper, appended in place (CTR-024, DES-031). The
+   * archived view is carried back, because the cursor is a position in
+   * whichever list is on screen. */
+  async function showMore() {
+    if (busy || nextCursor === null) return;
+    setBusy(true);
+    setPageError(null);
+    const outcome = await readContractDocuments(contractNumber, showArchived, nextCursor);
+    setBusy(false);
+    if (!outcome.ok) {
+      setPageError(
+        outcome.detail ??
+          intl.formatMessage({
+            id: "documents.moreError",
+            defaultMessage: "The next documents could not be read. Try again.",
+          }),
+      );
+      return;
+    }
+    const first = outcome.documents[0];
+    onDocuments([...documents, ...outcome.documents], outcome.nextCursor);
+    setAppended(first ? { count: outcome.documents.length, from: first.id } : null);
+  }
 
   /** Erasing is the Administrator's alone (DOC-010), so nobody else is
    * shown the item. The seam refuses everyone else regardless; this is
@@ -282,13 +327,16 @@ export function DocumentsCard({
    * half-replaced — the alternative is the section quietly dropping the
    * archived rows the moment anything else is written.
    */
-  async function applyPaper(paper: ContractDocument[]) {
+  async function applyPaper(paper: ContractDocument[], cursor: string | null) {
     if (!showArchived) {
-      onDocuments(paper);
+      onDocuments(paper, cursor);
+      setAppended(null);
       return;
     }
     const outcome = await readContractDocuments(contractNumber, true);
-    onDocuments(outcome.ok ? outcome.documents : paper);
+    if (outcome.ok) onDocuments(outcome.documents, outcome.nextCursor);
+    else onDocuments(paper, cursor);
+    setAppended(null);
   }
 
   /** The show-archived toggle. It re-reads either way: the archived rows
@@ -306,7 +354,8 @@ export function DocumentsCard({
       setDetail(outcome.detail ?? null);
       return;
     }
-    onDocuments(outcome.documents);
+    onDocuments(outcome.documents, outcome.nextCursor);
+    setAppended(null);
     setShowArchived(next);
     setStatus("idle");
   }
@@ -325,7 +374,7 @@ export function DocumentsCard({
     setStatus("saving");
     setDetail(null);
     const outcome = await setPrimaryDocument(document.id);
-    if (outcome.ok) await applyPaper(outcome.documents);
+    if (outcome.ok) await applyPaper(outcome.documents, outcome.nextCursor);
     setBusy(false);
     if (outcome.ok) {
       setStatus("saved");
@@ -416,7 +465,7 @@ export function DocumentsCard({
     setStatus("saving");
     setDetail(null);
     const outcome = await hardDeleteDocument(document.id, confirmTitle);
-    if (outcome.ok) await applyPaper(outcome.documents);
+    if (outcome.ok) await applyPaper(outcome.documents, outcome.nextCursor);
     setBusy(false);
     if (outcome.ok) {
       setDeleting(null);
@@ -584,7 +633,14 @@ export function DocumentsCard({
               const isOpen = opened.has(document.id);
               return (
                 <tbody key={document.id}>
-                  <tr className="border-t border-border-default">
+                  <tr
+                    // Focusable only while it is the landing row: a
+                    // section of fifty tab stops nobody asked for is
+                    // worse than none (DES-031).
+                    ref={document.id === appended?.from ? landing : undefined}
+                    tabIndex={document.id === appended?.from ? -1 : undefined}
+                    className="border-t border-border-default"
+                  >
                     <td className="px-4 py-2.5">
                       <span className="flex items-start gap-1">
                         {chain.superseded.length > 0 ? (
@@ -811,6 +867,34 @@ export function DocumentsCard({
           </table>
         </div>
       )}
+      {/* Under the table's own rows and inside the section's card, so
+          the control reads as part of the list (DES-031). */}
+      {nextCursor !== null && (
+        <div className="flex items-center justify-between gap-3 border-t border-border-default px-4 py-3">
+          {pageError ? (
+            <p role="alert" className="text-xs text-status-danger-fg">
+              {pageError}
+            </p>
+          ) : (
+            <span />
+          )}
+          <Button variant="secondary" disabled={busy} onClick={() => void showMore()}>
+            <FormattedMessage id="documents.more" defaultMessage="Show more" />
+          </Button>
+        </div>
+      )}
+      {/* What the press did, for a reader who cannot see the rows
+          arrive. Focus lands on the first of them, so this says how many
+          followed it (DES-031). */}
+      <p aria-live="polite" className="sr-only">
+        {appended && (
+          <FormattedMessage
+            id="documents.moreAdded"
+            defaultMessage="{count, plural, one {# more document} other {# more documents}}. {total} shown."
+            values={{ count: appended.count, total: documents.length }}
+          />
+        )}
+      </p>
       {composer && (
         <UploadDialog
           contractNumber={contractNumber}

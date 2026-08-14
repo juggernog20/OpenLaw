@@ -166,6 +166,10 @@ export function useCommentApplet({
    * what a failed read leaves — a count nobody could fetch is not a
    * number to guess at. */
   const [unread, setUnread] = useState(0);
+  /** Where the page before this one starts, or null at the start of the
+   * thread (CTR-024). The panel opens on the newest end and walks
+   * backwards, which is the direction a reader goes for more. */
+  const [cursor, setCursor] = useState<string | null>(null);
 
   useEffect(() => {
     let current = true;
@@ -188,6 +192,7 @@ export function useCommentApplet({
     // that fails must not leave the previous thread — or its count — on
     // screen as though it were current.
     setComments(null);
+    setCursor(null);
     // The people this record can address come down with the thread. The
     // list is one working group, so it costs a small read once, and the
     // typeahead is instant when the `@` is typed rather than waiting on
@@ -206,6 +211,7 @@ export function useCommentApplet({
       return;
     }
     setComments(thread.data.comments);
+    setCursor(thread.data.nextCursor);
     // The thread is on screen, so it has been read — and only now. A
     // panel that could not load its thread has shown nobody anything,
     // and clearing the badge there would take the signal away without
@@ -217,6 +223,25 @@ export function useCommentApplet({
       .catch(() => ({ data: undefined }));
     if (marked.data) setUnread(marked.data.unread);
   }, [entityType, entityId]);
+
+  /**
+   * One page further back, prepended in place (CTR-024, DES-031).
+   *
+   * The older comments go on the head of the thread rather than the
+   * foot, because the thread reads oldest to newest and the older ones
+   * belong above what is already there. It answers whether it worked, so
+   * the panel can say so beside the control that asked.
+   */
+  const older = useCallback(async (): Promise<Comment | null> => {
+    if (cursor === null) return null;
+    const { data } = await api
+      .GET("/api/v1/comments", { params: { query: { entityType, entityId, cursor } } })
+      .catch(() => ({ data: undefined }));
+    if (!data) throw new Error("older comments");
+    setComments((current) => [...data.comments, ...(current ?? [])]);
+    setCursor(data.nextCursor);
+    return data.comments[0] ?? null;
+  }, [entityType, entityId, cursor]);
 
   return {
     id: "chat",
@@ -236,6 +261,8 @@ export function useCommentApplet({
         candidates={candidates}
         loadFailed={loadFailed}
         onLoad={load}
+        hasOlder={cursor !== null}
+        onOlder={older}
         // A thread that could not be read stays unread. Folding the
         // posted row into the null sentinel would turn "we do not know
         // what is here" into a one-row conversation, under a load error
@@ -293,6 +320,8 @@ function CommentThread({
   candidates,
   loadFailed,
   onLoad,
+  hasOlder,
+  onOlder,
   onPosted,
   onChanged,
 }: Readonly<{
@@ -306,10 +335,24 @@ function CommentThread({
   candidates: readonly MentionCandidate[];
   loadFailed: boolean;
   onLoad: () => Promise<void>;
+  /** There is thread before what is on screen (CTR-024). */
+  hasOlder: boolean;
+  /** Reads one page further back and prepends it, answering the oldest
+   * comment it brought — the row focus moves to (DES-031). Throws when
+   * the read failed, which is what the control reports. */
+  onOlder: () => Promise<Comment | null>;
   onPosted: (comment: Comment) => void;
   onChanged: (comment: Comment) => void;
 }>) {
   const intl = useIntl();
+  /** A page read is in flight, and whether the last one failed. */
+  const [paging, setPaging] = useState(false);
+  const [pageFailed, setPageFailed] = useState(false);
+  /** The comment focus is moved to after a page prepends: the oldest one
+   * it brought, which is the top of the new material and where the
+   * reader's attention has to go — otherwise the thread grew above them
+   * with nothing to say so (DES-031). */
+  const [landed, setLanded] = useState<string | null>(null);
 
   // The panel mounts when the bar expands it, so this is where "opened"
   // happens. Re-reading on every open keeps a thread left open in one
@@ -317,6 +360,20 @@ function CommentThread({
   useEffect(() => {
     void onLoad();
   }, [onLoad]);
+
+  async function showOlder() {
+    if (paging) return;
+    setPaging(true);
+    setPageFailed(false);
+    try {
+      const first = await onOlder();
+      setLanded(first?.id ?? null);
+    } catch {
+      setPageFailed(true);
+    } finally {
+      setPaging(false);
+    }
+  }
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -337,6 +394,25 @@ function CommentThread({
             />
           </p>
         )}
+        {/* At the head, not the foot: the thread reads oldest to newest,
+            so the older conversation belongs above what is on screen and
+            the control that fetches it belongs where it will land
+            (DES-031, extending the feed's own foot). */}
+        {hasOlder && (
+          <div className="flex flex-col items-start gap-2 border-b border-border-default px-4 py-3">
+            {pageFailed && (
+              <p role="alert" className="text-xs text-status-danger-fg">
+                <FormattedMessage
+                  id="comments.olderError"
+                  defaultMessage="The earlier comments could not be read. Try again."
+                />
+              </p>
+            )}
+            <Button variant="secondary" disabled={paging} onClick={() => void showOlder()}>
+              <FormattedMessage id="comments.older" defaultMessage="Show older" />
+            </Button>
+          </div>
+        )}
         {comments !== null && comments.length > 0 && (
           <ol aria-label={intl.formatMessage(CHAT_LABEL)}>
             {comments.map((comment) => (
@@ -347,6 +423,7 @@ function CommentThread({
                 viewerId={viewerId}
                 confidential={confidential}
                 onChanged={onChanged}
+                landed={comment.id === landed}
               />
             ))}
           </ol>
@@ -399,6 +476,7 @@ function CommentRow({
   viewerId,
   confidential,
   onChanged,
+  landed = false,
 }: Readonly<{
   comment: Comment;
   role: Role;
@@ -408,6 +486,11 @@ function CommentRow({
    * restriction with it. */
   confidential: boolean;
   onChanged: (comment: Comment) => void;
+  /** This row is the oldest one a "Show older" press just brought, so
+   * focus belongs on it: the thread grew above the reader, and a
+   * keyboard or screen-reader user has to be put where it grew
+   * (DES-031). */
+  landed?: boolean;
 }>) {
   const intl = useIntl();
   const [editing, setEditing] = useState(false);
@@ -419,6 +502,9 @@ function CommentRow({
    * away. Radix hands focus back to the trigger as the dialog closes,
    * and the trigger is about to unmount, so the row catches it. */
   const item = useRef<HTMLLIElement>(null);
+  useEffect(() => {
+    if (landed) item.current?.focus();
+  }, [landed]);
 
   const legalOnly = comment.visibility === "legal_only";
   /** Redacted wins where both happened: the Administrator's act is the

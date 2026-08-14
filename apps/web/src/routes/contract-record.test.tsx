@@ -1765,7 +1765,7 @@ describe("the contract record's comment applet (M9/2)", () => {
           entityType: call.url.searchParams.get("entityType"),
           entityId: call.url.searchParams.get("entityId"),
         });
-        return json(200, { comments: thread });
+        return json(200, { comments: thread, nextCursor: null });
       }
       if (call.method === "POST") {
         posts.push(call.body);
@@ -2059,7 +2059,7 @@ describe("the contract record's comment applet (M9/2)", () => {
       signedIn: MEMBER,
       extra: (call: StubCall) => {
         if (call.url.pathname === "/api/v1/comments" && call.method === "GET") {
-          return json(200, { comments: [] });
+          return json(200, { comments: [], nextCursor: null });
         }
         if (call.url.pathname === "/api/v1/comments" && call.method === "POST") {
           return problem(403, "You cannot post a comment at that visibility tier.");
@@ -2862,6 +2862,140 @@ describe("the contract record's comment applet (M9/2)", () => {
       expect(panel.querySelectorAll("svg.lucide-lock").length).toBeGreaterThan(0);
       expect(view.container.querySelector("svg.lucide-shield-alert")).toBeNull();
       expect(view.container.querySelector("svg.lucide-eye-off")).toBeNull();
+    });
+  });
+
+  /**
+   * The bound and its head control (CTR-024, DES-031).
+   *
+   * The thread is paged from the newest end, so the panel opens on the
+   * conversation as it stands and the older conversation arrives above
+   * it — which is where the control that fetches it goes.
+   */
+  describe("the paged thread (CTR-024, DES-031)", () => {
+    /** Two pages: the newest one first, the older one behind a cursor. */
+    function pagedComments() {
+      const NEWEST = [comment("c-newest", "The last word.", "working_team")];
+      const OLDER = [comment("c-older", "The first word.", "working_team")];
+      const cursors: (string | null)[] = [];
+      const handler = (call: StubCall): Response | undefined => {
+        if (call.url.pathname === "/api/v1/comments/mention-candidates") {
+          return json(200, { candidates: [] });
+        }
+        if (call.url.pathname === "/api/v1/comments/unread") return json(200, { unread: 0 });
+        if (call.url.pathname === "/api/v1/comments/read") return json(200, { unread: 0 });
+        if (call.url.pathname !== "/api/v1/comments" || call.method !== "GET") return undefined;
+        const cursor = call.url.searchParams.get("cursor");
+        cursors.push(cursor);
+        return cursor === null
+          ? json(200, { comments: NEWEST, nextCursor: "c-newest" })
+          : json(200, { comments: OLDER, nextCursor: null });
+      };
+      return { handler, cursors, NEWEST, OLDER };
+    }
+
+    it("opens on the newest page and puts the older one above it", async () => {
+      const user = userEvent.setup();
+      const paged = pagedComments();
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call: StubCall) => paged.handler(call) ?? recordApi(contractRow()).handler(call),
+      });
+      renderAt("/contracts/42");
+      await openChat(user);
+
+      const panel = await screen.findByRole("complementary", { name: "Comments" });
+      expect(await within(panel).findByText("The last word.")).toBeInTheDocument();
+      expect(within(panel).queryByText("The first word.")).not.toBeInTheDocument();
+
+      await user.click(within(panel).getByRole("button", { name: "Show older" }));
+
+      // Prepended: the older comment goes above the newer one, because
+      // the thread reads oldest to newest (CMT-002).
+      const rows = await within(panel).findAllByRole("listitem");
+      expect(rows[0]).toHaveTextContent("The first word.");
+      expect(rows[1]).toHaveTextContent("The last word.");
+      expect(paged.cursors).toEqual([null, "c-newest"]);
+      // The start of the thread: the control goes with it.
+      expect(within(panel).queryByRole("button", { name: "Show older" })).not.toBeInTheDocument();
+    });
+
+    it("puts focus on the oldest comment it brought, because the thread grew above the reader", async () => {
+      const user = userEvent.setup();
+      const paged = pagedComments();
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call: StubCall) => paged.handler(call) ?? recordApi(contractRow()).handler(call),
+      });
+      renderAt("/contracts/42");
+      await openChat(user);
+
+      const panel = await screen.findByRole("complementary", { name: "Comments" });
+      await within(panel).findByText("The last word.");
+      await user.click(within(panel).getByRole("button", { name: "Show older" }));
+
+      const landed = (await within(panel).findByText("The first word.")).closest("li");
+      await waitFor(() => expect(landed).toHaveFocus());
+    });
+
+    it("keeps the control and the cursor when an older page fails", async () => {
+      const user = userEvent.setup();
+      const NEWEST = [comment("c-newest", "The last word.", "working_team")];
+      const OLDER = [comment("c-older", "The first word.", "working_team")];
+      // The first reach backwards is refused; the second is not.
+      let reached = 0;
+      const paging = (call: StubCall): Response | undefined => {
+        if (call.url.pathname === "/api/v1/comments/mention-candidates") {
+          return json(200, { candidates: [] });
+        }
+        if (call.url.pathname === "/api/v1/comments/unread") return json(200, { unread: 0 });
+        if (call.url.pathname === "/api/v1/comments/read") return json(200, { unread: 0 });
+        if (call.url.pathname !== "/api/v1/comments" || call.method !== "GET") return undefined;
+        if (call.url.searchParams.get("cursor") === null) {
+          return json(200, { comments: NEWEST, nextCursor: "c-newest" });
+        }
+        reached += 1;
+        return reached === 1
+          ? problem(503, "The thread is not available.")
+          : json(200, { comments: OLDER, nextCursor: null });
+      };
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call: StubCall) => paging(call) ?? recordApi(contractRow()).handler(call),
+      });
+      renderAt("/contracts/42");
+      await openChat(user);
+
+      const panel = await screen.findByRole("complementary", { name: "Comments" });
+      await within(panel).findByText("The last word.");
+      await user.click(within(panel).getByRole("button", { name: "Show older" }));
+
+      // The failure is spoken beside the control, and the control stays
+      // — a thread that swallowed its cursor would strand the reader at
+      // the newest page with no way back.
+      expect(await within(panel).findByRole("alert")).toHaveTextContent(
+        "The earlier comments could not be read. Try again.",
+      );
+      const again = within(panel).getByRole("button", { name: "Show older" });
+      expect(within(panel).queryByText("The first word.")).not.toBeInTheDocument();
+
+      await user.click(again);
+
+      const rows = await within(panel).findAllByRole("listitem");
+      expect(rows[0]).toHaveTextContent("The first word.");
+      expect(rows[1]).toHaveTextContent("The last word.");
+    });
+
+    it("draws no control at all when the first page is the whole thread", async () => {
+      const user = userEvent.setup();
+      const comments = commentsApi([comment("c1", "Only this.", "working_team")]);
+      stubApi({ signedIn: MEMBER, extra: pageApi(comments) });
+      renderAt("/contracts/42");
+      await openChat(user);
+
+      const panel = await screen.findByRole("complementary", { name: "Comments" });
+      expect(await within(panel).findByText("Only this.")).toBeInTheDocument();
+      expect(within(panel).queryByRole("button", { name: "Show older" })).not.toBeInTheDocument();
     });
   });
 });
@@ -3682,6 +3816,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       if (pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
         return json(200, {
           documents: paper(call.url.searchParams.get("includeArchived") === "true"),
+          nextCursor: null,
         });
       }
       if (pathname === "/api/v1/contracts/42/documents" && call.method === "POST") {
@@ -3732,7 +3867,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
         writes.push({ url: pathname, body: call.body });
         if (options.designationFails) return problem(409, options.designationFails);
         current = current.map((row) => ({ ...row, isPrimary: row.id === named[1] }));
-        return json(200, { documents: paper(false) });
+        return json(200, { documents: paper(false), nextCursor: null });
       }
       // DOC-010's soft delete and its undo. Both answer the one
       // document, because neither changes any other row.
@@ -3756,7 +3891,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
         writes.push({ url: `${pathname}:DELETE`, body: call.body });
         if (options.removalFails) return problem(400, options.removalFails);
         current = current.filter((row) => row.id !== erased[1]);
-        return json(200, { documents: paper(false) });
+        return json(200, { documents: paper(false), nextCursor: null });
       }
       // The executed pin (CTR-014), set and cleared at the document's
       // own address: the pin is one column on the document, and no
@@ -4235,7 +4370,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       signedIn: MEMBER,
       extra: (call) =>
         call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "GET"
-          ? json(200, { documents: [DRAFT] })
+          ? json(200, { documents: [DRAFT], nextCursor: null })
           : record.handler(call),
     });
     renderAt("/contracts/42");
@@ -4545,5 +4680,142 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       within(section).getByRole("link", { name: "Orion_MSA_2026_draft.docx" }),
     ).toBeInTheDocument();
     expect(countBadge(section, "1 document")).toBeVisible();
+  });
+});
+
+/**
+ * The bound on the record's paper and its foot (CTR-024, DES-031).
+ *
+ * A contract holds as many documents as it needs (CTR-014), so the
+ * section is paged like the contract list it hangs off — and the way to
+ * the rest is a control under the table.
+ */
+describe("the paged Documents section (CTR-024, DES-031)", () => {
+  const FIRST = {
+    id: "doc-first",
+    title: "Orion_MSA_2026_draft.docx",
+    description: null,
+    isPrimary: true,
+    archivedAt: null,
+    isConfidential: false,
+    createdBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+    createdAt: "2026-08-11T09:00:00.000Z",
+    updatedAt: "2026-08-11T09:00:00.000Z",
+    versions: [
+      {
+        id: "ver-first",
+        versionNumber: 1,
+        kind: "draft_ours",
+        note: null,
+        originalFilename: "Orion_MSA_2026_draft.docx",
+        mimeType: "text/plain",
+        byteSize: 10,
+        checksumSha256: "a".repeat(64),
+        uploadedBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+        createdAt: "2026-08-11T09:00:00.000Z",
+        isCurrent: true,
+        isExecuted: false,
+      },
+    ],
+  };
+  const SECOND = {
+    ...FIRST,
+    id: "doc-second",
+    title: "board_pack.pdf",
+    isPrimary: false,
+    versions: [{ ...FIRST.versions[0]!, id: "ver-second", originalFilename: "board_pack.pdf" }],
+  };
+
+  /** Two pages of paper, the second reached only with the first's
+   * cursor. Everything else on the record is the plain stub. */
+  function pagedPaper() {
+    const cursors: (string | null)[] = [];
+    const record = recordApi(contractRow());
+    const handler = (call: StubCall): Response | undefined => {
+      if (call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
+        const cursor = call.url.searchParams.get("cursor");
+        cursors.push(cursor);
+        return cursor === null
+          ? json(200, { documents: [FIRST], nextCursor: "doc-first" })
+          : json(200, { documents: [SECOND], nextCursor: null });
+      }
+      return record.handler(call);
+    };
+    return { handler, cursors };
+  }
+
+  it("appends the next page in place, and the count follows what is on screen", async () => {
+    const api = pagedPaper();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await screen.findByRole("region", { name: /^Documents/ });
+    expect(within(section).getByRole("link", { name: FIRST.title })).toBeInTheDocument();
+    expect(within(section).queryByRole("link", { name: SECOND.title })).not.toBeInTheDocument();
+
+    await user.click(within(section).getByRole("button", { name: "Show more" }));
+
+    expect(await within(section).findByRole("link", { name: SECOND.title })).toBeInTheDocument();
+    expect(within(section).getByRole("link", { name: FIRST.title })).toBeInTheDocument();
+    expect(api.cursors).toEqual([null, "doc-first"]);
+    // The end of the record's paper: the foot goes with it.
+    expect(within(section).queryByRole("button", { name: "Show more" })).not.toBeInTheDocument();
+    expect(within(section).getByRole("img", { name: "2 documents" })).toBeVisible();
+  });
+
+  it("puts focus on the first row it appended, and says how many followed", async () => {
+    stubApi({ signedIn: MEMBER, extra: pagedPaper().handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await screen.findByRole("region", { name: /^Documents/ });
+    await user.click(within(section).getByRole("button", { name: "Show more" }));
+
+    const landed = (await within(section).findByRole("link", { name: SECOND.title })).closest("tr");
+    await waitFor(() => expect(landed).toHaveFocus());
+    expect(within(section).getByText("1 more document. 2 shown.")).toBeInTheDocument();
+  });
+
+  it("keeps the foot and the cursor when a page fails, so the retry is the same button", async () => {
+    // The first reach for the next page is refused; the second is not.
+    let reached = 0;
+    const record = recordApi(contractRow());
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call: StubCall): Response | undefined => {
+        if (call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
+          if (call.url.searchParams.get("cursor") === null) {
+            return json(200, { documents: [FIRST], nextCursor: "doc-first" });
+          }
+          reached += 1;
+          return reached === 1
+            ? problem(503, "The documents are not available.")
+            : json(200, { documents: [SECOND], nextCursor: null });
+        }
+        return record.handler(call);
+      },
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await screen.findByRole("region", { name: /^Documents/ });
+    await within(section).findByRole("link", { name: FIRST.title });
+    await user.click(within(section).getByRole("button", { name: "Show more" }));
+
+    // The failure is spoken beside the control, and the control stays.
+    expect(await within(section).findByRole("alert")).toHaveTextContent(
+      "The documents are not available.",
+    );
+    const again = within(section).getByRole("button", { name: "Show more" });
+    // Nothing was appended, and the count still counts only what is here.
+    expect(within(section).queryByRole("link", { name: SECOND.title })).not.toBeInTheDocument();
+    expect(within(section).getByRole("img", { name: "1 document" })).toBeVisible();
+
+    await user.click(again);
+
+    expect(await within(section).findByRole("link", { name: SECOND.title })).toBeInTheDocument();
+    expect(within(section).getByRole("link", { name: FIRST.title })).toBeInTheDocument();
+    expect(within(section).getByRole("img", { name: "2 documents" })).toBeVisible();
   });
 });

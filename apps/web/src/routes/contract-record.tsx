@@ -201,6 +201,9 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     canEdit,
     contract: record.data.contract,
     documents: documents.data.documents,
+    /** Where the next page of paper starts, or null when the first page
+     * is all of it (CTR-024). */
+    documentsCursor: documents.data.nextCursor,
     fields: record.data.fields,
     customFieldRefs: record.data.customFieldRefs,
     team: record.data.team,
@@ -267,6 +270,7 @@ function ContractRecord() {
     canEdit,
     contract,
     documents: contractDocuments,
+    documentsCursor,
     fields,
     customFieldRefs,
     team,
@@ -311,6 +315,10 @@ function ContractRecord() {
    * because an upload, an appended version, and a metadata edit each
    * change it without a page re-read. */
   const [paper, setPaper] = useState<ContractDocument[]>(contractDocuments);
+  /** Where the next page of paper starts, or null at the end of it. The
+   * section pages itself; the record holds the position, because the
+   * record holds the list (CTR-024). */
+  const [paperCursor, setPaperCursor] = useState<string | null>(documentsCursor);
   /** The other side (CTR-011), primary first as the API orders it. */
   const [parties, setParties] = useState<ContractCounterparty[]>(counterparties);
   const [drafts, setDrafts] = useState<Record<TextFieldKey, string>>(() => textDrafts(contract));
@@ -1039,6 +1047,7 @@ function ContractRecord() {
               <DocumentsCard
                 contractNumber={saved.number}
                 documents={paper}
+                nextCursor={paperCursor}
                 frozen={frozen}
                 // DOC-010's erasure is the Administrator's alone, and it
                 // is the one control on this section a role decides.
@@ -1052,7 +1061,12 @@ function ContractRecord() {
                 // them on the same page.
                 viewerId={user.id}
                 ownerId={saved.manager?.id ?? null}
-                onDocuments={setPaper}
+                onDocuments={(rows, cursor) => {
+                  setPaper(rows);
+                  // `undefined` means the write changed rows without
+                  // moving the position: a metadata edit is not a page.
+                  if (cursor !== undefined) setPaperCursor(cursor);
+                }}
               />
             </div>
             <TeamCard

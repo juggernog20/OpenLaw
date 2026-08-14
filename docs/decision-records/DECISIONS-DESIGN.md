@@ -1812,6 +1812,63 @@ The scroll model is proved in `e2e/tests/05-app-shell.spec.ts`, at the layer whe
 
 M12's document panel gets its own scroll container inside the record body and inherits this contract rather than negotiating one. Any future full-height surface — a split view, a preview pane, a board — does the same: bound your own height from `main`, and never reach for the window.
 
+## DES-031: The paging foot — where it goes on a table, on a thread, and where focus lands (extends DES-026)
+
+- **Status:** Accepted
+- **Date:** 2026-08-14
+
+### Context
+
+CTR-024 bounds three lists that had no ceiling: the contract list, one record's comment thread, and one record's documents. Each now answers one page and says where the next one starts, so each needs a way to ask for the rest.
+
+DES-026 already decided that shape for the history panel: "the list ends in a secondary Button labelled 'Show older' whenever a further page exists, and in nothing when it does not", and rejected infinite scroll because a scroll sentinel is not keyboard-reachable and DES-010 requires that it be. That rejection was written about the feed, but nothing in the reasoning is feed-specific, and it holds here unchanged.
+
+What the feed's version does not answer is what these three surfaces need: a foot on a **table** rather than inside a panel, a **thread that reads oldest-first** and therefore grows at the wrong end for a foot, and **where focus goes** once fifty rows have appeared — DES-010 territory that a panel of twenty-five entries never made urgent.
+
+### Decision
+
+**1. The control is DES-026's, unchanged.** A secondary `Button`, drawn only while a further page exists, and absent — not disabled, not replaced by an end-of-list line — when the list is complete. There is no infinite scroll on any of these surfaces, for DES-026's reason.
+
+**2. On a table, the foot goes inside the card and under the table's last rule.** It is a strip with `border-t border-border-default` and the card's own `px-4 py-3`, so the table's bottom rule becomes the foot's top rule and no second rule appears. The card keeps its rounded corners; the strip is what the corner now rounds. **The horizontal scroll moves off the card and onto the table**, because a foot that could slide sideways out of view is a control the reader has to hunt for.
+
+**3. On the comment thread the control goes at the head, and the words are "Show older".** The thread reads oldest to newest (CMT-002) and pages backwards from the newest end (CTR-024), so the older conversation belongs above what is on screen — and a control belongs where what it fetches will land. It takes the same strip treatment, with `border-b` instead of `border-t`.
+
+**4. Focus moves to the first row of the page just brought.** On a table that is the first appended `tr`; on the thread it is the oldest prepended `li`. The row takes `tabIndex={-1}` **only while it is the landing row**, so a list of fifty never becomes fifty tab stops.
+
+- It is one rule for both directions and it never drops focus, which keeping focus on the button cannot claim: the button is absent on the press that ends the list, and focus on a removed element falls to the body.
+- It is also the honest answer to what the press did. The reader asked for rows; the rows are the answer; focus goes where the answer starts. On the thread it is load-bearing rather than merely tidy — the conversation grew _above_ the reader, and without the move nothing tells them so.
+
+**5. A polite live region says how many arrived and how many are on screen** — "1 more contract. 2 shown." It is `sr-only` and it sits outside the list, because a reader who cannot see the rows appear gets the count from nowhere else. The thread needs none: focus lands on the oldest new comment and reading continues from there.
+
+**6. A failed page is said beside the control, and the control stays.** DES-026's rule for the feed's two failure states, applied unchanged: the retry is the button already under the reader's hand.
+
+**7. The list's count says what is on screen whenever that is not the whole list.** The contracts sub-bar reads "50 contracts shown" while a cursor remains, and "N contracts" when the page is the list. There is no total to state (CTR-024), and a bare "50 contracts" over a list of three hundred is a number the page cannot stand behind.
+
+**8. The empty state is untouched.** A list with nothing in it has no page to ask for, so no foot is drawn and the module's own empty state is what the reader sees.
+
+### Rationale
+
+Putting the foot inside the card is what makes it read as part of the list rather than as a page action. A button floating below the card would sit in the same place a "Create contract" or a "Save" would, and the reader has to tell "there is more of this list" from "do something to this list" at a glance.
+
+The focus rule is the one part of this that is not simply DES-026 restated, and it is the part that decides whether the surface is usable without a mouse. A keyboard user who presses "Show more" and is left where they were has no way to know anything happened, and a screen-reader user gets silence. Moving focus and announcing the count answer the same question in the two modalities, so both are here.
+
+Naming the thread's control "Show older" rather than "Show more" is not cosmetic: it is the feed's own word for the same act, and on a thread the direction is the fact the reader needs.
+
+### Alternatives considered
+
+- **Infinite scroll.** Rejected, in DES-026's own words: a scroll sentinel is not keyboard-reachable, and DES-010 requires that affordances are.
+- **Keeping focus on the button.** Rejected: it is fine until the press that ends the list, where the button unmounts and focus falls to the body. Two rules where one will do, and the one that fails is the last press of every list.
+- **Replacing the button with an "That is all" end line and moving focus there.** Rejected: it contradicts DES-026's absent end state, and it adds a line whose only content is the absence of a control.
+- **A foot on the thread as well, matching the tables.** Rejected: the thread pages backwards, so a foot would fetch content that lands above it and scroll the reader away from the press.
+- **Numbered pages.** Rejected upstream — CTR-024 answers no total, and numbered pages need one.
+- **Stating a total beside "shown".** Rejected: the same number CTR-024 refuses, wearing a different label.
+
+### Consequences
+
+`ContractsTable` takes a `foot` slot and a landing row; the Documents section and the comment thread carry their own. Three new messages per surface — the control, the failure, and the live-region sentence — and one new plural form for the contracts count. No new tokens: the strip is `border-border-default` on the card's own surface, and the control is the shipped secondary `Button`.
+
+Every list bounded after this inherits the foot rather than inventing one, and any surface that pages backwards inherits the head placement with it. M12's document panel is the first that will.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -1846,3 +1903,4 @@ M12's document panel gets its own scroll container inside the record body and in
 | DES-028 | The confidential record page — the Tier 2 banner and the flag control (extends DES-009)                                                                              | Accepted |
 | DES-029 | The confidential marker and the composer notice — DES-009's Tier 1 and Tier 3                                                                                        | Accepted |
 | DES-030 | The shell scroll model — one viewport tall, and `main` owns the scroll                                                                                               | Accepted |
+| DES-031 | The paging foot — table placement, the thread's head control, and where focus lands (extends DES-026)                                                                | Accepted |
