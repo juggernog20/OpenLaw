@@ -87,7 +87,7 @@ export type ActivityAction =
   // a comment keeps its own verb from taking it back: an edit and a
   // delete are the author's acts, and a redact is an Administrator's.
   | `comment.${"posted" | "edited" | "deleted" | "redacted"}`
-  // The record's paper (M11/2, M11/3, M11/4, DD-017). The entry hangs off the
+  // The record's paper (M11/2, M11/3, M11/4, M11/5, DD-017). The entry hangs off the
   // owning contract, not off the document: access to a document is the
   // owning record's access and nothing else (DOC-008), so its story
   // belongs in that record's feed. The payload names the document,
@@ -114,6 +114,19 @@ export type ActivityAction =
   | "document.primary_set"
   | "document.executed_set"
   | "document.executed_cleared"
+  // DOC-010's two removals (M11/5), and they are not two names for one
+  // act. Archiving hides a wrong upload and destroys nothing; restoring
+  // is its undo; hard deletion is the Administrator's lawful erasure and
+  // it takes the version rows and the stored files with it. Three verbs,
+  // because an auditor asked "what happened to that file" must be able
+  // to tell "it was taken off the list" from "it no longer exists".
+  //
+  // The hard-deletion entry is the reason every payload in this module
+  // carries the document's title: the entry outlives the row, so it is
+  // the only place left that says what was erased.
+  | "document.archived"
+  | "document.restored"
+  | "document.hard_deleted"
   | "sso_provider.registered"
   | "sso_provider.updated"
   // Data leaving the system (M9/7, DD-017). An export is a security

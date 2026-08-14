@@ -983,7 +983,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The paper on one contract (DOC-008), newest first, each with its whole version chain in order 1..n and one version of it marked current. Exactly one document is marked primary — the instrument the contract is — and any version the team has pinned as the signed copy is marked executed. A contract holds as many documents as it needs: a loose attachment such as a schedule or a certificate is its own document with its own chain, beside the main instrument rather than inside its history (CTR-014). Access is inherited from the contract and nothing else: a Contributor on the team reads the list, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist */
+    /** The paper on one contract (DOC-008), newest first, each with its whole version chain in order 1..n and one version of it marked current. Exactly one document is marked primary — the instrument the contract is — and any version the team has pinned as the signed copy is marked executed. A contract holds as many documents as it needs: a loose attachment such as a schedule or a certificate is its own document with its own chain, beside the main instrument rather than inside its history (CTR-014). Access is inherited from the contract and nothing else: a Contributor on the team reads the list, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. Archived documents (DOC-010) are left out; includeArchived=true draws them beside the live ones, which is where restoring one is offered */
     get: operations["listContractDocuments"];
     put?: never;
     /** Upload a file to a contract, creating a document with version 1 (DOC-001). Any file type is accepted (DOC-004); the ceiling is the deployment's MAX_UPLOAD_MB, and a file over it is refused rather than stored. The version row records the original filename, the declared MIME type, the byte size the server counted, and the SHA-256 it computed while streaming. The blob is written through the storage adapter before the rows commit (DOC-012). The first document uploaded to a contract becomes its primary document — the instrument the contract is (CTR-014) — and every one after it is a loose attachment until somebody moves the designation. Appends document.created on the owning contract, and document.primary_set beside it when the designation was taken (DD-017). The kind and note fields must be sent before the file part. An archived contract takes no new paper until it is restored. A contract the uploader cannot reach answers 404, exactly as one that does not exist */
@@ -1021,7 +1021,8 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
-    delete?: never;
+    /** Destroy a whole document — the lawful-erasure answer (DOC-010). It removes the document row, every version row under it, and every stored blob those versions name, through the storage adapter. It is whole-document by design: there is no route that deletes one version, because a chain somebody can cut pieces out of is not negotiation history (DOC-001), so the whole document goes or nothing does. It takes a typed confirmation: confirmTitle must be the document's own title, exactly. It is the Administrator's alone; every other role is refused 403, a Contributor and a Legal Team Member alike. The activity and audit entries written before it survive it and still name what was deleted, and the erasure appends document.hard_deleted beside them (DD-017) — the record stays accountable after the files are gone. It reaches an archived contract too, because erasure is compelled from outside the record and a frozen record is not a place to hide from it. A document on a contract the Administrator cannot reach answers 404 */
+    delete: operations["hardDeleteDocument"];
     options?: never;
     head?: never;
     /** Rename a document or edit its description (DOC-007), one field per request as DES-017 commits them. The stored files are untouched by either: a version's own filename is what it arrived as and stays that, and a download still offers it back. Appends document.updated on the owning contract (DD-017), naming what changed. An archived contract takes no edit until it is restored. A document on a contract the editor cannot reach answers 404, exactly as one that does not exist */
@@ -1058,6 +1059,40 @@ export interface paths {
     post: operations["setExecutedDocumentVersion"];
     /** Take the executed pin off this document (CTR-014). Every version is left exactly as it was — the pin is one column on the document, and clearing it says the record has no signed copy, never that a file changed or went away. Appends document.executed_cleared on the owning contract (DD-017). An Administrator or a Legal Team Member who reaches the contract may clear it; a Contributor on the team reads the record and is refused 403 (DD-015). An archived contract keeps its pin until it is restored. A document on a contract the actor cannot reach answers 404, exactly as one that does not exist */
     delete: operations["clearExecutedDocumentVersion"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/{documentId}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Archive a document (DOC-010's soft delete, for the wrong upload): it leaves the record's document list and its count, and nothing is destroyed. The row stays, the whole version chain stays, and every stored file stays — restoring it puts it back, so a wrong archive is a two-second fix. It is not the erasure path: that is the Administrator's hard delete, which leaves no row at all. Appends document.archived on the owning contract (DD-017). An Administrator or a Legal Team Member who reaches the contract may archive; a Contributor on the team reads the record and is refused 403, because their write grid arrives with M23 (DD-015). An archived contract keeps its paper as it stands until it is restored. A document on a contract the actor cannot reach answers 404, exactly as one that does not exist */
+    post: operations["archiveDocument"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/{documentId}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Restore an archived document (DOC-010): it rejoins the record's document list and its count exactly as it was. Nothing had to be rebuilt, because archiving destroyed nothing — the chain, the notes, and the two CTR-014 designations come back with it. Appends document.restored on the owning contract (DD-017). An Administrator or a Legal Team Member who reaches the contract may restore; a Contributor on the team is refused 403 (DD-015). An archived contract is restored first, because a frozen record takes no change to its paper. A document on a contract the actor cannot reach answers 404, exactly as one that does not exist */
+    post: operations["restoreDocument"];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -5276,7 +5311,9 @@ export interface operations {
   };
   listContractDocuments: {
     parameters: {
-      query?: never;
+      query?: {
+        includeArchived?: "true" | "false";
+      };
       header?: never;
       path: {
         number: number;
@@ -5318,6 +5355,7 @@ export interface operations {
                 isCurrent: boolean;
                 isExecuted: boolean;
               }[];
+              archivedAt: string | null;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -5404,6 +5442,7 @@ export interface operations {
                 isCurrent: boolean;
                 isExecuted: boolean;
               }[];
+              archivedAt: string | null;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -5490,6 +5529,7 @@ export interface operations {
                 isCurrent: boolean;
                 isExecuted: boolean;
               }[];
+              archivedAt: string | null;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -5501,6 +5541,82 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  hardDeleteDocument: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        documentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          confirmTitle: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documents: {
+              id: string;
+              title: string;
+              description: string | null;
+              isPrimary: boolean;
+              versions: {
+                id: string;
+                versionNumber: number;
+                /** @enum {string} */
+                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                note: string | null;
+                originalFilename: string;
+                mimeType: string;
+                byteSize: number;
+                checksumSha256: string;
+                uploadedBy: {
+                  id: string;
+                  displayName: string;
+                  image: string | null;
+                  archived: boolean;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                isCurrent: boolean;
+                isExecuted: boolean;
+              }[];
+              archivedAt: string | null;
+              createdBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
           };
         };
       };
@@ -5566,6 +5682,7 @@ export interface operations {
                 isCurrent: boolean;
                 isExecuted: boolean;
               }[];
+              archivedAt: string | null;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -5635,6 +5752,7 @@ export interface operations {
                 isCurrent: boolean;
                 isExecuted: boolean;
               }[];
+              archivedAt: string | null;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -5710,6 +5828,7 @@ export interface operations {
                 isCurrent: boolean;
                 isExecuted: boolean;
               }[];
+              archivedAt: string | null;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -5779,6 +5898,147 @@ export interface operations {
                 isCurrent: boolean;
                 isExecuted: boolean;
               }[];
+              archivedAt: string | null;
+              createdBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  archiveDocument: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        documentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            document: {
+              id: string;
+              title: string;
+              description: string | null;
+              isPrimary: boolean;
+              versions: {
+                id: string;
+                versionNumber: number;
+                /** @enum {string} */
+                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                note: string | null;
+                originalFilename: string;
+                mimeType: string;
+                byteSize: number;
+                checksumSha256: string;
+                uploadedBy: {
+                  id: string;
+                  displayName: string;
+                  image: string | null;
+                  archived: boolean;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                isCurrent: boolean;
+                isExecuted: boolean;
+              }[];
+              archivedAt: string | null;
+              createdBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  restoreDocument: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        documentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            document: {
+              id: string;
+              title: string;
+              description: string | null;
+              isPrimary: boolean;
+              versions: {
+                id: string;
+                versionNumber: number;
+                /** @enum {string} */
+                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                note: string | null;
+                originalFilename: string;
+                mimeType: string;
+                byteSize: number;
+                checksumSha256: string;
+                uploadedBy: {
+                  id: string;
+                  displayName: string;
+                  image: string | null;
+                  archived: boolean;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                isCurrent: boolean;
+                isExecuted: boolean;
+              }[];
+              archivedAt: string | null;
               createdBy: {
                 id: string;
                 displayName: string;

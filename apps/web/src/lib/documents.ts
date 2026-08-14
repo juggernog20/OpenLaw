@@ -5,7 +5,8 @@
  * reads: the row shape the API answers, the chain split into the version
  * that matters now and the ones it supersedes, the address a download is
  * fetched from, and the calls the section makes — the two uploads, the
- * metadata edit, and the two CTR-014 designations.
+ * metadata edit, the two CTR-014 designations, and DOC-010's two
+ * removals.
  *
  * The two uploads do not go through the generated client.
  * `openapi-fetch` types a `format: binary` field as a string, and the
@@ -209,6 +210,75 @@ export async function clearExecutedVersion(documentId: string): Promise<UploadOu
     params: { path: { documentId } },
   });
   return data ? { ok: true, document: data.document } : { ok: false, detail: problemDetail(error) };
+}
+
+/**
+ * Reads one contract's paper.
+ *
+ * The record page loads the live list with everything else, so this is
+ * the re-read the archived view needs: the archived rows only exist
+ * server-side, and coming back to the live view should not trust a
+ * stale list either.
+ */
+export async function readContractDocuments(
+  contractNumber: number,
+  includeArchived: boolean,
+): Promise<PaperOutcome> {
+  const { data, error } = await api.GET("/api/v1/contracts/{number}/documents", {
+    params: {
+      path: { number: contractNumber },
+      query: includeArchived ? { includeArchived: "true" } : {},
+    },
+  });
+  return data
+    ? { ok: true, documents: data.documents }
+    : { ok: false, detail: problemDetail(error) };
+}
+
+/**
+ * Archives a document (DOC-010's soft delete), the answer to the wrong
+ * upload.
+ *
+ * It destroys nothing: the row, the whole chain, and every stored file
+ * stay exactly where they were, so restoring it is the undo and there is
+ * nothing to warn anybody about.
+ */
+export async function archiveDocument(documentId: string): Promise<UploadOutcome> {
+  const { data, error } = await api.POST("/api/v1/documents/{documentId}/archive", {
+    params: { path: { documentId } },
+  });
+  return data ? { ok: true, document: data.document } : { ok: false, detail: problemDetail(error) };
+}
+
+/** Puts an archived document back on the record's list and in its
+ * count, exactly as it was. */
+export async function restoreDocument(documentId: string): Promise<UploadOutcome> {
+  const { data, error } = await api.POST("/api/v1/documents/{documentId}/restore", {
+    params: { path: { documentId } },
+  });
+  return data ? { ok: true, document: data.document } : { ok: false, detail: problemDetail(error) };
+}
+
+/**
+ * Destroys a whole document — the Administrator's lawful-erasure path
+ * (DOC-010).
+ *
+ * `confirmTitle` is DOC-010's typed confirmation, and the seam checks it
+ * rather than trusting the dialog: it must be the document's own title,
+ * exactly. It answers the record's whole paper, because the erasure may
+ * also have taken the instrument, and no other row inherits that mark.
+ */
+export async function hardDeleteDocument(
+  documentId: string,
+  confirmTitle: string,
+): Promise<PaperOutcome> {
+  const { data, error } = await api.DELETE("/api/v1/documents/{documentId}", {
+    params: { path: { documentId } },
+    body: { confirmTitle },
+  });
+  return data
+    ? { ok: true, documents: data.documents }
+    : { ok: false, detail: problemDetail(error) };
 }
 
 /** One field off a parsed JSON body, without asserting its shape. */

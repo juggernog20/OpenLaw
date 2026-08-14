@@ -3486,7 +3486,7 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
  * CTR-014 designations: which document is the instrument, and which of
  * its versions is the signed copy.
  */
-describe("the contract record's Documents section (M11/2, M11/3, M11/4)", () => {
+describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)", () => {
   /** One version of a chain, as the API answers it. */
   const version = (over: Record<string, unknown> = {}) => ({
     id: "ver-1",
@@ -3513,6 +3513,8 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4)", () => 
     /** The first document uploaded is the instrument (CTR-014). */
     isPrimary: true,
     versions: [version()],
+    /** On the record's list and in its count (DOC-010). */
+    archivedAt: null,
     createdBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
     createdAt: "2026-08-11T09:00:00.000Z",
     updatedAt: "2026-08-11T09:00:00.000Z",
@@ -3566,11 +3568,15 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4)", () => 
     ],
   };
 
-  /** The record stub, plus the documents read, the two uploads, and the
-   * metadata edit. */
+  /** The record stub, plus the documents read, the two uploads, the
+   * metadata edit, and DOC-010's two removals. */
   function documentsApi(
     rows: Record<string, unknown>[],
-    options: { uploadFails?: string; designationFails?: string } = {},
+    options: {
+      uploadFails?: string;
+      designationFails?: string;
+      removalFails?: string;
+    } = {},
     team = [person("u1", "creator")],
   ) {
     const record = recordApi(contractRow(), team);
@@ -3578,10 +3584,16 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4)", () => 
      * both the address and what rode in the form. */
     const writes: { url: string; body: unknown }[] = [];
     let current = rows;
+    /** The record's paper as the seam answers it: archived rows are off
+     * the list unless they were asked for (DOC-010). */
+    const paper = (includeArchived: boolean) =>
+      includeArchived ? current : current.filter((row) => row.archivedAt === null);
     const handler = (call: StubCall): Response | undefined => {
       const { pathname } = call.url;
       if (pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
-        return json(200, { documents: current });
+        return json(200, {
+          documents: paper(call.url.searchParams.get("includeArchived") === "true"),
+        });
       }
       if (pathname === "/api/v1/contracts/42/documents" && call.method === "POST") {
         writes.push({ url: pathname, body: call.body });
@@ -3631,7 +3643,31 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4)", () => 
         writes.push({ url: pathname, body: call.body });
         if (options.designationFails) return problem(409, options.designationFails);
         current = current.map((row) => ({ ...row, isPrimary: row.id === named[1] }));
-        return json(200, { documents: current });
+        return json(200, { documents: paper(false) });
+      }
+      // DOC-010's soft delete and its undo. Both answer the one
+      // document, because neither changes any other row.
+      const removed = /^\/api\/v1\/documents\/([^/]+)\/(archive|restore)$/.exec(pathname);
+      if (removed && call.method === "POST") {
+        writes.push({ url: `${pathname}`, body: call.body });
+        if (options.removalFails) return problem(409, options.removalFails);
+        const target = current.find((row) => row.id === removed[1]);
+        if (!target) return problem(404, "No document exists with this reference.");
+        const next = {
+          ...target,
+          archivedAt: removed[2] === "archive" ? "2026-08-14T10:00:00.000Z" : null,
+        };
+        current = current.map((row) => (row === target ? next : row));
+        return json(200, { document: next });
+      }
+      // The Administrator's erasure. It answers the record's whole
+      // paper, because the instrument may have gone with it.
+      const erased = /^\/api\/v1\/documents\/([^/]+)$/.exec(pathname);
+      if (erased && call.method === "DELETE") {
+        writes.push({ url: `${pathname}:DELETE`, body: call.body });
+        if (options.removalFails) return problem(400, options.removalFails);
+        current = current.filter((row) => row.id !== erased[1]);
+        return json(200, { documents: paper(false) });
       }
       // The executed pin (CTR-014), set and cleared at the document's
       // own address: the pin is one column on the document, and no
@@ -3678,6 +3714,36 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4)", () => 
   ) {
     await user.click(within(section).getByRole("button", { name }));
     return screen.findByRole("dialog");
+  }
+
+  /**
+   * One act from a document row's overflow menu.
+   *
+   * Everything a viewer may do to a document lives behind one trigger
+   * (DES-025's pattern), so a test reaches it the way a person does:
+   * open the row's menu, then pick the verb.
+   */
+  async function act(
+    user: ReturnType<typeof userEvent.setup>,
+    section: HTMLElement,
+    title: string,
+    verb: string,
+  ) {
+    await user.click(within(section).getByRole("button", { name: `Actions for ${title}` }));
+    await user.click(await screen.findByRole("menuitem", { name: verb }));
+  }
+
+  /** The verbs one document row's menu offers this viewer. */
+  async function menuVerbs(
+    user: ReturnType<typeof userEvent.setup>,
+    section: HTMLElement,
+    title: string,
+  ): Promise<string[]> {
+    await user.click(within(section).getByRole("button", { name: `Actions for ${title}` }));
+    const menu = await screen.findByRole("menu");
+    return within(menu)
+      .getAllByRole("menuitem")
+      .map((item) => item.textContent ?? "");
   }
 
   it("draws the section with a count of the paper on the record", async () => {
@@ -3828,7 +3894,8 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4)", () => 
     const user = userEvent.setup();
 
     const section = await documentsSection();
-    const dialog = await compose(user, section, "Add a version to Orion_MSA_2026_draft.docx");
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Add version");
+    const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByRole("heading", { name: "Add version" })).toBeVisible();
     await user.upload(
       within(dialog).getByLabelText("File"),
@@ -3856,7 +3923,8 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4)", () => 
     const user = userEvent.setup();
 
     const section = await documentsSection();
-    const dialog = await compose(user, section, "Edit the details of Orion_MSA_2026_draft.docx");
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Edit details");
+    const dialog = await screen.findByRole("dialog");
     const name = within(dialog).getByLabelText("Name");
     await user.clear(name);
     await user.type(name, "Orion Cloud — MSA");
@@ -3882,7 +3950,8 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4)", () => 
     const user = userEvent.setup();
 
     const section = await documentsSection();
-    const dialog = await compose(user, section, "Edit the details of Orion_MSA_2026_draft.docx");
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Edit details");
+    const dialog = await screen.findByRole("dialog");
     await user.clear(within(dialog).getByLabelText("Name"));
     await user.click(within(dialog).getByRole("button", { name: "Save" }));
 
@@ -3913,22 +3982,20 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4)", () => 
   it("marks the document the record calls its instrument", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT, THEIRS]).handler });
     renderAt("/contracts/42");
+    const user = userEvent.setup();
 
     const section = await documentsSection();
     // One mark on the record, on the row it is about.
     expect(within(section).getAllByText("Primary")).toHaveLength(1);
-    // And no control offered on the row that already holds it: absent,
-    // not disabled, and the mark beside the name is what says why.
-    expect(
-      within(section).queryByRole("button", {
-        name: "Make Orion_MSA_2026_draft.docx the primary document",
-      }),
-    ).not.toBeInTheDocument();
-    expect(
-      within(section).getByRole("button", {
-        name: "Make Orion_MSA_2026_redline_orion.docx the primary document",
-      }),
-    ).toBeVisible();
+    // And no act offered on the row that already holds it: absent, not
+    // disabled, and the mark beside the name is what says why.
+    expect(await menuVerbs(user, section, "Orion_MSA_2026_draft.docx")).not.toContain(
+      "Make primary",
+    );
+    await user.keyboard("{Escape}");
+    expect(await menuVerbs(user, section, "Orion_MSA_2026_redline_orion.docx")).toContain(
+      "Make primary",
+    );
   });
 
   it("moves the designation to another document on the record", async () => {
@@ -3938,11 +4005,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4)", () => 
     const user = userEvent.setup();
 
     const section = await documentsSection();
-    await user.click(
-      within(section).getByRole("button", {
-        name: "Make Orion_MSA_2026_redline_orion.docx the primary document",
-      }),
-    );
+    await act(user, section, "Orion_MSA_2026_redline_orion.docx", "Make primary");
 
     await waitFor(() => expect(api.writes).toHaveLength(1));
     expect(api.writes[0]!.url).toBe("/api/v1/documents/doc-2/primary");
@@ -3950,11 +4013,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4)", () => 
     // section redraws from the whole list the seam answered with, so
     // the row that lost the designation is not left claiming it.
     await waitFor(() => expect(within(section).getAllByText("Primary")).toHaveLength(1));
-    expect(
-      await within(section).findByRole("button", {
-        name: "Make Orion_MSA_2026_draft.docx the primary document",
-      }),
-    ).toBeVisible();
+    expect(await menuVerbs(user, section, "Orion_MSA_2026_draft.docx")).toContain("Make primary");
   });
 
   it("pins a superseded round as the executed copy, and clears it again", async () => {
@@ -4031,11 +4090,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4)", () => 
     const user = userEvent.setup();
 
     const section = await documentsSection();
-    await user.click(
-      within(section).getByRole("button", {
-        name: "Make Orion_MSA_2026_redline_orion.docx the primary document",
-      }),
-    );
+    await act(user, section, "Orion_MSA_2026_redline_orion.docx", "Make primary");
 
     expect(
       await within(section).findByText("That document is already the contract's primary document."),
@@ -4068,14 +4123,9 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4)", () => 
     // convention every other card on this page follows. Their write
     // grid arrives in M23.
     expect(within(section).queryByRole("button", { name: "Upload" })).not.toBeInTheDocument();
-    expect(
-      within(section).queryByRole("button", { name: /^Add a version/ }),
-    ).not.toBeInTheDocument();
-    expect(
-      within(section).queryByRole("button", { name: /^Edit the details/ }),
-    ).not.toBeInTheDocument();
-    expect(within(section).queryByRole("button", { name: /^Make / })).not.toBeInTheDocument();
+    expect(within(section).queryByRole("button", { name: /^Actions for/ })).not.toBeInTheDocument();
     expect(within(section).queryByRole("button", { name: /^Pin version/ })).not.toBeInTheDocument();
+    expect(within(section).queryByRole("switch")).not.toBeInTheDocument();
   });
 
   it("freezes the section's controls on an archived record", async () => {
@@ -4091,18 +4141,166 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4)", () => 
 
     const section = await documentsSection();
     expect(within(section).queryByRole("button", { name: "Upload" })).not.toBeInTheDocument();
-    expect(
-      within(section).queryByRole("button", { name: /^Add a version/ }),
-    ).not.toBeInTheDocument();
-    expect(
-      within(section).queryByRole("button", { name: /^Edit the details/ }),
-    ).not.toBeInTheDocument();
-    expect(within(section).queryByRole("button", { name: /^Make / })).not.toBeInTheDocument();
+    expect(within(section).queryByRole("button", { name: /^Actions for/ })).not.toBeInTheDocument();
     expect(within(section).queryByRole("button", { name: /^Pin version/ })).not.toBeInTheDocument();
+    expect(within(section).queryByRole("switch")).not.toBeInTheDocument();
     // Reading it is not editing it: the download and the marks stay.
     expect(
       within(section).getByRole("link", { name: "Orion_MSA_2026_draft.docx" }),
     ).toBeInTheDocument();
     expect(within(section).getByText("Primary")).toBeVisible();
+  });
+
+  it("archives a document off the list and out of the count", async () => {
+    const api = documentsApi([DRAFT, THEIRS]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    expect(within(section).getByText("2")).toBeVisible();
+    // No confirmation: archiving destroys nothing, and Restore is the
+    // way back (DOC-010).
+    await act(user, section, "Orion_MSA_2026_redline_orion.docx", "Archive");
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]!.url).toBe("/api/v1/documents/doc-2/archive");
+    await waitFor(() =>
+      expect(
+        within(section).queryByRole("link", { name: "Orion_MSA_2026_redline_orion.docx" }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(within(section).getByText("1")).toBeVisible();
+  });
+
+  it("shows the archived rows on demand and restores one back onto the list", async () => {
+    const api = documentsApi([DRAFT, { ...THEIRS, archivedAt: "2026-08-13T09:00:00.000Z" }]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    // Off the list and out of the count until they are asked for.
+    expect(within(section).getByText("1")).toBeVisible();
+    expect(
+      within(section).queryByRole("link", { name: "Orion_MSA_2026_redline_orion.docx" }),
+    ).not.toBeInTheDocument();
+
+    await user.click(within(section).getByRole("switch"));
+
+    // Drawn beside the live ones, marked for what they are, and still
+    // downloadable — nothing was destroyed.
+    const link = await within(section).findByRole("link", {
+      name: "Orion_MSA_2026_redline_orion.docx",
+    });
+    expect(link).toHaveAttribute("href", "/api/v1/documents/doc-2/versions/ver-2/download");
+    expect(within(section).getByText("Archived")).toBeVisible();
+    // The count still says what is on the record, not what is on screen.
+    expect(within(section).getByText("1")).toBeVisible();
+
+    await act(user, section, "Orion_MSA_2026_redline_orion.docx", "Restore");
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]!.url).toBe("/api/v1/documents/doc-2/restore");
+    await waitFor(() => expect(within(section).getByText("2")).toBeVisible());
+    expect(within(section).queryByText("Archived")).not.toBeInTheDocument();
+  });
+
+  it("offers an archived document its way back and nothing that would be refused", async () => {
+    const api = documentsApi([{ ...DRAFT, archivedAt: "2026-08-13T09:00:00.000Z" }]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(within(section).getByRole("switch"));
+    await within(section).findByText("Archived");
+
+    // A Legal Team Member gets the one act the seam still takes. Every
+    // other write on an archived document is refused until it is
+    // restored, so a control for one would be a dead end — and the
+    // erasure is the Administrator's, not theirs.
+    expect(await menuVerbs(user, section, "Orion_MSA_2026_draft.docx")).toEqual(["Restore"]);
+    await user.keyboard("{Escape}");
+    expect(within(section).queryByRole("button", { name: /^Pin version/ })).not.toBeInTheDocument();
+  });
+
+  it("keeps the erasure off a Legal Team Member's menu", async () => {
+    stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT]).handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    // They archive all day and destroy nothing (DOC-010). The seam
+    // refuses them regardless; the menu is what keeps a control from
+    // offering a dead end. The Administrator's own menu is asserted by
+    // the typed-confirmation test below.
+    const member = await documentsSection();
+    expect(await menuVerbs(user, member, "Orion_MSA_2026_draft.docx")).toEqual([
+      "Add version",
+      "Edit details",
+      "Archive",
+    ]);
+  });
+
+  it("takes a typed name before it destroys a document, and sends it to the seam", async () => {
+    const api = documentsApi([DRAFT, THEIRS]);
+    stubApi({ signedIn: ADMIN, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    expect(await menuVerbs(user, section, "Orion_MSA_2026_draft.docx")).toContain("Delete");
+    await user.keyboard("{Escape}");
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Delete");
+
+    const dialog = await screen.findByRole("dialog");
+    // The consequence before the verb: the chain and the stored files
+    // go, and there is no undo.
+    expect(
+      within(dialog).getByText(/Orion_MSA_2026_draft.docx and its 1 version are removed/),
+    ).toBeVisible();
+    const confirm = within(dialog).getByRole("button", {
+      name: "Delete Orion_MSA_2026_draft.docx",
+    });
+    expect(confirm).toBeDisabled();
+
+    // A near miss is not the name.
+    const box = within(dialog).getByLabelText("Type Orion_MSA_2026_draft.docx to confirm");
+    await user.type(box, "Orion_MSA_2026_draft.doc");
+    expect(confirm).toBeDisabled();
+    await user.type(box, "x");
+    await waitFor(() => expect(confirm).toBeEnabled());
+    await user.click(confirm);
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    // The typed name rides to the seam: the dialog is one half of the
+    // rule, and the seam is where it holds.
+    expect(api.writes[0]).toEqual({
+      url: "/api/v1/documents/doc-1:DELETE",
+      body: { confirmTitle: "Orion_MSA_2026_draft.docx" },
+    });
+    await waitFor(() =>
+      expect(
+        within(section).queryByRole("link", { name: "Orion_MSA_2026_draft.docx" }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(within(section).getByText("1")).toBeVisible();
+  });
+
+  it("reports the seam's own refusal when a removal is turned down", async () => {
+    const api = documentsApi([DRAFT], { removalFails: "This document is already archived." });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Archive");
+
+    expect(await within(section).findByText("This document is already archived.")).toBeVisible();
+    // Nothing moved: the section draws what the record says.
+    expect(
+      within(section).getByRole("link", { name: "Orion_MSA_2026_draft.docx" }),
+    ).toBeInTheDocument();
+    expect(within(section).getByText("1")).toBeVisible();
   });
 });

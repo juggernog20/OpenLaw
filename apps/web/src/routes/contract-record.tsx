@@ -1040,6 +1040,9 @@ function ContractRecord() {
                 contractNumber={saved.number}
                 documents={paper}
                 frozen={frozen}
+                // DOC-010's erasure is the Administrator's alone, and it
+                // is the one control on this section a role decides.
+                role={user.role}
                 onDocuments={setPaper}
               />
             </div>

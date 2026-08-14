@@ -138,7 +138,7 @@ _Queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/precedents routed
 - **Decision** — Archive (soft delete, Member+) hides from lists/search, recoverable, logged. Hard delete is Admin-only, whole-document (all versions), typed-confirmation + activity-logged — the compliance/redaction path (DD-017/MTR-008 pattern). Individual versions can never be deleted. Retention rules and legal holds stay parked (FUTURE-FEATURES).
 - **Rationale** — Chain trustworthiness requires version immutability; lawful-erasure (GDPR) requires a real hard-delete path.
 - **Alternatives considered** — Soft-only: no erasure path. Per-version delete: breaks the negotiation record.
-- **Consequences** — Matches `archived_at` on `documents`; hard delete cascades `document_versions` + stored blobs.
+- **Consequences** — Matches `archived_at` on `documents`; hard delete cascades `document_versions` + stored blobs. _Settled in M11/5: the typed confirmation is a **server** rule, not a dialog's manners — the route takes the document's own title and refuses anything else, because the dialog can be skipped and the ceremony is what stops an irreversible act happening without the actor naming its subject. The blobs are deleted **inside** the transaction that removes the rows, before it commits: a failure then rolls the rows back and a retry converges, where deleting after the commit would leave files with no row left to name them. Hard delete reaches a document on an **archived** contract, which refuses every other write on its paper — erasure is compelled from outside the record, so a frozen record is not a place to hide from it._
 
 ## DOC-011 — Bulk upload: multi-file drop + folder drop retaining structure (revises DOC-006 to nested folders)
 

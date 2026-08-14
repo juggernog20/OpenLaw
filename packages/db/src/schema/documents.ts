@@ -12,11 +12,17 @@
  * decision: the contract names the instrument, the document names its
  * signed version.
  *
+ * M11/5 adds `archived_at`, DOC-010's soft delete, and the two indexes
+ * the same step's hard delete needs on the two designation foreign
+ * keys — each on the column that holds the reference:
+ * `documents.executed_version_id` here, and
+ * `contracts.primary_document_id` beside it.
+ *
  * What is deliberately not here yet, and the step that brings it:
- * `is_confidential` (DD-014's per-document flag), `archived_at`
- * (DOC-010's soft delete), `folder_id` (DOC-006), and the version
- * chain's `source` plus the two comparison-provenance columns (M32's
- * generated redlines). Each arrives with the feature that reads it.
+ * `is_confidential` (DD-014's per-document flag), `folder_id`
+ * (DOC-006), and the version chain's `source` plus the two
+ * comparison-provenance columns (M32's generated redlines). Each
+ * arrives with the feature that reads it.
  */
 
 import { sql } from "drizzle-orm";
@@ -124,6 +130,17 @@ export const documents = pgTable(
         onDelete: "set null",
       },
     ),
+    /**
+     * DOC-010's soft delete: when this document left the record's lists
+     * and its count, or NULL while it is on them (M11/5).
+     *
+     * It answers the wrong upload, and it destroys nothing — the row
+     * stays, the chain stays, and the blobs stay, so restoring it is one
+     * write. Lawful erasure is the other removal DOC-010 gives, and it
+     * is a whole different route: Administrator-only, typed
+     * confirmation, and no row left to hold a time.
+     */
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
     // No cascade, as everywhere a record names a person: someone is
     // archived, never deleted (SET-005).
     createdBy: text("created_by")
@@ -139,6 +156,14 @@ export const documents = pgTable(
     // The one read the record page makes: this contract's documents,
     // newest first.
     index("documents_contract_idx").on(table.contractId, table.createdAt),
+    // The executed pin's own column — the referencing side of the
+    // foreign key into `document_versions` (M11/5). No read filters on
+    // it, so it carried no index until now: what needs one is DOC-010's
+    // hard delete. Removing a version row makes Postgres check every
+    // document for one pointing at it, and without an index that check
+    // is a sequential scan of `documents` per deleted version — the cost
+    // the M11/4 review parked until this step.
+    index("documents_executed_version_idx").on(table.executedVersionId),
   ],
 );
 

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The Documents section of the contract record (M11/2, M11/3, M11/4),
- * drawn from the C4 mock's list: the section heading with a count of
- * what is on the record, the upload control beside it, and one row per
- * document — name, kind, version, size, when it landed, and who put it
- * there.
+ * The Documents section of the contract record (M11/2, M11/3, M11/4,
+ * M11/5), drawn from the C4 mock's list: the section heading with a
+ * count of what is on the record, the upload control beside it, and one
+ * row per document — name, kind, version, size, when it landed, and who
+ * put it there.
  *
  * **The chain reads as a negotiation, not as a pile of files.** A
  * document's row is the version that matters now (DOC-001), marked
@@ -51,37 +51,72 @@
  * last round. Each write says saving, then saved or why not, in the
  * header's own micro-state (DES-017).
  *
+ * **Controls are split by what they are about, and the document's own
+ * go in one overflow menu** (DES-025's pattern, for its reason). The pin
+ * is a fact about a version, so it stays inline on the version's own
+ * row. Everything else — the instrument, the next round, the details,
+ * and DOC-010's two removals — is about the document, and six unlabelled
+ * glyphs on a 13px row have nowhere to sit and no way to tell an archive
+ * from an erasure. The menu is the shipped DropdownMenu on a `ghost`
+ * `icon` Button, offering what this viewer may do and nothing else —
+ * absent, not disabled, the convention the comment row already follows.
+ *
+ * **Archiving is one click and erasing is not** (DOC-010). Archive
+ * destroys nothing, so it takes no confirmation: the row leaves the list
+ * and the count, and Restore in the archived view is the two-second way
+ * back. The Administrator's hard delete takes a typed confirmation —
+ * the document's own name, typed out — because it removes the record,
+ * every round of the chain, and every stored file, and nothing puts
+ * those back.
+ *
  * Writing is Member+ (DD-015): a Contributor reads the section and
- * downloads from it, and is offered no control — absent, not disabled,
- * the convention every other card on this page follows. An archived
- * record is read the same way, because archiving freezes the record.
+ * downloads from it, and is offered no control. An archived record is
+ * read the same way, because archiving freezes the record. Erasing is
+ * the Administrator's alone, so the Delete item is drawn for nobody
+ * else.
  */
 
 import { useRef, useState } from "react";
-import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
+import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import {
+  Archive,
+  ArchiveRestore,
   ChevronDown,
   ChevronRight,
   FilePlus2,
   FileText,
+  MoreHorizontal,
   Pencil,
   Pin,
   Star,
+  Trash2,
   Upload,
 } from "lucide-react";
 import { Avatar } from "../avatar";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { Switch } from "../ui/switch";
 import { StatusNote, type FieldStatus } from "../status-note";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
 import { formatFileSize, formatShortDate } from "../../lib/format";
+import type { Role } from "../../lib/roles";
 import {
+  archiveDocument,
   chainOf,
   clearExecutedVersion,
   documentDownloadHref,
   DOCUMENT_VERSION_KINDS,
+  hardDeleteDocument,
+  readContractDocuments,
+  restoreDocument,
   setExecutedVersion,
   setPrimaryDocument,
   updateDocument,
@@ -140,6 +175,7 @@ export function DocumentsCard({
   contractNumber,
   documents,
   frozen,
+  role,
   onDocuments,
 }: Readonly<{
   /** CTR-003's reference — the address the upload route takes. */
@@ -148,6 +184,10 @@ export function DocumentsCard({
   /** The record is frozen: it is archived, or this viewer reads it
    * rather than edits it. Either way it renders as facts. */
   frozen: boolean;
+  /** The viewer's role. It answers one question the section cannot ask
+   * of the rows: whether to draw DOC-010's erasure, which is the
+   * Administrator's alone. */
+  role: Role;
   onDocuments: (documents: ContractDocument[]) => void;
 }>) {
   const intl = useIntl();
@@ -165,6 +205,22 @@ export function DocumentsCard({
   const [opened, setOpened] = useState<ReadonlySet<string>>(() => new Set());
   const [composer, setComposer] = useState<Composer | null>(null);
   const [editing, setEditing] = useState<ContractDocument | null>(null);
+  /** Whether the archived rows are drawn beside the live ones — the
+   * view restoring one is offered in (DOC-010), as the contracts list
+   * and the entity registry already do it. */
+  const [showArchived, setShowArchived] = useState(false);
+  /** The document a typed confirmation is open for, or none. */
+  const [deleting, setDeleting] = useState<ContractDocument | null>(null);
+
+  /** Erasing is the Administrator's alone (DOC-010), so nobody else is
+   * shown the item. The seam refuses everyone else regardless; this is
+   * what keeps a control from offering a dead end. */
+  const canErase = role === "administrator";
+
+  /** How much paper is on the record. Archived rows never count,
+   * whichever view is showing: being off the count is what archiving
+   * means. */
+  const liveCount = documents.filter((row) => row.archivedAt === null).length;
 
   /** A document that just changed, put back where it was. The list order
    * is the API's (newest document first), and adding a version to an
@@ -184,6 +240,43 @@ export function DocumentsCard({
   }
 
   /**
+   * The record's whole paper, as the seam just answered it.
+   *
+   * The seam answers the live list. In the archived view that is not the
+   * list on screen, so it is re-read in the view being shown rather than
+   * half-replaced — the alternative is the section quietly dropping the
+   * archived rows the moment anything else is written.
+   */
+  async function applyPaper(paper: ContractDocument[]) {
+    if (!showArchived) {
+      onDocuments(paper);
+      return;
+    }
+    const outcome = await readContractDocuments(contractNumber, true);
+    onDocuments(outcome.ok ? outcome.documents : paper);
+  }
+
+  /** The show-archived toggle. It re-reads either way: the archived rows
+   * only exist server-side, and coming back should not trust a stale
+   * list either. */
+  async function toggleArchived(next: boolean) {
+    if (busy) return;
+    setBusy(true);
+    setStatus("saving");
+    setDetail(null);
+    const outcome = await readContractDocuments(contractNumber, next);
+    setBusy(false);
+    if (!outcome.ok) {
+      setStatus("error");
+      setDetail(outcome.detail ?? null);
+      return;
+    }
+    onDocuments(outcome.documents);
+    setShowArchived(next);
+    setStatus("idle");
+  }
+
+  /**
    * Names a document the contract's instrument (CTR-014).
    *
    * The whole list comes back and the whole list is replaced: the
@@ -197,9 +290,63 @@ export function DocumentsCard({
     setStatus("saving");
     setDetail(null);
     const outcome = await setPrimaryDocument(document.id);
+    if (outcome.ok) await applyPaper(outcome.documents);
     setBusy(false);
     if (outcome.ok) {
-      onDocuments(outcome.documents);
+      setStatus("saved");
+      return;
+    }
+    setStatus("error");
+    setDetail(outcome.detail ?? null);
+  }
+
+  /**
+   * DOC-010's soft delete, and its undo.
+   *
+   * Archiving takes no confirmation, because it destroys nothing: the
+   * row leaves the list and the count, and Restore in the archived view
+   * is the way back. In the live view the archived row simply goes; in
+   * the archived view it stays where it is and takes its mark.
+   */
+  async function setArchived(document: ContractDocument, next: boolean) {
+    if (busy) return;
+    setBusy(true);
+    setStatus("saving");
+    setDetail(null);
+    const outcome = next ? await archiveDocument(document.id) : await restoreDocument(document.id);
+    setBusy(false);
+    if (!outcome.ok) {
+      setStatus("error");
+      setDetail(outcome.detail ?? null);
+      return;
+    }
+    if (next && !showArchived) {
+      onDocuments(documents.filter((row) => row.id !== document.id));
+      setDetail(null);
+      setStatus("saved");
+      return;
+    }
+    replace(outcome.document);
+  }
+
+  /**
+   * DOC-010's hard delete: the document, its whole chain, and every
+   * stored file behind it.
+   *
+   * The typed name goes to the seam rather than being checked only here.
+   * The dialog can be skipped, and the seam is where the ceremony has to
+   * hold — this is the client half of one rule, not the rule itself.
+   */
+  async function erase(document: ContractDocument, confirmTitle: string) {
+    if (busy) return;
+    setBusy(true);
+    setStatus("saving");
+    setDetail(null);
+    const outcome = await hardDeleteDocument(document.id, confirmTitle);
+    if (outcome.ok) await applyPaper(outcome.documents);
+    setBusy(false);
+    if (outcome.ok) {
+      setDeleting(null);
       setStatus("saved");
       return;
     }
@@ -254,14 +401,28 @@ export function DocumentsCard({
           {/* How much paper is on the record, without opening anything
               (story 22). The number is what the list holds — the API
               leaves out what this viewer may not see, so a count taken
-              here can never announce what was left out. */}
+              here can never announce what was left out — minus whatever
+              is archived, because being off the count is what archiving
+              a document means (DOC-010). */}
           <span className="rounded-chip bg-badge-count-bg px-1.5 py-px text-xs font-medium text-badge-count-fg">
-            {intl.formatNumber(documents.length)}
+            {intl.formatNumber(liveCount)}
           </span>
         </div>
         {!frozen && (
           <div className="flex shrink-0 items-center gap-2">
             <StatusNote status={status} detail={detail} />
+            {/* The archived view, where restoring one is offered — the
+                same control the contracts list and the entity registry
+                already carry, in the same words. */}
+            <Label htmlFor="documents-show-archived" className="text-sm font-normal text-muted">
+              <FormattedMessage id="documents.showArchived" defaultMessage="Show archived" />
+            </Label>
+            <Switch
+              id="documents-show-archived"
+              checked={showArchived}
+              disabled={busy}
+              onCheckedChange={(next) => void toggleArchived(next)}
+            />
             <Button variant="secondary" onClick={() => setComposer({ document: undefined })}>
               <Upload size={16} aria-hidden="true" />
               <FormattedMessage id="documents.upload" defaultMessage="Upload" />
@@ -305,7 +466,7 @@ export function DocumentsCard({
                   </span>
                 </th>
                 {!frozen && (
-                  <th scope="col" className="w-36 px-4 py-2 text-end font-medium">
+                  <th scope="col" className="w-24 px-4 py-2 text-end font-medium">
                     <span className="sr-only">
                       <FormattedMessage id="documents.column.actions" defaultMessage="Actions" />
                     </span>
@@ -392,6 +553,19 @@ export function DocumentsCard({
                                 <FormattedMessage id="documents.primary" defaultMessage="Primary" />
                               </span>
                             )}
+                            {/* Off the list and out of the count
+                                (DOC-010), drawn only in the archived
+                                view — the same pill the contracts list
+                                marks an archived record with, because
+                                it is the same fact one level down. */}
+                            {document.archivedAt !== null && (
+                              <span className="rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
+                                <FormattedMessage
+                                  id="documents.archivedPill"
+                                  defaultMessage="Archived"
+                                />
+                              </span>
+                            )}
                           </span>
                           {/* Two muted lines at most, and each says
                               which one it is to a reader who cannot see
@@ -430,66 +604,32 @@ export function DocumentsCard({
                     {!frozen && (
                       <td className="px-4 py-2.5">
                         <span className="flex items-center justify-end gap-1">
-                          {/* Absent on the row that already holds the
-                              designation, not disabled — the convention
-                              every card on this page follows, and the
-                              Primary mark beside the name is what says
-                              why the control is not there. There is no
-                              clear: a record with paper on it has an
-                              instrument, so the designation moves or it
-                              stays. */}
-                          {!document.isPrimary && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              disabled={busy}
-                              onClick={() => void makePrimary(document)}
-                              aria-label={intl.formatMessage(
-                                {
-                                  id: "documents.makePrimary",
-                                  defaultMessage: "Make {title} the primary document",
-                                },
-                                { title: document.title },
-                              )}
-                            >
-                              <Star size={16} aria-hidden="true" />
-                            </Button>
+                          {/* The pin is a fact about a version, so it
+                              stays on the version's own row. An archived
+                              document takes no pin — the seam refuses
+                              it — so the control is absent there rather
+                              than dead. */}
+                          {document.archivedAt === null && (
+                            <PinButton
+                              document={document}
+                              version={chain.current}
+                              busy={busy}
+                              intl={intl}
+                              onToggle={togglePin}
+                            />
                           )}
-                          <PinButton
+                          <DocumentActions
                             document={document}
-                            version={chain.current}
                             busy={busy}
+                            canErase={canErase}
                             intl={intl}
-                            onToggle={togglePin}
+                            onMakePrimary={() => void makePrimary(document)}
+                            onAddVersion={() => setComposer({ document })}
+                            onEditDetails={() => setEditing(document)}
+                            onArchive={() => void setArchived(document, true)}
+                            onRestore={() => void setArchived(document, false)}
+                            onDelete={() => setDeleting(document)}
                           />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setComposer({ document })}
-                            aria-label={intl.formatMessage(
-                              {
-                                id: "documents.addVersionFor",
-                                defaultMessage: "Add a version to {title}",
-                              },
-                              { title: document.title },
-                            )}
-                          >
-                            <FilePlus2 size={16} aria-hidden="true" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setEditing(document)}
-                            aria-label={intl.formatMessage(
-                              {
-                                id: "documents.editDetailsFor",
-                                defaultMessage: "Edit the details of {title}",
-                              },
-                              { title: document.title },
-                            )}
-                          >
-                            <Pencil size={16} aria-hidden="true" />
-                          </Button>
                         </span>
                       </td>
                     )}
@@ -540,15 +680,18 @@ export function DocumentsCard({
                                 readily as the current one: a contract
                                 signed in round two and amended in round
                                 three has its signed copy behind its
-                                head. */}
+                                head. An archived document takes none,
+                                for the reason its own row gives. */}
                             <span className="flex items-center justify-end gap-1">
-                              <PinButton
-                                document={document}
-                                version={version}
-                                busy={busy}
-                                intl={intl}
-                                onToggle={togglePin}
-                              />
+                              {document.archivedAt === null && (
+                                <PinButton
+                                  document={document}
+                                  version={version}
+                                  busy={busy}
+                                  intl={intl}
+                                  onToggle={togglePin}
+                                />
+                              )}
                             </span>
                           </td>
                         )}
@@ -582,7 +725,230 @@ export function DocumentsCard({
           }}
         />
       )}
+      {deleting && (
+        <DeleteDialog
+          document={deleting}
+          busy={busy}
+          onClose={() => setDeleting(null)}
+          onConfirm={(confirmTitle) => void erase(deleting, confirmTitle)}
+        />
+      )}
     </section>
+  );
+}
+
+/** What each menu item says, in the words DES-015 asks for: a verb, in
+ * sentence case, and no phrase where a word will do. */
+const ACTION_LABEL = {
+  makePrimary: defineMessage({
+    id: "documents.action.makePrimary",
+    defaultMessage: "Make primary",
+  }),
+  addVersion: defineMessage({ id: "documents.action.addVersion", defaultMessage: "Add version" }),
+  editDetails: defineMessage({
+    id: "documents.action.editDetails",
+    defaultMessage: "Edit details",
+  }),
+  archive: defineMessage({ id: "documents.action.archive", defaultMessage: "Archive" }),
+  restore: defineMessage({ id: "documents.action.restore", defaultMessage: "Restore" }),
+  delete: defineMessage({ id: "documents.action.delete", defaultMessage: "Delete" }),
+} as const;
+
+/**
+ * Everything a viewer may do to one document, in one overflow menu
+ * (DES-025's pattern).
+ *
+ * Six unlabelled glyphs will not fit a 13px row, and two of them would
+ * be an archive and an erasure sitting side by side — the one pair on
+ * this page where a misread is unrecoverable. The menu gives each act a
+ * verb.
+ *
+ * It offers what this viewer may do and nothing else: absent, not
+ * disabled. An archived document is offered its way back and its
+ * erasure, and nothing else — every other write on it is refused by the
+ * seam until it is restored, so a control for one would be a dead end.
+ */
+function DocumentActions({
+  document,
+  busy,
+  canErase,
+  intl,
+  onMakePrimary,
+  onAddVersion,
+  onEditDetails,
+  onArchive,
+  onRestore,
+  onDelete,
+}: Readonly<{
+  document: ContractDocument;
+  busy: boolean;
+  canErase: boolean;
+  intl: IntlShape;
+  onMakePrimary: () => void;
+  onAddVersion: () => void;
+  onEditDetails: () => void;
+  onArchive: () => void;
+  onRestore: () => void;
+  onDelete: () => void;
+}>) {
+  const archived = document.archivedAt !== null;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          disabled={busy}
+          aria-label={intl.formatMessage(
+            { id: "documents.actionsFor", defaultMessage: "Actions for {title}" },
+            { title: document.title },
+          )}
+        >
+          <MoreHorizontal size={16} aria-hidden="true" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {!archived && (
+          <>
+            {/* Absent on the row that already holds the designation —
+                the Primary mark beside the name is what says why. There
+                is no clear: a record with paper on it has an
+                instrument, so the designation moves or it stays. */}
+            {!document.isPrimary && (
+              <DropdownMenuItem onSelect={onMakePrimary}>
+                <Star size={16} aria-hidden="true" />
+                <FormattedMessage {...ACTION_LABEL.makePrimary} />
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onSelect={onAddVersion}>
+              <FilePlus2 size={16} aria-hidden="true" />
+              <FormattedMessage {...ACTION_LABEL.addVersion} />
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={onEditDetails}>
+              <Pencil size={16} aria-hidden="true" />
+              <FormattedMessage {...ACTION_LABEL.editDetails} />
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={onArchive}>
+              <Archive size={16} aria-hidden="true" />
+              <FormattedMessage {...ACTION_LABEL.archive} />
+            </DropdownMenuItem>
+          </>
+        )}
+        {archived && (
+          <DropdownMenuItem onSelect={onRestore}>
+            <ArchiveRestore size={16} aria-hidden="true" />
+            <FormattedMessage {...ACTION_LABEL.restore} />
+          </DropdownMenuItem>
+        )}
+        {canErase && (
+          <DropdownMenuItem onSelect={onDelete}>
+            <Trash2 size={16} aria-hidden="true" />
+            <FormattedMessage {...ACTION_LABEL.delete} />
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/**
+ * DOC-010's typed confirmation: the Administrator types the name of what
+ * they are destroying.
+ *
+ * Proportionate to what it takes. Archiving is one click, because it
+ * destroys nothing; this removes the record, every round of the chain,
+ * and every stored file, and there is no undo — so the dialog names the
+ * consequence before the verb and asks for the document's own name, in
+ * full, before the button will do anything (DES-025's normalization
+ * point 2 names this as the pattern DOC-010 asks for).
+ *
+ * The typed value is sent to the seam rather than only checked here: the
+ * dialog can be skipped, and the seam is where the rule has to hold.
+ */
+function DeleteDialog({
+  document,
+  busy,
+  onClose,
+  onConfirm,
+}: Readonly<{
+  document: ContractDocument;
+  busy: boolean;
+  onClose: () => void;
+  onConfirm: (confirmTitle: string) => void;
+}>) {
+  const intl = useIntl();
+  const [typed, setTyped] = useState("");
+  const matches = typed.trim() === document.title.trim();
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent aria-describedby={undefined}>
+        <DialogTitle>
+          <FormattedMessage id="documents.delete.title" defaultMessage="Delete this document?" />
+        </DialogTitle>
+        <p className="mt-4 text-base text-primary">
+          <FormattedMessage
+            id="documents.delete.body"
+            defaultMessage={
+              "{title} and its {count, plural, one {# version} other {# versions}} " +
+              "are removed, and the stored files with them. You cannot undo this."
+            }
+            values={{ title: document.title, count: document.versions.length }}
+          />
+        </p>
+        <form
+          className="mt-4 flex flex-col gap-1.5"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (matches && !busy) onConfirm(typed.trim());
+          }}
+        >
+          <Label htmlFor="document-delete-confirm">
+            <FormattedMessage
+              id="documents.delete.confirmLabel"
+              defaultMessage="Type {title} to confirm"
+              values={{ title: document.title }}
+            />
+          </Label>
+          <Input
+            id="document-delete-confirm"
+            value={typed}
+            // The viewer opened this dialog to type one thing, so the
+            // caret belongs in the box they opened it for. This is a
+            // mount inside a click handler, not a page load.
+            autoFocus
+            autoComplete="off"
+            // The filename's ceiling, not the rename field's: a title
+            // seeded from a long filename can run past 200, and the box
+            // has to be able to hold every name a document can carry —
+            // a shorter cap would leave this button disabled forever.
+            maxLength={255}
+            onChange={(event) => setTyped(event.target.value)}
+          />
+          <div className="mt-4 flex justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={onClose}>
+              <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+            </Button>
+            <Button
+              type="submit"
+              variant="danger"
+              // Disabled rather than absent, unlike every other control
+              // in this section: the button is the thing the typing is
+              // for, and taking it away would leave the box with nothing
+              // to explain it.
+              disabled={busy || !matches}
+              aria-label={intl.formatMessage(
+                { id: "documents.delete.confirmAction", defaultMessage: "Delete {title}" },
+                { title: document.title },
+              )}
+            >
+              <FormattedMessage {...ACTION_LABEL.delete} />
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
