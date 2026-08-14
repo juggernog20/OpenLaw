@@ -68,6 +68,10 @@ import {
  * refuses a longer one rather than shortening it. */
 const MAX_NOTE_LENGTH = 2000;
 
+/** What the description holds, for the note's reason: the seam refuses
+ * a longer one, so the control stops the writer at the same line. */
+const MAX_DESCRIPTION_LENGTH = 10_000;
+
 /**
  * The kind, as the C4 mock colors it: our own work reads as the calm
  * informational pair, their redline as the one that wants attention, a
@@ -770,6 +774,7 @@ function DetailsDialog({
             <textarea
               id="document-description"
               value={description}
+              maxLength={MAX_DESCRIPTION_LENGTH}
               className={TEXTAREA_CLASS}
               onChange={(event) => setDescription(event.target.value)}
             />
