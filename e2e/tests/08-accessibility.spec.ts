@@ -15,7 +15,7 @@
 
 import { test, expect } from "@playwright/test";
 import { z } from "zod";
-import { ADMIN, ensureAdminExists, reportAxeViolations, signInAs } from "./helpers.js";
+import { ADMIN, ensureAdminExists, reportAxeViolations, signInAs, sweepOrSay } from "./helpers.js";
 
 test.describe("accessibility floor", () => {
   test("login page: axe scan, title, and document language", async ({ page }, testInfo) => {
@@ -82,6 +82,11 @@ test.describe("accessibility floor", () => {
     });
     expect(invited.status()).toBe(201);
     const { user } = z.object({ user: z.object({ id: z.string() }) }).parse(await invited.json());
+
+    const leaveInert = async () => {
+      await page.request.delete(`/api/v1/auth/invites/${user.id}`);
+    };
+
     try {
       const archived = await page.request.post(`/api/v1/users/${user.id}/archive`);
       expect(archived.ok()).toBe(true);
@@ -97,9 +102,11 @@ test.describe("accessibility floor", () => {
       await reportAxeViolations(page, testInfo, "settings-users-archived", {
         disableRules: ["color-contrast"],
       });
-    } finally {
-      await page.request.delete(`/api/v1/auth/invites/${user.id}`);
+    } catch (error) {
+      await sweepOrSay("the archived-rows axe scan", leaveInert);
+      throw error;
     }
+    await leaveInert();
   });
 
   test("reduced motion degrades transitions to instant", async ({ page }) => {
