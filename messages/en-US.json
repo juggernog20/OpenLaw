@@ -1019,6 +1019,9 @@
   "docPanel.pdf.pageOf": {
     "defaultMessage": "Page {page} of {total}"
   },
+  "docPanel.pdf.pages": {
+    "defaultMessage": "{filename}, page {page} of {total}"
+  },
   "docPanel.pdf.previousPage": {
     "defaultMessage": "Previous page"
   },
