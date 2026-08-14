@@ -919,7 +919,11 @@ function DeleteDialog({
             // mount inside a click handler, not a page load.
             autoFocus
             autoComplete="off"
-            maxLength={200}
+            // The filename's ceiling, not the rename field's: a title
+            // seeded from a long filename can run past 200, and the box
+            // has to be able to hold every name a document can carry —
+            // a shorter cap would leave this button disabled forever.
+            maxLength={255}
             onChange={(event) => setTyped(event.target.value)}
           />
           <div className="mt-4 flex justify-end gap-2">

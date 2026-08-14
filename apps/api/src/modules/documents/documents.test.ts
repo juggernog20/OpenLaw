@@ -1925,6 +1925,23 @@ describe("the Administrator's hard delete", () => {
     expect(await paper(adminCookies, contract.number, true)).toEqual([]);
   });
 
+  it("takes a title as long as a filename can be, so no document is beyond erasing", async () => {
+    // A title is seeded from the uploaded filename, and a filename may
+    // run to 255 characters — past what a rename may set. The typed
+    // confirmation has to be able to say that whole name, or the
+    // longest-named documents would be the ones the lawful-erasure path
+    // cannot reach.
+    const contract = await newContract("Orion Cloud — the longest name");
+    const filename = `${"a".repeat(251)}.pdf`;
+    const document = await uploaded(adminCookies, contract.number, { filename });
+    expect(document.title).toBe(filename);
+
+    const res = await hardDelete(adminCookies, document.id, filename);
+
+    expect(res.statusCode, res.body).toBe(200);
+    expect(await paper(adminCookies, contract.number, true)).toEqual([]);
+  });
+
   it("is refused for every role except Administrator", async () => {
     const contract = await newContract("Orion Cloud — not yours to destroy");
     await putOnTeam(contract.number, idOf(MEMBER), "member");

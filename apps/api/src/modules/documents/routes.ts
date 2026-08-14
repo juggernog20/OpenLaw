@@ -282,9 +282,15 @@ const MetadataPatch = z.object({
  * subject. Comparison is exact after trimming: a near-miss is refused
  * rather than accepted, because "close enough" is not a thing to say
  * about an erasure.
+ *
+ * Bounded by the filename's ceiling, not the title patch's. A title is
+ * seeded from the uploaded filename, which may run to
+ * `MAX_FILENAME_LENGTH` — longer than `TitleSchema` allows a rename to
+ * set. The confirmation must be able to say every title a document can
+ * actually hold, or a long-named document could never be erased at all.
  */
 const HardDeleteBody = z.object({
-  confirmTitle: TitleSchema,
+  confirmTitle: z.string().trim().min(1).max(MAX_FILENAME_LENGTH),
 });
 
 /** What a hard delete answers: the whole record's paper, as it stands

@@ -10025,7 +10025,7 @@
                   "confirmTitle": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 200
+                    "maxLength": 255
                   }
                 },
                 "required": ["confirmTitle"]
