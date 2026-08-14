@@ -8,11 +8,11 @@
  * (TECH-014). SCHEMA.md is the naming reference for the rest.
  *
  * What is deliberately not here yet, and the step that brings it:
- * `description` and the rename path, `executed_version_id` (the CTR-014
- * pin), `is_confidential` (DD-014's per-document flag), `archived_at`
- * (DOC-010's soft delete), `folder_id` (DOC-006), and the version
- * chain's `source` plus the two comparison-provenance columns (M32's
- * generated redlines). Each arrives with the feature that reads it.
+ * `executed_version_id` (the CTR-014 pin), `is_confidential` (DD-014's
+ * per-document flag), `archived_at` (DOC-010's soft delete), `folder_id`
+ * (DOC-006), and the version chain's `source` plus the two
+ * comparison-provenance columns (M32's generated redlines). Each arrives
+ * with the feature that reads it.
  */
 
 import { sql } from "drizzle-orm";
@@ -71,9 +71,14 @@ export const documents = pgTable(
   "documents",
   {
     id: uuidPk(),
-    /** What the record is called. Seeded from the uploaded filename;
-     * the rename path (DOC-007) lands with the metadata edit. */
+    /** What the record is called. Seeded from the uploaded filename,
+     * and renameable from there (DOC-007) — the files themselves are
+     * never touched by it. */
     title: text("title").notNull(),
+    /** What the record is, in the team's own words (DOC-007). Standard
+     * metadata and the only prose the record carries: there are no tags
+     * and no custom fields on a document. NULL when nobody wrote one. */
+    description: text("description"),
     /** DOC-008's owning record, and the whole access answer in front of
      * this row: a viewer who cannot reach the contract cannot reach its
      * documents (DD-014, CTR-021). */

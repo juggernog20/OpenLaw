@@ -188,6 +188,21 @@ function text(payload: Payload, key: string): string | null {
   return typeof value === "string" && value.length > 0 ? value : null;
 }
 
+/**
+ * Which version of the chain an entry is about (DOC-001), as the
+ * sentence selects on it.
+ *
+ * A string, because ICU `select` takes one, and version numbers are
+ * references rather than quantities — `v3` is a name, so it is not
+ * locale-formatted the way a count would be. `unknown` is the arm a row
+ * that carries no number falls into: the log is append-only, so a
+ * payload written by an older build has to still read as a sentence.
+ */
+function versionNumber(payload: Payload): string {
+  const value = payload.versionNumber;
+  return typeof value === "number" && Number.isInteger(value) ? String(value) : "unknown";
+}
+
 /** What an unrecorded value reads as, on either side of a change. */
 function notSet(intl: IntlShape): string {
   return intl.formatMessage({ id: "activity.notSet", defaultMessage: "Not set" });
@@ -768,10 +783,11 @@ const ARMS: Readonly<Record<string, Arm>> = {
       defaultMessage: "{actor} restored this contract",
     }),
   },
-  // The record's paper (M11/2). The entry hangs off the owning contract
-  // — a document's access is its owner's and nothing else (DOC-008) —
-  // and it names the document, because hard deletion (DOC-010) will one
-  // day take the row and the entry has to still say what was uploaded.
+  // The record's paper (M11/2, M11/3). The entry hangs off the owning
+  // contract — a document's access is its owner's and nothing else
+  // (DOC-008) — and it names the document, because hard deletion
+  // (DOC-010) will one day take the row and the entry has to still say
+  // what was uploaded.
   "document.created": {
     icon: Upload,
     message: defineMessage({
@@ -779,6 +795,35 @@ const ARMS: Readonly<Record<string, Arm>> = {
       defaultMessage: "{actor} uploaded {title}",
     }),
     values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+  },
+  // A round of the negotiation, narrated as one: which document, and
+  // which version of it. The number is what makes the feed readable as
+  // a history rather than as a run of identical uploads.
+  "document.version_added": {
+    icon: FilePlus2,
+    message: defineMessage({
+      id: "activity.document.versionAdded",
+      defaultMessage:
+        "{version, select, unknown {{actor} added a version of {title}} " +
+        "other {{actor} added version {version} of {title}}}",
+    }),
+    values: (intl, payload) => ({
+      title: named(intl, payload, "title"),
+      version: versionNumber(payload),
+    }),
+  },
+  // The metadata edit (DOC-007). It says the document's details changed,
+  // never that a file did: the stored versions are immutable, and a
+  // rename touches none of them. The old→new pairs come off the
+  // `changed` map like every other edit's.
+  "document.updated": {
+    icon: PencilLine,
+    message: defineMessage({
+      id: "activity.document.updated",
+      defaultMessage: "{actor} edited the details of {title}",
+    }),
+    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+    changes: changesFrom,
   },
 
   // Ids only, never text (CMT-006). A redacted comment's entry reads as

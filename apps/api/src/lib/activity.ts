@@ -87,13 +87,22 @@ export type ActivityAction =
   // a comment keeps its own verb from taking it back: an edit and a
   // delete are the author's acts, and a redact is an Administrator's.
   | `comment.${"posted" | "edited" | "deleted" | "redacted"}`
-  // The record's paper (M11/2, DD-017). The entry hangs off the owning
-  // contract, not off the document: access to a document is the owning
-  // record's access and nothing else (DOC-008), so its story belongs in
-  // that record's feed. The payload names the document, because hard
-  // deletion (DOC-010) removes the rows and the entry still has to say
-  // what was deleted.
+  // The record's paper (M11/2, M11/3, DD-017). The entry hangs off the
+  // owning contract, not off the document: access to a document is the
+  // owning record's access and nothing else (DOC-008), so its story
+  // belongs in that record's feed. The payload names the document,
+  // because hard deletion (DOC-010) removes the rows and the entry still
+  // has to say what was deleted.
+  //
+  // Three verbs, because three different things happen. Adding a round
+  // to the chain is not the same event as putting the first file on the
+  // record, and neither is renaming one — the feed has to read as a
+  // negotiation rather than as a run of generic edits, and an
+  // Administrator has to be able to filter the audit log on the one they
+  // are looking for.
   | "document.created"
+  | "document.version_added"
+  | "document.updated"
   | "sso_provider.registered"
   | "sso_provider.updated"
   // Data leaving the system (M9/7, DD-017). An export is a security

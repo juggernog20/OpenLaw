@@ -307,8 +307,9 @@ function ContractRecord() {
   const [refs, setRefs] = useState<CustomFieldRefs>(customFieldRefs);
   const [retypeTo, setRetypeTo] = useState<ContractTypeOption | null>(null);
   const [roster, setRoster] = useState<ContractTeamMember[]>(team);
-  /** The record's paper (M11/2). State rather than loader data because
-   * an upload adds to it without a page re-read. */
+  /** The record's paper (M11/2, M11/3). State rather than loader data
+   * because an upload, an appended version, and a metadata edit each
+   * change it without a page re-read. */
   const [paper, setPaper] = useState<ContractDocument[]>(contractDocuments);
   /** The other side (CTR-011), primary first as the API orders it. */
   const [parties, setParties] = useState<ContractCounterparty[]>(counterparties);
@@ -1028,7 +1029,7 @@ function ContractRecord() {
                 onStatus={note}
                 onCommit={commitCustomField}
               />
-              {/* The record's paper (M11/2), in the section the C4 mock
+              {/* The record's paper (M11/2, M11/3), in the section the C4 mock
                   draws. It follows the fields because the mock puts the
                   documents behind their own tab, after everything the
                   record itself states — and this page is one scroll,
