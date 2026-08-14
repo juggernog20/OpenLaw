@@ -26,6 +26,7 @@ import {
   UnsupportedFormatError,
 } from "../lib/doc-engine/engine.js";
 import type { DocEngine } from "../lib/doc-engine/engine.js";
+import { EmailUnreadableError } from "../lib/email/parse.js";
 import {
   BlobNotFoundError,
   InvalidBlobRefError,
@@ -74,6 +75,10 @@ export interface JobAttempt {
 export function isTerminalFailure(error: unknown): boolean {
   if (error instanceof UnsupportedFormatError) return true;
   if (error instanceof SourceUnreadableError) return true;
+  // The same fact for the one derivation the engine has no part in
+  // (M12/5): bytes that are not the email they claim to be, or more
+  // bytes than the in-process parser will open, are what they are.
+  if (error instanceof EmailUnreadableError) return true;
   // The stored blob is missing, or its reference is malformed. Neither
   // heals: no retry puts bytes back, and no retry makes a bad reference
   // parse. Named one by one rather than by their base class, because a

@@ -302,6 +302,16 @@ The sidecar and the interface this decision named both shipped. What was open wa
 
 **The contract suite comes in two tiers**, and the split is the honest part. The _shape_ tier — which formats convert, which failure each bad input produces, that a conversion answers a PDF, that what the engine converts it can read back, that nothing one call does is visible to the next — is run against both the real image and the deterministic fake. The _fidelity_ tier — a Word document's words, a deck's slide, the tracked insertion, the tracked deletion, the margin comment, a scan's OCR text, and a native text layer read without OCR — runs against the real container only. The fake cannot read a Word document, and a fake that pretended to would pass while the engine it stands in for failed. The fidelity tier is where this decision's flagged risk is now measured rather than assumed.
 
+### Addendum (2026-08-15) — settled in M12/5: the in-process MSG/EML libraries
+
+This decision said MSG/EML parsing is an in-process Node library and left the library open. These are the ones, and the reason for each.
+
+**Two libraries, because there are two containers.** An EML is an RFC 822 MIME message and is read by **`postal-mime`** (MIT-0, no dependencies of its own). A MSG is Outlook's compound file — a small random-access filesystem, not text — and is read by **`@kenjiuno/msgreader`** (Apache-2.0). Both licences are AGPL-compatible, which is the gate every runtime dependency passes. Neither container can be parsed as a stream: a MSG is addressed at random and a MIME tree is only whole once its last boundary is read. So the whole file is opened in memory behind a 25 MiB ceiling. It is a ceiling, not a claim about what exists: a message with large attachments, or one an internal Exchange carried without a relay's limits, really can be bigger — and what such a file is refused is the parsed reading of itself, never its upload, its download, or its place on the record.
+
+**The sanitizer is a third dependency, and it is not optional.** An email body is the only content in the product written by somebody outside it, and the panel is asked to render it. **`sanitize-html`** (MIT) cuts it to an allow-list on the server, so no client can render the raw form by forgetting a step. Writing our own was rejected: an HTML sanitizer is a parser with an adversary, and this is not the place to have one of our own.
+
+**Neither library touches the doc-engine seam, and that is the decision holding.** `DocEngine` names three operations over documents the sidecar reads; an email is not one of them, and adding a fourth would put a text format that parses in a millisecond behind an HTTP call to an 800 MB container. The `EmailUnreadableError` these libraries raise is classified terminal beside the engine's own terminal failures, because it means the same thing to the pipeline: a retry reads the same bytes.
+
 ## TECH-011: Email sending — SMTP first + provider adapter
 
 - **Status:** Accepted

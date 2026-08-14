@@ -58,7 +58,7 @@ describe("which files need a display rendition", () => {
       ),
     ).toBe(false);
     expect(needsDisplayRendition("application/zip", "bundle.zip")).toBe(false);
-    // Email is parsed in process in M12/5, with no sidecar involved.
+    // An email is parsed in process (M12/5), with no sidecar involved.
     expect(needsDisplayRendition("message/rfc822", "dispute.eml")).toBe(false);
   });
 });

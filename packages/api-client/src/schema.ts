@@ -1166,6 +1166,57 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/documents/{documentId}/versions/{versionId}/email": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Read one uploaded email as a message (M12/5, DOC-004): its headers, its body, and the files that came with it. A MSG or an EML is parsed in process by a Node library — no doc engine, no conversion, and nothing stored — so the answer is the message as the file holds it, read fresh on every call. The HTML body is sanitized here, on the server, before it is handed out: nothing in it runs and nothing in it loads, so a tracking pixel cannot report that a lawyer opened a disclosed email. Attachments are listed with the family each one would render as, and each is reachable at its own address. A file that is not an email is refused 415, and one whose bytes cannot be read as the email they claim to be is refused 422 with the download offered. It sits behind the same two predicates every document read does: a Contributor on the team reads what they may download, and anyone who cannot reach the contract — or is outside a confidential document's audience — is answered 404, exactly as for a document that was never uploaded */
+    get: operations["readDocumentVersionEmail"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/{documentId}/versions/{versionId}/attachments/{attachmentIndex}/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Stream one file out of a rendered email, as an attachment (M12/5, DOC-004). The index is the file's position in the message, which is a stable name for it because the version's bytes are immutable (DOC-001). Unlike a version's own download, this never echoes a declared type: a version's type was bounded and shape-checked when it was uploaded, and this one came out of the middle of a file nobody checked at all — so the bytes go out as `application/octet-stream`, with the attachment disposition and sniffing off. An attachment is not a side door: it sits behind the same two predicates its version does, so anyone who cannot reach the contract — or is outside a confidential document's audience — is answered 404, exactly as for a document that was never uploaded */
+    get: operations["downloadEmailAttachment"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/{documentId}/versions/{versionId}/attachments/{attachmentIndex}/preview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Stream one file out of a rendered email for display in place (M12/5, DOC-004), so a PDF or a photographed page attached to a message opens in the panel rather than in a Downloads folder. It is the attachment download's twin and differs in the same two headers a version's preview differs in: the disposition is inline, and the content type is chosen from the routing table rather than echoed from the message. An attachment outside the render set is refused 415 and the panel offers its download instead — there is no conversion path for an attachment, so a Word file inside an email downloads. It sits behind the same two predicates its version does: anyone who cannot reach the contract, or is outside a confidential document's audience, is answered 404 */
+    get: operations["previewEmailAttachment"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/comments": {
     parameters: {
       query?: never;
@@ -6244,7 +6295,7 @@ export interface operations {
             text: {
               /** @enum {string} */
               state: "pending" | "ready" | "failed" | "unsupported";
-              source: ("native_layer" | "ocr" | "rendition") | null;
+              source: ("native_layer" | "ocr" | "rendition" | "email_body") | null;
               text: string | null;
               updatedAt: string | null;
             };
@@ -6287,6 +6338,142 @@ export interface operations {
               updatedAt: string | null;
             };
           };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  readDocumentVersionEmail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        documentId: string;
+        versionId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            email: {
+              subject: string | null;
+              from: {
+                name: string | null;
+                address: string | null;
+              } | null;
+              to: {
+                name: string | null;
+                address: string | null;
+              }[];
+              cc: {
+                name: string | null;
+                address: string | null;
+              }[];
+              bcc: {
+                name: string | null;
+                address: string | null;
+              }[];
+              date: string | null;
+              html: string | null;
+              text: string | null;
+              attachments: {
+                index: number;
+                filename: string;
+                mimeType: string;
+                byteSize: number;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                isInline: boolean;
+              }[];
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  downloadEmailAttachment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        documentId: string;
+        versionId: string;
+        attachmentIndex: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/octet-stream": string;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  previewEmailAttachment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        documentId: string;
+        versionId: string;
+        attachmentIndex: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/pdf": string;
+          "image/png": string;
+          "image/jpeg": string;
+          "image/gif": string;
+          "image/webp": string;
+          "image/bmp": string;
+          "image/avif": string;
         };
       };
       /** @description Problem details (RFC 9457) */

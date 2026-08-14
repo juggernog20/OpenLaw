@@ -21,11 +21,10 @@
  * a scanned contract can be found in M25's search, and for nothing else
  * yet.
  *
- * What is deliberately not here, and the step that brings it: the
- * `email_body` source that M12/5 writes. It arrives with the feature
- * that writes it, exactly as `generated_redline` waits for M32 in
- * `document_versions.kind`. The display rendition's own table landed in
- * M12/4 beside this one, in `document-rendition.ts`.
+ * The display rendition's own table landed in M12/4 beside this one, in
+ * `document-rendition.ts`. The `email_body` source landed in M12/5 with
+ * the feature that writes it — the same way `generated_redline` still
+ * waits for M32 in `document_versions.kind`.
  */
 
 import { sql } from "drizzle-orm";
@@ -51,15 +50,18 @@ export type DerivationState = (typeof DERIVATION_STATES)[number];
  * image-only scan the doc engine read as pictures of pages.
  * `rendition` is a Word document or a PowerPoint deck, read from the
  * PDF the pipeline converted it to (M12/4) — one extraction path, over
- * PDF, rather than a second reader per office format.
+ * PDF, rather than a second reader per office format. `email_body` is
+ * an uploaded MSG or EML, parsed in process (M12/5): its body is its
+ * text, and no engine and no conversion were involved.
  *
- * The three are recorded rather than inferred because they are not
+ * The four are recorded rather than inferred because they are not
  * equally trustworthy: OCR text is a machine's reading of a photograph,
- * a rendition's text has been through a conversion, and a later feature
- * that weighs a match — search ranking, AI analysis — has to be able to
- * tell which it is holding.
+ * a rendition's text has been through a conversion, an email body is
+ * exactly what a sender wrote, and a later feature that weighs a match —
+ * search ranking, AI analysis — has to be able to tell which it is
+ * holding.
  */
-export const TEXT_SOURCES = ["native_layer", "ocr", "rendition"] as const;
+export const TEXT_SOURCES = ["native_layer", "ocr", "rendition", "email_body"] as const;
 export type TextSource = (typeof TEXT_SOURCES)[number];
 
 /**
@@ -102,7 +104,7 @@ export const documentVersionText = pgTable(
     ),
     check(
       "document_version_text_source_check",
-      sql`${table.source} is null or ${table.source} in ('native_layer', 'ocr', 'rendition')`,
+      sql`${table.source} is null or ${table.source} in ('native_layer', 'ocr', 'rendition', 'email_body')`,
     ),
     // Ready and "has text from a named source" are the same fact, so the
     // database holds them together rather than trusting every writer to.

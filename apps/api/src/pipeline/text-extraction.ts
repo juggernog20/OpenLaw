@@ -28,6 +28,13 @@
  * conversion job calls {@link readPdfTextLayer} at the end of its own
  * work. Both write the same row, through the same writer.
  *
+ * **An email is the one file read without the engine** (M12/5,
+ * TECH-010). A MSG or an EML is parsed in process by a Node library, and
+ * its body is its text — no conversion, no OCR, and no round trip to the
+ * sidecar. It is a branch in this handler rather than a queue of its
+ * own, for the reason OCR is: it is the same job, answering text, and
+ * writing the same row through the same writer.
+ *
  * **A failure stops at the derivation.** The version row, its stored
  * blob, and its download are untouched whatever happens here; a version
  * whose extraction failed is a version with no text, not a broken
@@ -37,6 +44,7 @@
  */
 
 import { documentVersions, documentVersionText, eq, type TextSource } from "@openlaw/db";
+import { emailBodyText, isEmail, parseStoredEmail } from "../lib/email/parse.js";
 import { conversionFormatOf, renderFamilyOf } from "../lib/render-family.js";
 import {
   errorCode,
@@ -88,13 +96,13 @@ export function hasUsableTextLayer(text: string): boolean {
 /**
  * Whether the pipeline will ever produce text for this version.
  *
- * Three families answer yes. PDFs are read directly, here. Word
+ * Four families answer yes. PDFs are read directly, here. Word
  * documents and PowerPoint decks are read from the PDF rendition the
  * conversion job makes of them (M12/4), so their text is owed from the
  * moment they are uploaded even though this handler never touches them.
- * Email bodies are parsed in process in M12/5. Images yield no text in
- * v1 (DOC-005 is image-only PDFs, not photographs), and the long tail is
- * download-only for good.
+ * An email's body is its text, parsed in process here (M12/5). Images
+ * yield no text in v1 (DOC-005 is image-only PDFs, not photographs), and
+ * the long tail is download-only for good.
  *
  * A version this answers `false` for gets no derivation row, and the
  * text read says so plainly rather than leaving a caller polling for
@@ -102,7 +110,7 @@ export function hasUsableTextLayer(text: string): boolean {
  */
 export function extractsText(mimeType: string, filename: string): boolean {
   const family = renderFamilyOf(mimeType, filename);
-  return family === "pdf" || family === "word" || family === "presentation";
+  return family === "pdf" || family === "word" || family === "presentation" || family === "email";
 }
 
 /**
@@ -232,7 +240,9 @@ export async function extractVersionText(deps: DerivationDeps, versionId: string
     return;
   }
 
-  const { text, source } = await readPdfText(deps, versionId, version);
+  const { text, source } = isEmail(version.mimeType, version.originalFilename)
+    ? await readEmailBody(deps, version)
+    : await readPdfText(deps, versionId, version);
   await writeTextDerivation(deps, versionId, { state: "ready", source, text });
   deps.log.info(
     { versionId, source, characters: text.length },
@@ -264,6 +274,26 @@ async function readPdfText(
   );
   const ocr = await withBlob(deps, version.fileRef, (blob) => deps.docEngine.ocrPdf(blob));
   return { text: ocr, source: "ocr" };
+}
+
+/**
+ * The email route (DOC-004, M12/5): parse the message and keep its body.
+ *
+ * Nothing is converted and nothing is stored. The words a sender wrote
+ * are already text, so the derivation is a parse and a trim — which is
+ * why this is a branch here rather than a job with a queue of its own.
+ *
+ * The blob is opened through the same helper the PDF route uses, so a
+ * parse that refuses part way through leaves no handle behind.
+ */
+async function readEmailBody(
+  deps: DerivationDeps,
+  version: VersionRow,
+): Promise<{ text: string; source: TextSource }> {
+  const email = await withBlob(deps, version.fileRef, (blob) =>
+    parseStoredEmail(blob, version.mimeType, version.originalFilename),
+  );
+  return { text: emailBodyText(email), source: "email_body" };
 }
 
 /**

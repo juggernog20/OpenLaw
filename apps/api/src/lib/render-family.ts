@@ -20,13 +20,16 @@
  * which names no family and falls through to the name. That ordering is
  * why a `.png` dragged out of an archive still routes as an image.
  *
- * **Every family is routed here, not only the ones that render now.**
- * Word, PowerPoint, and email each got their own family in M12/2 with an
- * honest download card in the panel. M12/4 flipped the first two to
- * rendered surfaces without changing a single family: it added what the
- * doc engine converts each one from, beside the type each row already
- * carried. Email follows in M12/5. A family the table does not name is
- * `other`, which is download-only for good.
+ * **Every family is routed here, and each one has flipped to a rendered
+ * surface without the table changing shape.** Word, PowerPoint, and
+ * email each got their own family in M12/2 with an honest download card
+ * in the panel. M12/4 flipped the first two by adding what the doc
+ * engine converts each one from, beside the type each row already
+ * carried. M12/5 flipped email by adding nothing at all: an email needs
+ * neither a preview type nor a conversion, because it is parsed in
+ * process and answered as a message rather than streamed as bytes. A
+ * family the table does not name is `other`, which is download-only for
+ * good.
  *
  * **A row says how a file is previewed, and it says it once.** Either
  * the stored file is what a preview streams — `previewType` names what
@@ -45,11 +48,10 @@ import type { ConvertibleFormat } from "./doc-engine/engine.js";
 /**
  * DOC-004's families, plus the catch-all.
  *
- * `pdf` and `image` render natively in M12/2. `word`, `presentation`,
- * and `email` are named because the panel must say something true about
- * them today and something different in M12/3 and M12/4. `other` is
- * everything else — the spreadsheets and the archives DOC-004 leaves
- * download-only.
+ * `pdf` and `image` render natively (M12/2). `word` and `presentation`
+ * are drawn from a converted PDF rendition (M12/4). `email` is parsed in
+ * process and drawn as a message (M12/5). `other` is everything else —
+ * the spreadsheets and the archives DOC-004 leaves download-only.
  */
 export const RENDER_FAMILIES = ["pdf", "image", "word", "presentation", "email", "other"] as const;
 
