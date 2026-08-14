@@ -12,6 +12,7 @@ import { fileURLToPath } from "node:url";
 import { createDb, runMigrations } from "@openlaw/db";
 import { buildApp } from "./app.js";
 import { createMailerResolver } from "./lib/mailer.js";
+import { DEFAULT_STORAGE_PATH, createLocalStorage } from "./lib/storage/local.js";
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -33,6 +34,15 @@ await runMigrations(db);
 const resolveMailer = createMailerResolver(db, {
   url: process.env.SMTP_URL,
   from: process.env.SMTP_FROM,
+});
+
+// DOC-009/TECH-014: the storage root is read here, at startup, and the
+// adapter is injected — no module ever reads the environment for it.
+// `||`, not `??`: under Compose the variable always exists (empty when
+// unset in .env), and empty means "not configured". The local driver is
+// the only driver today; the S3 driver joins behind the same interface.
+const storage = createLocalStorage({
+  root: process.env.STORAGE_PATH || DEFAULT_STORAGE_PATH,
 });
 
 // BASE_URL anchors emailed links (set-password, magic links) and origin
@@ -71,6 +81,7 @@ const app = await buildApp(
       disableRateLimit: process.env.AUTH_RATE_LIMIT === "off",
     },
     resolveMailer,
+    storage,
     webDist: webDistPresent ? webDist : undefined,
   },
   { logger: true },

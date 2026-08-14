@@ -128,7 +128,7 @@ _Queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/precedents routed
   - **Search**: full-text search covers title, description, owning-record context, and **extracted text** (native text layers + DOC-005 OCR output). Working default: Postgres FTS first (no extra infrastructure for self-hosters); a dedicated engine (Tantivy/Meilisearch) only if relevance/scale demands it later. Extraction runs on the background job pipeline (same worker as OCR).
 - **Rationale** — Both choices follow PRODUCT.md's "working install in under an hour from a clean VM" principle: zero extra services in the default path, adapters where deployments differ.
 - **Alternatives considered** — S3-only (hosted assumption — wrong default for self-host); dedicated search engine in v1 (another service to run before the first document is findable).
-- **Consequences** — Tech-stack queue already carries the engine questions; this decision pre-loads the defaults. `document_versions.file_ref` format finalizes with the adapter decision.
+- **Consequences** — Tech-stack queue already carries the engine questions; this decision pre-loads the defaults. `document_versions.file_ref` format finalizes with the adapter decision — _settled by **DOC-012**: `<driver>:<key>`_.
 
 ## DOC-010 — Deletion: soft delete + Admin hard delete; versions immutable
 
@@ -154,6 +154,22 @@ _Queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/precedents routed
 - **Alternatives considered** — Drag-drop only (no structure): flattens legacy organization. CSV-mapped migration flow (recommended, not requested): can layer later if metadata-rich migration demand appears.
 - **Consequences** — `document_folders.parent_id` added in SCHEMA.md; DOC-006 annotated. Upload pipeline handles directory traversal + batch job queuing (background pipeline per DOC-005/009).
 
+## DOC-012 — Storage adapter: three operations, and `file_ref` = `<driver>:<key>`
+
+- **Status** — Accepted
+- **Date** — 2026-08-14
+- **Context** — DOC-009 fixed the storage requirements and left the `file_ref` format to "the adapter decision"; TECH-014 confirmed a driver-prefixed key. M11 is the first milestone that stores a file, so the shape is now real code and changing it later means a data migration.
+- **Decision** —
+  - The adapter has **three operations and nothing else**: put a blob, get a blob as a stream, delete a blob. It carries **no S3-shaped concepts** — no bucket, no presigned URL, no multipart part numbers — so a Graph-backed SharePoint driver (queued above) stays implementable behind it.
+  - **`file_ref` is `<driver>:<key>`.** The driver name is lowercase `[a-z][a-z0-9-]*`; the local filesystem driver is `local`. A reference is split at its first colon, and a driver refuses a reference that names another driver rather than guessing at it.
+  - **Keys** are slash-separated segments of `A-Z a-z 0-9 . _ -`, each segment starting with a letter or a digit, at most 512 characters. The charset is smaller than any one driver needs: safe as a filesystem path, safe as an object name, and unable to hold the separator or escape a root.
+  - **Defined failures**, the same on every driver: getting a key that was never written fails as not-found; putting a key that is already written fails as already-exists and leaves the stored blob untouched; deleting a key that was never written succeeds, because hard deletion (DOC-010) must be repeatable after a partial failure. A write that fails part way leaves nothing at the key.
+  - **Blobs are immutable and keys are never reused.** This is what makes an orphaned blob — written, then the database commit failed — harmless.
+  - **One shared contract-test suite** defines all of the above. Every driver passes the same suite: the local driver against a temporary directory, the S3 driver against a MinIO container.
+- **Rationale** — A narrow interface is the only one three unlike backends can all honour. Prefixing the driver into the stored reference means a deployment that changes drivers can still tell where each old blob lives, which is the difference between a migration and a data loss.
+- **Alternatives considered** — A bare key with the driver read from configuration: cheaper to write, but a deployment that switches drivers can no longer read its own history. A richer interface (copy, list, signed URLs): S3 gives them free, SharePoint does not, and v1 needs none of them.
+- **Consequences** — `document_versions.file_ref` stores `<driver>:<key>`. The Compose stack mounts the `openlaw-files` named volume at `STORAGE_PATH` (default `/var/lib/openlaw/files`), and DEPLOYMENT.md backs it up beside the database. Widening the key charset later is safe; narrowing it is not.
+
 ## Index of decisions
 
 | #       | Decision                                                                       | Status   |
@@ -169,3 +185,4 @@ _Queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/precedents routed
 | DOC-009 | Storage & search: requirements here, engine picks routed to tech-stack         | Accepted |
 | DOC-010 | Deletion: soft delete + Admin hard delete; versions immutable                  | Accepted |
 | DOC-011 | Bulk upload: multi-file + folder drop retaining structure (folders nest)       | Accepted |
+| DOC-012 | Storage adapter: three operations, and `file_ref` = `<driver>:<key>`           | Accepted |

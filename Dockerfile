@@ -56,6 +56,12 @@ COPY --from=build /app/apps/api/dist apps/api/dist
 COPY --from=build /app/apps/worker/dist apps/worker/dist
 COPY --from=build /app/apps/web/dist apps/web/dist
 
+# The default storage root (DOC-009). Compose mounts the openlaw-files
+# named volume here; Docker seeds an empty volume from the image's
+# directory, ownership included, so creating it as `node` is what lets
+# the unprivileged runtime user write uploads.
+RUN mkdir -p /var/lib/openlaw/files && chown -R node:node /var/lib/openlaw
+
 USER node
 EXPOSE 3000
 CMD ["node", "apps/api/dist/index.js"]

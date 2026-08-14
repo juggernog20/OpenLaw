@@ -33,6 +33,7 @@ All configuration is environment variables in `.env`; [`.env.example`](../.env.e
 | `DATABASE_URL`           | no       | Unset = the bundled Postgres. Set for external/managed Postgres (TECH-004 — equally supported).                                                                                                                                   |
 | `BASE_URL`               | in prod  | The public origin (e.g. `https://legal.example.com`). Emailed links and OIDC callbacks point here, and the auth layer checks request origins against it.                                                                          |
 | `SMTP_URL` / `SMTP_FROM` | no       | Outbound email; setting `SMTP_URL` pins SMTP to the environment, overriding anything saved in the app (see [Email](#email)). Unset = configurable in the app; with neither, email flows report "unconfigured" instead of sending. |
+| `STORAGE_PATH`           | no       | Where uploaded files are stored (DOC-009). Defaults to `/var/lib/openlaw/files`, the mount point of the `openlaw-files` named volume. Keep the default under Compose — see [Files](#files).                                       |
 | `PORT`                   | no       | The published host port (the container always listens on 3000 internally).                                                                                                                                                        |
 
 ## Reverse proxy contract
@@ -86,6 +87,16 @@ server {
 
 Set `DATABASE_URL` in `.env` to any reachable PostgreSQL 16+ and the app uses it instead of the bundled container. The bundled `postgres` service starts anyway (harmlessly idle); stop it with `docker compose stop postgres` or ignore it. It is never published to the host network either way.
 
+## Files
+
+Uploaded files are stored on disk by the default storage driver (DOC-009, TECH-014) — no object store, no extra service. The stack mounts the `openlaw-files` named volume at `STORAGE_PATH` (default `/var/lib/openlaw/files`), so files survive `docker compose down`, image upgrades, and rebuilds, exactly like the database volume. (`docker compose down -v` deletes both — don't.)
+
+The directory appears with the first upload; an install that stores nothing creates nothing.
+
+Point `STORAGE_PATH` somewhere else only outside Compose. Under Compose the volume follows the variable, but the image prepares only the default path for the container's unprivileged `node` user, so another path mounts as root-owned and uploads fail.
+
+An S3-compatible driver is coming; until then the volume is the whole story.
+
 ## Email
 
 OpenLaw sends through whatever SMTP relay you already run (TECH-011). Configure it one of two ways:
@@ -113,7 +124,7 @@ docker compose pull
 docker compose up -d
 ```
 
-Migrations run automatically when the app container boots (TECH-005); replicas booting together serialize on an advisory lock. Data lives in the `openlaw-pgdata` named volume and survives `docker compose down`, image upgrades, and rebuilds. (`docker compose down -v` deletes it — don't.)
+Migrations run automatically when the app container boots (TECH-005); replicas booting together serialize on an advisory lock. Data lives in two named volumes — `openlaw-pgdata` (the database) and `openlaw-files` (uploads, see [Files](#files)) — and both survive `docker compose down`, image upgrades, and rebuilds. (`docker compose down -v` deletes them — don't.)
 
 ## Health
 
@@ -122,10 +133,14 @@ Migrations run automatically when the app container boots (TECH-005); replicas b
 
 ## Backups
 
-One database, one story (TECH-004):
+Two things hold state: the database and the files volume.
 
 ```bash
 docker compose exec postgres pg_dump -U openlaw openlaw > openlaw-$(date +%F).sql
+docker compose run --rm --no-deps --entrypoint sh -v "$PWD:/out" app \
+  -c 'tar czf "/out/openlaw-files-$(date +%F).tar.gz" -C "$STORAGE_PATH" .'
 ```
 
-For external Postgres, run `pg_dump` against it directly.
+The second command archives the files volume through the `app` service, so it picks up whatever volume and `STORAGE_PATH` your stack declares — no volume name to keep in step. It writes the archive into the current directory as the container's `node` user (uid 1000).
+
+For external Postgres, run `pg_dump` against it directly. Back both up together: a database row points at a file, and a file with no row is unreachable.

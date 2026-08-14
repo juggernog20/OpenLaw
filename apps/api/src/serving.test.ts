@@ -15,10 +15,12 @@ import { createDb } from "@openlaw/db";
 import { buildApp } from "./app.js";
 import {
   CapturingMailer,
+  createTestStorage,
   fixedMailerResolver,
   TEST_AUTH_CONFIG,
   startHarness,
   type TestHarness,
+  type TestStorage,
 } from "./testing/harness.js";
 
 const SHELL_MARKER = '<div id="root">openlaw-shell</div>';
@@ -26,6 +28,7 @@ const SHELL_MARKER = '<div id="root">openlaw-shell</div>';
 describe("SPA serving", () => {
   let app: Awaited<ReturnType<typeof buildApp>>;
   let db: ReturnType<typeof createDb>;
+  let storage: TestStorage;
   let webDist: string;
 
   beforeAll(async () => {
@@ -39,10 +42,12 @@ describe("SPA serving", () => {
 
     // pg pools connect lazily; these suites never touch the database.
     db = createDb("postgresql://unused:unused@localhost:5432/unused");
+    storage = await createTestStorage();
     app = await buildApp({
       db,
       config: TEST_AUTH_CONFIG,
       resolveMailer: fixedMailerResolver(new CapturingMailer()),
+      storage: storage.storage,
       webDist,
     });
     await app.ready();
@@ -51,6 +56,7 @@ describe("SPA serving", () => {
   afterAll(async () => {
     await app.close();
     await db.$client.end();
+    await storage.cleanup();
     rmSync(webDist, { recursive: true, force: true });
   });
 
@@ -127,14 +133,17 @@ describe("readiness", () => {
   describe("with the database unreachable", () => {
     let app: Awaited<ReturnType<typeof buildApp>>;
     let db: ReturnType<typeof createDb>;
+    let storage: TestStorage;
 
     beforeAll(async () => {
       // A port nothing listens on: connection attempts fail fast.
       db = createDb("postgresql://unused:unused@127.0.0.1:59999/unused");
+      storage = await createTestStorage();
       app = await buildApp({
         db,
         config: TEST_AUTH_CONFIG,
         resolveMailer: fixedMailerResolver(new CapturingMailer()),
+        storage: storage.storage,
       });
       await app.ready();
     });
@@ -142,6 +151,7 @@ describe("readiness", () => {
     afterAll(async () => {
       await app.close();
       await db.$client.end();
+      await storage.cleanup();
     });
 
     it("reports unavailable, but stays live", async () => {
