@@ -23,6 +23,7 @@ import {
   SourceUnreadableError,
   UnsupportedFormatError,
   isConvertibleFormat,
+  unsupportedFormat,
   type DocEngine,
 } from "./engine.js";
 
@@ -195,7 +196,7 @@ export function createHttpDocEngine(options: HttpDocEngineOptions): DocEngine {
       // the process notices.
       if (!isConvertibleFormat(format)) {
         source.destroy();
-        throw new UnsupportedFormatError(format);
+        throw unsupportedFormat(format);
       }
       const { response, call } = await post("convert", source, new URLSearchParams({ format }));
       // The bound is released once the answer's headers are in hand. The

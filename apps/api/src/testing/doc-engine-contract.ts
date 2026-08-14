@@ -184,10 +184,16 @@ export function describeDocEngineContract(
         timeout,
       );
 
-      it.each(UNCONVERTIBLE_FORMATS)("refuses the format %j", async (format) => {
-        await expect(
-          engine.convertToPdf(bytes(DOC_ENGINE_FIXTURES.plainDocx), format),
-        ).rejects.toBeInstanceOf(UnsupportedFormatError);
+      it.each(UNCONVERTIBLE_FORMATS)("refuses the format %j, naming it", async (format) => {
+        const error = await engine.convertToPdf(bytes(DOC_ENGINE_FIXTURES.plainDocx), format).then(
+          () => undefined,
+          (raised: unknown) => raised,
+        );
+        expect(error).toBeInstanceOf(UnsupportedFormatError);
+        // The refusal names the format it refused. The message is what a
+        // failed derivation shows an operator, and "does not convert" with
+        // no subject leaves them grepping.
+        expect((error as Error).message).toContain(JSON.stringify(format));
       });
 
       it(

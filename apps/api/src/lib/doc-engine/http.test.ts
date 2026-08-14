@@ -189,7 +189,11 @@ describe("doc-engine HTTP client", () => {
     }
 
     it("reads 415 as a format it does not convert", async () => {
-      expect(await errorFor(415)).toBeInstanceOf(UnsupportedFormatError);
+      const error = await errorFor(415);
+      expect(error).toBeInstanceOf(UnsupportedFormatError);
+      // The sidecar's own sentence, verbatim — not wrapped inside a
+      // second sentence that reads it as a format name.
+      expect((error as Error).message).toBe("no");
     });
 
     it("reads 422 as a source it cannot read", async () => {

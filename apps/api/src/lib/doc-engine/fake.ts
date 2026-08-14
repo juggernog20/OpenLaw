@@ -25,8 +25,8 @@ import { Readable } from "node:stream";
 import {
   DocEngineUnavailableError,
   SourceUnreadableError,
-  UnsupportedFormatError,
   isConvertibleFormat,
+  unsupportedFormat,
   type DocEngine,
 } from "./engine.js";
 
@@ -169,7 +169,7 @@ export function createFakeDocEngine(): DocEngine {
         // the caller opened and nobody closes holds its file handle
         // until the process notices.
         source.destroy();
-        throw new UnsupportedFormatError(format);
+        throw unsupportedFormat(format);
       }
       // Every other refusal reads the source first, so a caller never
       // has to know which failures consume the stream and which do not.

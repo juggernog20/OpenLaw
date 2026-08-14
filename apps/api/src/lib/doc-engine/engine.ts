@@ -36,12 +36,26 @@ import type { Readable } from "node:stream";
 /** Base class of every failure this interface defines. */
 export class DocEngineError extends Error {}
 
-/** The engine does not convert that source format. Terminal. */
+/**
+ * The engine does not convert that source format. Terminal.
+ *
+ * Takes a whole message, not a format name: the HTTP client raises this
+ * for a sidecar's 415 as well, and what the sidecar sends is a full
+ * sentence. {@link unsupportedFormat} builds the standard one for the
+ * sites that refuse a format themselves.
+ */
 export class UnsupportedFormatError extends DocEngineError {
-  constructor(format: string) {
-    super(`The doc engine does not convert ${JSON.stringify(format)} to PDF.`);
+  constructor(message: string) {
+    super(message);
     this.name = "UnsupportedFormatError";
   }
+}
+
+/** The refusal for a format the engine does not convert, naming it. */
+export function unsupportedFormat(format: string): UnsupportedFormatError {
+  return new UnsupportedFormatError(
+    `The doc engine does not convert ${JSON.stringify(format)} to PDF.`,
+  );
 }
 
 /** The bytes are not readable as the document they claim to be. Terminal. */
