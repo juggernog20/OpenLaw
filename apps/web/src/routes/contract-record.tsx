@@ -1018,6 +1018,8 @@ function ContractRecord() {
               roster={roster}
               users={users}
               frozen={frozen}
+              isConfidential={saved.isConfidential}
+              canFlag={canFlag}
               onRoster={setRoster}
             />
           </div>
@@ -1075,6 +1077,8 @@ function TeamCard({
   roster,
   users,
   frozen,
+  isConfidential,
+  canFlag,
   onRoster,
 }: Readonly<{
   /** CTR-003's reference — the address every contract route takes. */
@@ -1085,6 +1089,8 @@ function TeamCard({
   /** The record is frozen: it is archived, or this viewer reads it
    * rather than edits it. Either way it renders as facts. */
   frozen: boolean;
+  isConfidential: boolean;
+  canFlag: boolean;
   onRoster: (team: ContractTeamMember[]) => void;
 }>) {
   const intl = useIntl();
@@ -1144,7 +1150,7 @@ function TeamCard({
           ref={addControl}
           variant="ghost"
           size="icon"
-          disabled={frozen}
+          disabled={frozen || (isConfidential && !canFlag)}
           aria-label={intl.formatMessage({
             id: "contracts.team.add",
             defaultMessage: "Add team member",
@@ -1175,7 +1181,11 @@ function TeamCard({
             // A second click while the first is in flight is refused by
             // `remove` itself, so the control stays enabled and keeps
             // the focus its owner put on it.
-            onRemove={frozen || member.role === "creator" ? undefined : () => void remove(member)}
+            onRemove={
+              frozen || (isConfidential && !canFlag) || member.role === "creator"
+                ? undefined
+                : () => void remove(member)
+            }
             // The role is selected inside the message, not pasted in as
             // a translated fragment — a locale that inflects the role
             // after "as" needs the raw value to work with (DES-013).

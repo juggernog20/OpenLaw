@@ -1626,6 +1626,9 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       const { userId, role } = request.body;
       const team = await app.db.transaction(async (tx) => {
         const current = await editableContract(tx, request.params.number, request.user);
+        if (current.row.isConfidential) {
+          await assertMayFlagConfidential(tx, current, request.user);
+        }
         if (role === CREATOR_TEAM_ROLE) {
           throw httpError(400, "The creator is recorded when the contract is created.");
         }
@@ -1683,6 +1686,9 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       const { userId, role } = request.params;
       const team = await app.db.transaction(async (tx) => {
         const current = await editableContract(tx, request.params.number, request.user);
+        if (current.row.isConfidential) {
+          await assertMayFlagConfidential(tx, current, request.user);
+        }
         if (role === CREATOR_TEAM_ROLE) {
           throw httpError(409, "The creator stays on the record — it is who made it.");
         }

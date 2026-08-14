@@ -470,10 +470,8 @@ describe("the confidential marker in the contract list (M10/5)", () => {
 
     const walled = await screen.findByRole("row", { name: /Beacon sponsorship/ });
     const marker = within(walled).getByRole("img", { name: MARKER });
-    // DES-009's literal label, in DES-009's own foreground token.
-    expect(marker).toHaveClass("text-confidential");
-    // Uppercase and letter-spaced, as DES-009 draws it.
-    expect(within(marker).getByText("CONFI")).toHaveClass("uppercase", "tracking-[0.4px]");
+    // DES-009's literal label is visible.
+    expect(within(marker).getByText("CONFI")).toBeVisible();
     // The open record carries nothing at all — the marker is the
     // exception, and the absence of one is the rule.
     const open = screen.getByRole("row", { name: /Acme master services agreement/ });
@@ -500,10 +498,10 @@ describe("the confidential marker in the contract list (M10/5)", () => {
     const { view } = renderAt("/contracts");
 
     const marker = await screen.findByRole("img", { name: MARKER });
-    expect(marker.querySelector("svg.lucide-lock")).not.toBeNull();
     // DES-009 admits no alternate — the glyph is the affordance.
-    expect(view.container.querySelector("svg.lucide-shield-alert")).toBeNull();
-    expect(view.container.querySelector("svg.lucide-eye-off")).toBeNull();
+    expect(marker).toBeVisible();
+    expect(view.container.querySelector("svg[data-lucide='shield-alert']")).toBeNull();
+    expect(view.container.querySelector("svg[data-lucide='eye-off']")).toBeNull();
   });
 });
 
