@@ -258,11 +258,26 @@ export function useCommentApplet({
 }
 
 /** The M3 header pill: how many comments are on screen. It counts the
- * filtered set, because the filtered set is all there is. */
+ * filtered set, because the filtered set is all there is.
+ *
+ * It draws a bare number and says a whole phrase. The panel heading
+ * supplies the noun on screen; a screen reader reaching a lone "3" gets
+ * nothing from it, so `role="img"` lets the name stand in place of the
+ * digits — the same split the confidential marker takes. */
 function CountPill({ count }: Readonly<{ count: number }>) {
   const intl = useIntl();
   return (
-    <span className="rounded-pill bg-badge-count-bg px-2 py-px text-xs font-semibold text-badge-count-fg">
+    <span
+      role="img"
+      aria-label={intl.formatMessage(
+        {
+          id: "comments.countLabel",
+          defaultMessage: "{count, plural, one {# comment} other {# comments}}",
+        },
+        { count },
+      )}
+      className="rounded-pill bg-badge-count-bg px-2 py-px text-xs font-semibold text-badge-count-fg"
+    >
       {intl.formatNumber(count)}
     </span>
   );

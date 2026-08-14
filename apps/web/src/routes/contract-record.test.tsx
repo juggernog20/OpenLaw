@@ -1866,7 +1866,7 @@ describe("the contract record's comment applet (M9/2)", () => {
     // The panel header counts what is on screen — the filtered set is
     // all there is, so no total can leak a hidden row.
     const panel = screen.getByRole("complementary", { name: "Comments" });
-    expect(within(panel).getByText("3")).toBeInTheDocument();
+    expect(within(panel).getByRole("img", { name: "3 comments" })).toBeInTheDocument();
   });
 
   it("says what the panel is for when nothing has been said", async () => {
@@ -1978,7 +1978,7 @@ describe("the contract record's comment applet (M9/2)", () => {
     expect(within(panel).queryByText("Legal only")).not.toBeInTheDocument();
     expect(panel.textContent).not.toContain("1x cap");
     // The count is the filtered set's, so it hides no gap either.
-    expect(within(panel).getByText("2")).toBeInTheDocument();
+    expect(within(panel).getByRole("img", { name: "2 comments" })).toBeInTheDocument();
   });
 
   it("lets a Contributor post into the rooms they are in", async () => {
@@ -3743,6 +3743,12 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
 
   const documentsSection = () => screen.findByRole("region", { name: /^Documents/ });
 
+  /** The count badge, found the way a screen reader finds it. It draws a
+   * bare number and says the whole phrase, so the phrase is what the
+   * tests ask for — the digits alone would name nothing. */
+  const countBadge = (section: HTMLElement, said: string) =>
+    within(section).getByRole("img", { name: said });
+
   /** The composer, opened from whichever control opens it. */
   async function compose(
     user: ReturnType<typeof userEvent.setup>,
@@ -3791,7 +3797,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(within(section).getByRole("heading", { level: 2, name: "Documents" })).toBeVisible();
     // The count is what the list holds — the API leaves out what this
     // viewer may not see, so it can never announce an omission.
-    expect(within(section).getByText("2")).toBeVisible();
+    expect(countBadge(section, "2 documents")).toBeVisible();
     expect(within(section).getAllByRole("row")).toHaveLength(3); // header + two
   });
 
@@ -3819,7 +3825,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
 
     const section = await documentsSection();
     expect(within(section).getByText("No documents on this contract yet.")).toBeVisible();
-    expect(within(section).getByText("0")).toBeVisible();
+    expect(countBadge(section, "0 documents")).toBeVisible();
   });
 
   it("shows the current version first and opens the rounds it supersedes", async () => {
@@ -3886,7 +3892,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     const section = await documentsSection();
     const dialog = await compose(user, section, "Upload");
     await user.upload(
-      within(dialog).getByLabelText("File"),
+      within(dialog).getByLabelText("File", { selector: "input" }),
       new File(["counter redline bytes"], "counter_redline.docx", {
         type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       }),
@@ -3907,7 +3913,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(
       await within(section).findByRole("link", { name: "counter_redline.docx" }),
     ).toBeInTheDocument();
-    expect(within(section).getByText("2")).toBeVisible();
+    expect(countBadge(section, "2 documents")).toBeVisible();
   });
 
   it("refuses to send a composer with no file on it", async () => {
@@ -3922,6 +3928,11 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
 
     expect(await within(dialog).findByText("Choose a file to upload.")).toBeVisible();
     expect(api.writes).toEqual([]);
+    // The refusal is about the File field, and the control a keyboard
+    // reaches on that field is this button — so the refusal is reachable
+    // from it rather than only findable by sight.
+    const choose = within(dialog).getByRole("button", { name: "File Choose file" });
+    expect(choose).toHaveAccessibleDescription("Choose a file to upload.");
   });
 
   it("appends the next version to a document from its own row", async () => {
@@ -3935,7 +3946,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByRole("heading", { name: "Add version" })).toBeVisible();
     await user.upload(
-      within(dialog).getByLabelText("File"),
+      within(dialog).getByLabelText("File", { selector: "input" }),
       new File(["our counter"], "counter_redline.docx", { type: "application/pdf" }),
     );
     await user.click(within(dialog).getByRole("button", { name: "Upload" }));
@@ -3947,7 +3958,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     // The new round is current, and the one before it is now history —
     // still there, still a document of its own count of one.
     expect(await within(section).findByText("v2")).toBeVisible();
-    expect(within(section).getByText("1")).toBeVisible();
+    expect(countBadge(section, "1 document")).toBeVisible();
     expect(
       within(section).getByRole("button", { name: /Show the 1 earlier version of/ }),
     ).toBeInTheDocument();
@@ -4005,7 +4016,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     const section = await documentsSection();
     const dialog = await compose(user, section, "Upload");
     await user.upload(
-      within(dialog).getByLabelText("File"),
+      within(dialog).getByLabelText("File", { selector: "input" }),
       new File(["far too much"], "enormous.pdf", { type: "application/pdf" }),
     );
     await user.click(within(dialog).getByRole("button", { name: "Upload" }));
@@ -4195,7 +4206,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     const user = userEvent.setup();
 
     const section = await documentsSection();
-    expect(within(section).getByText("2")).toBeVisible();
+    expect(countBadge(section, "2 documents")).toBeVisible();
     // No confirmation: archiving destroys nothing, and Restore is the
     // way back (DOC-010).
     await act(user, section, "Orion_MSA_2026_redline_orion.docx", "Archive");
@@ -4207,7 +4218,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
         within(section).queryByRole("link", { name: "Orion_MSA_2026_redline_orion.docx" }),
       ).not.toBeInTheDocument(),
     );
-    expect(within(section).getByText("1")).toBeVisible();
+    expect(countBadge(section, "1 document")).toBeVisible();
   });
 
   it("shows the archived rows on demand and restores one back onto the list", async () => {
@@ -4218,7 +4229,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
 
     const section = await documentsSection();
     // Off the list and out of the count until they are asked for.
-    expect(within(section).getByText("1")).toBeVisible();
+    expect(countBadge(section, "1 document")).toBeVisible();
     expect(
       within(section).queryByRole("link", { name: "Orion_MSA_2026_redline_orion.docx" }),
     ).not.toBeInTheDocument();
@@ -4233,13 +4244,13 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(link).toHaveAttribute("href", "/api/v1/documents/doc-2/versions/ver-2/download");
     expect(within(section).getByText("Archived")).toBeVisible();
     // The count still says what is on the record, not what is on screen.
-    expect(within(section).getByText("1")).toBeVisible();
+    expect(countBadge(section, "1 document")).toBeVisible();
 
     await act(user, section, "Orion_MSA_2026_redline_orion.docx", "Restore");
 
     await waitFor(() => expect(api.writes).toHaveLength(1));
     expect(api.writes[0]!.url).toBe("/api/v1/documents/doc-2/restore");
-    await waitFor(() => expect(within(section).getByText("2")).toBeVisible());
+    await waitFor(() => expect(countBadge(section, "2 documents")).toBeVisible());
     expect(within(section).queryByText("Archived")).not.toBeInTheDocument();
   });
 
@@ -4292,7 +4303,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     const marks = within(section).getAllByRole("img", { name: "Confidential" });
     expect(marks).toHaveLength(1);
     expect(within(section).getByText("board-memo.txt").closest("tr")).toContainElement(marks[0]!);
-    expect(within(section).getByText("2")).toBeVisible();
+    expect(countBadge(section, "2 documents")).toBeVisible();
   });
 
   it("draws no placeholder for a document the seam left out, and counts what it was given", async () => {
@@ -4305,7 +4316,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     const section = await documentsSection();
     expect(within(section).queryByRole("img", { name: "Confidential" })).not.toBeInTheDocument();
     expect(within(section).queryByText("board-memo.txt")).not.toBeInTheDocument();
-    expect(within(section).getByText("1")).toBeVisible();
+    expect(countBadge(section, "1 document")).toBeVisible();
     expect(within(section).getAllByRole("row")).toHaveLength(2); // header + one
   });
 
@@ -4429,7 +4440,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
         within(section).queryByRole("link", { name: "Orion_MSA_2026_draft.docx" }),
       ).not.toBeInTheDocument(),
     );
-    expect(within(section).getByText("1")).toBeVisible();
+    expect(countBadge(section, "1 document")).toBeVisible();
   });
 
   it("reads a refused erasure inside the dialog, where the dialog has not covered it", async () => {
@@ -4480,6 +4491,6 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(
       within(section).getByRole("link", { name: "Orion_MSA_2026_draft.docx" }),
     ).toBeInTheDocument();
-    expect(within(section).getByText("1")).toBeVisible();
+    expect(countBadge(section, "1 document")).toBeVisible();
   });
 });

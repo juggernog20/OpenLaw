@@ -566,6 +566,9 @@
   "comments.confidentialNotice": {
     "defaultMessage": "Confidential contract — whichever audience you pick, only the contract team, the Owner, and Administrators can read it."
   },
+  "comments.countLabel": {
+    "defaultMessage": "{count, plural, one {# comment} other {# comments}}"
+  },
   "comments.delete.body": {
     "defaultMessage": "A tombstone keeps its place in the thread, and nobody can read what it said. You cannot undo this."
   },
@@ -1057,6 +1060,9 @@
   },
   "documents.composer.versionTitle": {
     "defaultMessage": "Add version"
+  },
+  "documents.countLabel": {
+    "defaultMessage": "{count, plural, one {# document} other {# documents}}"
   },
   "documents.current": {
     "defaultMessage": "Current"

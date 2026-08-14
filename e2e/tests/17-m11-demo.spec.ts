@@ -351,10 +351,11 @@ function documentsSection(page: Page): Locator {
   return page.getByRole("region", { name: "Documents" });
 }
 
-/** How much paper the section says is on the record — the count badge
- * beside the heading, which is the only bare number in the header. */
+/** How much paper the section says is on the record. The badge draws a
+ * number and says a phrase, so it is found the way a screen reader finds
+ * it — by its name, not by a shape the markup happens to have. */
 function documentCount(page: Page): Locator {
-  return documentsSection(page).locator("header").getByText(/^\d+$/);
+  return documentsSection(page).getByRole("img", { name: /^\d+ documents?$/ });
 }
 
 /** One row of the section, found by the note its round carries. The note
@@ -389,7 +390,10 @@ async function uploadThroughComposer(
   await open();
   const dialog = page.getByRole("dialog");
   const chooser = page.waitForEvent("filechooser");
-  await dialog.getByRole("button", { name: "Choose file" }).click();
+  // The button carries the field's label as well as its own, because the
+  // input the label points at is out of the tab order and this is the
+  // control a keyboard reaches.
+  await dialog.getByRole("button", { name: "File Choose file" }).click();
   await (
     await chooser
   ).setFiles({ name: round.name, mimeType: "text/plain", buffer: Buffer.from(round.body, "utf8") });
@@ -552,6 +556,9 @@ test.describe.serial("M11 demo path", () => {
       const firstRound = roundRow(uploaderPage, DRAFT_NOTE);
       await expect(firstRound).toHaveCount(1);
       await expect(documentCount(uploaderPage)).toHaveText("1");
+      // The badge draws "1" and says what the 1 counts, so a reader who
+      // never sees the heading beside it still learns what it is.
+      await expect(documentCount(uploaderPage)).toHaveAccessibleName("1 document");
       // What the row says: the file, this round of the negotiation, its
       // number, and that it is the one that matters now.
       await expect(firstRound).toContainText(draft.name);
