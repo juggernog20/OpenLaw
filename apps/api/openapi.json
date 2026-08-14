@@ -9109,6 +9109,10 @@
                                 "mimeType": {
                                   "type": "string"
                                 },
+                                "renderFamily": {
+                                  "type": "string",
+                                  "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                                },
                                 "byteSize": {
                                   "type": "integer",
                                   "minimum": 0,
@@ -9162,6 +9166,7 @@
                                 "note",
                                 "originalFilename",
                                 "mimeType",
+                                "renderFamily",
                                 "byteSize",
                                 "checksumSha256",
                                 "uploadedBy",
@@ -9387,6 +9392,10 @@
                               "mimeType": {
                                 "type": "string"
                               },
+                              "renderFamily": {
+                                "type": "string",
+                                "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                              },
                               "byteSize": {
                                 "type": "integer",
                                 "minimum": 0,
@@ -9440,6 +9449,7 @@
                               "note",
                               "originalFilename",
                               "mimeType",
+                              "renderFamily",
                               "byteSize",
                               "checksumSha256",
                               "uploadedBy",
@@ -9656,6 +9666,10 @@
                               "mimeType": {
                                 "type": "string"
                               },
+                              "renderFamily": {
+                                "type": "string",
+                                "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                              },
                               "byteSize": {
                                 "type": "integer",
                                 "minimum": 0,
@@ -9709,6 +9723,7 @@
                               "note",
                               "originalFilename",
                               "mimeType",
+                              "renderFamily",
                               "byteSize",
                               "checksumSha256",
                               "uploadedBy",
@@ -9922,6 +9937,10 @@
                               "mimeType": {
                                 "type": "string"
                               },
+                              "renderFamily": {
+                                "type": "string",
+                                "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                              },
                               "byteSize": {
                                 "type": "integer",
                                 "minimum": 0,
@@ -9975,6 +9994,7 @@
                               "note",
                               "originalFilename",
                               "mimeType",
+                              "renderFamily",
                               "byteSize",
                               "checksumSha256",
                               "uploadedBy",
@@ -10175,6 +10195,10 @@
                                 "mimeType": {
                                   "type": "string"
                                 },
+                                "renderFamily": {
+                                  "type": "string",
+                                  "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                                },
                                 "byteSize": {
                                   "type": "integer",
                                   "minimum": 0,
@@ -10228,6 +10252,7 @@
                                 "note",
                                 "originalFilename",
                                 "mimeType",
+                                "renderFamily",
                                 "byteSize",
                                 "checksumSha256",
                                 "uploadedBy",
@@ -10423,6 +10448,10 @@
                                 "mimeType": {
                                   "type": "string"
                                 },
+                                "renderFamily": {
+                                  "type": "string",
+                                  "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                                },
                                 "byteSize": {
                                   "type": "integer",
                                   "minimum": 0,
@@ -10476,6 +10505,7 @@
                                 "note",
                                 "originalFilename",
                                 "mimeType",
+                                "renderFamily",
                                 "byteSize",
                                 "checksumSha256",
                                 "uploadedBy",
@@ -10687,6 +10717,10 @@
                               "mimeType": {
                                 "type": "string"
                               },
+                              "renderFamily": {
+                                "type": "string",
+                                "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                              },
                               "byteSize": {
                                 "type": "integer",
                                 "minimum": 0,
@@ -10740,6 +10774,7 @@
                               "note",
                               "originalFilename",
                               "mimeType",
+                              "renderFamily",
                               "byteSize",
                               "checksumSha256",
                               "uploadedBy",
@@ -10920,6 +10955,10 @@
                               "mimeType": {
                                 "type": "string"
                               },
+                              "renderFamily": {
+                                "type": "string",
+                                "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                              },
                               "byteSize": {
                                 "type": "integer",
                                 "minimum": 0,
@@ -10973,6 +11012,7 @@
                               "note",
                               "originalFilename",
                               "mimeType",
+                              "renderFamily",
                               "byteSize",
                               "checksumSha256",
                               "uploadedBy",
@@ -11155,6 +11195,10 @@
                               "mimeType": {
                                 "type": "string"
                               },
+                              "renderFamily": {
+                                "type": "string",
+                                "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                              },
                               "byteSize": {
                                 "type": "integer",
                                 "minimum": 0,
@@ -11208,6 +11252,7 @@
                               "note",
                               "originalFilename",
                               "mimeType",
+                              "renderFamily",
                               "byteSize",
                               "checksumSha256",
                               "uploadedBy",
@@ -11390,6 +11435,10 @@
                               "mimeType": {
                                 "type": "string"
                               },
+                              "renderFamily": {
+                                "type": "string",
+                                "enum": ["pdf", "image", "word", "presentation", "email", "other"]
+                              },
                               "byteSize": {
                                 "type": "integer",
                                 "minimum": 0,
@@ -11443,6 +11492,7 @@
                               "note",
                               "originalFilename",
                               "mimeType",
+                              "renderFamily",
                               "byteSize",
                               "checksumSha256",
                               "uploadedBy",
@@ -11571,6 +11621,94 @@
             "description": "Default Response",
             "content": {
               "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{documentId}/versions/{versionId}/preview": {
+      "get": {
+        "operationId": "previewDocumentVersion",
+        "summary": "Stream one version's file back for display in place — what the doc panel reads (M12/2, DOC-004). It is the download's twin and differs in exactly two headers: the disposition is inline, and the content type is the server's own rather than the one the upload declared. The type is routed from that declaration and the filename together — a hint, never a security decision — so a file that lies about itself can change which card the panel draws and can never change what the browser is told to do with it. A family with no in-app preview is refused 415 and the panel offers the download instead: PDFs and raster images render today, and SVG does not, because an inline SVG is a script. Any version in the chain previews, superseded rounds included. It sits behind the same two predicates every document read does: a Contributor on the team previews what they may download, and anyone who cannot reach the contract — or is outside a confidential document's audience — is answered 404, exactly as for a document that was never uploaded",
+        "tags": ["documents"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "documentId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "path",
+            "name": "versionId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/gif": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/bmp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/avif": {
                 "schema": {
                   "type": "string",
                   "format": "binary"

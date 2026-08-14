@@ -412,6 +412,18 @@ The 700-weight on tiny activity-feed avatar initials in the dashboard mock is **
 - A future DES will pick a secondary typeface for long-form legal-document body when the contract-detail / document-viewer screens are mocked.
 - A future DES will pick a specific monospace face if one is needed (otherwise the fallback chain remains the implementation).
 
+### Addendum (2026-08-14, M12/2 #185): the doc panel does not settle the secondary typeface, and says why
+
+DOC-004 named the doc panel as the surface that would settle the deferred pick, and M12/2 is where the panel got built. It does not settle it, and the reason is worth recording so the deferral does not get re-opened by the same argument next milestone.
+
+**A rendered legal document is not text we set.** The panel's PDF surface draws the file's own pages through pdf.js — its embedded fonts, its own metrics, its own layout. Word and PowerPoint reach the same surface in M12/3, because DOC-004 converts them to a PDF rendition and that rendition is what renders. Images are pixels. So nothing on the panel is long-form legal body copy in a typeface OpenLaw chose, and giving it one would be overriding what a signed document looks like — which is the opposite of what DOC-005 promises.
+
+**The mocks agree.** `designs/documents.pen` DOC2 draws its simulated contract page in **Tinos** at 13px on a 1.6 line-height, with 700-weight section headings — a Times-metric serif. That is a drawing of what a PDF looks like, not a specification for type we render. The one place in the same file where OpenLaw really does set document text — DOC6's parsed email body — is drawn in **Inter**, the app face, and M12/4 builds it that way.
+
+**The deferral therefore moves rather than closing.** The surface that would settle it is DOC-003's in-app compare view over extracted text (M32): a formatted comparison of two versions is the one place OpenLaw sets long-form clause text itself, and it is where a serif would earn its licence, its subsetting, and its dark-mode legibility check. Tinos is where that decision should start from, because it is what the mocks already draw and it is OFL-licensed and Times-metric.
+
+Nothing ships from this addendum: no second `@font-face`, no `--font-serif` token. A face nothing renders is weight in the bundle and a token nobody picks.
+
 ---
 
 ## DES-007: Spacing scale + density target — Tailwind default scale, 5 layout tokens, 4 chrome dimensions, normalized to 48/8/16
@@ -455,6 +467,7 @@ Per DES-001, geometry is theme-invariant — these need to be normalized to a si
 | `--width-activitybar`           | 48  | record-page activity bar _(amended by **DES-016**; originally a single `--width-rail: 320`)_  |
 | `--width-activitybar-indicator` | 3   | active-applet strip on the bar's leading edge _(added by the **DES-016** clarification, #47)_ |
 | `--width-panel`                 | 320 | record-page side panel hosting the active applet _(amended by **DES-016**)_                   |
+| `--width-docpanel`              | 720 | the doc panel, DES-016's wider sibling layer _(added by the **DES-016** clarification, #185)_ |
 
 **Density normalization.** When Light/Dark disagree with Warm in the existing Pencil mocks, **the implementation follows Light/Dark**: nav height 48px, nav gap 8px, header padding 16px. Warm's slightly tighter mock values were Pencil-time tweaks, not a deliberate brand-density signal. Per DES-001's geometry-invariance contract, the Warm mocks will be normalized to match in a follow-up Pencil pass; until then the implementation is the source of truth.
 
@@ -1125,6 +1138,26 @@ Take geometry from the ActivityBar and panel frames of the matter-detail screens
 6. **Type a slot as either a panel or a link.** DES-016 names settings as a deep link, so the applet type is a union: `render` opens the panel, `href` navigates. Only `render` slots own the panel, and only they toggle. Group link slots below the divider.
 
 Dock via a container query at 1100px of record-region width per DES-012. Write the threshold literally into the class list: Tailwind scans source text, and container conditions cannot read a CSS variable.
+
+### Implementation clarification (2026-08-14, M12/2 #185): the doc panel, the wider sibling layer
+
+DES-016 said the document panel (K) "opens as a wider sibling layer per the doc-panel spec, not inside the applet panel", and left the layer itself to that spec. M12/2 builds it, so this is what "wider sibling layer" means in the code. The reference frames are `designs/documents.pen` **DOC2 — Document detail** (the viewer card: its toolbar and its well) and **DOC6 — Email document**; the older `initial-contract-details.pen` K strip is the naming source (K.H1–H6, K.T1–T9) and loses to DOC2 wherever the two disagree.
+
+1. **The doc panel is a third column, not a second panel.** Docked, the record region reads content · doc panel · applet panel · activity bar. Both panels open together and neither closes the other: they answer different questions, and a reader who is discussing a clause in the chat applet is exactly the reader who wants the clause on screen. It is rendered by `RecordApplets`, through a `layer` slot beside the applet panel — a layer drawn inside the page's own content would sit inside the record's scroll and could not hold a column.
+
+2. **`--width-docpanel: 720px`, docking at 1400px of record-region width.** The width comes from the mock: DOC2 draws a 640px page, and 720 carries it with the well's own padding either side. The threshold is 1400 rather than DES-016's 1100 because a docked doc panel has to leave the record readable beside it, and 1100 − 720 does not. Below it the panel overlays the record region, pinned to the inner edge of the activity bar, which never disappears — DES-016's own behaviour, at a wider number because it is a wider thing. Write the threshold literally into the class list, for the reason above.
+
+3. **A 44px header, then a 40px toolbar.** The header is the applet panel's chrome verbatim — the document's title at 13px semibold and a close X at 16px — plus a file glyph and the version pill K.H3 draws, in the neutral `badge-count` pair, because the round on screen is a structural fact and not a status. The toolbar under it is DOC2's: `bg-canvas`, the file's own name at 12px muted on the leading edge, and the download (K.T8) on the trailing one. The title and the filename are two different strings and both are drawn — the record renames a document freely (DOC-007) and the file keeps the name it arrived under.
+
+4. **Reading controls belong to the surface that has them, not to the toolbar.** K.T1–T6 draw page navigation and zoom in the panel toolbar. They are drawn inside the PDF surface instead, because a PNG in the same panel has no pages and no zoom and a toolbar of dead controls is worse than none. K.T7 (search) and K.T9 (overflow) are not built: search inside a document is M25's, and there is nothing yet for an overflow to hold. Cross-cutting observation 15 in `CONTRACT-DETAILS-INVENTORY.md` — "nine controls for a preview; can collapse some behind more-vert" — is answered this way rather than by a menu.
+
+5. **The well is `bg-canvas` and the page floats on it in `bg-raised`**, as DOC2 draws it. A PDF page is rasterized at the device's pixel density and sized back down in CSS; a page drawn at 1x on a retina screen reads as a photocopy.
+
+6. **Esc closes it and focus comes back to the row that opened it.** The panel is a plain `aside`, not a Radix overlay, so DES-010's rules are wired by hand exactly as the applet panel's are: focus moves to the panel container when it opens — not to its close control, which reads as "you probably want to leave" — and the record puts focus back on the control that opened it when it closes.
+
+7. **The document's name is the control that opens it.** A file the panel can read is a `button`; a file it cannot is the download link M11 shipped. That split is not cosmetic: a link that opened a panel would break everything a link promises, and a button that downloaded would lose the right-click, the middle-click, and the `download` attribute that names the saved file. Which one a row draws is read off the family the server routed the version to (DOC-004) — the web holds no list of file types. The version being read is marked `aria-current`.
+
+8. **A file outside the render set gets a card, never an empty well.** It states the filename, its size, one sentence saying why it is not on screen, and its download. The sentence is per family, because "not yet" (Word, PowerPoint, email — M12/3 and M12/4) is a different fact from "not ever" (the long tail).
 
 ## DES-017: Editing model — per-field inline commit, no page edit mode
 

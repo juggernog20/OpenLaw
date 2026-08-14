@@ -3682,6 +3682,10 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     note: null,
     originalFilename: "Orion_MSA_2026_draft.docx",
     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    /** DOC-004's family, routed by the server (M12/2). Word is
+     * download-only until M12/3, so most fixtures here keep the name a
+     * plain download link. */
+    renderFamily: "word",
     byteSize: 88_000,
     checksumSha256: "a".repeat(64),
     uploadedBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
@@ -3735,7 +3739,14 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     title: "board_pack.pdf",
     isPrimary: false,
     createdBy: { id: "u1", displayName: "Ada Admin", image: null, archived: false },
-    versions: [version({ id: "ver-4", originalFilename: "board_pack.pdf" })],
+    versions: [
+      version({
+        id: "ver-4",
+        originalFilename: "board_pack.pdf",
+        mimeType: "application/pdf",
+        renderFamily: "pdf",
+      }),
+    ],
   };
 
   /** One file narrowed to the contract's named team, on a record
@@ -3746,7 +3757,14 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     title: "board-memo.txt",
     isPrimary: false,
     isConfidential: true,
-    versions: [version({ id: "ver-5", originalFilename: "board-memo.txt" })],
+    versions: [
+      version({
+        id: "ver-5",
+        originalFilename: "board-memo.txt",
+        mimeType: "text/plain",
+        renderFamily: "other",
+      }),
+    ],
   };
 
   /** Three rounds on one document, the third of them current — the
@@ -4817,5 +4835,296 @@ describe("the paged Documents section (CTR-024, DES-031)", () => {
     expect(await within(section).findByRole("link", { name: SECOND.title })).toBeInTheDocument();
     expect(within(section).getByRole("link", { name: FIRST.title })).toBeInTheDocument();
     expect(within(section).getByRole("img", { name: "2 documents" })).toBeVisible();
+  });
+});
+
+/**
+ * The doc panel (M12/2, DOC-004, DES-016).
+ *
+ * The demand is one sentence: a Legal Team Member clicks a PDF version
+ * on a contract and reads it in-app, no download. What this asserts is
+ * the panel around that — that the name opens it, that the family the
+ * server routed the file to decides which surface it gets, that a file
+ * outside the render set gets an honest card and never a broken
+ * preview, that any round in the chain opens, and that the M4 keyboard
+ * contract holds: Esc closes it and focus comes back to the row.
+ *
+ * The rendering itself is not asserted here and cannot be: pdf.js draws
+ * into a canvas, which jsdom has none of. What the panel promises this
+ * layer is the right surface at the right address — the pixels are the
+ * library's job, and the demo spec is where the whole stack is watched
+ * drawing them.
+ */
+describe("the doc panel (M12/2)", () => {
+  const version = (over: Record<string, unknown> = {}) => ({
+    id: "pv-1",
+    versionNumber: 1,
+    kind: "draft_ours",
+    note: null,
+    originalFilename: "msa-signed.pdf",
+    mimeType: "application/pdf",
+    renderFamily: "pdf",
+    byteSize: 240_000,
+    checksumSha256: "a".repeat(64),
+    uploadedBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+    createdAt: "2026-08-11T09:00:00.000Z",
+    isCurrent: true,
+    isExecuted: false,
+    ...over,
+  });
+
+  const document = (over: Record<string, unknown> = {}) => ({
+    id: "pdoc-1",
+    title: "Orion Cloud — master services agreement",
+    description: null,
+    isPrimary: true,
+    archivedAt: null,
+    isConfidential: false,
+    createdBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+    createdAt: "2026-08-11T09:00:00.000Z",
+    updatedAt: "2026-08-11T09:00:00.000Z",
+    versions: [version()],
+    ...over,
+  });
+
+  /** The record's three loader reads plus the paper, and nothing else:
+   * the panel makes no call of its own — the preview is an address the
+   * browser fetches, not a client call. */
+  function panelApi(rows: Record<string, unknown>[]) {
+    const record = recordApi(contractRow(), [person("u1", "creator"), person("u2", "member")]);
+    return (call: StubCall): Response | undefined => {
+      if (call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
+        return json(200, { documents: rows, nextCursor: null });
+      }
+      return record.handler(call);
+    };
+  }
+
+  /** The same, plus the metadata edit — for the one test that renames a
+   * document while its panel is open. */
+  function editablePanelApi() {
+    const record = recordApi(contractRow(), [person("u1", "creator"), person("u2", "member")]);
+    let rows = [document()];
+    return (call: StubCall): Response | undefined => {
+      if (call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
+        return json(200, { documents: rows, nextCursor: null });
+      }
+      const edited = /^\/api\/v1\/documents\/([^/]+)$/.exec(call.url.pathname);
+      if (edited && call.method === "PATCH") {
+        const next = { ...rows[0]!, ...(call.body as Record<string, unknown>) };
+        rows = [next];
+        return json(200, { document: next });
+      }
+      return record.handler(call);
+    };
+  }
+
+  const section = () => screen.findByRole("region", { name: /^Documents/ });
+  const panel = (name: RegExp) => screen.findByRole("complementary", { name });
+
+  it("opens a PDF version in the panel from its name, with no download", async () => {
+    stubApi({ signedIn: MEMBER, extra: panelApi([document()]) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    // A file that reads in the app is a button, not a download link:
+    // pressing it opens the panel rather than saving the file.
+    const open = within(list).getByRole("button", {
+      name: "Orion Cloud — master services agreement",
+    });
+    expect(
+      within(list).queryByRole("link", { name: "Orion Cloud — master services agreement" }),
+    ).toBeNull();
+
+    await user.click(open);
+    const reading = await panel(/master services agreement, version 1/);
+    // The name, the round, and the file's own name — the DOC2 mock's
+    // header and toolbar.
+    expect(within(reading).getByRole("heading", { level: 2 })).toHaveTextContent(
+      "Orion Cloud — master services agreement",
+    );
+    expect(within(reading).getByText("v1")).toBeVisible();
+    expect(within(reading).getByText("msa-signed.pdf")).toBeVisible();
+    // The download is still one click away, from inside the panel.
+    expect(within(reading).getByRole("link", { name: "Download" })).toHaveAttribute(
+      "href",
+      "/api/v1/documents/pdoc-1/versions/pv-1/download",
+    );
+    // The chain says which round is on screen, so a reader coming back
+    // to the list can see where they are.
+    expect(open).toHaveAttribute("aria-current", "true");
+  });
+
+  it("keeps the panel's header on the record's own words after a rename", async () => {
+    stubApi({ signedIn: MEMBER, extra: editablePanelApi() });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(
+      within(list).getByRole("button", { name: "Orion Cloud — master services agreement" }),
+    );
+    await panel(/master services agreement, version 1/);
+
+    // Renaming the document while it is open moves the panel's header
+    // with it: what the panel draws is resolved from the list, never
+    // from a copy taken when it opened.
+    await user.click(
+      within(list).getByRole("button", {
+        name: "Actions for Orion Cloud — master services agreement",
+      }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: "Edit details" }));
+    const dialog = await screen.findByRole("dialog");
+    const name = within(dialog).getByLabelText("Name");
+    await user.clear(name);
+    await user.type(name, "Orion Cloud MSA");
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    expect(await panel(/Orion Cloud MSA, version 1/)).toBeVisible();
+  });
+
+  it("draws a raster image inline, from the preview address", async () => {
+    const image = document({
+      id: "pdoc-img",
+      title: "Signature page",
+      versions: [
+        version({
+          id: "pv-img",
+          originalFilename: "signature-page.png",
+          mimeType: "image/png",
+          renderFamily: "image",
+        }),
+      ],
+    });
+    stubApi({ signedIn: MEMBER, extra: panelApi([image]) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    await user.click(within(await section()).getByRole("button", { name: "Signature page" }));
+    const reading = await panel(/Signature page, version 1/);
+    // Inline, and read from the preview rather than the download: the
+    // server sets the type and the disposition there.
+    expect(within(reading).getByRole("img", { name: "signature-page.png" })).toHaveAttribute(
+      "src",
+      "/api/v1/documents/pdoc-img/versions/pv-img/preview",
+    );
+  });
+
+  it("gives an out-of-set file an honest download card, never a broken preview", async () => {
+    const sheet = document({
+      id: "pdoc-x",
+      title: "fee-schedule.xlsx",
+      versions: [
+        version({
+          id: "pv-x",
+          originalFilename: "fee-schedule.xlsx",
+          mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          renderFamily: "other",
+        }),
+      ],
+    });
+    stubApi({ signedIn: MEMBER, extra: panelApi([sheet]) });
+    renderAt("/contracts/42");
+
+    const list = await section();
+    // Nothing in the section opens it, because nothing in the app can
+    // read it: the name stays the download it was in M11.
+    expect(within(list).getByRole("link", { name: "fee-schedule.xlsx" })).toHaveAttribute(
+      "href",
+      "/api/v1/documents/pdoc-x/versions/pv-x/download",
+    );
+    expect(within(list).queryByRole("button", { name: "fee-schedule.xlsx" })).toBeNull();
+  });
+
+  it("opens a superseded round as readily as the current one", async () => {
+    const chain = document({
+      id: "pdoc-chain",
+      title: "Negotiated agreement",
+      versions: [
+        version({
+          id: "pv-a",
+          versionNumber: 1,
+          originalFilename: "round_1.pdf",
+          isCurrent: false,
+        }),
+        version({ id: "pv-b", versionNumber: 2, originalFilename: "round_2.pdf" }),
+      ],
+    });
+    stubApi({ signedIn: MEMBER, extra: panelApi([chain]) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(
+      within(list).getByRole("button", { name: /Show the 1 earlier version of Negotiated/ }),
+    );
+    await user.click(within(list).getByRole("button", { name: "round_1.pdf" }));
+
+    // The round on screen is the one that was asked for, not the head
+    // of the chain.
+    const reading = await panel(/Negotiated agreement, version 1/);
+    expect(within(reading).getByText("round_1.pdf")).toBeVisible();
+    expect(within(reading).getByRole("link", { name: "Download" })).toHaveAttribute(
+      "href",
+      "/api/v1/documents/pdoc-chain/versions/pv-a/download",
+    );
+  });
+
+  it("closes on Esc and puts focus back on the row that opened it", async () => {
+    stubApi({ signedIn: MEMBER, extra: panelApi([document()]) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    const open = within(list).getByRole("button", {
+      name: "Orion Cloud — master services agreement",
+    });
+    await user.click(open);
+    await panel(/master services agreement, version 1/);
+
+    await user.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("complementary", { name: /master services agreement, version 1/ }),
+      ).toBeNull(),
+    );
+    // DES-010's restore-to-trigger rule: the panel is a plain aside, so
+    // this is wired by hand and has to be asserted.
+    expect(open).toHaveFocus();
+  });
+
+  it("closes from its own close control", async () => {
+    stubApi({ signedIn: MEMBER, extra: panelApi([document()]) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(
+      within(list).getByRole("button", { name: "Orion Cloud — master services agreement" }),
+    );
+    const reading = await panel(/master services agreement, version 1/);
+    await user.click(within(reading).getByRole("button", { name: "Close the document" }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("complementary", { name: /master services agreement, version 1/ }),
+      ).toBeNull(),
+    );
+  });
+
+  it("lets a Contributor on the team read what they can already download", async () => {
+    stubApi({ signedIn: CONTRIBUTOR, extra: panelApi([document()]) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(
+      within(list).getByRole("button", { name: "Orion Cloud — master services agreement" }),
+    );
+    // Read access means reading, on every surface: the panel is not a
+    // write and is offered to everyone the record names.
+    expect(await panel(/master services agreement, version 1/)).toBeVisible();
   });
 });

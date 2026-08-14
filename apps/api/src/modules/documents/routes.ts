@@ -138,7 +138,8 @@ import {
   type ContractAccessReader,
 } from "../../lib/contract-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
-import { attachmentDisposition, MEGABYTE } from "../../lib/uploads.js";
+import { previewContentType, RENDER_FAMILIES, renderFamilyOf } from "../../lib/render-family.js";
+import { attachmentDisposition, inlineDisposition, MEGABYTE } from "../../lib/uploads.js";
 
 /** The contract read floor (CTR-021), which is the document floor too:
  * a Contributor reads and downloads the paper on a contract they are
@@ -228,6 +229,21 @@ const VersionSchema = z.object({
   /** What the upload declared it was — a rendering hint (DOC-004),
    * never a decision. */
   mimeType: z.string(),
+  /**
+   * Which of DOC-004's families this file belongs to, and therefore
+   * which surface the doc panel opens for it (M12/2).
+   *
+   * Routed on the server from the declared type and the filename, so
+   * the panel holds no copy of that table and a family added later
+   * reaches every client at once. `pdf` and `image` render in the panel
+   * today; `word`, `presentation`, and `email` show a download card
+   * until M12/3 and M12/4 flip them; `other` is download-only for good.
+   *
+   * It is a hint about how to draw the file and never a statement about
+   * what the bytes are. The preview read decides for itself what to
+   * call them, from the same table.
+   */
+  renderFamily: z.enum(RENDER_FAMILIES),
   /** Counted by the server as the bytes streamed past. */
   byteSize: z.int().nonnegative(),
   /** Lowercase hex SHA-256, computed over the same pass. */
@@ -638,6 +654,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       note: row.note,
       originalFilename: row.originalFilename,
       mimeType: row.mimeType,
+      renderFamily: renderFamilyOf(row.mimeType, row.originalFilename),
       byteSize: row.byteSize,
       checksumSha256: row.checksumSha256,
       uploadedBy: toPerson(row.uploadedBy),
@@ -1701,30 +1718,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const { documentId, versionId } = request.params;
-      // Document, owning contract, and reach in one read: the scope
-      // rides beside the ids, so a version on a contract this viewer
-      // cannot reach is not distinguishable from one that is not there.
-      const [row] = await app.db
-        .select({
-          fileRef: documentVersions.fileRef,
-          originalFilename: documentVersions.originalFilename,
-          mimeType: documentVersions.mimeType,
-          byteSize: documentVersions.byteSize,
-        })
-        .from(documentVersions)
-        .innerJoin(documents, eq(documentVersions.documentId, documents.id))
-        .innerJoin(contracts, eq(documents.contractId, contracts.id))
-        .where(
-          and(
-            eq(documentVersions.id, versionId),
-            eq(documentVersions.documentId, documentId),
-            contractTeamScope(app.db, request.user),
-            documentAudienceScope(app.db, request.user),
-          ),
-        )
-        .limit(1);
-      if (!row) throw httpError(404, NO_DOCUMENT);
+      const row = await reachedVersion(request.user, request.params);
 
       const body = await app.storage.get(row.fileRef);
       return (
@@ -1744,6 +1738,135 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       );
     },
   );
+
+  app.get(
+    "/documents/:documentId/versions/:versionId/preview",
+    {
+      preHandler: requireDocumentReader,
+      schema: {
+        operationId: "previewDocumentVersion",
+        summary:
+          "Stream one version's file back for display in place — what " +
+          "the doc panel reads (M12/2, DOC-004). It is the download's " +
+          "twin and differs in exactly two headers: the disposition is " +
+          "inline, and the content type is the server's own rather than " +
+          "the one the upload declared. The type is routed from that " +
+          "declaration and the filename together — a hint, never a " +
+          "security decision — so a file that lies about itself can " +
+          "change which card the panel draws and can never change what " +
+          "the browser is told to do with it. A family with no in-app " +
+          "preview is refused 415 and the panel offers the download " +
+          "instead: PDFs and raster images render today, and SVG does " +
+          "not, because an inline SVG is a script. Any version in the " +
+          "chain previews, superseded rounds included. It sits behind " +
+          "the same two predicates every document read does: a " +
+          "Contributor on the team previews what they may download, and " +
+          "anyone who cannot reach the contract — or is outside a " +
+          "confidential document's audience — is answered 404, exactly " +
+          "as for a document that was never uploaded",
+        tags: ["documents"],
+        // The whole fixed set the routing table can choose from — a
+        // response is one of these or it is a problem document. Unlike
+        // the download's single octet-stream, this list is knowable,
+        // because the server picks the type rather than echoing one.
+        produces: [
+          "application/pdf",
+          "image/png",
+          "image/jpeg",
+          "image/gif",
+          "image/webp",
+          "image/bmp",
+          "image/avif",
+        ],
+        params: VersionParams,
+        response: {
+          200: DownloadSchema,
+          default: problemResponse,
+        },
+      },
+    },
+    async (request, reply) => {
+      const row = await reachedVersion(request.user, request.params);
+
+      // Chosen from the table, never echoed from the row. This is the
+      // whole of what "a hint, never a security decision" buys: the
+      // uploader's string reaches the routing and never the header.
+      const contentType = previewContentType(row.mimeType, row.originalFilename);
+      if (!contentType) {
+        // Plainly, not as a 404. The reader can already see the
+        // document — they were handed its row — so hiding here would
+        // hide nothing and would make an honest "this does not preview"
+        // read as a bug.
+        throw httpError(415, "This file type has no in-app preview. Download it instead.");
+      }
+
+      const body = await app.storage.get(row.fileRef);
+      return (
+        reply
+          .header("content-type", contentType)
+          .header("content-length", String(row.byteSize))
+          .header("content-disposition", inlineDisposition(row.originalFilename))
+          // Belt and braces on a server-set type: the browser must use
+          // the type it was given rather than sniffing the bytes for a
+          // more interesting one.
+          .header("x-content-type-options", "nosniff")
+          // The panel fetches these bytes and draws them itself, so
+          // nothing here needs to run. A browser navigated straight at
+          // this address gets an inert document: no scripts, no
+          // subresources, no same-origin reach.
+          .header("content-security-policy", "default-src 'none'; sandbox")
+          .header("cache-control", "private, max-age=0, must-revalidate")
+          .send(body)
+      );
+    },
+  );
+
+  /** One stored version, as the two byte reads need it described. */
+  interface ReachedVersion {
+    fileRef: string;
+    originalFilename: string;
+    mimeType: string;
+    byteSize: number;
+  }
+
+  /**
+   * One version this viewer reaches, by its own id and its document's,
+   * or a 404.
+   *
+   * Shared by the download and the preview, because they ask one
+   * question and must not drift into two answers. Document, owning
+   * contract, and both scopes ride in one read: a version on a contract
+   * the viewer cannot reach, and a version of a confidential document
+   * they are outside the audience of, are each answered exactly as one
+   * that was never uploaded (DOC-008, DD-014). Rendering opens no side
+   * door past the contract gate.
+   */
+  async function reachedVersion(
+    user: AuthenticatedUser,
+    params: Readonly<{ documentId: string; versionId: string }>,
+  ): Promise<ReachedVersion> {
+    const [row] = await app.db
+      .select({
+        fileRef: documentVersions.fileRef,
+        originalFilename: documentVersions.originalFilename,
+        mimeType: documentVersions.mimeType,
+        byteSize: documentVersions.byteSize,
+      })
+      .from(documentVersions)
+      .innerJoin(documents, eq(documentVersions.documentId, documents.id))
+      .innerJoin(contracts, eq(documents.contractId, contracts.id))
+      .where(
+        and(
+          eq(documentVersions.id, params.versionId),
+          eq(documentVersions.documentId, params.documentId),
+          contractTeamScope(app.db, user),
+          documentAudienceScope(app.db, user),
+        ),
+      )
+      .limit(1);
+    if (!row) throw httpError(404, NO_DOCUMENT);
+    return row;
+  }
 
   /** Where one version's blob lives (DOC-012): minted from the two ids,
    * never from the uploaded filename, so no name a person chose can

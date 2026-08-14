@@ -4,7 +4,12 @@
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
     "types": ["vite/client"],
-    "noEmit": true
+    "noEmit": true,
+    // The Vite config imports its own plugin by its real filename.
+    // Vite's native config loader wants the extension, and nothing here
+    // is ever emitted, so the extension is allowed rather than the
+    // warning tolerated.
+    "allowImportingTsExtensions": true
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["src", "vite.config.ts", "vite-pdfjs-assets.ts"]
 }

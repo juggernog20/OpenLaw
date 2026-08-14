@@ -3,9 +3,14 @@
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
+import { pdfjsAssets } from "./vite-pdfjs-assets.ts";
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  // The doc panel's PDF surface fetches pdf.js's character maps,
+  // standard-font metrics, image decoders, and colour profiles by name
+  // at run time. They are served from this origin rather than from a
+  // CDN (DD-001), which no bundler can arrange on its own.
+  plugins: [react(), tailwindcss(), pdfjsAssets()],
   // Same-origin in development: the API (and its /api/auth better-auth
   // handler) is proxied so session cookies never cross origins (TECH-008).
   // The Origin header is rewritten because better-auth's CSRF check
