@@ -116,11 +116,15 @@ describe("S3-compatible driver", () => {
     expect(await readAll(object.Body as Readable)).toBe("the executed copy");
   });
 
-  it("leaves no object behind when the source stream fails", async () => {
+  it("leaves no object behind when a multipart upload's source stream fails", async () => {
+    // The shared contract suite already cuts off a small upload, which
+    // never leaves one part. This one is over the 5 MiB minimum part
+    // size before it dies, so parts have gone to the store and the
+    // upload has to be abandoned rather than completed.
     const key = randomUUID();
     const failing = Readable.from(
       (async function* () {
-        yield Buffer.from("the first half of a draft");
+        yield Buffer.alloc(6 * 1024 * 1024, "x");
         throw new Error("the upload was cut off");
       })(),
     );
@@ -130,7 +134,7 @@ describe("S3-compatible driver", () => {
     await expect(
       store.client.send(new GetObjectCommand({ Bucket: store.bucket, Key: key })),
     ).rejects.toThrow();
-  });
+  }, 60_000);
 
   it("lets exactly one of two writers of the same key win", async () => {
     const key = randomUUID();

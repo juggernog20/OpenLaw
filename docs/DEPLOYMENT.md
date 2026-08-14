@@ -161,14 +161,23 @@ Migrations run automatically when the app container boots (TECH-005); replicas b
 
 ## Backups
 
-Two things hold state: the database and the files volume.
+Two things hold state: the database, and wherever your storage driver keeps its files. Back both up together: a database row points at a file, and a file with no row is unreachable.
+
+The database, on the bundled Postgres:
 
 ```bash
 docker compose exec postgres pg_dump -U openlaw openlaw > openlaw-$(date +%F).sql
+```
+
+For external Postgres, run `pg_dump` against it directly.
+
+The files, on the **local** driver:
+
+```bash
 docker compose run --rm --no-deps --entrypoint sh -v "$PWD:/out" app \
   -c 'tar czf "/out/openlaw-files-$(date +%F).tar.gz" -C "$STORAGE_PATH" .'
 ```
 
-The second command archives the files volume through the `app` service, so it picks up whatever volume and `STORAGE_PATH` your stack declares — no volume name to keep in step. It writes the archive into the current directory as the container's `node` user (uid 1000).
+That command archives the files volume through the `app` service, so it picks up whatever volume and `STORAGE_PATH` your stack declares — no volume name to keep in step. It writes the archive into the current directory as the container's `node` user (uid 1000).
 
-For external Postgres, run `pg_dump` against it directly. On the S3 driver, back the bucket up with your store's own tooling instead of the volume. Back both up together whichever the pair is: a database row points at a file, and a file with no row is unreachable.
+On the **s3** driver, do not run it — the volume is empty. Back the bucket up with your store's own tooling: versioning, replication, or a scheduled sync. Keep the old volume too if the install ever ran on the local driver; the files it wrote are still read from it.
