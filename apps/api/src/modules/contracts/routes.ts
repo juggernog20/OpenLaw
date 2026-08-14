@@ -81,6 +81,21 @@
  * business/legal editable-field split is not built here: a Contributor
  * reads.
  *
+ * The same predicate carries DD-014's Confidential flag (M10). A
+ * confidential contract is reached by the named team, its Owner, and
+ * Administrators, and by nobody else — so a Legal Team Member who is not
+ * on it is answered exactly as they are for a contract that was never
+ * made, in the list and at the record URL alike.
+ *
+ * Every mutation asks the same question, on the row it has locked and
+ * inside its own transaction: the per-field patch whatever it carries,
+ * the status change, the team add and remove, the counterparty add,
+ * remove and primary change, and archive and restore. They all start at
+ * `lockedContract`, which is where the question is asked once. So a
+ * write against a contract the viewer cannot reach answers exactly as a
+ * write against a contract that does not exist, and a write leaks no
+ * more than a read.
+ *
  * Every mutation appends to the activity log in the same transaction
  * (DD-017); the feed and audit surfaces read it in M9.
  */
@@ -115,7 +130,12 @@ import {
 } from "@openlaw/db";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
-import { contractTeamScope } from "../../lib/contract-access.js";
+import {
+  confidentialityWrite,
+  contractTeamScope,
+  CREATOR_TEAM_ROLE,
+  reachesLockedContract,
+} from "../../lib/contract-access.js";
 import {
   AttachedCustomFieldSchema,
   assertRequiredCustomFields,
@@ -132,9 +152,13 @@ const requireMember = requireRole("administrator", "legal_team_member");
 
 /**
  * The two read surfaces — the list and the record — take a Contributor
- * as well (CTR-021). The role alone opens no contract: `teamScope` narrows
- * the answer to the contracts the Contributor holds a `contract_team`
- * row on. Business Users stay refused on every contract surface.
+ * as well (CTR-021). The role alone opens no contract: `teamScope`
+ * narrows the answer to the contracts the Contributor holds a
+ * `contract_team` row on, and takes a confidential contract away from
+ * anyone outside its named team and its Owner (DD-014) — except an
+ * Administrator, who reaches every contract with no team row and no
+ * Owner assignment at all. Business Users stay refused on every contract
+ * surface.
  */
 const requireContractReader = requireRole("administrator", "legal_team_member", "contributor");
 
@@ -144,10 +168,6 @@ const DRAFT_STATUS_SLUG = "draft";
 /** Only a Member+ user can be the Owner: the Owner runs the contract,
  * and a read-only viewer cannot run one (CTR-004, DD-013). */
 const OWNER_ROLES = ["administrator", "legal_team_member"] as const;
-
-/** The `creator` row is provenance, not membership: the server writes it
- * once at creation, and nothing after that adds or drops it. */
-const CREATOR_ROLE = "creator";
 
 const SeveritySchema = z.enum(SEVERITY_LEVELS);
 
@@ -275,6 +295,11 @@ const ContractRowSchema = z.object({
    * `description` does — it is a column of the record, and the
    * per-field PATCH answers with the row. */
   customFields: CustomFieldsSchema,
+  /** DD-014's opt-in gate. `true` means only the named team, the Owner,
+   * and Administrators reach this record at all — so every viewer who
+   * receives this row already reaches it, and the flag is here to be
+   * drawn (DES-009's marker and banner), never to be inferred from. */
+  isConfidential: z.boolean(),
   archivedAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
@@ -471,6 +496,7 @@ function toRow(context: ContractContext) {
     value: toValue(row),
     description: row.description,
     customFields: row.customFields,
+    isConfidential: row.isConfidential,
     archivedAt: row.archivedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -694,24 +720,92 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
    * names, or 404s — every mutation starts here. One query, the same
    * join the reads use; `of: contracts` locks the contract row alone,
    * because the joined taxonomy rows are only read here.
+   *
+   * Reach is asked next, on the row this just locked and inside the same
+   * transaction (CTR-021, DD-014). Member+ was a sufficient grant until
+   * M10, so this read carried no row scope at all; the Confidential flag
+   * is the one thing that takes a contract away from a Legal Team
+   * Member, so every write now asks the question every read already
+   * asks — the shared predicate, not a second copy of it.
+   *
+   * The order is the point. The lock comes first, so the flag and the
+   * team rows cannot move under the answer; the question comes before
+   * anything is written, so a refusal changes nothing. A contract this
+   * viewer does not reach then answers exactly as a contract that was
+   * never made — the same status and the same words — so a write leaks
+   * no more than a read.
    */
-  async function lockedContract(tx: Tx, number: number): Promise<ContractContext> {
+  async function lockedContract(
+    tx: Tx,
+    number: number,
+    user: AuthenticatedUser,
+  ): Promise<ContractContext> {
     const [target] = await selectContracts(tx)
       .where(eq(contracts.number, number))
       .limit(1)
       .for("update", { of: contracts });
     if (!target) throw httpError(404, "No contract exists with this number.");
+    if (!(await reachesLockedContract(tx, user, target.row))) {
+      throw httpError(404, "No contract exists with this number.");
+    }
     return target;
   }
 
-  /** `lockedContract` for the write paths that refuse a frozen record —
-   * an archived contract reads as facts until it is restored. */
-  async function editableContract(tx: Tx, number: number): Promise<ContractContext> {
-    const current = await lockedContract(tx, number);
+  /** The refusal every write path shares: an archived contract reads as
+   * facts until it is restored. Separate from the read that produced it,
+   * because one caller has a guard to answer first (see below). */
+  function assertEditable(current: ContractContext): void {
     if (current.row.archivedAt) {
       throw httpError(409, "This contract is archived. Restore it before editing.");
     }
+  }
+
+  /** `lockedContract` for the write paths that refuse a frozen record.
+   * The reach refusal comes first, inside `lockedContract`: a 409 on a
+   * record the viewer cannot reach would say the record is there. */
+  async function editableContract(
+    tx: Tx,
+    number: number,
+    user: AuthenticatedUser,
+  ): Promise<ContractContext> {
+    const current = await lockedContract(tx, number, user);
+    assertEditable(current);
     return current;
+  }
+
+  /**
+   * The two refusals behind the Confidential flag (DD-014, CTR-022),
+   * decided by the shared access module and turned into HTTP here.
+   *
+   * A viewer who does reach the record but is none of the three actors
+   * is refused plainly: they can already see the record, so 404 would
+   * hide nothing and would only make a real permission boundary read as
+   * a bug.
+   *
+   * A viewer who does not reach the record never arrives here — every
+   * mutation is refused at `lockedContract` now, in the same words a
+   * contract that does not exist is refused in. The module still answers
+   * that case, and this still turns it into the same 404: the whole
+   * question has one home, and a caller that reads only half of the
+   * answer would be one refactor away from a leak.
+   *
+   * It runs before the archived refusal, because a 409 on a record the
+   * viewer may not decide the audience of would tell them the flag write
+   * was theirs to make.
+   */
+  async function assertMayFlagConfidential(
+    tx: Tx,
+    current: ContractContext,
+    user: AuthenticatedUser,
+  ) {
+    const verdict = await confidentialityWrite(tx, user, current.row);
+    if (verdict === "unreachable") throw httpError(404, "No contract exists with this number.");
+    if (verdict === "refused") {
+      throw httpError(
+        403,
+        "Only an Administrator, the contract's creator, or its Owner can change this.",
+      );
+    }
   }
 
   /** One contract type's attached fields, in the order the record draws
@@ -849,9 +943,12 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "The contract list, newest reference first: number, title, " +
           "type, and status; archived contracts only with " +
-          "includeArchived=true. Member+ read every contract; a " +
-          "Contributor reads exactly the contracts they hold a " +
-          "contract_team row on, archived ones behind the same flag",
+          "includeArchived=true. Member+ read every contract that is not " +
+          "confidential; a Contributor reads exactly the contracts they " +
+          "hold a contract_team row on, archived ones behind the same " +
+          "flag. A confidential contract is listed only for its named " +
+          "team, its Owner, and Administrators — silently absent for " +
+          "everyone else, so no count can reveal it",
         tags: ["contracts"],
         querystring: z.object({ includeArchived: z.enum(["true", "false"]).optional() }),
         response: {
@@ -968,7 +1065,8 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           "the record page's read; archived contracts answer too, so " +
           "restore stays reachable. A Contributor reads a contract they " +
           "hold a contract_team row on, and is answered 404 on one they " +
-          "do not",
+          "do not. A confidential contract answers the same 404 to " +
+          "anyone outside its named team, its Owner, and Administrators",
         tags: ["contracts"],
         params: NumberParams,
         response: { 200: ContractRecordEnvelope, default: problemResponse },
@@ -1003,7 +1101,9 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           "refused while one is empty); the status starts on the " +
           "protected draft seed (CTR-001) and the number comes from the " +
           "CTR-003 sequence. Everything else is set inline on the record " +
-          "afterward",
+          "afterward — except the Confidential flag (DD-014), which may " +
+          "be set here so a sensitive record is never visible to the " +
+          "wrong audience, even briefly",
         tags: ["contracts"],
         // Strict: the number is the sequence's to give, so a body
         // carrying one is refused rather than silently ignored.
@@ -1014,6 +1114,11 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
            * have to be here — the rest are set on the record — and a
            * slug the type does not attach is refused. */
           customFields: CustomFieldsInput.optional(),
+          /** DD-014's flag, from the first moment. No actor check is
+           * needed: the person creating the record is its creator, and
+           * the creator is one of the three who may set it. Omitted
+           * means open, which is the product's default (DD-014). */
+          isConfidential: z.boolean().optional(),
         }),
         response: { 201: ContractEnvelope, default: problemResponse },
       },
@@ -1068,6 +1173,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         );
         assertRequiredCustomFields(attached, customFields);
 
+        const isConfidential = request.body.isConfidential ?? false;
         const [row] = await tx
           .insert(contracts)
           .values({
@@ -1075,6 +1181,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             contractTypeId: contractType.id,
             statusId: draft.id,
             customFields,
+            isConfidential,
           })
           .returning();
         // Provenance, written once and never again (CTR-004): who made
@@ -1084,7 +1191,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         await tx.insert(contractTeam).values({
           contractId: row!.id,
           userId: request.user.id,
-          role: CREATOR_ROLE,
+          role: CREATOR_TEAM_ROLE,
         });
         await recordActivity(tx, {
           entityType: "contract",
@@ -1103,6 +1210,21 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             customFields: Object.keys(customFields).sort(),
           },
         });
+        // A record born walled off gets its own entry beside the
+        // creation one. DD-014 wants every set of the flag accountable
+        // by actor and timestamp, and an Administrator reading the audit
+        // log should find it under the verb they filtered on rather than
+        // inside a `contract.created` payload they had to know to open.
+        if (isConfidential) {
+          await recordActivity(tx, {
+            entityType: "contract",
+            entityId: row!.id,
+            actorId: request.user.id,
+            action: "contract.confidentiality_set",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: { number: row!.number, title: row!.title },
+          });
+        }
         return {
           row: row!,
           contractTypeName: contractType.displayName,
@@ -1135,7 +1257,12 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           "cadence commit together and clear together. Re-typing " +
           "re-checks the new type's hard-required fields before it " +
           "commits (CTR-016/MTR-014), so the type and the values that " +
-          "satisfy it may be sent together. Never on an archived contract",
+          "satisfy it may be sent together. The Confidential flag " +
+          "(DD-014) commits here too, but only for an Administrator, the " +
+          "contract's creator, or its Owner: anyone else who reaches the " +
+          "record is refused 403, and anyone who does not reach it is " +
+          "answered 404 like a contract that does not exist. Never on an " +
+          "archived contract",
         tags: ["contracts"],
         params: NumberParams,
         // Strict: an unknown key is a client bug, not a silent strip.
@@ -1165,6 +1292,11 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
            * attach are refused. */
           customFields: CustomFieldsInput.optional(),
           statusId: z.string().optional(),
+          /** DD-014's flag, set or cleared. It rides the per-field PATCH
+           * like every other field, but it is the one field with an
+           * actor set narrower than the route's, and it keeps its own
+           * audit verb rather than joining the changed map. */
+          isConfidential: z.boolean().optional(),
         }),
         response: { 200: ContractFieldsEnvelope, default: problemResponse },
       },
@@ -1172,7 +1304,16 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const body = request.body;
       const updated = await app.db.transaction(async (tx) => {
-        const current = await editableContract(tx, request.params.number);
+        const current = await lockedContract(tx, request.params.number, request.user);
+        // Reach was answered above, for this patch and every other one,
+        // whatever the body carries. What is left is the flag's own
+        // narrower actor set, and it is asked before the archived
+        // refusal: a viewer who may not decide the audience should not
+        // learn from a 409 that the write was otherwise theirs to make.
+        if (body.isConfidential !== undefined) {
+          await assertMayFlagConfidential(tx, current, request.user);
+        }
+        assertEditable(current);
         const target = current.row;
 
         const patch: Partial<Contract> = {};
@@ -1343,6 +1484,18 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           }
         }
 
+        // The Confidential flag keeps its own audit verb for the reason
+        // DD-014 gives: the walling-off of a record has to be
+        // accountable in its own right, so it is a verb an Administrator
+        // can filter on rather than one key inside an edit. Like the
+        // status, it rides the same UPDATE and stays out of the changed
+        // map.
+        let confidentialityChange: boolean | undefined;
+        if (body.isConfidential !== undefined && body.isConfidential !== target.isConfidential) {
+          patch.isConfidential = body.isConfidential;
+          confidentialityChange = body.isConfidential;
+        }
+
         // The status keeps its own audit verb — surfaces branch on the
         // stage behind it (CTR-001) — so it rides the same UPDATE but
         // stays out of the changed map.
@@ -1407,6 +1560,23 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             payload: { number: row!.number, title: row!.title, ...statusChange },
           });
         }
+        if (confidentialityChange !== undefined) {
+          // One write, two DD-017 surfaces: the team's feed narrates it
+          // at the record-action tier, and the Administrator-only audit
+          // log — which reads every tier with no record scope — records
+          // it with actor and timestamp. The audit-log module needs
+          // nothing of its own for that.
+          await recordActivity(tx, {
+            entityType: "contract",
+            entityId: target.id,
+            actorId: request.user.id,
+            action: confidentialityChange
+              ? "contract.confidentiality_set"
+              : "contract.confidentiality_cleared",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: { number: row!.number, title: row!.title },
+          });
+        }
         return {
           row: row!,
           contractTypeName,
@@ -1455,8 +1625,8 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request, reply) => {
       const { userId, role } = request.body;
       const team = await app.db.transaction(async (tx) => {
-        const current = await editableContract(tx, request.params.number);
-        if (role === CREATOR_ROLE) {
+        const current = await editableContract(tx, request.params.number, request.user);
+        if (role === CREATOR_TEAM_ROLE) {
           throw httpError(400, "The creator is recorded when the contract is created.");
         }
         // Anyone live may join a team — external counsel participate as
@@ -1512,8 +1682,8 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const { userId, role } = request.params;
       const team = await app.db.transaction(async (tx) => {
-        const current = await editableContract(tx, request.params.number);
-        if (role === CREATOR_ROLE) {
+        const current = await editableContract(tx, request.params.number, request.user);
+        if (role === CREATOR_TEAM_ROLE) {
           throw httpError(409, "The creator stays on the record — it is who made it.");
         }
         const [removed] = await tx
@@ -1586,7 +1756,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request, reply) => {
       const { counterpartyId, name } = request.body;
       const result = await app.db.transaction(async (tx) => {
-        const current = await editableContract(tx, request.params.number);
+        const current = await editableContract(tx, request.params.number, request.user);
 
         let party: JoinedCounterparty;
         let born = false;
@@ -1676,7 +1846,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const { counterpartyId } = request.params;
       const result = await app.db.transaction(async (tx) => {
-        const current = await editableContract(tx, request.params.number);
+        const current = await editableContract(tx, request.params.number, request.user);
         const [removed] = await tx
           .delete(contractCounterparties)
           .where(
@@ -1761,7 +1931,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const { counterpartyId } = request.params;
       const result = await app.db.transaction(async (tx) => {
-        const current = await editableContract(tx, request.params.number);
+        const current = await editableContract(tx, request.params.number, request.user);
         const [target] = await tx
           .select({
             id: counterparties.id,
@@ -1817,7 +1987,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const archived = await app.db.transaction(async (tx) => {
-        const current = await lockedContract(tx, request.params.number);
+        const current = await lockedContract(tx, request.params.number, request.user);
         if (current.row.archivedAt) throw httpError(409, "This contract is already archived.");
 
         const [row] = await tx
@@ -1855,7 +2025,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const restored = await app.db.transaction(async (tx) => {
-        const current = await lockedContract(tx, request.params.number);
+        const current = await lockedContract(tx, request.params.number, request.user);
         if (!current.row.archivedAt) throw httpError(409, "This contract is not archived.");
 
         const [row] = await tx

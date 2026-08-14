@@ -794,10 +794,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The contract list, newest reference first: number, title, type, and status; archived contracts only with includeArchived=true. Member+ read every contract; a Contributor reads exactly the contracts they hold a contract_team row on, archived ones behind the same flag */
+    /** The contract list, newest reference first: number, title, type, and status; archived contracts only with includeArchived=true. Member+ read every contract that is not confidential; a Contributor reads exactly the contracts they hold a contract_team row on, archived ones behind the same flag. A confidential contract is listed only for its named team, its Owner, and Administrators — silently absent for everyone else, so no count can reveal it */
     get: operations["listContracts"];
     put?: never;
-    /** Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward */
+    /** Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward — except the Confidential flag (DD-014), which may be set here so a sensitive record is never visible to the wrong audience, even briefly */
     post: operations["createContract"];
     delete?: never;
     options?: never;
@@ -829,14 +829,14 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** One contract by its CTR-003 number, with its Owner, its signing entity, its counterparties, its working group, and the fields its type attaches (CTR-016) in attachment order — the record page's read; archived contracts answer too, so restore stays reachable. A Contributor reads a contract they hold a contract_team row on, and is answered 404 on one they do not */
+    /** One contract by its CTR-003 number, with its Owner, its signing entity, its counterparties, its working group, and the fields its type attaches (CTR-016) in attachment order — the record page's read; archived contracts answer too, so restore stays reachable. A Contributor reads a contract they hold a contract_team row on, and is answered 404 on one they do not. A confidential contract answers the same 404 to anyone outside its named team, its Owner, and Administrators */
     get: operations["getContract"];
     put?: never;
     post?: never;
     delete?: never;
     options?: never;
     head?: never;
-    /** Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, the value, the type, a custom field, or the status — any live status may follow any other (CTR-001). The value is one field in three parts: amount, currency, and cadence commit together and clear together. Re-typing re-checks the new type's hard-required fields before it commits (CTR-016/MTR-014), so the type and the values that satisfy it may be sent together. Never on an archived contract */
+    /** Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, the value, the type, a custom field, or the status — any live status may follow any other (CTR-001). The value is one field in three parts: amount, currency, and cadence commit together and clear together. Re-typing re-checks the new type's hard-required fields before it commits (CTR-016/MTR-014), so the type and the values that satisfy it may be sent together. The Confidential flag (DD-014) commits here too, but only for an Administrator, the contract's creator, or its Owner: anyone else who reaches the record is refused 403, and anyone who does not reach it is answered 404 like a contract that does not exist. Never on an archived contract */
     patch: operations["updateContract"];
     trace?: never;
   };
@@ -4206,6 +4206,7 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              isConfidential: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -4241,6 +4242,7 @@ export interface operations {
           customFields?: {
             [key: string]: (string | number | boolean | string[]) | null;
           };
+          isConfidential?: boolean;
         };
       };
     };
@@ -4289,6 +4291,7 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              isConfidential: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -4434,6 +4437,7 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              isConfidential: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -4530,6 +4534,7 @@ export interface operations {
             [key: string]: (string | number | boolean | string[]) | null;
           };
           statusId?: string;
+          isConfidential?: boolean;
         };
       };
     };
@@ -4578,6 +4583,7 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              isConfidential: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -4782,6 +4788,7 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              isConfidential: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -4864,6 +4871,7 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              isConfidential: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -4946,6 +4954,7 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              isConfidential: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -5027,6 +5036,7 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              isConfidential: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -5102,6 +5112,7 @@ export interface operations {
               customFields: {
                 [key: string]: string | number | boolean | string[];
               };
+              isConfidential: boolean;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;

@@ -197,6 +197,13 @@
       "when": 1786640218702,
       "tag": "0027_audit_log_created_at_idx",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1786650506463,
+      "tag": "0028_contract_confidential",
+      "breakpoints": true
     }
   ]
 }

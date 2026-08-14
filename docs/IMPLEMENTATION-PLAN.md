@@ -36,11 +36,12 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arc 2, milestone 10** — confidentiality, the last milestone of the arc. Arc 1 is done: the
-monorepo and CI, the authentication chain, the Compose stack a deployer actually runs, the themed
-app shell, and the `/settings` destination with its Personal and Organization rails. Arc 2 has the
-configurable types and statuses, the Entities registry, the contract record, and — with M9 — the
-conversation on a record and the two read surfaces over the activity log.
+**Arc 3, milestone 11** — documents and the version chain. Arc 1 is done: the monorepo and CI, the
+authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
+`/settings` destination with its Personal and Organization rails. Arc 2 is done too: the
+configurable types and statuses, the Entities registry, the contract record, the conversation on a
+record with the two read surfaces over the activity log, and — with M10 — the confidentiality gate
+that takes a walled-off contract out of the reach of everyone outside its team.
 
 ---
 
@@ -141,13 +142,19 @@ every later module reuses, so it is slower than it looks and pays for itself thr
   - Contributor team access to a contract record, which is the second audience Legal Only excludes
   - _Decisions:_ CMT-001 to CMT-009, CTR-021, DD-016, DD-017, DES-023 to DES-027
 
-- [ ] **M10 — Confidentiality**
+- [x] **M10 — Confidentiality**
       _Demo:_ Mark a contract confidential; a Legal Team Member who isn't on it can't see it in the list, in
       search, or anywhere else — with no placeholder revealing that it exists.
-  - The opt-in per-record flag on contracts and documents; silent omission, never a locked placeholder
-  - The three-tier affordance: inline marker, detail banner, composer warning
-  - Independent flags with a link-time nudge, no cascade
-  - _Decisions:_ DD-014, DES-009, CTR-018
+  - The opt-in per-record flag on contracts; silent omission, never a locked placeholder — the list, the
+    record URL, the comments, the activity feed, the unread counts, the mention candidates, and every
+    mutation all answer as for a record that does not exist
+  - One predicate for all of them: confidentiality composes in front of the M9 contract-access module
+  - The three-tier affordance: inline marker, record banner, composer notice
+  - Three actors decide the audience — an Administrator, the creator, and the Owner — and each set and
+    clear is its own activity action, so the audit log holds the walling-off itself
+  - The flag on documents waits for the `documents` table in M11; the CTR-018 link-time nudge waits for the
+    first link surface (M17/M23); search inherits the gate in M25
+  - _Decisions:_ DD-014, CTR-021 (extended in place), CTR-022, DES-009, DES-028, DES-029
 
 ---
 

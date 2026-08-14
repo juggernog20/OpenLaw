@@ -12,6 +12,13 @@
  * toggle with a row-level restore. The C1 mock's remaining columns — risk and expiry — join
  * with the tickets that add those fields to the record.
  *
+ * A confidential row carries DES-009's Tier 1 marker beside its title,
+ * where the C1 mock draws it. The list is the one surface in this build
+ * that renders a contract title outside the record page, so it is the
+ * one place the marker goes today. A viewer who cannot reach a
+ * confidential record gets no row for it at all — the API narrowed the
+ * list (DD-014, CTR-021) — so the marker marks records, never absences.
+ *
  * The destination takes Member+ and Contributors (CTR-021). A Contributor's
  * list is the contracts they hold a `contract_team` row on — the API
  * does that narrowing, and an empty answer is the list's own empty
@@ -48,6 +55,8 @@ import { currentUser, needsSetup } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
 import { Avatar } from "../components/avatar";
+import { ConfidentialMarker } from "../components/confidential-marker";
+import { ConfidentialToggle } from "../components/confidential-toggle";
 import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
 import { PageTitle } from "../components/page-title";
 import { Button } from "../components/ui/button";
@@ -388,6 +397,13 @@ function ContractsTable({
                   >
                     {row.title}
                   </Link>
+                  {/* DES-009 Tier 1, where the C1 mock draws it: beside
+                      the title, so a walled-off record is told apart
+                      while scanning thirty rows. A row is here only
+                      because this viewer reaches the record — the API
+                      answers no row at all to anyone else — so the
+                      marker never doubles as a placeholder (DD-014). */}
+                  {row.isConfidential && <ConfidentialMarker />}
                   {row.archivedAt !== null && (
                     <span className="inline-flex rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
                       <FormattedMessage id="contracts.archivedPill" defaultMessage="Archived" />
@@ -505,6 +521,10 @@ function CreateContractDialog({
    * types and back — a name typed once should not have to be typed
    * again because someone checked another type on the way. */
   const [fieldDrafts, setFieldDrafts] = useState<Record<string, CustomFieldDraft>>({});
+  /** DD-014's flag, set here so a sensitive record is never visible to
+   * the wrong audience, even briefly. The actor is the creator by
+   * definition, so no gate is needed: whoever may create may flag. */
+  const [confidential, setConfidential] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -569,7 +589,9 @@ function CreateContractDialog({
     }
     setBusy(true);
     const { data, error: problem } = await api
-      .POST("/api/v1/contracts", { body: { title: title.trim(), contractTypeId, customFields } })
+      .POST("/api/v1/contracts", {
+        body: { title: title.trim(), contractTypeId, customFields, isConfidential: confidential },
+      })
       .catch(() => ({ data: null, error: undefined }));
     setBusy(false);
     if (!data) {
@@ -671,6 +693,14 @@ function CreateContractDialog({
               )}
             </div>
           ))}
+          {/* DD-014's flag, where the C10 mock draws it: the last row
+              before the note, so the audience is decided before the
+              record exists rather than in the seconds after. */}
+          <ConfidentialToggle
+            id="contract-new-confidential"
+            confidential={confidential}
+            onChange={setConfidential}
+          />
           <p className="text-sm text-muted">
             <FormattedMessage
               id="contracts.form.draftNote"

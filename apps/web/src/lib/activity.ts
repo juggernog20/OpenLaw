@@ -55,6 +55,7 @@ import {
   KeyRound,
   Link2,
   ListOrdered,
+  Lock,
   LogOut,
   MessageSquare,
   Palette,
@@ -733,6 +734,24 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
     changes: (intl, payload, context) =>
       directChange(intl, payload, "primaryCounterparty", context),
+  },
+  // One glyph for confidentiality everywhere (DES-009), so the set and
+  // the clear wear the same Lock and the sentence is what tells them
+  // apart. An alternate glyph for the clear would be the second
+  // confidentiality icon that decision rules out.
+  "contract.confidentiality_set": {
+    icon: Lock,
+    message: defineMessage({
+      id: "activity.contract.confidentialitySet",
+      defaultMessage: "{actor} marked this contract confidential",
+    }),
+  },
+  "contract.confidentiality_cleared": {
+    icon: Lock,
+    message: defineMessage({
+      id: "activity.contract.confidentialityCleared",
+      defaultMessage: "{actor} cleared this contract's confidential mark",
+    }),
   },
   "contract.archived": {
     icon: Archive,

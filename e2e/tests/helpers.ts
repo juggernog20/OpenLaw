@@ -15,7 +15,9 @@ import {
   type Browser,
   type BrowserContext,
   type Page,
+  type TestInfo,
 } from "@playwright/test";
+import { AxeBuilder } from "@axe-core/playwright";
 import { z } from "zod";
 import { extractLink, waitForMailTo } from "./mailpit.js";
 
@@ -227,6 +229,50 @@ export async function ensureSsoProviderExists(request: APIRequestContext): Promi
   } finally {
     await idp.close();
   }
+}
+
+/** One axe finding, as the runner reports it. */
+export type AxeViolation = Awaited<ReturnType<AxeBuilder["analyze"]>>["violations"][number];
+
+/**
+ * Scans a page with axe-core and reports what it found (#48, DES-011).
+ *
+ * Reporting is the default and failing is the caller's choice. The
+ * whole-page scans in the accessibility floor spec are an advisory
+ * triage signal: violations are printed to the runner output (and
+ * raised as GitHub warning annotations in CI) and attached to the
+ * report, but they do not fail the run. A caller that owns a surface —
+ * a milestone spec scanning the chrome it just built — asserts on the
+ * answer instead.
+ *
+ * `include` narrows the scan to one CSS selector's subtree, which is
+ * what makes the second use honest: a spec can gate its own surface
+ * without adopting every finding on the page around it.
+ */
+export async function reportAxeViolations(
+  page: Page,
+  testInfo: TestInfo,
+  label: string,
+  options: { disableRules?: string[]; include?: string } = {},
+): Promise<AxeViolation[]> {
+  let builder = new AxeBuilder({ page }).disableRules(options.disableRules ?? []);
+  if (options.include !== undefined) builder = builder.include(options.include);
+  const results = await builder.analyze();
+  await testInfo.attach(`axe-${label}`, {
+    body: JSON.stringify(results.violations, null, 2),
+    contentType: "application/json",
+  });
+  if (results.violations.length === 0) {
+    console.log(`axe(${label}): no violations.`);
+    return results.violations;
+  }
+  for (const violation of results.violations) {
+    const targets = violation.nodes.map((node) => node.target.join(" ")).join("; ");
+    const line = `axe(${label}): [${violation.impact ?? "unknown"}] ${violation.id} — ${violation.help} (${targets})`;
+    console.log(line);
+    if (process.env.CI) console.log(`::warning title=New axe violation::${line}`);
+  }
+  return results.violations;
 }
 
 /** A per-run staff member with a live session of their own. */

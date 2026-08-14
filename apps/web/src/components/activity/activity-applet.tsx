@@ -30,6 +30,10 @@
  * Timestamps follow DES-014's activity-feed rule — relative inside a
  * week, short absolute after — with the long absolute and its timezone
  * in the tooltip, so a cross-region reader knows what they are reading.
+ *
+ * Inside a confidential record (DD-014), every entry wears DES-009's
+ * lock-only micro-marker beside its timestamp, so an entry copied out
+ * of the panel carries its restriction with it.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -43,6 +47,7 @@ import {
   type NarrationContext,
 } from "../../lib/activity";
 import { formatLongDateTime, formatRelativeOrShort } from "../../lib/format";
+import { ConfidentialMarker } from "../confidential-marker";
 import { Button } from "../ui/button";
 import type { Applet } from "../shell/applets";
 
@@ -63,6 +68,10 @@ export interface ActivityAppletOptions {
    * reference kinds store. */
   fields?: NarrationContext["fields"];
   referenceNames?: NarrationContext["referenceNames"];
+  /** Whether the record itself is confidential (DD-014). Every entry
+   * then wears DES-009's lock-only micro-marker beside its timestamp,
+   * so an entry copied out of the panel carries its restriction. */
+  confidential?: boolean;
 }
 
 /**
@@ -75,6 +84,7 @@ export function useActivityApplet({
   entityId,
   fields,
   referenceNames,
+  confidential = false,
 }: ActivityAppletOptions): Applet {
   return {
     id: "history",
@@ -86,6 +96,7 @@ export function useActivityApplet({
         entityId={entityId}
         fields={fields}
         referenceNames={referenceNames}
+        confidential={confidential}
       />
     ),
   };
@@ -96,6 +107,7 @@ function ActivityFeed({
   entityId,
   fields,
   referenceNames,
+  confidential = false,
 }: Readonly<ActivityAppletOptions>) {
   const intl = useIntl();
   /** null until the first page answers. */
@@ -177,6 +189,7 @@ function ActivityFeed({
                 entry={entry}
                 fields={fields}
                 referenceNames={referenceNames}
+                confidential={confidential}
               />
             ))}
           </ol>
@@ -215,10 +228,14 @@ function ActivityRow({
   entry,
   fields,
   referenceNames,
+  confidential,
 }: Readonly<{
   entry: ActivityEntry;
   fields?: NarrationContext["fields"];
   referenceNames?: NarrationContext["referenceNames"];
+  /** The record is confidential, so the entry wears DES-009's micro
+   * marker beside its timestamp. */
+  confidential: boolean;
 }>) {
   const intl = useIntl();
   const {
@@ -260,13 +277,20 @@ function ActivityRow({
             )}
           </p>
         ))}
-        <time
-          dateTime={entry.createdAt}
-          title={formatLongDateTime(entry.createdAt, { locale: intl.locale })}
-          className="text-xs text-muted"
-        >
-          {formatRelativeOrShort(entry.createdAt, { locale: intl.locale })}
-        </time>
+        {/* DES-009 Tier 1's micro variant, beside the timestamp where
+            the decision puts it. Decorative: the record's banner is a
+            labelled landmark already saying this, and repeating it on
+            every entry would be noise rather than information. */}
+        <span className="flex items-center gap-1">
+          {confidential && <ConfidentialMarker variant="micro" />}
+          <time
+            dateTime={entry.createdAt}
+            title={formatLongDateTime(entry.createdAt, { locale: intl.locale })}
+            className="text-xs text-muted"
+          >
+            {formatRelativeOrShort(entry.createdAt, { locale: intl.locale })}
+          </time>
+        </span>
       </div>
     </li>
   );

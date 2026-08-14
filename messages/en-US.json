@@ -59,6 +59,12 @@
   "activity.contract.archived": {
     "defaultMessage": "{actor} archived this contract"
   },
+  "activity.contract.confidentialityCleared": {
+    "defaultMessage": "{actor} cleared this contract's confidential mark"
+  },
+  "activity.contract.confidentialitySet": {
+    "defaultMessage": "{actor} marked this contract confidential"
+  },
   "activity.contract.counterpartyAdded": {
     "defaultMessage": "{actor} added {counterparty} on the other side"
   },
@@ -524,6 +530,9 @@
   "comments.composer": {
     "defaultMessage": "New comment"
   },
+  "comments.confidentialNotice": {
+    "defaultMessage": "Confidential contract — whichever audience you pick, only the contract team, the Owner, and Administrators can read it."
+  },
   "comments.delete.body": {
     "defaultMessage": "A tombstone keeps its place in the thread, and nobody can read what it said. You cannot undo this."
   },
@@ -608,6 +617,12 @@
   "comments.tombstone.redacted": {
     "defaultMessage": "Comment removed by an Administrator."
   },
+  "confidential.marker": {
+    "defaultMessage": "Confidential"
+  },
+  "confidential.markerShort": {
+    "defaultMessage": "CONFI"
+  },
   "contracts.applet.settings": {
     "defaultMessage": "Contract settings"
   },
@@ -640,6 +655,21 @@
   },
   "contracts.column.value": {
     "defaultMessage": "Value"
+  },
+  "contracts.confidential.banner": {
+    "defaultMessage": "Confidential contract — the contract team, the Owner, and Administrators see it."
+  },
+  "contracts.confidential.bannerRegion": {
+    "defaultMessage": "Confidential contract"
+  },
+  "contracts.confidential.field": {
+    "defaultMessage": "Confidential — restrict to the contract team"
+  },
+  "contracts.confidential.hint": {
+    "defaultMessage": "Everyone outside the contract team loses the record and everything on it. The Owner and Administrators keep it."
+  },
+  "contracts.confidential.manageTeam": {
+    "defaultMessage": "Manage team"
   },
   "contracts.count": {
     "defaultMessage": "{count, plural, one {# contract} other {# contracts}}"

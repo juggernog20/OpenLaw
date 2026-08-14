@@ -1,0 +1,1 @@
+ALTER TABLE "contracts" ADD COLUMN "is_confidential" boolean DEFAULT false NOT NULL;

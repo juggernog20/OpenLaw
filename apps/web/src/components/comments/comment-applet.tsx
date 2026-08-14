@@ -45,6 +45,15 @@
  * facts. Every one of these is refused at the seam too; the menu offers
  * only what the viewer may do.
  *
+ * Inside a confidential record (DD-014), every row wears DES-009's
+ * lock-only micro-marker beside its timestamp, and the composer's
+ * audience line says the record is confidential and that the bound
+ * holds at every tier (Tier 3). Confidentiality changes nothing about
+ * who hears what — the tiers answer that — so nothing else here moves.
+ * There is no add-as-watcher offer: CMT-007 superseded that clause of
+ * DES-009, and the typeahead already offers only people the record can
+ * reach.
+ *
  * The bar icon carries the unread badge (M9/5, CMT-004) — the one applet
  * that does. It counts what the viewer has not read, over the same
  * filtered set the thread is read at, so it can say nothing the thread
@@ -78,6 +87,7 @@ import { problemDetail } from "../../lib/messages";
 import type { Role } from "../../lib/roles";
 import { cn } from "../../lib/utils";
 import { Avatar } from "../avatar";
+import { ConfidentialMarker } from "../confidential-marker";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import {
@@ -123,6 +133,12 @@ export interface CommentAppletOptions {
   /** Who is reading. An edit and a delete are the author's alone
    * (CMT-005), so a row needs to know whether this is their author. */
   viewerId: string;
+  /** Whether the record itself is confidential (DD-014). It changes
+   * nothing about who hears what — the tiers answer that, and the API
+   * enforces it — but it changes what the panel says: every row wears
+   * DES-009's micro-marker, and the composer states the bound before
+   * anything is posted. */
+  confidential?: boolean;
 }
 
 /**
@@ -141,6 +157,7 @@ export function useCommentApplet({
   entityId,
   role,
   viewerId,
+  confidential = false,
 }: CommentAppletOptions): Applet {
   const [comments, setComments] = useState<Comment[] | null>(null);
   const [candidates, setCandidates] = useState<MentionCandidate[]>([]);
@@ -214,6 +231,7 @@ export function useCommentApplet({
         entityId={entityId}
         role={role}
         viewerId={viewerId}
+        confidential={confidential}
         comments={comments}
         candidates={candidates}
         loadFailed={loadFailed}
@@ -255,6 +273,7 @@ function CommentThread({
   entityId,
   role,
   viewerId,
+  confidential,
   comments,
   candidates,
   loadFailed,
@@ -266,6 +285,7 @@ function CommentThread({
   entityId: string;
   role: Role;
   viewerId: string;
+  confidential: boolean;
   /** null until the first read answers. */
   comments: readonly Comment[] | null;
   candidates: readonly MentionCandidate[];
@@ -310,6 +330,7 @@ function CommentThread({
                 comment={comment}
                 role={role}
                 viewerId={viewerId}
+                confidential={confidential}
                 onChanged={onChanged}
               />
             ))}
@@ -320,6 +341,7 @@ function CommentThread({
         entityType={entityType}
         entityId={entityId}
         role={role}
+        confidential={confidential}
         candidates={candidates}
         onPosted={onPosted}
       />
@@ -360,11 +382,16 @@ function CommentRow({
   comment,
   role,
   viewerId,
+  confidential,
   onChanged,
 }: Readonly<{
   comment: Comment;
   role: Role;
   viewerId: string;
+  /** The record is confidential, so the row wears DES-009's micro
+   * marker beside its timestamp — a copied snippet then carries its
+   * restriction with it. */
+  confidential: boolean;
   onChanged: (comment: Comment) => void;
 }>) {
   const intl = useIntl();
@@ -482,6 +509,11 @@ function CommentRow({
               <FormattedMessage id="comments.edited" defaultMessage="edited" />
             </span>
           )}
+          {/* DES-009 Tier 1's micro variant, beside the timestamp where
+              the decision puts it. Decorative: the record's banner is a
+              labelled landmark already saying this, and repeating it on
+              every row would be noise rather than information. */}
+          {confidential && <ConfidentialMarker variant="micro" />}
           <time
             dateTime={comment.createdAt}
             title={formatLongDateTime(comment.createdAt, { locale: intl.locale })}
@@ -830,12 +862,16 @@ function Composer({
   entityType,
   entityId,
   role,
+  confidential,
   candidates,
   onPosted,
 }: Readonly<{
   entityType: CommentEntityType;
   entityId: string;
   role: Role;
+  /** The record is confidential (DD-014), so the audience line says so
+   * and says that the bound holds at every tier. */
+  confidential: boolean;
   candidates: readonly MentionCandidate[];
   onPosted: (comment: Comment) => void;
 }>) {
@@ -1166,6 +1202,22 @@ function Composer({
       )}
       {/* Said before the post, never after (CMT-003). */}
       <p className="text-xs text-muted">{tierAudience(intl, tier)}</p>
+      {/* DES-009 Tier 3, as CTR-022 amended it. The tier line above says
+          which room this comment goes to; this says the whole panel is
+          inside a wall, whichever room is picked. It names the audience
+          in the banner's own words, because a reminder that misstates
+          who can see the record is worse than none (DES-028). There is
+          no add-as-watcher offer: CMT-007 superseded that clause, and
+          the typeahead already offers nobody the record cannot reach. */}
+      {confidential && (
+        <p className="flex items-start gap-1 text-xs text-confidential">
+          <ConfidentialMarker variant="micro" className="mt-0.5" />
+          <FormattedMessage
+            id="comments.confidentialNotice"
+            defaultMessage="Confidential contract — whichever audience you pick, only the contract team, the Owner, and Administrators can read it."
+          />
+        </p>
+      )}
       {error && (
         <p role="alert" className="text-xs text-status-danger-fg">
           {error}

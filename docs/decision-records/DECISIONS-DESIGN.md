@@ -569,7 +569,9 @@ The Pencil mocks include a single inline affordance — `🔒 CONFI` text label 
 - Layout: `Lock` icon (16px) + "Confidential matter — Members + named team only" text, left-aligned · "Manage team →" link, right-aligned (visible to Administrators and the matter creator only, per DD-014's gating rule)
 - Padding: `0 var(--spacing-page-x)` to match sub-bar gutters
 
-**Tier 3 — Composer @-mention warning.** When the comment composer or the document-upload share-list inside a confidential matter receives an @-mention (or named-share) targeting a user who is not currently on the matter team, a non-blocking inline warning renders below the composer: _"@Sara Kim isn't on this confidential matter. They will be added as a watcher if you confirm."_ The submit action confirms the membership grant _and_ posts. No hard-block. The grant is recorded in the audit log per DD-014.
+**Tier 3 — Composer @-mention warning.** ~~When the comment composer or the document-upload share-list inside a confidential matter receives an @-mention (or named-share) targeting a user who is not currently on the matter team, a non-blocking inline warning renders below the composer: _"@Sara Kim isn't on this confidential matter. They will be added as a watcher if you confirm."_ The submit action confirms the membership grant _and_ posts. No hard-block. The grant is recorded in the audit log per DD-014.~~
+
+**Superseded for contracts by CMT-007, recorded in CTR-022 and built in DES-029.** There is nobody to offer. The mention typeahead offers only people the record already reaches, so on a confidential contract it never names somebody outside the audience — the warning has no case to fire on, and the membership grant it confirmed is one CMT-007 rejected for every record. Tier 3 survives as the composer's confidential notice, which states the flag and names the bounded audience instead of offering to widen it. The clause above stands for matters until M22 answers for them.
 
 **Lock icon only.** Confidentiality everywhere uses the same `Lock` glyph from Lucide. No alternates (`ShieldAlert`, `EyeOff`) — single glyph reduces cognitive overhead and reads as "restricted access" universally.
 
@@ -1636,6 +1638,122 @@ Putting the filter bar inside the card rather than in its header strip is the on
 
 `apps/web/src/routes/settings-audit-log.tsx` is the pane. No new tokens: the row is `bg-control`, `border-muted`, `border-default`, `text-primary`, and `text-muted`, and the badge reuses the confidential and counter pairs, all already valued and gated. `lib/format.ts` gains `dayBounds`, which turns a civil date into the two instants it covers in the reader's timezone — the first surface to filter on a date range, and not the last. `lib/roles.ts` gains the role wording that the Users pane, the wizard, and the Profile pane each held a copy of, because the narration is the fourth reader of it. The narration layer's entry type is now structural rather than the record feed's response shape, so both surfaces narrate the same rows without either converting for the other.
 
+## DES-028: The confidential record page — the Tier 2 banner and the flag control (extends DES-009)
+
+- **Status:** Accepted
+- **Date:** 2026-08-14
+
+### Context
+
+DES-009 committed to three affordance tiers for a confidential record and drew Tier 2 in words: a 36px persistent banner between the top nav and the sub-bar, on the `--confidential-bg` / `--confidential-fg` pair, carrying the `Lock` glyph, its copy, and a trailing "Manage team →" link for the people who may change the audience. M10/4 (#148) builds it, and builds the control that sets and clears the flag on the record.
+
+Two frames of `designs/contracts.pen` cover the work. **C8 — Contract detail · Confidential** draws the banner as `S8 ConfBanner`, stacked exactly where DES-009 puts it. **C10 — Create contract modal** draws the flag control as `S10 ConfToggle`: a switch, a lock, a label, and a caption. Neither frame draws a flag control on the record page itself, so that surface takes C10's anatomy and DES-017's commit rule.
+
+The mocks predate two decisions that changed what is true about a confidential contract. CTR-022 put the Owner in the access set and the actor set; CMT-007 superseded DES-009's Tier-3 add-as-watcher grant. The copy below is written against the product as decided, not as first drawn.
+
+### Decision
+
+**The banner is a slot on the application shell**, between the nav and the sub-bar, filled by the page that knows the record is confidential. It is chrome: the component takes no dismiss prop, so a caller cannot add one, and nothing on the strip is a button.
+
+- Height `--height-confidential-banner`, background `bg-confidential-bg`, foreground `text-confidential`, a bottom rule in `border-default` to match the sub-bar's separation, and `px-page-x` gutters.
+- A 16px `Lock`, then the statement at 12px medium, left-aligned; the trailing link at 12px semibold, right-aligned.
+- It is a labelled region, so the statement stays reachable from the landmark list after half an hour inside the record — the same persistence the strip gives a sighted reader.
+
+**The trailing link is gated to the three actors** — an Administrator, the `creator` team row, and the Owner (DD-014, CTR-022) — and it is a fragment to the record's own Team card. Changing the audience is changing the roster, so "one step from the reminder" is one anchor, not a route that does not exist.
+
+**The flag control is a field of the record**, in the Contract card, spanning both columns and closing it: it is the record's audience rather than one of its business facts.
+
+- It commits on the switch's own change. A switch has no blur to wait for, and DES-017 commits when the person is done deciding — which for a two-state control is the moment they flip it, the same rule the record's selects already follow. The field's micro-state sits beside the label.
+- **Inert is a real state, and on this control it is the common one.** Every included viewer reads the audience; only the three actors may change it. The switch, its label, and its caption all stay when it is inert. A control that vanished would leave the reader unable to tell a confidential record from an open one on this card, which is the opposite of what DES-009 exists for.
+- The gate is the client-side twin of the API's `confidentialityWrite`, read from the two facts the record already answers — the roster and the Owner. The server is the authority; this only keeps a control from offering a dead end.
+
+**One component serves both surfaces.** The create dialog and the record's Contract card ask the same question, and they ask it in the same words from the same component, so the second cannot drift from the first.
+
+### Recorded normalization points
+
+1. **The trailing link reads "Manage team", not the mock's "Manage access".** DES-009, the M10 spec, and CONTEXT.md all call the thing a team; "access" names no surface in this product.
+2. **The arrow is a 16px Lucide `ArrowRight`, not the "→" character.** DES-009 writes the arrow into the copy and DES-008 forbids character glyphs; a Lucide arrow satisfies both. The C8 frame draws no arrow at all.
+3. **The banner's lock is 16px** where the C8 frame draws 14. DES-009's own banner layout says 16, and DES-008's ramp floors there. The 12px carve-out is for the badges and the inline marker, where a 16px lock is taller than the text it marks; a 36px strip has the room.
+4. **The banner carries a bottom rule** in `border-default`, which the C8 frame omits and DES-009 specifies.
+5. **The banner copy names the whole audience**: "Confidential contract — the contract team, the Owner, and Administrators see it." The frame's "visible to the contract team only" was true when it was drawn and is not now — CTR-022 put the Owner in the access set, and DD-014 always kept Administrators there. A reminder that misstates who can see the record is worse than none.
+6. **The control's caption is rewritten** from the C10 frame's "Hidden from shared lists and reports." There are no reports, and the caption has to say what setting the flag actually does: the record, its comments, and its history leave everyone outside the team.
+7. **No confidential chip is drawn beside the record's own title**, where the C8 frame draws `S8 ConfChip` in the sub-bar. DES-009 scopes Tier 1 to "wherever the title appears **outside** the record's own detail page", and the banner 36px above already carries the statement. The list row's marker is unaffected and lands with M10/5.
+
+### Rationale
+
+Putting the banner in the shell rather than at the top of the page body is what makes it chrome. The record's body scrolls; the strip must not, and a component that lives above the scroll container cannot be scrolled off by accident.
+
+Making the flag a field of the record, rather than an action in the sub-bar or an item in an overflow menu, follows from DES-017: it is one column of the record, it commits on its own, and it is logged like every other field commit. It also puts the audience on the same card as the facts it governs, where somebody reading the record meets it without going looking.
+
+Keeping the control visible-but-inert for the viewers who may not use it is the one place this record departs from the "absent, not disabled" convention the nav, the settings rail, and the archive action follow. The reason those are absent is that they are doors: an affordance nobody may use is a dead end. This is not a door — it is a statement of fact that happens to be adjustable by three people. Hiding it would remove the fact along with the affordance.
+
+### Alternatives considered
+
+- **The banner as the first element of the page body.** Rejected: it scrolls away, which is the failure mode DES-009 rationale 2 is entirely about.
+- **The flag as a sub-bar action beside Archive.** Rejected: the sub-bar holds record-level lifecycle actions, and the flag is a field with a stored value that the card must be able to state. A toggle in a strip of buttons also has nowhere to put the caption.
+- **Hiding the control from viewers who may not change it.** Rejected: see the Rationale. It would leave the Contract card silent about the record's audience for everyone but three people.
+- **"Manage team" as a route.** Rejected: there is no team-management route; the roster is a card on this page, and inventing a destination for it is a product decision this ticket has no mandate for.
+- **A dismiss control that only hides the banner for the session.** Rejected by DES-009 itself, and worth restating: a banner that can be closed is a banner that is closed.
+
+### Consequences
+
+`apps/web/src/components/confidential-banner.tsx` is Tier 2, and `confidential-toggle.tsx` is the shared control; DES-009's `<ConfidentialMarker>` (Tier 1) lands beside them with M10/5. `AppShell` gains one optional `banner` slot between the nav and the sub-bar — the only chrome that sits there today. No new tokens: the height and the colour pair were added with DES-009 and are already contrast-linted in all three themes. The record's Team card gains a stable `id`, because the banner's link is a fragment to it.
+
+## DES-029: The confidential marker and the composer notice — DES-009's Tier 1 and Tier 3
+
+- **Status:** Accepted
+- **Date:** 2026-08-14
+
+### Context
+
+DES-028 built Tier 2, the banner that says a record is confidential while somebody is looking at it. M10/5 (#149) builds the two tiers that work where the banner is not: **Tier 1**, the marker that rides beside a contract title in a list of thirty and beside every comment and activity entry a reader might copy out; and **Tier 3**, the line the composer says at the moment content is handed to an audience.
+
+One frame covers part of the work. **C1 — Contracts list** draws the marker on row C-55 as `C-55 conf`: a 12px Lucide lock and a label, on a lavender wash. **C8 — Contract detail · Confidential** draws the same anatomy again as `S8 ConfChip`, beside the record's own title. No frame draws the micro-marker on a comment or an activity entry, and no frame draws the composer notice — **C3 — Contract detail · Comments panel** is an open record, so its composer says only which tier it is posting at.
+
+DES-009 wrote both tiers in words, and two decisions have moved under them since. CTR-022 put the Owner in the access set, so any copy that names the audience has to name three parties, not one. CTR-022 also superseded DES-009's Tier-3 add-as-watcher grant, following CMT-007: the typeahead offers only people the record can reach, so there is nobody to offer to add.
+
+### Decision
+
+**One component, two variants** — `apps/web/src/components/confidential-marker.tsx`, as DES-009's consequences call for.
+
+- **Inline.** A 12px `Lock` and the literal "CONFI", uppercase at `0.4px` letter-spacing, at `text-xs` semibold in `text-confidential`. The 12px is DES-009's own carve-out from DES-008's 16/20/24 ramp, taken for this glyph and no other — the same carve-out DES-023 §1 and DES-028 §3 already record, and for the same reason: beside an 11px label a 16px lock is taller than the text it marks. It rides beside a contract title **rendered outside the record's own page**. In this build that is one surface: the contract list row. The audit log names an entity by type and id, the activity narration says "this contract" rather than its title, and there is no search, dashboard, or link surface yet — each of those inherits the marker when it arrives.
+- **Micro.** The lock alone, same size, same token, beside the timestamp on every comment and every activity entry inside a confidential record.
+
+**The marker marks records, never absences.** It takes no "hidden" state and no caller can give it one. A viewer who cannot reach a confidential record is answered no row, no entry, and no count (DD-014, CTR-021), so there is nothing for a placeholder to attach to.
+
+**Tier 3 is one added line under the composer**, below the tier's own audience line and in `text-confidential` with the micro-marker ahead of it: _"Confidential contract — whichever audience you pick, only the contract team, the Owner, and Administrators can read it."_ The tier line still answers "which room does this comment go to"; the notice answers "and all of those rooms are inside a wall". Nothing offers to widen the record's audience from the composer.
+
+### Recorded normalization points
+
+1. **The marker's label is "CONFI", not the frames' "Confidential".** Both frames draw the full word; DES-009 names the abbreviation, and the M10 spec and #149 restate it. The full word is what the marker is _called_ — it is the accessible name — and "CONFI" is what is drawn.
+2. **The marker takes no background wash.** The C1 and C8 frames draw the label on `#FBEFFF`. DES-009 gives Tier 1 a foreground and no surface, and the token registry says so in as many words: `confidential` is the inline marker and the banner foreground, `confidential-bg` is the banner background. A second lavender surface beside a title would also read as a status pill, which is the coupling DES-009 rationale 5 rejected.
+3. **The letter-spacing is an explicit `0.4px`.** DES-006 tightens tracking on `<h1>` and nowhere else, and there is no widened step on the ramp. This is the one exception, and DES-009 gives the number, so it is written as the number rather than approximated by a Tailwind step.
+4. **The micro-marker is drawn from the DES-009 text, not from a frame.** No frame draws a comment or an activity entry inside a confidential record. It takes the inline variant's glyph and token at the inline variant's size, and drops the label: beside an 11px timestamp there is no room for a word, and the banner 36px above is already saying it.
+5. **The micro-marker is decorative; the inline marker is not.** The inline one carries the accessible name "Confidential", because a list row has no other statement of the restriction. The micro one carries none: it lives inside a record whose banner is a labelled landmark saying the same thing, and announcing "Confidential" on thirty consecutive rows is noise rather than information.
+6. **The composer notice is drawn from the DES-009 text, not from a frame**, and its copy names the whole audience in the banner's own words. DES-028 point 5 applies unchanged: a reminder that misstates who can see the record is worse than none.
+7. **DES-028 point 7 stands: no confidential chip beside the record's own title**, where C8 draws `S8 ConfChip`. Tier 1 is scoped to titles rendered outside the record page, and the banner 36px above is Tier 2's whole job. Two statements in the same colour pair, 36px apart, saying the same thing, dilute rather than reinforce — and the sub-bar already carries a reference, a truncating title, a status pill, and an archived pill.
+
+### Rationale
+
+Tier 1 and Tier 2 fail in opposite places, which is why DES-009 has both. A banner cannot help somebody scanning a list, and a marker beside a title cannot help somebody who has been inside one record for half an hour. The micro variant exists for a third failure the other two miss entirely: text leaves the product by being copied, and a lock rendered next to it is the only part of the restriction that travels with a screenshot.
+
+"CONFI" over "Confidential" is a density argument. The marker sits between a title and an archived pill in a row that already carries seven columns; an abbreviation at 11px reads as a mark, and a full word reads as another column. The accessible name keeps the whole word for the reader who is listening rather than scanning.
+
+Tier 3 is the leak-prevention surface DES-009 rationale 3 describes, minus the mechanism CMT-007 took away. What is left is worth keeping on its own: the composer is the moment content is handed to an audience, and it is the last place a statement of the bound can still change what somebody types.
+
+### Alternatives considered
+
+- **Following the frames' full-word chip on the wash.** Rejected: it duplicates DES-023's tier badge treatment at a glance, and the token registry reserves `confidential-bg` for the banner.
+- **A `tracking-wide` or `tracking-wider` step instead of the literal `0.4px`.** Rejected: neither Tailwind step lands on DES-009's number at 11px, and approximating a figure the decision states is drift with extra steps.
+- **The "CONFI" text spoken as written.** Rejected: read letter by letter it says nothing. The marker is drawn as an abbreviation and named as a word.
+- **Giving every micro-marker an accessible name.** Rejected: see normalization point 5.
+- **A wash on the comment row inside a confidential record, the way DES-023 washes a Legal Only row.** Rejected: the wash is the tier's, and a second one would say the record's restriction in the tier's own language. Confidentiality narrows who reaches the record; the tiers answer for whoever is left, and the two must not be read as one scale.
+- **Putting the Tier 3 notice above the tier segments.** Rejected: the reading order runs from the narrow fact to the wide one — this comment goes to that room, and every room here is inside the wall.
+
+### Consequences
+
+`apps/web/src/components/confidential-marker.tsx` is Tier 1. The contract list row renders the inline variant; the comment applet and the history applet render the micro variant and take one new option each, so the record page passes the saved flag rather than the loaded one and the panels follow a commit exactly as the banner does. The comment composer renders the Tier 3 notice. No new tokens: the foreground pair was added with DES-009 and is contrast-linted in all three themes. Every future surface that renders a contract title outside the record page — search (M25), the dashboard (M29), the CTR-018 link rows (M17/M23) — renders the inline variant there; that obligation belongs to those tickets.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -1667,3 +1785,5 @@ Putting the filter bar inside the card rather than in its header strip is the on
 | DES-025 | The corrected comment row — edited marker, two tombstones, and the overflow menu (extends DES-023)                                                                   | Accepted |
 | DES-026 | The history panel interior — narrated row, medallion, and load-more foot (extends DES-016)                                                                           | Accepted |
 | DES-027 | The audit-log pane — filter bar, narrated table row, and the export foot (extends DES-021, DES-026)                                                                  | Accepted |
+| DES-028 | The confidential record page — the Tier 2 banner and the flag control (extends DES-009)                                                                              | Accepted |
+| DES-029 | The confidential marker and the composer notice — DES-009's Tier 1 and Tier 3                                                                                        | Accepted |
