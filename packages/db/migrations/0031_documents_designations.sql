@@ -1,0 +1,4 @@
+ALTER TABLE "contracts" ADD COLUMN "primary_document_id" text;--> statement-breakpoint
+ALTER TABLE "documents" ADD COLUMN "executed_version_id" text;--> statement-breakpoint
+ALTER TABLE "contracts" ADD CONSTRAINT "contracts_primary_document_id_documents_id_fk" FOREIGN KEY ("primary_document_id") REFERENCES "public"."documents"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "documents" ADD CONSTRAINT "documents_executed_version_id_document_versions_id_fk" FOREIGN KEY ("executed_version_id") REFERENCES "public"."document_versions"("id") ON DELETE set null ON UPDATE no action;

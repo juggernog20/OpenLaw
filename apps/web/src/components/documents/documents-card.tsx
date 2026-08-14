@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The Documents section of the contract record (M11/2, M11/3), drawn
- * from the C4 mock's list: the section heading with a count of what is
- * on the record, the upload control beside it, and one row per document
- * — name, kind, version, size, when it landed, and who put it there.
+ * The Documents section of the contract record (M11/2, M11/3, M11/4),
+ * drawn from the C4 mock's list: the section heading with a count of
+ * what is on the record, the upload control beside it, and one row per
+ * document — name, kind, version, size, when it landed, and who put it
+ * there.
  *
  * **The chain reads as a negotiation, not as a pile of files.** A
  * document's row is the version that matters now (DOC-001), marked
@@ -16,8 +17,16 @@
  * **A contract holds as many documents as it needs.** A loose attachment
  * such as a schedule or a certificate is its own document with its own
  * chain, sitting beside the main instrument rather than inside its
- * history (CTR-014). The primary-document designation that names which
- * one is the main instrument lands with the executed pin.
+ * history (CTR-014).
+ *
+ * **Two designations are marked here, and each is one word** (CTR-014).
+ * The document the record calls its instrument is marked Primary — the
+ * mock's own caption, moved onto the row it is about, because a caption
+ * over a list of six cannot say which one. The version the team pinned
+ * as the signed copy is marked Executed, beside Current and in the same
+ * quiet treatment: they are two answers to "what is this version to the
+ * record", and a coloured pill there would argue with the kind pill in
+ * the next column, which is a different fact with the same word on it.
  *
  * **Every open is a download in M11.** The name is a plain link to the
  * version's own address, so the browser saves the file the way it saves
@@ -34,6 +43,14 @@
  * rather than in place on the name cell, because on this surface the
  * name is the download.
  *
+ * **The two designations are one click each, and they report where the
+ * section already reports.** Neither collects anything, so neither is a
+ * form: naming the instrument is a control on the document's row, and
+ * pinning the signed copy is a control on the version's own row —
+ * including a superseded one, because the signed copy is often not the
+ * last round. Each write says saving, then saved or why not, in the
+ * header's own micro-state (DES-017).
+ *
  * Writing is Member+ (DD-015): a Contributor reads the section and
  * downloads from it, and is offered no control — absent, not disabled,
  * the convention every other card on this page follows. An archived
@@ -42,7 +59,16 @@
 
 import { useRef, useState } from "react";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
-import { ChevronDown, ChevronRight, FilePlus2, FileText, Pencil, Upload } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  FilePlus2,
+  FileText,
+  Pencil,
+  Pin,
+  Star,
+  Upload,
+} from "lucide-react";
 import { Avatar } from "../avatar";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
@@ -53,8 +79,11 @@ import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
 import { formatFileSize, formatShortDate } from "../../lib/format";
 import {
   chainOf,
+  clearExecutedVersion,
   documentDownloadHref,
   DOCUMENT_VERSION_KINDS,
+  setExecutedVersion,
+  setPrimaryDocument,
   updateDocument,
   uploadContractDocument,
   uploadDocumentVersion,
@@ -123,6 +152,13 @@ export function DocumentsCard({
 }>) {
   const intl = useIntl();
   const [status, setStatus] = useState<FieldStatus>("idle");
+  /** The seam's own refusal, when it sent one, so the section says what
+   * the server said rather than a generic line over the top of it. */
+  const [detail, setDetail] = useState<string | null>(null);
+  /** A designation write is in flight. One at a time: both of them
+   * answer with rows this list is replaced from, so a second click
+   * landing first would leave the section drawing the older answer. */
+  const [busy, setBusy] = useState(false);
   /** Which documents have their earlier rounds open. Collapsed by
    * default: the section answers "which file matters now" first, and the
    * history is one click away rather than in the way. */
@@ -135,6 +171,7 @@ export function DocumentsCard({
    * older document does not move it. */
   function replace(document: ContractDocument) {
     onDocuments(documents.map((row) => (row.id === document.id ? document : row)));
+    setDetail(null);
     setStatus("saved");
   }
 
@@ -142,7 +179,58 @@ export function DocumentsCard({
     // Newest first, as the list is ordered: the new document goes on
     // top without a re-read.
     onDocuments([document, ...documents]);
+    setDetail(null);
     setStatus("saved");
+  }
+
+  /**
+   * Names a document the contract's instrument (CTR-014).
+   *
+   * The whole list comes back and the whole list is replaced: the
+   * designation moving changes two rows, and re-deriving the second one
+   * here would be the section disagreeing with the record the moment
+   * anything else changed.
+   */
+  async function makePrimary(document: ContractDocument) {
+    if (busy) return;
+    setBusy(true);
+    setStatus("saving");
+    setDetail(null);
+    const outcome = await setPrimaryDocument(document.id);
+    setBusy(false);
+    if (outcome.ok) {
+      onDocuments(outcome.documents);
+      setStatus("saved");
+      return;
+    }
+    setStatus("error");
+    setDetail(outcome.detail ?? null);
+  }
+
+  /**
+   * Pins one version as the signed copy, or takes the pin off it
+   * (CTR-014).
+   *
+   * One control for both, because the pin is one fact with two states.
+   * Which way it goes is read off the version the button is on, never
+   * off the version's kind — a round tagged Executed is what its
+   * uploader called it, and the pin is what the team decided.
+   */
+  async function togglePin(document: ContractDocument, version: DocumentVersion) {
+    if (busy) return;
+    setBusy(true);
+    setStatus("saving");
+    setDetail(null);
+    const outcome = version.isExecuted
+      ? await clearExecutedVersion(document.id)
+      : await setExecutedVersion(document.id, version.id);
+    setBusy(false);
+    if (outcome.ok) {
+      replace(outcome.document);
+      return;
+    }
+    setStatus("error");
+    setDetail(outcome.detail ?? null);
   }
 
   function toggle(documentId: string) {
@@ -173,7 +261,7 @@ export function DocumentsCard({
         </div>
         {!frozen && (
           <div className="flex shrink-0 items-center gap-2">
-            <StatusNote status={status} />
+            <StatusNote status={status} detail={detail} />
             <Button variant="secondary" onClick={() => setComposer({ document: undefined })}>
               <Upload size={16} aria-hidden="true" />
               <FormattedMessage id="documents.upload" defaultMessage="Upload" />
@@ -217,7 +305,7 @@ export function DocumentsCard({
                   </span>
                 </th>
                 {!frozen && (
-                  <th scope="col" className="w-20 px-4 py-2 text-end font-medium">
+                  <th scope="col" className="w-36 px-4 py-2 text-end font-medium">
                     <span className="sr-only">
                       <FormattedMessage id="documents.column.actions" defaultMessage="Actions" />
                     </span>
@@ -279,18 +367,32 @@ export function DocumentsCard({
                           className="mt-1 shrink-0 text-muted"
                         />
                         <span className="flex min-w-0 flex-col">
-                          <a
-                            href={documentDownloadHref(document.id, chain.current.id)}
-                            // The name is the download. `download` asks
-                            // the browser to save rather than navigate;
-                            // the response says the same thing in its own
-                            // headers, so a browser that ignores the
-                            // attribute still saves the file.
-                            download={chain.current.originalFilename}
-                            className="rounded-chip font-medium text-primary hover:text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
-                          >
-                            {document.title}
-                          </a>
+                          <span className="flex flex-wrap items-center gap-1.5">
+                            <a
+                              href={documentDownloadHref(document.id, chain.current.id)}
+                              // The name is the download. `download` asks
+                              // the browser to save rather than navigate;
+                              // the response says the same thing in its own
+                              // headers, so a browser that ignores the
+                              // attribute still saves the file.
+                              download={chain.current.originalFilename}
+                              className="rounded-chip font-medium text-primary hover:text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+                            >
+                              {document.title}
+                            </a>
+                            {/* The instrument the contract is (CTR-014).
+                                Marked on the row rather than in a caption
+                                over the list, because a caption cannot say
+                                which of six documents it means. The quiet
+                                chip is the count badge's own pair: a
+                                designation is a structural fact, not a
+                                status. */}
+                            {document.isPrimary && (
+                              <span className="rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
+                                <FormattedMessage id="documents.primary" defaultMessage="Primary" />
+                              </span>
+                            )}
+                          </span>
                           {/* Two muted lines at most, and each says
                               which one it is to a reader who cannot see
                               the difference — the DES-021 sr-only
@@ -328,6 +430,38 @@ export function DocumentsCard({
                     {!frozen && (
                       <td className="px-4 py-2.5">
                         <span className="flex items-center justify-end gap-1">
+                          {/* Absent on the row that already holds the
+                              designation, not disabled — the convention
+                              every card on this page follows, and the
+                              Primary mark beside the name is what says
+                              why the control is not there. There is no
+                              clear: a record with paper on it has an
+                              instrument, so the designation moves or it
+                              stays. */}
+                          {!document.isPrimary && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              disabled={busy}
+                              onClick={() => void makePrimary(document)}
+                              aria-label={intl.formatMessage(
+                                {
+                                  id: "documents.makePrimary",
+                                  defaultMessage: "Make {title} the primary document",
+                                },
+                                { title: document.title },
+                              )}
+                            >
+                              <Star size={16} aria-hidden="true" />
+                            </Button>
+                          )}
+                          <PinButton
+                            document={document}
+                            version={chain.current}
+                            busy={busy}
+                            intl={intl}
+                            onToggle={togglePin}
+                          />
                           <Button
                             variant="ghost"
                             size="icon"
@@ -400,7 +534,24 @@ export function DocumentsCard({
                         <SizeCell version={version} />
                         <ModifiedCell version={version} />
                         <UploaderCell version={version} intl={intl} />
-                        {!frozen && <td className="px-4 py-2.5" />}
+                        {!frozen && (
+                          <td className="px-4 py-2.5">
+                            {/* A superseded round takes the pin as
+                                readily as the current one: a contract
+                                signed in round two and amended in round
+                                three has its signed copy behind its
+                                head. */}
+                            <span className="flex items-center justify-end gap-1">
+                              <PinButton
+                                document={document}
+                                version={version}
+                                busy={busy}
+                                intl={intl}
+                                onToggle={togglePin}
+                              />
+                            </span>
+                          </td>
+                        )}
                       </tr>
                     ))}
                 </tbody>
@@ -447,9 +598,17 @@ function KindCell({ version, intl }: Readonly<{ version: DocumentVersion; intl: 
   );
 }
 
-/** The version's number, and — on the one the chain pins — that it is
- * the file that matters now (DOC-001). The mark is the API's own, so the
- * section cannot disagree with the record about which one it is. */
+/**
+ * The version's number, and what the record calls this round: the file
+ * that matters now (DOC-001), the signed copy (CTR-014), or both, or
+ * neither.
+ *
+ * Both marks are the API's own, so the section cannot disagree with the
+ * record about which version is which. They wear the same quiet
+ * treatment because they answer the same kind of question — and because
+ * a coloured Executed here would argue with the Executed *kind* pill in
+ * the next column, which is a different fact wearing the same word.
+ */
 function VersionCell({ version, intl }: Readonly<{ version: DocumentVersion; intl: IntlShape }>) {
   return (
     <td className="px-4 py-2.5 align-top">
@@ -465,8 +624,58 @@ function VersionCell({ version, intl }: Readonly<{ version: DocumentVersion; int
             <FormattedMessage id="documents.current" defaultMessage="Current" />
           </span>
         )}
+        {version.isExecuted && (
+          <span className="text-xs font-medium text-muted">
+            <FormattedMessage id="documents.executed" defaultMessage="Executed" />
+          </span>
+        )}
       </span>
     </td>
+  );
+}
+
+/**
+ * The executed pin, as one control (CTR-014).
+ *
+ * One glyph for both directions, for DES-009's reason on the
+ * confidentiality mark: an alternate glyph for the clear would be a
+ * second icon for one concept.
+ *
+ * A toggle, named for what it toggles and never for what the next click
+ * does. `aria-pressed` is what carries the state, so a reader hears
+ * "Pin version 2 of … as the executed copy, pressed" — a name that also
+ * changed would announce the state twice, in two different words.
+ */
+function PinButton({
+  document,
+  version,
+  busy,
+  intl,
+  onToggle,
+}: Readonly<{
+  document: ContractDocument;
+  version: DocumentVersion;
+  busy: boolean;
+  intl: IntlShape;
+  onToggle: (document: ContractDocument, version: DocumentVersion) => Promise<void>;
+}>) {
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      disabled={busy}
+      aria-pressed={version.isExecuted}
+      onClick={() => void onToggle(document, version)}
+      aria-label={intl.formatMessage(
+        {
+          id: "documents.pinExecuted",
+          defaultMessage: "Pin version {number} of {title} as the executed copy",
+        },
+        { number: version.versionNumber, title: document.title },
+      )}
+    >
+      <Pin size={16} aria-hidden="true" />
+    </Button>
   );
 }
 
