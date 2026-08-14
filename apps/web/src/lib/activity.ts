@@ -923,6 +923,31 @@ const ARMS: Readonly<Record<string, Arm>> = {
       versions: versionCount(payload),
     }),
   },
+  // DD-014's per-document flag (M11/6). It takes the record's own Lock,
+  // for the reason the record's pair gives: one glyph for
+  // confidentiality everywhere, and the sentence is what tells the set
+  // from the clear.
+  //
+  // Both entries only ever reach a reader who is inside the document's
+  // audience. Anyone the flag walls out is not shown the row at all —
+  // the feed leaves it out at query time, because an entry saying a
+  // file was made confidential says the file is there.
+  "document.confidentiality_set": {
+    icon: Lock,
+    message: defineMessage({
+      id: "activity.document.confidentialitySet",
+      defaultMessage: "{actor} marked {title} confidential",
+    }),
+    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+  },
+  "document.confidentiality_cleared": {
+    icon: Lock,
+    message: defineMessage({
+      id: "activity.document.confidentialityCleared",
+      defaultMessage: "{actor} cleared the confidential mark on {title}",
+    }),
+    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+  },
 
   // Ids only, never text (CMT-006). A redacted comment's entry reads as
   // a comment that was removed, never as what the comment said.

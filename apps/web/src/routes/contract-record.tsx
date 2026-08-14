@@ -1043,6 +1043,15 @@ function ContractRecord() {
                 // DOC-010's erasure is the Administrator's alone, and it
                 // is the one control on this section a role decides.
                 role={user.role}
+                // DD-014's per-document flag has an actor set of three
+                // (CTR-022), and two of them are people rather than a
+                // role: the person who uploaded the document, which the
+                // row states, and the record's Owner, which only the
+                // record holds. The saved row rather than the loader's
+                // copy, so taking the Owner off takes the control with
+                // them on the same page.
+                viewerId={user.id}
+                ownerId={saved.manager?.id ?? null}
                 onDocuments={setPaper}
               />
             </div>

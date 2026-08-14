@@ -44,6 +44,24 @@
  * on the upload alike. One predicate is what keeps those four answers
  * from drifting apart.
  *
+ * **The per-document Confidential flag composes in front of that, and
+ * does not replace it** (M11/6, DD-014). A viewer must pass both gates:
+ * the contract's, and then the document's. `documentAudienceScope`
+ * narrows one sensitive file to the contract's named team, the
+ * contract's Owner, and Administrators, even on a contract that is open
+ * to everyone. It rides beside the contract scope in every read here, so
+ * a document outside a viewer's audience is absent from the list, absent
+ * from the count the list is taken from, and answered 404 on the
+ * download and on every mutation — the same answer a document that was
+ * never uploaded gives. **Nothing renders a locked placeholder**, here
+ * or on the web: a placeholder is a statement that the file exists.
+ *
+ * Setting and clearing the flag is a narrower act than reaching the
+ * document. Three actors may do it — an Administrator, the person who
+ * uploaded the document, and the owning contract's Owner — and a viewer
+ * who reaches the document but is none of them is refused plainly, the
+ * way the contract's own flag refuses them.
+ *
  * **A Contributor on the team reads and downloads** (DD-015, CTR-021).
  * Their write grid arrives with M23, so uploading is Member+ here: a
  * Contributor who reaches the record is refused plainly, because they
@@ -111,7 +129,12 @@ import {
 } from "@openlaw/db";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
-import { contractTeamScope, type ContractAccessReader } from "../../lib/contract-access.js";
+import {
+  contractTeamScope,
+  documentAudienceScope,
+  documentConfidentialityWrite,
+  type ContractAccessReader,
+} from "../../lib/contract-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { attachmentDisposition, MEGABYTE } from "../../lib/uploads.js";
 
@@ -246,6 +269,17 @@ const DocumentSchema = z.object({
    * order they arrived in.
    */
   archivedAt: z.iso.datetime({ offset: true }).nullable(),
+  /**
+   * DD-014's per-document flag: whether this one file is narrowed to
+   * the contract's named team, its Owner, and Administrators — even
+   * when the contract itself is open.
+   *
+   * It is only ever `true` for a viewer who is inside that audience,
+   * because a viewer outside it never receives the row at all. It is
+   * therefore a mark on a document the reader can see, never a
+   * placeholder for one they cannot.
+   */
+  isConfidential: z.boolean(),
   createdBy: PersonSchema,
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -269,6 +303,14 @@ const DescriptionSchema = z.string().trim().max(10_000);
 const MetadataPatch = z.object({
   title: TitleSchema.optional(),
   description: DescriptionSchema.nullable().optional(),
+  /**
+   * DD-014's per-document flag, set or cleared. It rides the per-field
+   * PATCH as the contract's own flag does, and for the same two
+   * reasons: it is one field of the record, and it has an actor set
+   * narrower than the route's, so it keeps its own audit verb rather
+   * than joining the changed map.
+   */
+  isConfidential: z.boolean().optional(),
 });
 
 /**
@@ -421,16 +463,24 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     /** Which document the owning contract calls its instrument, which
      * may be this one or another (CTR-014). */
     primaryDocumentId: string | null;
+    /** DD-014's per-document flag, as it stands on this row. */
+    isConfidential: boolean;
+    /** Who uploaded it — one of the three actors who may decide its
+     * audience (DD-014, CTR-022). */
+    createdBy: string;
+    /** The owning contract's Owner (CTR-004), who is another. */
+    contractManagerId: string | null;
   }
 
   /**
    * One document this viewer reaches, by its own id, or `null`.
    *
-   * The owning contract is joined in and the scope rides beside the id,
-   * so a document on a contract the viewer cannot reach is not
-   * distinguishable from one that was never created (DOC-008, DD-014).
-   * A document's id says nothing about which record it is on, so
-   * refusing it any other way would be the leak the 404 prevents.
+   * The owning contract is joined in and **both** scopes ride beside the
+   * id, so a document on a contract the viewer cannot reach — and a
+   * confidential document on a contract they can — are each
+   * indistinguishable from one that was never created (DOC-008,
+   * DD-014). A document's id says nothing about which record it is on,
+   * so refusing it any other way would be the leak the 404 prevents.
    *
    * `lock` holds the **contract** row — not the document row. That is
    * the lock every write on a contract's paper serializes behind, so a
@@ -452,10 +502,19 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         archivedAt: documents.archivedAt,
         executedVersionId: documents.executedVersionId,
         primaryDocumentId: contracts.primaryDocumentId,
+        isConfidential: documents.isConfidential,
+        createdBy: documents.createdBy,
+        contractManagerId: contracts.managerId,
       })
       .from(documents)
       .innerJoin(contracts, eq(documents.contractId, contracts.id))
-      .where(and(eq(documents.id, documentId), contractTeamScope(db, user)))
+      .where(
+        and(
+          eq(documents.id, documentId),
+          contractTeamScope(db, user),
+          documentAudienceScope(db, user),
+        ),
+      )
       .limit(1);
     const [row] = await (lock ? query.for("update", { of: contracts }) : query);
     return row ?? null;
@@ -476,6 +535,10 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         /** DOC-010's soft delete, so the archived view can mark the rows
          * that are off the record's list rather than guess at them. */
         archivedAt: documents.archivedAt,
+        /** DD-014's per-document flag, so a reader who is inside the
+         * audience can see which file is narrowed. Only rows this
+         * viewer already reaches get here. */
+        isConfidential: documents.isConfidential,
         createdAt: documents.createdAt,
         updatedAt: documents.updatedAt,
         createdBy: {
@@ -576,6 +639,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         toVersion(version, index === last, version.id === row.executedVersionId),
       ),
       archivedAt: row.archivedAt?.toISOString() ?? null,
+      isConfidential: row.isConfidential,
       createdBy: toPerson(row.createdBy),
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
@@ -645,13 +709,27 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
    * (DOC-010). That is the soft delete: the row is still there, the
    * chain is still there, and the blobs are still there — it is off the
    * list and out of the count until somebody restores it.
+   *
+   * **A confidential document this viewer is outside the audience of is
+   * left out of every one of those answers** (DD-014), and there is no
+   * query parameter that asks for it. The record's section count is
+   * taken from this list, so a document left out here is out of the
+   * count too — which is the whole of what "silently omitted, not shown
+   * as a placeholder" means for a number.
    */
-  async function paperOf(db: Executor, contract: ReachedContract, includeArchived = false) {
+  async function paperOf(
+    db: ContractAccessReader & Executor,
+    user: AuthenticatedUser,
+    contract: ReachedContract,
+    includeArchived = false,
+  ) {
     const rows = await selectDocuments(db)
       .where(
-        includeArchived
-          ? eq(documents.contractId, contract.id)
-          : and(eq(documents.contractId, contract.id), isNull(documents.archivedAt)),
+        and(
+          eq(documents.contractId, contract.id),
+          includeArchived ? undefined : isNull(documents.archivedAt),
+          documentAudienceScope(db, user),
+        ),
       )
       // Newest first, as the record's Documents section reads. The id
       // breaks a same-instant tie: uuidv7 is time-ordered, so that
@@ -703,7 +781,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       // An archived record still reads: archiving is a soft delete for
       // mistakes and imports, and restore has to be reachable.
       return {
-        documents: await paperOf(app.db, contract, request.query.includeArchived === "true"),
+        documents: await paperOf(
+          app.db,
+          request.user,
+          contract,
+          request.query.includeArchived === "true",
+        ),
       };
     },
   );
@@ -928,10 +1011,22 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "are untouched by either: a version's own filename is what it " +
           "arrived as and stays that, and a download still offers it " +
           "back. Appends document.updated on the owning contract " +
-          "(DD-017), naming what changed. An archived contract takes no " +
+          "(DD-017), naming what changed. isConfidential is the third " +
+          "field, and it is not one of those two: it sets or clears " +
+          "DD-014's per-document flag, which narrows this one file to " +
+          "the contract's named team, its Owner, and Administrators, " +
+          "even on an open contract. It has an actor set narrower than " +
+          "the route's — an Administrator, the person who uploaded the " +
+          "document, and the contract's Owner — and anybody else who " +
+          "reaches the document is refused 403 rather than 404, because " +
+          "they can already see it. Each set and each clear appends its " +
+          "own action, document.confidentiality_set or " +
+          "document.confidentiality_cleared. An archived contract takes " +
+          "no " +
           "edit until it is restored. A document on a contract the " +
-          "editor cannot reach answers 404, exactly as one that does not " +
-          "exist",
+          "editor cannot reach — and a confidential document they are " +
+          "outside the audience of — answers 404, exactly as one that " +
+          "does not exist",
         tags: ["documents"],
         params: DocumentParams,
         body: MetadataPatch,
@@ -945,9 +1040,23 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       return {
         document: await app.db.transaction(async (tx) => {
           const target = await reachedDocument(tx, request.user, documentId, true);
+          // Reach first, so the flag's own refusal below cannot answer
+          // for a document this viewer may not see.
+          assertReachedDocument(target);
+          // Then the flag's narrower actor set, and it is asked before
+          // the two freezes: a viewer who may not decide the audience
+          // should not learn from a 409 that the write was otherwise
+          // theirs to make. It is M10's ordering, one level down.
+          if (body.isConfidential !== undefined) {
+            await assertMayFlagConfidential(tx, target, request.user);
+          }
           assertOpenDocument(target);
 
-          const patch: { title?: string; description?: string | null } = {};
+          const patch: {
+            title?: string;
+            description?: string | null;
+            isConfidential?: boolean;
+          } = {};
           /** The DD-017 changed map — old and new per edited field,
            * feeding the M9 viewer's narration. */
           const changed: Record<string, { from: unknown; to: unknown }> = {};
@@ -965,10 +1074,23 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             }
           }
 
+          // The flag keeps its own audit verb for DD-014's reason: the
+          // walling-off of a file has to be accountable in its own
+          // right, so it is a slug an Administrator can filter on
+          // rather than one key inside an edit. It rides the same
+          // UPDATE and stays out of the changed map.
+          let confidentialityChange: boolean | undefined;
+          if (body.isConfidential !== undefined && body.isConfidential !== target.isConfidential) {
+            patch.isConfidential = body.isConfidential;
+            confidentialityChange = body.isConfidential;
+          }
+
           // Nothing changed: answer with the row and write no
           // misleading from==to entry.
-          if (Object.keys(changed).length > 0) {
+          if (Object.keys(patch).length > 0) {
             await tx.update(documents).set(patch).where(eq(documents.id, documentId));
+          }
+          if (Object.keys(changed).length > 0) {
             await recordActivity(tx, {
               entityType: "contract",
               entityId: target.contractId,
@@ -979,6 +1101,27 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
               // still names the document after DOC-010's hard delete
               // has taken the row.
               payload: { documentId, title: patch.title ?? target.title, changed },
+            });
+          }
+          if (confidentialityChange !== undefined) {
+            // One write, two DD-017 surfaces, as the contract's own
+            // flag does it: the team's feed narrates it at the
+            // record-action tier, and the Administrator's audit log
+            // holds it with actor and timestamp.
+            //
+            // The entry names the document, and it is written on the
+            // owning contract like every other entry here — so setting
+            // the flag is itself an entry the feed then hides from
+            // anybody the flag has just walled out.
+            await recordActivity(tx, {
+              entityType: "contract",
+              entityId: target.contractId,
+              actorId: request.user.id,
+              action: confidentialityChange
+                ? "document.confidentiality_set"
+                : "document.confidentiality_cleared",
+              visibility: RECORD_ACTIVITY_TIER,
+              payload: { documentId, title: patch.title ?? target.title },
             });
           }
 
@@ -1070,7 +1213,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             },
           });
 
-          return paperOf(tx, {
+          return paperOf(tx, request.user, {
             id: target.contractId,
             archivedAt: target.contractArchivedAt,
             primaryDocumentId: documentId,
@@ -1428,7 +1571,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           // behaviour for.
           for (const version of chain) await app.storage.delete(version.fileRef);
 
-          return paperOf(tx, {
+          return paperOf(tx, request.user, {
             id: target.contractId,
             archivedAt: target.contractArchivedAt,
             // Derived rather than re-read: `contracts.primary_document_id`
@@ -1488,6 +1631,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             eq(documentVersions.id, versionId),
             eq(documentVersions.documentId, documentId),
             contractTeamScope(app.db, request.user),
+            documentAudienceScope(app.db, request.user),
           ),
         )
         .limit(1);
@@ -1703,6 +1847,40 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     assertLiveContract(document);
     if (document.archivedAt) {
       throw httpError(409, "This document is archived. Restore it before changing it.");
+    }
+  }
+
+  /**
+   * The two refusals behind the per-document Confidential flag
+   * (DD-014, CTR-022, DOC-008), decided by the shared access module and
+   * turned into HTTP here.
+   *
+   * A viewer who reaches the document but is none of the three actors
+   * is refused plainly: they can already see the file, so a 404 would
+   * hide nothing and would only make a real permission boundary read as
+   * a bug. The refusal says who may, and says nothing about the
+   * document that the reader cannot see for themselves.
+   *
+   * A viewer outside the document's audience never arrives here — the
+   * read that produced this row already applied the same predicate, in
+   * the same words a document that does not exist is refused in. The
+   * module still answers that case and this still turns it into that
+   * 404: the whole question has one home, and a caller that read half
+   * the answer would be one refactor away from a leak.
+   */
+  async function assertMayFlagConfidential(
+    tx: Tx,
+    document: ReachedDocument,
+    user: AuthenticatedUser,
+  ): Promise<void> {
+    const verdict = await documentConfidentialityWrite(tx, user, document);
+    if (verdict === "unreachable") throw httpError(404, NO_DOCUMENT);
+    if (verdict === "refused") {
+      throw httpError(
+        403,
+        "Only an Administrator, the person who uploaded this document, or " +
+          "the contract's Owner can change this.",
+      );
     }
   }
 

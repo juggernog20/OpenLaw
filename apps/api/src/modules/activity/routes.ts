@@ -21,6 +21,17 @@
  * number. There is no total in the envelope for that reason, as there is
  * none on the thread.
  *
+ * **A second omission joins it in M11** (DD-014, DOC-008). An entry that
+ * names a confidential document is left out for anyone outside that
+ * document's audience — the contract's named team, its Owner, and
+ * Administrators. It is omission and not redaction for the same reason
+ * the tier filter is: every documents payload carries the document's
+ * title, so that the record still says what was erased after the rows
+ * are gone, and a redacted row would announce that a file is there. The
+ * predicate is `contract-access`'s, beside the reach rule the document
+ * list itself reads through, so the feed and the list cannot disagree
+ * about which documents exist for this viewer.
+ *
  * `admin_only` never reaches a record feed, and no code here excludes it
  * on purpose. `readableTiers` answers the three DD-016 tiers and nothing
  * else, so settings, user administration, and security entries are out
@@ -51,7 +62,7 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { activityLog, and, COMMENT_VISIBILITIES, desc, eq, inArray, sql, users } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
-import { contractAudience } from "../../lib/contract-access.js";
+import { confidentialDocumentEntryScope, contractAudience } from "../../lib/contract-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
 /**
@@ -140,7 +151,10 @@ export const activityRoutes: FastifyPluginAsyncZod = async (app) => {
           "at query time to the DD-016 tiers the viewer is in the room " +
           "for. A comment entry rides the comment's own tier, so a Legal " +
           "Only comment leaves no trace for anyone who could not read " +
-          "it — no row, no gap, and no count. `admin_only` entries never " +
+          "it — no row, no gap, and no count. An entry that names a " +
+          "confidential document (DD-014) is left out the same way, for " +
+          "anyone outside that document's audience. " +
+          "`admin_only` entries never " +
           "appear here; the Administrator's audit log is their surface. " +
           "Paged from a server-fixed page size: pass the previous page's " +
           "`nextCursor` to read further back. A record the viewer cannot " +
@@ -209,6 +223,13 @@ export const activityRoutes: FastifyPluginAsyncZod = async (app) => {
             eq(activityLog.entityType, entityType),
             eq(activityLog.entityId, audience.contractId),
             inArray(activityLog.visibility, [...audience.tiers]),
+            // DD-014's per-document flag, one level below the tier
+            // filter and applied the same way. An entry naming a
+            // document this viewer may not see is left out of the
+            // page — not redacted, because every payload here carries
+            // the document's title, and a redacted row would still say
+            // that something happened.
+            confidentialDocumentEntryScope(audience),
             before,
           ),
         )

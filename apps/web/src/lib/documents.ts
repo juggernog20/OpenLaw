@@ -147,13 +147,19 @@ async function send(url: string, draft: UploadDraft): Promise<UploadOutcome> {
 }
 
 /**
- * Renames a document or edits its description (DOC-007), one field per
- * call as DES-017 commits them. The stored files are untouched: a
+ * Renames a document, edits its description (DOC-007), or sets and
+ * clears DD-014's per-document Confidential flag — one field per call as
+ * DES-017 commits them. The stored files are untouched by any of them: a
  * version keeps the filename it arrived under.
+ *
+ * The flag is the one field with an actor set narrower than the route's
+ * (CTR-022): an Administrator, the person who uploaded the document, and
+ * the contract's Owner. The seam refuses anybody else with a plain 403,
+ * which the section reports where it reports every other refusal.
  */
 export async function updateDocument(
   documentId: string,
-  patch: Readonly<{ title?: string; description?: string | null }>,
+  patch: Readonly<{ title?: string; description?: string | null; isConfidential?: boolean }>,
 ): Promise<UploadOutcome> {
   const { data, error } = await api.PATCH("/api/v1/documents/{documentId}", {
     params: { path: { documentId } },

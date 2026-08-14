@@ -18,9 +18,11 @@
  * `documents.executed_version_id` here, and
  * `contracts.primary_document_id` beside it.
  *
+ * M11/6 adds `is_confidential`, DD-014's per-document flag, which M10
+ * deferred until this table existed.
+ *
  * What is deliberately not here yet, and the step that brings it:
- * `is_confidential` (DD-014's per-document flag), `folder_id`
- * (DOC-006), and the version chain's `source` plus the two
+ * `folder_id` (DOC-006), and the version chain's `source` plus the two
  * comparison-provenance columns (M32's generated redlines). Each
  * arrives with the feature that reads it.
  */
@@ -28,6 +30,7 @@
 import { sql } from "drizzle-orm";
 import {
   bigint,
+  boolean,
   check,
   index,
   integer,
@@ -141,6 +144,24 @@ export const documents = pgTable(
      * confirmation, and no row left to hold a time.
      */
     archivedAt: timestamp("archived_at", { withTimezone: true }),
+    /**
+     * DD-014's per-document flag, deferred from M10 to the step that
+     * landed this table (M11/6).
+     *
+     * It **narrows** and never widens. Access is still inherited from
+     * the owning contract (DOC-008), and this asks a second question of
+     * whoever the contract already admits: a confidential document is
+     * reached by the contract's named team, the contract's Owner, and
+     * Administrators, and by nobody else. A viewer outside that audience
+     * is answered exactly as for a document that was never uploaded —
+     * off the list, out of the count, 404 on the download and on every
+     * mutation, and with the activity entries that name it left out.
+     *
+     * There is no per-document team beside it, for DOC-008's reason: a
+     * second team would be a second source of truth for one record's
+     * permissions.
+     */
+    isConfidential: boolean("is_confidential").notNull().default(false),
     // No cascade, as everywhere a record names a person: someone is
     // archived, never deleted (SET-005).
     createdBy: text("created_by")

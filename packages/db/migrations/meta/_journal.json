@@ -232,6 +232,13 @@
       "when": 1786700413069,
       "tag": "0032_document_archive",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1786703174841,
+      "tag": "0033_document_confidential",
+      "breakpoints": true
     }
   ]
 }

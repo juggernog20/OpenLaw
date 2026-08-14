@@ -41,14 +41,24 @@
  * M10's confidentiality gate (DD-014) composes **in front** of this
  * rather than replacing it: `is_confidential` narrows who reaches the
  * record, and the tiers below then answer for whoever is left.
+ *
+ * M11 adds a fourth question, one level down: who reaches one
+ * **document** on a record they already reach (DD-014, DOC-008). It
+ * composes in front of the record's gate the same way — a viewer must
+ * pass both — and it is answered out of the same audience rule, because
+ * "the named team, the Owner, and Administrators" is one sentence and
+ * two copies of it would drift. There is no document team: the flag
+ * narrows what the contract already allows and never widens it.
  */
 
 import {
+  activityLog,
   and,
   asc,
   contracts,
   contractTeam,
   COMMENT_VISIBILITIES,
+  documents,
   eq,
   inArray,
   isNull,
@@ -170,6 +180,89 @@ export function contractTeamScope(
 }
 
 /**
+ * The documents whose owning contract names this person — either by a
+ * `contract_team` row or as its Owner (CTR-004).
+ *
+ * DD-014's audience, said over the `documents` table. It is a subquery
+ * on `documents.contract_id` rather than a join, so that every read of a
+ * document can compose it without changing its own `FROM` clause: the
+ * record's list joins the uploader, the download joins the version
+ * chain, and neither has to take the contract table along to ask this.
+ */
+function namedOnTheOwningContract(db: ContractAccessReader, user: AuthenticatedUser): SQL {
+  return inArray(
+    documents.contractId,
+    db
+      .select({ id: contracts.id })
+      .from(contracts)
+      .where(
+        or(
+          eq(contracts.managerId, user.id),
+          inArray(
+            contracts.id,
+            db
+              .select({ contractId: contractTeam.contractId })
+              .from(contractTeam)
+              .where(eq(contractTeam.userId, user.id)),
+          ),
+        ),
+      ),
+  );
+}
+
+/**
+ * How far one viewer sees across the document table (DD-014, DOC-008) —
+ * the per-document flag M10 deferred until `documents` existed.
+ *
+ * **It composes in front of `contractTeamScope`, and never replaces
+ * it.** A viewer must pass both: the contract's gate says whether they
+ * reach the record at all, and this says whether they reach one file on
+ * a record they already reach. Composing them the other way round would
+ * be a widening, and DD-014's flag only ever narrows.
+ *
+ * An Administrator sees every document on every contract, so nothing
+ * narrows and this answers `undefined` — DD-014's no-exception rule, one
+ * level down.
+ *
+ * Everybody else reaches a confidential document when the owning
+ * contract names them: a `contract_team` row of any role, or the Owner
+ * clause CTR-022 added. A document that is not confidential is reached
+ * by whoever reaches its contract, exactly as before. For a Contributor
+ * this adds nothing at all — the team row the flag asks for is the row
+ * they already had to hold to reach the contract — which is the flag
+ * never widening anybody's access, said again where it could go wrong.
+ *
+ * A Business User reaches no contract, so they reach no document. It is
+ * answered here anyway, for the reason the contract scope gives: a role
+ * added to the union later must be answered in both scopes before the
+ * build passes, rather than falling through into a grant.
+ *
+ * The same predicate serves every reader — the record's document list,
+ * the section count that is taken from it, the download, and every
+ * mutation. One predicate is what makes silent omission true rather than
+ * intended: a document this viewer may not see never leaves the
+ * database, so no list, count, or refusal can say it is there.
+ */
+export function documentAudienceScope(
+  db: ContractAccessReader,
+  user: AuthenticatedUser,
+): SQL | undefined {
+  switch (user.role) {
+    case "administrator":
+      return undefined;
+    case "legal_team_member":
+    case "contributor":
+      return or(eq(documents.isConfidential, false), namedOnTheOwningContract(db, user));
+    case "business_user":
+      return sql`false`;
+    default: {
+      const unanswered: never = user.role;
+      throw new Error(`No document reach rule for role: ${unanswered}`);
+    }
+  }
+}
+
+/**
  * The DD-016 tier predicate, as a pure function of the viewer's role and
  * their standing on the record. Legal Only admits Administrators and
  * Legal Team Members. Working Team adds Contributors on that contract.
@@ -187,7 +280,7 @@ export function contractTeamScope(
  *
  * `onTeam` is not read for Member+ — they hear every tier on every
  * contract they reach. M10's confidentiality gate turns on that same
- * fact, but it does so in `reachesContract` below: reach and tier stay
+ * fact, but it does so in `inNamedAudience` below: reach and tier stay
  * two questions, and this one answers only the second.
  */
 export function readableTiers(role: UserRole, onTeam: boolean): readonly CommentVisibility[] {
@@ -205,16 +298,25 @@ interface Standing {
 }
 
 /**
- * Whether one person reaches one contract — `contractTeamScope`'s rule
- * said over a person instead of over the rows.
+ * Whether one person is inside a walled-off thing's audience —
+ * `contractTeamScope`'s rule said over a person instead of over the
+ * rows.
  *
- * The row scope answers "which contracts does this viewer reach"; this
- * answers "which people does this contract reach". They are the same
+ * The row scope answers "which records does this viewer reach"; this
+ * answers "which people does this record reach". They are the same
  * sentence read from either end, and they are written next to each other
  * so that the typeahead can never offer somebody the record itself would
  * answer 404 to.
+ *
+ * One function serves both levels of DD-014's flag. A confidential
+ * contract and a confidential document have the same audience — the
+ * contract's named team, the contract's Owner, and Administrators — so
+ * they are one rule asked twice rather than two rules that could drift.
+ * `isConfidential` is whichever flag is being asked about; `person` is
+ * always their standing on the **owning contract**, because a document
+ * has no team of its own (DOC-008).
  */
-function reachesContract(person: Standing, isConfidential: boolean): boolean {
+function inNamedAudience(person: Standing, isConfidential: boolean): boolean {
   switch (person.role) {
     case "administrator":
       return true;
@@ -241,6 +343,19 @@ export interface ContractAudience {
   contractId: string;
   /** The tiers this viewer hears on it; never empty. */
   tiers: readonly CommentVisibility[];
+  /**
+   * Whether this viewer is inside the audience of a **confidential
+   * document** on this record (DD-014, DOC-008) — an Administrator, or
+   * somebody the contract names by a team row or as its Owner.
+   *
+   * It is one fact about a person and a record, so it is read here with
+   * the reach answer rather than asked again per row. The feed is what
+   * consumes it: an entry naming a document this viewer may not see must
+   * be left out of their page, and a per-entry lookup would be the same
+   * question asked twenty-five times with twenty-five chances to differ
+   * from the document list's own answer.
+   */
+  seesConfidentialDocuments: boolean;
 }
 
 /**
@@ -267,13 +382,86 @@ export async function contractAudience(
         where ${contractTeam.contractId} = ${contracts.id}
           and ${contractTeam.userId} = ${user.id}
       )`,
+      /** CTR-004's Owner, for the document audience below. */
+      managerId: contracts.managerId,
     })
     .from(contracts)
     .where(and(eq(contracts.id, contractId), contractTeamScope(db, user)))
     .limit(1);
   if (!row) return null;
   const tiers = readableTiers(user.role, row.onTeam);
-  return tiers.length === 0 ? null : { contractId: row.id, tiers };
+  if (tiers.length === 0) return null;
+  return {
+    contractId: row.id,
+    tiers,
+    // The same audience the document scope filters rows by, said over
+    // this one person. It is `inNamedAudience` asked with the flag
+    // already known to be set — the question is only ever put to a
+    // viewer about a document that is confidential.
+    seesConfidentialDocuments: inNamedAudience(
+      { role: user.role, onTeam: row.onTeam, isOwner: row.managerId === user.id },
+      true,
+    ),
+  };
+}
+
+/**
+ * The activity entries a viewer outside a confidential document's
+ * audience must not be shown (DD-014, DD-017).
+ *
+ * An entry that names a document they may not see would leak the
+ * document's existence, its title, and often what was just done to it —
+ * every payload in the documents module carries the title on purpose, so
+ * that the record still says what was erased. So the entry is omitted,
+ * not redacted: the feed must read for them exactly as it would if the
+ * document had never been uploaded.
+ *
+ * It filters at query time, like every other tier and reach rule here,
+ * so an omitted entry never leaves the database and no page count can
+ * announce that something was left out.
+ *
+ * `undefined` for a viewer already inside the audience — an
+ * Administrator, or somebody the contract names — which drops out of the
+ * `and(...)` it composes into.
+ *
+ * The match is on the payload's own `documentId`. An entry that carries
+ * no such key is left alone: it is not about a document, so no rule here
+ * reaches it.
+ *
+ * **An entry naming a document that is no longer there is hidden too**,
+ * and that is the decision rather than an accident. DOC-010's hard
+ * delete removes the row, so after it there is nothing left to ask
+ * whether the file was confidential — and every one of those entries
+ * still carries its title. A rule that guessed "it must have been open"
+ * would hand an outsider the whole story of a walled-off file the moment
+ * it was erased, which is the leak the flag exists to prevent, delivered
+ * late.
+ *
+ * The cost is stated plainly: after an erasure, a viewer the contract
+ * does not name loses the story of an **open** document too. That is
+ * over-hiding rather than leaking, it is bounded to the rarest act in
+ * the product, and DOC-010's own accountability surface — the
+ * Administrator's audit log, which reads the table with no record scope
+ * — is untouched by any of this. The alternative was a marker written
+ * into the erasure's payload and read back by a self-join, which is a
+ * rule a later writer can forget to keep, and forgetting it would be
+ * silent.
+ */
+export function confidentialDocumentEntryScope(
+  audience: ContractAudience,
+): SQL<unknown> | undefined {
+  if (audience.seesConfidentialDocuments) return undefined;
+  // Parenthesised here rather than left to the caller: this is one
+  // `or`, and an unbracketed `or` composed into an `and` list would bind
+  // the wrong way and admit every entry in the feed.
+  return sql`(
+    ${activityLog.payload} ->> 'documentId' is null
+    or exists (
+      select 1 from ${documents}
+      where ${documents.id} = ${activityLog.payload} ->> 'documentId'
+        and ${documents.isConfidential} = false
+    )
+  )`;
 }
 
 /**
@@ -299,23 +487,25 @@ export interface LockedContract {
 }
 
 /** Every `contract_team` role one person holds on one contract, read
- * live. Both questions below are built on it: reach asks whether there
- * is any row at all, and the flag's actor set asks whether one of them
- * is `creator`. */
+ * live. Every question below is built on it: reach asks whether there
+ * is any row at all, and the contract flag's actor set asks whether one
+ * of them is `creator`. The document questions ask it of the **owning**
+ * contract, because that is where a document's team is (DOC-008). */
 async function standingOn(
   db: ContractAccessReader,
   user: AuthenticatedUser,
-  contract: LockedContract,
+  contractId: string,
+  managerId: string | null,
 ): Promise<{ standing: Standing; held: { role: string }[] }> {
   const held = await db
     .select({ role: contractTeam.role })
     .from(contractTeam)
-    .where(and(eq(contractTeam.contractId, contract.id), eq(contractTeam.userId, user.id)));
+    .where(and(eq(contractTeam.contractId, contractId), eq(contractTeam.userId, user.id)));
   return {
     standing: {
       role: user.role,
       onTeam: held.length > 0,
-      isOwner: contract.managerId === user.id,
+      isOwner: managerId === user.id,
     },
     held,
   };
@@ -350,8 +540,8 @@ export async function reachesLockedContract(
   user: AuthenticatedUser,
   contract: LockedContract,
 ): Promise<boolean> {
-  const { standing } = await standingOn(db, user, contract);
-  return reachesContract(standing, contract.isConfidential);
+  const { standing } = await standingOn(db, user, contract.id, contract.managerId);
+  return inNamedAudience(standing, contract.isConfidential);
 }
 
 /**
@@ -378,10 +568,58 @@ export async function confidentialityWrite(
   user: AuthenticatedUser,
   contract: LockedContract,
 ): Promise<ConfidentialityWrite> {
-  const { standing, held } = await standingOn(db, user, contract);
-  if (!reachesContract(standing, contract.isConfidential)) return "unreachable";
+  const { standing, held } = await standingOn(db, user, contract.id, contract.managerId);
+  if (!inNamedAudience(standing, contract.isConfidential)) return "unreachable";
   const isCreator = held.some((row) => row.role === CREATOR_TEAM_ROLE);
   return standing.role === "administrator" || standing.isOwner || isCreator ? "allowed" : "refused";
+}
+
+/** The four facts about a document the flag's two questions turn on, as
+ * the mutation already holds them on the row it read under the owning
+ * contract's lock. */
+export interface LockedDocument {
+  /** DOC-008's owning record — the only place a document's team is. */
+  contractId: string;
+  /** The owning contract's Owner (CTR-004). */
+  contractManagerId: string | null;
+  /** Who uploaded the document. It is DD-014's "the creator", one level
+   * down: a document is made by one act with one actor, so it is a
+   * column rather than a team row. */
+  createdBy: string;
+  /** The document's own flag, not the contract's. */
+  isConfidential: boolean;
+}
+
+/**
+ * Who may wall one document off, and who may open it again (DD-014,
+ * CTR-022, DOC-008).
+ *
+ * Three actors, mirroring the contract's: an Administrator, the person
+ * who uploaded the document, and the **owning contract's** Owner. The
+ * middle one is a column here rather than a `creator` team row, because
+ * a document has no team of its own — an upload is one act with one
+ * actor, and `created_by` records it.
+ *
+ * The two refusals are the contract's two refusals, for the contract's
+ * reasons. `unreachable` is a viewer outside the document's audience,
+ * answered as a document that was never uploaded. `refused` is a viewer
+ * who can already see the document but may not decide who else does: a
+ * 404 there would hide nothing and would read as a bug.
+ *
+ * The caller has already answered the **contract's** gate — this is the
+ * second question, not a replacement for the first — so what is asked
+ * here is only the document's own flag.
+ */
+export async function documentConfidentialityWrite(
+  db: ContractAccessReader,
+  user: AuthenticatedUser,
+  document: LockedDocument,
+): Promise<ConfidentialityWrite> {
+  const { standing } = await standingOn(db, user, document.contractId, document.contractManagerId);
+  if (!inNamedAudience(standing, document.isConfidential)) return "unreachable";
+  return standing.role === "administrator" || standing.isOwner || document.createdBy === user.id
+    ? "allowed"
+    : "refused";
 }
 
 /** One person a comment on this record can address, and the tiers they
@@ -459,7 +697,7 @@ export async function contractMentionCandidates(
     .orderBy(asc(sql`lower(${users.displayName})`), asc(users.id));
   return rows.flatMap((row) => {
     const standing = { role: row.role, onTeam: row.onTeam, isOwner: row.id === record.managerId };
-    if (!reachesContract(standing, record.isConfidential)) return [];
+    if (!inNamedAudience(standing, record.isConfidential)) return [];
     const tiers = readableTiers(row.role, row.onTeam);
     if (tiers.length === 0) return [];
     return [{ id: row.id, displayName: row.displayName, image: row.image, tiers }];

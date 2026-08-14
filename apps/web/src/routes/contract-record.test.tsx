@@ -3515,6 +3515,9 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     versions: [version()],
     /** On the record's list and in its count (DOC-010). */
     archivedAt: null,
+    /** Open to whoever reaches the contract, which is where every
+     * document starts (DD-014). */
+    isConfidential: false,
     createdBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
     createdAt: "2026-08-11T09:00:00.000Z",
     updatedAt: "2026-08-11T09:00:00.000Z",
@@ -3534,6 +3537,29 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
         byteSize: 102_000,
       }),
     ],
+  };
+
+  /** A document somebody else put on the record. The signed-in Legal
+   * Team Member is neither its uploader nor the record's Owner, so
+   * DD-014's flag is not theirs to decide (CTR-022). */
+  const SOMEONE_ELSES = {
+    ...DRAFT,
+    id: "doc-4",
+    title: "board_pack.pdf",
+    isPrimary: false,
+    createdBy: { id: "u1", displayName: "Ada Admin", image: null, archived: false },
+    versions: [version({ id: "ver-4", originalFilename: "board_pack.pdf" })],
+  };
+
+  /** One file narrowed to the contract's named team, on a record
+   * everybody can open (DD-014, M11/6). */
+  const WALLED = {
+    ...DRAFT,
+    id: "doc-5",
+    title: "board-memo.txt",
+    isPrimary: false,
+    isConfidential: true,
+    versions: [version({ id: "ver-5", originalFilename: "board-memo.txt" })],
   };
 
   /** Three rounds on one document, the third of them current — the
@@ -3576,10 +3602,20 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       uploadFails?: string;
       designationFails?: string;
       removalFails?: string;
+      /** CTR-004's Owner, who is one of DD-014's three actors on every
+       * document of the record (CTR-022). Unassigned unless a test
+       * needs them. */
+      ownerId?: string;
+      /** The seam's own refusal of a metadata patch, which is the route
+       * DD-014's flag rides. */
+      editFails?: string;
     } = {},
     team = [person("u1", "creator")],
   ) {
-    const record = recordApi(contractRow(), team);
+    const record = recordApi(
+      contractRow(options.ownerId ? { manager: person(options.ownerId) } : {}),
+      team,
+    );
     /** Every write the section made, in order, so a test can assert
      * both the address and what rode in the form. */
     const writes: { url: string; body: unknown }[] = [];
@@ -3693,6 +3729,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       const edited = /^\/api\/v1\/documents\/([^/]+)$/.exec(pathname);
       if (edited && call.method === "PATCH") {
         writes.push({ url: pathname, body: call.body });
+        if (options.editFails) return problem(403, options.editFails);
         const target = current.find((row) => row.id === edited[1]);
         if (!target) return problem(404, "No document exists with this reference.");
         const next = { ...target, ...(call.body as Record<string, unknown>) };
@@ -4238,8 +4275,116 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(await menuVerbs(user, member, "Orion_MSA_2026_draft.docx")).toEqual([
       "Add version",
       "Edit details",
+      // They uploaded this one, so the flag is theirs to decide
+      // (CTR-022). The next test is the row where it is not.
+      "Mark confidential",
       "Archive",
     ]);
+  });
+
+  it("marks a confidential document, and draws nothing where one was left out", async () => {
+    stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT, WALLED]).handler });
+    renderAt("/contracts/42");
+
+    // DES-009 Tier 1, on the row it is about: this file is narrowed to
+    // the contract's named team even though the record is open.
+    const section = await documentsSection();
+    const marks = within(section).getAllByRole("img", { name: "Confidential" });
+    expect(marks).toHaveLength(1);
+    expect(within(section).getByText("board-memo.txt").closest("tr")).toContainElement(marks[0]!);
+    expect(within(section).getByText("2")).toBeVisible();
+  });
+
+  it("draws no placeholder for a document the seam left out, and counts what it was given", async () => {
+    // What an outside viewer's request actually answers: the walled row
+    // is not in it. The section has no hidden state to draw, so the
+    // omission is silent by construction (DD-014).
+    stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT]).handler });
+    renderAt("/contracts/42");
+
+    const section = await documentsSection();
+    expect(within(section).queryByRole("img", { name: "Confidential" })).not.toBeInTheDocument();
+    expect(within(section).queryByText("board-memo.txt")).not.toBeInTheDocument();
+    expect(within(section).getByText("1")).toBeVisible();
+    expect(within(section).getAllByRole("row")).toHaveLength(2); // header + one
+  });
+
+  it("lets the person who uploaded a document mark it confidential, and clear it again", async () => {
+    const api = documentsApi([DRAFT]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Mark confidential");
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]).toEqual({
+      url: "/api/v1/documents/doc-1",
+      body: { isConfidential: true },
+    });
+    expect(await within(section).findByRole("img", { name: "Confidential" })).toBeVisible();
+
+    // One item, two states: the words are what tell the set from the
+    // clear, because DES-009 gives confidentiality one glyph.
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Clear confidential mark");
+    await waitFor(() => expect(api.writes).toHaveLength(2));
+    expect(api.writes[1]).toEqual({
+      url: "/api/v1/documents/doc-1",
+      body: { isConfidential: false },
+    });
+    await waitFor(() =>
+      expect(within(section).queryByRole("img", { name: "Confidential" })).not.toBeInTheDocument(),
+    );
+  });
+
+  it("offers the flag to the record's Owner, who uploaded nothing", async () => {
+    const api = documentsApi([SOMEONE_ELSES], { ownerId: "u2" });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    // CTR-022's clause: the person accountable for the record decides
+    // its files' audience, team row or no team row.
+    const section = await documentsSection();
+    expect(await menuVerbs(user, section, "board_pack.pdf")).toContain("Mark confidential");
+  });
+
+  it("reports the seam's own refusal when the flag is turned down, and keeps the mark as it was", async () => {
+    const api = documentsApi([WALLED], {
+      editFails:
+        "Only an Administrator, the person who uploaded this document, or " +
+        "the contract's Owner can change this.",
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await act(user, section, "board-memo.txt", "Clear confidential mark");
+
+    // The seam is the rule; the menu only keeps a control from offering
+    // a dead end. When the two disagree, the seam's words are what the
+    // section says.
+    expect(
+      await within(section).findByText(
+        "Only an Administrator, the person who uploaded this document, or " +
+          "the contract's Owner can change this.",
+      ),
+    ).toBeVisible();
+    expect(within(section).getByRole("img", { name: "Confidential" })).toBeVisible();
+  });
+
+  it("keeps the flag off the menu for a viewer who is none of the three", async () => {
+    stubApi({ signedIn: MEMBER, extra: documentsApi([SOMEONE_ELSES]).handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    // On the record, working on it, and that is not a claim on who else
+    // may see this file. The seam refuses them 403 regardless; the menu
+    // is what keeps a control from offering a dead end.
+    const section = await documentsSection();
+    expect(await menuVerbs(user, section, "board_pack.pdf")).not.toContain("Mark confidential");
   });
 
   it("takes a typed name before it destroys a document, and sends it to the seam", async () => {

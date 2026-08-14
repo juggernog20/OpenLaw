@@ -69,11 +69,21 @@
  * every round of the chain, and every stored file, and nothing puts
  * those back.
  *
+ * **A confidential document is marked, never placeheld** (DD-014,
+ * M11/6). The DES-009 Tier 1 marker rides beside the name of a document
+ * whose flag is set, so a reader who is inside its audience can see
+ * which file is narrowed. A reader who is outside it gets no row here at
+ * all, because the API answered them none — the section draws what it is
+ * given and has no "hidden" state to draw, which is what makes the
+ * omission silent rather than announced.
+ *
  * Writing is Member+ (DD-015): a Contributor reads the section and
  * downloads from it, and is offered no control. An archived record is
  * read the same way, because archiving freezes the record. Erasing is
  * the Administrator's alone, so the Delete item is drawn for nobody
- * else.
+ * else. Deciding one document's audience is a fourth actor set again —
+ * an Administrator, the person who uploaded it, and the contract's Owner
+ * (CTR-022) — so that item is drawn for those three and nobody else.
  */
 
 import { useRef, useState } from "react";
@@ -85,6 +95,7 @@ import {
   ChevronRight,
   FilePlus2,
   FileText,
+  Lock,
   MoreHorizontal,
   Pencil,
   Pin,
@@ -93,6 +104,7 @@ import {
   Upload,
 } from "lucide-react";
 import { Avatar } from "../avatar";
+import { ConfidentialMarker } from "../confidential-marker";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import {
@@ -176,6 +188,8 @@ export function DocumentsCard({
   documents,
   frozen,
   role,
+  viewerId,
+  ownerId,
   onDocuments,
 }: Readonly<{
   /** CTR-003's reference — the address the upload route takes. */
@@ -188,6 +202,13 @@ export function DocumentsCard({
    * of the rows: whether to draw DOC-010's erasure, which is the
    * Administrator's alone. */
   role: Role;
+  /** Who is reading. The Confidential flag's actor set is a fact about
+   * this person and this document (CTR-022), so the section needs to
+   * know which person it is drawing for. */
+  viewerId: string;
+  /** The contract's Owner (CTR-004), or none. The record holds it, so
+   * it is passed down rather than read again per row. */
+  ownerId: string | null;
   onDocuments: (documents: ContractDocument[]) => void;
 }>) {
   const intl = useIntl();
@@ -216,6 +237,20 @@ export function DocumentsCard({
    * shown the item. The seam refuses everyone else regardless; this is
    * what keeps a control from offering a dead end. */
   const canErase = role === "administrator";
+
+  /**
+   * Whether this viewer may decide who sees one document (DD-014,
+   * CTR-022). Three actors: an Administrator, the person who uploaded
+   * it, and the contract's Owner.
+   *
+   * It says exactly what the seam says, out of facts the record already
+   * answered — the uploader is on the row, and the Owner is on the
+   * contract. Reach is not asked again, because being drawn this row is
+   * what proves it. The API refuses anybody else with a plain 403; this
+   * is only what keeps a control from offering a dead end.
+   */
+  const canFlag = (document: ContractDocument) =>
+    role === "administrator" || document.createdBy.id === viewerId || ownerId === viewerId;
 
   /** How much paper is on the record. Archived rows never count,
    * whichever view is showing: being off the count is what archiving
@@ -324,6 +359,37 @@ export function DocumentsCard({
       onDocuments(documents.filter((row) => row.id !== document.id));
       setDetail(null);
       setStatus("saved");
+      return;
+    }
+    replace(outcome.document);
+  }
+
+  /**
+   * DD-014's per-document flag, set and cleared.
+   *
+   * It narrows one file to the contract's named team, its Owner, and
+   * Administrators, even on a record everybody can open. Clearing it
+   * puts the file back where the contract's own audience is.
+   *
+   * **Setting it can put the file outside the setter's own audience.**
+   * An Administrator and the record's Owner always stay inside it; a
+   * Legal Team Member who uploaded a file to a contract they hold no
+   * team row on does not, because uploading grants nothing (DOC-008).
+   * The seam answers their own write with the row, so the section keeps
+   * drawing it until the page is loaded again — a successful write that
+   * made the row disappear under the person who made it would read as a
+   * failure. On the next load it is simply not in the list.
+   */
+  async function setConfidential(document: ContractDocument, next: boolean) {
+    if (busy) return;
+    setBusy(true);
+    setStatus("saving");
+    setDetail(null);
+    const outcome = await updateDocument(document.id, { isConfidential: next });
+    setBusy(false);
+    if (!outcome.ok) {
+      setStatus("error");
+      setDetail(outcome.detail ?? null);
       return;
     }
     replace(outcome.document);
@@ -541,6 +607,14 @@ export function DocumentsCard({
                             >
                               {document.title}
                             </a>
+                            {/* DES-009 Tier 1, beside a document's name
+                                rather than a record's: this file is
+                                narrowed to the contract's named team
+                                (DD-014). It is a mark on a row the
+                                reader can already see — a reader
+                                outside the audience is sent no row, so
+                                nothing here is ever a placeholder. */}
+                            {document.isConfidential && <ConfidentialMarker />}
                             {/* The instrument the contract is (CTR-014).
                                 Marked on the row rather than in a caption
                                 over the list, because a caption cannot say
@@ -622,10 +696,12 @@ export function DocumentsCard({
                             document={document}
                             busy={busy}
                             canErase={canErase}
+                            canFlag={canFlag(document)}
                             intl={intl}
                             onMakePrimary={() => void makePrimary(document)}
                             onAddVersion={() => setComposer({ document })}
                             onEditDetails={() => setEditing(document)}
+                            onSetConfidential={(next) => void setConfidential(document, next)}
                             onArchive={() => void setArchived(document, true)}
                             onRestore={() => void setArchived(document, false)}
                             onDelete={() => setDeleting(document)}
@@ -749,6 +825,14 @@ const ACTION_LABEL = {
     id: "documents.action.editDetails",
     defaultMessage: "Edit details",
   }),
+  markConfidential: defineMessage({
+    id: "documents.action.markConfidential",
+    defaultMessage: "Mark confidential",
+  }),
+  clearConfidential: defineMessage({
+    id: "documents.action.clearConfidential",
+    defaultMessage: "Clear confidential mark",
+  }),
   archive: defineMessage({ id: "documents.action.archive", defaultMessage: "Archive" }),
   restore: defineMessage({ id: "documents.action.restore", defaultMessage: "Restore" }),
   delete: defineMessage({ id: "documents.action.delete", defaultMessage: "Delete" }),
@@ -772,10 +856,12 @@ function DocumentActions({
   document,
   busy,
   canErase,
+  canFlag,
   intl,
   onMakePrimary,
   onAddVersion,
   onEditDetails,
+  onSetConfidential,
   onArchive,
   onRestore,
   onDelete,
@@ -783,10 +869,14 @@ function DocumentActions({
   document: ContractDocument;
   busy: boolean;
   canErase: boolean;
+  /** Whether this viewer is one of DD-014's three actors for this
+   * document. The item is absent for everybody else, not disabled. */
+  canFlag: boolean;
   intl: IntlShape;
   onMakePrimary: () => void;
   onAddVersion: () => void;
   onEditDetails: () => void;
+  onSetConfidential: (confidential: boolean) => void;
   onArchive: () => void;
   onRestore: () => void;
   onDelete: () => void;
@@ -829,6 +919,21 @@ function DocumentActions({
               <Pencil size={16} aria-hidden="true" />
               <FormattedMessage {...ACTION_LABEL.editDetails} />
             </DropdownMenuItem>
+            {/* DD-014's flag, one item that says which way it goes
+                (CTR-022). One glyph for confidentiality everywhere, as
+                DES-009 asks: the words are what tell the set from the
+                clear. It is drawn for the three actors and for nobody
+                else — absent, not disabled, as every other item here. */}
+            {canFlag && (
+              <DropdownMenuItem onSelect={() => onSetConfidential(!document.isConfidential)}>
+                <Lock size={16} aria-hidden="true" />
+                <FormattedMessage
+                  {...(document.isConfidential
+                    ? ACTION_LABEL.clearConfidential
+                    : ACTION_LABEL.markConfidential)}
+                />
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onSelect={onArchive}>
               <Archive size={16} aria-hidden="true" />
               <FormattedMessage {...ACTION_LABEL.archive} />

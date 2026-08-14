@@ -116,7 +116,14 @@ _Queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/precedents routed
   - The repository destination is Member+ (legal staff); Contributors/Business Users see documents only through records they're on.
 - **Rationale** — One rule source for permissions (no drift between a record's team and its files); "where does this live?" at upload is cheap now that owners include entities and knowledge (the old orphan cases all have homes).
 - **Alternatives considered** — Standalone with default-team-wide visibility (recommended, declined). Per-document teams: permission drift by design.
-- **Consequences** — DD-007 annotated (stand-alone clause revised); DOC-002's standalone bullet superseded; SCHEMA.md documents section gains the exactly-one-owner rule and future `entity_id` / knowledge FKs; MTR-007's "standalone contract" is unaffected (the _contract_ stands alone; its documents belong to it).
+- **Consequences** — DD-007 annotated (stand-alone clause revised); DOC-002's standalone bullet superseded; SCHEMA.md documents section gains the exactly-one-owner rule and future `entity_id` / knowledge FKs; MTR-007's "standalone contract" is unaffected (the _contract_ stands alone; its documents belong to it). _Settled in M11/6, where DD-014's per-document flag lands on `documents.is_confidential`._
+
+- _The flag **composes in front of** the owning record's gate. It does not replace it. A viewer must pass both gates, so the flag only narrows what the record already allows._
+- _A confidential document's audience is the owning contract's named team, the contract's Owner, and Administrators. That is the same audience a confidential contract has, so one predicate in the shared access module answers both levels. Two copies of it would drift._
+- _The actor set mirrors CTR-022 one level down: an Administrator, the contract's Owner, and the person who uploaded the document. A contract reads its `creator` team row for that middle actor; a document reads `created_by`. An upload is one act with one actor, and a document has no team to hold a role on._
+- _An uploader who holds no team row can therefore wall themselves out of their own file. An Administrator or the Owner opens it again. Widening the audience to include the uploader was rejected: it would grant access from an act that grants none._
+- _The flag rides the document's own per-field PATCH, as the contract's flag rides the record's. It keeps its own two activity verbs and stays out of the `document.updated` changed map._
+- _An activity entry that names a document is hidden from a viewer outside that document's audience. It is also hidden once the document is hard-deleted. The row is gone, so nothing is left to ask whether the file was confidential, and every entry still carries its title. This over-hides an erased **open** document's story from a viewer the contract does not name. The Administrator's audit log is untouched, which is where DOC-010 puts the accountability._
 
 ## DOC-009 — Storage & search: requirements here, engine picks routed to tech-stack
 
