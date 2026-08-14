@@ -30,10 +30,20 @@ services:
       # origin. Empty means unset: the app falls back to its localhost
       # default and warns in production.
       BASE_URL: ${BASE_URL:-}
-      # Uploaded files (DOC-009, TECH-014): the storage driver's root,
-      # and the mount point of the named volume below — the two must
-      # agree, so both read the same variable.
+      # Uploaded files (DOC-009, TECH-014). The default driver is the
+      # local filesystem one — no extra service to run. STORAGE_PATH is
+      # its root and the mount point of the named volume below; the two
+      # must agree, so both read the same variable.
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-}
       STORAGE_PATH: ${STORAGE_PATH:-/var/lib/openlaw/files}
+      # The S3-compatible driver, read only when STORAGE_DRIVER=s3.
+      # Empty means unset — see .env.example for what each one means.
+      S3_BUCKET: ${S3_BUCKET:-}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_REGION: ${S3_REGION:-}
+      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
       # The upload ceiling in whole MB (story 24). Empty means unset:
       # the app falls back to its own default.
       MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-}
@@ -42,7 +52,9 @@ services:
       PORT: 3000
       HOST: 0.0.0.0
     volumes:
-      # Files outlive the container (TECH-005) — no extra service to run.
+      # Files outlive the container (TECH-005) — no extra service to
+      # run. A stack on the S3 driver leaves this volume empty; it costs
+      # nothing and keeps whatever the local driver wrote before.
       - openlaw-files:${STORAGE_PATH:-/var/lib/openlaw/files}
     ports:
       - "${PORT:-3000}:3000"

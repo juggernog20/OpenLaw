@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 import { createDb, runMigrations } from "@openlaw/db";
 import { buildApp } from "./app.js";
 import { createMailerResolver } from "./lib/mailer.js";
-import { DEFAULT_STORAGE_PATH, createLocalStorage } from "./lib/storage/local.js";
+import { createStorageFromEnv } from "./lib/storage/config.js";
 import { maxUploadBytes } from "./lib/uploads.js";
 
 function requireEnv(name: string): string {
@@ -37,14 +37,20 @@ const resolveMailer = createMailerResolver(db, {
   from: process.env.SMTP_FROM,
 });
 
-// DOC-009/TECH-014: the storage root is read here, at startup, and the
-// adapter is injected — no module ever reads the environment for it.
-// `||`, not `??`: under Compose the variable always exists (empty when
-// unset in .env), and empty means "not configured". The local driver is
-// the only driver today; the S3 driver joins behind the same interface.
-const storage = createLocalStorage({
-  root: process.env.STORAGE_PATH || DEFAULT_STORAGE_PATH,
-});
+// DOC-009/TECH-014: the storage driver is chosen here, at startup, and
+// the adapter is injected — no module below ever reads the environment
+// for it, or knows which driver it got. The local filesystem driver is
+// the default; STORAGE_DRIVER=s3 points the install at an object store.
+// A configuration fault stops the boot rather than silently falling back
+// to a local disk nobody would think to look at.
+const storage = (function readStorage() {
+  try {
+    return createStorageFromEnv(process.env);
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  }
+})();
 
 // The upload ceiling, in whole mebibytes, read here for the storage
 // root's reason: startup reads the environment, and no module does. An
