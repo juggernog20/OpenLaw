@@ -1025,7 +1025,7 @@ export interface paths {
     delete: operations["hardDeleteDocument"];
     options?: never;
     head?: never;
-    /** Rename a document or edit its description (DOC-007), one field per request as DES-017 commits them. The stored files are untouched by either: a version's own filename is what it arrived as and stays that, and a download still offers it back. Appends document.updated on the owning contract (DD-017), naming what changed. An archived contract takes no edit until it is restored. A document on a contract the editor cannot reach answers 404, exactly as one that does not exist */
+    /** Rename a document or edit its description (DOC-007), one field per request as DES-017 commits them. The stored files are untouched by either: a version's own filename is what it arrived as and stays that, and a download still offers it back. Appends document.updated on the owning contract (DD-017), naming what changed. isConfidential is the third field, and it is not one of those two: it sets or clears DD-014's per-document flag, which narrows this one file to the contract's named team, its Owner, and Administrators, even on an open contract. It has an actor set narrower than the route's — an Administrator, the person who uploaded the document, and the contract's Owner — and anybody else who reaches the document is refused 403 rather than 404, because they can already see it. Each set and each clear appends its own action, document.confidentiality_set or document.confidentiality_cleared. An archived contract takes no edit until it is restored. A document on a contract the editor cannot reach — and a confidential document they are outside the audience of — answers 404, exactly as one that does not exist */
     patch: operations["updateDocument"];
     trace?: never;
   };
@@ -1226,7 +1226,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** One record's activity feed, newest first (DD-017), filtered at query time to the DD-016 tiers the viewer is in the room for. A comment entry rides the comment's own tier, so a Legal Only comment leaves no trace for anyone who could not read it — no row, no gap, and no count. `admin_only` entries never appear here; the Administrator's audit log is their surface. Paged from a server-fixed page size: pass the previous page's `nextCursor` to read further back. A record the viewer cannot reach answers 404, exactly as one that does not exist */
+    /** One record's activity feed, newest first (DD-017), filtered at query time to the DD-016 tiers the viewer is in the room for. A comment entry rides the comment's own tier, so a Legal Only comment leaves no trace for anyone who could not read it — no row, no gap, and no count. An entry that names a confidential document (DD-014) is left out the same way, for anyone outside that document's audience. `admin_only` entries never appear here; the Administrator's audit log is their surface. Paged from a server-fixed page size: pass the previous page's `nextCursor` to read further back. A record the viewer cannot reach answers 404, exactly as one that does not exist */
     get: operations["listActivity"];
     put?: never;
     post?: never;
@@ -5356,6 +5356,7 @@ export interface operations {
                 isExecuted: boolean;
               }[];
               archivedAt: string | null;
+              isConfidential: boolean;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -5443,6 +5444,7 @@ export interface operations {
                 isExecuted: boolean;
               }[];
               archivedAt: string | null;
+              isConfidential: boolean;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -5530,6 +5532,7 @@ export interface operations {
                 isExecuted: boolean;
               }[];
               archivedAt: string | null;
+              isConfidential: boolean;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -5606,6 +5609,7 @@ export interface operations {
                 isExecuted: boolean;
               }[];
               archivedAt: string | null;
+              isConfidential: boolean;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -5645,6 +5649,7 @@ export interface operations {
         "application/json": {
           title?: string;
           description?: string | null;
+          isConfidential?: boolean;
         };
       };
     };
@@ -5683,6 +5688,7 @@ export interface operations {
                 isExecuted: boolean;
               }[];
               archivedAt: string | null;
+              isConfidential: boolean;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -5753,6 +5759,7 @@ export interface operations {
                 isExecuted: boolean;
               }[];
               archivedAt: string | null;
+              isConfidential: boolean;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -5829,6 +5836,7 @@ export interface operations {
                 isExecuted: boolean;
               }[];
               archivedAt: string | null;
+              isConfidential: boolean;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -5899,6 +5907,7 @@ export interface operations {
                 isExecuted: boolean;
               }[];
               archivedAt: string | null;
+              isConfidential: boolean;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -5969,6 +5978,7 @@ export interface operations {
                 isExecuted: boolean;
               }[];
               archivedAt: string | null;
+              isConfidential: boolean;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -6039,6 +6049,7 @@ export interface operations {
                 isExecuted: boolean;
               }[];
               archivedAt: string | null;
+              isConfidential: boolean;
               createdBy: {
                 id: string;
                 displayName: string;

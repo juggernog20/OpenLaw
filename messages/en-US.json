@@ -98,6 +98,12 @@
   "activity.document.archived": {
     "defaultMessage": "{actor} archived {title}"
   },
+  "activity.document.confidentialityCleared": {
+    "defaultMessage": "{actor} cleared the confidential mark on {title}"
+  },
+  "activity.document.confidentialitySet": {
+    "defaultMessage": "{actor} marked {title} confidential"
+  },
   "activity.document.created": {
     "defaultMessage": "{actor} uploaded {title}"
   },
@@ -974,6 +980,9 @@
   "documents.action.archive": {
     "defaultMessage": "Archive"
   },
+  "documents.action.clearConfidential": {
+    "defaultMessage": "Clear confidential mark"
+  },
   "documents.action.delete": {
     "defaultMessage": "Delete"
   },
@@ -982,6 +991,9 @@
   },
   "documents.action.makePrimary": {
     "defaultMessage": "Make primary"
+  },
+  "documents.action.markConfidential": {
+    "defaultMessage": "Mark confidential"
   },
   "documents.action.restore": {
     "defaultMessage": "Restore"

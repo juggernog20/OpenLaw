@@ -127,6 +127,20 @@ export type ActivityAction =
   | "document.archived"
   | "document.restored"
   | "document.hard_deleted"
+  // DD-014's per-document flag (M11/6), set and cleared. Two verbs for
+  // the reason the contract's own flag has two: DD-014 requires every
+  // walling-off to be accountable in its own right, so it is a slug an
+  // Administrator can filter the audit log on rather than one key
+  // inside a `document.updated` payload.
+  //
+  // These two entries are themselves subject to the flag they record. A
+  // set is narrated to the record's feed, and from the moment it lands
+  // the feed hides it — along with every earlier entry naming the same
+  // document — from anybody outside the document's audience. That is
+  // the point: an entry saying a file was made confidential says the
+  // file is there.
+  | "document.confidentiality_set"
+  | "document.confidentiality_cleared"
   | "sso_provider.registered"
   | "sso_provider.updated"
   // Data leaving the system (M9/7, DD-017). An export is a security
