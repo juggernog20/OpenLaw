@@ -36,12 +36,13 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arc 3, milestone 11** — documents and the version chain. Arc 1 is done: the monorepo and CI, the
-authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
+**Arc 3, milestone 12** — rendering, OCR, and text extraction. Arc 1 is done: the monorepo and CI,
+the authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
 `/settings` destination with its Personal and Organization rails. Arc 2 is done too: the
 configurable types and statuses, the Entities registry, the contract record, the conversation on a
-record with the two read surfaces over the activity log, and — with M10 — the confidentiality gate
-that takes a walled-off contract out of the reach of everyone outside its team.
+record with the two read surfaces over the activity log, and the confidentiality gate that takes a
+walled-off contract out of the reach of everyone outside its team. Arc 3 has started: M11 puts the
+paper on the record — the version chain, the storage adapter, and the two drivers behind it.
 
 ---
 
@@ -163,16 +164,24 @@ every later module reuses, so it is slower than it looks and pays for itself thr
 Everything between "a contract exists" and "a contract is live and being watched." This is the arc that
 makes OpenLaw a CLM rather than a database with a form on it.
 
-- [ ] **M11 — Documents and the version chain**
+- [x] **M11 — Documents and the version chain**
       _Demo:_ Upload a draft to a contract, upload a revision, and see the linear immutable chain with the
       current version pinned.
-  - `documents` plus `document_versions`; every document has exactly one owning record
-  - Corrections append a version; versions are never edited
-  - Soft delete plus Administrator hard delete
-  - The storage adapter, with its local-filesystem driver on a volume and the S3-compatible driver behind
-    the same interface — this is the first demo that puts a file anywhere, so the adapter lands here
-    rather than with the Compose stack
-  - _Decisions:_ DOC-001, DOC-008, DOC-009, DOC-010, TECH-014
+  - `documents` plus `document_versions`; every document has exactly one owning record, which in this
+    milestone is a contract
+  - Corrections append a version — the number is assigned under the owning contract's row lock, and no
+    route edits or deletes one
+  - The chain pins the current version; the record names its primary document, and the executed copy is
+    pinned by hand until M15 sets it
+  - Archive and restore, plus the Administrator's typed-confirmation hard delete, which takes the version
+    rows and the stored blobs with it
+  - The per-document Confidential flag, deferred from M10 to the `documents` table: silent omission on the
+    list, the count, the download, and the activity entries that name the file
+  - The storage adapter — put, get as a stream, delete — with the local-filesystem driver on a named volume
+    and the S3-compatible driver behind the same interface; this is the first demo that puts a file
+    anywhere, so the adapter lands here rather than with the Compose stack
+  - _Decisions:_ DOC-001, DOC-008, DOC-009, DOC-010, DOC-012, CTR-014, DD-014 (extended to documents),
+    TECH-014
 
 - [ ] **M12 — Rendering, OCR, and text extraction**
       _Demo:_ Preview a Word draft in-app without downloading it, then upload a scanned PDF and watch OCR
