@@ -34,6 +34,9 @@ services:
       # and the mount point of the named volume below — the two must
       # agree, so both read the same variable.
       STORAGE_PATH: ${STORAGE_PATH:-/var/lib/openlaw/files}
+      # The upload ceiling in whole MB (story 24). Empty means unset:
+      # the app falls back to its own default.
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-}
       # In-container listen address is fixed; PORT in .env moves the
       # published host port instead (see ports below).
       PORT: 3000

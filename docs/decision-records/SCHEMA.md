@@ -783,7 +783,7 @@ Exactly one owner FK set (same rule shape as `documents`). Invariant: a folder, 
 
 Source: **DOC-001**
 
-Immutable file snapshots, strictly linear per document (`version_number` 1..n). Never edited or deleted individually — corrections add a new version.
+Immutable file snapshots, strictly linear per document (`version_number` 1..n). Never edited or deleted individually — corrections add a new version. Beside the chain columns each row records the **file facts** the stored bytes are described by; they are written once at upload, because the blob behind `file_ref` is immutable and cannot drift from them.
 
 | Column                     | Type        | Notes                                                                                                                                                                                                                 |
 | -------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -796,6 +796,10 @@ Immutable file snapshots, strictly linear per document (`version_number` 1..n). 
 | `compared_from_version_id` | UUID        | FK → `document_versions.id`, nullable; generated redlines: the older comparison operand                                                                                                                               |
 | `compared_to_version_id`   | UUID        | FK → `document_versions.id`, nullable; generated redlines: the newer comparison operand — both operands stored per **DOC-001**/**DOC-003** so the original comparison is reconstructable after the result is appended |
 | `note`                     | text        | nullable                                                                                                                                                                                                              |
+| `original_filename`        | text        | not null; the name the file arrived under, and the name a download offers back. Never used to build a storage key — keys are minted from ids                                                                          |
+| `mime_type`                | text        | not null; what the upload declared. Client-supplied, so it is a rendering hint (**DOC-004**) and never a security decision                                                                                            |
+| `byte_size`                | bigint      | not null; counted by the server as the bytes streamed past, not taken from a header                                                                                                                                   |
+| `checksum_sha256`          | text        | not null; lowercase hex, computed over the same pass — written at upload so a later integrity check has something to compare against                                                                                  |
 | `created_by`               | UUID        | FK → `users.id`, not null                                                                                                                                                                                             |
 | `created_at`               | timestamptz | no `updated_at` — rows are immutable                                                                                                                                                                                  |
 

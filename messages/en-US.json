@@ -95,6 +95,9 @@
   "activity.contract.updated": {
     "defaultMessage": "{actor} changed {count, plural, =0 {this contract} one {{field}} other {# fields}}"
   },
+  "activity.document.created": {
+    "defaultMessage": "{actor} uploaded {title}"
+  },
   "activity.empty": {
     "defaultMessage": "Nothing has happened to this record yet. Every change to it shows up here."
   },
@@ -940,6 +943,42 @@
   },
   "dialog.close": {
     "defaultMessage": "Close"
+  },
+  "documents.column.kind": {
+    "defaultMessage": "Kind"
+  },
+  "documents.column.modified": {
+    "defaultMessage": "Modified"
+  },
+  "documents.column.name": {
+    "defaultMessage": "Name"
+  },
+  "documents.column.size": {
+    "defaultMessage": "Size"
+  },
+  "documents.column.uploadedBy": {
+    "defaultMessage": "Uploaded by"
+  },
+  "documents.empty": {
+    "defaultMessage": "No documents on this contract yet."
+  },
+  "documents.kind": {
+    "defaultMessage": "{kind, select, draft_ours {Draft · ours} redline_theirs {Redline · theirs} redline_ours {Redline · ours} executed {Executed} amendment {Amendment} other {Unknown}}"
+  },
+  "documents.section": {
+    "defaultMessage": "Documents"
+  },
+  "documents.upload": {
+    "defaultMessage": "Upload"
+  },
+  "documents.uploadError": {
+    "defaultMessage": "That file could not be uploaded. Try again."
+  },
+  "documents.uploadField": {
+    "defaultMessage": "File to upload"
+  },
+  "documents.uploadedBy": {
+    "defaultMessage": "Uploaded by {name}"
   },
   "entities.archivedPill": {
     "defaultMessage": "Archived"

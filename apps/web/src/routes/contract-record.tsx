@@ -137,6 +137,7 @@ import {
   type CustomFieldValues,
 } from "../lib/custom-fields";
 import { currencyFractionDigits, currencyOptions, toMajorUnits, toMinorUnits } from "../lib/format";
+import type { ContractDocument } from "../lib/documents";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
 import { problemDetail } from "../lib/messages";
 import { cn } from "../lib/utils";
@@ -152,6 +153,7 @@ import { ConfidentialBanner } from "../components/confidential-banner";
 import { ConfidentialToggle } from "../components/confidential-toggle";
 import { CounterpartyPicker, type CounterpartyPick } from "../components/counterparty-picker";
 import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
+import { DocumentsCard } from "../components/documents/documents-card";
 import { PageTitle } from "../components/page-title";
 import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Button } from "../components/ui/button";
@@ -172,8 +174,13 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
   // Contributor anyway; the record read alone carries every name the
   // page has to draw.
   const canEdit = isMemberPlus(user.role);
-  const [record, options, registry] = await Promise.all([
+  const [record, documents, options, registry] = await Promise.all([
     api.GET("/api/v1/contracts/{number}", { params: { path: { number } } }),
+    // The record's paper (M11/2). Read by every viewer who reaches the
+    // page — a Contributor on the team reads and downloads it too
+    // (DD-015) — and answered 404 for anyone the record itself is
+    // hidden from, which is the same refusal the record read gives.
+    api.GET("/api/v1/contracts/{number}/documents", { params: { path: { number } } }),
     canEdit ? api.GET("/api/v1/contracts/options") : undefined,
     // The registry's own Member+ list is the signing-entity picker's
     // source (CTR-011): it is ordered by legal name and already leaves
@@ -188,6 +195,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     user,
     canEdit,
     contract: record.data.contract,
+    documents: documents.data?.documents ?? [],
     fields: record.data.fields,
     customFieldRefs: record.data.customFieldRefs,
     team: record.data.team,
@@ -253,6 +261,7 @@ function ContractRecord() {
     user,
     canEdit,
     contract,
+    documents: contractDocuments,
     fields,
     customFieldRefs,
     team,
@@ -293,6 +302,9 @@ function ContractRecord() {
   const [refs, setRefs] = useState<CustomFieldRefs>(customFieldRefs);
   const [retypeTo, setRetypeTo] = useState<ContractTypeOption | null>(null);
   const [roster, setRoster] = useState<ContractTeamMember[]>(team);
+  /** The record's paper (M11/2). State rather than loader data because
+   * an upload adds to it without a page re-read. */
+  const [paper, setPaper] = useState<ContractDocument[]>(contractDocuments);
   /** The other side (CTR-011), primary first as the API orders it. */
   const [parties, setParties] = useState<ContractCounterparty[]>(counterparties);
   const [drafts, setDrafts] = useState<Record<TextFieldKey, string>>(() => textDrafts(contract));
@@ -1010,6 +1022,19 @@ function ContractRecord() {
                 error={fieldError}
                 onStatus={note}
                 onCommit={commitCustomField}
+              />
+              {/* The record's paper (M11/2), in the section the C4 mock
+                  draws. It follows the fields because the mock puts the
+                  documents behind their own tab, after everything the
+                  record itself states — and this page is one scroll,
+                  not a tab strip. The full document panel DES-016
+                  places in a wider sibling layer lands with M12's
+                  rendering; this is the record-body section. */}
+              <DocumentsCard
+                contractNumber={saved.number}
+                documents={paper}
+                frozen={frozen}
+                onDocuments={setPaper}
               />
             </div>
             <TeamCard

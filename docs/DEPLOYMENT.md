@@ -34,6 +34,7 @@ All configuration is environment variables in `.env`; [`.env.example`](../.env.e
 | `BASE_URL`               | in prod  | The public origin (e.g. `https://legal.example.com`). Emailed links and OIDC callbacks point here, and the auth layer checks request origins against it.                                                                          |
 | `SMTP_URL` / `SMTP_FROM` | no       | Outbound email; setting `SMTP_URL` pins SMTP to the environment, overriding anything saved in the app (see [Email](#email)). Unset = configurable in the app; with neither, email flows report "unconfigured" instead of sending. |
 | `STORAGE_PATH`           | no       | Where uploaded files are stored (DOC-009). Defaults to `/var/lib/openlaw/files`, the mount point of the `openlaw-files` named volume. Keep the default under Compose — see [Files](#files).                                       |
+| `MAX_UPLOAD_MB`          | no       | Caps each upload, in whole MB. Defaults to 100. Raise your reverse proxy's body limit to match when you raise this — see [Files](#files).                                                                                         |
 | `PORT`                   | no       | The published host port (the container always listens on 3000 internally).                                                                                                                                                        |
 
 ## Reverse proxy contract
@@ -45,6 +46,7 @@ The stack serves plain HTTP on one port and ships no proxy (TECH-017): TLS and t
 3. **Pass `Origin` and `Host` through unmodified** — the auth layer's CSRF protection compares the `Origin` header against `BASE_URL` (TECH-008); a proxy that rewrites or strips it breaks sign-in.
 4. **No path rewriting.** The app owns the whole path space; serve it at the domain root.
 5. **Don't buffer `/api/events`.** Live surfaces use Server-Sent Events (TECH-009); response buffering turns them into nothing.
+6. **Allow a request body at least as large as `MAX_UPLOAD_MB`.** File uploads stream through the app (DOC-012); a proxy with a smaller body limit refuses them first, with its own error instead of the app's.
 
 Everything else — HTTP/2, compression, request logging — is your choice.
 
@@ -94,6 +96,8 @@ Uploaded files are stored on disk by the default storage driver (DOC-009, TECH-0
 The directory appears with the first upload; an install that stores nothing creates nothing.
 
 Point `STORAGE_PATH` somewhere else only outside Compose. Under Compose the volume follows the variable, but the image prepares only the default path for the container's unprivileged `node` user, so another path mounts as root-owned and uploads fail.
+
+One upload may carry at most `MAX_UPLOAD_MB` megabytes (default 100). A file over the ceiling is refused with a clear message instead of a timeout. If you raise it, raise your reverse proxy's own body limit to match — nginx's `client_max_body_size`, Caddy's `request_body max_size` — or the proxy cuts the request off first and the refusal stops being clear.
 
 An S3-compatible driver is coming; until then the volume is the whole story.
 

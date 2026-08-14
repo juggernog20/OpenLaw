@@ -976,6 +976,41 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/contracts/{number}/documents": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The paper on one contract (DOC-008), newest first, each with the version that is current. Access is inherited from the contract and nothing else: a Contributor on the team reads the list, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist */
+    get: operations["listContractDocuments"];
+    put?: never;
+    /** Upload a file to a contract, creating a document with version 1 (DOC-001). Any file type is accepted (DOC-004); the ceiling is the deployment's MAX_UPLOAD_MB, and a file over it is refused rather than stored. The version row records the original filename, the declared MIME type, the byte size the server counted, and the SHA-256 it computed while streaming. The blob is written through the storage adapter before the rows commit (DOC-012). Appends document.created on the owning contract (DD-017). The kind and note fields must be sent before the file part. An archived contract takes no new paper until it is restored. A contract the uploader cannot reach answers 404, exactly as one that does not exist */
+    post: operations["uploadContractDocument"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/{documentId}/versions/{versionId}/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Stream one version's file back, as an attachment. Every open is a download in M11 — in-app rendering is M12 — and there are no presigned URLs: the bytes come through the API behind the session and the owning contract's access predicate. A Contributor on the team downloads; anyone who cannot reach the contract is answered 404, exactly as for a document that does not exist */
+    get: operations["downloadDocumentVersion"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/comments": {
     parameters: {
       query?: never;
@@ -5157,6 +5192,185 @@ export interface operations {
               jurisdiction: string | null;
             }[];
           };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listContractDocuments: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documents: {
+              id: string;
+              title: string;
+              currentVersion: {
+                id: string;
+                versionNumber: number;
+                /** @enum {string} */
+                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                note: string | null;
+                originalFilename: string;
+                mimeType: string;
+                byteSize: number;
+                checksumSha256: string;
+                uploadedBy: {
+                  id: string;
+                  displayName: string;
+                  image: string | null;
+                  archived: boolean;
+                };
+                /** Format: date-time */
+                createdAt: string;
+              };
+              createdBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  uploadContractDocument: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": {
+          /**
+           * Format: binary
+           * @description The file itself. Any type is accepted (DOC-004).
+           */
+          file: string;
+          /**
+           * @description What this version is in the negotiation (CTR-014). Defaults to `draft_ours`. Must be sent before the file part.
+           * @enum {string}
+           */
+          kind?: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+          /** @description What changed in this round, kept beside the file. Must be sent before the file part. */
+          note?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            document: {
+              id: string;
+              title: string;
+              currentVersion: {
+                id: string;
+                versionNumber: number;
+                /** @enum {string} */
+                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                note: string | null;
+                originalFilename: string;
+                mimeType: string;
+                byteSize: number;
+                checksumSha256: string;
+                uploadedBy: {
+                  id: string;
+                  displayName: string;
+                  image: string | null;
+                  archived: boolean;
+                };
+                /** Format: date-time */
+                createdAt: string;
+              };
+              createdBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  downloadDocumentVersion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        documentId: string;
+        versionId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/octet-stream": string;
         };
       };
       /** @description Problem details (RFC 9457) */
