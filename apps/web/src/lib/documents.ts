@@ -4,7 +4,8 @@
  * The documents vocabulary the contract record's Documents section
  * reads: the row shape the API answers, the chain split into the version
  * that matters now and the ones it supersedes, the address a download is
- * fetched from, and the three calls the section makes.
+ * fetched from, and the calls the section makes — the two uploads, the
+ * metadata edit, and the two CTR-014 designations.
  *
  * The two uploads do not go through the generated client.
  * `openapi-fetch` types a `format: binary` field as a string, and the
@@ -156,6 +157,56 @@ export async function updateDocument(
   const { data, error } = await api.PATCH("/api/v1/documents/{documentId}", {
     params: { path: { documentId } },
     body: patch,
+  });
+  return data ? { ok: true, document: data.document } : { ok: false, detail: problemDetail(error) };
+}
+
+/** What a write over the whole record's paper answers: the list as it
+ * now stands, or why not. */
+export type PaperOutcome =
+  { ok: true; documents: ContractDocument[] } | { ok: false; detail?: string };
+
+/**
+ * Names one document the contract's instrument (CTR-014).
+ *
+ * It answers the record's whole paper rather than the one document,
+ * because the designation moving changes two rows: the one that takes
+ * it and the one that loses it. The caller replaces the list it holds
+ * instead of working out for itself which other row moved.
+ */
+export async function setPrimaryDocument(documentId: string): Promise<PaperOutcome> {
+  const { data, error } = await api.POST("/api/v1/documents/{documentId}/primary", {
+    params: { path: { documentId } },
+  });
+  return data
+    ? { ok: true, documents: data.documents }
+    : { ok: false, detail: problemDetail(error) };
+}
+
+/**
+ * Pins one version as the document's signed copy (CTR-014).
+ *
+ * Explicit, and never read off the version's kind: a round tagged
+ * `executed` is what its uploader called it, and pinning is what the
+ * team decided. The seam refuses a version of another document.
+ */
+export async function setExecutedVersion(
+  documentId: string,
+  versionId: string,
+): Promise<UploadOutcome> {
+  const { data, error } = await api.POST("/api/v1/documents/{documentId}/executed-version", {
+    params: { path: { documentId } },
+    body: { versionId },
+  });
+  return data ? { ok: true, document: data.document } : { ok: false, detail: problemDetail(error) };
+}
+
+/** Takes the executed pin off a document. Every version is left as it
+ * was — the pin is one column on the document, not a fact about a
+ * file. */
+export async function clearExecutedVersion(documentId: string): Promise<UploadOutcome> {
+  const { data, error } = await api.DELETE("/api/v1/documents/{documentId}/executed-version", {
+    params: { path: { documentId } },
   });
   return data ? { ok: true, document: data.document } : { ok: false, detail: problemDetail(error) };
 }

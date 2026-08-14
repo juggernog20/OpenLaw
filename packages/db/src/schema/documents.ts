@@ -7,12 +7,16 @@
  * all, and they carry only the columns that step reads and writes
  * (TECH-014). SCHEMA.md is the naming reference for the rest.
  *
+ * M11/4 adds `executed_version_id`, the CTR-014 pin, beside
+ * `contracts.primary_document_id`, which is the other half of the same
+ * decision: the contract names the instrument, the document names its
+ * signed version.
+ *
  * What is deliberately not here yet, and the step that brings it:
- * `executed_version_id` (the CTR-014 pin), `is_confidential` (DD-014's
- * per-document flag), `archived_at` (DOC-010's soft delete), `folder_id`
- * (DOC-006), and the version chain's `source` plus the two
- * comparison-provenance columns (M32's generated redlines). Each arrives
- * with the feature that reads it.
+ * `is_confidential` (DD-014's per-document flag), `archived_at`
+ * (DOC-010's soft delete), `folder_id` (DOC-006), and the version
+ * chain's `source` plus the two comparison-provenance columns (M32's
+ * generated redlines). Each arrives with the feature that reads it.
  */
 
 import { sql } from "drizzle-orm";
@@ -25,6 +29,7 @@ import {
   text,
   timestamp,
   uniqueIndex,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { users } from "./auth.js";
 import { contracts } from "./contracts.js";
@@ -85,6 +90,40 @@ export const documents = pgTable(
     contractId: text("contract_id")
       .notNull()
       .references(() => contracts.id),
+    /**
+     * CTR-014's executed pin: which version of this document is the
+     * signed one (M11/4). It is the file previews, exports, and AI
+     * analysis target by default.
+     *
+     * **Explicit, and never inferred from a version's kind.** A version
+     * tagged `executed` is what the uploader called that round; the pin
+     * is what the team decided is the signed copy, and the two are set
+     * by different acts. NULL is the answer for every document nobody
+     * has pinned a version on, which is most of them.
+     *
+     * **Same-document invariant** (DOC-001): the named row must be a
+     * version of *this* document. It is enforced at write time — the
+     * route reads the version by its id **and** this document's id
+     * inside the same locked transaction, so a version of another
+     * document is not found rather than pinned. A composite FK is the
+     * decision's stated alternative; it is not taken, because
+     * `(id, executed_version_id) → (document_id, id)` cannot carry the
+     * plain `SET NULL` that hard deletion (DOC-010) needs without
+     * nulling the primary key beside it.
+     *
+     * SET NULL on delete: versions are never deleted one at a time
+     * (DOC-001), so this fires only when the whole document goes.
+     */
+    // The return type is written out because the reference closes a
+    // cycle — this table names a version, and a version names this
+    // table — and TypeScript cannot infer a type that depends on
+    // itself. It is the annotation Drizzle documents for exactly this.
+    executedVersionId: text("executed_version_id").references(
+      (): AnyPgColumn => documentVersions.id,
+      {
+        onDelete: "set null",
+      },
+    ),
     // No cascade, as everywhere a record names a person: someone is
     // archived, never deleted (SET-005).
     createdBy: text("created_by")

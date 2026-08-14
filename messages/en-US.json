@@ -98,6 +98,15 @@
   "activity.document.created": {
     "defaultMessage": "{actor} uploaded {title}"
   },
+  "activity.document.executedCleared": {
+    "defaultMessage": "{actor} cleared the executed copy of {title}"
+  },
+  "activity.document.executedSet": {
+    "defaultMessage": "{version, select, unknown {{actor} pinned the executed copy of {title}} other {{actor} pinned version {version} of {title} as the executed copy}}"
+  },
+  "activity.document.primarySet": {
+    "defaultMessage": "{actor} made {title} the primary document"
+  },
   "activity.document.updated": {
     "defaultMessage": "{actor} edited the details of {title}"
   },
@@ -129,7 +138,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} primaryCounterparty {Primary counterparty} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -1037,11 +1046,23 @@
   "documents.empty": {
     "defaultMessage": "No documents on this contract yet."
   },
+  "documents.executed": {
+    "defaultMessage": "Executed"
+  },
   "documents.kind": {
     "defaultMessage": "{kind, select, draft_ours {Draft · ours} redline_theirs {Redline · theirs} redline_ours {Redline · ours} executed {Executed} amendment {Amendment} other {Unknown}}"
   },
+  "documents.makePrimary": {
+    "defaultMessage": "Make {title} the primary document"
+  },
   "documents.notePrefix": {
     "defaultMessage": "Note:"
+  },
+  "documents.pinExecuted": {
+    "defaultMessage": "Pin version {number} of {title} as the executed copy"
+  },
+  "documents.primary": {
+    "defaultMessage": "Primary"
   },
   "documents.section": {
     "defaultMessage": "Documents"

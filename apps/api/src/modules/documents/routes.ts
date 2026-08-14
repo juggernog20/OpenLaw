@@ -1,14 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * A contract's paper (M11/2, M11/3) — the first path in the codebase
- * that puts a file anywhere: upload a draft, append the next revision,
- * read the chain, download any version of it, and keep the record's
- * metadata legible without touching the files.
+ * A contract's paper (M11/2, M11/3, M11/4) — the first path in the
+ * codebase that puts a file anywhere: upload a draft, append the next
+ * revision, read the chain, download any version of it, keep the
+ * record's metadata legible without touching the files, and say which
+ * document is the instrument and which of its versions is signed.
  *
  * **Two tables, one logical record** (DOC-001). A `documents` row is the
  * thing the contract links to; the bytes live in `document_versions`,
  * numbered 1..n and immutable.
+ *
+ * **Two designations, each answering one question** (CTR-014). The
+ * primary document says which document *is* the contract; everything
+ * else on the record is a loose attachment beside it. The executed pin
+ * says which version of a document is the signed one. The first sits on
+ * the contract, so exactly one document holds it and the rule is the
+ * column's shape rather than a check. The second sits on the document
+ * and is explicit: a version tagged `executed` is what its uploader
+ * called that round, and the pin is what the team decided — the two are
+ * never inferred from one another.
  *
  * **There is no route here that edits or deletes a version, and that
  * absence is the decision.** A correction appends a new version, which
@@ -54,9 +65,10 @@
  * path, and the local filesystem driver has no other way anyway.
  *
  * **Every mutation writes its own activity action** on the owning
- * contract (DD-017): creating a document, adding a version to one, and
- * editing what the record says are three different things that happened,
- * so the feed narrates three different sentences rather than one generic
+ * contract (DD-017): creating a document, adding a version to one,
+ * editing what the record says, naming the instrument, and pinning or
+ * clearing the signed copy are five different things that happened, so
+ * the feed narrates five different sentences rather than one generic
  * edit.
  */
 
@@ -166,6 +178,19 @@ const VersionSchema = z.object({
    * the whole view is built around, so the server states it.
    */
   isCurrent: z.boolean(),
+  /**
+   * Whether this is the version the team pinned as the signed one
+   * (CTR-014). At most one version of a document carries it, and most
+   * documents carry it on none.
+   *
+   * Not the same question as `kind === "executed"`, and deliberately not
+   * derived from it: the kind is what the uploader called that round,
+   * and the pin is what the team decided is the executed copy. M15's
+   * e-signature return will set the pin on a file nobody tagged
+   * (CTR-013), and a chain can hold two rounds both called `executed`
+   * with only one of them signed.
+   */
+  isExecuted: z.boolean(),
 });
 
 const DocumentSchema = z.object({
@@ -173,6 +198,13 @@ const DocumentSchema = z.object({
   title: z.string(),
   /** What the record is, in the team's own words (DOC-007). */
   description: z.string().nullable(),
+  /**
+   * Whether this document is the contract's instrument (CTR-014).
+   * Exactly one document on a contract carries it: the first upload
+   * takes it, and from there it moves. Every other document on the
+   * record is a loose attachment beside the primary chain.
+   */
+  isPrimary: z.boolean(),
   /**
    * The whole chain, in order 1..n, exactly one row of it current
    * (DOC-001). Superseded versions stay in it and stay downloadable:
@@ -269,6 +301,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     id: string;
     /** SET-003's soft delete: a time freezes the record (CTR-021). */
     archivedAt: Date | null;
+    /** CTR-014's instrument, or NULL on a record with no paper yet. */
+    primaryDocumentId: string | null;
   }
 
   /**
@@ -290,7 +324,11 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     lock = false,
   ): Promise<ReachedContract | null> {
     const query = db
-      .select({ id: contracts.id, archivedAt: contracts.archivedAt })
+      .select({
+        id: contracts.id,
+        archivedAt: contracts.archivedAt,
+        primaryDocumentId: contracts.primaryDocumentId,
+      })
       .from(contracts)
       .where(and(eq(contracts.number, number), contractTeamScope(db, user)))
       .limit(1);
@@ -306,6 +344,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     contractId: string;
     /** The owning contract's SET-003 soft delete (CTR-021). */
     archivedAt: Date | null;
+    /** Which version of *this* document is pinned as signed, or NULL
+     * (CTR-014). */
+    executedVersionId: string | null;
+    /** Which document the owning contract calls its instrument, which
+     * may be this one or another (CTR-014). */
+    primaryDocumentId: string | null;
   }
 
   /**
@@ -334,6 +378,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         description: documents.description,
         contractId: documents.contractId,
         archivedAt: contracts.archivedAt,
+        executedVersionId: documents.executedVersionId,
+        primaryDocumentId: contracts.primaryDocumentId,
       })
       .from(documents)
       .innerJoin(contracts, eq(documents.contractId, contracts.id))
@@ -352,6 +398,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         title: documents.title,
         description: documents.description,
         contractId: documents.contractId,
+        /** CTR-014's pin, read here so the chain below can mark the row
+         * it names without a second query. */
+        executedVersionId: documents.executedVersionId,
         createdAt: documents.createdAt,
         updatedAt: documents.updatedAt,
         createdBy: {
@@ -404,7 +453,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     };
   }
 
-  function toVersion(row: VersionRow, isCurrent: boolean) {
+  function toVersion(row: VersionRow, isCurrent: boolean, isExecuted: boolean) {
     return {
       id: row.id,
       versionNumber: row.versionNumber,
@@ -417,24 +466,40 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       uploadedBy: toPerson(row.uploadedBy),
       createdAt: row.createdAt.toISOString(),
       isCurrent,
+      isExecuted,
     };
   }
 
   /**
-   * One document with its chain, ordered 1..n and pinned.
+   * One document with its chain, ordered 1..n, and both CTR-014
+   * designations stated on it.
    *
    * The chain arrives in version order, so the current version is its
    * last row — that is what "current is the highest version number"
-   * means (DOC-001). The pin is computed once, here, so no surface has
-   * to work it out again.
+   * means (DOC-001). Current and executed are two different marks and
+   * are computed from two different facts: the first from the ordering,
+   * the second from the document's own `executed_version_id`. A chain
+   * may carry both on one row, on two rows, or on neither.
+   *
+   * `primaryDocumentId` is the owning contract's column, passed in
+   * rather than read here: it is one fact about the record, and reading
+   * it once per document would ask the same question as many times as
+   * the record has paper.
    */
-  function toDocument(row: DocumentRow, chain: readonly VersionRow[]) {
+  function toDocument(
+    row: DocumentRow,
+    chain: readonly VersionRow[],
+    primaryDocumentId: string | null,
+  ) {
     const last = chain.length - 1;
     return {
       id: row.id,
       title: row.title,
       description: row.description,
-      versions: chain.map((version, index) => toVersion(version, index === last)),
+      isPrimary: row.id === primaryDocumentId,
+      versions: chain.map((version, index) =>
+        toVersion(version, index === last, version.id === row.executedVersionId),
+      ),
       createdBy: toPerson(row.createdBy),
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
@@ -476,12 +541,43 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
   /** One document with its chain, read back through the projection the
    * list answers with, so what a write returns is what the next load
    * will draw. */
-  async function documentWithChain(db: Executor, documentId: string) {
+  async function documentWithChain(
+    db: Executor,
+    documentId: string,
+    primaryDocumentId: string | null,
+  ) {
     const [row] = await selectDocuments(db).where(eq(documents.id, documentId));
     const chain = (await chainsOf(db, [documentId])).get(documentId);
     // Both are written in one transaction, so neither can be missing
     // for a document this code just wrote or edited.
-    return toDocument(row!, chain!);
+    return toDocument(row!, chain!, primaryDocumentId);
+  }
+
+  /**
+   * All the paper on one contract, newest first, each document with its
+   * whole chain.
+   *
+   * Shared by the list read and by the primary designation, which is
+   * the one write that changes two rows at once — the document that
+   * takes the designation and the one that loses it. Answering the whole
+   * record's paper means the caller replaces what it holds rather than
+   * working out for itself which other row moved.
+   */
+  async function paperOf(db: Executor, contract: ReachedContract) {
+    const rows = await selectDocuments(db)
+      .where(eq(documents.contractId, contract.id))
+      // Newest first, as the record's Documents section reads. The id
+      // breaks a same-instant tie: uuidv7 is time-ordered, so that
+      // order is still the upload order.
+      .orderBy(desc(documents.createdAt), desc(documents.id));
+    const chains = await chainsOf(
+      db,
+      rows.map((row) => row.id),
+    );
+    return rows.flatMap((row) => {
+      const chain = chains.get(row.id);
+      return chain ? [toDocument(row, chain, contract.primaryDocumentId)] : [];
+    });
   }
 
   app.get(
@@ -493,7 +589,10 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "The paper on one contract (DOC-008), newest first, each with " +
           "its whole version chain in order 1..n and one version of it " +
-          "marked current. A contract holds as many documents as it " +
+          "marked current. Exactly one document is marked primary — the " +
+          "instrument the contract is — and any version the team has " +
+          "pinned as the signed copy is marked executed. A contract " +
+          "holds as many documents as it " +
           "needs: a loose attachment such as a schedule or a " +
           "certificate is its own document with its own chain, beside " +
           "the main instrument rather than inside its history " +
@@ -513,22 +612,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!contract) throw httpError(404, NO_CONTRACT);
       // An archived record still reads: archiving is a soft delete for
       // mistakes and imports, and restore has to be reachable.
-      const rows = await selectDocuments(app.db)
-        .where(eq(documents.contractId, contract.id))
-        // Newest first, as the record's Documents section reads. The id
-        // breaks a same-instant tie: uuidv7 is time-ordered, so that
-        // order is still the upload order.
-        .orderBy(desc(documents.createdAt), desc(documents.id));
-      const chains = await chainsOf(
-        app.db,
-        rows.map((row) => row.id),
-      );
-      return {
-        documents: rows.flatMap((row) => {
-          const chain = chains.get(row.id);
-          return chain ? [toDocument(row, chain)] : [];
-        }),
-      };
+      return { documents: await paperOf(app.db, contract) };
     },
   );
 
@@ -546,8 +630,14 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "original filename, the declared MIME type, the byte size the " +
           "server counted, and the SHA-256 it computed while streaming. " +
           "The blob is written through the storage adapter before the " +
-          "rows commit (DOC-012). Appends document.created on the owning " +
-          "contract (DD-017). The kind and note fields must be sent " +
+          "rows commit (DOC-012). The first document uploaded to a " +
+          "contract becomes its primary document — the instrument the " +
+          "contract is (CTR-014) — and every one after it is a loose " +
+          "attachment until somebody moves the designation. Appends " +
+          "document.created on the owning " +
+          "contract, and document.primary_set beside it when the " +
+          "designation was taken (DD-017). The kind and note fields " +
+          "must be sent " +
           "before the file part. An archived contract takes no new " +
           "paper until it is restored. A contract the uploader cannot " +
           "reach answers 404, exactly as one that does not exist",
@@ -611,9 +701,40 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           payload: { documentId, versionId, title: file.filename },
         });
 
+        // The first document on a record is the instrument (CTR-014).
+        // Nobody asked for it, which is exactly why it gets its own
+        // entry rather than being left implied by the upload above — the
+        // counterparty promotion is logged for the same reason, and a
+        // record born confidential is too. The contract row is held, so
+        // two first uploads at once cannot both read NULL here.
+        const primaryDocumentId = locked.primaryDocumentId ?? documentId;
+        if (locked.primaryDocumentId === null) {
+          await tx
+            .update(contracts)
+            .set({ primaryDocumentId: documentId })
+            .where(eq(contracts.id, locked.id));
+          await recordActivity(tx, {
+            entityType: "contract",
+            entityId: locked.id,
+            actorId: request.user.id,
+            action: "document.primary_set",
+            visibility: RECORD_ACTIVITY_TIER,
+            // `from`/`to` as the counterparty promotion writes them, so
+            // the M9 viewer narrates the move with one shared helper. The
+            // first upload takes the designation from nobody.
+            payload: {
+              documentId,
+              title: file.filename,
+              fromDocumentId: null,
+              from: null,
+              to: file.filename,
+            },
+          });
+        }
+
         // Read back through the list's own projection, so the row the
         // uploader gets is the row the next load will draw.
-        return documentWithChain(tx, documentId);
+        return documentWithChain(tx, documentId, primaryDocumentId);
       });
 
       return reply.status(201).send({ document: created });
@@ -696,7 +817,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             kind: file.kind,
           },
         });
-        return documentWithChain(tx, documentId);
+        return documentWithChain(tx, documentId, locked.primaryDocumentId);
       });
 
       return reply.status(201).send({ document: updated });
@@ -769,7 +890,249 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             });
           }
 
-          return documentWithChain(tx, documentId);
+          return documentWithChain(tx, documentId, target.primaryDocumentId);
+        }),
+      };
+    },
+  );
+
+  app.post(
+    "/documents/:documentId/primary",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "setPrimaryContractDocument",
+        summary:
+          "Name this document the contract's primary document — the " +
+          "instrument the contract is (CTR-014). Everything else on the " +
+          "record reads as a loose attachment beside it. The first " +
+          "document uploaded already holds the designation, so this is " +
+          "the reassignment: it moves to another document on the same " +
+          "contract, or it stays where it is. There is no route to " +
+          "clear it, because a record with paper on it has an " +
+          "instrument. Exactly one document holds the designation at " +
+          "any moment — it is one column on the contract, not a flag " +
+          "on each document. Appends document.primary_set on the " +
+          "owning contract (DD-017). An Administrator or a Legal Team " +
+          "Member who reaches the contract may move it; a Contributor " +
+          "on the team reads the record and is refused 403, because " +
+          "their write grid arrives with M23 (DD-015). An archived " +
+          "contract keeps the " +
+          "designation it has until it is restored. A document on a " +
+          "contract the actor cannot reach answers 404, exactly as one " +
+          "that does not exist",
+        tags: ["documents"],
+        params: DocumentParams,
+        // The whole record's paper, because this is the one write that
+        // changes two documents at once: the one that takes the
+        // designation and the one that loses it.
+        response: { 200: DocumentsEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const { documentId } = request.params;
+      return {
+        documents: await app.db.transaction(async (tx) => {
+          // The contract row is held, which is what makes "exactly one"
+          // true under two people clicking at once: the second waits
+          // and then writes over what the first left.
+          const target = await reachedDocument(tx, request.user, documentId, true);
+          assertOpenDocument(target);
+          if (target.primaryDocumentId === documentId) {
+            throw httpError(409, "That document is already the contract's primary document.");
+          }
+
+          // The document the designation is leaving, named for the
+          // entry. Read before the write, and it may be absent: a
+          // record whose paper was all hard-deleted (DOC-010) has no
+          // primary until the next upload.
+          const previous = target.primaryDocumentId
+            ? ((
+                await tx
+                  .select({ title: documents.title })
+                  .from(documents)
+                  .where(eq(documents.id, target.primaryDocumentId))
+                  .limit(1)
+              )[0] ?? null)
+            : null;
+
+          await tx
+            .update(contracts)
+            .set({ primaryDocumentId: documentId })
+            .where(eq(contracts.id, target.contractId));
+          await recordActivity(tx, {
+            entityType: "contract",
+            entityId: target.contractId,
+            actorId: request.user.id,
+            action: "document.primary_set",
+            visibility: RECORD_ACTIVITY_TIER,
+            // Both titles, because hard deletion (DOC-010) takes the
+            // rows and the entry has to keep saying which document the
+            // instrument moved from and which it moved to.
+            payload: {
+              documentId,
+              title: target.title,
+              fromDocumentId: target.primaryDocumentId,
+              from: previous?.title ?? null,
+              to: target.title,
+            },
+          });
+
+          return paperOf(tx, {
+            id: target.contractId,
+            archivedAt: target.archivedAt,
+            primaryDocumentId: documentId,
+          });
+        }),
+      };
+    },
+  );
+
+  app.post(
+    "/documents/:documentId/executed-version",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "setExecutedDocumentVersion",
+        summary:
+          "Pin one version of this document as the signed copy " +
+          "(CTR-014) — the file previews, exports, and AI analysis " +
+          "target by default. The pin is explicit and is never read off " +
+          "a version's kind: a round tagged `executed` is what its " +
+          "uploader called it, and pinning is what the team decided. " +
+          "Any version can be pinned, current or superseded, and " +
+          "pinning one takes the pin off whichever version held it. A " +
+          "version of another document is refused: the pinned row must " +
+          "be a version of this one (DOC-001). Appends " +
+          "document.executed_set on the owning contract (DD-017). An " +
+          "Administrator or a Legal Team Member who reaches the " +
+          "contract may pin; a Contributor on the team reads the record " +
+          "and is refused 403 (DD-015). An " +
+          "archived contract takes no pin until it is restored. A " +
+          "document on a contract the actor cannot reach answers 404, " +
+          "exactly as one that does not exist",
+        tags: ["documents"],
+        params: DocumentParams,
+        body: z.object({ versionId: RecordIdSchema }),
+        response: { 200: DocumentEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const { documentId } = request.params;
+      const { versionId } = request.body;
+      return {
+        document: await app.db.transaction(async (tx) => {
+          const target = await reachedDocument(tx, request.user, documentId, true);
+          assertOpenDocument(target);
+
+          // DOC-001's same-document invariant, enforced at write time
+          // and enforced by the read itself: the version is looked up
+          // by its own id **and** this document's, inside the locked
+          // transaction that then writes it. A version of another
+          // document is not found here, so there is no path from a
+          // mismatched pair to a stored row.
+          const [version] = await tx
+            .select({
+              id: documentVersions.id,
+              versionNumber: documentVersions.versionNumber,
+            })
+            .from(documentVersions)
+            .where(
+              and(eq(documentVersions.id, versionId), eq(documentVersions.documentId, documentId)),
+            )
+            .limit(1);
+          if (!version) throw httpError(404, "That version is not part of this document.");
+          if (target.executedVersionId === version.id) {
+            throw httpError(409, "That version is already this document's executed copy.");
+          }
+
+          await tx
+            .update(documents)
+            .set({ executedVersionId: version.id })
+            .where(eq(documents.id, documentId));
+          await recordActivity(tx, {
+            entityType: "contract",
+            entityId: target.contractId,
+            actorId: request.user.id,
+            action: "document.executed_set",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: {
+              documentId,
+              title: target.title,
+              versionId: version.id,
+              versionNumber: version.versionNumber,
+            },
+          });
+
+          return documentWithChain(tx, documentId, target.primaryDocumentId);
+        }),
+      };
+    },
+  );
+
+  app.delete(
+    "/documents/:documentId/executed-version",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "clearExecutedDocumentVersion",
+        summary:
+          "Take the executed pin off this document (CTR-014). Every " +
+          "version is left exactly as it was — the pin is one column on " +
+          "the document, and clearing it says the record has no signed " +
+          "copy, never that a file changed or went away. Appends " +
+          "document.executed_cleared on the owning contract (DD-017). " +
+          "An Administrator or a Legal Team Member who reaches the " +
+          "contract may clear it; a Contributor on the team reads the " +
+          "record and is refused 403 (DD-015). " +
+          "An archived contract keeps its pin until it is restored. A " +
+          "document on a contract the actor cannot reach answers 404, " +
+          "exactly as one that does not exist",
+        tags: ["documents"],
+        params: DocumentParams,
+        response: { 200: DocumentEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const { documentId } = request.params;
+      return {
+        document: await app.db.transaction(async (tx) => {
+          const target = await reachedDocument(tx, request.user, documentId, true);
+          assertOpenDocument(target);
+          const pinned = target.executedVersionId;
+          if (!pinned) throw httpError(409, "This document has no executed copy to clear.");
+
+          // The number is read for the entry, not for the write: the
+          // feed says which version stopped being the signed one, and a
+          // bare id would make that sentence unreadable.
+          const [version] = await tx
+            .select({ versionNumber: documentVersions.versionNumber })
+            .from(documentVersions)
+            .where(eq(documentVersions.id, pinned))
+            .limit(1);
+
+          // One column, set to NULL. No version row is touched here,
+          // and there is no statement in this handler that could touch
+          // one (DOC-001).
+          await tx
+            .update(documents)
+            .set({ executedVersionId: null })
+            .where(eq(documents.id, documentId));
+          await recordActivity(tx, {
+            entityType: "contract",
+            entityId: target.contractId,
+            actorId: request.user.id,
+            action: "document.executed_cleared",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: {
+              documentId,
+              title: target.title,
+              versionId: pinned,
+              versionNumber: version?.versionNumber ?? null,
+            },
+          });
+
+          return documentWithChain(tx, documentId, target.primaryDocumentId);
         }),
       };
     },

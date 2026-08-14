@@ -60,10 +60,12 @@ import {
   MessageSquare,
   Palette,
   PencilLine,
+  Pin,
   Settings,
   ShieldCheck,
   ShieldOff,
   SquareCheck,
+  Star,
   Tag,
   Tags,
   Trash2,
@@ -231,6 +233,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "entity {Signing entity} priority {Priority} risk {Risk} " +
         "contractType {Contract type} value {Value} status {Status} " +
         "primaryCounterparty {Primary counterparty} " +
+        "primaryDocument {Primary document} " +
         "displayName {Name} display_name {Display name} name {Name} " +
         "role {Role} email {Email} " +
         "stage {Stage} moduleScope {Scope} isRequired {Required} " +
@@ -783,7 +786,7 @@ const ARMS: Readonly<Record<string, Arm>> = {
       defaultMessage: "{actor} restored this contract",
     }),
   },
-  // The record's paper (M11/2, M11/3). The entry hangs off the owning
+  // The record's paper (M11/2, M11/3, M11/4). The entry hangs off the owning
   // contract — a document's access is its owner's and nothing else
   // (DOC-008) — and it names the document, because hard deletion
   // (DOC-010) will one day take the row and the entry has to still say
@@ -824,6 +827,46 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
     values: (intl, payload) => ({ title: named(intl, payload, "title") }),
     changes: changesFrom,
+  },
+  // Which document *is* the contract (CTR-014). The first upload takes
+  // the designation without anybody asking for it, so the log says so
+  // rather than leaving it implied by the upload above — the
+  // counterparty promotion is written the same way, and the old→new
+  // pair rides the same `from`/`to` helper.
+  "document.primary_set": {
+    icon: Star,
+    message: defineMessage({
+      id: "activity.document.primarySet",
+      defaultMessage: "{actor} made {title} the primary document",
+    }),
+    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+    changes: (intl, payload, context) => directChange(intl, payload, "primaryDocument", context),
+  },
+  // One glyph for the pin everywhere, the way DES-009 gives
+  // confidentiality one Lock: the set and the clear are two states of
+  // one fact, so the sentence is what tells them apart. The set names
+  // the round, because a chain reads as a history and "version 3" is
+  // what makes it one.
+  "document.executed_set": {
+    icon: Pin,
+    message: defineMessage({
+      id: "activity.document.executedSet",
+      defaultMessage:
+        "{version, select, unknown {{actor} pinned the executed copy of {title}} " +
+        "other {{actor} pinned version {version} of {title} as the executed copy}}",
+    }),
+    values: (intl, payload) => ({
+      title: named(intl, payload, "title"),
+      version: versionNumber(payload),
+    }),
+  },
+  "document.executed_cleared": {
+    icon: Pin,
+    message: defineMessage({
+      id: "activity.document.executedCleared",
+      defaultMessage: "{actor} cleared the executed copy of {title}",
+    }),
+    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
   },
 
   // Ids only, never text (CMT-006). A redacted comment's entry reads as

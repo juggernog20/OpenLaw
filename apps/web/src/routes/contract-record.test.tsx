@@ -3474,17 +3474,19 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
 });
 
 /**
- * The Documents section of the record body (M11/2, M11/3), drawn from
- * the C4 mock: the heading with a count of what is on the record, the
- * upload composer beside it, and one row per document — the version that
- * matters now, with the rounds it supersedes opening underneath it.
+ * The Documents section of the record body (M11/2, M11/3, M11/4), drawn
+ * from the C4 mock: the heading with a count of what is on the record,
+ * the upload composer beside it, and one row per document — the version
+ * that matters now, with the rounds it supersedes opening underneath it.
  *
  * The panel DES-016 places in a wider sibling layer is not here — it
  * lands with M12's rendering. What this asserts is the section, the
  * count, the chain with its pin, a download per version, the composer
- * that sends the kind and the note, and the metadata edit.
+ * that sends the kind and the note, the metadata edit, and the two
+ * CTR-014 designations: which document is the instrument, and which of
+ * its versions is the signed copy.
  */
-describe("the contract record's Documents section (M11/2, M11/3)", () => {
+describe("the contract record's Documents section (M11/2, M11/3, M11/4)", () => {
   /** One version of a chain, as the API answers it. */
   const version = (over: Record<string, unknown> = {}) => ({
     id: "ver-1",
@@ -3498,6 +3500,9 @@ describe("the contract record's Documents section (M11/2, M11/3)", () => {
     uploadedBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
     createdAt: "2026-08-11T09:00:00.000Z",
     isCurrent: true,
+    /** The CTR-014 pin, which no upload ever sets: it is the team's own
+     * decision, never read off the round's kind. */
+    isExecuted: false,
     ...over,
   });
 
@@ -3505,6 +3510,8 @@ describe("the contract record's Documents section (M11/2, M11/3)", () => {
     id: "doc-1",
     title: "Orion_MSA_2026_draft.docx",
     description: null,
+    /** The first document uploaded is the instrument (CTR-014). */
+    isPrimary: true,
     versions: [version()],
     createdBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
     createdAt: "2026-08-11T09:00:00.000Z",
@@ -3515,6 +3522,8 @@ describe("the contract record's Documents section (M11/2, M11/3)", () => {
     ...DRAFT,
     id: "doc-2",
     title: "Orion_MSA_2026_redline_orion.docx",
+    // A loose attachment beside the instrument, not the instrument.
+    isPrimary: false,
     versions: [
       version({
         id: "ver-2",
@@ -3561,7 +3570,7 @@ describe("the contract record's Documents section (M11/2, M11/3)", () => {
    * metadata edit. */
   function documentsApi(
     rows: Record<string, unknown>[],
-    options: { uploadFails?: string } = {},
+    options: { uploadFails?: string; designationFails?: string } = {},
     team = [person("u1", "creator")],
   ) {
     const record = recordApi(contractRow(), team);
@@ -3581,6 +3590,9 @@ describe("the contract record's Documents section (M11/2, M11/3)", () => {
           ...DRAFT,
           id: "doc-new",
           title: "counter_redline.docx",
+          // The first document on a record takes the designation; every
+          // one after it is a loose attachment (CTR-014).
+          isPrimary: current.length === 0,
           versions: [version({ id: "ver-new", originalFilename: "counter_redline.docx" })],
         };
         current = [added, ...current];
@@ -3610,6 +3622,37 @@ describe("the contract record's Documents section (M11/2, M11/3)", () => {
         };
         current = current.map((row) => (row === target ? next : row));
         return json(201, { document: next });
+      }
+      // Which document is the instrument (CTR-014). The seam answers
+      // the record's whole paper, because two rows move: the one that
+      // takes the designation and the one that loses it.
+      const named = /^\/api\/v1\/documents\/([^/]+)\/primary$/.exec(pathname);
+      if (named && call.method === "POST") {
+        writes.push({ url: pathname, body: call.body });
+        if (options.designationFails) return problem(409, options.designationFails);
+        current = current.map((row) => ({ ...row, isPrimary: row.id === named[1] }));
+        return json(200, { documents: current });
+      }
+      // The executed pin (CTR-014), set and cleared at the document's
+      // own address: the pin is one column on the document, and no
+      // version row is touched by either.
+      const pinned = /^\/api\/v1\/documents\/([^/]+)\/executed-version$/.exec(pathname);
+      if (pinned && (call.method === "POST" || call.method === "DELETE")) {
+        writes.push({ url: `${pathname}:${call.method}`, body: call.body });
+        if (options.designationFails) return problem(409, options.designationFails);
+        const target = current.find((row) => row.id === pinned[1]);
+        if (!target) return problem(404, "No document exists with this reference.");
+        const wanted =
+          call.method === "POST" ? (call.body as { versionId: string }).versionId : null;
+        const next = {
+          ...target,
+          versions: (target.versions as Record<string, unknown>[]).map((row) => ({
+            ...row,
+            isExecuted: row.id === wanted,
+          })),
+        };
+        current = current.map((row) => (row === target ? next : row));
+        return json(200, { document: next });
       }
       const edited = /^\/api\/v1\/documents\/([^/]+)$/.exec(pathname);
       if (edited && call.method === "PATCH") {
@@ -3867,6 +3910,141 @@ describe("the contract record's Documents section (M11/2, M11/3)", () => {
     expect(within(section).getByText("No documents on this contract yet.")).toBeVisible();
   });
 
+  it("marks the document the record calls its instrument", async () => {
+    stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT, THEIRS]).handler });
+    renderAt("/contracts/42");
+
+    const section = await documentsSection();
+    // One mark on the record, on the row it is about.
+    expect(within(section).getAllByText("Primary")).toHaveLength(1);
+    // And no control offered on the row that already holds it: absent,
+    // not disabled, and the mark beside the name is what says why.
+    expect(
+      within(section).queryByRole("button", {
+        name: "Make Orion_MSA_2026_draft.docx the primary document",
+      }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(section).getByRole("button", {
+        name: "Make Orion_MSA_2026_redline_orion.docx the primary document",
+      }),
+    ).toBeVisible();
+  });
+
+  it("moves the designation to another document on the record", async () => {
+    const api = documentsApi([DRAFT, THEIRS]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(
+      within(section).getByRole("button", {
+        name: "Make Orion_MSA_2026_redline_orion.docx the primary document",
+      }),
+    );
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]!.url).toBe("/api/v1/documents/doc-2/primary");
+    // Still exactly one mark, and it is on the other row now: the
+    // section redraws from the whole list the seam answered with, so
+    // the row that lost the designation is not left claiming it.
+    await waitFor(() => expect(within(section).getAllByText("Primary")).toHaveLength(1));
+    expect(
+      await within(section).findByRole("button", {
+        name: "Make Orion_MSA_2026_draft.docx the primary document",
+      }),
+    ).toBeVisible();
+  });
+
+  it("pins a superseded round as the executed copy, and clears it again", async () => {
+    const api = documentsApi([CHAIN]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(
+      within(section).getByRole("button", { name: /Show the 2 earlier versions of/ }),
+    );
+    // The signed copy is often not the last round: this contract was
+    // signed in round two and redlined again in round three.
+    await user.click(
+      within(section).getByRole("button", {
+        name: "Pin version 2 of Orion Cloud — master services agreement as the executed copy",
+      }),
+    );
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]).toEqual({
+      url: "/api/v1/documents/doc-3/executed-version:POST",
+      body: { versionId: "ver-b" },
+    });
+    expect(await within(section).findByText("Executed")).toBeVisible();
+    // Current and executed are two marks on two rows, not one fact.
+    expect(within(section).getByText("Current")).toBeVisible();
+
+    // The same control, named for what it toggles: the state is on
+    // `aria-pressed`, not in the name.
+    const pin = within(section).getByRole("button", {
+      name: "Pin version 2 of Orion Cloud — master services agreement as the executed copy",
+    });
+    await waitFor(() => expect(pin).toHaveAttribute("aria-pressed", "true"));
+    await user.click(pin);
+
+    await waitFor(() => expect(api.writes).toHaveLength(2));
+    expect(api.writes[1]!.url).toBe("/api/v1/documents/doc-3/executed-version:DELETE");
+    // Every round is still there: the pin is one column on the
+    // document, and clearing it takes nothing else with it.
+    await waitFor(() => expect(within(section).queryByText("Executed")).not.toBeInTheDocument());
+    expect(within(section).getByRole("link", { name: "round_2.docx" })).toBeInTheDocument();
+  });
+
+  it("never reads the pin off a round's kind", async () => {
+    const signed = {
+      ...DRAFT,
+      id: "doc-signed",
+      title: "Orion_MSA_2026_signed.pdf",
+      versions: [version({ id: "ver-signed", kind: "executed" })],
+    };
+    stubApi({ signedIn: MEMBER, extra: documentsApi([signed]).handler });
+    renderAt("/contracts/42");
+
+    const section = await documentsSection();
+    // The kind is what the uploader called this round; the pin is what
+    // the team decided, and nobody has decided yet. One "Executed" on
+    // the row — the kind pill — and none beside the version number.
+    expect(within(section).getAllByText("Executed")).toHaveLength(1);
+    expect(
+      within(section).getByRole("button", {
+        name: "Pin version 1 of Orion_MSA_2026_signed.pdf as the executed copy",
+      }),
+    ).toBeVisible();
+  });
+
+  it("reports the seam's own refusal when a designation is turned down", async () => {
+    const api = documentsApi([DRAFT, THEIRS], {
+      designationFails: "That document is already the contract's primary document.",
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(
+      within(section).getByRole("button", {
+        name: "Make Orion_MSA_2026_redline_orion.docx the primary document",
+      }),
+    );
+
+    expect(
+      await within(section).findByText("That document is already the contract's primary document."),
+    ).toBeVisible();
+    // Nothing moved: the section draws what the record says, not what
+    // the click hoped for.
+    expect(within(section).getAllByText("Primary")).toHaveLength(1);
+  });
+
   it("offers a Contributor the list and the download, and no control that writes", async () => {
     const api = documentsApi([CHAIN], {}, [person("u1", "creator"), person("u3", "contributor")]);
     stubApi({
@@ -3896,6 +4074,8 @@ describe("the contract record's Documents section (M11/2, M11/3)", () => {
     expect(
       within(section).queryByRole("button", { name: /^Edit the details/ }),
     ).not.toBeInTheDocument();
+    expect(within(section).queryByRole("button", { name: /^Make / })).not.toBeInTheDocument();
+    expect(within(section).queryByRole("button", { name: /^Pin version/ })).not.toBeInTheDocument();
   });
 
   it("freezes the section's controls on an archived record", async () => {
@@ -3917,9 +4097,12 @@ describe("the contract record's Documents section (M11/2, M11/3)", () => {
     expect(
       within(section).queryByRole("button", { name: /^Edit the details/ }),
     ).not.toBeInTheDocument();
-    // Reading it is not editing it: the download stays.
+    expect(within(section).queryByRole("button", { name: /^Make / })).not.toBeInTheDocument();
+    expect(within(section).queryByRole("button", { name: /^Pin version/ })).not.toBeInTheDocument();
+    // Reading it is not editing it: the download and the marks stay.
     expect(
       within(section).getByRole("link", { name: "Orion_MSA_2026_draft.docx" }),
     ).toBeInTheDocument();
+    expect(within(section).getByText("Primary")).toBeVisible();
   });
 });

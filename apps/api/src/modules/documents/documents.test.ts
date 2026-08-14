@@ -27,7 +27,15 @@
  * address nothing was ever made under — and the two answers must be one
  * answer.
  *
- * The fourth subject is the ceiling (story 24). An oversized upload is
+ * The two CTR-014 designations are the fourth subject. Exactly one
+ * document on a contract is the instrument, the first upload takes the
+ * designation, and it moves from there — so the assertions count the
+ * marked documents rather than looking one up. The executed pin is
+ * explicit: an upload tagged `executed` pins nothing, a version of
+ * another document is refused at write time (DOC-001), and clearing the
+ * pin leaves the chain byte for byte as it was.
+ *
+ * The fifth subject is the ceiling (story 24). An oversized upload is
  * refused with a problem response that names the limit, and nothing is
  * left on the record. It runs against a second app over the same
  * database with a small ceiling, because the refusal is worth testing
@@ -108,12 +116,14 @@ interface VersionRow {
   uploadedBy: { id: string; displayName: string; archived: boolean };
   createdAt: string;
   isCurrent: boolean;
+  isExecuted: boolean;
 }
 
 interface DocumentRow {
   id: string;
   title: string;
   description: string | null;
+  isPrimary: boolean;
   versions: VersionRow[];
   createdBy: { id: string; displayName: string };
   createdAt: string;
@@ -360,6 +370,38 @@ const patchDocument = (
     cookies,
     payload,
   });
+
+/** The raw answer to naming a document the contract's instrument
+ * (CTR-014). */
+const makePrimary = (cookies: Record<string, string>, documentId: string) =>
+  harness.app.inject({
+    method: "POST",
+    url: `/api/v1/documents/${documentId}/primary`,
+    cookies,
+  });
+
+/** The raw answer to pinning one version as the signed copy (CTR-014). */
+const pinExecuted = (cookies: Record<string, string>, documentId: string, versionId: string) =>
+  harness.app.inject({
+    method: "POST",
+    url: `/api/v1/documents/${documentId}/executed-version`,
+    cookies,
+    payload: { versionId },
+  });
+
+/** The raw answer to taking the executed pin off a document. */
+const clearExecuted = (cookies: Record<string, string>, documentId: string) =>
+  harness.app.inject({
+    method: "DELETE",
+    url: `/api/v1/documents/${documentId}/executed-version`,
+    cookies,
+  });
+
+/** The versions of one document that carry the executed pin. Plural on
+ * purpose: "at most one" is the claim, so the assertion counts rather
+ * than finds. */
+const executedOf = (document: DocumentRow): VersionRow[] =>
+  document.versions.filter((version) => version.isExecuted);
 
 const listDocuments = (cookies: Record<string, string>, number: number) =>
   harness.app.inject({ method: "GET", url: `/api/v1/contracts/${number}/documents`, cookies });
@@ -1168,6 +1210,384 @@ describe("who reaches a contract's paper", () => {
 
     const res = await listDocuments(adminCookies, contract.number);
     expect(res.json().documents).toEqual([]);
+  });
+});
+
+/**
+ * The primary document (CTR-014, M11/4): which document *is* the
+ * contract.
+ *
+ * The claim under test is "exactly one at a time", so every assertion
+ * counts the marked documents rather than looking one up — a suite that
+ * only checked the document it just named would pass on a record with
+ * two primaries in it.
+ */
+describe("the primary document", () => {
+  it("gives the designation to the first document uploaded", async () => {
+    const contract = await newContract("Orion Cloud — the first file");
+
+    const document = await uploaded(adminCookies, contract.number, { filename: "msa.docx" });
+
+    expect(document.isPrimary).toBe(true);
+  });
+
+  it("leaves every document after the first a loose attachment", async () => {
+    const contract = await newContract("Orion Cloud — the attachments");
+    const instrument = await uploaded(adminCookies, contract.number, { filename: "msa.docx" });
+    await uploaded(adminCookies, contract.number, { filename: "insurance_cert.pdf" });
+    await uploaded(adminCookies, contract.number, { filename: "parent_guarantee.pdf" });
+
+    const rows = (await listDocuments(adminCookies, contract.number)).json()
+      .documents as DocumentRow[];
+
+    expect(rows.filter((row) => row.isPrimary).map((row) => row.id)).toEqual([instrument.id]);
+  });
+
+  it("moves the designation to another document on the same contract", async () => {
+    const contract = await newContract("Orion Cloud — the reassignment");
+    const first = await uploaded(adminCookies, contract.number, { filename: "wrong_file.pdf" });
+    const second = await uploaded(adminCookies, contract.number, { filename: "the_msa.docx" });
+
+    const res = await makePrimary(adminCookies, second.id);
+
+    expect(res.statusCode, res.body).toBe(200);
+    // The whole record's paper comes back, because two documents
+    // changed: the one that took the designation and the one that lost
+    // it.
+    const answered = res.json().documents as DocumentRow[];
+    expect(answered.filter((row) => row.isPrimary).map((row) => row.id)).toEqual([second.id]);
+
+    const rows = (await listDocuments(adminCookies, contract.number)).json()
+      .documents as DocumentRow[];
+    expect(rows.filter((row) => row.isPrimary).map((row) => row.id)).toEqual([second.id]);
+    expect(rows.find((row) => row.id === first.id)!.isPrimary).toBe(false);
+  });
+
+  it("refuses naming the document that already holds it", async () => {
+    const contract = await newContract("Orion Cloud — already the primary");
+    const document = await uploaded(adminCookies, contract.number);
+
+    const res = await makePrimary(adminCookies, document.id);
+
+    expect(res.statusCode, res.body).toBe(409);
+  });
+
+  it("keeps each contract's designation to itself", async () => {
+    const mine = await newContract("Orion Cloud — my instrument");
+    const theirs = await newContract("Orion Cloud — their instrument");
+    const ours = await uploaded(adminCookies, mine.number, { filename: "ours.docx" });
+    await uploaded(adminCookies, theirs.number, { filename: "theirs.docx" });
+
+    const rows = (await listDocuments(adminCookies, theirs.number)).json()
+      .documents as DocumentRow[];
+
+    expect(rows.some((row) => row.id === ours.id)).toBe(false);
+    expect(rows.filter((row) => row.isPrimary).length).toBe(1);
+  });
+
+  it("records the first upload's designation as its own action", async () => {
+    const contract = await newContract("Orion Cloud — the first designation");
+    const document = await uploaded(adminCookies, contract.number, { filename: "msa.docx" });
+
+    const entries = await feed(adminCookies, contract.id);
+    const entry = entries.find((row) => row.action === "document.primary_set");
+    expect(entry, "a document.primary_set entry on the contract").toBeDefined();
+    expect(entry!.payload.documentId).toBe(document.id);
+    expect(entry!.payload.title).toBe("msa.docx");
+    // Nobody asked for it, so the entry says it happened rather than
+    // leaving it implied by the upload beside it.
+    expect(entry!.payload.from).toBeNull();
+  });
+
+  it("names both documents when the designation moves", async () => {
+    const contract = await newContract("Orion Cloud — the moved designation");
+    const first = await uploaded(adminCookies, contract.number, { filename: "wrong_file.pdf" });
+    const second = await uploaded(adminCookies, contract.number, { filename: "the_msa.docx" });
+
+    const res = await makePrimary(adminCookies, second.id);
+    expect(res.statusCode, res.body).toBe(200);
+
+    const entries = await feed(adminCookies, contract.id);
+    const moved = entries.filter((row) => row.action === "document.primary_set");
+    // Two: the one the first upload took, and this one.
+    expect(moved.length).toBe(2);
+    const latest = moved.find((row) => row.payload.documentId === second.id);
+    expect(latest, "the reassignment entry").toBeDefined();
+    expect(latest!.payload.title).toBe("the_msa.docx");
+    expect(latest!.payload.fromDocumentId).toBe(first.id);
+    expect(latest!.payload.from).toBe("wrong_file.pdf");
+  });
+
+  it("refuses the reassignment on an archived contract", async () => {
+    const contract = await newContract("Orion Cloud — frozen designation");
+    await uploaded(adminCookies, contract.number, { filename: "one.pdf" });
+    const second = await uploaded(adminCookies, contract.number, { filename: "two.pdf" });
+    const archive = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/archive`,
+      cookies: adminCookies,
+    });
+    expect(archive.statusCode, archive.body).toBe(200);
+
+    const res = await makePrimary(adminCookies, second.id);
+
+    expect(res.statusCode, res.body).toBe(409);
+  });
+
+  it("refuses a Contributor without hiding the record from them", async () => {
+    const contract = await newContract("Orion Cloud — the Contributor's designation");
+    await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+    await uploaded(adminCookies, contract.number, { filename: "one.pdf" });
+    const second = await uploaded(adminCookies, contract.number, { filename: "two.pdf" });
+
+    const res = await makePrimary(contributorCookies, second.id);
+
+    expect(res.statusCode, res.body).toBe(403);
+  });
+
+  it("answers a walled-off viewer exactly as it answers for a document that was never created", async () => {
+    const contract = await newContract("Project Nightingale — the designation");
+    await uploaded(adminCookies, contract.number, { filename: "one.pdf" });
+    const second = await uploaded(adminCookies, contract.number, { filename: "two.pdf" });
+    await markConfidential(contract.number);
+
+    const missing = "01920000-0000-7000-8000-0000000000aa";
+    const walled = await makePrimary(outsiderCookies, second.id);
+    const absent = await makePrimary(outsiderCookies, missing);
+
+    expect(walled.statusCode).toBe(404);
+    expect(withoutInstance(walled.json())).toEqual(withoutInstance(absent.json()));
+
+    // And the record is as it was.
+    const rows = (await listDocuments(adminCookies, contract.number)).json()
+      .documents as DocumentRow[];
+    expect(rows.filter((row) => row.isPrimary).map((row) => row.id)).not.toEqual([second.id]);
+  });
+});
+
+/**
+ * The executed pin (CTR-014, DOC-001, M11/4): which version of a
+ * document is the signed one.
+ *
+ * Two claims are load-bearing here and are asserted rather than assumed.
+ * The pin is **explicit** — no upload sets it, whatever kind the
+ * uploader tagged the round with. And the pinned row must be a version
+ * of **this** document, refused at write time.
+ */
+describe("the executed pin", () => {
+  it("pins nothing until somebody says which version, even for a round tagged executed", async () => {
+    const contract = await newContract("Orion Cloud — nothing pinned");
+    const document = await uploaded(adminCookies, contract.number, { filename: "msa.docx" });
+    const signed = await versionAdded(adminCookies, document.id, {
+      kind: "executed",
+      filename: "msa_signed.pdf",
+    });
+
+    // The kind is what the uploader called this round. The pin is what
+    // the team decided, and nobody has decided yet.
+    expect(currentOf(signed).kind).toBe("executed");
+    expect(executedOf(signed)).toEqual([]);
+  });
+
+  it("pins the version the team chose", async () => {
+    const contract = await newContract("Orion Cloud — the signed copy");
+    const document = await uploaded(adminCookies, contract.number, { filename: "msa.docx" });
+    const withSigned = await versionAdded(adminCookies, document.id, {
+      kind: "executed",
+      filename: "msa_signed.pdf",
+    });
+    const signed = currentOf(withSigned);
+
+    const res = await pinExecuted(adminCookies, document.id, signed.id);
+
+    expect(res.statusCode, res.body).toBe(200);
+    expect(executedOf(res.json().document as DocumentRow).map((row) => row.id)).toEqual([
+      signed.id,
+    ]);
+    const rows = (await listDocuments(adminCookies, contract.number)).json()
+      .documents as DocumentRow[];
+    expect(executedOf(rows[0]!).map((row) => row.id)).toEqual([signed.id]);
+  });
+
+  it("pins a superseded version, because the pin is not the current one", async () => {
+    const contract = await newContract("Orion Cloud — signed then amended");
+    const document = await uploaded(adminCookies, contract.number, { filename: "msa.docx" });
+    const withSigned = await versionAdded(adminCookies, document.id, { kind: "executed" });
+    const signed = currentOf(withSigned);
+    const withAmendment = await versionAdded(adminCookies, document.id, { kind: "amendment" });
+    expect(currentOf(withAmendment).versionNumber).toBe(3);
+
+    const res = await pinExecuted(adminCookies, document.id, signed.id);
+
+    expect(res.statusCode, res.body).toBe(200);
+    const answered = res.json().document as DocumentRow;
+    expect(executedOf(answered).map((row) => row.versionNumber)).toEqual([2]);
+    // Two different marks on two different rows: the chain's own head,
+    // and the file that was signed.
+    expect(currentOf(answered).versionNumber).toBe(3);
+    expect(currentOf(answered).isExecuted).toBe(false);
+  });
+
+  it("moves the pin rather than holding two", async () => {
+    const contract = await newContract("Orion Cloud — the corrected pin");
+    const document = await uploaded(adminCookies, contract.number, { filename: "msa.docx" });
+    const first = currentOf(document);
+    const withSecond = await versionAdded(adminCookies, document.id, { kind: "executed" });
+    const second = currentOf(withSecond);
+
+    await pinExecuted(adminCookies, document.id, first.id);
+    const res = await pinExecuted(adminCookies, document.id, second.id);
+
+    expect(res.statusCode, res.body).toBe(200);
+    expect(executedOf(res.json().document as DocumentRow).map((row) => row.id)).toEqual([
+      second.id,
+    ]);
+  });
+
+  it("refuses a version that belongs to another document, and pins nothing", async () => {
+    const contract = await newContract("Orion Cloud — crossed pin");
+    const one = await uploaded(adminCookies, contract.number, { filename: "one.pdf" });
+    const two = await uploaded(adminCookies, contract.number, { filename: "two.pdf" });
+
+    const res = await pinExecuted(adminCookies, one.id, currentOf(two).id);
+
+    // DOC-001's same-document invariant, refused at write time.
+    expect(res.statusCode, res.body).toBe(404);
+    const rows = (await listDocuments(adminCookies, contract.number)).json()
+      .documents as DocumentRow[];
+    expect(rows.flatMap(executedOf)).toEqual([]);
+  });
+
+  it("refuses pinning the version that already holds the pin", async () => {
+    const contract = await newContract("Orion Cloud — pinned twice");
+    const document = await uploaded(adminCookies, contract.number);
+    const version = currentOf(document);
+    expect((await pinExecuted(adminCookies, document.id, version.id)).statusCode).toBe(200);
+
+    const res = await pinExecuted(adminCookies, document.id, version.id);
+
+    expect(res.statusCode, res.body).toBe(409);
+  });
+
+  it("clears the pin and leaves every version exactly as it was", async () => {
+    const contract = await newContract("Orion Cloud — unpinned");
+    const content = Buffer.from("the signed copy, byte for byte");
+    const document = await uploaded(adminCookies, contract.number, { filename: "msa.docx" });
+    const withSigned = await versionAdded(adminCookies, document.id, {
+      kind: "executed",
+      note: "counter-signed and returned",
+      filename: "msa_signed.pdf",
+      content,
+    });
+    const signed = currentOf(withSigned);
+    expect((await pinExecuted(adminCookies, document.id, signed.id)).statusCode).toBe(200);
+
+    const res = await clearExecuted(adminCookies, document.id);
+
+    expect(res.statusCode, res.body).toBe(200);
+    const answered = res.json().document as DocumentRow;
+    expect(executedOf(answered)).toEqual([]);
+    // The chain is untouched: same rows, same numbers, same kinds, same
+    // notes, same files. Only the one column on the document moved.
+    expect(answered.versions.map((row) => ({ ...row, isExecuted: undefined }))).toEqual(
+      withSigned.versions.map((row) => ({ ...row, isExecuted: undefined })),
+    );
+    const file = await download(adminCookies, document.id, signed.id);
+    expect(file.statusCode).toBe(200);
+    expect(file.rawPayload.equals(content)).toBe(true);
+  });
+
+  it("refuses a clear when no version is pinned", async () => {
+    const contract = await newContract("Orion Cloud — nothing to clear");
+    const document = await uploaded(adminCookies, contract.number);
+
+    const res = await clearExecuted(adminCookies, document.id);
+
+    expect(res.statusCode, res.body).toBe(409);
+  });
+
+  it("leaves the pin where it is when the next round is appended", async () => {
+    const contract = await newContract("Orion Cloud — a round after the signature");
+    const document = await uploaded(adminCookies, contract.number, { kind: "executed" });
+    const signed = currentOf(document);
+    expect((await pinExecuted(adminCookies, document.id, signed.id)).statusCode).toBe(200);
+
+    const appended = await versionAdded(adminCookies, document.id, { kind: "amendment" });
+
+    expect(executedOf(appended).map((row) => row.id)).toEqual([signed.id]);
+  });
+
+  it("records the set and the clear as two different actions", async () => {
+    const contract = await newContract("Orion Cloud — the pin's narrative");
+    const document = await uploaded(adminCookies, contract.number, { filename: "msa.docx" });
+    const withSigned = await versionAdded(adminCookies, document.id, { kind: "executed" });
+    const signed = currentOf(withSigned);
+    expect((await pinExecuted(adminCookies, document.id, signed.id)).statusCode).toBe(200);
+    expect((await clearExecuted(adminCookies, document.id)).statusCode).toBe(200);
+
+    const entries = await feed(adminCookies, contract.id);
+    const set = entries.find((row) => row.action === "document.executed_set");
+    expect(set, "a document.executed_set entry on the contract").toBeDefined();
+    expect(set!.payload.documentId).toBe(document.id);
+    expect(set!.payload.title).toBe("msa.docx");
+    expect(set!.payload.versionId).toBe(signed.id);
+    expect(set!.payload.versionNumber).toBe(2);
+
+    const cleared = entries.find((row) => row.action === "document.executed_cleared");
+    expect(cleared, "a document.executed_cleared entry on the contract").toBeDefined();
+    expect(cleared!.payload.documentId).toBe(document.id);
+    expect(cleared!.payload.versionId).toBe(signed.id);
+    expect(cleared!.payload.versionNumber).toBe(2);
+  });
+
+  it("refuses the pin and the clear on an archived contract", async () => {
+    const contract = await newContract("Orion Cloud — frozen pin");
+    const document = await uploaded(adminCookies, contract.number);
+    const version = currentOf(document);
+    expect((await pinExecuted(adminCookies, document.id, version.id)).statusCode).toBe(200);
+    const archive = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/archive`,
+      cookies: adminCookies,
+    });
+    expect(archive.statusCode, archive.body).toBe(200);
+
+    expect((await clearExecuted(adminCookies, document.id)).statusCode).toBe(409);
+    expect((await pinExecuted(adminCookies, document.id, version.id)).statusCode).toBe(409);
+  });
+
+  it("refuses a Contributor without hiding the record from them", async () => {
+    const contract = await newContract("Orion Cloud — the Contributor's pin");
+    await putOnTeam(contract.number, idOf(CONTRIBUTOR), "contributor");
+    const document = await uploaded(adminCookies, contract.number);
+
+    const res = await pinExecuted(contributorCookies, document.id, currentOf(document).id);
+
+    expect(res.statusCode, res.body).toBe(403);
+    expect((await clearExecuted(contributorCookies, document.id)).statusCode).toBe(403);
+  });
+
+  it("answers a walled-off viewer exactly as it answers for a document that was never created", async () => {
+    const contract = await newContract("Project Nightingale — the pin");
+    const document = await uploaded(adminCookies, contract.number, { filename: "one.pdf" });
+    const version = currentOf(document);
+    await markConfidential(contract.number);
+
+    const missing = "01920000-0000-7000-8000-0000000000bb";
+    const walledSet = await pinExecuted(outsiderCookies, document.id, version.id);
+    const absentSet = await pinExecuted(outsiderCookies, missing, version.id);
+    expect(walledSet.statusCode).toBe(404);
+    expect(withoutInstance(walledSet.json())).toEqual(withoutInstance(absentSet.json()));
+
+    const walledClear = await clearExecuted(outsiderCookies, document.id);
+    const absentClear = await clearExecuted(outsiderCookies, missing);
+    expect(walledClear.statusCode).toBe(404);
+    expect(withoutInstance(walledClear.json())).toEqual(withoutInstance(absentClear.json()));
+
+    // And nothing was pinned.
+    const rows = (await listDocuments(adminCookies, contract.number)).json()
+      .documents as DocumentRow[];
+    expect(rows.flatMap(executedOf)).toEqual([]);
   });
 });
 
