@@ -17,6 +17,8 @@
     "openapi:emit": "tsx scripts/emit-openapi.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1110.0",
+    "@aws-sdk/lib-storage": "^3.1110.0",
     "@better-auth/drizzle-adapter": "~1.6.27",
     "@better-auth/sso": "1.6.27",
     "@fastify/multipart": "^10.1.0",
@@ -34,6 +36,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@testcontainers/minio": "^12.1.0",
     "@testcontainers/postgresql": "^12.1.0",
     "@types/nodemailer": "^8.0.1",
     "oauth2-mock-server": "^9.1.0",
