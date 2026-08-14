@@ -36,6 +36,30 @@ export type DocumentVersion = ContractDocument["versions"][number];
 /** What a version is in the negotiation (CTR-014). */
 export type DocumentVersionKind = DocumentVersion["kind"];
 
+/**
+ * Which of DOC-004's families a file belongs to, as the API routes it.
+ *
+ * Routed on the server from the declared type and the filename, so
+ * nothing here holds a copy of that table: the panel switches on the
+ * family it is handed and a family added later arrives without a client
+ * change.
+ */
+export type RenderFamily = DocumentVersion["renderFamily"];
+
+/**
+ * The families the doc panel renders in place today (M12/2).
+ *
+ * Everything else — Word and PowerPoint until M12/3, email until M12/4,
+ * and the long tail for good — gets the honest download card DOC-004
+ * asks for, never a broken preview.
+ */
+export const PREVIEWABLE_FAMILIES = ["pdf", "image"] as const satisfies readonly RenderFamily[];
+
+/** Whether this version opens in the panel or offers its download. */
+export function isPreviewable(version: DocumentVersion): boolean {
+  return (PREVIEWABLE_FAMILIES as readonly RenderFamily[]).includes(version.renderFamily);
+}
+
 /** The five CTR-014 kinds, in the order a negotiation walks them — the
  * order the composer offers and the order the chain usually reads in. */
 export const DOCUMENT_VERSION_KINDS = [
@@ -81,7 +105,25 @@ export function chainOf(
  * there is no presigned URL to build (DOC-012).
  */
 export function documentDownloadHref(documentId: string, versionId: string): string {
-  return `/api/v1/documents/${encodeURIComponent(documentId)}/versions/${encodeURIComponent(versionId)}/download`;
+  return `${versionUrl(documentId, versionId)}/download`;
+}
+
+/**
+ * Where the doc panel reads one version's bytes from (M12/2).
+ *
+ * The download's twin, and the difference is all on the server: the
+ * response comes back inline, under a type the server chose from the
+ * file's family rather than from what the upload declared. The session
+ * cookie rides a same-origin request on its own, here as on the
+ * download, and there is still no presigned URL (DOC-012).
+ */
+export function documentPreviewHref(documentId: string, versionId: string): string {
+  return `${versionUrl(documentId, versionId)}/preview`;
+}
+
+/** Where one version lives, which both byte reads hang off. */
+function versionUrl(documentId: string, versionId: string): string {
+  return `/api/v1/documents/${encodeURIComponent(documentId)}/versions/${encodeURIComponent(versionId)}`;
 }
 
 /** What the composer collects beside the file itself: what this version

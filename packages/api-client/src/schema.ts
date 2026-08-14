@@ -1115,6 +1115,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/documents/{documentId}/versions/{versionId}/preview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Stream one version's file back for display in place — what the doc panel reads (M12/2, DOC-004). It is the download's twin and differs in exactly two headers: the disposition is inline, and the content type is the server's own rather than the one the upload declared. The type is routed from that declaration and the filename together — a hint, never a security decision — so a file that lies about itself can change which card the panel draws and can never change what the browser is told to do with it. A family with no in-app preview is refused 415 and the panel offers the download instead: PDFs and raster images render today, and SVG does not, because an inline SVG is a script. Any version in the chain previews, superseded rounds included. It sits behind the same two predicates every document read does: a Contributor on the team previews what they may download, and anyone who cannot reach the contract — or is outside a confidential document's audience — is answered 404, exactly as for a document that was never uploaded */
+    get: operations["previewDocumentVersion"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/comments": {
     parameters: {
       query?: never;
@@ -5345,6 +5362,8 @@ export interface operations {
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
                 byteSize: number;
                 checksumSha256: string;
                 uploadedBy: {
@@ -5434,6 +5453,8 @@ export interface operations {
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
                 byteSize: number;
                 checksumSha256: string;
                 uploadedBy: {
@@ -5522,6 +5543,8 @@ export interface operations {
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
                 byteSize: number;
                 checksumSha256: string;
                 uploadedBy: {
@@ -5599,6 +5622,8 @@ export interface operations {
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
                 byteSize: number;
                 checksumSha256: string;
                 uploadedBy: {
@@ -5679,6 +5704,8 @@ export interface operations {
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
                 byteSize: number;
                 checksumSha256: string;
                 uploadedBy: {
@@ -5750,6 +5777,8 @@ export interface operations {
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
                 byteSize: number;
                 checksumSha256: string;
                 uploadedBy: {
@@ -5828,6 +5857,8 @@ export interface operations {
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
                 byteSize: number;
                 checksumSha256: string;
                 uploadedBy: {
@@ -5899,6 +5930,8 @@ export interface operations {
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
                 byteSize: number;
                 checksumSha256: string;
                 uploadedBy: {
@@ -5970,6 +6003,8 @@ export interface operations {
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
                 byteSize: number;
                 checksumSha256: string;
                 uploadedBy: {
@@ -6041,6 +6076,8 @@ export interface operations {
                 note: string | null;
                 originalFilename: string;
                 mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
                 byteSize: number;
                 checksumSha256: string;
                 uploadedBy: {
@@ -6100,6 +6137,44 @@ export interface operations {
         };
         content: {
           "application/octet-stream": string;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  previewDocumentVersion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        documentId: string;
+        versionId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/pdf": string;
+          "image/png": string;
+          "image/jpeg": string;
+          "image/gif": string;
+          "image/webp": string;
+          "image/bmp": string;
+          "image/avif": string;
         };
       };
       /** @description Problem details (RFC 9457) */

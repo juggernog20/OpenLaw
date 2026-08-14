@@ -22,9 +22,20 @@ import type { Applet, PanelApplet } from "./applets";
 
 export function RecordApplets({
   applets,
+  layer,
   children,
 }: Readonly<{
   applets: readonly Applet[];
+  /**
+   * A wider sibling layer beside the applet panel, or nothing.
+   *
+   * DES-016 names one: the doc panel (M12/2), which is too wide to be
+   * an applet and opens beside the panel rather than inside it. It is
+   * passed in rather than rendered by the page's own content, because
+   * only this component's flex row can hold a column — a layer drawn
+   * inside `children` would sit inside the record's own scroll.
+   */
+  layer?: ReactNode;
   /** The record's own content, beside the panel. */
   children: ReactNode;
 }>) {
@@ -58,6 +69,10 @@ export function RecordApplets({
   return (
     <div className="@container/record relative flex min-h-0 flex-1">
       <div className="min-w-0 flex-1">{children}</div>
+      {/* Between the content and the applet panel: docked, the record
+          reads on the left, the document in the middle, and the applet
+          on the right. */}
+      {layer}
       {expanded ? (
         <AppletPanel
           id={panelId}

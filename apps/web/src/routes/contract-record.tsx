@@ -88,7 +88,7 @@
  * Users are bounced home, and the API's 403 is the real refusal.
  */
 
-import { memo, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import {
   Link,
   redirect,
@@ -153,6 +153,7 @@ import { ConfidentialBanner } from "../components/confidential-banner";
 import { ConfidentialToggle } from "../components/confidential-toggle";
 import { CounterpartyPicker, type CounterpartyPick } from "../components/counterparty-picker";
 import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
+import { DocPanel } from "../components/documents/doc-panel";
 import { DocumentsCard } from "../components/documents/documents-card";
 import { PageTitle } from "../components/page-title";
 import { StatusNote, type FieldStatus } from "../components/status-note";
@@ -319,6 +320,28 @@ function ContractRecord() {
    * section pages itself; the record holds the position, because the
    * record holds the list (CTR-024). */
   const [paperCursor, setPaperCursor] = useState<string | null>(documentsCursor);
+  /**
+   * Which version the doc panel is reading, or none (M12/2).
+   *
+   * The record holds it rather than the Documents section, because the
+   * panel is not part of that section: DES-016 puts it in a wider
+   * sibling layer beside the applet panel, and only the record's applet
+   * region can hold a column.
+   *
+   * It names the version rather than the document, because any round in
+   * the chain opens — reading round three of a negotiation is not a
+   * different feature from reading round five.
+   *
+   * Two ids, and nothing else: what the panel draws is resolved from the
+   * list below on every render, so renaming a document while it is open
+   * changes the panel's own header, and a document that leaves the list
+   * takes the panel with it.
+   */
+  const [reading, setReading] = useState<{ documentId: string; versionId: string } | null>(null);
+  /** What opened the panel, so closing it puts focus back there —
+   * DES-010's restore-to-trigger rule, wired by hand because the panel
+   * is a plain aside. */
+  const readingTrigger = useRef<HTMLElement | null>(null);
   /** The other side (CTR-011), primary first as the API orders it. */
   const [parties, setParties] = useState<ContractCounterparty[]>(counterparties);
   const [drafts, setDrafts] = useState<Record<TextFieldKey, string>>(() => textDrafts(contract));
@@ -385,6 +408,43 @@ function ContractRecord() {
     user.role === "administrator" ||
     saved.manager?.id === user.id ||
     roster.some((member) => member.id === user.id && member.role === "creator");
+
+  /**
+   * What the doc panel is drawing, resolved from the list rather than
+   * held beside it (M12/2).
+   *
+   * Resolved on every render, so the panel says what the record says: a
+   * rename changes its header, and a document archived out of the view
+   * or erased simply stops resolving, which closes the panel rather
+   * than leaving it drawing a file the record no longer has.
+   */
+  const open = (() => {
+    if (!reading) return null;
+    const document = paper.find((row) => row.id === reading.documentId);
+    const version = document?.versions.find((row) => row.id === reading.versionId);
+    return document && version ? { document, version } : null;
+  })();
+
+  // A document that stopped resolving is one that left the list —
+  // archived out of the live view, or erased. The panel is already
+  // gone; this drops what is left of the reference so a later restore
+  // does not reopen a panel nobody asked for.
+  useEffect(() => {
+    if (reading && !open) {
+      setReading(null);
+      readingTrigger.current = null;
+    }
+  }, [reading, open]);
+
+  /** Closes the panel and puts focus back on the control that opened
+   * it — DES-010's restore-to-trigger rule, wired by hand because the
+   * panel is a plain aside. */
+  function closeReading() {
+    setReading(null);
+    // Before the panel unmounts the element focus is sitting in.
+    readingTrigger.current?.focus();
+    readingTrigger.current = null;
+  }
 
   function textDrafts(row: ContractRow): Record<TextFieldKey, string> {
     return { title: row.title, description: row.description ?? "" };
@@ -650,6 +710,18 @@ function ContractRecord() {
           user.role === "administrator"
             ? [chatApplet, historyApplet, SETTINGS_APPLET]
             : [chatApplet, historyApplet]
+        }
+        // DES-016's wider sibling layer (M12/2): the document being
+        // read, beside the record rather than instead of it.
+        layer={
+          open && (
+            <DocPanel
+              documentId={open.document.id}
+              title={open.document.title}
+              version={open.version}
+              onClose={closeReading}
+            />
+          )
         }
       >
         <div className="flex flex-col gap-4 overflow-y-auto px-page-x py-page-y">
@@ -1061,6 +1133,14 @@ function ContractRecord() {
                 // them on the same page.
                 viewerId={user.id}
                 ownerId={saved.manager?.id ?? null}
+                // Opening a version in the doc panel (M12/2). The
+                // trigger comes with it so closing puts focus back on
+                // the row control that opened it.
+                reading={reading?.versionId ?? null}
+                onRead={(document, version, trigger) => {
+                  readingTrigger.current = trigger;
+                  setReading({ documentId: document.id, versionId: version.id });
+                }}
                 onDocuments={(rows, cursor) => {
                   setPaper(rows);
                   // `undefined` means the write changed rows without
