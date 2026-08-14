@@ -45,6 +45,7 @@ import {
   ensureMemberInert,
   onboardActivatedMember,
   signInAs,
+  sweepOrSay,
   type OnboardedMember,
 } from "./helpers.js";
 
@@ -346,6 +347,20 @@ test.describe.serial("M8 demo path", () => {
     const ownerEmail = `e2e-m8-owner-${Date.now()}@e2e.example`;
     const title = `${CONTRACT_PREFIX} ${Date.now()}`;
     let owner: OnboardedMember | undefined;
+
+    /**
+     * Leaves the shared instance as the run found it (TECH-018): the
+     * per-run contract and entity archived, the per-run Owner archived
+     * (an activated user has no hard delete). Archiving a person named
+     * on a record never touches the record.
+     */
+    const leaveInert = async () => {
+      await owner?.context.close();
+      await ensureDemoContractsInert(page.request);
+      await ensureDemoEntitiesInert(page.request);
+      await ensureMemberInert(page.request, ownerEmail);
+    };
+
     try {
       owner = await onboardActivatedMember(page.request, browser, {
         email: ownerEmail,
@@ -486,16 +501,15 @@ test.describe.serial("M8 demo path", () => {
         `${ADMIN.displayName} creator`,
         `${ADMIN.displayName} watcher`,
       ]);
-    } finally {
-      // Leave the shared instance as the run found it (TECH-018): the
-      // per-run contract and entity archived, the per-run Owner archived
-      // (an activated user has no hard delete). Archiving a person named
-      // on a record never touches the record.
-      await ensureDemoContractsInert(page.request);
-      await ensureDemoEntitiesInert(page.request);
-      await owner?.context.close();
-      await ensureMemberInert(page.request, ownerEmail);
+    } catch (error) {
+      // A cleanup that throws here would replace the failure that caused
+      // it, and the failure is the one worth reading.
+      await sweepOrSay("M8 demo", leaveInert);
+      throw error;
     }
+    // The journey passed, so a cleanup that fails is a failure of its
+    // own: it leaves the shared instance dirty for the next run.
+    await leaveInert();
   });
 
   test("a Contributor reads the contracts they are on, and nothing else (CTR-021)", async ({
@@ -507,6 +521,13 @@ test.describe.serial("M8 demo path", () => {
 
     const email = `e2e-m8-contributor-${Date.now()}@e2e.example`;
     let member: OnboardedMember | undefined;
+
+    const leaveInert = async () => {
+      await member?.context.close();
+      await ensureDemoContractsInert(page.request);
+      await ensureMemberInert(page.request, email);
+    };
+
     try {
       member = await onboardActivatedMember(page.request, browser, {
         email,
@@ -589,10 +610,10 @@ test.describe.serial("M8 demo path", () => {
       for (const refused of await Promise.all(refusals)) {
         expect(refused.status(), "the contract write seams must refuse a Contributor").toBe(403);
       }
-    } finally {
-      await ensureDemoContractsInert(page.request);
-      await member?.context.close();
-      await ensureMemberInert(page.request, email);
+    } catch (error) {
+      await sweepOrSay("M8 demo", leaveInert);
+      throw error;
     }
+    await leaveInert();
   });
 });

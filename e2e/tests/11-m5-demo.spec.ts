@@ -23,6 +23,7 @@ import {
   onboardActivatedMember,
   signInAs,
   switchTheme,
+  sweepOrSay,
   type OnboardedMember,
 } from "./helpers.js";
 
@@ -67,6 +68,18 @@ test.describe.serial("M5 demo path", () => {
     // real flows, with a live session of their own to revoke.
     const email = `e2e-m5-demo-${Date.now()}@e2e.example`;
     let member: OnboardedMember | undefined;
+
+    /** Leaves the shared instance in built-in mode and the per-run
+     * member inert (TECH-018), whatever happened above. */
+    const leaveInert = async () => {
+      await member?.context.close();
+      const reverted = await page.request.patch("/api/v1/auth/mode", {
+        data: { mode: "built_in" },
+      });
+      expect(reverted.status(), await reverted.text()).toBe(200);
+      await ensureMemberInert(page.request, email);
+    };
+
     try {
       member = await onboardActivatedMember(page.request, browser, {
         email,
@@ -121,13 +134,15 @@ test.describe.serial("M5 demo path", () => {
       await expect(row.getByText("Saved")).toBeVisible();
       await member.page.goto("/settings/appearance");
       await expect(member.page).toHaveURL(/\/auth\/login/);
-    } finally {
-      await member?.context.close();
-      // Leave the shared instance in built-in mode and the per-run
-      // member inert (TECH-018), whatever happened above.
-      await page.request.patch("/api/v1/auth/mode", { data: { mode: "built_in" } });
-      await ensureMemberInert(page.request, email);
+    } catch (error) {
+      // A cleanup that throws here would replace the failure that caused
+      // it, and the failure is the one worth reading.
+      await sweepOrSay("M5 demo", leaveInert);
+      throw error;
     }
+    // The journey passed, so a cleanup that fails is a failure of its
+    // own: it leaves the shared instance dirty for the next run.
+    await leaveInert();
   });
 
   test("a Legal Team Member sees Personal only and is bounced from Organization URLs", async ({
@@ -140,6 +155,12 @@ test.describe.serial("M5 demo path", () => {
 
     const email = `e2e-m5-member-${Date.now()}@e2e.example`;
     let member: OnboardedMember | undefined;
+
+    const leaveInert = async () => {
+      await member?.context.close();
+      await ensureMemberInert(page.request, email);
+    };
+
     try {
       member = await onboardActivatedMember(page.request, browser, {
         email,
@@ -174,9 +195,10 @@ test.describe.serial("M5 demo path", () => {
       // real refusal (SET-002).
       const refused = await memberPage.request.get("/api/v1/users");
       expect(refused.status()).toBe(403);
-    } finally {
-      await member?.context.close();
-      await ensureMemberInert(page.request, email);
+    } catch (error) {
+      await sweepOrSay("M5 demo", leaveInert);
+      throw error;
     }
+    await leaveInert();
   });
 });

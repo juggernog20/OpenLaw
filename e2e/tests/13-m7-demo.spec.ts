@@ -25,6 +25,7 @@ import {
   ensureMemberInert,
   onboardActivatedMember,
   signInAs,
+  sweepOrSay,
   type OnboardedMember,
 } from "./helpers.js";
 
@@ -86,6 +87,13 @@ test.describe.serial("M7 demo path", () => {
     }
 
     const legalName = `${ENTITY_PREFIX} UK Ltd ${Date.now()}`;
+
+    /** Leaves the shared instance as the run found it (TECH-018): the
+     * per-run entity archived out of the list and the M8 picker seam. */
+    const leaveInert = async () => {
+      await ensureDemoEntitiesInert(page.request);
+    };
+
     try {
       // The new Entities destination, from the nav.
       await page.goto("/");
@@ -161,11 +169,15 @@ test.describe.serial("M7 demo path", () => {
         registeredAgent: "Aldgate Corporate Services Ltd",
         registeredAddress: "1 Gresham Street, London EC2V 7BX, United Kingdom",
       });
-    } finally {
-      // Leave the shared instance as the run found it (TECH-018): the
-      // per-run entity archived out of the list and the M8 picker seam.
-      await ensureDemoEntitiesInert(page.request);
+    } catch (error) {
+      // A cleanup that throws here would replace the failure that caused
+      // it, and the failure is the one worth reading.
+      await sweepOrSay("M7 demo", leaveInert);
+      throw error;
     }
+    // The journey passed, so a cleanup that fails is a failure of its
+    // own: it leaves the shared instance dirty for the next run.
+    await leaveInert();
   });
 
   test("a Contributor has no Entities module at all (ENT-004)", async ({ page, browser }) => {
@@ -173,6 +185,12 @@ test.describe.serial("M7 demo path", () => {
 
     const email = `e2e-m7-contributor-${Date.now()}@e2e.example`;
     let member: OnboardedMember | undefined;
+
+    const leaveInert = async () => {
+      await member?.context.close();
+      await ensureMemberInert(page.request, email);
+    };
+
     try {
       member = await onboardActivatedMember(page.request, browser, {
         email,
@@ -206,9 +224,10 @@ test.describe.serial("M7 demo path", () => {
       for (const refused of await Promise.all(refusals)) {
         expect(refused.status(), "the registry must refuse a Contributor").toBe(403);
       }
-    } finally {
-      await member?.context.close();
-      await ensureMemberInert(page.request, email);
+    } catch (error) {
+      await sweepOrSay("M7 demo", leaveInert);
+      throw error;
     }
+    await leaveInert();
   });
 });

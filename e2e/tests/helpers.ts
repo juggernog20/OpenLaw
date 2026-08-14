@@ -327,16 +327,44 @@ export async function onboardActivatedMember(
  * carry an Administrator session.
  */
 export async function ensureMemberInert(request: APIRequestContext, email: string): Promise<void> {
+  // Every seam is asserted. `APIRequestContext` answers a non-2xx
+  // without rejecting, so a sweep that quietly failed would report
+  // success and leave the shared instance dirty for the next run — the
+  // one thing this function exists to prevent.
   const listed = await request.get("/api/v1/users");
-  if (!listed.ok()) return;
+  expect(listed.status(), await listed.text()).toBe(200);
   const { users } = z
     .object({ users: z.array(z.object({ id: z.string(), email: z.string(), status: z.string() })) })
     .parse(await listed.json());
   const member = users.find((user) => user.email === email);
+  // Nobody under that address is the resting state itself, not a
+  // failure: a run that died before the invite landed leaves none.
   if (!member) return;
   if (member.status === "invited") {
-    await request.delete(`/api/v1/auth/invites/${member.id}`);
+    const revoked = await request.delete(`/api/v1/auth/invites/${member.id}`);
+    expect(revoked.status(), await revoked.text()).toBe(204);
   } else if (member.status !== "archived") {
-    await request.post(`/api/v1/users/${member.id}/archive`);
+    const archived = await request.post(`/api/v1/users/${member.id}/archive`);
+    expect(archived.status(), await archived.text()).toBe(200);
   }
+}
+
+/**
+ * Runs a sweep after a journey that has already failed, and reports a
+ * failing sweep rather than throwing it.
+ *
+ * A journey wrapped in a bare `finally` loses its own failure whenever
+ * the sweep throws too: the sweep's error is the one that propagates,
+ * and the report names a cleanup problem instead of the reason the run
+ * failed. The failure is the one worth reading, so this says the sweep
+ * went wrong on the console and lets the caller re-throw the original.
+ *
+ * A sweep after a *passing* journey is not this — call it directly, so
+ * that it fails the test. Leaving the never-reset instance (TECH-018)
+ * dirty for the next run is a failure of its own.
+ */
+export async function sweepOrSay(label: string, sweep: () => Promise<void>): Promise<void> {
+  await sweep().catch((swept: unknown) => {
+    console.log(`${label} cleanup failed after the journey did: ${String(swept)}`);
+  });
 }

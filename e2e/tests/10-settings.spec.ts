@@ -26,6 +26,7 @@ import {
   ensureSsoProviderExists,
   onboardActivatedMember,
   signInAs,
+  sweepOrSay,
   switchTheme,
   type OnboardedMember,
 } from "./helpers.js";
@@ -155,6 +156,14 @@ test.describe.serial("the settings destination", () => {
     // form is covered at the unit seam.
     await ensureSsoProviderExists(page.request);
 
+    /** Leaves the shared instance in built-in mode whatever happened. */
+    const leaveInert = async () => {
+      const reverted = await page.request.patch("/api/v1/auth/mode", {
+        data: { mode: "built_in" },
+      });
+      expect(reverted.status(), await reverted.text()).toBe(200);
+    };
+
     try {
       // The rail journey: Security is a collapsed group until opened.
       await page.goto("/settings/general");
@@ -188,10 +197,11 @@ test.describe.serial("the settings destination", () => {
       await page.getByRole("radio", { name: "Built-in" }).check();
       expect((await reverted).ok()).toBe(true);
       await expect(page.getByRole("radio", { name: "Built-in" })).toBeChecked();
-    } finally {
-      // Leave the shared instance in built-in mode whatever happened.
-      await page.request.patch("/api/v1/auth/mode", { data: { mode: "built_in" } });
+    } catch (error) {
+      await sweepOrSay("the auth-mode journey", leaveInert);
+      throw error;
     }
+    await leaveInert();
   });
 
   test("the Users pane invites a user, resends the invite, and revokes it (#65)", async ({
@@ -220,6 +230,23 @@ test.describe.serial("the settings destination", () => {
     await dialog.getByRole("radio", { name: "Contributor" }).click();
     await dialog.getByRole("button", { name: "Send invite" }).click();
 
+    /**
+     * A failure above must not strand the pending invite on the
+     * never-reset instance (TECH-018) — revoke through the API whatever
+     * happened; on the happy path there is nothing to find.
+     */
+    const leaveInert = async () => {
+      const listed = await page.request.get("/api/v1/users");
+      expect(listed.status(), await listed.text()).toBe(200);
+      const { users } = z
+        .object({ users: z.array(z.object({ id: z.string(), email: z.string() })) })
+        .parse(await listed.json());
+      const leftover = users.find((user) => user.email === email);
+      if (!leftover) return;
+      const revoked = await page.request.delete(`/api/v1/auth/invites/${leftover.id}`);
+      expect(revoked.status(), await revoked.text()).toBe(204);
+    };
+
     try {
       // The invite is a row, not a fire-and-forget — and it survives a
       // reload with its role because the list route serves it.
@@ -240,19 +267,11 @@ test.describe.serial("the settings destination", () => {
       // seam, where the emailed token is directly in hand.
       await inviteRow.getByRole("button", { name: `Revoke the invite to ${email}` }).click();
       await expect(inviteRow).toHaveCount(0);
-    } finally {
-      // A failure above must not strand the pending invite on the
-      // never-reset instance (TECH-018) — revoke through the API
-      // whatever happened; on the happy path there is nothing to find.
-      const listed = await page.request.get("/api/v1/users");
-      if (listed.ok()) {
-        const { users } = z
-          .object({ users: z.array(z.object({ id: z.string(), email: z.string() })) })
-          .parse(await listed.json());
-        const leftover = users.find((user) => user.email === email);
-        if (leftover) await page.request.delete(`/api/v1/auth/invites/${leftover.id}`);
-      }
+    } catch (error) {
+      await sweepOrSay("the invite journey", leaveInert);
+      throw error;
     }
+    await leaveInert();
   });
 
   test("the Users pane edits a role, revokes sessions, archives, and restores (#66)", async ({
@@ -270,6 +289,12 @@ test.describe.serial("the settings destination", () => {
     const email = `e2e-member-${Date.now()}@e2e.example`;
     const password = "their-own-e2e-password";
     let member: OnboardedMember | undefined;
+
+    const leaveInert = async () => {
+      await member?.context.close();
+      await ensureMemberInert(page.request, email);
+    };
+
     try {
       member = await onboardActivatedMember(page.request, browser, {
         email,
@@ -314,9 +339,10 @@ test.describe.serial("the settings destination", () => {
       await row.getByRole("button", { name: `Restore ${email}` }).click();
       await expect(row.getByText("Active")).toBeVisible();
       await signInAs(memberPage, email, password, "Riva Member");
-    } finally {
-      await member?.context.close();
-      await ensureMemberInert(page.request, email);
+    } catch (error) {
+      await sweepOrSay("the Users-pane journey", leaveInert);
+      throw error;
     }
+    await leaveInert();
   });
 });
