@@ -18,7 +18,9 @@ Decisions are numbered `DOC-###`.
 
 ## Open questions queued for the next grill-me session
 
-_None — queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/precedents routed to the Knowledge module per DOC-002; storage/search engine picks routed to the tech-stack grill per DOC-009. New questions from screen batches or other module grills queue here._
+_Queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/precedents routed to the Knowledge module per DOC-002; storage/search engine picks routed to the tech-stack grill per DOC-009. New questions from screen batches or other module grills queue here._
+
+- **SharePoint as a storage driver** (raised 2026-08-14, during the M11 spec): SharePoint is a commonly requested file home for the kind of org OpenLaw targets. It speaks Microsoft Graph with token auth — a third driver with its own decision, not an S3 variant. DOC-009's adapter interface must stay implementable by a Graph-backed driver; the driver itself needs a grill (auth model, tenant setup, latency, whether OpenLaw or SharePoint is the source of truth).
 
 ---
 
