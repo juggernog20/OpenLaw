@@ -36,13 +36,15 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arc 3, milestone 12** — rendering, OCR, and text extraction. Arc 1 is done: the monorepo and CI,
-the authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
+**Arc 3, milestone 13** — folders and bulk upload. Arc 1 is done: the monorepo and CI, the
+authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
 `/settings` destination with its Personal and Organization rails. Arc 2 is done too: the
 configurable types and statuses, the Entities registry, the contract record, the conversation on a
 record with the two read surfaces over the activity log, and the confidentiality gate that takes a
-walled-off contract out of the reach of everyone outside its team. Arc 3 has started: M11 puts the
-paper on the record — the version chain, the storage adapter, and the two drivers behind it.
+walled-off contract out of the reach of everyone outside its team. Arc 3 is under way: M11 puts the
+paper on the record — the version chain, the storage adapter, and the two drivers behind it — and
+M12 makes that paper readable, with the doc panel over five families, the doc-engine sidecar, and
+the background pipeline that extracts every version's text.
 
 ---
 
@@ -183,13 +185,29 @@ makes OpenLaw a CLM rather than a database with a form on it.
   - _Decisions:_ DOC-001, DOC-008, DOC-009, DOC-010, DOC-012, CTR-014, DD-014 (extended to documents),
     TECH-014
 
-- [ ] **M12 — Rendering, OCR, and text extraction**
+- [x] **M12 — Rendering, OCR, and text extraction**
       _Demo:_ Preview a Word draft in-app without downloading it, then upload a scanned PDF and watch OCR
       make its text available.
-  - The single LibreOffice + OCR sidecar service
-  - In-app rendering for PDF, Word, images, PowerPoint, and emails; everything else download-only
-  - Extraction jobs on the background pipeline, feeding the search index built in M25
-  - _Decisions:_ DOC-004, DOC-005, TECH-010
+  - The doc-engine sidecar — headless LibreOffice, OCRmyPDF/Tesseract, and a thin HTTP wrapper — as the
+    stack's fourth service, reachable only on the compose network; the `DocEngine` interface is the seam
+    the application sees, and the sidecar's own contract suite is what "a doc engine" means
+  - The doc panel, DES-016's wider sibling layer: PDFs and raster images drawn from the stored file,
+    Word and PowerPoint from a converted PDF rendition, emails parsed into headers, sanitized body, and
+    an attachment list; everything else gets an honest download card, never a broken preview
+  - Render routing is a hint and never a security decision — the family comes from the declared type and
+    the filename, and a preview answers a content type this server chose, inline, with nosniff
+  - The background pipeline for real: pg-boss on the existing Postgres, the worker container alive on the
+    same image with the worker command, and bounded retries with a terminal failure recorded per version
+  - Derived artifacts beside the chain, never in it: a display rendition and the extracted text per
+    version, each with its own pending / ready / failed state the panel polls — plus `unsupported`,
+    the answer for a file that was never owed one, so a caller stops asking instead of waiting
+  - Text out of every family that has any — a PDF's native layer, OCR when that layer is empty, a
+    conversion's rendition for Word and PowerPoint, and an email's body — with the source recorded,
+    because the search index M25 builds has to know which it holds
+  - The upgrade backfill sweep: a worker asks for what pre-M12 versions are still owed, so an install
+    gets its previews and text without re-upload
+  - _Decisions:_ DOC-004, DOC-005, DOC-010 (extended to derived artifacts), DES-006 (addendum),
+    DES-016 (clarified), TECH-007, TECH-010
 
 - [ ] **M13 — Folders and bulk upload**
       _Demo:_ Drag a folder of legacy contract files onto a contract and watch the nested structure survive
