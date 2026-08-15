@@ -202,7 +202,22 @@ export function BatchDialog({
    * never in `ids` and so can never be sent twice.
    */
   async function send(ids: readonly string[], firstRun = false) {
-    if (ids.length === 0 || running.current) return;
+    if (running.current) return;
+    // A drop can carry only structure: empty directories and not one
+    // file. Its import is the folder creates alone — nothing to pool,
+    // nothing to watch land — so the folders are made, the section is
+    // read again, and the dialog closes on success. It stays open only
+    // to say why they could not be made. A retry over zero rows is
+    // still nothing to do.
+    if (ids.length === 0) {
+      if (!firstRun) return;
+      running.current = true;
+      const made = await recreateEmptyFolders();
+      running.current = false;
+      await onLanded();
+      if (made) onClose();
+      return;
+    }
     const byId = new Map(rows.map((row) => [row.id, row]));
     running.current = true;
     cancelled.current = false;
@@ -277,9 +292,12 @@ export function BatchDialog({
    *
    * A refusal is reported once, in the seam's own words, and the import
    * carries on: the files are what the reader came to import.
+   *
+   * Answers whether every one of them was made, because a drop that
+   * carried only structure has nothing else to say whether it worked.
    */
-  async function recreateEmptyFolders() {
-    if (emptyFolders.length === 0) return;
+  async function recreateEmptyFolders(): Promise<boolean> {
+    if (emptyFolders.length === 0) return true;
     for (const path of emptyFolders) {
       const outcome = await recreateContractFolderPath(contractNumber, {
         path,
@@ -293,8 +311,9 @@ export function BatchDialog({
             defaultMessage: "Some empty folders of the dropped tree could not be created.",
           }),
       );
-      return;
+      return false;
     }
+    return true;
   }
 
   /** Which rows are drawn, and how many are left unsaid. Failures come
@@ -315,7 +334,10 @@ export function BatchDialog({
           {!started ? (
             <FormattedMessage
               id="documents.batch.confirmTitle"
-              defaultMessage="{count, plural, one {Import # file} other {Import # files}}"
+              // `=0` is a drop that carried only structure — empty
+              // directories and not one file. Its import is real: the
+              // folders are created, and only the files are absent.
+              defaultMessage="{count, plural, =0 {Import folders} one {Import # file} other {Import # files}}"
               values={{ count: rows.length }}
             />
           ) : settled ? (
@@ -585,7 +607,9 @@ export function BatchDialog({
                   >
                     <FormattedMessage
                       id="documents.batch.import"
-                      defaultMessage="{count, plural, one {Import # file} other {Import # files}}"
+                      // `=0` as the title above: a drop of only empty
+                      // directories still has an import to run.
+                      defaultMessage="{count, plural, =0 {Import folders} one {Import # file} other {Import # files}}"
                       values={{ count: rows.length }}
                     />
                   </Button>

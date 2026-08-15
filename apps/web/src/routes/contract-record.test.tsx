@@ -7315,6 +7315,39 @@ describe("dropping a folder tree on the contract record (M13/5, DOC-011, DES-033
     expect(api.recreated).toHaveLength(1);
   });
 
+  it("imports a drop that carried only structure — empty directories and not one file", async () => {
+    const api = dropApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    // A tree of nothing but directories is a real gesture — somebody
+    // scaffolding the folders before the paper arrives — and DOC-011
+    // promises the structure that arrives is the structure that was
+    // dropped, files or none.
+    dropOn(section, [dir("Legacy contracts", [dir("Executed"), dir("Redlines")])]);
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("heading", { name: "Import folders" })).toBeVisible();
+    const before = api.folderReads();
+    await user.click(within(dialog).getByRole("button", { name: "Import folders" }));
+
+    // The deepest leaves carry their whole chain, so recreating them
+    // recreates every level above — and no upload is sent, because
+    // there is no file to send.
+    await waitFor(() => expect(api.recreated).toHaveLength(2));
+    expect(api.recreated).toEqual([
+      { path: "Legacy contracts/Executed", parentId: null },
+      { path: "Legacy contracts/Redlines", parentId: null },
+    ]);
+    expect(api.uploaded).toEqual([]);
+    // Its work done, the dialog closes over a section that has read its
+    // folders again: the tree behind it is the answer.
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(api.folderReads()).toBeGreaterThan(before);
+  });
+
   it("reads the record's folders again once the import settles", async () => {
     const api = dropApi();
     stubApi({ signedIn: MEMBER, extra: api.handler });

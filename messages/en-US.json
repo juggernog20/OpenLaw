@@ -1155,7 +1155,7 @@
     "defaultMessage": "A file that fails costs that file. The rest of the import carries on."
   },
   "documents.batch.confirmTitle": {
-    "defaultMessage": "{count, plural, one {Import # file} other {Import # files}}"
+    "defaultMessage": "{count, plural, =0 {Import folders} one {Import # file} other {Import # files}}"
   },
   "documents.batch.derivations": {
     "defaultMessage": "Text extraction and OCR run in the background after every file lands."
@@ -1179,7 +1179,7 @@
     "defaultMessage": "{folders, plural, one {# folder} other {# folders}} · {files, plural, one {# file} other {# files}}"
   },
   "documents.batch.import": {
-    "defaultMessage": "{count, plural, one {Import # file} other {Import # files}}"
+    "defaultMessage": "{count, plural, =0 {Import folders} one {Import # file} other {Import # files}}"
   },
   "documents.batch.inFlight": {
     "defaultMessage": "{uploading} uploading · {queued} queued"
