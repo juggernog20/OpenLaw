@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+#
+# Gitleaks configuration for the Secret scan (history) CI job
+# (.github/workflows/security.yml). It extends the default rules; the
+# allowlist below names known non-secrets one by one, never whole files
+# or directories. The scan covers commit history, so a flagged fixture
+# is allowlisted here rather than reworded — rewording only changes the
+# tip, and the finding stays in the commits that already carry it.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Fixture values that look like credentials and are not"
+# "not-a-real-key" in base64 — the Azure account-key fixture in
+# apps/api/src/lib/storage/config.test.ts.
+regexes = ['''bm90LWEtcmVhbC1rZXk=''']
