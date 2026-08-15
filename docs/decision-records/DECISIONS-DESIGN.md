@@ -2086,6 +2086,70 @@ Every documents table on a record takes the 76px trailing cell, whether or not t
 
 `designs/contracts.pen` is the reference: C4 rebuilt, and C24–C29 added. `designs/documents.pen` DOC4 and DOC5 are untouched and stay that way until M26.
 
+## DES-034: The stage pipeline — six fixed steps beside the status pill (extends DES-005, DES-032)
+
+- **Status:** Accepted
+- **Date:** 2026-08-15
+
+### Context
+
+CTR-001 gave contracts a two-layer lifecycle: renameable statuses over a fixed six-stage backbone — `draft → review → approval → signature → active → ended`. The record has drawn the status half since M8, as the sub-bar pill. It has never drawn the stage half. Grill-plan row D.8 says it must: "renders the derived stage (6-step pipeline per CTR-001), same datum as C.5 at coarser zoom".
+
+Every contract-record frame in `designs/contracts.pen` already draws it, as `S2 StagePipe` on the sub-bar. No DES named its anatomy, said what a stage that a contract has moved back past should look like, or said what happens to six steps in a slot too narrow for them. DES-032 closed the obvious escape route in advance: a record page may gain no further permanent strip.
+
+### Decision
+
+**1. The anatomy is the mock's.** One bordered strip — `bg-control`, `border-border-default`, `rounded-card`, `px-3 py-1.5`, `gap-1.5` — holding the six stages in canonical order, each pair separated by a Lucide `chevron-right` in `text-border-default`. Three item states:
+
+- **Behind the marker** — a Lucide `check` in `text-status-success-fg`, then the stage name in `text-xs text-primary`.
+- **The marker** — the stage name in the DES-005 pill its stage family names (`STAGE_PILL`), drawn exactly as the sub-bar's status pill is drawn: `rounded-pill px-2 py-0.5 text-xs font-medium`.
+- **Ahead of the marker** — the stage name in `text-xs text-muted`, nothing else.
+
+**2. It renders position, never progress.** Transitions are unrestricted (CTR-001) — deals collapse, redlines reopen after approval — so the marker moves backwards as readily as forwards. The check on the stages behind it is recomputed from the current stage on every render and means "behind the current position", not "achieved". A regression takes those checks away again. Nothing in the strip may accumulate.
+
+**3. It sits in the sub-bar, beside the status pill.** The two are one datum at two zooms and are read together: the pill takes the label an Administrator may rename, the pipeline takes the fixed stage that label maps to. The strip is the sub-bar's middle group, between the breadcrumb group and the record actions, as every C-frame draws it. It costs no chrome height — the row is already 64px.
+
+**4. Under a 1024px shell the sub-bar row wraps; it never becomes a strip.** Six stages, a breadcrumb, a title, and a pill do not fit one 64px line under about 1024px — the title truncates to nothing and the pill goes under the pipeline. So the sub-bar section drops its fixed height and wraps: the breadcrumb group takes the first line, and the pipeline and the record actions share the second. The gate is the shell container (`@5xl/shell`), not the viewport — DES-012's rule, because the sub-bar reflows against its own slot, and 1024 is where this bar runs out of room rather than where the shell changes shape.
+
+This is not a fifth strip under DES-032: it is the same strip, reflowed, and only where the alternative is an unreadable one. On a phone it costs nothing against DES-032's accepted stack — the 48px top nav is hidden below 768px, so header 62 + a two-line sub-bar + the 36px section strip still comes in under the 214px desktop chrome.
+
+**5. The pipeline claims no width of its own on a narrow slot, and its full width on a wide one.** Narrow, it is `grow basis-0`, so it shares its line with the record actions instead of pushing them onto a third row, and scrolls inside whatever is left. Wide, it is `shrink-0`, so a long title truncates before six stages start sliding out of view.
+
+**6. Where the strip still does not fit, it scrolls sideways and never wraps.** A chevron at a line break reads as a broken sequence. The strip takes `max-w-full overflow-x-auto` and is focusable, which is what makes that scroll reachable from the keyboard (WCAG 2.2 SC 2.1.1); it is a named list, so the tab stop announces itself.
+
+**7. Three states, none of them carried by colour alone (DES-011).** The check glyph, the pill fill, and the muted plain text differ in shape and weight as well as hue. For assistive technology the marker carries `aria-current="step"` and the stages behind it carry a screen-reader-only "done" — the word the check glyph says visually. The stages ahead carry nothing: a bare label after a marked one already reads as not reached, and three repetitions of "not started" is noise.
+
+**8. Two normalizations off the mock.** The glyphs are 12px rather than the mock's 12 and 10 — one sub-16 step, the size the checkbox indicator already uses for a glyph inside a control (DES-008 governs standalone icons, and these are interior to a compact metadata strip). The marker pill takes the shipped status pill's `px-2 py-0.5` and `font-medium` rather than the mock's raw 3/10 padding and 600 weight, because the two pills sit side by side on the same row and a half-pixel disagreement between them would read as a mistake.
+
+### Rationale
+
+The pipeline is the reason CTR-001 has a fixed backbone at all. A reader who does not know that "Redlining with counterparty" is a review-stage status cannot read the pill; the pipeline is what turns a team's private vocabulary back into the six words every contract shares.
+
+Position-not-progress is the whole design constraint, and it is why this is a marked list rather than a progress bar, a stepper with connectors that fill, or anything else that implies a ratchet. CTR-001 allows any transition. A control that draws four filled segments and then has to unfill three of them is lying on the way in or on the way out.
+
+Wrapping the sub-bar on mobile rather than adding a strip is the choice DES-032 forced, and it is the right one anyway: the pipeline belongs beside the pill, and a strip of its own would have separated the two things that mean the same.
+
+### Alternatives considered
+
+- **A filled progress bar or connector-stepper.** Rejected: it promises one-way travel that CTR-001 explicitly refuses.
+- **Putting the pipeline at the top of the scrolling body.** Rejected: it leaves the pill alone in the chrome, so the coarse and fine readings of one datum end up in two different layers, and the coarse one scrolls away.
+- **A fifth chrome strip for the pipeline on a narrow shell.** Rejected by DES-032's ceiling clause.
+- **Hiding the pipeline on a narrow shell.** Rejected: the stage is the one thing on the record a phone reader is most likely to have opened it for.
+- **Keeping the one-line sub-bar all the way down and letting everything shrink.** Rejected on sight of it: under about 1024px the title truncates to nothing and the pipeline slides over the status pill.
+- **Letting the strip wrap to two lines instead of scrolling.** Rejected: a chevron stranded at the end of a line reads as a sequence that broke, not as one that continued.
+- **Showing the status label inside the marker pill instead of the stage name.** Rejected: the pill next to it already says the label, and the pipeline's job is to name the stage.
+- **A viewport `md:` breakpoint for the wrap.** Rejected: DES-012 reserves the viewport breakpoint for the shell's own desktop/mobile switch, and the sub-bar has a container to query. The bar also runs out of room at 1024, not at 768.
+
+### Consequences
+
+`StagePipeline` is the component; the contract record's sub-bar is the reference mount. It takes the derived stage and nothing else, so any surface that can answer a stage can draw it.
+
+Three new messages: the strip's accessible name, the stage-name select, and the "done" word. No new tokens — the strip reuses `bg-control`, `border-border-default`, `text-status-success-fg`, and the `STAGE_PILL` families DES-005 already ships.
+
+Anything reading the record's sub-bar by text now finds stage names there as well as the status label, and must say which of the two it means. The pipeline is the named list; the pill is what is outside it.
+
+`designs/contracts.pen` is the reference: `S2 StagePipe` in every C-frame, C2 and C22 being the clearest.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -2123,3 +2187,4 @@ Every documents table on a record takes the 76px trailing cell, whether or not t
 | DES-031 | The paging foot — table placement, the thread's head control, and where focus lands (extends DES-026)                                                                | Accepted |
 | DES-032 | The record-page section strip — routed tabs under the breadcrumb (extends DES-016, DES-030)                                                                          | Accepted |
 | DES-033 | The folder tree and the record-scoped batch drop (extends DES-032, DES-025)                                                                                          | Accepted |
+| DES-034 | The stage pipeline — six fixed steps beside the status pill (extends DES-005, DES-032)                                                                               | Accepted |

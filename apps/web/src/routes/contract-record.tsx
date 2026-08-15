@@ -63,6 +63,13 @@
  * deep-link (SET-001) sits below the divider. Matters (M22) and
  * documents (M11) mount the same two panels.
  *
+ * The sub-bar says where the contract sits twice, at two zooms
+ * (CTR-001). The pill takes the status label, which is renameable; the
+ * stage pipeline beside it takes the fixed stage that label maps to,
+ * and marks the contract's position in the six. Position, not
+ * progress: transitions are unrestricted, so a status change that lands
+ * on an earlier stage moves the marker back.
+ *
  * Archive (soft delete — for mistakes and imports, not for ending a
  * contract) and restore live in the sub-bar; an archived record reads
  * as facts until restored.
@@ -166,6 +173,7 @@ import { CustomFieldControl, type FieldReference } from "../components/custom-fi
 import { DocPanel } from "../components/documents/doc-panel";
 import { DocumentsCard } from "../components/documents/documents-card";
 import { PageTitle } from "../components/page-title";
+import { StagePipeline } from "../components/stage-pipeline";
 import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
@@ -701,9 +709,24 @@ function ContractRecord() {
         <>
           <section
             aria-labelledby="page-title"
-            className="flex h-(--height-subbar) shrink-0 items-center justify-between gap-4 bg-canvas px-page-x"
+            // Three groups on one 64px row, as the C2 mock draws them:
+            // the breadcrumb, the stage pipeline, and the record
+            // actions (DES-034). Under a 1024px shell they no longer
+            // fit — the title truncates to nothing and the pipeline
+            // slides over the status pill — so the row wraps and the
+            // bar grows by one line. The pipeline is not allowed a
+            // strip of its own (DES-032 closed that door), and it does
+            // not need one: it shares the second line with the record
+            // actions, and on a phone the top nav is hidden anyway, so
+            // the chrome stays shorter than the desktop stack DES-032
+            // already accepted.
+            className={cn(
+              "flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2",
+              "bg-canvas px-page-x py-2",
+              "@5xl/shell:h-(--height-subbar) @5xl/shell:flex-nowrap @5xl/shell:py-0",
+            )}
           >
-            <div className="flex min-w-0 items-center gap-2">
+            <div className="flex w-full min-w-0 items-center gap-2 @5xl/shell:w-auto">
               <Link
                 to="/contracts"
                 className="shrink-0 rounded-chip text-base text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
@@ -727,6 +750,12 @@ function ContractRecord() {
                 </span>
               )}
             </div>
+            {/* CTR-001's six-stage backbone, beside the pill that names
+                the status behind it (grill-plan D.8). It reads on an
+                archived record and for a Contributor exactly as it
+                reads for anyone else: where the contract sits is a fact
+                about it, not an affordance. */}
+            <StagePipeline stage={saved.stage} />
             {/* Archive and restore are mutations, so a read-only viewer
               is offered neither — absent, not disabled, the same
               convention the nav and the settings rail follow. */}
