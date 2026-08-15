@@ -35,10 +35,20 @@ export function problem(status: number, detail: string): Response {
 }
 
 /**
+ * What a stubbed call answers.
+ *
+ * A promise is an answer too: a suite that has to see what a client does
+ * while several requests are in flight — a bounded upload pool, say —
+ * holds the answers open and releases them by hand. Returning undefined
+ * makes the test fail loudly instead of hitting the network.
+ */
+export type StubAnswer = Response | Promise<Response> | undefined;
+
+/**
  * Installs a global fetch stub. The handler answers per call; returning
  * undefined makes the test fail loudly instead of hitting the network.
  */
-export function stubFetch(handler: (call: StubCall) => Response | undefined) {
+export function stubFetch(handler: (call: StubCall) => StubAnswer) {
   const impl = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const href = typeof input === "string" || input instanceof URL ? String(input) : input.url;
     const url = new URL(href, "http://localhost:3000");
@@ -100,7 +110,7 @@ export interface ApiState {
   onboarding?: { completed: boolean; emailConfigured: boolean };
   /** Defaults to env-pinned — the wizard's email step reads it (#37). */
   emailSettings?: { source: "env" | "app" | "unset"; fromAddress: string | null };
-  extra?: (call: StubCall) => Response | undefined;
+  extra?: (call: StubCall) => StubAnswer;
 }
 
 export function stubApi(state: ApiState) {

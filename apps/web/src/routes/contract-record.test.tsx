@@ -34,7 +34,14 @@
 import { describe, expect, it } from "vitest";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import {
+  json,
+  problem,
+  renderAt,
+  stubApi,
+  type StubAnswer,
+  type StubCall,
+} from "../testing/helpers";
 import type { CustomFieldValue, CustomFieldValues } from "../lib/custom-fields";
 
 const ADMIN = {
@@ -4276,7 +4283,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     // The refusal is about the File field, and the control a keyboard
     // reaches on that field is this button — so the refusal is reachable
     // from it rather than only findable by sight.
-    const choose = within(dialog).getByRole("button", { name: "File Choose file" });
+    const choose = within(dialog).getByRole("button", { name: "File Choose files" });
     expect(choose).toHaveAccessibleDescription("Choose a file to upload.");
   });
 
@@ -6449,5 +6456,539 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
     expect(await within(section).findByText("signed.pdf")).toBeVisible();
     // And it stops being said once they are there.
     expect(within(section).queryByText("Loading the documents in Executed")).toBeNull();
+  });
+});
+
+describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)", () => {
+  const version = (over: Record<string, unknown> = {}) => ({
+    id: "ver-1",
+    versionNumber: 1,
+    kind: "draft_ours",
+    note: null,
+    originalFilename: "signed.pdf",
+    mimeType: "text/plain",
+    renderFamily: "other",
+    byteSize: 10,
+    checksumSha256: "a".repeat(64),
+    uploadedBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+    createdAt: "2026-08-11T09:00:00.000Z",
+    isCurrent: true,
+    isExecuted: false,
+    ...over,
+  });
+
+  const document = (id: string, title: string, folderId: string | null = null) => ({
+    id,
+    title,
+    description: null,
+    isPrimary: false,
+    versions: [version({ id: `ver-${id}`, originalFilename: title })],
+    archivedAt: null,
+    isConfidential: false,
+    folderId,
+    createdBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+    createdAt: "2026-08-11T09:00:00.000Z",
+    updatedAt: "2026-08-11T09:00:00.000Z",
+  });
+
+  const folder = (id: string, name: string) => ({
+    id,
+    name,
+    parentId: null,
+    createdAt: "2026-08-15T09:00:00.000Z",
+    updatedAt: "2026-08-15T09:00:00.000Z",
+  });
+
+  /**
+   * The record, its folders, its paper, and the upload route a batch is
+   * N calls to.
+   *
+   * The seam is the one a single upload already goes through, because
+   * that is the whole decision: nothing on the server knows a batch
+   * happened. So the stub keeps the rules that route keeps — the first
+   * file on a record with no paper takes the primary designation
+   * (CTR-014), and every file lands as a new document at version 1.
+   */
+  function batchApi(
+    initial: Record<string, unknown>[],
+    folders: Record<string, unknown>[] = [],
+    options: {
+      /** Filenames the seam refuses, and how. `413` is the deployment's
+       * size ceiling, which no retry can get past. */
+      refuse?: Record<string, { status: number; detail: string }>;
+      /** Filenames refused on the first attempt only, so a retry can be
+       * seen to land. */
+      refuseOnce?: Record<string, { status: number; detail: string }>;
+      /** Held open until the test releases them, so what is in flight
+       * at once can be counted. */
+      hold?: boolean;
+    } = {},
+    team = [person("u1", "creator")],
+  ) {
+    const record = recordApi(contractRow(), team);
+    let paper = initial;
+    /** Every upload the batch sent, in order: the filename it carried
+     * and the kind that rode with it. */
+    const uploaded: { name: string; kind: string }[] = [];
+    /** The filenames whose answers are still being held. */
+    const held: (() => void)[] = [];
+    /** The most files that were ever in flight at one moment. */
+    let inFlight = 0;
+    let peak = 0;
+    const attempts = new Map<string, number>();
+    const listing = (folderId: string | null) =>
+      paper.filter((row) => (row.folderId ?? null) === folderId);
+    const handler = (call: StubCall): Response | undefined => {
+      const { pathname } = call.url;
+      if (pathname === "/api/v1/contracts/42/folders" && call.method === "GET") {
+        return json(200, {
+          folders: folders.map((row) => ({
+            ...row,
+            documentCount: listing(row.id as string).length,
+          })),
+        });
+      }
+      if (pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
+        const asked = call.url.searchParams.get("folder");
+        const rows = asked === null ? paper : listing(asked === "root" ? null : asked);
+        return json(200, { documents: rows, nextCursor: null });
+      }
+      if (pathname === "/api/v1/contracts/42/documents" && call.method === "POST") {
+        const form = call.body as FormData;
+        const file = form.get("file") as File;
+        uploaded.push({ name: file.name, kind: String(form.get("kind")) });
+        const tried = (attempts.get(file.name) ?? 0) + 1;
+        attempts.set(file.name, tried);
+        const refusal =
+          options.refuse?.[file.name] ??
+          (tried === 1 ? options.refuseOnce?.[file.name] : undefined);
+        if (refusal) return problem(refusal.status, refusal.detail);
+        const added = {
+          ...document(`doc-${paper.length + 1}`, file.name),
+          // The first document on a record is the instrument, and every
+          // one after it is a loose attachment (CTR-014).
+          isPrimary: paper.length === 0,
+          versions: [version({ id: `ver-${file.name}`, originalFilename: file.name })],
+        };
+        paper = [added, ...paper];
+        return json(201, { document: added });
+      }
+      return record.handler(call);
+    };
+    /** The upload answer, delayed when the test asked for it, so the
+     * pool's bound is observable rather than inferred. */
+    const gated = (call: StubCall): StubAnswer => {
+      const isUpload =
+        call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "POST";
+      if (!isUpload || !options.hold) return handler(call);
+      inFlight += 1;
+      peak = Math.max(peak, inFlight);
+      const answer = handler(call)!;
+      return new Promise<Response>((resolve) => {
+        held.push(() => {
+          inFlight -= 1;
+          resolve(answer);
+        });
+      });
+    };
+    return {
+      handler: gated,
+      uploaded,
+      /** The filenames the batch sent, in order. */
+      names: () => uploaded.map((one) => one.name),
+      release: () => {
+        const waiting = [...held];
+        held.length = 0;
+        for (const done of waiting) done();
+      },
+      peak: () => peak,
+      paper: () => paper,
+    };
+  }
+
+  const documentsSection = () => screen.findByRole("region", { name: /^Documents/ });
+
+  const file = (name: string, bytes = "some bytes") =>
+    new File([bytes], name, { type: "application/pdf" });
+
+  /**
+   * A drop of plain files on the section.
+   *
+   * jsdom has no drag, so the `DataTransfer` is synthetic: the shape the
+   * handler reads and nothing else. `items` carries the entries, because
+   * that is the list that can say what an entry *is* — M13/5 walks the
+   * same entries to recreate a dropped directory tree.
+   */
+  function dropOn(target: HTMLElement, files: File[], directories: string[] = []) {
+    const dataTransfer = {
+      types: ["Files"],
+      files,
+      items: [
+        ...files.map((one) => ({
+          kind: "file",
+          getAsFile: () => one,
+          webkitGetAsEntry: () => ({ isFile: true, isDirectory: false }),
+        })),
+        ...directories.map((name) => ({
+          kind: "file",
+          getAsFile: () => new File([], name),
+          webkitGetAsEntry: () => ({ isFile: false, isDirectory: true, name }),
+        })),
+      ],
+    };
+    fireEvent.dragOver(target, { dataTransfer });
+    fireEvent.drop(target, { dataTransfer });
+  }
+
+  it("opens one confirmation for a whole drop, and creates nothing until it is confirmed", async () => {
+    const api = batchApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    dropOn(section, [file("MSA_2019_signed.pdf"), file("SOW1_2020_signed.pdf")]);
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("heading", { name: "Import 2 files" })).toBeVisible();
+    // What will be created, named — and where it will land, stated
+    // rather than offered as a choice: the drop already answered that.
+    expect(within(dialog).getByText("MSA_2019_signed.pdf")).toBeVisible();
+    expect(within(dialog).getByText("SOW1_2020_signed.pdf")).toBeVisible();
+    expect(within(dialog).getByText("Record root")).toBeVisible();
+    expect(within(dialog).getByText("Set by the drop")).toBeVisible();
+    expect(within(dialog).getByText("Nothing is created until you import.")).toBeVisible();
+    expect(api.uploaded).toEqual([]);
+  });
+
+  it("collects one kind for the whole batch and no note, and sends it with every file", async () => {
+    const api = batchApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [file("one.pdf"), file("two.pdf")]);
+    const dialog = await screen.findByRole("dialog");
+    // One control over the kinds, defaulting to our own draft, and no
+    // per-file ceremony beside it (DOC-011).
+    const kind = within(dialog).getByLabelText("Version kind");
+    expect(kind).toHaveValue("draft_ours");
+    expect(within(dialog).queryByLabelText("Note")).toBeNull();
+    await user.selectOptions(kind, "executed");
+    await user.click(within(dialog).getByRole("button", { name: "Import 2 files" }));
+
+    await waitFor(() => expect(api.uploaded).toHaveLength(2));
+    expect(api.names().toSorted()).toEqual(["one.pdf", "two.pdf"]);
+    // One kind rode with every file of the batch, and it is the one the
+    // dialog collected.
+    expect(api.uploaded.map((one) => one.kind)).toEqual(["executed", "executed"]);
+    // The dialog closes only on Done, so a reader who retried can see
+    // whether the second attempt worked (DES-033 §11).
+    await user.click(await within(dialog).findByRole("button", { name: "Done" }));
+    // Both rows land, both as new documents at version 1, and the
+    // section counts them.
+    expect(await within(section).findByText("one.pdf")).toBeVisible();
+    expect(within(section).getByRole("img", { name: "2 documents" })).toBeVisible();
+  });
+
+  it("cancels the batch, creating nothing", async () => {
+    const api = batchApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [file("one.pdf"), file("two.pdf")]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(api.uploaded).toEqual([]);
+    expect(within(section).getByText("No documents on this contract yet.")).toBeVisible();
+  });
+
+  it("leaves exactly one primary when a batch lands on a record with no paper", async () => {
+    const api = batchApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [file("one.pdf"), file("two.pdf"), file("three.pdf")]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 3 files" }));
+
+    await waitFor(() => expect(api.uploaded).toHaveLength(3));
+    await user.click(await within(dialog).findByRole("button", { name: "Done" }));
+    // The designation is the seam's, taken by whichever file landed
+    // first — the batch never asks for it and never sets it twice.
+    expect(await within(section).findByText("three.pdf")).toBeVisible();
+    expect(within(section).getAllByText("Primary")).toHaveLength(1);
+  });
+
+  it("reports a failed file on its own row and retries that file alone", async () => {
+    const api = batchApi([], [], {
+      refuseOnce: { "two.pdf": { status: 502, detail: "The storage driver did not answer." } },
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [file("one.pdf"), file("two.pdf")]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 2 files" }));
+
+    // One file failed and says why, in the seam's own sentence. The
+    // other one landed: a refusal costs its own file and nothing else.
+    expect(await within(dialog).findByText("The storage driver did not answer.")).toBeVisible();
+    expect(within(dialog).getByRole("heading", { name: "Imported 1 of 2 files" })).toBeVisible();
+    expect(api.names().toSorted()).toEqual(["one.pdf", "two.pdf"]);
+
+    await user.click(within(dialog).getByRole("button", { name: "Retry two.pdf" }));
+
+    // Only the failed file went again, so nothing can land twice.
+    await waitFor(() => expect(api.uploaded).toHaveLength(3));
+    expect(api.names().at(-1)).toBe("two.pdf");
+    expect(
+      await within(dialog).findByRole("heading", { name: "Imported 2 of 2 files" }),
+    ).toBeVisible();
+  });
+
+  it("names the deployment's limit on an oversized file, offers no retry, and lands the rest", async () => {
+    const api = batchApi([], [], {
+      refuse: {
+        "enormous.pdf": {
+          status: 413,
+          detail: "That file is over the 100 MB upload limit.",
+        },
+      },
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [file("enormous.pdf"), file("small.pdf")]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 2 files" }));
+
+    expect(
+      await within(dialog).findByText("That file is over the 100 MB upload limit."),
+    ).toBeVisible();
+    // No retry anywhere: the same file earns the same answer, and a
+    // control that cannot succeed reads as "try again" when the answer
+    // will not change (DES-033 §11).
+    expect(within(dialog).queryByRole("button", { name: /^Retry/ })).toBeNull();
+    // The rest of the batch went on regardless — the ceiling is per
+    // file, not per drop.
+    expect(within(dialog).getByRole("heading", { name: "Imported 1 of 2 files" })).toBeVisible();
+    await user.click(within(dialog).getByRole("button", { name: "Done" }));
+    expect(await within(section).findByText("small.pdf")).toBeVisible();
+  });
+
+  it("keeps at most three uploads in flight at once", async () => {
+    const api = batchApi([], [], { hold: true });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(
+      section,
+      [1, 2, 3, 4, 5, 6].map((n) => file(`file-${n}.pdf`)),
+    );
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 6 files" }));
+
+    // Three went, three are waiting for a worker: a 200-file import
+    // does not open 200 connections.
+    await waitFor(() => expect(api.uploaded).toHaveLength(3));
+    expect(api.peak()).toBe(3);
+    api.release();
+    await waitFor(() => expect(api.uploaded).toHaveLength(6));
+    api.release();
+    expect(api.peak()).toBe(3);
+  });
+
+  it("hands a multi-file pick from the upload dialog to the same confirmation", async () => {
+    const api = batchApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(within(section).getByRole("button", { name: "Upload" }));
+    const composer = await screen.findByRole("dialog");
+    // The drop's pointer-free twin: the picker takes many, and many is
+    // a batch wherever it came from.
+    await user.upload(within(composer).getByLabelText("File", { selector: "input" }), [
+      file("one.pdf"),
+      file("two.pdf"),
+    ]);
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("heading", { name: "Import 2 files" })).toBeVisible();
+    // The drop said where; a pick did not, so the line that says so is
+    // absent rather than wrong.
+    expect(within(dialog).queryByText("Set by the drop")).toBeNull();
+    expect(api.uploaded).toEqual([]);
+  });
+
+  it("keeps a single pick in the composer, where the note still belongs", async () => {
+    const api = batchApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(within(section).getByRole("button", { name: "Upload" }));
+    const composer = await screen.findByRole("dialog");
+    await user.upload(
+      within(composer).getByLabelText("File", { selector: "input" }),
+      file("one.pdf"),
+    );
+
+    // One file is one round, and a round takes a note.
+    expect(within(composer).getByLabelText("Note")).toBeVisible();
+    expect(within(composer).getByText("one.pdf")).toBeVisible();
+    expect(within(composer).queryByRole("heading", { name: /^Import/ })).toBeNull();
+  });
+
+  it("re-reads every listing after a batch, including a folder that was closed", async () => {
+    const api = batchApi([document("doc-1", "filed.pdf", "f-1")], [folder("f-1", "Executed")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    // Opened, then closed: the folder's listing is cached, and a write
+    // that does not evict it would draw it as it stood before.
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    expect(await within(section).findByText("filed.pdf")).toBeVisible();
+    await user.click(within(section).getByRole("button", { name: "Collapse Executed" }));
+
+    dropOn(section, [file("dropped.pdf")]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 1 file" }));
+    await waitFor(() => expect(api.uploaded).toHaveLength(1));
+    await user.click(await within(dialog).findByRole("button", { name: "Done" }));
+
+    // The record root has the new document, and the folder still
+    // answers what is in it when it is opened again.
+    expect(await within(section).findByText("dropped.pdf")).toBeVisible();
+    await user.click(within(section).getByRole("button", { name: "Expand Executed" }));
+    expect(await within(section).findByText("filed.pdf")).toBeVisible();
+    expect(within(section).getByRole("img", { name: "2 documents" })).toBeVisible();
+  });
+
+  it("opens nothing for a drop carrying no file of its own", async () => {
+    const api = batchApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    // A directory is not a file, and recreating one is M13/5's. Nothing
+    // is half-read, and nothing is created.
+    dropOn(section, [], ["Legacy contracts"]);
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(api.uploaded).toEqual([]);
+  });
+
+  it("takes the loose files out of a drop that also carried a directory", async () => {
+    const api = batchApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    dropOn(section, [file("loose.pdf")], ["Legacy contracts"]);
+
+    // One file, not two: the directory is left whole for M13/5 rather
+    // than half-read as a file with no bytes.
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("heading", { name: "Import 1 file" })).toBeVisible();
+    expect(within(dialog).getByText("loose.pdf")).toBeVisible();
+    expect(within(dialog).queryByText("Legacy contracts")).toBeNull();
+  });
+
+  it("stops starting new uploads on Cancel remaining, and lets the ones in flight finish", async () => {
+    const api = batchApi([], [], { hold: true });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(
+      section,
+      [1, 2, 3, 4, 5].map((n) => file(`file-${n}.pdf`)),
+    );
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 5 files" }));
+    await waitFor(() => expect(api.uploaded).toHaveLength(3));
+
+    await user.click(within(dialog).getByRole("button", { name: "Cancel remaining" }));
+    api.release();
+
+    // A request that has left cannot be recalled, so the three in flight
+    // land. The two nobody had started say so and offer the retry, which
+    // is what a file nobody sent deserves.
+    expect(
+      await within(dialog).findByRole("heading", { name: "Imported 3 of 5 files" }),
+    ).toBeVisible();
+    expect(api.uploaded).toHaveLength(3);
+    expect(within(dialog).getAllByText("Cancelled before it was uploaded.")).toHaveLength(2);
+    expect(within(dialog).getByRole("button", { name: "Retry 2 files" })).toBeVisible();
+  });
+
+  it("takes no drop on an archived record", async () => {
+    const record = recordApi(contractRow({ archivedAt: "2026-08-01T00:00:00.000Z" }), [
+      person("u1", "creator"),
+    ]);
+    stubApi({ signedIn: MEMBER, extra: record.handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    dropOn(section, [file("one.pdf")]);
+
+    // A frozen record's paper stays frozen, drop included.
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(within(section).queryByText(/^Drop files here/)).toBeNull();
+  });
+
+  it("lists the first files of a long batch and says how many it did not draw", async () => {
+    const api = batchApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    dropOn(
+      section,
+      Array.from({ length: 10 }, (_, index) => file(`file-${index}.pdf`)),
+    );
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("heading", { name: "Import 10 files" })).toBeVisible();
+    expect(within(dialog).getByText("file-0.pdf")).toBeVisible();
+    expect(within(dialog).queryByText("file-9.pdf")).toBeNull();
+    expect(within(dialog).getByText("…and 4 more files")).toBeVisible();
+  });
+
+  it("says what a drop on this section means, and says it once", async () => {
+    stubApi({ signedIn: MEMBER, extra: batchApi([]).handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    // One gesture, one meaning (DES-033 §8): a dropped file is always a
+    // new document, and appending a round is a deliberate act on a
+    // named document.
+    expect(
+      within(section).getByText("Drop files here — each file becomes a new document at version 1"),
+    ).toBeVisible();
+    expect(
+      within(section).getByText(
+        "To add a round to an existing chain, use Add version on that document.",
+      ),
+    ).toBeVisible();
   });
 });
