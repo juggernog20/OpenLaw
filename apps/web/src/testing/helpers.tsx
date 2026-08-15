@@ -172,6 +172,12 @@ export function stubApi(state: ApiState) {
     if (/^\/api\/v1\/contracts\/\d+\/documents$/.test(call.url.pathname) && call.method === "GET") {
       return json(200, { documents: [], nextCursor: null });
     }
+    // And how that paper is filed (M13/2). Empty by default for the
+    // documents read's reason: a record with no folders is the ordinary
+    // case, and only the suites that are about the tree supply one.
+    if (/^\/api\/v1\/contracts\/\d+\/folders$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { folders: [] });
+    }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
       return json(200, state.onboarding ?? { completed: true, emailConfigured: true });
     }

@@ -1217,6 +1217,42 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/contracts/{number}/folders": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The folders on one contract, whole (DOC-006). Folders are scoped inside the record and nowhere else — there is no global tree, and the repository view stays flat with folder as a facet there. The set comes back in one answer rather than one level at a time, because a record's folder set is small and the Documents section draws the whole tree from it. Siblings are ordered by name without case, the way a file manager lists a directory. Access is inherited from the contract and nothing else: a Contributor on the team reads the tree, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it */
+    get: operations["listContractFolders"];
+    put?: never;
+    /** Create a folder on a contract, at the record root or inside another folder (DOC-006). The name is trimmed, must not be empty, is bounded at the filesystem's own ceiling, and may not hold a slash — a folder drop addresses a chain by path, and a name with a separator in it could not be one segment of one. Three invariants are refused here rather than left to the database: a parent on another contract is answered exactly as a parent that was never created, a sibling name already taken under the same parent is refused 409, and a folder deeper than the tree's ceiling is refused 409. Appends folder.created on the owning contract (DD-017), carrying the name so the entry outlives a later rename. Answers the record's whole folder set, because that is what the tree is drawn from. Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract takes no new folder until it is restored */
+    post: operations["createContractFolder"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/folders/{folderId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Dissolve a folder (DOC-006). Its child folders are re-filed into its parent — the record root when it had none — and nothing is destroyed: this route deletes no document, and erasing one stays DOC-010's separate Administrator-only path. Because the children are re-filed rather than removed, a delete that would put two folders of the same name in one place is refused 409 rather than resolved by inventing a name. Appends folder.deleted on the owning contract (DD-017), carrying the folder's name — the entry outlives the row, so it is the only thing left that says what was dissolved. Answers the record's whole folder set, because every re-filed child moved. A folder on a contract the viewer cannot reach answers 404, exactly as one that does not exist; an archived contract takes no delete until it is restored */
+    delete: operations["deleteContractFolder"];
+    options?: never;
+    head?: never;
+    /** Rename a folder, move it under a different parent, or both (DOC-006). parentId null moves it to the record root, and omitting parentId moves nothing — they are two different requests. A move carries the whole subtree, so the tree's depth ceiling is asked about the deepest folder underneath rather than about the moved row alone. The parent chain never cycles: a move that would put a folder inside itself, or inside one of its own descendants, is refused 409. A parent on another contract is answered exactly as a parent that was never created, and a sibling name already taken under the destination is refused 409. Appends folder.renamed and folder.moved on the owning contract (DD-017) — one entry per thing that happened, each carrying the folder's name. Answers the record's whole folder set. A folder on a contract the editor cannot reach answers 404, exactly as one that does not exist; an archived contract takes no edit until it is restored */
+    patch: operations["updateContractFolder"];
+    trace?: never;
+  };
   "/api/v1/comments": {
     parameters: {
       query?: never;
@@ -6474,6 +6510,184 @@ export interface operations {
           "image/webp": string;
           "image/bmp": string;
           "image/avif": string;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listContractFolders: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            folders: {
+              id: string;
+              name: string;
+              parentId: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createContractFolder: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name: string;
+          parentId?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            folders: {
+              id: string;
+              name: string;
+              parentId: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteContractFolder: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        folderId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            folders: {
+              id: string;
+              name: string;
+              parentId: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateContractFolder: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        folderId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name?: string;
+          parentId?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            folders: {
+              id: string;
+              name: string;
+              parentId: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
         };
       };
       /** @description Problem details (RFC 9457) */
