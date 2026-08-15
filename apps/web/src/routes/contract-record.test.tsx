@@ -6359,6 +6359,36 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
     expect(within(section).getByText("signed.pdf")).toBeVisible();
   });
 
+  it("reads a closed folder fresh after a move filed something into it", async () => {
+    const api = filingApi([document("doc-1", "signed.pdf")], [folder("f-1", "Executed")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    // Open the folder while it is empty, so the section holds a listing
+    // for it, then close it again.
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    await within(section).findByText("Empty");
+    await user.click(within(section).getByRole("button", { name: "Collapse Executed" }));
+
+    // File the loose document into the closed folder.
+    await user.click(
+      await within(section).findByRole("button", { name: "Actions for signed.pdf" }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: "Move to folder" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.selectOptions(within(dialog).getByLabelText("File in"), "f-1");
+    await user.click(within(dialog).getByRole("button", { name: "Move" }));
+    await waitFor(() => expect(within(section).queryByText("signed.pdf")).toBeNull());
+
+    // Reopening draws what the folder holds now, not the listing it held
+    // before the move: a Move names any folder, open or not, so a cache
+    // kept across the write would sit beside a count that has moved on.
+    await user.click(within(section).getByRole("button", { name: "Expand Executed" }));
+    expect(await within(section).findByText("signed.pdf")).toBeVisible();
+  });
+
   it("names every destination by its whole path", async () => {
     const api = filingApi(
       [document("doc-1", "letter.pdf")],

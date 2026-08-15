@@ -542,6 +542,18 @@ export function DocumentsCard({
     const root = await readContractDocuments(contractNumber, showArchived, undefined, FOLDER_ROOT);
     if (root.ok) onDocuments(root.documents, root.nextCursor);
     setAppended(null);
+    // A closed folder's cached listing is evicted rather than re-read:
+    // the write may have moved a row into it — a Move names any folder,
+    // open or not — and a cache this refresh skipped would be reopened
+    // as it stood before the write, beside a count that has moved on.
+    // Evicted, reopening reads fresh, which is the promise the toggle
+    // trusts.
+    setListings((current) => {
+      const kept = [...current].filter(
+        ([folderId]) => openFolders.has(folderId) && folderId !== dissolved,
+      );
+      return kept.length === current.size ? current : new Map(kept);
+    });
     for (const folderId of openFolders) {
       // A folder that has just been dissolved has no listing to read.
       if (folderId === dissolved) continue;
