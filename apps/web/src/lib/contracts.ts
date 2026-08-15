@@ -90,6 +90,37 @@ function exhaustiveList<T extends string>() {
     values;
 }
 
+/**
+ * CTR-001's fixed six-stage backbone, in canonical forward order.
+ *
+ * The order is a sequence, not a ratchet: a contract may move to any
+ * status, so a stage may go backwards. The pipeline renders where the
+ * contract sits in this list, never how far it has travelled.
+ */
+export const CONTRACT_STAGES = exhaustiveList<ContractStage>()([
+  "draft",
+  "review",
+  "approval",
+  "signature",
+  "active",
+  "ended",
+] as const);
+
+/** The fixed stage's own name. It is not the status label: the label is
+ * renameable and the stage is not (CTR-001), so the two are written
+ * separately and read side by side on the record. */
+export function stageLabel(intl: IntlShape, stage: ContractStage): string {
+  return intl.formatMessage(
+    {
+      id: "contracts.stageLabel",
+      defaultMessage:
+        "{stage, select, draft {Draft} review {Review} approval {Approval} " +
+        "signature {Signature} active {Active} ended {Ended} other {Unknown}}",
+    },
+    { stage },
+  );
+}
+
 /** DES-018's one ordinal severity ramp, low → critical. */
 export const SEVERITY_LEVELS = exhaustiveList<SeverityLevel>()([
   "low",

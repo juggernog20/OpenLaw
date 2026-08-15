@@ -941,6 +941,15 @@
   "contracts.showArchived": {
     "defaultMessage": "Show archived"
   },
+  "contracts.stage.done": {
+    "defaultMessage": "done"
+  },
+  "contracts.stage.pipeline": {
+    "defaultMessage": "Stage"
+  },
+  "contracts.stageLabel": {
+    "defaultMessage": "{stage, select, draft {Draft} review {Review} approval {Approval} signature {Signature} active {Active} ended {Ended} other {Unknown}}"
+  },
   "contracts.team.add": {
     "defaultMessage": "Add team member"
   },
