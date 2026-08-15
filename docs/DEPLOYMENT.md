@@ -139,13 +139,17 @@ The same boot rule holds: name the driver and leave out the container, and the a
 
 Downloads stream through the app here too. Give the credential read, write, and delete on the container and nothing else — `Storage Blob Data Contributor` scoped to the container, when the credential chain is used.
 
+One account-level caveat: blob **versioning** and **soft delete** keep copies of a blob after a delete the store reports as successful. OpenLaw's hard delete (DOC-010) is a lawful-erasure tool, and it can only remove what the store lets it reach — with either feature on, erased files linger in the account until their retention lapses. Turn both off on this container's account, or own that gap knowingly.
+
 ### Changing driver
 
 Every file records the driver that stored it, and reads follow that record across every configured driver (DOC-014) — so **changing driver does not lose the files already stored**. Files written by the local driver stay readable from the volume after you switch to `s3` or `azure-blob`; keep the volume, and keep the old driver's variables set. Drop them and those files' reads fail with a message naming the driver and what to set — never a false "not found". Nothing copies old files into the new store — that is a migration to run yourself, and there is no tool for it yet.
 
+A named store is a configured reader whether or not it is the write driver: setting `S3_BUCKET` or `AZURE_BLOB_CONTAINER` makes that driver readable, and its other variables are then checked at boot exactly as for the write driver — a reader that cannot reach its store stops the start, not the first old file.
+
 ### The upload ceiling
 
-One upload may carry at most `MAX_UPLOAD_MB` megabytes (default 100), on either driver. A file over the ceiling is refused with a clear message instead of a timeout. If you raise it, raise your reverse proxy's own body limit to match — nginx's `client_max_body_size`, Caddy's `request_body max_size` — or the proxy cuts the request off first and the refusal stops being clear.
+One upload may carry at most `MAX_UPLOAD_MB` megabytes (default 100), on every driver. A file over the ceiling is refused with a clear message instead of a timeout. If you raise it, raise your reverse proxy's own body limit to match — nginx's `client_max_body_size`, Caddy's `request_body max_size` — or the proxy cuts the request off first and the refusal stops being clear.
 
 ## The doc engine
 

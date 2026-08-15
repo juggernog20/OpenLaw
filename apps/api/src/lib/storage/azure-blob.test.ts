@@ -91,8 +91,10 @@ describe("Azure Blob driver", () => {
     await store.azurite.stop();
   });
 
-  /** Everything a stream yields, as one string. */
-  async function readAll(stream: NodeJS.ReadableStream): Promise<string> {
+  /** Everything a download yields, as one string. The body is optional
+   * only for other runtimes, so a missing one is a failure here. */
+  async function readAll(stream: NodeJS.ReadableStream | undefined): Promise<string> {
+    if (!stream) throw new Error("The download answered no stream.");
     const chunks: Buffer[] = [];
     for await (const chunk of stream) chunks.push(Buffer.from(chunk));
     return Buffer.concat(chunks).toString();
@@ -110,9 +112,7 @@ describe("Azure Blob driver", () => {
       .getContainerClient(store.container)
       .getBlobClient(key)
       .download();
-    expect(await readAll(blob.readableStreamBody as NodeJS.ReadableStream)).toBe(
-      "the executed copy",
-    );
+    expect(await readAll(blob.readableStreamBody)).toBe("the executed copy");
   });
 
   it("lets exactly one of two writers of the same key win", async () => {
@@ -132,9 +132,7 @@ describe("Azure Blob driver", () => {
       .getContainerClient(store.container)
       .getBlobClient(key)
       .download();
-    expect(["round one", "round two"]).toContain(
-      await readAll(blob.readableStreamBody as NodeJS.ReadableStream),
-    );
+    expect(["round one", "round two"]).toContain(await readAll(blob.readableStreamBody));
   });
 
   it("round-trips a blob larger than one staged block", async () => {
@@ -168,7 +166,7 @@ describe("Azure Blob driver", () => {
 
     await expect(
       store.client.getContainerClient(store.container).getBlobClient(key).download(),
-    ).rejects.toThrow();
+    ).rejects.toMatchObject({ statusCode: 404 });
     // Uncommitted blocks are invisible to every read and the service
     // reaps them on its own; unlike S3's multipart machinery there is
     // no upload object left to abandon, so invisibility is the whole

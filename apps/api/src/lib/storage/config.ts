@@ -77,12 +77,19 @@ export class UnconfiguredDriverError extends StorageError {
   }
 }
 
-/** What an operator sets to configure each driver, named in the error above. */
-const CONFIGURATION_HINTS: Record<string, string> = {
-  [S3_DRIVER]: "set S3_BUCKET and the other S3_* variables to reach its store",
-  [AZURE_BLOB_DRIVER]:
+/**
+ * What an operator sets to configure each driver, named in the error
+ * above. A Map, not an object: the driver name comes out of a stored
+ * reference, and an object lookup would answer `Object.prototype` for
+ * a name like `constructor`.
+ */
+const CONFIGURATION_HINTS = new Map<string, string>([
+  [S3_DRIVER, "set S3_BUCKET and the other S3_* variables to reach its store"],
+  [
+    AZURE_BLOB_DRIVER,
     "set AZURE_BLOB_CONTAINER and the other AZURE_BLOB_* variables to reach its store",
-};
+  ],
+]);
 
 /**
  * Reads one variable, treating empty as unset.
@@ -158,6 +165,14 @@ function readAzureBlobConfig(env: StorageEnvironment): StorageConfig {
   }
 
   const account = read(env, "AZURE_BLOB_ACCOUNT");
+  // Azure's own rule for account names. Checked here because the name
+  // is interpolated into the store's address below — a name Azure
+  // could never issue would otherwise become a quietly wrong URL.
+  if (account && !/^[a-z0-9]{3,24}$/.test(account)) {
+    throw new StorageConfigError(
+      "AZURE_BLOB_ACCOUNT must be 3 to 24 lowercase letters and digits, as Azure requires.",
+    );
+  }
   const key = read(env, "AZURE_BLOB_ACCOUNT_KEY");
   // A key with no account is half a credential: unlike the account
   // name, which stands alone (it names the store, and the Azure
@@ -177,6 +192,15 @@ function readAzureBlobConfig(env: StorageEnvironment): StorageConfig {
   if (!endpoint && !account) {
     throw new StorageConfigError(
       "Set AZURE_BLOB_ACCOUNT (Azure answers at the account's own address) or AZURE_BLOB_ENDPOINT.",
+    );
+  }
+  // The Azure credential chain hands out bearer tokens, and the SDK
+  // refuses to send one over plain HTTP. Refused here instead, where
+  // the refusal can name the variables — at the first read it would
+  // name neither.
+  if (endpoint?.startsWith("http://") && !key) {
+    throw new StorageConfigError(
+      "An http:// AZURE_BLOB_ENDPOINT needs AZURE_BLOB_ACCOUNT_KEY — the Azure credential chain sends bearer tokens, which never travel unencrypted.",
     );
   }
 
@@ -271,7 +295,7 @@ function createStorageRouter(
     // answered with what to set — never with not-found, which would
     // read as "the blob is gone" when the truth is "you cannot see it
     // from here" (DOC-014).
-    const hint = CONFIGURATION_HINTS[driver];
+    const hint = CONFIGURATION_HINTS.get(driver);
     if (hint) throw new UnconfiguredDriverError(ref, driver, hint);
     throw new InvalidBlobRefError(
       `${JSON.stringify(ref)} names the ${JSON.stringify(driver)} driver, and the drivers are ${STORAGE_DRIVERS.join(", ")}.`,

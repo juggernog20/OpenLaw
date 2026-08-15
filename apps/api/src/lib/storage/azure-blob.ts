@@ -67,18 +67,19 @@ function statusOf(error: unknown): number | undefined {
  * The service's own name for what went wrong, when it gave one.
  *
  * The storage SDK surfaces `x-ms-error-code` as `details.errorCode` on
- * the `RestError` it throws; some paths set `code` as well. Both are
- * read, because which one is set differs by operation.
+ * the `RestError` it throws; some paths set `code` as well. The
+ * service's name is read first: `code` also carries transport-level
+ * names (`ENOTFOUND`, `REQUEST_SEND_ERROR`) and must not shadow what
+ * the store itself said.
  */
 function errorCodeOf(error: unknown): string | undefined {
   if (typeof error !== "object" || error === null) return undefined;
   const { code, details } = error as { code?: unknown; details?: unknown };
-  if (typeof code === "string") return code;
   if (typeof details === "object" && details !== null && "errorCode" in details) {
     const errorCode = (details as { errorCode: unknown }).errorCode;
     if (typeof errorCode === "string") return errorCode;
   }
-  return undefined;
+  return typeof code === "string" ? code : undefined;
 }
 
 /**
@@ -188,8 +189,13 @@ export function createAzureBlobStorage(options: AzureBlobStorageOptions): Storag
       const key = parseBlobRef(ref, AZURE_BLOB_DRIVER);
       // `deleteIfExists` makes a missing blob a no-op, which is the
       // contract: hard deletion (DOC-010) must be repeatable after a
-      // partial failure.
-      await container.getBlobClient(key).deleteIfExists();
+      // partial failure. Snapshots go with the blob — OpenLaw never
+      // takes one, but a backup tool may have, and a delete the store
+      // refuses over a snapshot is a hard delete that cannot converge.
+      // What this cannot reach: account-level versioning or soft
+      // delete, which retain copies after a successful delete — an
+      // operator owing DOC-010 an erasure must know that (DEPLOYMENT).
+      await container.getBlobClient(key).deleteIfExists({ deleteSnapshots: "include" });
     },
   };
 }

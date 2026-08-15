@@ -196,6 +196,29 @@ describe("the Azure Blob driver's environment", () => {
     expect(() => readStorageConfig({ STORAGE_DRIVER: "azure-blob" })).toThrow(StorageConfigError);
   });
 
+  it("refuses an account name Azure could never issue", () => {
+    // The name is interpolated into the store's address, so a bad one
+    // would become a quietly wrong URL rather than a named fault.
+    expect(() => readStorageConfig({ ...AZURE_ENV, AZURE_BLOB_ACCOUNT: "Not-An-Account" })).toThrow(
+      StorageConfigError,
+    );
+  });
+
+  it("refuses a plain-http endpoint with no key, where a bearer token would travel unencrypted", () => {
+    expect(() =>
+      readStorageConfig({ ...AZURE_ENV, AZURE_BLOB_ENDPOINT: "http://azurite:10000/openlaw" }),
+    ).toThrow(StorageConfigError);
+    // With a key the same endpoint is fine — that is exactly how
+    // Azurite is reached.
+    expect(
+      readStorageConfig({
+        ...AZURE_ENV,
+        AZURE_BLOB_ENDPOINT: "http://azurite:10000/openlaw",
+        AZURE_BLOB_ACCOUNT_KEY: "bm90LWEtcmVhbC1rZXk=", // NOSONAR — fixture
+      }),
+    ).toMatchObject({ endpoint: "http://azurite:10000/openlaw" });
+  });
+
   it("refuses a driver with neither an account nor an endpoint to reach", () => {
     expect(() =>
       readStorageConfig({ STORAGE_DRIVER: "azure-blob", AZURE_BLOB_CONTAINER: "openlaw-files" }),
@@ -217,18 +240,16 @@ describe("the read router (DOC-014)", () => {
   it("routes a read to the driver the reference names, not the write driver", async () => {
     // An install that moved from local to azure-blob: the write driver
     // changed, and a reference the local driver wrote must still read.
-    const root = await mkdtemp(join(tmpdir(), "openlaw-router-"));
+    const install = await localInstall(AZURE_ENV);
     try {
-      await writeFile(join(root, "an-old-upload"), "written before the driver switch");
+      await writeFile(join(install.root, "an-old-upload"), "written before the driver switch");
 
-      const storage = createStorageFromEnv({ ...AZURE_ENV, STORAGE_PATH: root });
-
-      const stream = await storage.get("local:an-old-upload");
+      const stream = await install.storage.get("local:an-old-upload");
       const chunks: Buffer[] = [];
       for await (const chunk of stream) chunks.push(Buffer.from(chunk));
       expect(Buffer.concat(chunks).toString()).toBe("written before the driver switch");
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await install.stop();
     }
   });
 
@@ -262,6 +283,20 @@ describe("the read router (DOC-014)", () => {
     const install = await localInstall();
     try {
       await expect(install.storage.get("sharepoint:somewhere/a-blob")).rejects.toBeInstanceOf(
+        InvalidBlobRefError,
+      );
+    } finally {
+      await install.stop();
+    }
+  });
+
+  it("refuses a driver name that is an Object.prototype property", async () => {
+    // The driver name comes out of a stored reference. A plain-object
+    // hint lookup would answer `Object.prototype.constructor` for
+    // this one and misreport it as an unconfigured driver.
+    const install = await localInstall();
+    try {
+      await expect(install.storage.get("constructor:somewhere/a-blob")).rejects.toBeInstanceOf(
         InvalidBlobRefError,
       );
     } finally {
