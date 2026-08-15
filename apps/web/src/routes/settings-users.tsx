@@ -99,7 +99,7 @@ function StatusPill({ status }: Readonly<{ status: UserRow["status"] }>) {
 
 /** Mock-style stamps: "3h ago" within the week, then "Jul 28". */
 function lastActiveLabel(intl: IntlShape, iso: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return intl.formatMessage({ id: "settings.users.neverActive", defaultMessage: "—" });
   const then = new Date(iso);
   const minutes = Math.floor((Date.now() - then.getTime()) / 60_000);
   if (minutes < 60) {

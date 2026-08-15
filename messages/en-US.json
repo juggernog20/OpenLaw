@@ -2297,6 +2297,9 @@
   "settings.users.invited": {
     "defaultMessage": "Invited"
   },
+  "settings.users.neverActive": {
+    "defaultMessage": "—"
+  },
   "settings.users.resend": {
     "defaultMessage": "Resend the invite to {email}"
   },
