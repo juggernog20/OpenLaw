@@ -986,6 +986,34 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
     values: (intl, payload) => ({ title: named(intl, payload, "title") }),
   },
+  // Where a document sits in the record's tree (M13/3, DOC-006). One
+  // verb for both directions, and the sentence says which one it was:
+  // into a folder, or back out onto the contract itself. Both folders
+  // ride the payload **by name**, because a folder is renamed and
+  // dissolved freely and the id would not draw a sentence a week later.
+  //
+  // Whether it went to the record root is its own value rather than a
+  // sentinel inside the folder's name, for `folderNarration`'s reason: a
+  // folder really can be called "none".
+  "document.filed": {
+    icon: FolderInput,
+    message: defineMessage({
+      id: "activity.document.filed",
+      defaultMessage:
+        "{atRoot, select, true {{actor} moved {title} onto the contract} " +
+        "other {{actor} filed {title} in {folder}}}",
+    }),
+    values: (intl, payload) => {
+      const folder = text(payload, "folderName");
+      return {
+        title: named(intl, payload, "title"),
+        atRoot: folder === null ? "true" : "false",
+        // Never read when `atRoot` is true, and never left undefined: an
+        // ICU argument a locale still names has to resolve to something.
+        folder: folder ?? "",
+      };
+    },
+  },
   // How the record's paper is filed (M13/2, DOC-006). Each entry names
   // the folder by the name it had at the time, because a folder is
   // renamed and dissolved freely and the row will not be there to read

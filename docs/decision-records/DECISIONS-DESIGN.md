@@ -2026,6 +2026,7 @@ Appending a round stays a deliberate act on a named document, reached from that 
 4. **The record dialog drops DOC5's `Import into`, `Where does this live?`, and `Record` controls entirely.** They are not hidden or pre-filled; they are not there.
 5. **C4's drop hint is replaced.** The version-to-the-chain sentence does not survive anywhere on the section.
 6. **The mock names one folder in lower case on purpose.** "correspondence" is drawn between "Amendments" and "Executed", so the case-insensitive order is a thing the mock shows rather than a thing this record only asserts.
+7. **A refused folder Delete stays inside the open dialog, carrying the server's own sentence** — it does not close the dialog and mark the row, as §6 above says. This normalizes §6 rather than reversing it: the consequence sentence and the one-click shape are unchanged, and only where the refusal is said moves. It is said in the dialog because that is where the reader is looking and because every refusal here is one they can act on — a name already taken, a delete that would put two folders of one name in one place — so they can read why and then cancel or fix. It is the DOC-010 erasure dialog's own precedent on this same surface. The same rule holds for a refused document Move.
 
 ### Rationale
 

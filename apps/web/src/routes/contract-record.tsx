@@ -145,7 +145,7 @@ import {
   type CustomFieldValues,
 } from "../lib/custom-fields";
 import { currencyFractionDigits, currencyOptions, toMajorUnits, toMinorUnits } from "../lib/format";
-import type { ContractDocument } from "../lib/documents";
+import { FOLDER_ROOT, type ContractDocument } from "../lib/documents";
 import type { ContractFolder } from "../lib/folders";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
 import { problemDetail } from "../lib/messages";
@@ -202,7 +202,14 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     // page — a Contributor on the team reads and downloads it too
     // (DD-015) — and answered 404 for anyone the record itself is
     // hidden from, which is the same refusal the record read gives.
-    api.GET("/api/v1/contracts/{number}/documents", { params: { path: { number } } }),
+    //
+    // The record root only (M13/3): the tree draws its folders first and
+    // then the documents filed nowhere, and a folder's own documents
+    // load when it is opened. Reading the record's whole paper here
+    // would draw every filed document twice.
+    api.GET("/api/v1/contracts/{number}/documents", {
+      params: { path: { number }, query: { folder: FOLDER_ROOT } },
+    }),
     // How that paper is filed (M13/2, DOC-006). One read for the whole
     // tree, because a record's folder set is small and drawing it a
     // level at a time would be a round trip per press.

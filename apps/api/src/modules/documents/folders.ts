@@ -13,10 +13,11 @@
  * contract, and a folder's id is only ever meaningful beside the record
  * that owns it.
  *
- * **Deleting a folder dissolves it; it destroys nothing.** The child
- * folders are re-filed into the deleted folder's parent — the record
- * root when it had none — and the row goes. Destroying a document is
- * DOC-010's job and is reached from that document.
+ * **Deleting a folder dissolves it; it destroys nothing.** Its child
+ * folders and the documents filed in it are re-filed into the deleted
+ * folder's parent — the record root when it had none — and the row goes.
+ * Destroying a document is DOC-010's job and is reached from that
+ * document.
  *
  * **Three invariants, enforced here rather than by the database**
  * (DOC-008's pattern):
@@ -55,9 +56,21 @@
  *
  * **A folder carries no confidentiality flag of its own** (DES-033). Its
  * name is visible to everyone who reaches the record; what DD-014
- * narrows is documents, which is a question this module does not ask
- * because no document is filed in a folder yet — `documents.folder_id`
- * and the counts taken through the audience predicate arrive with M13/3.
+ * narrows is the documents filed in it. So every folder answers a
+ * `documentCount`, and that count is **scoped to the viewer asking**,
+ * taken through `documentAudienceScope` — the one predicate every
+ * document read already passes through. A confidential document a viewer
+ * is outside the audience of is left out of the folder's listing and out
+ * of its count together, which is what makes the omission silent rather
+ * than announced: an "empty" folder may be a folder whose contents this
+ * viewer cannot see, and nothing here distinguishes the two.
+ *
+ * **A dissolved folder's documents move with its child folders** (M13/3).
+ * The re-file is a fact about the record's organization rather than a
+ * read, so it is **not** viewer-scoped: every document in the folder
+ * moves, the archived ones and the ones the deleter is outside the
+ * audience of included. Leaving one behind would orphan a row against a
+ * folder that no longer exists.
  *
  * **Manual folder work is narrated** (DD-017). Create, rename, move, and
  * delete each append one record-tier entry on the owning contract, and
@@ -69,10 +82,26 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { and, asc, contracts, documentFolders, eq, MAX_FOLDER_NAME_LENGTH, sql } from "@openlaw/db";
+import {
+  and,
+  asc,
+  contracts,
+  count,
+  documentFolders,
+  documents,
+  eq,
+  isNotNull,
+  isNull,
+  MAX_FOLDER_NAME_LENGTH,
+  sql,
+} from "@openlaw/db";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
-import { contractTeamScope, type ContractAccessReader } from "../../lib/contract-access.js";
+import {
+  contractTeamScope,
+  documentAudienceScope,
+  type ContractAccessReader,
+} from "../../lib/contract-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
 /** The contract read floor (CTR-021), which is the folder read floor
@@ -90,10 +119,17 @@ const requireMember = requireRole("administrator", "legal_team_member");
  * exist — on the folder routes as on every document route (DD-014). */
 const NO_CONTRACT = "No contract exists with this number.";
 
-/** And a folder on such a contract answers the same way. Its own id says
+/**
+ * And a folder on such a contract answers the same way. Its own id says
  * nothing about which record it belongs to, so a refusal here would be
- * the leak the 404 exists to prevent. */
-const NO_FOLDER = "No folder exists with this reference.";
+ * the leak the 404 exists to prevent.
+ *
+ * Exported because the document routes refuse a folder too — a filing
+ * into another record's folder, and a folder-filtered read of one
+ * (M13/3). The two refusals have to be one refusal, so they share the
+ * sentence rather than each holding a copy of it.
+ */
+export const NO_FOLDER = "No folder exists with this reference.";
 
 /**
  * How deep the tree may go, counting the record root's own folders as
@@ -135,6 +171,23 @@ const FolderSchema = z.object({
   name: z.string(),
   /** The folder this one sits inside, or null at the record root. */
   parentId: z.string().nullable(),
+  /**
+   * How many live documents are filed **directly** in this folder, for
+   * the viewer asking (M13/3, DES-033).
+   *
+   * Directly, because the count states what opening the folder will
+   * show: a document filed one level down belongs to that folder's own
+   * count, and a number that summed a subtree would disagree with the
+   * listing under it.
+   *
+   * Scoped to the viewer, and that is the part that carries a promise.
+   * An archived document is out of it (DOC-010) and so is a confidential
+   * document this viewer is outside the audience of (DD-014) — left out
+   * by the same predicate that leaves it out of the listing. So a zero
+   * here reads "Empty" and says nothing about whether there is anything
+   * to be empty of.
+   */
+  documentCount: z.int().nonnegative(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
 });
@@ -297,11 +350,51 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
       .orderBy(asc(sql`lower(${documentFolders.name})`), asc(documentFolders.id));
   }
 
-  function toFolder(row: FolderRow) {
+  /**
+   * How much is filed in each of one record's folders, for one viewer.
+   *
+   * One grouped read for the whole tree rather than one per folder: the
+   * section draws every count at once, and a query per row is how a
+   * record with twelve folders becomes twelve round trips.
+   *
+   * **The scope is the one every document read already passes through**
+   * (DD-014). `documentAudienceScope` decides it, exactly as the list,
+   * the download, and the record's own section count do — there is no
+   * second predicate here, because a second one is how a count and a
+   * listing come to disagree, and a count that disagreed with its
+   * listing would announce the very rows DD-014 leaves out. Archived
+   * documents are out of it too (DOC-010): being off the list and out of
+   * the count is what archiving one means.
+   *
+   * A folder nothing is filed in is simply absent from the answer, and
+   * the caller reads that as zero.
+   */
+  async function countsOf(
+    db: ContractAccessReader & Executor,
+    user: AuthenticatedUser,
+    contractId: string,
+  ): Promise<Map<string, number>> {
+    const rows = await db
+      .select({ folderId: documents.folderId, filed: count() })
+      .from(documents)
+      .where(
+        and(
+          eq(documents.contractId, contractId),
+          isNotNull(documents.folderId),
+          isNull(documents.archivedAt),
+          documentAudienceScope(db, user),
+        ),
+      )
+      .groupBy(documents.folderId);
+    return new Map(rows.map((row) => [row.folderId!, row.filed]));
+  }
+
+  function toFolder(row: FolderRow, filed: number) {
     return {
       id: row.id,
       name: row.name,
       parentId: row.parentId,
+      documentCount: filed,
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
     };
@@ -310,8 +403,17 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
   /** The record's folders as the routes answer them, read back through
    * the same projection the list uses — so what a write returns is what
    * the next load will draw. */
-  async function foldersEnvelope(db: Executor, contractId: string) {
-    return { folders: (await foldersOf(db, contractId)).map(toFolder) };
+  async function foldersEnvelope(
+    db: ContractAccessReader & Executor,
+    user: AuthenticatedUser,
+    contractId: string,
+  ) {
+    // One after the other, never in parallel: this runs inside a
+    // transaction as often as not, and a transaction is one connection —
+    // two statements racing down it is not a speed-up.
+    const rows = await foldersOf(db, contractId);
+    const counts = await countsOf(db, user, contractId);
+    return { folders: rows.map((row) => toFolder(row, counts.get(row.id) ?? 0)) };
   }
 
   /**
@@ -494,7 +596,15 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
           "than one level at a time, because a record's folder set is " +
           "small and the Documents section draws the whole tree from it. " +
           "Siblings are ordered by name without case, the way a file " +
-          "manager lists a directory. Access is inherited from the " +
+          "manager lists a directory. Each folder carries how many live " +
+          "documents are filed directly in it, counted for the viewer " +
+          "asking: an archived document is out of the count (DOC-010), " +
+          "and so is a confidential document this viewer is outside the " +
+          "audience of (DD-014) — left out by the same predicate that " +
+          "leaves it out of the folder's listing, so a count can never " +
+          "announce a document the listing hid. A zero therefore reads " +
+          "as an empty folder whether it is empty or its contents are " +
+          "not this viewer's to see. Access is inherited from the " +
           "contract and nothing else: a Contributor on the team reads " +
           "the tree, and anyone who cannot reach the contract — a " +
           "Contributor who is not on it, a Legal Team Member outside a " +
@@ -511,7 +621,7 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!contract) throw httpError(404, NO_CONTRACT);
       // An archived record still reads: archiving is a soft delete for
       // mistakes and imports, and restore has to be reachable.
-      return await foldersEnvelope(app.db, contract.id);
+      return await foldersEnvelope(app.db, request.user, contract.id);
     },
   );
 
@@ -579,7 +689,7 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
           payload: { folderId: created!.id, name, parentName: parent?.name ?? null },
         });
 
-        return foldersEnvelope(tx, contract.id);
+        return foldersEnvelope(tx, request.user, contract.id);
       });
       return reply.status(201).send(folders);
     },
@@ -686,7 +796,7 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
           });
         }
 
-        return foldersEnvelope(tx, target.contractId);
+        return foldersEnvelope(tx, request.user, target.contractId);
       });
     },
   );
@@ -698,11 +808,16 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "deleteContractFolder",
         summary:
-          "Dissolve a folder (DOC-006). Its child folders are re-filed " +
+          "Dissolve a folder (DOC-006). Its child folders and the " +
+          "documents filed in it are re-filed " +
           "into its parent — the record root when it had none — and " +
           "nothing is destroyed: this route deletes no document, and " +
           "erasing one stays DOC-010's separate Administrator-only " +
-          "path. Because the children are re-filed rather than removed, " +
+          "path. Every document in the folder moves, the archived ones " +
+          "and the confidential ones the caller cannot see included: " +
+          "the re-file is a fact about the record's organization, not a " +
+          "read, and a row left behind would point at a folder that no " +
+          "longer exists. Because the children are re-filed rather than removed, " +
           "a delete that would put two folders of the same name in one " +
           "place is refused 409 rather than resolved by inventing a " +
           "name. Appends folder.deleted on the owning contract " +
@@ -745,6 +860,16 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
             .set({ parentId: target.parentId })
             .where(eq(documentFolders.parentId, target.id));
         }
+        // And the paper filed here goes where the child folders go
+        // (M13/3). No audience scope and no archived filter on this one:
+        // it is the record's organization being rewritten, not read, and
+        // a document left pointing at a folder about to be deleted would
+        // be an orphan the foreign key then refuses. Nothing is lost —
+        // the documents move up one level, exactly as the folders do.
+        await tx
+          .update(documents)
+          .set({ folderId: target.parentId })
+          .where(eq(documents.folderId, target.id));
         await tx.delete(documentFolders).where(eq(documentFolders.id, target.id));
         await recordActivity(tx, {
           entityType: "contract",
@@ -755,7 +880,7 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
           payload: { folderId: target.id, name: target.name },
         });
 
-        return foldersEnvelope(tx, target.contractId);
+        return foldersEnvelope(tx, request.user, target.contractId);
       });
     },
   );

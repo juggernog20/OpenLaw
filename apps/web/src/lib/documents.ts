@@ -30,6 +30,16 @@ type ListResponse =
 /** One document on a record, with its whole version chain. */
 export type ContractDocument = ListResponse["documents"][number];
 
+/**
+ * The listing context that is the record root — the documents filed in
+ * no folder (DOC-006, M13/3).
+ *
+ * The filter has three answers and one of them has no id to be addressed
+ * by, so the record root is addressed by a word. The seam reserves it:
+ * every id in the API is a uuidv7, so no folder can be called this.
+ */
+export const FOLDER_ROOT = "root";
+
 /** One immutable file snapshot (DOC-001). */
 export type DocumentVersion = ContractDocument["versions"][number];
 
@@ -353,7 +363,15 @@ async function send(url: string, draft: UploadDraft): Promise<UploadOutcome> {
  */
 export async function updateDocument(
   documentId: string,
-  patch: Readonly<{ title?: string; description?: string | null; isConfidential?: boolean }>,
+  patch: Readonly<{
+    title?: string;
+    description?: string | null;
+    isConfidential?: boolean;
+    /** Where the document is filed (DOC-006, M13/3): a folder on its own
+     * record, or `null` for the record root. Omitting the field moves
+     * nothing — `null` and absent are two different requests. */
+    folderId?: string | null;
+  }>,
 ): Promise<UploadOutcome> {
   const { data, error } = await api.PATCH("/api/v1/documents/{documentId}", {
     params: { path: { documentId } },
@@ -416,17 +434,23 @@ export async function clearExecutedVersion(documentId: string): Promise<UploadOu
 }
 
 /**
- * Reads one contract's paper.
+ * Reads one listing of one contract's paper.
  *
- * The record page loads the live list with everything else, so this is
- * the re-read the archived view needs: the archived rows only exist
- * server-side, and coming back to the live view should not trust a
- * stale list either.
+ * The record page loads the record root with everything else, so this is
+ * the re-read the archived view needs, the read a folder makes when it
+ * is opened, and the read a "Show more" makes inside either.
+ *
+ * `folder` is which listing (DOC-006, M13/3): {@link FOLDER_ROOT} for
+ * the documents filed nowhere, a folder's own id for what is filed in
+ * it, or omitted for the record's whole paper. The cursor is a position
+ * **inside** whichever listing was asked for, so paging never crosses
+ * from one folder into another (DES-031).
  */
 export async function readContractDocuments(
   contractNumber: number,
   includeArchived: boolean,
   cursor?: string,
+  folder?: string,
 ): Promise<PaperOutcome> {
   const { data, error } = await api.GET("/api/v1/contracts/{number}/documents", {
     params: {
@@ -434,6 +458,7 @@ export async function readContractDocuments(
       query: {
         ...(includeArchived ? { includeArchived: "true" as const } : {}),
         ...(cursor ? { cursor } : {}),
+        ...(folder ? { folder } : {}),
       },
     },
   });

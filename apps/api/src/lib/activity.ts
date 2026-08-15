@@ -141,6 +141,13 @@ export type ActivityAction =
   // file is there.
   | "document.confidentiality_set"
   | "document.confidentiality_cleared"
+  // Where a document sits in the record's tree (M13/3, DOC-006). One
+  // verb for both directions — into a folder and back out to the record
+  // root — because it is one act with a destination, and the payload
+  // carries both folders by name so the entry outlives a rename or a
+  // dissolve. A null on either side is the record root, which has no
+  // name because it is not a folder.
+  | "document.filed"
   // How a record's paper is filed (M13/2, DOC-006). The entry hangs off
   // the owning contract, like every other entry in this module, and its
   // payload carries the folder's **name** — a folder is renamed and
