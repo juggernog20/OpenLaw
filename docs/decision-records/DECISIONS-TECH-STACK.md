@@ -608,7 +608,7 @@ CTR-012's soft gate (#235) is the first refusal a client has to **act on**. `PAT
 
 - `apps/api/src/lib/problem.ts` owns the field; `app.ts`'s error handler renders it. Every existing refusal is unchanged.
 - The web helper layer gains `problemType` beside `problemDetail` (`apps/web/src/lib/messages.ts`).
-- Each acted-on type is declared next to the rule that throws it — `SOFT_GATE_PROBLEM_TYPE` in `apps/api/src/lib/soft-gate.ts`, mirrored for the client in `apps/web/src/lib/approvals.ts`.
+- Each acted-on type is declared once, in `packages/shared` (TECH-016's home for definitions both ends of the wire must agree on), and imported by the rule that throws it and the client that branches on it — `SOFT_GATE_PROBLEM_TYPE` in `packages/shared/src/index.ts` is the first. A mirrored copy per side was rejected in review: two copies that drifted would not fail loudly — the client would simply stop recognizing the refusal.
 - The OpenAPI document does not enumerate the types; they are documented in the route summary that can raise them.
 
 ## Index of decisions
