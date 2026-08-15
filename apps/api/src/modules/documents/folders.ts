@@ -76,8 +76,23 @@
  * delete each append one record-tier entry on the owning contract, and
  * each payload carries the folder's name — so the entry still says what
  * happened after a later rename or delete has taken the row's name away.
- * A folder that a bulk drop find-or-creates will write none: the drop's
+ * A folder that a bulk drop find-or-creates writes none: the drop's
  * story is its uploads, not its traversal.
+ *
+ * **A folder drop addresses a chain by path** (M13/5, DOC-011).
+ * {@link findOrCreateFolderPath} walks a relative path segment by
+ * segment and creates what is missing, and it is the same act whether an
+ * upload carries the path or a create route is asked for an empty
+ * directory. It runs **under the owning contract's row lock**, on the
+ * same one-read tree the invariants above are decided from, which is
+ * what makes N uploads racing on one path converge on one folder rather
+ * than manufacture N of them: the second request waits at the lock and
+ * then reads the folder the first one wrote.
+ *
+ * Its sibling comparison is {@link assertNameFree}'s own, because it has
+ * to be — a path segment that differed only in case from a folder
+ * already there would otherwise either duplicate the folder or hit the
+ * partial unique index behind it.
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -94,6 +109,7 @@ import {
   isNull,
   MAX_FOLDER_NAME_LENGTH,
   sql,
+  type Db,
 } from "@openlaw/db";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
@@ -143,6 +159,366 @@ export const NO_FOLDER = "No folder exists with this reference.";
  * narrowing it later would strand folders the rule no longer allows.
  */
 const MAX_FOLDER_DEPTH = 10;
+
+/**
+ * The one separator a folder path is written with (DOC-011).
+ *
+ * One rather than two: a folder name may hold neither slash
+ * ({@link folderName}), so a Windows-shaped path arrives as a name that
+ * breaks the rules and is refused as one, rather than being guessed at.
+ */
+const PATH_SEPARATOR = "/";
+
+/**
+ * The longest a folder path may be as a string, before it is a path.
+ *
+ * A body and a form field are both text before anything reads them, so
+ * the bound is stated once and applied to both. It is the deepest chain
+ * the tree allows, each segment at a folder name's own ceiling, plus its
+ * separators — so no path the rules would accept can hit it.
+ */
+export const MAX_FOLDER_PATH_LENGTH = MAX_FOLDER_DEPTH * (MAX_FOLDER_NAME_LENGTH + 1);
+
+/**
+ * A database handle or a transaction inside one, as the rest of the API
+ * types it.
+ *
+ * The helpers below take it because they are shared by this module's
+ * routes and by the upload route (M13/5): one set of folder rules, read
+ * and written through whichever executor the caller is already holding
+ * the contract row lock on.
+ */
+type FolderExecutor = Db | Parameters<Parameters<Db["transaction"]>[0]>[0];
+
+/** One folder as the tree is drawn from it. */
+interface FolderRow {
+  id: string;
+  name: string;
+  parentId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Every folder on one contract, siblings in the order they are drawn.
+ *
+ * Ordered by name without case, which is how a file manager lists a
+ * directory and what DES-033 draws: `display_order` is deferred with the
+ * reorder surface that would read it. The id breaks a tie between two
+ * names that differ only in case, so the order is total and the same
+ * answer comes back twice.
+ *
+ * The whole set, never one level: the section draws the tree from one
+ * read, and every invariant below is asked of the same set.
+ */
+async function foldersOf(db: FolderExecutor, contractId: string): Promise<FolderRow[]> {
+  return db
+    .select({
+      id: documentFolders.id,
+      name: documentFolders.name,
+      parentId: documentFolders.parentId,
+      createdAt: documentFolders.createdAt,
+      updatedAt: documentFolders.updatedAt,
+    })
+    .from(documentFolders)
+    .where(eq(documentFolders.contractId, contractId))
+    .orderBy(asc(sql`lower(${documentFolders.name})`), asc(documentFolders.id));
+}
+
+/**
+ * A name, checked once and refused one rule at a time.
+ *
+ * Trimmed, because a name with an edge space sorts and compares as a
+ * name nobody typed. Non-empty, because a folder with no name cannot be
+ * pointed at. Bounded at the filesystem's own ceiling, because a folder
+ * is created from a directory name as often as it is typed (DOC-011).
+ * And free of the path separator, because a folder drop addresses a
+ * chain by path and a name holding a separator could not be one segment
+ * of one.
+ *
+ * Exported because a dropped path's segments are folder names and are
+ * held to exactly these rules (M13/5). One copy of them, so a directory
+ * a drop creates could equally have been typed.
+ */
+export function folderName(raw: string): string {
+  const name = raw.trim();
+  if (name.length === 0) throw httpError(400, "Give the folder a name.");
+  if (name.length > MAX_FOLDER_NAME_LENGTH) {
+    throw httpError(400, `A folder name can be at most ${MAX_FOLDER_NAME_LENGTH} characters.`);
+  }
+  if (name.includes("/") || name.includes("\\")) {
+    throw httpError(400, "A folder name cannot contain a slash. Make a folder inside instead.");
+  }
+  return name;
+}
+
+/**
+ * A relative folder path, as its segments (M13/5, DOC-011).
+ *
+ * The shape is deliberately strict, because the only thing that sends
+ * one is a client walking a dropped directory tree and it can send a
+ * clean path. A path that starts or ends with a separator, or holds an
+ * empty segment, is a client that built the string badly rather than a
+ * person who typed something — so it is refused plainly for that one
+ * file, and the rest of the batch carries on.
+ *
+ * `.` and `..` are refused rather than resolved. Nothing here touches a
+ * filesystem — a storage key is minted from two ids and never from a
+ * name — so they are not an escape, they are a folder called `..`, which
+ * is a folder nobody meant to make.
+ *
+ * Every segment is a folder name and goes through {@link folderName}, so
+ * a drop can create nothing that could not have been typed.
+ */
+export function folderPathSegments(raw: string): string[] {
+  const path = raw.trim();
+  if (path.length === 0) return [];
+  if (path.startsWith(PATH_SEPARATOR) || path.endsWith(PATH_SEPARATOR)) {
+    throw httpError(400, "A folder path cannot start or end with a slash.");
+  }
+  const parts = path.split(PATH_SEPARATOR);
+  // The count first, before a single segment is looked at, and before a
+  // byte of the file has been read: a path this deep is refused on its
+  // own shape whatever it is dropped onto, and refusing it here means a
+  // thousand-segment path costs a split rather than a thousand checks.
+  // The chain is asked about again under the lock, where where it lands
+  // is known.
+  assertDepthWithin(parts.length);
+  return parts.map((segment) => {
+    if (segment.trim().length === 0) {
+      throw httpError(400, "A folder path cannot have an empty segment.");
+    }
+    if (segment.trim() === "." || segment.trim() === "..") {
+      throw httpError(400, "A folder path cannot contain a . or .. segment.");
+    }
+    return folderName(segment);
+  });
+}
+
+/** How the tree is read: every folder by its id, and every folder's
+ * children by their parent's. Built once per write from the one read the
+ * lock protects. */
+interface Tree {
+  byId: Map<string, FolderRow>;
+  children: Map<string | null, FolderRow[]>;
+}
+
+function treeOf(rows: readonly FolderRow[]): Tree {
+  const byId = new Map<string, FolderRow>();
+  const children = new Map<string | null, FolderRow[]>();
+  for (const row of rows) {
+    byId.set(row.id, row);
+    const siblings = children.get(row.parentId);
+    if (siblings) siblings.push(row);
+    else children.set(row.parentId, [row]);
+  }
+  return { byId, children };
+}
+
+/** One row put into a tree already built, so a chain being created
+ * segment by segment sees what the segment before it made. */
+function addToTree(tree: Tree, row: FolderRow): void {
+  tree.byId.set(row.id, row);
+  const siblings = tree.children.get(row.parentId);
+  if (siblings) siblings.push(row);
+  else tree.children.set(row.parentId, [row]);
+}
+
+/**
+ * The parent a write named, as a row of this contract's own tree.
+ *
+ * Invariant 1 (DOC-008): a folder and its parent share one owning
+ * record. It holds because the tree was read for **this** contract — so
+ * a parent on another record is simply not in it, and is answered
+ * exactly as a parent that was never created. A folder's id says nothing
+ * about which record it belongs to, so any other refusal would say that
+ * the folder is there.
+ */
+function parentIn(tree: Tree, parentId: string | null): FolderRow | null {
+  if (parentId === null) return null;
+  const parent = tree.byId.get(parentId);
+  if (!parent) throw httpError(404, NO_FOLDER);
+  return parent;
+}
+
+/** How deep a folder sits, counting the record root's own folders as
+ * level 1. The walk is bounded by the tree's size, so a chain the write
+ * path somehow let cycle cannot spin here. */
+function depthOf(tree: Tree, folder: FolderRow | null): number {
+  let depth = 0;
+  let at = folder;
+  while (at && depth <= tree.byId.size) {
+    depth += 1;
+    at = at.parentId === null ? null : (tree.byId.get(at.parentId) ?? null);
+  }
+  return depth;
+}
+
+/**
+ * How many levels hang below a folder — 0 for one with no children.
+ *
+ * A move carries its whole subtree, so this is what the depth ceiling
+ * has to be asked about rather than the moved row alone.
+ *
+ * Bounded by the tree's own size, as the two walks above it are: the
+ * write path refuses a cycle, and code that trusted that without a bound
+ * would answer a stack overflow rather than a refusal if a row ever got
+ * past it.
+ */
+function heightBelow(tree: Tree, folderId: string, remaining = tree.byId.size): number {
+  if (remaining <= 0) return 0;
+  const children = tree.children.get(folderId) ?? [];
+  let height = 0;
+  for (const child of children) {
+    height = Math.max(height, 1 + heightBelow(tree, child.id, remaining - 1));
+  }
+  return height;
+}
+
+/**
+ * The sibling of one parent that reads as this name, or nothing.
+ *
+ * **The one comparison** invariant 3 and find-or-create both ask, so
+ * they cannot drift: a path segment that differs only in case from a
+ * folder already there finds that folder rather than trying to make a
+ * second one. Without case, because that is the same reading the sort
+ * takes (DES-033) — two siblings that read as the same word may not both
+ * exist.
+ */
+function siblingNamed(tree: Tree, parentId: string | null, name: string): FolderRow | undefined {
+  const wanted = name.toLowerCase();
+  return (tree.children.get(parentId) ?? []).find(
+    (sibling) => sibling.name.toLowerCase() === wanted,
+  );
+}
+
+/**
+ * Invariant 3: sibling names are unique within their parent, compared
+ * without case.
+ *
+ * `except` is the row being renamed or moved, which must not collide
+ * with itself.
+ */
+function assertNameFree(tree: Tree, parentId: string | null, name: string, except?: string): void {
+  const taken = siblingNamed(tree, parentId, name);
+  if (taken && taken.id !== except) throw httpError(409, `A folder named ${name} is already here.`);
+}
+
+/** Invariant 2: the parent chain never cycles. A folder may not be moved
+ * inside itself, nor inside anything already under it — the walk up from
+ * the new parent must never meet the folder being moved. */
+function assertNoCycle(tree: Tree, folderId: string, parent: FolderRow | null): void {
+  let at = parent;
+  let steps = 0;
+  while (at && steps <= tree.byId.size) {
+    if (at.id === folderId) {
+      throw httpError(409, "A folder cannot be moved inside itself.");
+    }
+    at = at.parentId === null ? null : (tree.byId.get(at.parentId) ?? null);
+    steps += 1;
+  }
+}
+
+/** The ceiling, in one sentence — said the same way whether a move, a
+ * create, or a dropped path is what would break it. */
+function assertDepthWithin(depth: number): void {
+  if (depth > MAX_FOLDER_DEPTH) {
+    throw httpError(409, `Folders can be nested ${MAX_FOLDER_DEPTH} deep. Put this one higher up.`);
+  }
+}
+
+/** The depth ceiling, asked of where the folder lands and of everything
+ * it brings with it. */
+function assertDepth(tree: Tree, parent: FolderRow | null, subtreeHeight: number): void {
+  assertDepthWithin(depthOf(tree, parent) + 1 + subtreeHeight);
+}
+
+/** One folder, as everything outside this module needs it: what to file
+ * a document into, and what to call it in an activity payload. */
+export interface ResolvedFolder {
+  id: string;
+  name: string;
+}
+
+/**
+ * Where a dropped file lands: a folder already on the record, a relative
+ * path beneath it, or both (M13/5, DOC-011).
+ *
+ * The two compose rather than exclude each other, because the drop can
+ * carry both: dropping a tree onto a folder row files the tree **inside
+ * that row**. `folderId` is the base the gesture landed on — the record
+ * root when there is none — and `path` is the chain to find-or-create
+ * beneath it.
+ */
+export interface FolderDestination {
+  /** A folder already on this record, or null for the record root. */
+  folderId: string | null;
+  /** The chain beneath it, already checked segment by segment. Empty
+   * means the base itself. */
+  path: readonly string[];
+}
+
+/**
+ * Find-or-creates a folder chain under one record, and answers the
+ * folder the file lands in (M13/5, DOC-011).
+ *
+ * **The caller must already hold the owning contract's row lock.** That
+ * lock is the whole mechanism: every folder write on one record
+ * serializes behind it, so N uploads racing on one path converge on one
+ * folder — the second reads the tree the first has committed and finds
+ * the segment already there. Without it two of them would both find
+ * nothing and both insert, and a legacy book would arrive filed into two
+ * folders of one name.
+ *
+ * **It writes no activity** (DD-017). A folder a drop creates on its way
+ * past is traversal, not an act somebody performed; the drop's story is
+ * the `document.created` entries its files leave behind, and each of
+ * those names the folder it landed in. A folder created from a control
+ * still narrates itself, in the route that offers that control.
+ *
+ * The invariants are the module's own: the base must be a folder of this
+ * record (a folder on another one is not in this tree and is answered
+ * exactly as one that never existed), the chain may not pass the depth
+ * ceiling, and each segment is matched against its siblings by the same
+ * case-insensitive comparison that refuses a duplicate.
+ */
+export async function findOrCreateFolderPath(
+  tx: FolderExecutor,
+  contractId: string,
+  destination: FolderDestination,
+): Promise<ResolvedFolder | null> {
+  const tree = treeOf(await foldersOf(tx, contractId));
+  let at = parentIn(tree, destination.folderId);
+  // Asked once, of the whole chain, before anything is written: a path
+  // that would end up too deep creates none of its shallower folders
+  // either. Half a chain is worse than no chain.
+  assertDepthWithin(depthOf(tree, at) + destination.path.length);
+
+  for (const segment of destination.path) {
+    const existing = siblingNamed(tree, at?.id ?? null, segment);
+    if (existing) {
+      // The folder already there wins, name and all: a segment that
+      // differs only in case is the same folder, not a second one.
+      at = existing;
+      continue;
+    }
+    const [created] = await tx
+      .insert(documentFolders)
+      .values({ contractId, parentId: at?.id ?? null, name: segment })
+      .returning({
+        id: documentFolders.id,
+        name: documentFolders.name,
+        parentId: documentFolders.parentId,
+        createdAt: documentFolders.createdAt,
+        updatedAt: documentFolders.updatedAt,
+      });
+    // Into the in-memory tree as well, so the next segment down sees
+    // the folder this one just made.
+    addToTree(tree, created!);
+    at = created!;
+  }
+  return at === null ? null : { id: at.id, name: at.name };
+}
 
 /** CTR-003's reference, as every contract route takes it. */
 const NumberParams = z.object({ number: z.coerce.number().int().positive() });
@@ -204,10 +580,34 @@ const FolderSchema = z.object({
  */
 const FoldersEnvelope = z.object({ folders: z.array(FolderSchema) });
 
+/**
+ * A create, in one of its two shapes.
+ *
+ * `name` is a person making a folder: one folder, refused if a sibling
+ * already reads the same, and narrated (DD-017).
+ *
+ * `path` is a drop recreating an empty directory of a dropped tree
+ * (M13/5, DOC-011): the chain is find-or-created segment by segment, a
+ * segment already there is used rather than refused, and nothing is
+ * narrated — a folder a drop passed through is traversal, not an act.
+ *
+ * Exactly one of the two, checked in the handler rather than by a
+ * cross-field rule here, for {@link RawNameSchema}'s reason: a schema
+ * refusal answers one generic sentence for the whole body, and this is a
+ * sentence the caller can act on.
+ */
 const CreateFolderBody = z.object({
-  name: RawNameSchema,
+  name: RawNameSchema.optional(),
+  /**
+   * A relative folder path, `/` separated, to find-or-create beneath
+   * the parent.
+   *
+   * Bounded here as well as segment by segment below, because a body is
+   * a string before it is a path.
+   */
+  path: z.string().max(MAX_FOLDER_PATH_LENGTH).optional(),
   /** The folder to create this one inside, or omitted for the record
-   * root. */
+   * root. A `path` is relative to it. */
   parentId: RecordIdSchema.optional(),
 });
 
@@ -315,41 +715,6 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
     return row ?? null;
   }
 
-  /** One folder as the tree is drawn from it. */
-  interface FolderRow {
-    id: string;
-    name: string;
-    parentId: string | null;
-    createdAt: Date;
-    updatedAt: Date;
-  }
-
-  /**
-   * Every folder on one contract, siblings in the order they are drawn.
-   *
-   * Ordered by name without case, which is how a file manager lists a
-   * directory and what DES-033 draws: `display_order` is deferred with
-   * the reorder surface that would read it. The id breaks a tie between
-   * two names that differ only in case, so the order is total and the
-   * same answer comes back twice.
-   *
-   * The whole set, never one level: the section draws the tree from one
-   * read, and every invariant below is asked of the same set.
-   */
-  async function foldersOf(db: Executor, contractId: string): Promise<FolderRow[]> {
-    return db
-      .select({
-        id: documentFolders.id,
-        name: documentFolders.name,
-        parentId: documentFolders.parentId,
-        createdAt: documentFolders.createdAt,
-        updatedAt: documentFolders.updatedAt,
-      })
-      .from(documentFolders)
-      .where(eq(documentFolders.contractId, contractId))
-      .orderBy(asc(sql`lower(${documentFolders.name})`), asc(documentFolders.id));
-  }
-
   /**
    * How much is filed in each of one record's folders, for one viewer.
    *
@@ -414,147 +779,6 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
     const rows = await foldersOf(db, contractId);
     const counts = await countsOf(db, user, contractId);
     return { folders: rows.map((row) => toFolder(row, counts.get(row.id) ?? 0)) };
-  }
-
-  /**
-   * A name, checked once and refused one rule at a time.
-   *
-   * Trimmed, because a name with an edge space sorts and compares as a
-   * name nobody typed. Non-empty, because a folder with no name cannot
-   * be pointed at. Bounded at the filesystem's own ceiling, because a
-   * folder is created from a directory name as often as it is typed
-   * (DOC-011). And free of the path separator, because a folder drop
-   * addresses a chain by path and a name holding a separator could not
-   * be one segment of one.
-   */
-  function folderName(raw: string): string {
-    const name = raw.trim();
-    if (name.length === 0) throw httpError(400, "Give the folder a name.");
-    if (name.length > MAX_FOLDER_NAME_LENGTH) {
-      throw httpError(400, `A folder name can be at most ${MAX_FOLDER_NAME_LENGTH} characters.`);
-    }
-    if (name.includes("/") || name.includes("\\")) {
-      throw httpError(400, "A folder name cannot contain a slash. Make a folder inside instead.");
-    }
-    return name;
-  }
-
-  /** How the tree is read: every folder by its id, and every folder's
-   * children by their parent's. Built once per write from the one read
-   * the lock protects. */
-  interface Tree {
-    byId: Map<string, FolderRow>;
-    children: Map<string | null, FolderRow[]>;
-  }
-
-  function treeOf(rows: readonly FolderRow[]): Tree {
-    const byId = new Map<string, FolderRow>();
-    const children = new Map<string | null, FolderRow[]>();
-    for (const row of rows) {
-      byId.set(row.id, row);
-      const siblings = children.get(row.parentId);
-      if (siblings) siblings.push(row);
-      else children.set(row.parentId, [row]);
-    }
-    return { byId, children };
-  }
-
-  /**
-   * The parent a write named, as a row of this contract's own tree.
-   *
-   * Invariant 1 (DOC-008): a folder and its parent share one owning
-   * record. It holds because the tree was read for **this** contract —
-   * so a parent on another record is simply not in it, and is answered
-   * exactly as a parent that was never created. A folder's id says
-   * nothing about which record it belongs to, so any other refusal would
-   * say that the folder is there.
-   */
-  function parentIn(tree: Tree, parentId: string | null): FolderRow | null {
-    if (parentId === null) return null;
-    const parent = tree.byId.get(parentId);
-    if (!parent) throw httpError(404, NO_FOLDER);
-    return parent;
-  }
-
-  /** How deep a folder sits, counting the record root's own folders as
-   * level 1. The walk is bounded by the tree's size, so a chain the
-   * write path somehow let cycle cannot spin here. */
-  function depthOf(tree: Tree, folder: FolderRow | null): number {
-    let depth = 0;
-    let at = folder;
-    while (at && depth <= tree.byId.size) {
-      depth += 1;
-      at = at.parentId === null ? null : (tree.byId.get(at.parentId) ?? null);
-    }
-    return depth;
-  }
-
-  /**
-   * How many levels hang below a folder — 0 for one with no children.
-   *
-   * A move carries its whole subtree, so this is what the depth ceiling
-   * has to be asked about rather than the moved row alone.
-   *
-   * Bounded by the tree's own size, as the two walks above it are: the
-   * write path refuses a cycle, and code that trusted that without a
-   * bound would answer a stack overflow rather than a refusal if a row
-   * ever got past it.
-   */
-  function heightBelow(tree: Tree, folderId: string, remaining = tree.byId.size): number {
-    if (remaining <= 0) return 0;
-    const children = tree.children.get(folderId) ?? [];
-    let height = 0;
-    for (const child of children) {
-      height = Math.max(height, 1 + heightBelow(tree, child.id, remaining - 1));
-    }
-    return height;
-  }
-
-  /**
-   * Invariant 3: sibling names are unique within their parent, compared
-   * without case.
-   *
-   * Without case, because that is the same reading the sort already
-   * takes (DES-033): two siblings that sort as equal and read as the
-   * same word may not both exist. `except` is the row being renamed or
-   * moved, which must not collide with itself.
-   */
-  function assertNameFree(
-    tree: Tree,
-    parentId: string | null,
-    name: string,
-    except?: string,
-  ): void {
-    const taken = (tree.children.get(parentId) ?? []).some(
-      (sibling) => sibling.id !== except && sibling.name.toLowerCase() === name.toLowerCase(),
-    );
-    if (taken) throw httpError(409, `A folder named ${name} is already here.`);
-  }
-
-  /** Invariant 2: the parent chain never cycles. A folder may not be
-   * moved inside itself, nor inside anything already under it — the walk
-   * up from the new parent must never meet the folder being moved. */
-  function assertNoCycle(tree: Tree, folderId: string, parent: FolderRow | null): void {
-    let at = parent;
-    let steps = 0;
-    while (at && steps <= tree.byId.size) {
-      if (at.id === folderId) {
-        throw httpError(409, "A folder cannot be moved inside itself.");
-      }
-      at = at.parentId === null ? null : (tree.byId.get(at.parentId) ?? null);
-      steps += 1;
-    }
-  }
-
-  /** The depth ceiling, asked of where the folder lands and of
-   * everything it brings with it. */
-  function assertDepth(tree: Tree, parent: FolderRow | null, subtreeHeight: number): void {
-    if (depthOf(tree, parent) + 1 + subtreeHeight > MAX_FOLDER_DEPTH) {
-      throw httpError(
-        409,
-        `Folders can be nested ${MAX_FOLDER_DEPTH} deep. Put this one higher up.`,
-      );
-    }
   }
 
   /**
@@ -644,6 +868,15 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
           "folder deeper than the tree's ceiling is refused 409. " +
           "Appends folder.created on the owning contract (DD-017), " +
           "carrying the name so the entry outlives a later rename. " +
+          "Send path instead of name to recreate an empty directory of " +
+          "a dropped tree (DOC-011): the relative chain is " +
+          "find-or-created segment by segment beneath parentId, under " +
+          "the owning contract's row lock, so a segment already there " +
+          "is used rather than refused and two drops racing on one path " +
+          "converge on one folder. That form writes no activity — a " +
+          "folder a drop passed through is traversal rather than an act " +
+          "somebody performed, and the drop's story is its uploads " +
+          "(DD-017). Exactly one of name and path. " +
           "Answers the record's whole folder set, because that is what " +
           "the tree is drawn from. Member+: a Contributor who reaches " +
           "the record is refused 403 rather than 404, because they can " +
@@ -656,12 +889,37 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const { name: rawName, parentId } = request.body;
+      const { name: rawName, path: rawPath, parentId } = request.body;
+      // One act or the other, never both and never neither. Asked before
+      // the transaction opens: a request that names nothing to make has
+      // nothing to lock a row for.
+      if ((rawName === undefined) === (rawPath === undefined)) {
+        throw httpError(400, "Give the folder a name, or a path to recreate.");
+      }
+
+      // The drop's shape (M13/5): the chain is find-or-created under the
+      // contract's row lock and nothing is narrated, because a folder a
+      // drop passed through is traversal rather than an act.
+      if (rawPath !== undefined) {
+        const path = folderPathSegments(rawPath);
+        if (path.length === 0) throw httpError(400, "Give the folder a path to recreate.");
+        const recreated = await app.db.transaction(async (tx) => {
+          const contract = await reachedContract(tx, request.user, request.params.number, true);
+          assertOpen(contract);
+          await findOrCreateFolderPath(tx, contract.id, {
+            folderId: parentId ?? null,
+            path,
+          });
+          return foldersEnvelope(tx, request.user, contract.id);
+        });
+        return reply.status(201).send(recreated);
+      }
+
       const folders = await app.db.transaction(async (tx) => {
         const contract = await reachedContract(tx, request.user, request.params.number, true);
         assertOpen(contract);
 
-        const name = folderName(rawName);
+        const name = folderName(rawName!);
         // One read of the record's whole set, under the lock above, and
         // every question below is asked of it: the parent, the sibling
         // names, and the depth. Nothing can change underneath between

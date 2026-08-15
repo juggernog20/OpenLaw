@@ -181,7 +181,19 @@ import { attachmentDisposition, inlineDisposition, MEGABYTE } from "../../lib/up
 // refusal is imported rather than copied: a folder on another contract
 // answers exactly as one that was never created (DOC-006), and two
 // copies of that sentence are two things that can drift apart.
-import { NO_FOLDER } from "./folders.js";
+// And the folder rules a dropped path is held to (M13/5, DOC-011). The
+// find-or-create is imported for the same reason: it decides a segment
+// against its siblings by the very comparison that refuses a duplicate,
+// and a second copy of that comparison here would be a way for a path
+// differing only in case to make a folder the create route would have
+// refused.
+import {
+  findOrCreateFolderPath,
+  folderPathSegments,
+  MAX_FOLDER_PATH_LENGTH,
+  NO_FOLDER,
+  type FolderDestination,
+} from "./folders.js";
 import { needsDisplayRendition, recordRenditionOwed } from "../../pipeline/display-conversion.js";
 import { extractsText, recordTextOwed } from "../../pipeline/text-extraction.js";
 
@@ -216,7 +228,9 @@ const NumberParams = z.object({ number: z.coerce.number().int().positive() });
 /** An opaque text primary key, bounded rather than shaped — no route in
  * this API asserts a UUID pattern, and a well-formed id for a record the
  * viewer cannot reach answers 404 anyway. */
-const RecordIdSchema = z.string().min(1).max(64);
+const MAX_RECORD_ID_LENGTH = 64;
+
+const RecordIdSchema = z.string().min(1).max(MAX_RECORD_ID_LENGTH);
 
 const DocumentParams = z.object({ documentId: RecordIdSchema });
 
@@ -671,7 +685,8 @@ const FolderQuery = z.object({
 });
 
 /**
- * The multipart form, described for the OpenAPI document only.
+ * What both multipart uploads carry, described for the OpenAPI document
+ * only.
  *
  * The parser hands the request over as a stream rather than as a parsed
  * body, so there is nothing for a validator to run against here and the
@@ -681,26 +696,64 @@ const FolderQuery = z.object({
  * what the form carries so the generated client and the API docs are
  * not silent about it.
  */
-const UploadForm = z.any().meta({
+const UPLOAD_FIELDS = {
+  file: {
+    type: "string",
+    format: "binary",
+    description: "The file itself. Any type is accepted (DOC-004).",
+  },
+  kind: {
+    type: "string",
+    enum: [...DOCUMENT_VERSION_KINDS],
+    description:
+      "What this version is in the negotiation (CTR-014). Defaults to " +
+      "`draft_ours`. Must be sent before the file part.",
+  },
+  note: {
+    type: "string",
+    maxLength: MAX_NOTE_LENGTH,
+    description:
+      "What changed in this round, kept beside the file. Must be sent " + "before the file part.",
+  },
+} as const;
+
+/**
+ * Appending a round to an existing chain (DOC-001).
+ *
+ * No destination: a version lands where its document is already filed,
+ * and a folder field here would be a second answer to a question the
+ * document has already answered. The handler reads none, so the document
+ * says none.
+ */
+const VersionUploadForm = z.any().meta({
+  type: "object",
+  properties: { ...UPLOAD_FIELDS },
+  required: ["file"],
+});
+
+/**
+ * Creating a document, which is the one upload that decides where the
+ * file is filed (DOC-006, DOC-011).
+ */
+const CreateUploadForm = z.any().meta({
   type: "object",
   properties: {
-    file: {
+    ...UPLOAD_FIELDS,
+    folderId: {
       type: "string",
-      format: "binary",
-      description: "The file itself. Any type is accepted (DOC-004).",
-    },
-    kind: {
-      type: "string",
-      enum: [...DOCUMENT_VERSION_KINDS],
+      maxLength: MAX_RECORD_ID_LENGTH,
       description:
-        "What this version is in the negotiation (CTR-014). Defaults to " +
-        "`draft_ours`. Must be sent before the file part.",
+        "Where the file is filed: a folder already on this record " +
+        "(DOC-006), or omitted for the record root. Must be sent before " +
+        "the file part.",
     },
-    note: {
+    folderPath: {
       type: "string",
-      maxLength: MAX_NOTE_LENGTH,
+      maxLength: MAX_FOLDER_PATH_LENGTH,
       description:
-        "What changed in this round, kept beside the file. Must be sent " + "before the file part.",
+        "A relative folder path, `/` separated, find-or-created beneath " +
+        "`folderId` before the document is filed into its last segment " +
+        "(DOC-011). Must be sent before the file part.",
     },
   },
   required: ["file"],
@@ -1254,7 +1307,20 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "attachment until somebody moves the designation. Appends " +
           "document.created on the owning " +
           "contract, and document.primary_set beside it when the " +
-          "designation was taken (DD-017). The kind and note fields " +
+          "designation was taken (DD-017). The document is filed where " +
+          "the form says (DOC-006, DOC-011): folderId is a folder " +
+          "already on this record, folderPath is a relative chain " +
+          "find-or-created beneath it segment by segment, and sending " +
+          "neither files the document at the record root. The chain is " +
+          "resolved under the owning contract's row lock — the same one " +
+          "that serialises version numbers — so uploads racing on one " +
+          "path converge on a single folder rather than manufacturing " +
+          "one each. A folder a drop creates on its way past writes no " +
+          "activity of its own; the document.created entry names the " +
+          "folder its file landed in (DD-017). A path that misuses the " +
+          "separator or would nest past the tree's ceiling is refused " +
+          "for that one file, and a batch's other files are untouched. " +
+          "The kind, note, folderId and folderPath fields " +
           "must be sent " +
           "before the file part. An archived contract takes no new " +
           "paper until it is restored. A contract the uploader cannot " +
@@ -1262,7 +1328,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["documents"],
         consumes: ["multipart/form-data"],
         params: NumberParams,
-        body: UploadForm,
+        body: CreateUploadForm,
         response: { 201: DocumentEnvelope, default: problemResponse },
       },
     },
@@ -1278,82 +1344,113 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       // them and the blob is written before the rows exist (DOC-012).
       const documentId = uuidv7();
       const versionId = uuidv7();
-      const file = await receiveUpload(request, storageKey(documentId, versionId));
+      const file = await receiveUpload(request, storageKey(documentId, versionId), true);
 
-      const created = await app.db.transaction(async (tx) => {
-        // The contract row is held for the write, and reach is asked
-        // again on the same snapshot: a team row dropped between the
-        // first check and the insert must not leave a file on a record
-        // the uploader no longer reaches.
-        const locked = await reachedContract(tx, request.user, request.params.number, true);
-        assertOpen(locked);
+      // The blob is written before the rows (DOC-012), so a transaction
+      // that refuses leaves it behind. **A folder destination made that
+      // a routine outcome rather than a rare one**: a drop of a legacy
+      // book can carry a path that is too deep or names a folder on
+      // another record, and a batch refused a file at a time would
+      // otherwise leave one orphan blob per refused file. So the write
+      // is wrapped: the key is removed and the refusal is rethrown
+      // untouched, because what the caller is owed is the reason, not
+      // the cleanup. The key is never written again — the retry mints
+      // its own.
+      const created = await withStoredFile(request, file, () =>
+        app.db.transaction(async (tx) => {
+          // The contract row is held for the write, and reach is asked
+          // again on the same snapshot: a team row dropped between the
+          // first check and the insert must not leave a file on a record
+          // the uploader no longer reaches.
+          const locked = await reachedContract(tx, request.user, request.params.number, true);
+          assertOpen(locked);
 
-        await tx.insert(documents).values({
-          id: documentId,
-          // Seeded from the filename: the record has to be called
-          // something, and what the uploader recognises is the name
-          // they chose on their own machine. It is renameable from
-          // there (DOC-007), and renaming leaves the file's own name
-          // alone.
-          title: file.filename,
-          contractId: locked.id,
-          createdBy: request.user.id,
-        });
-        await insertVersion(tx, {
-          documentId,
-          versionId,
-          versionNumber: 1,
-          file,
-          by: request.user,
-        });
-        // On the owning contract, at the tier every record action rides
-        // (DD-017). The title is in the payload on purpose: hard
-        // deletion (DOC-010) removes the rows, and the entry has to
-        // still name what was deleted.
-        await recordActivity(tx, {
-          entityType: "contract",
-          entityId: locked.id,
-          actorId: request.user.id,
-          action: "document.created",
-          visibility: RECORD_ACTIVITY_TIER,
-          payload: { documentId, versionId, title: file.filename },
-        });
+          // Under that same lock, which is what makes a folder drop
+          // converge (DOC-011): a chain the form named is found or made
+          // segment by segment, and a second upload racing on the same
+          // path waits here and then finds what the first one wrote.
+          const folder = file.destination
+            ? await findOrCreateFolderPath(tx, locked.id, file.destination)
+            : null;
 
-        // The first document on a record is the instrument (CTR-014).
-        // Nobody asked for it, which is exactly why it gets its own
-        // entry rather than being left implied by the upload above — the
-        // counterparty promotion is logged for the same reason, and a
-        // record born confidential is too. The contract row is held, so
-        // two first uploads at once cannot both read NULL here.
-        const primaryDocumentId = locked.primaryDocumentId ?? documentId;
-        if (locked.primaryDocumentId === null) {
-          await tx
-            .update(contracts)
-            .set({ primaryDocumentId: documentId })
-            .where(eq(contracts.id, locked.id));
+          await tx.insert(documents).values({
+            id: documentId,
+            folderId: folder?.id ?? null,
+            // Seeded from the filename: the record has to be called
+            // something, and what the uploader recognises is the name
+            // they chose on their own machine. It is renameable from
+            // there (DOC-007), and renaming leaves the file's own name
+            // alone.
+            title: file.filename,
+            contractId: locked.id,
+            createdBy: request.user.id,
+          });
+          await insertVersion(tx, {
+            documentId,
+            versionId,
+            versionNumber: 1,
+            file,
+            by: request.user,
+          });
+          // On the owning contract, at the tier every record action rides
+          // (DD-017). The title is in the payload on purpose: hard
+          // deletion (DOC-010) removes the rows, and the entry has to
+          // still name what was deleted.
           await recordActivity(tx, {
             entityType: "contract",
             entityId: locked.id,
             actorId: request.user.id,
-            action: "document.primary_set",
+            action: "document.created",
             visibility: RECORD_ACTIVITY_TIER,
-            // `from`/`to` as the counterparty promotion writes them, so
-            // the M9 viewer narrates the move with one shared helper. The
-            // first upload takes the designation from nobody.
+            // The destination rides in the payload **by name** (DD-017),
+            // beside the title and for the same reason: this entry is the
+            // drop's whole story — a folder it find-or-created wrote none
+            // of its own — and it has to still say where the file landed
+            // after that folder is renamed or dissolved.
             payload: {
               documentId,
+              versionId,
               title: file.filename,
-              fromDocumentId: null,
-              from: null,
-              to: file.filename,
+              folderName: folder?.name ?? null,
             },
           });
-        }
 
-        // Read back through the list's own projection, so the row the
-        // uploader gets is the row the next load will draw.
-        return documentWithChain(tx, documentId, primaryDocumentId);
-      });
+          // The first document on a record is the instrument (CTR-014).
+          // Nobody asked for it, which is exactly why it gets its own
+          // entry rather than being left implied by the upload above — the
+          // counterparty promotion is logged for the same reason, and a
+          // record born confidential is too. The contract row is held, so
+          // two first uploads at once cannot both read NULL here.
+          const primaryDocumentId = locked.primaryDocumentId ?? documentId;
+          if (locked.primaryDocumentId === null) {
+            await tx
+              .update(contracts)
+              .set({ primaryDocumentId: documentId })
+              .where(eq(contracts.id, locked.id));
+            await recordActivity(tx, {
+              entityType: "contract",
+              entityId: locked.id,
+              actorId: request.user.id,
+              action: "document.primary_set",
+              visibility: RECORD_ACTIVITY_TIER,
+              // `from`/`to` as the counterparty promotion writes them, so
+              // the M9 viewer narrates the move with one shared helper. The
+              // first upload takes the designation from nobody.
+              payload: {
+                documentId,
+                title: file.filename,
+                fromDocumentId: null,
+                from: null,
+                to: file.filename,
+              },
+            });
+          }
+
+          // Read back through the list's own projection, so the row the
+          // uploader gets is the row the next load will draw.
+          return documentWithChain(tx, documentId, primaryDocumentId);
+        }),
+      );
 
       await askForDerivations(versionId, file);
       return reply.status(201).send({ document: created });
@@ -1383,7 +1480,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["documents"],
         consumes: ["multipart/form-data"],
         params: DocumentParams,
-        body: UploadForm,
+        body: VersionUploadForm,
         response: { 201: DocumentEnvelope, default: problemResponse },
       },
     },
@@ -2797,6 +2894,16 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     mimeType: string;
     kind: DocumentVersionKind;
     note: string | null;
+    /**
+     * Where the file is to be filed (DOC-006, DOC-011), or null for the
+     * record root.
+     *
+     * Read off the form and checked for shape here, before a byte is
+     * stored; the folder itself is resolved under the contract's row
+     * lock in the handler, because that is where it can be created
+     * without two racing uploads making two of it.
+     */
+    destination: FolderDestination | null;
     fileRef: string;
     byteSize: number;
     checksumSha256: string;
@@ -2814,8 +2921,18 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
    *
    * The bytes are streamed straight through: never buffered whole in
    * memory, never staged on disk, hashed and counted on the same pass.
+   *
+   * `filed` says whether this path takes a folder destination. Creating
+   * a document does (DOC-011); appending a round to an existing chain
+   * does not, because a version lands where its document is already
+   * filed and a destination there would be a second answer to a question
+   * the document has already answered.
    */
-  async function receiveUpload(request: FastifyRequest, key: string): Promise<StoredUpload> {
+  async function receiveUpload(
+    request: FastifyRequest,
+    key: string,
+    filed = false,
+  ): Promise<StoredUpload> {
     const part = await request.file().catch((error: unknown) => {
       throw asUploadRefusal(error);
     });
@@ -2826,6 +2943,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     // report — which is why the form has to put them first.
     const rawKind = fieldValue(part.fields, "kind");
     const rawNote = fieldValue(part.fields, "note");
+    // Checked here rather than after the bytes are stored, so a batch
+    // whose paths are malformed is refused a file at a time without
+    // having written any of them. The folder is *resolved* later, under
+    // the contract's row lock: that is the only place it can be created
+    // without two racing uploads making two of it.
+    const destination = filed ? folderDestination(part.fields) : null;
     const kind: DocumentVersionKind = rawKind
       ? (KindSchema.safeParse(rawKind).data ?? refuseKind())
       : "draft_ours";
@@ -2914,10 +3037,74 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       mimeType,
       kind,
       note,
+      destination,
       fileRef,
       byteSize,
       checksumSha256: digest.digest("hex"),
     };
+  }
+
+  /**
+   * Runs the write that follows a stored upload, and takes the blob away
+   * if it does not commit (DOC-012).
+   *
+   * The bytes reach the driver before the rows exist, so every refusal
+   * after that point leaves a blob nothing points at. Most of them are
+   * rare — reach revoked between two reads, the record archived under
+   * the uploader. **A folder destination is not**: a dropped path can be
+   * too deep, or name a folder on another record, and a batch refused a
+   * file at a time would leave one orphan per refused file.
+   *
+   * A failed delete is logged and swallowed: the caller is owed the
+   * reason their upload was refused, and a cleanup that itself failed is
+   * an operational fact rather than an answer to them.
+   */
+  async function withStoredFile<T>(
+    request: FastifyRequest,
+    file: StoredUpload,
+    write: () => Promise<T>,
+  ): Promise<T> {
+    try {
+      return await write();
+    } catch (error) {
+      await app.storage.delete(file.fileRef).catch((cleanup: unknown) => {
+        request.log.warn(
+          { err: cleanup, fileRef: file.fileRef },
+          "could not remove the blob of an upload that did not commit",
+        );
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Where an upload says it is to be filed (M13/5, DOC-011), or null for
+   * the record root.
+   *
+   * The two fields compose rather than exclude each other, because the
+   * drop can carry both: `folderId` is the row the gesture landed on,
+   * and `folderPath` is the chain to recreate beneath it. Dropping a
+   * tree onto a folder row is exactly that pair.
+   *
+   * Only the shape is decided here. Whether the folder is on this record
+   * — and whether the chain fits under the ceiling once it is placed —
+   * is decided under the row lock, where the answer cannot go stale.
+   */
+  function folderDestination(fields: Record<string, unknown>): FolderDestination | null {
+    const rawFolderId = fieldValue(fields, "folderId")?.trim() ?? "";
+    const rawPath = fieldValue(fields, "folderPath") ?? "";
+    // Bounded before either is read as anything but text. An id longer
+    // than any id could be names no folder, and is answered exactly as
+    // one that was never created rather than as a length complaint.
+    if (rawFolderId.length > MAX_RECORD_ID_LENGTH) {
+      throw httpError(404, NO_FOLDER);
+    }
+    if (rawPath.length > MAX_FOLDER_PATH_LENGTH) {
+      throw httpError(400, `A folder path can be at most ${MAX_FOLDER_PATH_LENGTH} characters.`);
+    }
+    const path = folderPathSegments(rawPath);
+    if (rawFolderId.length === 0 && path.length === 0) return null;
+    return { folderId: rawFolderId.length === 0 ? null : rawFolderId, path };
   }
 
   /** One row in the chain, written from what arrived. The only INSERT

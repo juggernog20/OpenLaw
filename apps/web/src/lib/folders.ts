@@ -23,6 +23,9 @@
 
 import type { paths } from "@openlaw/api-client";
 import { api } from "./api";
+// The separator the seam splits a folder path on, taken from the module
+// that reads a dropped tree: one string, joined and split in one place.
+import { PATH_SEPARATOR } from "./batch-upload";
 import { problemDetail } from "./messages";
 
 /** The API's answer for one contract's folders, aliased to the generated
@@ -139,6 +142,38 @@ export async function createContractFolder(
   const { data, error } = await api.POST("/api/v1/contracts/{number}/folders", {
     params: { path: { number: contractNumber } },
     body: folder,
+  });
+  return data ? { ok: true, folders: data.folders } : { ok: false, detail: problemDetail(error) };
+}
+
+/**
+ * Recreates one empty directory of a dropped tree (M13/5, DOC-011).
+ *
+ * A dropped directory that holds files is recreated by those files —
+ * each upload carries the path and the seam find-or-creates it. One that
+ * holds none has nothing to recreate it, so it is asked for on its own,
+ * and it is asked for by **path** rather than by name: every level above
+ * it may be missing too, and the seam makes the chain segment by segment
+ * under the owning contract's row lock.
+ *
+ * `parentId` is the folder the tree was dropped on, and the path is
+ * relative to it.
+ *
+ * It writes no activity, unlike {@link createContractFolder} (DD-017): a
+ * folder a drop passed through is traversal rather than an act somebody
+ * performed. A segment already there is used rather than refused, which
+ * is what lets an empty directory sit beside its full siblings.
+ */
+export async function recreateContractFolderPath(
+  contractNumber: number,
+  folder: Readonly<{ path: readonly string[]; parentId?: string }>,
+): Promise<FoldersOutcome> {
+  const { data, error } = await api.POST("/api/v1/contracts/{number}/folders", {
+    params: { path: { number: contractNumber } },
+    body: {
+      path: folder.path.join(PATH_SEPARATOR),
+      ...(folder.parentId ? { parentId: folder.parentId } : {}),
+    },
   });
   return data ? { ok: true, folders: data.folders } : { ok: false, detail: problemDetail(error) };
 }

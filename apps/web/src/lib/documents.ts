@@ -19,6 +19,11 @@
 
 import type { paths } from "@openlaw/api-client";
 import { api } from "./api";
+// The separator a folder path is written with on the wire, taken from
+// the module that reads a dropped tree rather than written again here:
+// the string the walk joins on and the string the seam splits on have
+// to be one string.
+import { PATH_SEPARATOR as FOLDER_PATH_SEPARATOR } from "./batch-upload";
 import { problemDetail } from "./messages";
 
 /** The API's answer for one contract's paper, aliased to the generated
@@ -298,6 +303,25 @@ export interface UploadDraft {
 }
 
 /**
+ * A new document's draft, which is the one upload that says where the
+ * file is filed (DOC-006, DOC-011).
+ *
+ * `folderId` is the folder the gesture landed on and `path` is the chain
+ * to recreate beneath it, so dropping a tree onto a folder row is the
+ * two together. The seam find-or-creates the chain under the owning
+ * contract's row lock, which is what makes several files carrying one
+ * path converge on one folder.
+ *
+ * Its own type rather than an optional field on {@link UploadDraft},
+ * because appending a round takes no destination at all: a version lands
+ * where its document is already filed, and a field the version route
+ * would ignore is a field a caller can be wrong about in silence.
+ */
+export interface DocumentUploadDraft extends UploadDraft {
+  destination?: Readonly<{ folderId?: string | null; path?: readonly string[] }>;
+}
+
+/**
  * What an upload answers: the document as it now stands, or why not.
  *
  * A refusal carries the seam's own status beside its sentence, because
@@ -319,7 +343,7 @@ export type UploadOutcome =
  */
 export function uploadContractDocument(
   contractNumber: number,
-  draft: UploadDraft,
+  draft: DocumentUploadDraft,
 ): Promise<UploadOutcome> {
   return send(`/api/v1/contracts/${contractNumber}/documents`, draft);
 }
@@ -338,11 +362,20 @@ export function uploadDocumentVersion(
   return send(`/api/v1/documents/${encodeURIComponent(documentId)}/versions`, draft);
 }
 
-/** The one multipart POST both uploads are. */
-async function send(url: string, draft: UploadDraft): Promise<UploadOutcome> {
+/** The one multipart POST both uploads are. A destination rides with it
+ * only when the caller had one to give. */
+async function send(url: string, draft: DocumentUploadDraft): Promise<UploadOutcome> {
   const form = new FormData();
   form.append("kind", draft.kind);
   if (draft.note.trim().length > 0) form.append("note", draft.note.trim());
+  // Before the file part, as the kind and the note are: the parser
+  // reports the fields it has already seen, and the file part ends the
+  // ones it can report. An empty destination is left off entirely — the
+  // absence is what the record root is.
+  if (draft.destination?.folderId) form.append("folderId", draft.destination.folderId);
+  if (draft.destination?.path?.length) {
+    form.append("folderPath", draft.destination.path.join(FOLDER_PATH_SEPARATOR));
+  }
   form.append("file", draft.file, draft.file.name);
   try {
     const response = await fetch(url, { method: "POST", body: form });

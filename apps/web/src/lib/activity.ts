@@ -845,13 +845,29 @@ const ARMS: Readonly<Record<string, Arm>> = {
   // (DOC-008) — and it names the document, because hard deletion
   // (DOC-010) will one day take the row and the entry has to still say
   // what was uploaded.
+  // A file arriving on the record, and where it landed (M13/5, DD-017).
+  // The folder is named because a bulk drop's folders narrate nothing of
+  // their own — this entry is the drop's whole story, so it has to say
+  // where each file went. By name rather than by id, so it still reads
+  // after that folder is renamed or dissolved.
   "document.created": {
     icon: Upload,
     message: defineMessage({
       id: "activity.document.created",
-      defaultMessage: "{actor} uploaded {title}",
+      defaultMessage:
+        "{atRoot, select, true {{actor} uploaded {title}} " +
+        "other {{actor} uploaded {title} into {folder}}}",
     }),
-    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+    values: (intl, payload) => {
+      const folder = text(payload, "folderName");
+      return {
+        title: named(intl, payload, "title"),
+        atRoot: folder === null ? "true" : "false",
+        // Never read when `atRoot` is true, and never left undefined: an
+        // ICU argument a locale still names has to resolve to something.
+        folder: folder ?? "",
+      };
+    },
   },
   // A round of the negotiation, narrated as one: which document, and
   // which version of it. The number is what makes the feed readable as

@@ -2044,6 +2044,15 @@ Appending a round stays a deliberate act on a named document, reached from that 
 
    Nothing above is reversed. The anatomy §9 and §11 fix is what M13/5 builds back onto.
 
+10. **M13/5 built all four back, and two of them changed shape on the way.** Point 9 was a deferral, and it is now spent: the hint carries its folder clause, the per-file rows carry their folder path, the summary is a tree, and the destination readout names the folder a drop landed on. Two details of §9 and §11 ship differently from the mock, for the reason point 8 gives about both of its own:
+
+    - **The tree summary draws every folder and truncates only the files.** C27 draws one truncation row, "…and 126 more files", after a tree. The structure is what the reader is confirming, so a truncated structure would be a confirmation of something else — the folder lines are all drawn, however many there are, and the truncation row counts the files it cut.
+    - **The OCR-queued badges and the scanned-file strip stay absent**, exactly as point 8 records: the client still has not read any file's text layer, and a folder drop does not change that.
+
+    One thing the mock has and the build does not, deliberately: C29's failure sentence reads "The other 126 are on the contract, filed where you dropped them." The shipped sentence stops at "on the contract", because the clause is only true when the drop carried a structure and a batch does not always. Worth revisiting if the sentence is ever made conditional on the drop's shape.
+
+11. **The drop targets are the section and each folder row, and only one of them lights up.** §7 names both targets and stops there. The row that will take the drop takes the section's own outline treatment, and the section keeps its own — the drop is still on the section, filed one level in. Two lit rows would promise a drop that lands twice, so one folder is marked at a time.
+
 ### Rationale
 
 Drawing folders as rows of the existing table is the whole reason this stays cheap. The columns, the row height, the paging foot, the pills, and the doc panel are all M11's and all unchanged; a folder is a row that fills fewer of them. A separate tree pane would have been a second surface to keep in step with the first, and DES-032 has just spent the record page's remaining chrome budget.

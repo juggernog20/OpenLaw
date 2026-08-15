@@ -146,7 +146,7 @@ import {
   Upload,
 } from "lucide-react";
 import { Avatar } from "../avatar";
-import { BatchDialog, type BatchSource } from "./batch-dialog";
+import { BatchDialog, type BatchDestination, type BatchSource } from "./batch-dialog";
 import { ConfidentialMarker } from "../confidential-marker";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
@@ -163,7 +163,12 @@ import { StatusNote, type FieldStatus } from "../status-note";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
 import { cn } from "../../lib/utils";
 import { formatFileSize, formatShortDate } from "../../lib/format";
-import { dragCarriesFiles, filesFromDrop } from "../../lib/batch-upload";
+import {
+  dragCarriesFiles,
+  filesFromDirectoryPicker,
+  filesFromDrop,
+  type DroppedFile,
+} from "../../lib/batch-upload";
 import type { Role } from "../../lib/roles";
 import {
   archiveDocument,
@@ -418,13 +423,33 @@ export function DocumentsCard({
   /** The document a "Move to folder" dialog is open for, or none. */
   const [filing, setFiling] = useState<ContractDocument | null>(null);
   const [composer, setComposer] = useState<Composer | null>(null);
-  /** The files a batch confirmation is open for, and what started it, or
-   * none (M13/4, DOC-011). Nothing is sent until the dialog is
-   * confirmed, so an accidental drop of the wrong files costs nothing. */
-  const [batch, setBatch] = useState<{ files: File[]; source: BatchSource } | null>(null);
+  /**
+   * The batch a confirmation is open for, or none (M13/4, M13/5,
+   * DOC-011).
+   *
+   * It carries what the gesture carried, whole: the files with the
+   * folder each one sat at, the directories of the dropped tree that
+   * held nothing, and the folder the gesture landed on. Nothing is sent
+   * until the dialog is confirmed, so an accidental drop of the wrong
+   * tree costs nothing.
+   */
+  const [batch, setBatch] = useState<{
+    files: DroppedFile[];
+    emptyFolders: (readonly string[])[];
+    /** The directories the walk could not read to the end, so the
+     * confirmation can say the batch may be short rather than let a drop
+     * arrive silently missing part of itself. */
+    unreadable: (readonly string[])[];
+    destination: BatchDestination | null;
+    source: BatchSource;
+  } | null>(null);
   /** A drag carrying files is over the section, so the surface says it
-   * is a target rather than leaving the reader to guess (DES-033 §7). */
+   * is a target rather than leaving the reader to guess (DES-033 §7).
+   * Null when nothing is over it; a folder's id when the drag is over
+   * that folder's row, so the row that will take the drop is the row
+   * that lights up. */
   const [dragging, setDragging] = useState(false);
+  const [dragFolder, setDragFolder] = useState<string | null>(null);
   const [editing, setEditing] = useState<ContractDocument | null>(null);
   /** Whether the archived rows are drawn beside the live ones — the
    * view restoring one is offered in (DOC-010), as the contracts list
@@ -1019,6 +1044,43 @@ export function DocumentsCard({
     );
   }
 
+  /**
+   * What a drop carried, read and handed to the batch confirmation
+   * (M13/5, DOC-011, DES-033 §7).
+   *
+   * The reading is the walk of the dropped tree, so this is async and
+   * the `DataTransfer` is read inside `filesFromDrop` before anything is
+   * awaited — a transfer is emptied when the drop handler returns.
+   *
+   * `into` is the folder the gesture landed on: null for the section
+   * itself, a folder for one of its rows. Every path in the batch is
+   * relative to it, so a tree dropped on a folder row is recreated
+   * inside that row.
+   *
+   * A gesture carrying nothing at all — a dragged text selection, an
+   * empty transfer — opens nothing. There is no batch to confirm.
+   */
+  async function openDrop(
+    transfer: DataTransfer | null,
+    into: BatchDestination | null,
+  ): Promise<void> {
+    const dropped = await filesFromDrop(transfer);
+    if (
+      dropped.files.length === 0 &&
+      dropped.emptyFolders.length === 0 &&
+      dropped.unreadable.length === 0
+    ) {
+      return;
+    }
+    setBatch({
+      files: dropped.files,
+      emptyFolders: dropped.emptyFolders,
+      unreadable: dropped.unreadable,
+      destination: into,
+      source: "drop",
+    });
+  }
+
   /** Everything a document row draws from, built once and handed to
    * every listing — the record root's and each open folder's. */
   const rowContext: RowContext = {
@@ -1067,17 +1129,14 @@ export function DocumentsCard({
         // Crossing between the section's own children is not leaving it.
         if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
         setDragging(false);
+        setDragFolder(null);
       }}
       onDrop={(event) => {
         if (frozen) return;
         event.preventDefault();
         setDragging(false);
-        const dropped = filesFromDrop(event.dataTransfer);
-        // A drop carrying no file — a dragged selection, or a directory,
-        // which is M13/5's to recreate — creates nothing and opens
-        // nothing. There is no batch to confirm.
-        if (dropped.length === 0) return;
-        setBatch({ files: dropped, source: "drop" });
+        setDragFolder(null);
+        void openDrop(event.dataTransfer, null);
       }}
     >
       <header className="flex h-section-header items-center justify-between gap-2 rounded-t-card border-b border-border-default bg-section-header px-4">
@@ -1204,9 +1263,16 @@ export function DocumentsCard({
               open={openFolders}
               listings={listings}
               rows={rowContext}
+              dragOver={dragFolder}
               onToggle={toggleFolder}
               onShowMore={(folderId, cursor) => void loadFolder(folderId, cursor)}
               onDialog={setFolderDialog}
+              onDragFolder={setDragFolder}
+              onDropOnFolder={(folder, transfer) => {
+                setDragging(false);
+                setDragFolder(null);
+                void openDrop(transfer, { id: folder.id, name: folder.name });
+              }}
             />
             {/* The record's own loose paper — the documents filed in no
                 folder at all (DES-033). A folder's documents are drawn
@@ -1226,13 +1292,13 @@ export function DocumentsCard({
           <p className="text-sm text-muted">
             <FormattedMessage
               id="documents.dropHint"
-              defaultMessage="Drop files here — each file becomes a new document at version 1"
+              defaultMessage="Drop files or folders here — each file becomes a new document at version 1"
             />
           </p>
           <p className="text-sm text-muted">
             <FormattedMessage
               id="documents.dropChain"
-              defaultMessage="To add a round to an existing chain, use Add version on that document."
+              defaultMessage="Folder structure is kept. To add a round to an existing chain, use Add version on that document."
             />
           </p>
         </div>
@@ -1275,8 +1341,22 @@ export function DocumentsCard({
             // (DOC-011). The composer's own fields are a round's — one
             // note about one change — and a batch is not a round, so it
             // hands over rather than growing a second shape.
+            //
+            // A directory picker's files carry the folder each one sat
+            // at; a plain multi-select's carry none, and land at the
+            // record root. Either way the batch is the same batch, which
+            // is what makes the picker folder drop's pointer-free twin
+            // (DES-033 §7). No empty directory comes through a picker:
+            // a file input carries files, and a directory holding none
+            // produces none.
             setComposer(null);
-            setBatch({ files, source: "picker" });
+            setBatch({
+              files,
+              emptyFolders: [],
+              unreadable: [],
+              destination: null,
+              source: "picker",
+            });
           }}
           onSaved={(document) => {
             if (composer.document) replace(document);
@@ -1289,6 +1369,9 @@ export function DocumentsCard({
         <BatchDialog
           contractNumber={contractNumber}
           files={batch.files}
+          emptyFolders={batch.emptyFolders}
+          unreadable={batch.unreadable}
+          destination={batch.destination}
           source={batch.source}
           // Every listing on screen, read again — the record root and
           // each open folder — with every cached listing the refresh
@@ -1677,9 +1760,12 @@ function FolderRows({
   open,
   listings,
   rows,
+  dragOver,
   onToggle,
   onShowMore,
   onDialog,
+  onDragFolder,
+  onDropOnFolder,
 }: Readonly<{
   folders: readonly ContractFolder[];
   /** The folder whose children this level draws, or null at the record
@@ -1692,9 +1778,18 @@ function FolderRows({
    * is not in here. */
   listings: ReadonlyMap<string, FolderListing>;
   rows: RowContext;
+  /** The folder a file drag is currently over, or none. One row lights
+   * up at a time: the drop lands in exactly one folder, and two lit rows
+   * would promise otherwise (DES-033 §7). */
+  dragOver: string | null;
   onToggle: (folderId: string) => void;
   onShowMore: (folderId: string, cursor: string) => void;
   onDialog: (dialog: FolderDialog) => void;
+  onDragFolder: (folderId: string | null) => void;
+  /** A drop that landed on this row rather than on the section. What it
+   * carries is filed into this folder, and a tree it carries is
+   * recreated inside it (DOC-011). */
+  onDropOnFolder: (folder: ContractFolder, transfer: DataTransfer | null) => void;
 }>) {
   return (
     <>
@@ -1704,7 +1799,41 @@ function FolderRows({
         return (
           <Fragment key={folder.id}>
             <tbody>
-              <tr className="border-t border-border-default">
+              <tr
+                className={cn(
+                  "border-t border-border-default",
+                  // The row that will take the drop is the row that says
+                  // so (DES-033 §7). The section's own outline stays on
+                  // as well: the drop is still on the section, filed one
+                  // level in.
+                  dragOver === folder.id && "outline outline-2 -outline-offset-2 outline-link",
+                )}
+                // A frozen record takes no drop, here as on the section:
+                // an archived record's paper is frozen and a Contributor
+                // is offered no control anywhere else on the row either.
+                onDragOver={(event) => {
+                  if (rows.frozen || !dragCarriesFiles(event.dataTransfer)) return;
+                  // Without this the section's own handler answers, and
+                  // the files would land at the record root instead of
+                  // in this folder.
+                  event.stopPropagation();
+                  event.preventDefault();
+                  event.dataTransfer.dropEffect = "copy";
+                  onDragFolder(folder.id);
+                }}
+                onDragLeave={(event) => {
+                  // Crossing between the row's own children is not
+                  // leaving it.
+                  if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+                  onDragFolder(null);
+                }}
+                onDrop={(event) => {
+                  if (rows.frozen) return;
+                  event.stopPropagation();
+                  event.preventDefault();
+                  onDropOnFolder(folder, event.dataTransfer);
+                }}
+              >
                 <td className="px-4 py-2.5">
                   <span className="flex items-center gap-1">
                     {/* 18px a level, drawn as a spacer at the head of the
@@ -1798,9 +1927,12 @@ function FolderRows({
                   open={open}
                   listings={listings}
                   rows={rows}
+                  dragOver={dragOver}
                   onToggle={onToggle}
                   onShowMore={onShowMore}
                   onDialog={onDialog}
+                  onDragFolder={onDragFolder}
+                  onDropOnFolder={onDropOnFolder}
                 />
                 <DocumentRows documents={listing?.documents ?? []} depth={depth + 1} rows={rows} />
                 <FolderListingFoot
@@ -2896,10 +3028,12 @@ function UploadDialog({
   /** The document being added to, or undefined for a new one. */
   document: ContractDocument | undefined;
   onClose: () => void;
-  /** Hand several chosen files to the batch confirmation (M13/4). This
-   * is the drop's pointer-free twin: the picker is where a keyboard
-   * reaches bulk intake, so it has to reach the same dialog. */
-  onBatch: (files: File[]) => void;
+  /** Hand several chosen files to the batch confirmation (M13/4,
+   * M13/5). This is the drop's pointer-free twin: the picker is where a
+   * keyboard reaches bulk intake, so it has to reach the same dialog —
+   * and the directory picker beside it is folder drop's twin, handing
+   * over the same shape with a path on each file. */
+  onBatch: (files: DroppedFile[]) => void;
   onSaved: (document: ContractDocument) => void;
 }>) {
   const intl = useIntl();
@@ -2912,6 +3046,11 @@ function UploadDialog({
    * person sees, because a bare file input cannot be styled to the
    * system. */
   const picker = useRef<HTMLInputElement>(null);
+  /** And the directory picker beside it, which is folder drop's
+   * pointer-free twin (DES-033 §7). Its own input, because
+   * `webkitdirectory` is set on the element rather than passed to the
+   * dialog it opens — one input cannot offer both. */
+  const directoryPicker = useRef<HTMLInputElement>(null);
 
   async function submit() {
     // One upload at a time. The CTA is disabled while one is in
@@ -2991,7 +3130,10 @@ function UploadDialog({
                 onChange={(event) => {
                   const chosen = [...(event.target.files ?? [])];
                   if (chosen.length > 1) {
-                    onBatch(chosen);
+                    // Picked flat, so every file lands at the record
+                    // root — the batch's shape is the drop's, with an
+                    // empty path on each row.
+                    onBatch(chosen.map((one) => ({ file: one, path: [] })));
                     return;
                   }
                   const one = chosen[0] ?? null;
@@ -2999,6 +3141,36 @@ function UploadDialog({
                   setFile(one);
                 }}
               />
+              {/* Folder drop's pointer-free twin (DES-033 §7). The
+                  browser puts the path each file sat at on the file
+                  itself, so the structure survives a pick exactly as it
+                  survives a drop — one file or a hundred, a directory is
+                  always a batch, because what was picked is a structure
+                  and the composer's own fields are one round's. */}
+              {document === undefined && (
+                <input
+                  ref={directoryPicker}
+                  id="document-directory"
+                  type="file"
+                  className="sr-only"
+                  tabIndex={-1}
+                  multiple
+                  // Named for itself. It is out of the tab order and the
+                  // button beside it is what a person reaches, but the
+                  // input is still the control the pick lands on, and an
+                  // unnamed one says nothing about which field it fills.
+                  aria-label={intl.formatMessage({
+                    id: "documents.composer.folder",
+                    defaultMessage: "Folder",
+                  })}
+                  // React does not know this attribute, and the DOM does.
+                  {...{ webkitdirectory: "" }}
+                  onChange={(event) => {
+                    const chosen = [...(event.target.files ?? [])];
+                    if (chosen.length > 0) onBatch(filesFromDirectoryPicker(chosen));
+                  }}
+                />
+              )}
               {/* The label points at the input, but the input is out of
                   the tab order — this button is the control a keyboard
                   reaches, so it has to carry the field's name itself, or
@@ -3023,6 +3195,21 @@ function UploadDialog({
                   <FormattedMessage id="documents.composer.choose" defaultMessage="Choose file" />
                 )}
               </Button>
+              {document === undefined && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  id="document-directory-choose"
+                  aria-labelledby="document-file-label document-directory-choose"
+                  onClick={() => directoryPicker.current?.click()}
+                >
+                  <FolderPlus size={16} aria-hidden="true" />
+                  <FormattedMessage
+                    id="documents.composer.chooseFolder"
+                    defaultMessage="Choose folder"
+                  />
+                </Button>
+              )}
               <span className="min-w-0 truncate text-sm text-muted">
                 {file?.name ?? (
                   <FormattedMessage

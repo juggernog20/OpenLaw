@@ -254,6 +254,82 @@ const BOOK = [
   { id: "cp-the-helix", name: "The Helix Group Ltd", jurisdiction: null },
 ];
 
+/**
+ * The synthetic drop harness (M13/4, M13/5, DOC-011).
+ *
+ * jsdom has neither drag nor the browser's directory-entry API, so a
+ * dropped tree is fed in as synthetic `DataTransfer` entry objects — the
+ * shape the walk reads and nothing else. That was M13's agreed seam
+ * decision, and it lives at module scope so the batch suite and the
+ * folder-drop suite exercise **one** harness: a change to what a
+ * directory reader does under failure has one place to be made.
+ */
+
+/** One node of a dropped tree: a file, or a directory holding more of
+ * them. */
+type DropNode = File | { name: string; children: DropNode[] };
+
+/** A directory of a dropped tree. With no children it is an empty
+ * directory, which is the case M13/5 recreates on its own. */
+const dir = (name: string, children: DropNode[] = []) => ({ name, children });
+
+/**
+ * One node of a dropped tree, as the directory-entry API would hand it
+ * over.
+ *
+ * Both calls are callback-shaped because the real ones are, and
+ * `readEntries` answers its children once and an empty page after —
+ * which is how a real reader says it has finished, and the loop that
+ * reads it has to be exercised against that.
+ */
+function entryOf(node: DropNode): unknown {
+  if (node instanceof File) {
+    return {
+      isFile: true,
+      isDirectory: false,
+      name: node.name,
+      file: (resolve: (file: File) => void) => resolve(node),
+    };
+  }
+  return {
+    isFile: false,
+    isDirectory: true,
+    name: node.name,
+    createReader: () => {
+      let served = false;
+      return {
+        readEntries: (resolve: (entries: unknown[]) => void) => {
+          if (served) return resolve([]);
+          served = true;
+          resolve(node.children.map(entryOf));
+        },
+      };
+    },
+  };
+}
+
+/**
+ * A drop on one target — the Documents section, or a folder row.
+ *
+ * The `DataTransfer` is synthetic for the reason the entries are.
+ * `items` carries them, because that is the list that can say what an
+ * entry *is*: `dataTransfer.files` would hand back a flat list with the
+ * dropped structure already destroyed.
+ */
+function dropOn(target: HTMLElement, nodes: DropNode[]) {
+  const dataTransfer = {
+    types: ["Files"],
+    files: nodes.filter((node): node is File => node instanceof File),
+    items: nodes.map((node) => ({
+      kind: "file",
+      getAsFile: () => (node instanceof File ? node : new File([], node.name)),
+      webkitGetAsEntry: () => entryOf(node),
+    })),
+  };
+  fireEvent.dragOver(target, { dataTransfer });
+  fireEvent.drop(target, { dataTransfer });
+}
+
 /** One party on the record, as the API answers it. */
 function party(id: string, isPrimary: boolean) {
   const found = BOOK.find((entry) => entry.id === id)!;
@@ -6527,9 +6603,18 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
   ) {
     const record = recordApi(contractRow(), team);
     let paper = initial;
-    /** Every upload the batch sent, in order: the filename it carried
-     * and the kind that rode with it. */
-    const uploaded: { name: string; kind: string }[] = [];
+    /** Every upload the batch sent, in order: the filename it carried,
+     * the kind that rode with it, and where it said the file goes
+     * (M13/5). */
+    const uploaded: {
+      name: string;
+      kind: string;
+      folderId: string | null;
+      folderPath: string | null;
+    }[] = [];
+    /** Every folder a drop asked for by path — the empty directories of
+     * the dropped tree (DOC-011). */
+    const recreated: { path: string; parentId: string | null }[] = [];
     /** The filenames whose answers are still being held. */
     const held: (() => void)[] = [];
     /** The most files that were ever in flight at one moment. */
@@ -6562,11 +6647,23 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
         const rows = asked === null ? paper : listing(asked === "root" ? null : asked);
         return json(200, { documents: rows, nextCursor: null });
       }
+      if (pathname === "/api/v1/contracts/42/folders" && call.method === "POST") {
+        // The drop's own shape: a path rather than a name, which the
+        // seam find-or-creates and narrates not at all (DOC-011).
+        const body = call.body as { path?: string; parentId?: string };
+        recreated.push({ path: String(body.path), parentId: body.parentId ?? null });
+        return json(201, { folders });
+      }
       if (pathname === "/api/v1/contracts/42/documents" && call.method === "POST") {
         const form = call.body as FormData;
         const file = form.get("file") as File;
         lastUpload = ++sequence;
-        uploaded.push({ name: file.name, kind: String(form.get("kind")) });
+        uploaded.push({
+          name: file.name,
+          kind: String(form.get("kind")),
+          folderId: form.has("folderId") ? String(form.get("folderId")) : null,
+          folderPath: form.has("folderPath") ? String(form.get("folderPath")) : null,
+        });
         const tried = (attempts.get(file.name) ?? 0) + 1;
         attempts.set(file.name, tried);
         const refusal =
@@ -6604,6 +6701,7 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     return {
       handler: gated,
       uploaded,
+      recreated,
       /** The filenames the batch sent, in order. */
       names: () => uploaded.map((one) => one.name),
       release: () => {
@@ -6624,35 +6722,6 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
 
   const file = (name: string, bytes = "some bytes") =>
     new File([bytes], name, { type: "application/pdf" });
-
-  /**
-   * A drop of plain files on the section.
-   *
-   * jsdom has no drag, so the `DataTransfer` is synthetic: the shape the
-   * handler reads and nothing else. `items` carries the entries, because
-   * that is the list that can say what an entry *is* — M13/5 walks the
-   * same entries to recreate a dropped directory tree.
-   */
-  function dropOn(target: HTMLElement, files: File[], directories: string[] = []) {
-    const dataTransfer = {
-      types: ["Files"],
-      files,
-      items: [
-        ...files.map((one) => ({
-          kind: "file",
-          getAsFile: () => one,
-          webkitGetAsEntry: () => ({ isFile: true, isDirectory: false }),
-        })),
-        ...directories.map((name) => ({
-          kind: "file",
-          getAsFile: () => new File([], name),
-          webkitGetAsEntry: () => ({ isFile: false, isDirectory: true, name }),
-        })),
-      ],
-    };
-    fireEvent.dragOver(target, { dataTransfer });
-    fireEvent.drop(target, { dataTransfer });
-  }
 
   it("opens one confirmation for a whole drop, and creates nothing until it is confirmed", async () => {
     const api = batchApi([]);
@@ -6914,34 +6983,33 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     await waitFor(() => expect(api.quiet()).toBe(true));
   });
 
-  it("opens nothing for a drop carrying no file of its own", async () => {
+  it("opens nothing for a drop carrying nothing at all", async () => {
     const api = batchApi([]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42/documents");
 
     const section = await documentsSection();
-    // A directory is not a file, and recreating one is M13/5's. Nothing
-    // is half-read, and nothing is created.
-    dropOn(section, [], ["Legacy contracts"]);
+    dropOn(section, []);
 
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(api.uploaded).toEqual([]);
   });
 
-  it("takes the loose files out of a drop that also carried a directory", async () => {
+  it("takes the loose files of a drop that also carried a directory, and the directory with them", async () => {
     const api = batchApi([]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42/documents");
 
     const section = await documentsSection();
-    dropOn(section, [file("loose.pdf")], ["Legacy contracts"]);
+    dropOn(section, [file("loose.pdf"), dir("Legacy contracts", [file("MSA.pdf")])]);
 
-    // One file, not two: the directory is left whole for M13/5 rather
-    // than half-read as a file with no bytes.
+    // Two files, not one: the directory is walked rather than left
+    // alone, and the file inside it comes with it (DOC-011).
     const dialog = await screen.findByRole("dialog");
-    expect(within(dialog).getByRole("heading", { name: "Import 1 file" })).toBeVisible();
+    expect(within(dialog).getByRole("heading", { name: "Import 2 files" })).toBeVisible();
     expect(within(dialog).getByText("loose.pdf")).toBeVisible();
-    expect(within(dialog).queryByText("Legacy contracts")).toBeNull();
+    expect(within(dialog).getByText("Legacy contracts")).toBeVisible();
+    expect(within(dialog).getByText("MSA.pdf")).toBeVisible();
   });
 
   it("stops starting new uploads on Cancel remaining, and lets the ones in flight finish", async () => {
@@ -7016,14 +7084,459 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     const section = await documentsSection();
     // One gesture, one meaning (DES-033 §8): a dropped file is always a
     // new document, and appending a round is a deliberate act on a
-    // named document.
+    // named document. The hint promises the folder clause now that the
+    // drop can carry one (DES-033 normalization point 9).
     expect(
-      within(section).getByText("Drop files here — each file becomes a new document at version 1"),
+      within(section).getByText(
+        "Drop files or folders here — each file becomes a new document at version 1",
+      ),
     ).toBeVisible();
     expect(
       within(section).getByText(
-        "To add a round to an existing chain, use Add version on that document.",
+        "Folder structure is kept. To add a round to an existing chain, use Add version on that document.",
       ),
     ).toBeVisible();
+  });
+});
+
+/**
+ * Folder drop (M13/5, DOC-011, DES-033): the structure survives.
+ *
+ * The traversal is exercised through the route tests like every other
+ * interaction, per M13's seam decision. jsdom has neither drag nor the
+ * directory-entry API, so a dropped tree is fed in as **synthetic
+ * `DataTransfer` entry objects** — the shape the walk reads and nothing
+ * else — and everything below is asserted at what the section drew and
+ * what it sent.
+ *
+ * **The client never creates a folder for a file.** Each upload carries
+ * its own path and the seam find-or-creates the chain under the owning
+ * contract's row lock, which is what makes several files of one folder
+ * converge on one folder. So what is asserted here is the path each
+ * upload carried, not a folder call the client did not make. The only
+ * folders asked for on their own are the empty directories, which no
+ * upload would recreate.
+ */
+describe("dropping a folder tree on the contract record (M13/5, DOC-011, DES-033)", () => {
+  const version = (over: Record<string, unknown> = {}) => ({
+    id: "ver-1",
+    versionNumber: 1,
+    kind: "draft_ours",
+    note: null,
+    originalFilename: "signed.pdf",
+    mimeType: "text/plain",
+    renderFamily: "other",
+    byteSize: 10,
+    checksumSha256: "a".repeat(64),
+    uploadedBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+    createdAt: "2026-08-11T09:00:00.000Z",
+    isCurrent: true,
+    isExecuted: false,
+    ...over,
+  });
+
+  const document = (id: string, title: string, folderId: string | null = null) => ({
+    id,
+    title,
+    description: null,
+    isPrimary: false,
+    versions: [version({ id: `ver-${id}`, originalFilename: title })],
+    archivedAt: null,
+    isConfidential: false,
+    folderId,
+    createdBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+    createdAt: "2026-08-11T09:00:00.000Z",
+    updatedAt: "2026-08-11T09:00:00.000Z",
+  });
+
+  const folderRow = (id: string, name: string, parentId: string | null = null) => ({
+    id,
+    name,
+    parentId,
+    documentCount: 0,
+    createdAt: "2026-08-15T09:00:00.000Z",
+    updatedAt: "2026-08-15T09:00:00.000Z",
+  });
+
+  /** The record, its paper, its folders, and every upload's destination
+   * as it arrived. */
+  function dropApi(folders: Record<string, unknown>[] = []) {
+    const record = recordApi(contractRow(), [person("u1", "creator")]);
+    let paper: Record<string, unknown>[] = [];
+    const uploaded: { name: string; folderId: string | null; folderPath: string | null }[] = [];
+    const recreated: { path: string; parentId: string | null }[] = [];
+    let folderReads = 0;
+    const handler = (call: StubCall): Response | undefined => {
+      const { pathname } = call.url;
+      if (pathname === "/api/v1/contracts/42/folders" && call.method === "GET") {
+        folderReads += 1;
+        return json(200, { folders });
+      }
+      if (pathname === "/api/v1/contracts/42/folders" && call.method === "POST") {
+        const body = call.body as { path?: string; parentId?: string };
+        recreated.push({ path: String(body.path), parentId: body.parentId ?? null });
+        return json(201, { folders });
+      }
+      if (pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
+        const asked = call.url.searchParams.get("folder");
+        return json(200, {
+          documents: asked === null || asked === "root" ? paper : [],
+          nextCursor: null,
+        });
+      }
+      if (pathname === "/api/v1/contracts/42/documents" && call.method === "POST") {
+        const form = call.body as FormData;
+        const file = form.get("file") as File;
+        uploaded.push({
+          name: file.name,
+          folderId: form.has("folderId") ? String(form.get("folderId")) : null,
+          folderPath: form.has("folderPath") ? String(form.get("folderPath")) : null,
+        });
+        const added = {
+          ...document(`doc-${uploaded.length}`, file.name),
+          isPrimary: uploaded.length === 1,
+          versions: [version({ id: `ver-${file.name}`, originalFilename: file.name })],
+        };
+        paper = [added, ...paper];
+        return json(201, { document: added });
+      }
+      return record.handler(call);
+    };
+    return {
+      handler,
+      uploaded,
+      recreated,
+      /** Where each named file said it was going. */
+      pathOf: (name: string) => uploaded.find((one) => one.name === name)?.folderPath ?? null,
+      folderReads: () => folderReads,
+    };
+  }
+
+  const documentsSection = () => screen.findByRole("region", { name: /^Documents/ });
+
+  const file = (name: string, bytes = "some bytes") =>
+    new File([bytes], name, { type: "application/pdf" });
+
+  /** The legacy book of the demo sentence: two levels of folders, files
+   * at both, and one directory holding nothing. */
+  const legacyBook = () =>
+    dir("Legacy contracts", [
+      dir("Executed", [file("MSA_2019_signed.pdf"), file("SOW1_2020_signed.pdf")]),
+      dir("Correspondence", [dir("2019", [file("notice.pdf")])]),
+      dir("Signature packets"),
+      file("cover_letter.pdf"),
+    ]);
+
+  it("shows the folder tree it will create before it creates anything", async () => {
+    const api = dropApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    dropOn(section, [legacyBook()]);
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("heading", { name: "Import 4 files" })).toBeVisible();
+    // The structure, drawn as a structure (DES-033 §9): the dropped
+    // directory, what it holds, and the files inside each level. Read
+    // off the summary list itself, because the version-kind control
+    // below it offers a kind called Executed too.
+    const summary = within(dialog).getByRole("list", { name: "What this import will create" });
+    expect(
+      within(summary)
+        .getAllByRole("listitem")
+        .map((line) => line.textContent),
+    ).toEqual([
+      "Legacy contracts4 folders · 4 files",
+      "Correspondence1 folder · 1 file",
+      "20191 file",
+      "notice.pdf10 byte",
+      "Executed2 files",
+      "MSA_2019_signed.pdf10 byte",
+      "SOW1_2020_signed.pdf10 byte",
+      // An empty directory of the dropped tree is drawn too, because it
+      // is part of the structure that arrived and nothing else will
+      // recreate it.
+      "Signature packetsEmpty",
+      "cover_letter.pdf10 byte",
+    ]);
+    expect(within(dialog).getByText("Folder structure is kept")).toBeVisible();
+    // And nothing is created until it is confirmed.
+    expect(api.uploaded).toEqual([]);
+    expect(api.recreated).toEqual([]);
+  });
+
+  it("sends every file with the folder path it sat at in the dropped tree", async () => {
+    const api = dropApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [legacyBook()]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 4 files" }));
+
+    await waitFor(() => expect(api.uploaded).toHaveLength(4));
+    // The path each file carried is the path it sat at, root-first —
+    // the seam find-or-creates that chain under the contract's row lock,
+    // so nothing here co-ordinates the folders and nothing here creates
+    // one.
+    expect(api.pathOf("MSA_2019_signed.pdf")).toBe("Legacy contracts/Executed");
+    expect(api.pathOf("SOW1_2020_signed.pdf")).toBe("Legacy contracts/Executed");
+    expect(api.pathOf("notice.pdf")).toBe("Legacy contracts/Correspondence/2019");
+    expect(api.pathOf("cover_letter.pdf")).toBe("Legacy contracts");
+    // Every file lands at the record root's own level of the tree, so
+    // none of them names a folder that was already there.
+    expect(api.uploaded.every((one) => one.folderId === null)).toBe(true);
+  });
+
+  it("recreates the empty directories of the dropped tree on their own", async () => {
+    const api = dropApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [legacyBook()]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 4 files" }));
+
+    // No upload would recreate a directory that held nothing, so it is
+    // asked for by path — every level above it may be missing too, and
+    // the seam makes the chain segment by segment (DOC-011).
+    await waitFor(() => expect(api.recreated).toHaveLength(1));
+    expect(api.recreated[0]).toEqual({
+      path: "Legacy contracts/Signature packets",
+      parentId: null,
+    });
+    // And the full ones are not asked for at all: their files made them.
+    await waitFor(() => expect(api.uploaded).toHaveLength(4));
+    expect(api.recreated).toHaveLength(1);
+  });
+
+  it("reads the record's folders again once the import settles", async () => {
+    const api = dropApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    const before = api.folderReads();
+    dropOn(section, [dir("Legacy", [file("MSA.pdf")])]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 1 file" }));
+
+    // The folders the import created are the seam's, so the section
+    // cannot know them: it reads the set again rather than guessing at
+    // what the drop made.
+    await waitFor(() => expect(api.folderReads()).toBeGreaterThan(before));
+  });
+
+  it("creates nothing at all when the drop is cancelled, folders included", async () => {
+    const api = dropApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [legacyBook()]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(api.uploaded).toEqual([]);
+    expect(api.recreated).toEqual([]);
+  });
+
+  it("files a drop onto a folder row into that folder, and a tree dropped there beneath it", async () => {
+    const api = dropApi([folderRow("f-1", "Executed")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    const row = (await within(section).findByText("Executed")).closest("tr")!;
+    dropOn(row, [file("signed.pdf"), dir("2019", [file("notice.pdf")])]);
+
+    const dialog = await screen.findByRole("dialog");
+    // The readout names the folder the gesture landed on rather than the
+    // record root, because that is where the drop said the files go.
+    // Read off the readout strip itself, because the version-kind
+    // control below it offers a kind called Executed too.
+    const readout = within(dialog).getByText("Set by the drop").parentElement!;
+    expect(within(readout).getByText("Executed")).toBeVisible();
+    expect(within(dialog).queryByText("Record root")).toBeNull();
+    await user.click(within(dialog).getByRole("button", { name: "Import 2 files" }));
+
+    await waitFor(() => expect(api.uploaded).toHaveLength(2));
+    // Both files name the folder they were dropped on. The one that sat
+    // in a directory names the chain beneath it too, so a tree dropped
+    // on a row is recreated inside that row.
+    expect(api.uploaded.every((one) => one.folderId === "f-1")).toBe(true);
+    expect(api.pathOf("signed.pdf")).toBeNull();
+    expect(api.pathOf("notice.pdf")).toBe("2019");
+  });
+
+  it("draws each file's destination on its own row while the import runs", async () => {
+    const api = dropApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [dir("Legacy", [dir("Executed", [file("MSA.pdf")])])]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 1 file" }));
+
+    // The path before the name, so a long import of a nested tree reads
+    // as the tree rather than as a list of names (DES-033 §11).
+    expect(await within(dialog).findByText("Legacy/Executed/")).toBeVisible();
+    await waitFor(() => expect(api.uploaded).toHaveLength(1));
+  });
+
+  it("refuses one bad path at the seam and lands the rest of the drop", async () => {
+    const api = dropApi();
+    const refusing = (call: StubCall): StubAnswer => {
+      const isUpload =
+        call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "POST";
+      if (isUpload) {
+        const form = call.body as FormData;
+        if (String(form.get("folderPath")).includes("Broken")) {
+          return problem(400, "A folder path cannot have an empty segment.");
+        }
+      }
+      return api.handler(call);
+    };
+    stubApi({ signedIn: MEMBER, extra: refusing });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [
+      dir("Legacy", [dir("Executed", [file("good.pdf")]), dir("Broken", [file("bad.pdf")])]),
+    ]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 2 files" }));
+
+    // The refused file says why, in the seam's own sentence, and the
+    // file beside it lands: a bad path costs its own file and never the
+    // batch (DOC-011).
+    expect(
+      await within(dialog).findByText("A folder path cannot have an empty segment."),
+    ).toBeVisible();
+    expect(
+      await within(dialog).findByText("1 file failed. The other 1 is on the contract."),
+    ).toBeVisible();
+    expect(api.uploaded.map((one) => one.name)).toEqual(["good.pdf"]);
+  });
+
+  it("takes a whole directory from the picker, structure and all, without a pointer", async () => {
+    const api = dropApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(within(section).getByRole("button", { name: "Upload" }));
+    const composer = await screen.findByRole("dialog");
+    // The directory picker is folder drop's pointer-free twin (DES-033
+    // §7): the browser puts the path each file sat at on the file
+    // itself, so the structure survives a pick as it survives a drop.
+    const picked = [file("MSA_2019_signed.pdf"), file("notice.pdf")];
+    Object.defineProperty(picked[0]!, "webkitRelativePath", {
+      value: "Legacy contracts/Executed/MSA_2019_signed.pdf",
+    });
+    Object.defineProperty(picked[1]!, "webkitRelativePath", {
+      value: "Legacy contracts/Correspondence/notice.pdf",
+    });
+    // The control a keyboard reaches carries the field's own name, as
+    // the file picker's does; the input behind it is what the pick lands
+    // on.
+    expect(within(composer).getByRole("button", { name: "File Choose folder" })).toBeVisible();
+    await user.upload(within(composer).getByLabelText("Folder"), picked);
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText("Legacy contracts")).toBeVisible();
+    await user.click(within(dialog).getByRole("button", { name: "Import 2 files" }));
+
+    await waitFor(() => expect(api.uploaded).toHaveLength(2));
+    expect(api.pathOf("MSA_2019_signed.pdf")).toBe("Legacy contracts/Executed");
+    expect(api.pathOf("notice.pdf")).toBe("Legacy contracts/Correspondence");
+  });
+
+  it("says the drop may be short when a directory could not be read", async () => {
+    const api = dropApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    // A browser that refuses a directory hands back nothing rather than
+    // an error, so a walk that could not read one must not call it
+    // empty: a drop arriving short in silence is the one failure a bulk
+    // import cannot afford.
+    const refused = {
+      isFile: false,
+      isDirectory: true,
+      name: "Locked",
+      createReader: () => ({
+        readEntries: (_resolve: unknown, reject: () => void) => reject(),
+      }),
+    };
+    const dataTransfer = {
+      types: ["Files"],
+      files: [file("loose.pdf")],
+      items: [
+        {
+          kind: "file",
+          getAsFile: () => file("loose.pdf"),
+          webkitGetAsEntry: () => entryOf(file("loose.pdf")),
+        },
+        { kind: "file", getAsFile: () => new File([], "Locked"), webkitGetAsEntry: () => refused },
+      ],
+    };
+    fireEvent.dragOver(section, { dataTransfer });
+    fireEvent.drop(section, { dataTransfer });
+
+    const dialog = await screen.findByRole("dialog");
+    expect(
+      within(dialog).getByText(
+        "1 folder could not be read: Locked. Check the list below — it may be missing files.",
+      ),
+    ).toBeVisible();
+    // And it is not recreated as an empty folder either: nothing here
+    // knows it is empty.
+    expect(within(dialog).queryByText("Empty")).toBeNull();
+  });
+
+  it("takes no drop at all on a folder row of an archived record", async () => {
+    const api = dropApi([folderRow("f-1", "Executed")]);
+    const record = recordApi({ ...contractRow(), archivedAt: "2026-08-01T09:00:00.000Z" }, [
+      person("u1", "creator"),
+    ]);
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call: StubCall) => {
+        const { pathname } = call.url;
+        if (pathname === "/api/v1/contracts/42/folders" && call.method === "GET") {
+          return json(200, { folders: [folderRow("f-1", "Executed")] });
+        }
+        if (pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
+          return json(200, { documents: [], nextCursor: null });
+        }
+        return record.handler(call);
+      },
+    });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    const row = (await within(section).findByText("Executed")).closest("tr")!;
+    dropOn(row, [file("signed.pdf")]);
+
+    // A frozen record's paper stays frozen, organization included — so
+    // the drop opens no confirmation at all rather than one that would
+    // be refused a file at a time.
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(api.uploaded).toEqual([]);
   });
 });
