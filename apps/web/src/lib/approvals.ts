@@ -85,6 +85,31 @@ export async function requestContractApprovals(
     : { ok: false, detail: problemDetail(error) };
 }
 
+/**
+ * Applies an approver group to the contract (CTR-012).
+ *
+ * One call for a whole template, because applying it is one act: the
+ * seam snapshots the group's current members onto the record, skips
+ * anybody who already has a request open, and refuses the apply
+ * outright when that leaves nobody to ask.
+ *
+ * It answers the whole roster, exactly as a named ask does — the same
+ * door, so the section replaces what it holds and never has to work out
+ * which rows the apply added.
+ */
+export async function applyApproverGroup(
+  contractNumber: number,
+  groupId: string,
+): Promise<ApprovalsOutcome> {
+  const { data, error } = await api.POST("/api/v1/contracts/{number}/approvals/group", {
+    params: { path: { number: contractNumber } },
+    body: { groupId },
+  });
+  return data
+    ? { ok: true, approvals: data.approvals }
+    : { ok: false, detail: problemDetail(error) };
+}
+
 /** Approves or rejects one request, with an optional note. Final: the
  * seam refuses a second decision on the same row. */
 export async function decideContractApproval(

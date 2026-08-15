@@ -63,10 +63,19 @@ const PEOPLE = [
   { id: "u4", displayName: "Sarah Chen", image: null, archived: false, role: "legal_team_member" },
 ];
 
+/** The live approver-group templates the apply picker offers (CTR-012).
+ * "Commercial sign-off" holds two people; "Empty template" holds none,
+ * which is a group the seam refuses rather than one the picker hides. */
+const GROUPS = [
+  { id: "g1", name: "Commercial sign-off", memberIds: ["u4", "u1"] },
+  { id: "g2", name: "Empty template", memberIds: [] },
+];
+
 const OPTIONS = {
   contractTypes: [{ id: "t-msa", slug: "msa", displayName: "MSA", fields: [] }],
   contractStatuses: [{ id: "s-draft", slug: "draft", displayName: "Draft", stage: "draft" }],
   users: PEOPLE,
+  approverGroups: GROUPS,
 };
 
 function contractRow(overrides: Record<string, unknown> = {}) {
@@ -126,6 +135,7 @@ function recordApi(
   initialApprovals: Record<string, unknown>[] = [],
   row: Record<string, unknown> = contractRow(),
   team: Record<string, unknown>[] = [{ ...named("u2"), archived: false, role: "creator" }],
+  groups: { id: string; name: string; memberIds: string[] }[] = GROUPS,
 ) {
   let approvals = initialApprovals;
   const writes: { method: string; path: string; body: unknown }[] = [];
@@ -136,7 +146,7 @@ function recordApi(
 
   const handler = (call: StubCall) => {
     if (call.url.pathname === "/api/v1/contracts/options" && call.method === "GET") {
-      return json(200, OPTIONS);
+      return json(200, { ...OPTIONS, approverGroups: groups });
     }
     if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
       return json(200, { entities: [] });
@@ -161,6 +171,34 @@ function recordApi(
         ...approvals,
         ...body.approverIds.map((id, index) =>
           approval({ id: `new-${index}`, approver: named(id), requestedBy: named("u2") }),
+        ),
+      ];
+      return json(201, { approvals });
+    }
+    if (call.url.pathname === "/api/v1/contracts/42/approvals/group" && call.method === "POST") {
+      writes.push({ method: "POST", path: call.url.pathname, body: call.body });
+      if (refuse) return problem(refuse.status, refuse.detail);
+      // The seam's own two filters, so what the stub answers is what
+      // the section would really be given back: the group's members,
+      // minus anybody who already holds a pending request.
+      const body = call.body as { groupId: string };
+      const group = groups.find((entry) => entry.id === body.groupId)!;
+      const pending = new Set(
+        approvals.filter((entry) => entry.status === "pending").map((entry) => entry.approver),
+      );
+      const asked = group.memberIds.filter(
+        (id) => ![...pending].some((person) => (person as { id: string }).id === id),
+      );
+      approvals = [
+        ...approvals,
+        ...asked.map((id, index) =>
+          approval({
+            id: `grp-${index}`,
+            approver: named(id),
+            requestedBy: named("u2"),
+            source: "group",
+            groupName: group.name,
+          }),
         ),
       ];
       return json(201, { approvals });
@@ -445,6 +483,109 @@ describe("the contract record's Approvals section", () => {
     renderAt("/contracts/42/approvals");
     await rosterRows();
     expect(screen.queryByRole("button", { name: "Add approver" })).not.toBeInTheDocument();
+  });
+
+  it("applies a group, and says who it will ask before it asks them", async () => {
+    const user = userEvent.setup();
+    const api = recordApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    await user.click(await screen.findByRole("button", { name: "Apply group" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.selectOptions(
+      within(dialog).getByLabelText("Approver group"),
+      "Commercial sign-off",
+    );
+    // The set is named before it becomes requests.
+    expect(within(dialog).getByText("Asks Sarah Chen and Ada Admin.")).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Apply group" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]).toMatchObject({
+      method: "POST",
+      path: "/api/v1/contracts/42/approvals/group",
+      body: { groupId: "g1" },
+    });
+    // The roster the apply answered with is what the section now draws,
+    // and the Source cell names the template each row came from.
+    const rows = await waitFor(async () => {
+      const drawn = await rosterRows();
+      expect(drawn).toHaveLength(2);
+      return drawn;
+    });
+    expect(within(rows[0]!).getByText("Commercial sign-off")).toBeInTheDocument();
+  });
+
+  it("counts the members it would skip, and leaves them out of the ask", async () => {
+    const user = userEvent.setup();
+    const api = recordApi([approval({ id: "a1", approver: named("u4"), status: "pending" })]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    await user.click(await screen.findByRole("button", { name: "Apply group" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.selectOptions(
+      within(dialog).getByLabelText("Approver group"),
+      "Commercial sign-off",
+    );
+    expect(within(dialog).getByText("Asks Ada Admin.")).toBeInTheDocument();
+    expect(
+      within(dialog).getByText("Skips 1 person who already has a request open."),
+    ).toBeInTheDocument();
+  });
+
+  it("says a group has nobody to ask, and prints the seam's refusal once", async () => {
+    const user = userEvent.setup();
+    const api = recordApi([]);
+    api.refuseNext(422, "Empty template has no members to ask.");
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    await user.click(await screen.findByRole("button", { name: "Apply group" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.selectOptions(within(dialog).getByLabelText("Approver group"), "Empty template");
+    expect(within(dialog).getByText("This group has nobody to ask.")).toBeInTheDocument();
+
+    // Whether an apply is a no-op is the seam's call, so the press is
+    // carried and its sentence is what the dialog prints.
+    await user.click(within(dialog).getByRole("button", { name: "Apply group" }));
+    const open = await screen.findByRole("dialog");
+    expect(
+      await within(open).findByText("Empty template has no members to ask."),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("Empty template has no members to ask.")).toHaveLength(1);
+  });
+
+  it("refuses to apply nothing", async () => {
+    const user = userEvent.setup();
+    const api = recordApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    await user.click(await screen.findByRole("button", { name: "Apply group" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Apply group" }));
+
+    expect(await within(dialog).findByText("Pick an approver group.")).toBeInTheDocument();
+    expect(api.writes).toHaveLength(0);
+  });
+
+  it("draws no apply control when no group is set up, and none for a read-only viewer", async () => {
+    const bare = recordApi([], contractRow(), undefined, []);
+    stubApi({ signedIn: MEMBER, extra: bare.handler });
+    const bareView = renderAt("/contracts/42/approvals");
+    await screen.findByRole("button", { name: "Add approver" });
+    expect(screen.queryByRole("button", { name: "Apply group" })).not.toBeInTheDocument();
+    bareView.view.unmount();
+
+    const readOnly = recordApi([approval({ id: "a1", approver: named("u4") })], contractRow(), [
+      { ...named("u3"), archived: false, role: "contributor" },
+    ]);
+    stubApi({ signedIn: CONTRIBUTOR, extra: readOnly.handler });
+    renderAt("/contracts/42/approvals");
+    await rosterRows();
+    expect(screen.queryByRole("button", { name: "Apply group" })).not.toBeInTheDocument();
   });
 
   it("reaches the section from the record's own tab strip", async () => {

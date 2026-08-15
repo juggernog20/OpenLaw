@@ -104,6 +104,8 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
   and,
+  approverGroupMembers,
+  approverGroups,
   asc,
   contractCounterparties,
   contractStatuses,
@@ -385,6 +387,27 @@ const StatusOptionSchema = TypeOptionSchema.extend({ stage: z.enum(CONTRACT_STAG
  * entry, plus the role the Owner filter reads. Archived people are left
  * out entirely — this list exists to be assigned from. */
 const UserOptionSchema = PersonSchema.extend({ role: z.enum(USER_ROLES) });
+
+/**
+ * The Member+ readable slice of an approver group (CTR-012): the name
+ * to offer in the record's apply picker, and the people applying it
+ * would ask.
+ *
+ * **Ids, not person rows.** The same answer already carries every live
+ * person in `users`, so a second copy of the same people could go stale
+ * against the first. The client joins them, and a member the `users`
+ * list does not hold is an archived person — exactly the member the
+ * apply itself leaves out, so the two agree without either saying so.
+ *
+ * Managing groups stays Administrator-only (SET-002): this is the list
+ * an apply reads, not the list an Administrator edits, and it carries
+ * the live groups alone.
+ */
+const ApproverGroupOptionSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  memberIds: z.array(z.string()),
+});
 
 const TitleSchema = z.string().trim().min(1).max(200);
 /** CTR-011's inline creation writes exactly this and nothing else. */
@@ -1113,21 +1136,25 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           "fields it attaches (CTR-016) so the create dialog can grow " +
           "the ones it requires; the live statuses; and the live people " +
           "the Owner and team pickers offer — the create dialog's and " +
-          "the record's Member+ picker source (the settings surfaces " +
-          "stay Administrator-only per SET-002)",
+          "the record's Member+ picker source; and the live approver " +
+          "groups the record's apply picker offers, each with the ids " +
+          "of the people applying it would ask (CTR-012) — the settings " +
+          "surfaces that manage all of these stay Administrator-only " +
+          "per SET-002",
         tags: ["contracts"],
         response: {
           200: z.object({
             contractTypes: z.array(TypeChoiceSchema),
             contractStatuses: z.array(StatusOptionSchema),
             users: z.array(UserOptionSchema),
+            approverGroups: z.array(ApproverGroupOptionSchema),
           }),
           default: problemResponse,
         },
       },
     },
     async () => {
-      const [types, statuses, people] = await Promise.all([
+      const [types, statuses, people, groups] = await Promise.all([
         app.db
           .select({
             id: contractTypes.id,
@@ -1160,7 +1187,48 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           .from(users)
           .where(isNull(users.archivedAt))
           .orderBy(asc(sql`lower(${users.displayName})`)),
+        // The live templates and their membership in one read (CTR-012).
+        // An archived group is absent, which is the whole of what
+        // archiving one does: it leaves the apply picker and disturbs
+        // nothing it already produced. The members ride in display-name
+        // order — the order the apply itself asks in — so the dialog's
+        // preview names people in the order the roster will then draw
+        // them, rather than in whatever order the join happened to give.
+        app.db
+          .select({
+            id: approverGroups.id,
+            name: approverGroups.name,
+            memberId: approverGroupMembers.userId,
+          })
+          .from(approverGroups)
+          .leftJoin(approverGroupMembers, eq(approverGroupMembers.groupId, approverGroups.id))
+          .leftJoin(users, eq(users.id, approverGroupMembers.userId))
+          .where(isNull(approverGroups.archivedAt))
+          .orderBy(
+            asc(approverGroups.name),
+            asc(approverGroups.createdAt),
+            asc(users.displayName),
+            asc(users.id),
+          ),
       ]);
+      // A left join, so a group with no members is still offered — the
+      // apply refuses it by name, which is a better answer than a
+      // template that has silently vanished from the picker.
+      //
+      // Gathered by id rather than by adjacency: nothing makes a group
+      // name unique, so two same-named templates can interleave their
+      // member rows under the sort. Map insertion order keeps the
+      // answer in the order the query gave.
+      const byGroupId = new Map<string, { id: string; name: string; memberIds: string[] }>();
+      for (const row of groups) {
+        let group = byGroupId.get(row.id);
+        if (!group) {
+          group = { id: row.id, name: row.name, memberIds: [] };
+          byGroupId.set(row.id, group);
+        }
+        if (row.memberId !== null) group.memberIds.push(row.memberId);
+      }
+      const groupOptions = [...byGroupId.values()];
       // Each type's own attachments, so the dialog knows what picking
       // that type will demand before it asks for it. One query per live
       // type: the taxonomy is a handful of rows, and the alternative —
@@ -1175,6 +1243,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         })),
         contractStatuses: statuses,
         users: people.map((person) => ({ ...toPerson(person), role: person.role })),
+        approverGroups: groupOptions,
       };
     },
   );

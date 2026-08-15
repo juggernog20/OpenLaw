@@ -51,6 +51,11 @@ type OptionsResponse =
 export type ContractTypeOption = OptionsResponse["contractTypes"][number];
 export type ContractStatusOption = OptionsResponse["contractStatuses"][number];
 export type UserOption = OptionsResponse["users"][number];
+/** One live approver group the record's apply picker offers (CTR-012):
+ * the name, and the ids of the people applying it would ask. The names
+ * behind those ids are the `users` answer above — one copy of a person
+ * on this page, so the picker and the roster cannot disagree. */
+export type ApproverGroupOption = OptionsResponse["approverGroups"][number];
 
 /**
  * One choice in the signing-entity picker (CTR-011): the id it commits

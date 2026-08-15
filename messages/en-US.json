@@ -45,7 +45,7 @@
     "defaultMessage": "{actor} rejected this contract"
   },
   "activity.approval.requested": {
-    "defaultMessage": "{actor} asked {approver} to approve this contract"
+    "defaultMessage": "{source, select, group {{actor} asked {approver} to approve this contract, from the {group} group} other {{actor} asked {approver} to approve this contract}}"
   },
   "activity.approverGroup.memberAdded": {
     "defaultMessage": "{actor} added {member} to the approver group {name}"
@@ -329,6 +329,12 @@
   "approvals.addTitle": {
     "defaultMessage": "Add approver"
   },
+  "approvals.applyGroup": {
+    "defaultMessage": "Apply group"
+  },
+  "approvals.applyGroupTitle": {
+    "defaultMessage": "Apply approver group"
+  },
   "approvals.approve": {
     "defaultMessage": "Approve"
   },
@@ -380,6 +386,24 @@
   "approvals.empty": {
     "defaultMessage": "No approvals requested on this contract yet."
   },
+  "approvals.group": {
+    "defaultMessage": "Approver group"
+  },
+  "approvals.groupAllAsked": {
+    "defaultMessage": "Everybody in this group already has a request open."
+  },
+  "approvals.groupAsks": {
+    "defaultMessage": "Asks {names}."
+  },
+  "approvals.groupEmpty": {
+    "defaultMessage": "This group has nobody to ask."
+  },
+  "approvals.groupSkips": {
+    "defaultMessage": "{count, plural, one {Skips # person who already has a request open.} other {Skips # people who already have a request open.}}"
+  },
+  "approvals.groupSnapshot": {
+    "defaultMessage": "Applying a group asks the people it names now. A later edit to the group leaves these requests as they are."
+  },
   "approvals.noCandidates": {
     "defaultMessage": "Everybody who can approve this contract already has a request open."
   },
@@ -388,6 +412,12 @@
   },
   "approvals.note": {
     "defaultMessage": "Note (optional)"
+  },
+  "approvals.pickGroup": {
+    "defaultMessage": "Pick an approver group."
+  },
+  "approvals.pickGroupOption": {
+    "defaultMessage": "Pick a group"
   },
   "approvals.pickSomebody": {
     "defaultMessage": "Pick at least one approver."

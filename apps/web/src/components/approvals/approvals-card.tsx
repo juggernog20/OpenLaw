@@ -41,13 +41,23 @@
  * confidentiality control gives: the API is the authority, and a second
  * rule would drift. The seam refuses either way, by name; this is only
  * what keeps a stale list from being the normal case.
+ *
+ * **Applying a group is one more write through the same door** (M14/4,
+ * CTR-012). The apply dialog picks one live template and says who it
+ * would ask before it asks them, because applying a group asks several
+ * people at once and the reader should see the set before it becomes
+ * requests. The dialog **describes** the skip rule and refuses nothing
+ * itself: whether a group has anybody left to ask is the seam's
+ * decision, and printing its sentence is what keeps the rule in one
+ * place (DES-035).
  */
 
 import { useState } from "react";
 import { FormattedMessage, useIntl, defineMessage, type IntlShape } from "react-intl";
-import { Check, MoreHorizontal, Plus, X } from "lucide-react";
+import { Check, MoreHorizontal, Plus, Users, X } from "lucide-react";
 import {
   APPROVAL_PILL,
+  applyApproverGroup,
   cancelContractApproval,
   decideContractApproval,
   requestContractApprovals,
@@ -55,10 +65,10 @@ import {
   type ApprovalStatus,
   type ContractApproval,
 } from "../../lib/approvals";
-import type { ContractTeamMember, UserOption } from "../../lib/contracts";
+import type { ApproverGroupOption, ContractTeamMember, UserOption } from "../../lib/contracts";
 import type { Role } from "../../lib/roles";
 import { formatShortDate } from "../../lib/format";
-import { TEXTAREA_CLASS } from "../../lib/form-controls";
+import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
 import { Avatar } from "../avatar";
 import { StatusNote, type FieldStatus } from "../status-note";
 import { Button } from "../ui/button";
@@ -109,6 +119,7 @@ export function ApprovalsCard({
   contractNumber,
   approvals,
   users,
+  approverGroups,
   team,
   viewerId,
   viewerRole,
@@ -121,6 +132,10 @@ export function ApprovalsCard({
   approvals: readonly ContractApproval[];
   /** The people the record's pickers read, Member+ and otherwise. */
   users: readonly UserOption[];
+  /** The live approver-group templates (CTR-012). Empty when an
+   * Administrator has configured none, and the apply control is then
+   * absent rather than opening a dialog that can only say no. */
+  approverGroups: readonly ApproverGroupOption[];
   /** The contract's working group (CTR-004) — half of a confidential
    * record's audience, and the Owner is the other half. */
   team: readonly ContractTeamMember[];
@@ -136,6 +151,7 @@ export function ApprovalsCard({
   const [status, setStatus] = useState<FieldStatus>("idle");
   const [detail, setDetail] = useState<string | null>(null);
   const [asking, setAsking] = useState(false);
+  const [applying, setApplying] = useState(false);
   const [deciding, setDeciding] = useState<{
     approval: ContractApproval;
     decision: ApprovalDecision;
@@ -178,6 +194,20 @@ export function ApprovalsCard({
         person.id === ownerId,
     )
     .map((person) => ({ id: person.id, displayName: person.displayName, image: person.image }));
+
+  /**
+   * Every live person this page holds, by id — what the apply dialog
+   * turns a group's member ids into.
+   *
+   * Unfiltered on purpose. A member outside a confidential record's
+   * audience is refused **by the seam, by name**, so the preview has to
+   * be able to name them; leaving them out would draw an apply that
+   * looks smaller than the one that is about to be refused. Archived
+   * people are absent from this list already, which is exactly the
+   * member the apply itself skips — so the preview and the seam agree
+   * without either of them saying so.
+   */
+  const peopleById = new Map(users.map((person) => [person.id, person]));
 
   /**
    * Every write says saving, then saved or why not, and replaces the
@@ -263,6 +293,16 @@ export function ApprovalsCard({
         {!frozen && (
           <div className="flex shrink-0 items-center gap-2">
             <StatusNote status={status} detail={detail} />
+            {/* The C5 mock's pair, in its order. Absent rather than
+                disabled when no Administrator has set a template up:
+                a control whose dialog could only say "there are none"
+                is not a control. */}
+            {approverGroups.length > 0 && (
+              <Button variant="secondary" disabled={busy} onClick={() => setApplying(true)}>
+                <Users size={16} aria-hidden="true" />
+                <FormattedMessage id="approvals.applyGroup" defaultMessage="Apply group" />
+              </Button>
+            )}
             <Button variant="secondary" disabled={busy} onClick={() => setAsking(true)}>
               <Plus size={16} aria-hidden="true" />
               <FormattedMessage id="approvals.add" defaultMessage="Add approver" />
@@ -340,6 +380,20 @@ export function ApprovalsCard({
               true,
             );
             if (refusal === null) setAsking(false);
+            return refusal;
+          }}
+        />
+      )}
+      {applying && (
+        <ApplyGroupDialog
+          groups={approverGroups}
+          peopleById={peopleById}
+          pendingApprovers={pendingApprovers}
+          busy={busy}
+          onClose={() => setApplying(false)}
+          onConfirm={async (groupId) => {
+            const refusal = await run(() => applyApproverGroup(contractNumber, groupId), true);
+            if (refusal === null) setApplying(false);
             return refusal;
           }}
         />
@@ -596,6 +650,177 @@ function AddApproverDialog({
             </Button>
             <Button type="submit" disabled={busy || candidates.length === 0}>
               <FormattedMessage id="approvals.request" defaultMessage="Request approvals" />
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/**
+ * Which template to apply (CTR-012, DES-035).
+ *
+ * One group, so one select rather than a list of checkboxes: a group is
+ * already a set, and picking two of them is two acts through two
+ * writes. Under the select the dialog **says who it would ask**, by
+ * name — applying a group turns one press into several requests, and a
+ * reader should see the set before it becomes rows on the record.
+ *
+ * The preview mirrors the seam's two silent filters, and nothing else.
+ * A member the page holds no live person for is archived and is left
+ * out, exactly as the apply leaves them out; a member who already has a
+ * request open is counted as skipped, exactly as the apply skips them.
+ * Whether what remains is empty — and therefore refused — is the
+ * **seam's** call: the dialog states the case and lets the press carry
+ * it, so the rule lives in one place and its sentence is printed once
+ * (DES-035 clause 12).
+ */
+function ApplyGroupDialog({
+  groups,
+  peopleById,
+  pendingApprovers,
+  busy,
+  onClose,
+  onConfirm,
+}: Readonly<{
+  groups: readonly ApproverGroupOption[];
+  peopleById: ReadonlyMap<string, UserOption>;
+  pendingApprovers: ReadonlySet<string>;
+  busy: boolean;
+  onClose: () => void;
+  /** Answers with the refusal to show, or `null` when the apply
+   * landed. */
+  onConfirm: (groupId: string) => Promise<string | null>;
+}>) {
+  const intl = useIntl();
+  const [groupId, setGroupId] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const picked = groups.find((group) => group.id === groupId) ?? null;
+  // The live members of the picked template, split into the people this
+  // apply would ask and the ones it would skip.
+  const live = (picked?.memberIds ?? []).flatMap((id) => {
+    const person = peopleById.get(id);
+    return person ? [person] : [];
+  });
+  const toAsk = live.filter((person) => !pendingApprovers.has(person.id));
+  const skipped = live.length - toAsk.length;
+
+  async function submit() {
+    if (busy) return;
+    if (picked === null) {
+      setError(
+        intl.formatMessage({
+          id: "approvals.pickGroup",
+          defaultMessage: "Pick an approver group.",
+        }),
+      );
+      return;
+    }
+    setError(await onConfirm(picked.id));
+  }
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent aria-describedby={undefined}>
+        <DialogTitle>
+          <FormattedMessage id="approvals.applyGroupTitle" defaultMessage="Apply approver group" />
+        </DialogTitle>
+        <form
+          className="mt-4 flex flex-col gap-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submit();
+          }}
+        >
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="approver-group">
+              <FormattedMessage id="approvals.group" defaultMessage="Approver group" />
+            </Label>
+            <select
+              id="approver-group"
+              value={groupId}
+              autoFocus
+              className={CONTROL_CLASS}
+              onChange={(event) => {
+                setGroupId(event.target.value);
+                setError(null);
+              }}
+            >
+              <option value="">
+                {intl.formatMessage({
+                  id: "approvals.pickGroupOption",
+                  defaultMessage: "Pick a group",
+                })}
+              </option>
+              {groups.map((group) => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          {picked !== null && (
+            <div className="flex flex-col gap-1 text-sm">
+              {toAsk.length > 0 ? (
+                <p className="text-primary">
+                  <FormattedMessage
+                    id="approvals.groupAsks"
+                    defaultMessage="Asks {names}."
+                    values={{
+                      names: intl.formatList(
+                        toAsk.map((person) => person.displayName),
+                        { type: "conjunction" },
+                      ),
+                    }}
+                  />
+                </p>
+              ) : (
+                <p className="text-muted">
+                  {live.length === 0 ? (
+                    <FormattedMessage
+                      id="approvals.groupEmpty"
+                      defaultMessage="This group has nobody to ask."
+                    />
+                  ) : (
+                    <FormattedMessage
+                      id="approvals.groupAllAsked"
+                      defaultMessage="Everybody in this group already has a request open."
+                    />
+                  )}
+                </p>
+              )}
+              {toAsk.length > 0 && skipped > 0 && (
+                <p className="text-muted">
+                  <FormattedMessage
+                    id="approvals.groupSkips"
+                    defaultMessage="{count, plural, one {Skips # person who already has a request open.} other {Skips # people who already have a request open.}}"
+                    values={{ count: skipped }}
+                  />
+                </p>
+              )}
+            </div>
+          )}
+          {/* The C5 mock's own note about the apply, said where the
+              apply happens rather than under the roster it produces. */}
+          <p className="text-xs text-muted">
+            <FormattedMessage
+              id="approvals.groupSnapshot"
+              defaultMessage="Applying a group asks the people it names now. A later edit to the group leaves these requests as they are."
+            />
+          </p>
+          {error && (
+            <p role="alert" className="text-xs text-status-danger-fg">
+              {error}
+            </p>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={onClose}>
+              <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+            </Button>
+            <Button type="submit" disabled={busy}>
+              <FormattedMessage id="approvals.applyGroup" defaultMessage="Apply group" />
             </Button>
           </div>
         </form>

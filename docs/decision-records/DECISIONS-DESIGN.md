@@ -2197,7 +2197,15 @@ DES-032 also enumerated the record's sections as three — Overview, Fields, Doc
 
 **12. A refusal is printed once.** A write raised from a dialog reports in that dialog's form, where the reader's attention already is; a write with no dialog — the row's cancel — reports in the card head's micro-state. The same sentence in both places reads as two failures.
 
-**13. The mock's two note rows are not drawn.** Each describes behaviour that lands in a later slice — the soft gate, and the group snapshot. A surface that explains a rule it does not yet apply is a surface that is wrong.
+**13. The mock's two note rows are not drawn.** Each describes behaviour that lands in a later slice — the soft gate, and the group snapshot. A surface that explains a rule it does not yet apply is a surface that is wrong. _(Amended by clause 17: the snapshot sentence is drawn once the apply exists, in the dialog rather than under the roster.)_
+
+**14. "Apply group" is the card head's second control, before "Add approver", and it is absent when there is no group to apply** _(added 2026-08-16 with #234)_. The C5 mock draws the pair in that order, and this is that pair. It is a `secondary` Button with the mock's own `Users` glyph at 16, beside the "Add approver" it shares a head with. When an Administrator has configured no live approver group, the control is not drawn at all. Clause 9 said the same thing about a different absence: a control whose dialog could only report that there is nothing to pick is not a control, and the Settings pane is where a group comes into existence.
+
+**15. Applying is one dialog and a single select.** A group is already a set, so picking one is one act and picking two is two writes; a multi-select would collect two acts into one press. The select is the shipped `CONTROL_CLASS` raw `<select>` — the record's own single-choice control — with a "Pick a group" placeholder, so a group is chosen deliberately rather than defaulted into. Submitting with nothing picked prints "Pick an approver group." in the form, the same shape "Pick at least one approver." already takes.
+
+**16. The dialog names the people it would ask, before it asks them.** One press becomes several requests, and the reader should see the set while it is still a preview: "Asks Sarah Chen and Ada Admin." under the select, with "Skips 1 person who already has a request open." beneath it when the apply would skip somebody. A group with nobody left to ask says so — "This group has nobody to ask." for an empty template, "Everybody in this group already has a request open." for a fully-skipped one. The preview mirrors the seam's two **silent** filters and nothing more: an archived member is simply not among the live people the page holds, which is exactly the member the apply leaves out. Whether what remains is empty, and therefore refused, stays the seam's call — the dialog states the case, the press carries it, and clause 12 prints the seam's sentence once. The rule lives in one place.
+
+**17. The mock's snapshot note row is drawn in the apply dialog, not under the roster.** "Applying a group asks the people it names now. A later edit to the group leaves these requests as they are." is a fact about the **act**, and it is said where the act is taken, at `text-xs text-muted`. Under the table it would be a permanent explanation of a button most readings of the card never press. The mock's other note row — the soft gate — stays undrawn until that slice lands.
 
 ### Rationale
 
@@ -2214,7 +2222,10 @@ Pending being `assigned` rather than `warning` is the one colour choice worth st
 - **A confirmation on cancel.** Rejected: it withdraws an ask, and the ask can be made again in one dialog. Confirmations spent on recoverable acts are confirmations nobody reads on the unrecoverable ones.
 - **Keeping the mock's "Approvals & signing" heading now.** Rejected: naming M15's rows a milestone before they exist.
 - **A separate dialog per approver.** Rejected: CTR-012's whole point is that approvals are parallel, and the seam creates the set or refuses the set.
-- **Drawing the mock's two note rows now.** Rejected: they describe the soft gate and the group snapshot, neither of which this surface does yet.
+- **Drawing the mock's two note rows now.** Rejected: they describe the soft gate and the group snapshot, neither of which this surface does yet. _(The snapshot row was revisited with #234 — see clause 17.)_
+- **A checkbox list of groups, or several groups in one apply.** Rejected with clause 15: a group is a set already, and two of them are two acts the seam creates or refuses separately.
+- **Hiding a group the apply would refuse.** Rejected with clause 16: a template an Administrator configured should be findable in the picker, and "this group has nobody to ask" is a better answer than a group that has silently vanished.
+- **Refusing the empty apply in the dialog rather than letting the press reach the seam.** Rejected with clause 16: the dialog would then hold a second copy of the skip rule, and a second copy is a rule that drifts.
 - **Putting the roster on the Overview as a card.** Rejected: the Overview is the record's own columns, the C5 mock puts approvals behind their own tab, and DES-032 exists precisely so a job the record does one at a time gets an address.
 
 ### Consequences
@@ -2225,7 +2236,9 @@ The record now has four sections. `RECORD_TABS` grows by one, and the loader rea
 
 No new tokens. The pills reuse the DES-005 families already shipped, the card reuses the Documents section's own surfaces, and the menu reuses DES-025's trigger.
 
-`designs/contracts.pen` frame **C5 — Contract detail · Approvals** is the reference, with clauses 1, 3, 5, 9, 10, and 13 above recording where the build departs from it and why.
+`designs/contracts.pen` frame **C5 — Contract detail · Approvals** is the reference, with clauses 1, 3, 5, 9, 10, 13, 14, and 17 above recording where the build departs from it and why.
+
+The apply picker needs the live approver groups on the record, so the Member+ contract-options answer carries them — the names alone, with the ids of the people each would ask, in the display-name order the apply asks in, so the clause 16 preview names people in the order the roster will then draw them. Managing them stays Administrator-only (SET-002); this is the list an apply reads.
 
 ## Index of decisions
 
