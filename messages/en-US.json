@@ -105,7 +105,7 @@
     "defaultMessage": "{actor} marked {title} confidential"
   },
   "activity.document.created": {
-    "defaultMessage": "{actor} uploaded {title}"
+    "defaultMessage": "{atRoot, select, true {{actor} uploaded {title}} other {{actor} uploaded {title} into {folder}}}"
   },
   "activity.document.executedCleared": {
     "defaultMessage": "{actor} cleared the executed copy of {title}"
@@ -1155,7 +1155,7 @@
     "defaultMessage": "A file that fails costs that file. The rest of the import carries on."
   },
   "documents.batch.confirmTitle": {
-    "defaultMessage": "{count, plural, one {Import # file} other {Import # files}}"
+    "defaultMessage": "{count, plural, =0 {Import folders} one {Import # file} other {Import # files}}"
   },
   "documents.batch.derivations": {
     "defaultMessage": "Text extraction and OCR run in the background after every file lands."
@@ -1169,8 +1169,17 @@
   "documents.batch.failures": {
     "defaultMessage": "{failed, plural, one {# file failed} other {# files failed}}. {landed, plural, =0 {Nothing was added to the contract.} one {The other # is on the contract.} other {The other # are on the contract.}}"
   },
+  "documents.batch.fileMeta": {
+    "defaultMessage": "{files, plural, =0 {Empty} one {# file} other {# files}}"
+  },
+  "documents.batch.folderError": {
+    "defaultMessage": "Some empty folders of the dropped tree could not be created."
+  },
+  "documents.batch.folderMeta": {
+    "defaultMessage": "{folders, plural, one {# folder} other {# folders}} · {files, plural, one {# file} other {# files}}"
+  },
   "documents.batch.import": {
-    "defaultMessage": "{count, plural, one {Import # file} other {Import # files}}"
+    "defaultMessage": "{count, plural, =0 {Import folders} one {Import # file} other {Import # files}}"
   },
   "documents.batch.inFlight": {
     "defaultMessage": "{uploading} uploading · {queued} queued"
@@ -1195,6 +1204,9 @@
   },
   "documents.batch.progress": {
     "defaultMessage": "{landed} of {total, plural, one {# file} other {# files}} uploaded"
+  },
+  "documents.batch.progressList": {
+    "defaultMessage": "Files in this import"
   },
   "documents.batch.retry": {
     "defaultMessage": "Retry"
@@ -1229,6 +1241,15 @@
   "documents.batch.state.uploading": {
     "defaultMessage": "Uploading"
   },
+  "documents.batch.structureKept": {
+    "defaultMessage": "Folder structure is kept"
+  },
+  "documents.batch.summaryList": {
+    "defaultMessage": "What this import will create"
+  },
+  "documents.batch.unreadable": {
+    "defaultMessage": "{count, plural, one {# folder could not be read} other {# folders could not be read}}: {names}. Check the list below — it may be missing files."
+  },
   "documents.chain.toggle": {
     "defaultMessage": "{open, select, true {Hide} other {Show}} the {count, plural, one {# earlier version} other {# earlier versions}} of {title}"
   },
@@ -1256,6 +1277,9 @@
   "documents.composer.choose": {
     "defaultMessage": "Choose file"
   },
+  "documents.composer.chooseFolder": {
+    "defaultMessage": "Choose folder"
+  },
   "documents.composer.chooseMany": {
     "defaultMessage": "Choose files"
   },
@@ -1264,6 +1288,9 @@
   },
   "documents.composer.fileRequired": {
     "defaultMessage": "Choose a file to upload."
+  },
+  "documents.composer.folder": {
+    "defaultMessage": "Folder"
   },
   "documents.composer.kind": {
     "defaultMessage": "Kind"
@@ -1329,10 +1356,10 @@
     "defaultMessage": "Edit details"
   },
   "documents.dropChain": {
-    "defaultMessage": "To add a round to an existing chain, use Add version on that document."
+    "defaultMessage": "Folder structure is kept. To add a round to an existing chain, use Add version on that document."
   },
   "documents.dropHint": {
-    "defaultMessage": "Drop files here — each file becomes a new document at version 1"
+    "defaultMessage": "Drop files or folders here — each file becomes a new document at version 1"
   },
   "documents.empty": {
     "defaultMessage": "No documents on this contract yet."

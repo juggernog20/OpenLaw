@@ -1,8 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The batch import dialog (M13/4, DOC-011, DES-033), drawn from the C27,
- * C28 and C29 mocks.
+ * The batch import dialog (M13/4, M13/5, DOC-011, DES-033), drawn from
+ * the C27, C28 and C29 mocks.
+ *
+ * **What is dropped is what is drawn.** A folder drop's confirmation
+ * shows the tree it will create before it creates anything — the folders
+ * with their counts, the files inside them — because a 200-file import
+ * of somebody's drive folder is a decision about a structure and not
+ * about a list. The destination readout says where that structure lands:
+ * the record root, or the folder row the drop landed on.
  *
  * **One dialog, three moments.** The reader confirmed one thing and is
  * watching one thing, so the confirmation *becomes* the progress list
@@ -41,11 +48,28 @@
  * counted, because whether a PDF is a scan is decided by reading the
  * file's own text layer on the server (DOC-005) and the browser has not
  * read it.
+ *
+ * **The folders are the server's to create, not this dialog's.** Every
+ * file's upload carries its own path, and the seam find-or-creates the
+ * chain under the owning contract's row lock — so several files of one
+ * folder converge on one folder without this dialog co-ordinating
+ * anything, and a failed file leaves the folders its siblings made. The
+ * only folders asked for on their own are the **empty** directories of
+ * the dropped tree, which no upload would recreate.
  */
 
 import { useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { CircleAlert, CircleCheck, Clock, Folder, Info, Loader, RotateCcw } from "lucide-react";
+import {
+  CircleAlert,
+  CircleCheck,
+  Clock,
+  FileText,
+  Folder,
+  Info,
+  Loader,
+  RotateCcw,
+} from "lucide-react";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Label } from "../ui/label";
@@ -58,7 +82,9 @@ import {
   runBounded,
   type BatchRow,
   type BatchState,
+  type DroppedFile,
 } from "../../lib/batch-upload";
+import { recreateContractFolderPath } from "../../lib/folders";
 import {
   DOCUMENT_VERSION_KINDS,
   uploadContractDocument,
@@ -85,9 +111,19 @@ const PAYLOAD_TOO_LARGE = 413;
  * where the files land, and a pick did not. */
 export type BatchSource = "drop" | "picker";
 
+/** The folder a gesture landed on, or the record root. One drop, one
+ * base: every path in the batch is relative to it. */
+export interface BatchDestination {
+  id: string;
+  name: string;
+}
+
 export function BatchDialog({
   contractNumber,
   files,
+  emptyFolders,
+  unreadable,
+  destination,
   source,
   onLanded,
   onClose,
@@ -95,18 +131,34 @@ export function BatchDialog({
   /** CTR-003's reference — the address every file of the batch is sent
    * to, one call per file. */
   contractNumber: number;
-  /** What was dropped or chosen. Fixed for the life of the dialog: the
-   * batch is what the gesture carried, and adding to it would be a
-   * second gesture. */
-  files: readonly File[];
+  /** What was dropped or chosen, each file with the folder chain it sat
+   * at. Fixed for the life of the dialog: the batch is what the gesture
+   * carried, and adding to it would be a second gesture. */
+  files: readonly DroppedFile[];
+  /** The directories of the dropped tree that held nothing. No upload
+   * would recreate them, so they are asked for on their own (DOC-011). */
+  emptyFolders: readonly (readonly string[])[];
+  /** The directories the walk could not read to the end. Said before the
+   * import rather than after it: what is missing is missing from the
+   * batch itself, so the reader can cancel and drop again. */
+  unreadable: readonly (readonly string[])[];
+  /** The folder the gesture landed on, or null for the record root. */
+  destination: BatchDestination | null;
   source: BatchSource;
-  /** The record's paper, read again. Called once a run settles rather
-   * than per file, because a 200-file import would otherwise re-read
-   * the section 200 times. */
+  /** The record's paper and its folders, read again. Called once a run
+   * settles rather than per file, because a 200-file import would
+   * otherwise re-read the section 200 times. */
   onLanded: () => Promise<void>;
   onClose: () => void;
 }>) {
   const intl = useIntl();
+  /** What sits between two names of a path — a mark a reader reads, so
+   * it is a message rather than a literal (DES-013), and the same one
+   * the Move picker joins a destination's path with. */
+  const separator = intl.formatMessage({
+    id: "documents.folder.pathSeparator",
+    defaultMessage: "/",
+  });
   const [rows, setRows] = useState<BatchRow[]>(() => batchOf(files));
   const [kind, setKind] = useState<DocumentVersionKind>("draft_ours");
   /** Whether Import has been pressed. Before it, nothing has been sent
@@ -122,6 +174,11 @@ export function BatchDialog({
    * document back off a record. A ref rather than state, because the
    * check has to see the answer the press before it wrote. */
   const running = useRef(false);
+  /** Why the empty directories of the dropped tree could not be
+   * recreated, when they could not. Said beside the file failures rather
+   * than on a row of its own: no file is missing because of it, so it is
+   * a note about the structure and not about the import. */
+  const [folderError, setFolderError] = useState<string | null>(null);
 
   const landed = rows.filter((row) => row.state === "done").length;
   const failed = rows.filter((row) => row.state === "failed");
@@ -144,8 +201,23 @@ export function BatchDialog({
    * the batch again over fewer files, which is why a landed file is
    * never in `ids` and so can never be sent twice.
    */
-  async function send(ids: readonly string[]) {
-    if (ids.length === 0 || running.current) return;
+  async function send(ids: readonly string[], firstRun = false) {
+    if (running.current) return;
+    // A drop can carry only structure: empty directories and not one
+    // file. Its import is the folder creates alone — nothing to pool,
+    // nothing to watch land — so the folders are made, the section is
+    // read again, and the dialog closes on success. It stays open only
+    // to say why they could not be made. A retry over zero rows is
+    // still nothing to do.
+    if (ids.length === 0) {
+      if (!firstRun) return;
+      running.current = true;
+      const made = await recreateEmptyFolders();
+      running.current = false;
+      await onLanded();
+      if (made) onClose();
+      return;
+    }
     const byId = new Map(rows.map((row) => [row.id, row]));
     running.current = true;
     cancelled.current = false;
@@ -155,6 +227,10 @@ export function BatchDialog({
         ids.includes(row.id) ? { ...row, state: "queued", reason: null, retryable: true } : row,
       ),
     );
+    // The empty directories first, and only on the first run: they are
+    // part of the structure that was dropped, so they should be there
+    // whether or not every file lands. A retry is about files.
+    if (firstRun) await recreateEmptyFolders();
     await runBounded(ids, BATCH_CONCURRENCY, async (id) => {
       const row = byId.get(id);
       if (!row) return;
@@ -172,12 +248,16 @@ export function BatchDialog({
         return;
       }
       mark(id, { state: "uploading", reason: null, retryable: true });
-      // The batch's one kind, and no note (DOC-011). M13/5 adds the
-      // destination here, beside them, and nothing else moves.
+      // The batch's one kind, no note (DOC-011), and this file's own
+      // destination: the folder the gesture landed on, plus the chain it
+      // sat at in the dropped tree. The seam makes that chain under the
+      // contract's row lock, so the files of one folder converge on one
+      // folder without anything here co-ordinating them.
       const outcome = await uploadContractDocument(contractNumber, {
         file: row.file,
         kind,
         note: "",
+        destination: { folderId: destination?.id ?? null, path: row.path },
       });
       if (outcome.ok) {
         mark(id, { state: "done", reason: null, retryable: false });
@@ -201,12 +281,51 @@ export function BatchDialog({
     await onLanded();
   }
 
+  /**
+   * The directories of the dropped tree that held nothing, recreated
+   * (DOC-011).
+   *
+   * One at a time rather than at once: they are few, and asking for them
+   * in parallel would have them race each other on the levels they share
+   * — which the seam would resolve correctly and slowly, since every one
+   * of them takes the same row lock.
+   *
+   * A refusal is reported once, in the seam's own words, and the import
+   * carries on: the files are what the reader came to import.
+   *
+   * Answers whether every one of them was made, because a drop that
+   * carried only structure has nothing else to say whether it worked.
+   */
+  async function recreateEmptyFolders(): Promise<boolean> {
+    if (emptyFolders.length === 0) return true;
+    for (const path of emptyFolders) {
+      const outcome = await recreateContractFolderPath(contractNumber, {
+        path,
+        ...(destination ? { parentId: destination.id } : {}),
+      });
+      if (outcome.ok) continue;
+      setFolderError(
+        outcome.detail ??
+          intl.formatMessage({
+            id: "documents.batch.folderError",
+            defaultMessage: "Some empty folders of the dropped tree could not be created.",
+          }),
+      );
+      return false;
+    }
+    return true;
+  }
+
   /** Which rows are drawn, and how many are left unsaid. Failures come
    * first and are never cut, because they are the rows the reader has
    * something to do about. */
   const shown = started ? [...failed, ...rows.filter((row) => row.state !== "failed")] : [...rows];
   const drawn = shown.slice(0, Math.max(BATCH_ROWS, failed.length));
   const hidden = shown.length - drawn.length;
+  /** The structure the import will create, drawn before it creates it
+   * (DES-033 §9). Only before: once the import is running, the rows say
+   * what happened to each file rather than what was promised. */
+  const summary = started ? [] : summaryOf(rows, emptyFolders);
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -215,7 +334,10 @@ export function BatchDialog({
           {!started ? (
             <FormattedMessage
               id="documents.batch.confirmTitle"
-              defaultMessage="{count, plural, one {Import # file} other {Import # files}}"
+              // `=0` is a drop that carried only structure — empty
+              // directories and not one file. Its import is real: the
+              // folders are created, and only the files are absent.
+              defaultMessage="{count, plural, =0 {Import folders} one {Import # file} other {Import # files}}"
               values={{ count: rows.length }}
             />
           ) : settled ? (
@@ -241,13 +363,19 @@ export function BatchDialog({
               {/* Static, and offered no way to change it: the gesture
                   already answered where the files land, and a picker
                   here would let the confirmation contradict the drop
-                  that opened it (DES-033 §9). M13/4 has no folders in
-                  it, so every file lands at the record root. */}
+                  that opened it (DES-033 §9). A drop on a folder row
+                  names that folder; everything else lands at the record
+                  root, and the tree below it is created inside
+                  whichever. */}
               <span className="flex items-center gap-2 rounded-card bg-section-header px-2.5 py-1.5 text-sm">
                 <Folder size={16} aria-hidden="true" className="shrink-0 text-muted" />
-                <FormattedMessage id="documents.batch.root" defaultMessage="Record root" />
+                {destination ? (
+                  <span className="min-w-0 truncate">{destination.name}</span>
+                ) : (
+                  <FormattedMessage id="documents.batch.root" defaultMessage="Record root" />
+                )}
                 {source === "drop" && (
-                  <span className="ms-auto text-xs text-muted">
+                  <span className="ms-auto shrink-0 text-xs text-muted">
                     <FormattedMessage
                       id="documents.batch.setByDrop"
                       defaultMessage="Set by the drop"
@@ -255,6 +383,18 @@ export function BatchDialog({
                   </span>
                 )}
               </span>
+              {/* Said once, above the tree it is true of: a folder drop
+                  keeps the organization it arrived with (DOC-011), and
+                  the lines below are what that will look like. Drawn
+                  only when there is a structure to keep. */}
+              {summary.some((line) => line.kind === "folder") && (
+                <p className="text-xs text-muted">
+                  <FormattedMessage
+                    id="documents.batch.structureKept"
+                    defaultMessage="Folder structure is kept"
+                  />
+                </p>
+              )}
             </div>
           )}
           {started && (
@@ -289,17 +429,37 @@ export function BatchDialog({
               </span>
             </div>
           )}
-          <ul className="flex flex-col divide-y divide-border-default rounded-card border border-border-default">
-            {drawn.map((row) => (
-              <BatchFileRow
-                key={row.id}
-                row={row}
-                started={started}
-                settled={settled}
-                onRetry={() => void send([row.id])}
-              />
-            ))}
-            {hidden > 0 && (
+          {/* Named, because it is two different lists in one place: what
+              the import will create, and then where each file of it got
+              to. A reader moving by landmark has to be told which one
+              they are in. */}
+          <ul
+            aria-label={
+              started
+                ? intl.formatMessage({
+                    id: "documents.batch.progressList",
+                    defaultMessage: "Files in this import",
+                  })
+                : intl.formatMessage({
+                    id: "documents.batch.summaryList",
+                    defaultMessage: "What this import will create",
+                  })
+            }
+            className="flex flex-col divide-y divide-border-default rounded-card border border-border-default"
+          >
+            {!started ? (
+              <SummaryRows lines={summary} />
+            ) : (
+              drawn.map((row) => (
+                <BatchFileRow
+                  key={row.id}
+                  row={row}
+                  settled={settled}
+                  onRetry={() => void send([row.id])}
+                />
+              ))
+            )}
+            {started && hidden > 0 && (
               <li className="px-3 py-2 text-sm text-muted">
                 <FormattedMessage
                   id="documents.batch.more"
@@ -343,6 +503,36 @@ export function BatchDialog({
                 />
               </p>
             </div>
+          )}
+          {/* A directory the browser would not read to the end. Said
+              here rather than left silent, because what is missing is
+              missing from the batch below it — a drop that arrived short
+              and said nothing would be the one failure a bulk import
+              cannot afford. The reader can cancel and drop it again. */}
+          {unreadable.length > 0 && (
+            <p
+              role="alert"
+              className="flex items-start gap-2 rounded-card bg-status-danger-bg px-3 py-2.5 text-sm text-status-danger-fg"
+            >
+              <CircleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
+              <FormattedMessage
+                id="documents.batch.unreadable"
+                defaultMessage="{count, plural, one {# folder could not be read} other {# folders could not be read}}: {names}. Check the list below — it may be missing files."
+                values={{
+                  count: unreadable.length,
+                  names: unreadable.map((path) => path.join(separator)).join(", "),
+                }}
+              />
+            </p>
+          )}
+          {folderError && (
+            <p
+              role="alert"
+              className="flex items-start gap-2 rounded-card bg-status-danger-bg px-3 py-2.5 text-sm text-status-danger-fg"
+            >
+              <CircleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
+              {folderError}
+            </p>
           )}
           {settled && failed.length > 0 && (
             <p
@@ -406,10 +596,20 @@ export function BatchDialog({
                   <Button type="button" variant="secondary" onClick={onClose}>
                     <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
                   </Button>
-                  <Button type="button" onClick={() => void send(rows.map((row) => row.id))}>
+                  <Button
+                    type="button"
+                    onClick={() =>
+                      void send(
+                        rows.map((row) => row.id),
+                        true,
+                      )
+                    }
+                  >
                     <FormattedMessage
                       id="documents.batch.import"
-                      defaultMessage="{count, plural, one {Import # file} other {Import # files}}"
+                      // `=0` as the title above: a drop of only empty
+                      // directories still has an import to run.
+                      defaultMessage="{count, plural, =0 {Import folders} one {Import # file} other {Import # files}}"
                       values={{ count: rows.length }}
                     />
                   </Button>
@@ -474,6 +674,118 @@ export function BatchDialog({
   );
 }
 
+/** How far in one level of the summary tree sits, in pixels. DES-033's
+ * own 18px a level, so the confirmation indents exactly as the folder
+ * tree it is promising to create. */
+const SUMMARY_INDENT = 18;
+
+/** One line of the tree summary: a folder that will be created, or a
+ * file that will land in it (DES-033 §9). */
+type SummaryRow =
+  | {
+      kind: "folder";
+      key: string;
+      depth: number;
+      name: string;
+      /** How many folders and files sit anywhere beneath it. The whole
+       * subtree, as C27 draws it: a folder's line says what it will
+       * hold, and the lines under it say how. */
+      folders: number;
+      files: number;
+    }
+  | { kind: "file"; key: string; depth: number; name: string; size: number };
+
+/** One node of the dropped tree, while the summary is being built. */
+interface SummaryNode {
+  name: string;
+  folders: Map<string, SummaryNode>;
+  files: { name: string; size: number }[];
+}
+
+const emptyNode = (name: string): SummaryNode => ({ name, folders: new Map(), files: [] });
+
+/**
+ * The structure a drop will create, as lines to draw (DES-033 §9).
+ *
+ * Built from the paths the files carry and from the empty directories
+ * beside them, because those are the two things a dropped tree is made
+ * of. Siblings are ordered by name without case, which is the order the
+ * seam will answer the folders in — the confirmation and the tree it
+ * creates read the same way round.
+ *
+ * The files at the drop target itself come last, under the folders, as
+ * the record's own list draws them.
+ */
+function summaryOf(
+  rows: readonly BatchRow[],
+  emptyFolders: readonly (readonly string[])[],
+): SummaryRow[] {
+  const root = emptyNode("");
+  const nodeAt = (path: readonly string[]): SummaryNode => {
+    let at = root;
+    for (const segment of path) {
+      // Case-insensitively, as the seam matches a path segment against
+      // the siblings already there: two spellings of one folder are one
+      // folder, and the first spelling is the one that stands.
+      const key = segment.toLowerCase();
+      const held = at.folders.get(key);
+      if (held) at = held;
+      else {
+        const made = emptyNode(segment);
+        at.folders.set(key, made);
+        at = made;
+      }
+    }
+    return at;
+  };
+  for (const row of rows) {
+    nodeAt(row.path).files.push({ name: row.file.name, size: row.file.size });
+  }
+  for (const path of emptyFolders) nodeAt(path);
+
+  const lines: SummaryRow[] = [];
+  const walk = (
+    node: SummaryNode,
+    depth: number,
+    key: string,
+  ): { folders: number; files: number } => {
+    let folders = 0;
+    let files = node.files.length;
+    const children = [...node.folders.values()].toSorted((left, right) =>
+      left.name.localeCompare(right.name, undefined, { sensitivity: "base" }),
+    );
+    // The folder's own line goes in before its children's, and its
+    // counts are filled in once they have been walked — a line cannot
+    // say what it holds until what it holds has been counted.
+    const line: SummaryRow = { kind: "folder", key, depth, name: node.name, folders: 0, files: 0 };
+    if (depth >= 0) lines.push(line);
+    for (const child of children) {
+      const below = walk(child, depth + 1, `${key}/${child.name}`);
+      folders += 1 + below.folders;
+      files += below.files;
+    }
+    for (const [index, file] of node.files.entries()) {
+      lines.push({
+        kind: "file",
+        key: `${key}/${index}-${file.name}`,
+        depth: depth + 1,
+        name: file.name,
+        size: file.size,
+      });
+    }
+    if (line.kind === "folder") {
+      line.folders = folders;
+      line.files = files;
+    }
+    return { folders, files };
+  };
+  // The record root itself draws no line: the destination readout above
+  // has already said where the drop lands, and a line for it would say
+  // it twice.
+  walk(root, -1, "");
+  return lines;
+}
+
 /** The glyph one state wears (DES-033 §11, DES-008's Lucide set). */
 const STATE_ICON: Record<BatchState, typeof Clock> = {
   queued: Clock,
@@ -492,21 +804,97 @@ const STATE_TONE: Record<BatchState, string> = {
 };
 
 /**
- * One file's row.
+ * The tree the import will create, before it creates anything (DES-033
+ * §9).
  *
- * Before the import it states the file and its size — what will be
- * created. During and after it, it states where that file got to, and
- * a failure states why on its own row rather than in a note over the
- * top of the list.
+ * The folder lines are all drawn, however many there are: the structure
+ * is what the reader is confirming, and a truncated structure would be
+ * a confirmation of something else. The **files** are what gets cut,
+ * which is what the truncation row counts.
+ */
+function SummaryRows({ lines }: Readonly<{ lines: readonly SummaryRow[] }>) {
+  let drawnFiles = 0;
+  const drawn: SummaryRow[] = [];
+  for (const line of lines) {
+    if (line.kind === "file") {
+      if (drawnFiles >= BATCH_ROWS) continue;
+      drawnFiles += 1;
+    }
+    drawn.push(line);
+  }
+  const hidden = lines.filter((line) => line.kind === "file").length - drawnFiles;
+  return (
+    <>
+      {drawn.map((line) => (
+        <li key={line.key} className="flex items-center gap-2 px-3 py-2">
+          {/* 18px a level, drawn as a spacer at the head of the line, as
+              the folder tree itself indents (DES-033 §2). */}
+          {line.depth > 0 && (
+            <span
+              aria-hidden="true"
+              className="shrink-0"
+              style={{ width: line.depth * SUMMARY_INDENT }}
+            />
+          )}
+          {line.kind === "folder" ? (
+            <>
+              <Folder size={16} aria-hidden="true" className="shrink-0 text-muted" />
+              <span className="min-w-0 truncate text-sm font-semibold">{line.name}</span>
+              <span className="ms-auto shrink-0 text-xs text-muted">
+                {line.folders > 0 ? (
+                  <FormattedMessage
+                    id="documents.batch.folderMeta"
+                    defaultMessage="{folders, plural, one {# folder} other {# folders}} · {files, plural, one {# file} other {# files}}"
+                    values={{ folders: line.folders, files: line.files }}
+                  />
+                ) : (
+                  <FormattedMessage
+                    id="documents.batch.fileMeta"
+                    defaultMessage="{files, plural, =0 {Empty} one {# file} other {# files}}"
+                    values={{ files: line.files }}
+                  />
+                )}
+              </span>
+            </>
+          ) : (
+            <>
+              <FileText size={16} aria-hidden="true" className="shrink-0 text-muted" />
+              <span className="min-w-0 truncate text-sm">{line.name}</span>
+              <span className="ms-auto shrink-0 text-xs text-muted">
+                {formatFileSize(line.size)}
+              </span>
+            </>
+          )}
+        </li>
+      ))}
+      {hidden > 0 && (
+        <li className="px-3 py-2 text-sm text-muted">
+          <FormattedMessage
+            id="documents.batch.more"
+            defaultMessage="…and {count, plural, one {# more file} other {# more files}}"
+            values={{ count: hidden }}
+          />
+        </li>
+      )}
+    </>
+  );
+}
+
+/**
+ * One file's row, once the import is running.
+ *
+ * It states where that file got to, and a failure states why on its own
+ * row rather than in a note over the top of the list. The folder it is
+ * headed for is drawn before its name, in muted text, so a long import
+ * of a nested tree reads as the tree rather than as a list of names
+ * (DES-033 §11).
  */
 function BatchFileRow({
   row,
-  started,
   settled,
   onRetry,
 }: Readonly<{
   row: BatchRow;
-  started: boolean;
   /** The run has finished. Retry is offered only then, as C29 draws it:
    * a control that would start a second pool over rows the first one is
    * still working through is a way to send a file twice. */
@@ -514,6 +902,13 @@ function BatchFileRow({
   onRetry: () => void;
 }>) {
   const intl = useIntl();
+  /** What sits between two names of the file's path — a mark a reader
+   * reads, so it is a message rather than a literal (DES-013), and the
+   * same one the Move picker joins a destination's path with. */
+  const separator = intl.formatMessage({
+    id: "documents.folder.pathSeparator",
+    defaultMessage: "/",
+  });
   const Glyph = STATE_ICON[row.state];
   return (
     <li className="flex items-start gap-2 px-3 py-2">
@@ -529,13 +924,21 @@ function BatchFileRow({
         )}
       />
       <span className="flex min-w-0 flex-col">
-        <span className="truncate text-sm">{row.file.name}</span>
+        <span className="truncate text-sm">
+          {/* Where this file is headed, before its name and in muted
+              text (DES-033 §11), so a long import of a nested tree reads
+              as the tree. The separator is a mark a reader reads, so it
+              is the same message the Move picker's path is joined with
+              (DES-013). */}
+          {row.path.length > 0 && (
+            <span className="text-muted">{`${row.path.join(separator)}${separator} `}</span>
+          )}
+          {row.file.name}
+        </span>
         {row.reason && <span className="text-xs text-status-danger-fg">{row.reason}</span>}
       </span>
       <span className="ms-auto flex shrink-0 items-center gap-2 text-xs text-muted">
-        {!started ? (
-          formatFileSize(row.file.size)
-        ) : row.state === "done" ? (
+        {row.state === "done" ? (
           <FormattedMessage id="documents.batch.state.done" defaultMessage="Done" />
         ) : row.state === "uploading" ? (
           <FormattedMessage id="documents.batch.state.uploading" defaultMessage="Uploading" />
