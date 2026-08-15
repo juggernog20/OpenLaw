@@ -134,6 +134,10 @@ export function fixedMailerResolver(mailer: Mailer): MailerResolver {
 
 export interface TestStorage {
   storage: StorageAdapter;
+  /** The throwaway directory the driver writes into. Exposed so a suite
+   * can ask what is on the disk — "did that refusal leave a blob
+   * behind" is a question about files, not about a spy. */
+  root: string;
   /** Removes the temporary root. Safe to call more than once. */
   cleanup: () => Promise<void>;
 }
@@ -148,6 +152,7 @@ export async function createTestStorage(): Promise<TestStorage> {
   const root = await mkdtemp(join(tmpdir(), "openlaw-test-files-"));
   return {
     storage: createLocalStorage({ root }),
+    root,
     cleanup: () => rm(root, { recursive: true, force: true }),
   };
 }
@@ -166,6 +171,9 @@ export interface TestHarness {
   smtpEnv: { url: string; from: string } | null;
   /** The injected storage adapter — the local driver over a temporary root. */
   storage: StorageAdapter;
+  /** That temporary root, so a suite can read what the driver is
+   * actually holding. */
+  storageRoot: string;
   /**
    * The injected doc engine (TECH-010): the deterministic fake, not the
    * sidecar. The rule that tests run production code stops at the
@@ -251,7 +259,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
         ? { source: "app", from: row.smtpFrom, mailer }
         : { source: "unset", from: null, mailer: createUnconfiguredMailer() };
     };
-    const { storage, cleanup } = await createTestStorage();
+    const { storage, root: storageRoot, cleanup } = await createTestStorage();
     cleanupStorage = cleanup;
     const docEngine = createFakeDocEngine();
     const jobLog: JobLogLine[] = [];
@@ -280,6 +288,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       db,
       mailer,
       storage,
+      storageRoot,
       docEngine,
       pipeline: runningPipeline,
       jobLog,

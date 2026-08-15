@@ -3,12 +3,20 @@
 /**
  * The contract record page (M8), at the CTR-003 number-based address
  * `/contracts/42`: the breadcrumb sub-bar carrying the reference, the
- * title, and the status pill, then the Contract card with the fields
- * the record holds, the Description card under it, and the Team card
- * the C2 mock draws in the record's side column. Every field edits in
- * place and commits individually per DES-017 — no page edit mode, no
- * dirty state, no Save chrome — with the Owner, the type, status,
- * priority, and risk as selects.
+ * title, and the status pill, then the DES-032 section strip, and under
+ * it the section it names beside the Team card the C2 mock draws in the
+ * record's side column. Every field edits in place and commits
+ * individually per DES-017 — no page edit mode, no dirty state, no Save
+ * chrome — with the Owner, the type, status, priority, and risk as
+ * selects.
+ *
+ * Three sections, three addresses. **Overview** (`/contracts/42`) is
+ * the record's own columns: the Contract card and the Description card
+ * under it. **Fields** (`/contracts/42/fields`) is what this contract's
+ * type asks for on top of them. **Documents**
+ * (`/contracts/42/documents`) is the paper. The Team card is not one of
+ * the three — it stands beside all of them, because who is on a
+ * contract is context for reading any part of it.
  *
  * The custom fields are CTR-016's, and they earn the card the C2 mock
  * draws for them. The contract's type decides which of them appear and
@@ -137,7 +145,8 @@ import {
   type CustomFieldValues,
 } from "../lib/custom-fields";
 import { currencyFractionDigits, currencyOptions, toMajorUnits, toMinorUnits } from "../lib/format";
-import type { ContractDocument } from "../lib/documents";
+import { FOLDER_ROOT, type ContractDocument } from "../lib/documents";
+import type { ContractFolder } from "../lib/folders";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
 import { problemDetail } from "../lib/messages";
 import { cn } from "../lib/utils";
@@ -147,6 +156,7 @@ import { AppShell } from "../components/shell/app-shell";
 import { useActivityApplet } from "../components/activity/activity-applet";
 import { useCommentApplet } from "../components/comments/comment-applet";
 import { RecordApplets } from "../components/shell/record-applets";
+import { RecordTabs } from "../components/shell/record-tabs";
 import type { Applet } from "../components/shell/applets";
 import { Avatar } from "../components/avatar";
 import { ConfidentialBanner } from "../components/confidential-banner";
@@ -162,6 +172,11 @@ import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
+/** The record's sections (DES-032), in the order the strip draws them.
+ * The Overview is the bare address, so it has no segment of its own. */
+const RECORD_TABS = ["fields", "documents"] as const;
+type RecordTabName = "overview" | (typeof RECORD_TABS)[number];
+
 export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
   const user = await currentUser();
   if (!user) return redirect((await needsSetup()) ? "/auth/setup" : "/auth/login");
@@ -170,18 +185,35 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
   if (!canReadContracts(user.role)) return redirect("/");
   const number = Number(params.contractNumber);
   if (!Number.isInteger(number) || number < 1) throw new Error("That is not a contract reference.");
+  // A section this record does not have is not an error — the record
+  // exists. It lands on the Overview, which is what the bare address
+  // already means.
+  if (params.tab && !RECORD_TABS.includes(params.tab as (typeof RECORD_TABS)[number])) {
+    return redirect(`/contracts/${number}`);
+  }
   // The pickers exist to commit from, so a read-only viewer reads
   // none of them. Both seams are Member+ and would refuse a
   // Contributor anyway; the record read alone carries every name the
   // page has to draw.
   const canEdit = isMemberPlus(user.role);
-  const [record, documents, options, registry] = await Promise.all([
+  const [record, documents, folders, options, registry] = await Promise.all([
     api.GET("/api/v1/contracts/{number}", { params: { path: { number } } }),
     // The record's paper (M11/2). Read by every viewer who reaches the
     // page — a Contributor on the team reads and downloads it too
     // (DD-015) — and answered 404 for anyone the record itself is
     // hidden from, which is the same refusal the record read gives.
-    api.GET("/api/v1/contracts/{number}/documents", { params: { path: { number } } }),
+    //
+    // The record root only (M13/3): the tree draws its folders first and
+    // then the documents filed nowhere, and a folder's own documents
+    // load when it is opened. Reading the record's whole paper here
+    // would draw every filed document twice.
+    api.GET("/api/v1/contracts/{number}/documents", {
+      params: { path: { number }, query: { folder: FOLDER_ROOT } },
+    }),
+    // How that paper is filed (M13/2, DOC-006). One read for the whole
+    // tree, because a record's folder set is small and drawing it a
+    // level at a time would be a round trip per press.
+    api.GET("/api/v1/contracts/{number}/folders", { params: { path: { number } } }),
     canEdit ? api.GET("/api/v1/contracts/options") : undefined,
     // The registry's own Member+ list is the signing-entity picker's
     // source (CTR-011): it is ordered by legal name and already leaves
@@ -194,7 +226,12 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
   // here must not render as "No documents on this contract yet" — an
   // empty list is a fact about the record, not a fallback for a read
   // that did not happen.
-  if (!record.data || !documents.data || (canEdit && !(options?.data && registry?.data))) {
+  if (
+    !record.data ||
+    !documents.data ||
+    !folders.data ||
+    (canEdit && !(options?.data && registry?.data))
+  ) {
     throw new Error("The contract could not be read.");
   }
   return {
@@ -202,6 +239,10 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     canEdit,
     contract: record.data.contract,
     documents: documents.data.documents,
+    /** The record's folders, whole (M13/2). Required like the paper: an
+     * empty tree is a fact about the record, not a fallback for a read
+     * that did not happen. */
+    folders: folders.data.folders,
     /** Where the next page of paper starts, or null when the first page
      * is all of it (CTR-024). */
     documentsCursor: documents.data.nextCursor,
@@ -266,11 +307,16 @@ export function ContractRecordPage() {
 }
 
 function ContractRecord() {
+  // Which section is on screen (DES-032). The loader has already sent
+  // an unknown segment to the Overview, so anything that survives to
+  // here is one of the three.
+  const tab = (useParams().tab ?? "overview") as RecordTabName;
   const {
     user,
     canEdit,
     contract,
     documents: contractDocuments,
+    folders: contractFolders,
     documentsCursor,
     fields,
     customFieldRefs,
@@ -321,6 +367,19 @@ function ContractRecord() {
    * record holds the list (CTR-024). */
   const [paperCursor, setPaperCursor] = useState<string | null>(documentsCursor);
   /**
+   * The paper the Documents section is holding inside folders (M13/3).
+   *
+   * The list above is the record root, because a folder's documents are
+   * read when the folder is opened — so this is the rest of what is on
+   * screen, and the doc panel below resolves against both. Without it a
+   * filed document's name would open nothing.
+   */
+  const [filed, setFiled] = useState<ContractDocument[]>([]);
+  /** How the record's paper is filed (M13/2). State rather than loader
+   * data because every folder write answers the whole set, and the
+   * section replaces what it holds without a page re-read. */
+  const [tree, setTree] = useState<ContractFolder[]>(contractFolders);
+  /**
    * Which version the doc panel is reading, or none (M12/2).
    *
    * The record holds it rather than the Documents section, because the
@@ -332,10 +391,10 @@ function ContractRecord() {
    * the chain opens — reading round three of a negotiation is not a
    * different feature from reading round five.
    *
-   * Two ids, and nothing else: what the panel draws is resolved from the
-   * list below on every render, so renaming a document while it is open
-   * changes the panel's own header, and a document that leaves the list
-   * takes the panel with it.
+   * Two ids, and nothing else: what the panel draws is resolved from
+   * the paper on screen on every render, so renaming a document while it
+   * is open changes the panel's own header, and a document that leaves
+   * the listing takes the panel with it.
    */
   const [reading, setReading] = useState<{ documentId: string; versionId: string } | null>(null);
   /** What opened the panel, so closing it puts focus back there —
@@ -420,7 +479,9 @@ function ContractRecord() {
    */
   const open = (() => {
     if (!reading) return null;
-    const document = paper.find((row) => row.id === reading.documentId);
+    // The record root and the folders on screen, because a document
+    // opens the same way wherever it is filed (M13/3).
+    const document = [...paper, ...filed].find((row) => row.id === reading.documentId);
     const version = document?.versions.find((row) => row.id === reading.versionId);
     return document && version ? { document, version } : null;
   })();
@@ -637,60 +698,96 @@ function ContractRecord() {
         ) : undefined
       }
       subbar={
-        <section
-          aria-labelledby="page-title"
-          className="flex h-(--height-subbar) shrink-0 items-center justify-between gap-4 border-b border-(--chrome-subbar-border) bg-canvas px-page-x"
-        >
-          <div className="flex min-w-0 items-center gap-2">
-            <Link
-              to="/contracts"
-              className="shrink-0 rounded-chip text-base text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
-            >
-              <FormattedMessage id="contracts.title" defaultMessage="Contracts" />
-            </Link>
-            <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-subtle" />
-            <FileText size={16} aria-hidden="true" className="shrink-0 text-muted" />
-            <span className="shrink-0 text-base font-medium text-muted">{reference}</span>
-            <h1 id="page-title" className="truncate text-lg font-semibold">
-              {saved.title}
-            </h1>
-            <span
-              className={`inline-flex shrink-0 rounded-pill px-2 py-0.5 text-xs font-medium ${STAGE_PILL[saved.stage]}`}
-            >
-              {saved.statusName}
-            </span>
-            {archived && (
-              <span className="inline-flex shrink-0 rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
-                <FormattedMessage id="contracts.archivedPill" defaultMessage="Archived" />
+        <>
+          <section
+            aria-labelledby="page-title"
+            className="flex h-(--height-subbar) shrink-0 items-center justify-between gap-4 bg-canvas px-page-x"
+          >
+            <div className="flex min-w-0 items-center gap-2">
+              <Link
+                to="/contracts"
+                className="shrink-0 rounded-chip text-base text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+              >
+                <FormattedMessage id="contracts.title" defaultMessage="Contracts" />
+              </Link>
+              <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-subtle" />
+              <FileText size={16} aria-hidden="true" className="shrink-0 text-muted" />
+              <span className="shrink-0 text-base font-medium text-muted">{reference}</span>
+              <h1 id="page-title" className="truncate text-lg font-semibold">
+                {saved.title}
+              </h1>
+              <span
+                className={`inline-flex shrink-0 rounded-pill px-2 py-0.5 text-xs font-medium ${STAGE_PILL[saved.stage]}`}
+              >
+                {saved.statusName}
               </span>
-            )}
-          </div>
-          {/* Archive and restore are mutations, so a read-only viewer
+              {archived && (
+                <span className="inline-flex shrink-0 rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
+                  <FormattedMessage id="contracts.archivedPill" defaultMessage="Archived" />
+                </span>
+              )}
+            </div>
+            {/* Archive and restore are mutations, so a read-only viewer
               is offered neither — absent, not disabled, the same
               convention the nav and the settings rail follow. */}
-          {canEdit && (
-            <div className="flex shrink-0 items-center gap-2">
-              <StatusNote status={archiveStatus} detail={archiveError} />
-              <Button
-                variant="secondary"
-                disabled={archiveStatus === "saving"}
-                onClick={() => void archiveOrRestore()}
-              >
-                {archived ? (
-                  <>
-                    <ArchiveRestore size={16} aria-hidden="true" />
-                    <FormattedMessage id="contracts.record.restore" defaultMessage="Restore" />
-                  </>
-                ) : (
-                  <>
-                    <Archive size={16} aria-hidden="true" />
-                    <FormattedMessage id="contracts.record.archive" defaultMessage="Archive" />
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
-        </section>
+            {canEdit && (
+              <div className="flex shrink-0 items-center gap-2">
+                <StatusNote status={archiveStatus} detail={archiveError} />
+                <Button
+                  variant="secondary"
+                  disabled={archiveStatus === "saving"}
+                  onClick={() => void archiveOrRestore()}
+                >
+                  {archived ? (
+                    <>
+                      <ArchiveRestore size={16} aria-hidden="true" />
+                      <FormattedMessage id="contracts.record.restore" defaultMessage="Restore" />
+                    </>
+                  ) : (
+                    <>
+                      <Archive size={16} aria-hidden="true" />
+                      <FormattedMessage id="contracts.record.archive" defaultMessage="Archive" />
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+          </section>
+          {/* DES-032's section strip, under the breadcrumb and inside
+              the chrome: a tab strip that scrolled away with the record
+              would be no tab strip at all. It carries the sub-bar's own
+              bottom border, so the two read as one chrome slab. */}
+          <RecordTabs
+            label={intl.formatMessage({
+              id: "contracts.record.sections",
+              defaultMessage: "Contract sections",
+            })}
+            tabs={[
+              {
+                to: `/contracts/${saved.number}`,
+                end: true,
+                label: (
+                  <FormattedMessage id="contracts.record.tab.overview" defaultMessage="Overview" />
+                ),
+              },
+              {
+                to: `/contracts/${saved.number}/fields`,
+                label: (
+                  <FormattedMessage id="contracts.record.tab.fields" defaultMessage="Fields" />
+                ),
+              },
+              {
+                to: `/contracts/${saved.number}/documents`,
+                label: (
+                  <FormattedMessage
+                    id="contracts.record.tab.documents"
+                    defaultMessage="Documents"
+                  />
+                ),
+              },
+            ]}
+          />
+        </>
       }
     >
       {/* Reference then title, composed as one message — the separator
@@ -746,52 +843,64 @@ function ContractRecord() {
           )}
           {/* The C2 body: the record's own fields, with the people
               column beside them. Below the container threshold the two
-              stack, so the roster follows the record (DES-012). */}
+              stack, so the roster follows the record (DES-012).
+
+              The section tab decides what the main column holds; the
+              Team column is not one of the sections and stands beside
+              all three. Who is on a contract is context for reading any
+              part of it, and the DES-028 banner's "Manage team" link is
+              a fragment to that card — a link that only resolved on one
+              tab would be a link that sometimes goes nowhere. */}
           <div className="flex flex-col items-start gap-4 @4xl/page:flex-row">
             <div className="flex w-full min-w-0 flex-1 flex-col gap-4">
-              <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
-                <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
-                  <h2 className="text-base font-semibold">
-                    <FormattedMessage id="contracts.record.section" defaultMessage="Contract" />
-                  </h2>
-                </header>
-                <div className="grid grid-cols-1 gap-4 p-4 @2xl/page:grid-cols-2">
-                  <div className="@2xl/page:col-span-2">
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="contract-title">
-                        <FormattedMessage id="contracts.form.titleField" defaultMessage="Title" />
-                      </Label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          id="contract-title"
-                          value={drafts.title}
-                          disabled={frozen}
-                          onChange={(event) =>
-                            setDrafts((current) => ({ ...current, title: event.target.value }))
-                          }
-                          onBlur={() => commitText("title")}
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter") commitText("title");
-                            if (event.key === "Escape") revertText("title");
-                          }}
-                        />
-                        <StatusNote
-                          status={fieldStatus.title ?? "idle"}
-                          detail={fieldError.title}
-                        />
+              {tab === "overview" && (
+                <>
+                  <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
+                    <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
+                      <h2 className="text-base font-semibold">
+                        <FormattedMessage id="contracts.record.section" defaultMessage="Contract" />
+                      </h2>
+                    </header>
+                    <div className="grid grid-cols-1 gap-4 p-4 @2xl/page:grid-cols-2">
+                      <div className="@2xl/page:col-span-2">
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="contract-title">
+                            <FormattedMessage
+                              id="contracts.form.titleField"
+                              defaultMessage="Title"
+                            />
+                          </Label>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              id="contract-title"
+                              value={drafts.title}
+                              disabled={frozen}
+                              onChange={(event) =>
+                                setDrafts((current) => ({ ...current, title: event.target.value }))
+                              }
+                              onBlur={() => commitText("title")}
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter") commitText("title");
+                                if (event.key === "Escape") revertText("title");
+                              }}
+                            />
+                            <StatusNote
+                              status={fieldStatus.title ?? "idle"}
+                              detail={fieldError.title}
+                            />
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                  <ReadOnlyField
-                    label={
-                      <FormattedMessage
-                        id="contracts.column.reference"
-                        defaultMessage="Reference"
+                      <ReadOnlyField
+                        label={
+                          <FormattedMessage
+                            id="contracts.column.reference"
+                            defaultMessage="Reference"
+                          />
+                        }
+                        value={reference}
                       />
-                    }
-                    value={reference}
-                  />
-                  {/* The type is a field like any other on the surface,
+                      {/* The type is a field like any other on the surface,
                       and not like any other underneath: picking one
                       re-checks what that type demands (MTR-014), so a
                       pick with gaps opens a dialog instead of
@@ -800,224 +909,238 @@ function ContractRecord() {
                       toggle DES-017 removed, so it lands here with the
                       other scalars — the same move the Owner, our
                       entity, and the value already made. */}
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="contract-type">
-                      <FormattedMessage id="contracts.form.type" defaultMessage="Contract type" />
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      <select
-                        id="contract-type"
-                        value={saved.contractTypeId}
-                        className={CONTROL_CLASS}
-                        disabled={frozen}
-                        onChange={(event) => pickType(event.target.value)}
-                      >
-                        {typeOptions.map((option) => (
-                          <option key={option.id} value={option.id}>
-                            {option.displayName}
-                          </option>
-                        ))}
-                      </select>
-                      <StatusNote
-                        status={fieldStatus.contractTypeId ?? "idle"}
-                        detail={fieldError.contractTypeId}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="contract-owner">
-                      <FormattedMessage id="contracts.form.owner" defaultMessage="Owner" />
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      <select
-                        id="contract-owner"
-                        value={saved.manager?.id ?? ""}
-                        className={CONTROL_CLASS}
-                        disabled={frozen}
-                        onChange={(event) =>
-                          void commit("managerId", { managerId: event.target.value || null })
-                        }
-                      >
-                        {/* Empty is a real answer: an unassigned contract
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="contract-type">
+                          <FormattedMessage
+                            id="contracts.form.type"
+                            defaultMessage="Contract type"
+                          />
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <select
+                            id="contract-type"
+                            value={saved.contractTypeId}
+                            className={CONTROL_CLASS}
+                            disabled={frozen}
+                            onChange={(event) => pickType(event.target.value)}
+                          >
+                            {typeOptions.map((option) => (
+                              <option key={option.id} value={option.id}>
+                                {option.displayName}
+                              </option>
+                            ))}
+                          </select>
+                          <StatusNote
+                            status={fieldStatus.contractTypeId ?? "idle"}
+                            detail={fieldError.contractTypeId}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="contract-owner">
+                          <FormattedMessage id="contracts.form.owner" defaultMessage="Owner" />
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <select
+                            id="contract-owner"
+                            value={saved.manager?.id ?? ""}
+                            className={CONTROL_CLASS}
+                            disabled={frozen}
+                            onChange={(event) =>
+                              void commit("managerId", { managerId: event.target.value || null })
+                            }
+                          >
+                            {/* Empty is a real answer: an unassigned contract
                         sits in triage until someone takes it (CTR-004). */}
-                        <option value="">
-                          {intl.formatMessage({
-                            id: "contracts.ownerUnassigned",
-                            defaultMessage: "Unassigned",
-                          })}
-                        </option>
-                        {/* The saved Owner may have been archived since, and
+                            <option value="">
+                              {intl.formatMessage({
+                                id: "contracts.ownerUnassigned",
+                                defaultMessage: "Unassigned",
+                              })}
+                            </option>
+                            {/* The saved Owner may have been archived since, and
                         so be absent from the picker read — keep them
                         selectable as themselves rather than let the
                         select lie about what the record holds. */}
-                        {(saved.manager &&
-                        !ownerOptions.some((person) => person.id === saved.manager!.id)
-                          ? [saved.manager, ...ownerOptions]
-                          : ownerOptions
-                        ).map((person) => (
-                          <option key={person.id} value={person.id}>
-                            {person.displayName}
-                          </option>
-                        ))}
-                      </select>
-                      <StatusNote
-                        status={fieldStatus.managerId ?? "idle"}
-                        detail={fieldError.managerId}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="contract-entity">
-                      {/* "Our entity" as the C2 mock labels it: the Entity
+                            {(saved.manager &&
+                            !ownerOptions.some((person) => person.id === saved.manager!.id)
+                              ? [saved.manager, ...ownerOptions]
+                              : ownerOptions
+                            ).map((person) => (
+                              <option key={person.id} value={person.id}>
+                                {person.displayName}
+                              </option>
+                            ))}
+                          </select>
+                          <StatusNote
+                            status={fieldStatus.managerId ?? "idle"}
+                            detail={fieldError.managerId}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="contract-entity">
+                          {/* "Our entity" as the C2 mock labels it: the Entity
                         is ours, the Counterparty is theirs, and the
                         record must never blur the two (CONTEXT.md). */}
-                      <FormattedMessage id="contracts.form.entity" defaultMessage="Our entity" />
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      <select
-                        id="contract-entity"
-                        value={saved.entity?.id ?? ""}
-                        className={CONTROL_CLASS}
-                        disabled={frozen}
-                        onChange={(event) =>
-                          void commit("entityId", { entityId: event.target.value || null })
-                        }
-                      >
-                        {/* Empty is a real answer: a contract is often
+                          <FormattedMessage
+                            id="contracts.form.entity"
+                            defaultMessage="Our entity"
+                          />
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <select
+                            id="contract-entity"
+                            value={saved.entity?.id ?? ""}
+                            className={CONTROL_CLASS}
+                            disabled={frozen}
+                            onChange={(event) =>
+                              void commit("entityId", { entityId: event.target.value || null })
+                            }
+                          >
+                            {/* Empty is a real answer: a contract is often
                         recorded before anyone decides which of ours
                         signs it (CTR-011). */}
-                        <option value="">
-                          {intl.formatMessage({
-                            id: "contracts.entityUnknown",
-                            defaultMessage: "Not known yet",
-                          })}
-                        </option>
-                        {entityOptions.map((entity) => (
-                          <option key={entity.id} value={entity.id}>
-                            {entity.legalName}
-                          </option>
-                        ))}
-                      </select>
-                      <StatusNote
-                        status={fieldStatus.entityId ?? "idle"}
-                        detail={fieldError.entityId}
-                      />
-                    </div>
-                  </div>
-                  {/* Their side, next to ours: the two never blur
+                            <option value="">
+                              {intl.formatMessage({
+                                id: "contracts.entityUnknown",
+                                defaultMessage: "Not known yet",
+                              })}
+                            </option>
+                            {entityOptions.map((entity) => (
+                              <option key={entity.id} value={entity.id}>
+                                {entity.legalName}
+                              </option>
+                            ))}
+                          </select>
+                          <StatusNote
+                            status={fieldStatus.entityId ?? "idle"}
+                            detail={fieldError.entityId}
+                          />
+                        </div>
+                      </div>
+                      {/* Their side, next to ours: the two never blur
                     (CONTEXT.md), and the record reads them together. */}
-                  <CounterpartiesField
-                    contractNumber={saved.number}
-                    parties={parties}
-                    frozen={frozen}
-                    status={fieldStatus.counterparties ?? "idle"}
-                    error={fieldError.counterparties}
-                    onStatus={(next, detail) => note("counterparties", next, detail)}
-                    onChange={(row, next) => {
-                      // The primary decides what the list column and the
-                      // record hero show, so the row moves with the party.
-                      setSaved(row);
-                      setParties(next);
-                    }}
-                  />
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="contract-status">
-                      <FormattedMessage id="contracts.form.status" defaultMessage="Status" />
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      <select
-                        id="contract-status"
-                        value={saved.statusId}
-                        className={CONTROL_CLASS}
-                        disabled={frozen}
-                        onChange={(event) =>
-                          void commit("statusId", { statusId: event.target.value })
-                        }
-                      >
-                        {statusOptions.map((option) => (
-                          <option key={option.id} value={option.id}>
-                            {option.displayName}
-                          </option>
-                        ))}
-                      </select>
-                      <StatusNote
-                        status={fieldStatus.statusId ?? "idle"}
-                        detail={fieldError.statusId}
+                      <CounterpartiesField
+                        contractNumber={saved.number}
+                        parties={parties}
+                        frozen={frozen}
+                        status={fieldStatus.counterparties ?? "idle"}
+                        error={fieldError.counterparties}
+                        onStatus={(next, detail) => note("counterparties", next, detail)}
+                        onChange={(row, next) => {
+                          // The primary decides what the list column and the
+                          // record hero show, so the row moves with the party.
+                          setSaved(row);
+                          setParties(next);
+                        }}
                       />
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="contract-priority">
-                      <FormattedMessage id="contracts.form.priority" defaultMessage="Priority" />
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      <select
-                        id="contract-priority"
-                        value={saved.priority}
-                        className={CONTROL_CLASS}
-                        disabled={frozen}
-                        onChange={(event) =>
-                          void commit("priority", { priority: event.target.value as SeverityLevel })
-                        }
-                      >
-                        {SEVERITY_LEVELS.map((level) => (
-                          <option key={level} value={level}>
-                            {severityLabel(intl, level)}
-                          </option>
-                        ))}
-                      </select>
-                      <StatusNote
-                        status={fieldStatus.priority ?? "idle"}
-                        detail={fieldError.priority}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="contract-risk">
-                      <FormattedMessage id="contracts.form.risk" defaultMessage="Risk" />
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      <select
-                        id="contract-risk"
-                        value={saved.risk ?? ""}
-                        className={CONTROL_CLASS}
-                        disabled={frozen}
-                        onChange={(event) =>
-                          void commit("risk", {
-                            risk:
-                              event.target.value === ""
-                                ? null
-                                : (event.target.value as SeverityLevel),
-                          })
-                        }
-                      >
-                        {/* Empty is a real answer, not a placeholder: risk
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="contract-status">
+                          <FormattedMessage id="contracts.form.status" defaultMessage="Status" />
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <select
+                            id="contract-status"
+                            value={saved.statusId}
+                            className={CONTROL_CLASS}
+                            disabled={frozen}
+                            onChange={(event) =>
+                              void commit("statusId", { statusId: event.target.value })
+                            }
+                          >
+                            {statusOptions.map((option) => (
+                              <option key={option.id} value={option.id}>
+                                {option.displayName}
+                              </option>
+                            ))}
+                          </select>
+                          <StatusNote
+                            status={fieldStatus.statusId ?? "idle"}
+                            detail={fieldError.statusId}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="contract-priority">
+                          <FormattedMessage
+                            id="contracts.form.priority"
+                            defaultMessage="Priority"
+                          />
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <select
+                            id="contract-priority"
+                            value={saved.priority}
+                            className={CONTROL_CLASS}
+                            disabled={frozen}
+                            onChange={(event) =>
+                              void commit("priority", {
+                                priority: event.target.value as SeverityLevel,
+                              })
+                            }
+                          >
+                            {SEVERITY_LEVELS.map((level) => (
+                              <option key={level} value={level}>
+                                {severityLabel(intl, level)}
+                              </option>
+                            ))}
+                          </select>
+                          <StatusNote
+                            status={fieldStatus.priority ?? "idle"}
+                            detail={fieldError.priority}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="contract-risk">
+                          <FormattedMessage id="contracts.form.risk" defaultMessage="Risk" />
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <select
+                            id="contract-risk"
+                            value={saved.risk ?? ""}
+                            className={CONTROL_CLASS}
+                            disabled={frozen}
+                            onChange={(event) =>
+                              void commit("risk", {
+                                risk:
+                                  event.target.value === ""
+                                    ? null
+                                    : (event.target.value as SeverityLevel),
+                              })
+                            }
+                          >
+                            {/* Empty is a real answer, not a placeholder: risk
                         stays unset until legal assesses it (CTR-005). */}
-                        <option value="">{riskLabel(intl, null)}</option>
-                        {SEVERITY_LEVELS.map((level) => (
-                          <option key={level} value={level}>
-                            {severityLabel(intl, level)}
-                          </option>
-                        ))}
-                      </select>
-                      <StatusNote status={fieldStatus.risk ?? "idle"} detail={fieldError.risk} />
-                    </div>
-                  </div>
-                  {/* CTR-010's value: three controls, one field. It sits
+                            <option value="">{riskLabel(intl, null)}</option>
+                            {SEVERITY_LEVELS.map((level) => (
+                              <option key={level} value={level}>
+                                {severityLabel(intl, level)}
+                              </option>
+                            ))}
+                          </select>
+                          <StatusNote
+                            status={fieldStatus.risk ?? "idle"}
+                            detail={fieldError.risk}
+                          />
+                        </div>
+                      </div>
+                      {/* CTR-010's value: three controls, one field. It sits
                     with the other scalars the record holds, because the
                     C2 hero meta strip it is drawn in edits through the
                     page-level Edit toggle DES-017 removed — the same
                     move the Owner, our entity, and the counterparties
                     already made. */}
-                  <ValueField
-                    value={saved.value}
-                    frozen={frozen}
-                    status={fieldStatus.value ?? "idle"}
-                    error={fieldError.value}
-                    onStatus={(next, detail) => note("value", next, detail)}
-                    onCommit={(next) => void commit("value", { value: next })}
-                  />
-                  {/* Who may see the record at all (DD-014). It closes
+                      <ValueField
+                        value={saved.value}
+                        frozen={frozen}
+                        status={fieldStatus.value ?? "idle"}
+                        error={fieldError.value}
+                        onStatus={(next, detail) => note("value", next, detail)}
+                        onCommit={(next) => void commit("value", { value: next })}
+                      />
+                      {/* Who may see the record at all (DD-014). It closes
                       the card because it is the record's audience
                       rather than one of its business facts, and it is
                       the one field here that most of the people
@@ -1028,28 +1151,30 @@ function ContractRecord() {
                       the person is done deciding — which for a
                       two-state control is the moment they flip it, the
                       same rule the record's selects already follow. */}
-                  <div className="@2xl/page:col-span-2">
-                    <ConfidentialToggle
-                      id="contract-confidential"
-                      confidential={saved.isConfidential}
-                      // Archived refuses the flag edit like every other
-                      // edit, and only the three actors may ask for
-                      // one. Everyone else reads it inert — a fact
-                      // about the record, not a control they must not
-                      // press.
-                      disabled={frozen || !canFlag || fieldStatus.isConfidential === "saving"}
-                      status={
-                        <StatusNote
-                          status={fieldStatus.isConfidential ?? "idle"}
-                          detail={fieldError.isConfidential}
+                      <div className="@2xl/page:col-span-2">
+                        <ConfidentialToggle
+                          id="contract-confidential"
+                          confidential={saved.isConfidential}
+                          // Archived refuses the flag edit like every other
+                          // edit, and only the three actors may ask for
+                          // one. Everyone else reads it inert — a fact
+                          // about the record, not a control they must not
+                          // press.
+                          disabled={frozen || !canFlag || fieldStatus.isConfidential === "saving"}
+                          status={
+                            <StatusNote
+                              status={fieldStatus.isConfidential ?? "idle"}
+                              detail={fieldError.isConfidential}
+                            />
+                          }
+                          onChange={(next) =>
+                            void commit("isConfidential", { isConfidential: next })
+                          }
                         />
-                      }
-                      onChange={(next) => void commit("isConfidential", { isConfidential: next })}
-                    />
-                  </div>
-                </div>
-              </section>
-              {/* The C2 mock gives the description a card of its own,
+                      </div>
+                    </div>
+                  </section>
+                  {/* The C2 mock gives the description a card of its own,
                   and it earns one: it is the only free-form field on
                   the record, and a textarea the width of the card reads
                   as prose rather than as one more entry in a field
@@ -1060,94 +1185,104 @@ function ContractRecord() {
                   The heading names the textarea rather than the card:
                   one accessible name each, carried by the control that
                   answers to it, as the Contract card above does. */}
-              <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
-                <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
-                  <h2 id="contract-description-heading" className="text-base font-semibold">
-                    <FormattedMessage
-                      id="contracts.form.description"
-                      defaultMessage="Description"
-                    />
-                  </h2>
-                </header>
-                <div className="flex items-start gap-2 p-4">
-                  <textarea
-                    id="contract-description"
-                    // The card's own heading names the field: a second
-                    // label above a full-width textarea would repeat it.
-                    aria-labelledby="contract-description-heading"
-                    value={drafts.description}
-                    className={TEXTAREA_CLASS}
-                    disabled={frozen}
-                    onChange={(event) =>
-                      setDrafts((current) => ({ ...current, description: event.target.value }))
-                    }
-                    onBlur={() => commitText("description")}
-                    onKeyDown={(event) => {
-                      if (event.key === "Escape") revertText("description");
-                    }}
-                  />
-                  <StatusNote
-                    status={fieldStatus.description ?? "idle"}
-                    detail={fieldError.description}
-                  />
-                </div>
-              </section>
+                  <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
+                    <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
+                      <h2 id="contract-description-heading" className="text-base font-semibold">
+                        <FormattedMessage
+                          id="contracts.form.description"
+                          defaultMessage="Description"
+                        />
+                      </h2>
+                    </header>
+                    <div className="flex items-start gap-2 p-4">
+                      <textarea
+                        id="contract-description"
+                        // The card's own heading names the field: a second
+                        // label above a full-width textarea would repeat it.
+                        aria-labelledby="contract-description-heading"
+                        value={drafts.description}
+                        className={TEXTAREA_CLASS}
+                        disabled={frozen}
+                        onChange={(event) =>
+                          setDrafts((current) => ({ ...current, description: event.target.value }))
+                        }
+                        onBlur={() => commitText("description")}
+                        onKeyDown={(event) => {
+                          if (event.key === "Escape") revertText("description");
+                        }}
+                      />
+                      <StatusNote
+                        status={fieldStatus.description ?? "idle"}
+                        detail={fieldError.description}
+                      />
+                    </div>
+                  </section>
+                </>
+              )}
               {/* CTR-016's fields, in the card the C2 mock draws for
                   them and in the order the type's attachment join
-                  gives. It follows the Description card because the
-                  mock puts it after — the record's own columns first,
-                  then the account of them, then what this type asks
-                  for on top. */}
-              <FieldsCard
-                fields={attached}
-                values={saved.customFields}
-                people={peopleReferences}
-                entities={entityReferences}
-                frozen={frozen}
-                status={fieldStatus}
-                error={fieldError}
-                onStatus={note}
-                onCommit={commitCustomField}
-              />
-              {/* The record's paper (M11/2, M11/3), in the section the C4 mock
-                  draws. It follows the fields because the mock puts the
-                  documents behind their own tab, after everything the
-                  record itself states — and this page is one scroll,
-                  not a tab strip. The full document panel DES-016
-                  places in a wider sibling layer lands with M12's
-                  rendering; this is the record-body section. */}
-              <DocumentsCard
-                contractNumber={saved.number}
-                documents={paper}
-                nextCursor={paperCursor}
-                frozen={frozen}
-                // DOC-010's erasure is the Administrator's alone, and it
-                // is the one control on this section a role decides.
-                role={user.role}
-                // DD-014's per-document flag has an actor set of three
-                // (CTR-022), and two of them are people rather than a
-                // role: the person who uploaded the document, which the
-                // row states, and the record's Owner, which only the
-                // record holds. The saved row rather than the loader's
-                // copy, so taking the Owner off takes the control with
-                // them on the same page.
-                viewerId={user.id}
-                ownerId={saved.manager?.id ?? null}
-                // Opening a version in the doc panel (M12/2). The
-                // trigger comes with it so closing puts focus back on
-                // the row control that opened it.
-                reading={reading?.versionId ?? null}
-                onRead={(document, version, trigger) => {
-                  readingTrigger.current = trigger;
-                  setReading({ documentId: document.id, versionId: version.id });
-                }}
-                onDocuments={(rows, cursor) => {
-                  setPaper(rows);
-                  // `undefined` means the write changed rows without
-                  // moving the position: a metadata edit is not a page.
-                  if (cursor !== undefined) setPaperCursor(cursor);
-                }}
-              />
+                  gives. They are the Fields section (DES-032): what
+                  this contract's type asks for on top of the record's
+                  own columns, and — once CTR-008 lands — where the
+                  extraction writes its answers. */}
+              {tab === "fields" && (
+                <FieldsCard
+                  fields={attached}
+                  values={saved.customFields}
+                  people={peopleReferences}
+                  entities={entityReferences}
+                  frozen={frozen}
+                  status={fieldStatus}
+                  error={fieldError}
+                  onStatus={note}
+                  onCommit={commitCustomField}
+                />
+              )}
+              {/* The record's paper (M11/2, M11/3), in the section the
+                  C4 mock draws — and behind the tab the mock puts it
+                  behind (DES-032). The full document panel DES-016
+                  places in a wider sibling layer opens from here. */}
+              {tab === "documents" && (
+                <DocumentsCard
+                  contractNumber={saved.number}
+                  documents={paper}
+                  folders={tree}
+                  nextCursor={paperCursor}
+                  frozen={frozen}
+                  // DOC-010's erasure is the Administrator's alone, and it
+                  // is the one control on this section a role decides.
+                  role={user.role}
+                  // DD-014's per-document flag has an actor set of three
+                  // (CTR-022), and two of them are people rather than a
+                  // role: the person who uploaded the document, which the
+                  // row states, and the record's Owner, which only the
+                  // record holds. The saved row rather than the loader's
+                  // copy, so taking the Owner off takes the control with
+                  // them on the same page.
+                  viewerId={user.id}
+                  ownerId={saved.manager?.id ?? null}
+                  // Opening a version in the doc panel (M12/2). The
+                  // trigger comes with it so closing puts focus back on
+                  // the row control that opened it.
+                  reading={reading?.versionId ?? null}
+                  onRead={(document, version, trigger) => {
+                    readingTrigger.current = trigger;
+                    setReading({ documentId: document.id, versionId: version.id });
+                  }}
+                  onDocuments={(rows, cursor) => {
+                    setPaper(rows);
+                    // `undefined` means the write changed rows without
+                    // moving the position: a metadata edit is not a page.
+                    if (cursor !== undefined) setPaperCursor(cursor);
+                  }}
+                  // The setter itself rather than a lambda around it:
+                  // the section's report watches its own listings and
+                  // nothing else, so what it calls has to stay the same
+                  // function across a render.
+                  onFiled={setFiled}
+                  onFolders={setTree}
+                />
+              )}
             </div>
             <TeamCard
               contractNumber={saved.number}

@@ -49,6 +49,9 @@ import {
   Clock,
   Download,
   FilePlus2,
+  FolderInput,
+  FolderPlus,
+  FolderX,
   GitCommitHorizontal,
   Globe,
   Image as ImageIcon,
@@ -378,6 +381,41 @@ function directChange(
       to: changeValue(intl, key, payload.to, context),
     },
   ];
+}
+
+/**
+ * What a folder entry calls the folder it names, when it says.
+ *
+ * Its own fallback rather than {@link named}'s, because that one is a
+ * person's — "someone made the someone folder" is not a sentence. Every
+ * payload written here carries a name; this is what keeps a row that
+ * somehow does not from reading as a bug.
+ */
+function folderNamed(intl: IntlShape, payload: Payload, key: string): string {
+  return (
+    text(payload, key) ??
+    intl.formatMessage({ id: "activity.folder.unnamed", defaultMessage: "unnamed" })
+  );
+}
+
+/**
+ * The two values a folder create and a folder move narrate from: what
+ * the folder is called, and where it went.
+ *
+ * Whether it went to the record root is its **own** value rather than a
+ * sentinel inside the parent's name. A folder really can be called
+ * "none", and a message that read the destination out of the name would
+ * narrate that one as if it had landed on the contract.
+ */
+function folderNarration(intl: IntlShape, payload: Payload): Record<string, string> {
+  const parent = text(payload, "parentName");
+  return {
+    name: folderNamed(intl, payload, "name"),
+    atRoot: parent === null ? "true" : "false",
+    // Never read when `atRoot` is true, and never left undefined: an
+    // ICU argument a locale still names has to resolve to something.
+    parent: parent ?? "",
+  };
 }
 
 /** What a payload calls somebody or something it names, when it does.
@@ -807,13 +845,29 @@ const ARMS: Readonly<Record<string, Arm>> = {
   // (DOC-008) — and it names the document, because hard deletion
   // (DOC-010) will one day take the row and the entry has to still say
   // what was uploaded.
+  // A file arriving on the record, and where it landed (M13/5, DD-017).
+  // The folder is named because a bulk drop's folders narrate nothing of
+  // their own — this entry is the drop's whole story, so it has to say
+  // where each file went. By name rather than by id, so it still reads
+  // after that folder is renamed or dissolved.
   "document.created": {
     icon: Upload,
     message: defineMessage({
       id: "activity.document.created",
-      defaultMessage: "{actor} uploaded {title}",
+      defaultMessage:
+        "{atRoot, select, true {{actor} uploaded {title}} " +
+        "other {{actor} uploaded {title} into {folder}}}",
     }),
-    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+    values: (intl, payload) => {
+      const folder = text(payload, "folderName");
+      return {
+        title: named(intl, payload, "title"),
+        atRoot: folder === null ? "true" : "false",
+        // Never read when `atRoot` is true, and never left undefined: an
+        // ICU argument a locale still names has to resolve to something.
+        folder: folder ?? "",
+      };
+    },
   },
   // A round of the negotiation, narrated as one: which document, and
   // which version of it. The number is what makes the feed readable as
@@ -947,6 +1001,85 @@ const ARMS: Readonly<Record<string, Arm>> = {
       defaultMessage: "{actor} cleared the confidential mark on {title}",
     }),
     values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+  },
+  // Where a document sits in the record's tree (M13/3, DOC-006). One
+  // verb for both directions, and the sentence says which one it was:
+  // into a folder, or back out onto the contract itself. Both folders
+  // ride the payload **by name**, because a folder is renamed and
+  // dissolved freely and the id would not draw a sentence a week later.
+  //
+  // Whether it went to the record root is its own value rather than a
+  // sentinel inside the folder's name, for `folderNarration`'s reason: a
+  // folder really can be called "none".
+  "document.filed": {
+    icon: FolderInput,
+    message: defineMessage({
+      id: "activity.document.filed",
+      defaultMessage:
+        "{atRoot, select, true {{actor} moved {title} onto the contract} " +
+        "other {{actor} filed {title} in {folder}}}",
+    }),
+    values: (intl, payload) => {
+      const folder = text(payload, "folderName");
+      return {
+        title: named(intl, payload, "title"),
+        atRoot: folder === null ? "true" : "false",
+        // Never read when `atRoot` is true, and never left undefined: an
+        // ICU argument a locale still names has to resolve to something.
+        folder: folder ?? "",
+      };
+    },
+  },
+  // How the record's paper is filed (M13/2, DOC-006). Each entry names
+  // the folder by the name it had at the time, because a folder is
+  // renamed and dissolved freely and the row will not be there to read
+  // one off a week later.
+  //
+  // Only manual work is narrated. A folder that a bulk drop
+  // find-or-creates on its way to a file writes nothing (DOC-011): the
+  // drop's story is its uploads, and the feed narrates people rather
+  // than traversal.
+  "folder.created": {
+    icon: FolderPlus,
+    message: defineMessage({
+      id: "activity.folder.created",
+      defaultMessage:
+        "{atRoot, select, true {{actor} made the {name} folder} " +
+        "other {{actor} made the {name} folder in {parent}}}",
+    }),
+    values: (intl, payload) => ({ ...folderNarration(intl, payload) }),
+  },
+  "folder.renamed": {
+    icon: PencilLine,
+    message: defineMessage({
+      id: "activity.folder.renamed",
+      defaultMessage: "{actor} renamed the {previousName} folder to {name}",
+    }),
+    values: (intl, payload) => ({
+      name: folderNamed(intl, payload, "name"),
+      previousName: folderNamed(intl, payload, "previousName"),
+    }),
+  },
+  "folder.moved": {
+    icon: FolderInput,
+    message: defineMessage({
+      id: "activity.folder.moved",
+      defaultMessage:
+        "{atRoot, select, true {{actor} moved the {name} folder onto the contract} " +
+        "other {{actor} moved the {name} folder into {parent}}}",
+    }),
+    values: (intl, payload) => ({ ...folderNarration(intl, payload) }),
+  },
+  // "Deleted", and the sentence says what that means here: a folder is
+  // dissolved and its contents are re-filed, so nothing was destroyed
+  // and the feed must not imply that anything was.
+  "folder.deleted": {
+    icon: FolderX,
+    message: defineMessage({
+      id: "activity.folder.deleted",
+      defaultMessage: "{actor} deleted the {name} folder and kept what was in it",
+    }),
+    values: (intl, payload) => ({ name: folderNamed(intl, payload, "name") }),
   },
 
   // Ids only, never text (CMT-006). A redacted comment's entry reads as

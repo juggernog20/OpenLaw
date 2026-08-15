@@ -81,6 +81,40 @@
  * given and has no "hidden" state to draw, which is what makes the
  * omission silent rather than announced.
  *
+ * **Folders are rows of this table, not a second surface** (M13/2,
+ * DES-033). A folder's anatomy lives in the Name cell — an indent spacer
+ * of 18px per level, the disclosure chevron, the folder glyph, the name,
+ * then how much is filed in it — and Kind, Version, Size and Modified
+ * are empty on it, because a folder has none of them and an em dash in
+ * each would be four pieces of nothing. Folders sort before documents
+ * and siblings sort by name without case, which is how a file manager
+ * lists a directory. The whole tree is drawn from one read of the
+ * record's folder set.
+ *
+ * **The section draws several listings, not one list** (M13/3). The
+ * record root holds the documents filed in no folder; each folder's own
+ * documents are read when it is opened, through the same list route
+ * filtered to it, and DES-031's paging foot then applies inside that
+ * folder rather than across the record. A filed document is the same row
+ * as an unfiled one — it opens, previews, takes a version, and is erased
+ * identically — so both are drawn by one component and the only
+ * difference between them is how far in they sit.
+ *
+ * **Every folder takes a chevron, and its count is the viewer's**
+ * (DD-014, DES-033). A folder whose count reads "Empty" may be a folder
+ * whose contents this viewer cannot see: the seam leaves those documents
+ * out of the listing and out of the count together, by the one predicate
+ * every document read passes through. So nothing here tells the two
+ * apart — no hidden-item hint, no different empty line, and no chevron
+ * drawn only on the folders that hold something.
+ *
+ * **Dissolving a folder destroys nothing** (DOC-006). Its child folders
+ * and the documents filed in it are re-filed into its parent, or into
+ * the record root when it had none, so the confirmation says where the
+ * contents go rather than asking for a typed name: the ceremony
+ * DOC-010's erasure earns is out of proportion to a grouping that can be
+ * made again.
+ *
  * Writing is Member+ (DD-015): a Contributor reads the section and
  * downloads from it, and is offered no control. An archived record is
  * read the same way, because archiving freezes the record. Erasing is
@@ -90,7 +124,7 @@
  * (CTR-022) — so that item is drawn for those three and nobody else.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState, type RefObject } from "react";
 import { defineMessage, FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import {
   Archive,
@@ -99,6 +133,10 @@ import {
   ChevronRight,
   FilePlus2,
   FileText,
+  Folder,
+  FolderInput,
+  FolderOpen,
+  FolderPlus,
   Lock,
   MoreHorizontal,
   Pencil,
@@ -108,6 +146,7 @@ import {
   Upload,
 } from "lucide-react";
 import { Avatar } from "../avatar";
+import { BatchDialog, type BatchDestination, type BatchSource } from "./batch-dialog";
 import { ConfidentialMarker } from "../confidential-marker";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
@@ -124,6 +163,12 @@ import { StatusNote, type FieldStatus } from "../status-note";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
 import { cn } from "../../lib/utils";
 import { formatFileSize, formatShortDate } from "../../lib/format";
+import {
+  dragCarriesFiles,
+  filesFromDirectoryPicker,
+  filesFromDrop,
+  type DroppedFile,
+} from "../../lib/batch-upload";
 import type { Role } from "../../lib/roles";
 import {
   archiveDocument,
@@ -131,6 +176,7 @@ import {
   clearExecutedVersion,
   documentDownloadHref,
   DOCUMENT_VERSION_KINDS,
+  FOLDER_ROOT,
   hardDeleteDocument,
   isPreviewable,
   readContractDocuments,
@@ -145,6 +191,17 @@ import {
   type DocumentVersionKind,
   type UploadDraft,
 } from "../../lib/documents";
+import {
+  childrenOf,
+  createContractFolder,
+  deleteContractFolder,
+  movableInto,
+  pathOf,
+  readContractFolders,
+  updateContractFolder,
+  type ContractFolder,
+  type FoldersOutcome,
+} from "../../lib/folders";
 
 /** What the note field holds, matching the seam's own ceiling — which
  * refuses a longer one rather than shortening it. */
@@ -153,6 +210,16 @@ const MAX_NOTE_LENGTH = 2000;
 /** What the description holds, for the note's reason: the seam refuses
  * a longer one, so the control stops the writer at the same line. */
 const MAX_DESCRIPTION_LENGTH = 10_000;
+
+/** What a folder name holds, matching the seam's own ceiling — the
+ * filesystem's, because a folder is made from a directory name as often
+ * as it is typed (DOC-011). */
+const MAX_FOLDER_NAME_LENGTH = 255;
+
+/** How far one level of the tree sits in from the one above it, in
+ * pixels (DES-033). Drawn as a spacer at the head of the Name cell, so
+ * one rule serves both row kinds and nothing is positioned by eye. */
+const FOLDER_INDENT = 18;
 
 /**
  * The kind, as the C4 mock colors it: our own work reads as the calm
@@ -189,9 +256,88 @@ function kindLabel(intl: IntlShape, kind: DocumentVersionKind): string {
  * that does not exist yet, or the next round on one that does. */
 type Composer = { document: ContractDocument } | { document: undefined };
 
+/** What the folder dialog is open for. Creating and renaming collect one
+ * name and are one form; moving collects a destination; deleting
+ * confirms. */
+type FolderDialog =
+  | { mode: "create"; parent: ContractFolder | null }
+  | { mode: "rename"; folder: ContractFolder }
+  | { mode: "move"; folder: ContractFolder }
+  | { mode: "delete"; folder: ContractFolder };
+
+/**
+ * One folder's documents, as the section holds them once the folder has
+ * been opened (M13/3, DES-033).
+ *
+ * A listing of its own rather than a slice of the record's paper,
+ * because it is read on its own: opening a folder asks the list route
+ * for that folder, and DES-031's paging foot then applies inside it. A
+ * heavy folder pages without touching the rows around it.
+ */
+interface FolderListing {
+  documents: ContractDocument[];
+  /** Where the next page of *this* folder starts, or null at its end. */
+  nextCursor: string | null;
+  /** A read is in flight. The first one draws skeleton rows at the
+   * opened folder's depth, so the tree around them stays readable while
+   * they arrive (DES-033). */
+  loading: boolean;
+  /** Why the last read failed, said on the folder's own rows. The
+   * control that failed stays, so the retry is under the reader's
+   * hand. */
+  error: string | null;
+}
+
+/** How many skeleton rows a folder draws while its documents arrive.
+ * Three, as C25 draws them: enough to read as a list, few enough not to
+ * promise a length nobody knows yet. */
+const FOLDER_SKELETON_ROWS = 3;
+
+/**
+ * Everything one document row needs that is the same for every row on
+ * the section.
+ *
+ * One object rather than fifteen props, because a document row is drawn
+ * at the record root **and** inside every open folder, and threading the
+ * same fifteen through two call sites is how the two come to differ.
+ */
+interface RowContext {
+  frozen: boolean;
+  busy: boolean;
+  intl: IntlShape;
+  reading: string | null;
+  /** Whether DOC-010's erasure is drawn at all — the Administrator's
+   * alone. */
+  canErase: boolean;
+  /** Whether this viewer is one of DD-014's three actors for one
+   * document (CTR-022). */
+  canFlag: (document: ContractDocument) => boolean;
+  /** Which documents have their earlier rounds open. */
+  opened: ReadonlySet<string>;
+  /** What the last "Show more" brought, wherever it was pressed. Only
+   * one row is ever the landing row, so one ref serves every listing. */
+  appended: { count: number; from: string } | null;
+  landing: RefObject<HTMLTableRowElement | null>;
+  onToggle: (documentId: string) => void;
+  onRead: (
+    document: ContractDocument,
+    version: DocumentVersion,
+    trigger: HTMLElement | null,
+  ) => void;
+  onPin: (document: ContractDocument, version: DocumentVersion) => void;
+  onMakePrimary: (document: ContractDocument) => void;
+  onAddVersion: (document: ContractDocument) => void;
+  onEditDetails: (document: ContractDocument) => void;
+  onMoveToFolder: (document: ContractDocument) => void;
+  onSetConfidential: (document: ContractDocument, confidential: boolean) => void;
+  onArchive: (document: ContractDocument, archived: boolean) => void;
+  onDelete: (document: ContractDocument) => void;
+}
+
 export function DocumentsCard({
   contractNumber,
   documents,
+  folders,
   nextCursor,
   frozen,
   role,
@@ -200,10 +346,16 @@ export function DocumentsCard({
   reading,
   onRead,
   onDocuments,
+  onFiled,
+  onFolders,
 }: Readonly<{
   /** CTR-003's reference — the address the upload route takes. */
   contractNumber: number;
   documents: readonly ContractDocument[];
+  /** The record's folders, whole (M13/2, DOC-006). The tree is drawn
+   * from this one set: a record's folders are few, so there is no read
+   * per level and no page to ask for. */
+  folders: readonly ContractFolder[];
   /** Where the next page starts, or null at the end of the record's
    * paper (CTR-024). */
   nextCursor: string | null;
@@ -241,6 +393,23 @@ export function DocumentsCard({
    * cursor is omitted by a write that changed rows without moving the
    * position — a metadata edit is not a page. */
   onDocuments: (documents: ContractDocument[], nextCursor?: string | null) => void;
+  /**
+   * The documents this section is holding **inside folders** (M13/3).
+   *
+   * The record draws the doc panel, and it resolves what the panel is
+   * reading from the paper it holds — which is the record root alone,
+   * because a folder's documents are read when the folder is opened.
+   * Without this a filed document's name could be pressed and nothing
+   * would open: the reference would be resolved against a list it was
+   * never in.
+   *
+   * Told rather than asked for, because the folder listings live here.
+   */
+  onFiled: (documents: ContractDocument[]) => void;
+  /** The record's folders as the seam now answers them. Every folder
+   * write answers the whole set, because a delete re-files the children
+   * it had and more rows move than the one addressed. */
+  onFolders: (folders: ContractFolder[]) => void;
 }>) {
   const intl = useIntl();
   const [status, setStatus] = useState<FieldStatus>("idle");
@@ -255,7 +424,108 @@ export function DocumentsCard({
    * default: the section answers "which file matters now" first, and the
    * history is one click away rather than in the way. */
   const [opened, setOpened] = useState<ReadonlySet<string>>(() => new Set());
+  /** Which folders have their contents open. Collapsed by default, for
+   * the reason a document's earlier rounds are: the section answers what
+   * is on the record first, and the structure opens on a press. */
+  const [openFolders, setOpenFolders] = useState<ReadonlySet<string>>(() => new Set());
+  /** What each opened folder holds, keyed by the folder's id. A folder
+   * that has never been opened is not in here at all, which is what
+   * makes a heavy record a short table until somebody opens one. */
+  const [listings, setListings] = useState<ReadonlyMap<string, FolderListing>>(() => new Map());
+  /**
+   * The record is told what this section is holding inside folders
+   * (M13/3, M12/2).
+   *
+   * The doc panel is the record's, and it resolves the version it is
+   * reading out of the paper the record holds. That paper is the record
+   * root, so a filed document would never resolve and its name would
+   * open nothing. This is the one place that knows what the folders on
+   * screen hold.
+   *
+   * A listing survives a folder being closed (M13/3), so a document
+   * stays resolvable while its folder is shut — and a listing the
+   * refresh evicted takes its documents with it, which is what closes
+   * the panel over a document that has been erased.
+   *
+   * **A folder that is re-reading has not stopped holding its
+   * documents.** A write that re-reads the listings puts each open
+   * folder into its skeleton state until the read answers, and the
+   * skeleton is presentation, not the paper leaving the record. So
+   * while a listing is loading, the report keeps the last word it said
+   * for that folder — otherwise the panel over a filed document would
+   * close on every write to any other row of the paper, which is not
+   * what happens to a document at the record root. The word moves on
+   * when the read answers: a document the fresh listing no longer holds
+   * leaves the report then, and the panel with it.
+   *
+   * **"I hold nothing" and "I have not looked" are different answers.**
+   * This section is mounted and unmounted by the record's tab strip
+   * (DES-032), so it starts again with no listing at all every time the
+   * reader comes back to the paper. Saying "nothing" then would take
+   * away a panel the reader left open — while a root document's panel
+   * survives the same trip, because the record holds that list itself.
+   * So the first word is only spoken once there is something to say,
+   * and every word after it is spoken whatever it says.
+   *
+   * The listings are the whole of what this says, so they are the whole
+   * of what it watches: re-running because the record passed a new
+   * callback would say the same thing again on every render of the page.
+   */
+  const told = useRef(false);
+  /** The last word said for each folder, kept so a listing that is
+   * mid-read can repeat it rather than say "nothing". */
+  const spoken = useRef<ReadonlyMap<string, readonly ContractDocument[]>>(new Map());
+  useEffect(() => {
+    if (!told.current && listings.size === 0) return;
+    const word = new Map<string, readonly ContractDocument[]>();
+    for (const [folderId, listing] of listings) {
+      if (listing.loading) {
+        const last = spoken.current.get(folderId);
+        // A first read with no earlier word is "I have not looked yet"
+        // for this folder — the remount rule again, one folder at a
+        // time. Nothing is said this round; the read's answer speaks.
+        if (last === undefined) return;
+        word.set(folderId, last);
+      } else {
+        word.set(folderId, listing.documents);
+      }
+    }
+    told.current = true;
+    spoken.current = word;
+    onFiled([...word.values()].flat());
+  }, [listings]);
+  /** The folder dialog that is open, or none. */
+  const [folderDialog, setFolderDialog] = useState<FolderDialog | null>(null);
+  /** The document a "Move to folder" dialog is open for, or none. */
+  const [filing, setFiling] = useState<ContractDocument | null>(null);
   const [composer, setComposer] = useState<Composer | null>(null);
+  /**
+   * The batch a confirmation is open for, or none (M13/4, M13/5,
+   * DOC-011).
+   *
+   * It carries what the gesture carried, whole: the files with the
+   * folder each one sat at, the directories of the dropped tree that
+   * held nothing, and the folder the gesture landed on. Nothing is sent
+   * until the dialog is confirmed, so an accidental drop of the wrong
+   * tree costs nothing.
+   */
+  const [batch, setBatch] = useState<{
+    files: DroppedFile[];
+    emptyFolders: (readonly string[])[];
+    /** The directories the walk could not read to the end, so the
+     * confirmation can say the batch may be short rather than let a drop
+     * arrive silently missing part of itself. */
+    unreadable: (readonly string[])[];
+    destination: BatchDestination | null;
+    source: BatchSource;
+  } | null>(null);
+  /** A drag carrying files is over the section, so the surface says it
+   * is a target rather than leaving the reader to guess (DES-033 §7).
+   * Null when nothing is over it; a folder's id when the drag is over
+   * that folder's row, so the row that will take the drop is the row
+   * that lights up. */
+  const [dragging, setDragging] = useState(false);
+  const [dragFolder, setDragFolder] = useState<string | null>(null);
   const [editing, setEditing] = useState<ContractDocument | null>(null);
   /** Whether the archived rows are drawn beside the live ones — the
    * view restoring one is offered in (DOC-010), as the contracts list
@@ -278,28 +548,158 @@ export function DocumentsCard({
     if (appended) landing.current?.focus();
   }, [appended]);
 
-  /** One more page of paper, appended in place (CTR-024, DES-031). The
-   * archived view is carried back, because the cursor is a position in
-   * whichever list is on screen. */
+  /** What a listing says when its read did not land. Shared by the
+   * record root's foot and every folder's, because it is the same
+   * failure said in the same place. */
+  const readFailed = () =>
+    intl.formatMessage({
+      id: "documents.moreError",
+      defaultMessage: "The next documents could not be read. Try again.",
+    });
+
+  /** One more page of the record root, appended in place (CTR-024,
+   * DES-031). The archived view is carried back, because the cursor is a
+   * position in whichever list is on screen. */
   async function showMore() {
     if (busy || nextCursor === null) return;
     setBusy(true);
     setPageError(null);
-    const outcome = await readContractDocuments(contractNumber, showArchived, nextCursor);
+    const outcome = await readContractDocuments(
+      contractNumber,
+      showArchived,
+      nextCursor,
+      FOLDER_ROOT,
+    );
     setBusy(false);
     if (!outcome.ok) {
-      setPageError(
-        outcome.detail ??
-          intl.formatMessage({
-            id: "documents.moreError",
-            defaultMessage: "The next documents could not be read. Try again.",
-          }),
-      );
+      setPageError(outcome.detail ?? readFailed());
       return;
     }
     const first = outcome.documents[0];
     onDocuments([...documents, ...outcome.documents], outcome.nextCursor);
     setAppended(first ? { count: outcome.documents.length, from: first.id } : null);
+  }
+
+  /** One folder's listing, replaced or updated in place. */
+  function putListing(folderId: string, listing: FolderListing) {
+    setListings((current) => new Map(current).set(folderId, listing));
+  }
+
+  /**
+   * One folder's documents, read through the same list route the record
+   * root is read through (M13/3).
+   *
+   * `cursor` makes it a "Show more" inside the folder rather than a
+   * first load: the page is appended to what the folder already holds,
+   * and the cursor is a position inside this folder alone (DES-031).
+   *
+   * A failure is written onto the folder's own rows rather than the
+   * section's note, because the folder is where the reader is looking.
+   */
+  async function loadFolder(folderId: string, cursor?: string): Promise<void> {
+    const held = listings.get(folderId);
+    const carried = cursor === undefined ? [] : (held?.documents ?? []);
+    // A first read replaces the listing, so the position the folder held
+    // no longer describes it — a foot left pointing into the old one
+    // would page from somewhere the rows on screen never came from. Only
+    // a "Show more" keeps the position it is retrying from.
+    const position = cursor === undefined ? null : (held?.nextCursor ?? null);
+    putListing(folderId, {
+      documents: carried,
+      nextCursor: position,
+      loading: true,
+      error: null,
+    });
+    const outcome = await readContractDocuments(contractNumber, showArchived, cursor, folderId);
+    if (!outcome.ok) {
+      // A failed "Show more" keeps the cursor it tried, so the control
+      // that failed is still there and the retry is the button already
+      // under the reader's hand. A failed first read has no position to
+      // keep.
+      putListing(folderId, {
+        documents: carried,
+        nextCursor: position,
+        loading: false,
+        error: outcome.detail ?? readFailed(),
+      });
+      return;
+    }
+    const first = outcome.documents[0];
+    putListing(folderId, {
+      documents: [...carried, ...outcome.documents],
+      nextCursor: outcome.nextCursor,
+      loading: false,
+      error: null,
+    });
+    // Only a "Show more" announces and moves focus. A first load is the
+    // folder opening, and the reader is already looking at it.
+    if (cursor !== undefined && first) {
+      setAppended({ count: outcome.documents.length, from: first.id });
+    }
+  }
+
+  /**
+   * Every listing the section is drawing, read again.
+   *
+   * The writes that answer the record's whole paper — naming the
+   * instrument, and DOC-010's erasure — move rows the section is not
+   * drawing as one list any more: the root draws what is filed nowhere,
+   * and each open folder draws its own. So the answer is discarded and
+   * what is on screen is re-read, rather than half-replaced with a list
+   * that would put every filed document at the root.
+   */
+  async function refreshPaper(dissolved?: string): Promise<void> {
+    const root = await readContractDocuments(contractNumber, showArchived, undefined, FOLDER_ROOT);
+    if (root.ok) onDocuments(root.documents, root.nextCursor);
+    setAppended(null);
+    // A closed folder's cached listing is evicted rather than re-read:
+    // the write may have moved a row into it — a Move names any folder,
+    // open or not — and a cache this refresh skipped would be reopened
+    // as it stood before the write, beside a count that has moved on.
+    // Evicted, reopening reads fresh, which is the promise the toggle
+    // trusts.
+    setListings((current) => {
+      const kept = [...current].filter(
+        ([folderId]) => openFolders.has(folderId) && folderId !== dissolved,
+      );
+      return kept.length === current.size ? current : new Map(kept);
+    });
+    for (const folderId of openFolders) {
+      // A folder that has just been dissolved has no listing to read.
+      if (folderId === dissolved) continue;
+      await loadFolder(folderId);
+    }
+  }
+
+  /** Forgets a folder that no longer exists: it is neither open nor
+   * holding a listing, because there is nothing left to open. */
+  function forgetFolder(folderId: string) {
+    setOpenFolders((current) => {
+      if (!current.has(folderId)) return current;
+      const next = new Set(current);
+      next.delete(folderId);
+      return next;
+    });
+    setListings((current) => {
+      if (!current.has(folderId)) return current;
+      const next = new Map(current);
+      next.delete(folderId);
+      return next;
+    });
+  }
+
+  /**
+   * The record's folder set, read again for its counts (DES-033).
+   *
+   * A count is live and viewer-scoped, so anything that files, archives,
+   * restores or erases a document moves one. The set is small and the
+   * read is one query, so it is asked again rather than guessed at here
+   * — a count the section worked out for itself would be a second answer
+   * to a question DD-014 allows only one of.
+   */
+  async function refreshFolders(): Promise<void> {
+    const outcome = await readContractFolders(contractNumber);
+    if (outcome.ok) onFolders(outcome.folders);
   }
 
   /** Erasing is the Administrator's alone (DOC-010), so nobody else is
@@ -321,18 +721,66 @@ export function DocumentsCard({
   const canFlag = (document: ContractDocument) =>
     role === "administrator" || document.createdBy.id === viewerId || ownerId === viewerId;
 
-  /** How much paper is on the record. Archived rows never count,
-   * whichever view is showing: being off the count is what archiving
-   * means. */
-  const liveCount = documents.filter((row) => row.archivedAt === null).length;
+  /**
+   * How much paper is on the record: what is filed nowhere, plus what
+   * each folder says is filed in it.
+   *
+   * Two halves because the section reads two listings, and both halves
+   * come through the one predicate every document read passes through —
+   * the root list leaves out what this viewer may not see, and so does
+   * each folder's count (DD-014). So the total can no more announce a
+   * hidden document than either half can.
+   *
+   * Archived rows never count, whichever view is showing: being off the
+   * count is what archiving one means (DOC-010). The folder counts leave
+   * them out at the seam; the root list is filtered here, because the
+   * archived view draws them.
+   */
+  const liveCount =
+    documents.filter((row) => row.archivedAt === null).length +
+    folders.reduce((total, folder) => total + folder.documentCount, 0);
 
-  /** A document that just changed, put back where it was. The list order
-   * is the API's (newest document first), and adding a version to an
-   * older document does not move it. */
+  /**
+   * A document that just changed, put back where it was — in the record
+   * root and in every folder listing that holds it.
+   *
+   * The order is the API's (newest document first), and editing a
+   * document does not move it. Every listing is asked, because the row
+   * may be drawn inside an open folder rather than at the root and the
+   * caller should not have to know which.
+   */
   function replace(document: ContractDocument) {
     onDocuments(documents.map((row) => (row.id === document.id ? document : row)));
+    setListings((current) => {
+      const next = new Map(current);
+      for (const [folderId, listing] of current) {
+        if (!listing.documents.some((row) => row.id === document.id)) continue;
+        next.set(folderId, {
+          ...listing,
+          documents: listing.documents.map((row) => (row.id === document.id ? document : row)),
+        });
+      }
+      return next;
+    });
     setDetail(null);
     setStatus("saved");
+  }
+
+  /** A document that has left the listings on screen — archived out of
+   * the live view, or erased. */
+  function drop(documentId: string) {
+    onDocuments(documents.filter((row) => row.id !== documentId));
+    setListings((current) => {
+      const next = new Map(current);
+      for (const [folderId, listing] of current) {
+        if (!listing.documents.some((row) => row.id === documentId)) continue;
+        next.set(folderId, {
+          ...listing,
+          documents: listing.documents.filter((row) => row.id !== documentId),
+        });
+      }
+      return next;
+    });
   }
 
   function prepend(document: ContractDocument) {
@@ -344,36 +792,33 @@ export function DocumentsCard({
   }
 
   /**
-   * The record's whole paper, as the seam just answered it.
+   * The record's paper after a write that answered all of it.
    *
-   * The seam answers the live list. In the archived view that is not the
-   * list on screen, so it is re-read in the view being shown rather than
-   * half-replaced — the alternative is the section quietly dropping the
-   * archived rows the moment anything else is written.
+   * The answer is discarded and the listings on screen are re-read
+   * (M13/3). The seam answers the record's whole live list; the section
+   * draws the record root and each open folder, so pouring the whole
+   * list into the root would put every filed document there as well.
+   * Re-reading is also what the archived view already needed, because
+   * the archived rows only exist server-side.
    */
-  async function applyPaper(paper: ContractDocument[], cursor: string | null) {
-    if (!showArchived) {
-      onDocuments(paper, cursor);
-      setAppended(null);
-      return;
-    }
-    const outcome = await readContractDocuments(contractNumber, true);
-    if (outcome.ok) onDocuments(outcome.documents, outcome.nextCursor);
-    else onDocuments(paper, cursor);
-    setAppended(null);
+  async function applyPaper() {
+    await refreshPaper();
+    // A write that moved rows may have moved a folder's count with them.
+    await refreshFolders();
   }
 
   /** The show-archived toggle. It re-reads either way: the archived rows
    * only exist server-side, and coming back should not trust a stale
-   * list either. */
+   * list either. Every open folder is re-read with it, because a
+   * folder's listing is drawn in whichever view the section is in. */
   async function toggleArchived(next: boolean) {
     if (busy) return;
     setBusy(true);
     setStatus("saving");
     setDetail(null);
-    const outcome = await readContractDocuments(contractNumber, next);
-    setBusy(false);
+    const outcome = await readContractDocuments(contractNumber, next, undefined, FOLDER_ROOT);
     if (!outcome.ok) {
+      setBusy(false);
       setStatus("error");
       setDetail(outcome.detail ?? null);
       return;
@@ -381,16 +826,83 @@ export function DocumentsCard({
     onDocuments(outcome.documents, outcome.nextCursor);
     setAppended(null);
     setShowArchived(next);
+    // Read in the view being switched to, not the one being left. The
+    // rows are dropped first so a folder that fails to re-read draws
+    // its skeletons rather than the other view's rows — but each open
+    // folder keeps a listing, marked loading, because a folder that is
+    // re-reading has not stopped holding its documents: the report
+    // above repeats its last word until the new view answers, and the
+    // panel over a filed document survives the toggle the way a root
+    // document's does. Closed folders' caches go entirely, as before.
+    setListings(
+      new Map(
+        [...openFolders].map((folderId) => [
+          folderId,
+          { documents: [], nextCursor: null, loading: true, error: null },
+        ]),
+      ),
+    );
+    for (const folderId of openFolders) {
+      const folder = await readContractDocuments(contractNumber, next, undefined, folderId);
+      putListing(folderId, {
+        documents: folder.ok ? folder.documents : [],
+        nextCursor: folder.ok ? folder.nextCursor : null,
+        loading: false,
+        error: folder.ok ? null : (folder.detail ?? readFailed()),
+      });
+    }
+    setBusy(false);
     setStatus("idle");
+  }
+
+  /**
+   * Files a document into a folder, or moves it back out to the record
+   * root (DOC-006, M13/3).
+   *
+   * The row leaves one listing and joins another, and both folders'
+   * counts move with it, so everything on screen is read again rather
+   * than spliced: working out here which listing gained what is the
+   * section deciding for itself something the seam has just answered.
+   *
+   * A refusal is handed back to the dialog, the way the folder writes'
+   * are: the seam's refusals here are things the person can act on — a
+   * folder deleted under them, an archived record — and the dialog
+   * covers the spot the section note reads in.
+   */
+  async function fileDocument(
+    document: ContractDocument,
+    folderId: string | null,
+  ): Promise<string | null> {
+    if (busy) return null;
+    setBusy(true);
+    setStatus("saving");
+    setDetail(null);
+    const outcome = await updateDocument(document.id, { folderId });
+    if (outcome.ok) await applyPaper();
+    setBusy(false);
+    if (outcome.ok) {
+      setFiling(null);
+      setStatus("saved");
+      return null;
+    }
+    // Back to idle, not to error: the dialog says what happened, and a
+    // note behind it would say it again to whoever closes the dialog.
+    setStatus("idle");
+    return (
+      outcome.detail ??
+      intl.formatMessage({
+        id: "documents.move.error",
+        defaultMessage: "That document could not be moved. Try again.",
+      })
+    );
   }
 
   /**
    * Names a document the contract's instrument (CTR-014).
    *
-   * The whole list comes back and the whole list is replaced: the
-   * designation moving changes two rows, and re-deriving the second one
-   * here would be the section disagreeing with the record the moment
-   * anything else changed.
+   * The designation moving changes two rows — the one that takes it and
+   * the one that loses it — and the two can sit in different listings,
+   * so everything on screen is read again rather than re-derived here.
    */
   async function makePrimary(document: ContractDocument) {
     if (busy) return;
@@ -398,7 +910,7 @@ export function DocumentsCard({
     setStatus("saving");
     setDetail(null);
     const outcome = await setPrimaryDocument(document.id);
-    if (outcome.ok) await applyPaper(outcome.documents, outcome.nextCursor);
+    if (outcome.ok) await applyPaper();
     setBusy(false);
     if (outcome.ok) {
       setStatus("saved");
@@ -415,6 +927,9 @@ export function DocumentsCard({
    * row leaves the list and the count, and Restore in the archived view
    * is the way back. In the live view the archived row simply goes; in
    * the archived view it stays where it is and takes its mark.
+   *
+   * The count it leaves may be a folder's, so the folder set is read
+   * again when the document was filed in one (DES-033).
    */
   async function setArchived(document: ContractDocument, next: boolean) {
     if (busy) return;
@@ -422,6 +937,7 @@ export function DocumentsCard({
     setStatus("saving");
     setDetail(null);
     const outcome = next ? await archiveDocument(document.id) : await restoreDocument(document.id);
+    if (outcome.ok && document.folderId !== null) await refreshFolders();
     setBusy(false);
     if (!outcome.ok) {
       setStatus("error");
@@ -429,7 +945,7 @@ export function DocumentsCard({
       return;
     }
     if (next && !showArchived) {
-      onDocuments(documents.filter((row) => row.id !== document.id));
+      drop(document.id);
       setDetail(null);
       setStatus("saved");
       return;
@@ -489,7 +1005,7 @@ export function DocumentsCard({
     setStatus("saving");
     setDetail(null);
     const outcome = await hardDeleteDocument(document.id, confirmTitle);
-    if (outcome.ok) await applyPaper(outcome.documents, outcome.nextCursor);
+    if (outcome.ok) await applyPaper();
     setBusy(false);
     if (outcome.ok) {
       setDeleting(null);
@@ -542,10 +1058,174 @@ export function DocumentsCard({
     });
   }
 
+  /**
+   * Opens or closes one folder (DES-033).
+   *
+   * Opening one for the first time reads its documents. A folder that
+   * has been opened before keeps what it read, so closing and re-opening
+   * costs nothing — every write that could change it re-reads it.
+   */
+  function toggleFolder(folderId: string) {
+    const opening = !openFolders.has(folderId);
+    setOpenFolders((current) => {
+      const next = new Set(current);
+      if (!next.delete(folderId)) next.add(folderId);
+      return next;
+    });
+    if (opening && !listings.has(folderId)) void loadFolder(folderId);
+  }
+
+  /**
+   * One folder write, whichever of the four it is (M13/2).
+   *
+   * They share a shape: every one answers the record's whole folder set,
+   * because dissolving a folder re-files the children it had and more
+   * rows move than the one that was addressed. The caller replaces what
+   * it holds rather than working out which other row moved.
+   *
+   * A refusal is handed back to the dialog rather than written to the
+   * section note, the way the erasure's is: the dialog covers the spot
+   * that note reads in, and the seam's refusals here are all things the
+   * person can act on — a name already taken, a move that would close a
+   * cycle, a delete that would put two folders of one name in one place.
+   *
+   * **The refusal stays inside the open dialog**, carrying the server's
+   * own sentence, rather than closing it and marking the row. That is a
+   * deliberate normalization of DES-033 §6, recorded there: the person
+   * can read why and then cancel or fix, which is the DOC-010 erasure
+   * dialog's precedent on this same surface.
+   *
+   * `dissolved` names the folder a delete is dissolving. Its documents
+   * go up into the parent, so the listings on screen are read again —
+   * skipping the folder that has just stopped existing, and forgetting
+   * what it held. Nothing else here moves a document.
+   */
+  async function writeFolders(
+    write: () => Promise<FoldersOutcome>,
+    dissolved?: string,
+  ): Promise<string | null> {
+    if (busy) return null;
+    setBusy(true);
+    setStatus("saving");
+    setDetail(null);
+    const outcome = await write();
+    if (outcome.ok && dissolved !== undefined) {
+      forgetFolder(dissolved);
+      await refreshPaper(dissolved);
+    }
+    setBusy(false);
+    if (outcome.ok) {
+      onFolders(outcome.folders);
+      setFolderDialog(null);
+      setStatus("saved");
+      return null;
+    }
+    // Back to idle, not to error: the dialog says what happened, and a
+    // note behind it would say it again to whoever closes the dialog.
+    setStatus("idle");
+    return (
+      outcome.detail ??
+      intl.formatMessage({
+        id: "documents.folder.error",
+        defaultMessage: "That folder could not be saved. Try again.",
+      })
+    );
+  }
+
+  /**
+   * What a drop carried, read and handed to the batch confirmation
+   * (M13/5, DOC-011, DES-033 §7).
+   *
+   * The reading is the walk of the dropped tree, so this is async and
+   * the `DataTransfer` is read inside `filesFromDrop` before anything is
+   * awaited — a transfer is emptied when the drop handler returns.
+   *
+   * `into` is the folder the gesture landed on: null for the section
+   * itself, a folder for one of its rows. Every path in the batch is
+   * relative to it, so a tree dropped on a folder row is recreated
+   * inside that row.
+   *
+   * A gesture carrying nothing at all — a dragged text selection, an
+   * empty transfer — opens nothing. There is no batch to confirm.
+   */
+  async function openDrop(
+    transfer: DataTransfer | null,
+    into: BatchDestination | null,
+  ): Promise<void> {
+    const dropped = await filesFromDrop(transfer);
+    if (
+      dropped.files.length === 0 &&
+      dropped.emptyFolders.length === 0 &&
+      dropped.unreadable.length === 0
+    ) {
+      return;
+    }
+    setBatch({
+      files: dropped.files,
+      emptyFolders: dropped.emptyFolders,
+      unreadable: dropped.unreadable,
+      destination: into,
+      source: "drop",
+    });
+  }
+
+  /** Everything a document row draws from, built once and handed to
+   * every listing — the record root's and each open folder's. */
+  const rowContext: RowContext = {
+    frozen,
+    busy,
+    intl,
+    reading,
+    canErase,
+    canFlag,
+    opened,
+    appended,
+    landing,
+    onToggle: toggle,
+    onRead,
+    onPin: (document, version) => void togglePin(document, version),
+    onMakePrimary: (document) => void makePrimary(document),
+    onAddVersion: (document) => setComposer({ document }),
+    onEditDetails: setEditing,
+    onMoveToFolder: setFiling,
+    onSetConfidential: (document, next) => void setConfidential(document, next),
+    onArchive: (document, next) => void setArchived(document, next),
+    onDelete: setDeleting,
+  };
+
   return (
     <section
       aria-labelledby="contract-documents-heading"
-      className="w-full overflow-hidden rounded-card border border-border-default bg-raised"
+      className={cn(
+        "w-full overflow-hidden rounded-card border border-border-default bg-raised",
+        dragging && "outline outline-2 outline-offset-2 outline-link",
+      )}
+      // The whole section is the target (DES-033 §7). A frozen record
+      // takes no drop at all: an archived record's paper is frozen, and
+      // a Contributor is offered no control anywhere else here either.
+      onDragOver={(event) => {
+        if (frozen || !dragCarriesFiles(event.dataTransfer)) return;
+        // Without this the browser opens the dropped file instead of
+        // handing it over.
+        event.preventDefault();
+        // The section takes a copy of what is dropped and moves nothing.
+        // Left unset, the cursor can promise a move that never happens.
+        event.dataTransfer.dropEffect = "copy";
+        setDragging(true);
+      }}
+      onDragLeave={(event) => {
+        // Crossing between the section's own children is not leaving it.
+        if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+        setDragging(false);
+        setDragFolder(null);
+      }}
+      onDrop={(event) => {
+        if (frozen) return;
+        event.preventDefault();
+        setDragging(false);
+        setDragFolder(null);
+        void openDrop(event.dataTransfer, null);
+      }}
     >
       <header className="flex h-section-header items-center justify-between gap-2 rounded-t-card border-b border-border-default bg-section-header px-4">
         <div className="flex min-w-0 items-center gap-2">
@@ -594,6 +1274,16 @@ export function DocumentsCard({
               disabled={busy}
               onCheckedChange={(next) => void toggleArchived(next)}
             />
+            {/* The keyboard twin of every organizing gesture the drop
+                will add in M13/4 (DES-033): a folder is made from a
+                control, never only by dropping one. */}
+            <Button
+              variant="secondary"
+              onClick={() => setFolderDialog({ mode: "create", parent: null })}
+            >
+              <FolderPlus size={16} aria-hidden="true" />
+              <FormattedMessage id="documents.newFolder" defaultMessage="New folder" />
+            </Button>
             <Button variant="secondary" onClick={() => setComposer({ document: undefined })}>
               <Upload size={16} aria-hidden="true" />
               <FormattedMessage id="documents.upload" defaultMessage="Upload" />
@@ -601,7 +1291,11 @@ export function DocumentsCard({
           </div>
         )}
       </header>
-      {documents.length === 0 ? (
+      {/* A record with folders on it but no paper still draws the
+          table: the folders are the record's organization, and hiding
+          them behind the paper's empty state would say the tree is not
+          there. */}
+      {documents.length === 0 && folders.length === 0 ? (
         <p className="px-4 py-3 text-base text-muted">
           <FormattedMessage
             id="documents.empty"
@@ -645,246 +1339,56 @@ export function DocumentsCard({
                 )}
               </tr>
             </thead>
-            {/* One row group per document, because one document is one
-                chain: its current version leads, and the rounds it
-                supersedes belong to it and to nothing else. */}
-            {documents.map((document) => {
-              const chain = chainOf(document);
-              // A document with no version is a broken record, not an
-              // empty one, so it is left undrawn rather than drawn
-              // without a file.
-              if (!chain) return null;
-              const isOpen = opened.has(document.id);
-              return (
-                <tbody key={document.id}>
-                  <tr
-                    // Focusable only while it is the landing row: a
-                    // section of fifty tab stops nobody asked for is
-                    // worse than none (DES-031).
-                    ref={document.id === appended?.from ? landing : undefined}
-                    tabIndex={document.id === appended?.from ? -1 : undefined}
-                    className="border-t border-border-default"
-                  >
-                    <td className="px-4 py-2.5">
-                      <span className="flex items-start gap-1">
-                        {chain.superseded.length > 0 ? (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-expanded={isOpen}
-                            onClick={() => toggle(document.id)}
-                            aria-label={intl.formatMessage(
-                              {
-                                id: "documents.chain.toggle",
-                                defaultMessage:
-                                  "{open, select, true {Hide} other {Show}} the " +
-                                  "{count, plural, one {# earlier version} " +
-                                  "other {# earlier versions}} of {title}",
-                              },
-                              {
-                                open: isOpen,
-                                count: chain.superseded.length,
-                                title: document.title,
-                              },
-                            )}
-                          >
-                            {isOpen ? (
-                              <ChevronDown size={16} aria-hidden="true" />
-                            ) : (
-                              <ChevronRight size={16} aria-hidden="true" />
-                            )}
-                          </Button>
-                        ) : (
-                          // The column keeps its width whether a
-                          // document has history or not, so the names
-                          // stay on one line down the section.
-                          <span className="size-6" aria-hidden="true" />
-                        )}
-                        <FileText
-                          size={16}
-                          aria-hidden="true"
-                          className="mt-1 shrink-0 text-muted"
-                        />
-                        <span className="flex min-w-0 flex-col">
-                          <span className="flex flex-wrap items-center gap-1.5">
-                            <OpenVersion
-                              document={document}
-                              version={chain.current}
-                              label={document.title}
-                              reading={reading}
-                              onRead={onRead}
-                              className="font-medium"
-                            />
-                            {/* DES-009 Tier 1, beside a document's name
-                                rather than a record's: this file is
-                                narrowed to the contract's named team
-                                (DD-014). It is a mark on a row the
-                                reader can already see — a reader
-                                outside the audience is sent no row, so
-                                nothing here is ever a placeholder. */}
-                            {document.isConfidential && <ConfidentialMarker />}
-                            {/* The instrument the contract is (CTR-014).
-                                Marked on the row rather than in a caption
-                                over the list, because a caption cannot say
-                                which of six documents it means. The quiet
-                                chip is the count badge's own pair: a
-                                designation is a structural fact, not a
-                                status. */}
-                            {document.isPrimary && (
-                              <span className="rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
-                                <FormattedMessage id="documents.primary" defaultMessage="Primary" />
-                              </span>
-                            )}
-                            {/* Off the list and out of the count
-                                (DOC-010), drawn only in the archived
-                                view — the same pill the contracts list
-                                marks an archived record with, because
-                                it is the same fact one level down. */}
-                            {document.archivedAt !== null && (
-                              <span className="rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
-                                <FormattedMessage
-                                  id="documents.archivedPill"
-                                  defaultMessage="Archived"
-                                />
-                              </span>
-                            )}
-                          </span>
-                          {/* Two muted lines at most, and each says
-                              which one it is to a reader who cannot see
-                              the difference — the DES-021 sr-only
-                              prefix rule, for the same ambiguity. */}
-                          {document.description && (
-                            <span className="text-sm text-muted">
-                              <span className="sr-only">
-                                <FormattedMessage
-                                  id="documents.descriptionPrefix"
-                                  defaultMessage="Description:"
-                                />{" "}
-                              </span>
-                              {document.description}
-                            </span>
-                          )}
-                          {chain.current.note && (
-                            <span className="text-sm text-muted">
-                              <span className="sr-only">
-                                <FormattedMessage
-                                  id="documents.notePrefix"
-                                  defaultMessage="Note:"
-                                />{" "}
-                              </span>
-                              {chain.current.note}
-                            </span>
-                          )}
-                        </span>
-                      </span>
-                    </td>
-                    <KindCell version={chain.current} intl={intl} />
-                    <VersionCell version={chain.current} intl={intl} />
-                    <SizeCell version={chain.current} />
-                    <ModifiedCell version={chain.current} />
-                    <UploaderCell version={chain.current} intl={intl} />
-                    {!frozen && (
-                      <td className="px-4 py-2.5">
-                        <span className="flex items-center justify-end gap-1">
-                          {/* The pin is a fact about a version, so it
-                              stays on the version's own row. An archived
-                              document takes no pin — the seam refuses
-                              it — so the control is absent there rather
-                              than dead. */}
-                          {document.archivedAt === null && (
-                            <PinButton
-                              document={document}
-                              version={chain.current}
-                              busy={busy}
-                              intl={intl}
-                              onToggle={togglePin}
-                            />
-                          )}
-                          <DocumentActions
-                            document={document}
-                            busy={busy}
-                            canErase={canErase}
-                            canFlag={canFlag(document)}
-                            intl={intl}
-                            onMakePrimary={() => void makePrimary(document)}
-                            onAddVersion={() => setComposer({ document })}
-                            onEditDetails={() => setEditing(document)}
-                            onSetConfidential={(next) => void setConfidential(document, next)}
-                            onArchive={() => void setArchived(document, true)}
-                            onRestore={() => void setArchived(document, false)}
-                            onDelete={() => setDeleting(document)}
-                          />
-                        </span>
-                      </td>
-                    )}
-                  </tr>
-                  {isOpen &&
-                    chain.superseded.map((version) => (
-                      <tr key={version.id} className="border-t border-border-default">
-                        <td className="px-4 py-2.5">
-                          {/* Indented under the document it belongs to:
-                              a superseded round is part of one chain,
-                              not a document of its own. */}
-                          <span className="flex items-start gap-1 ps-7">
-                            <FileText
-                              size={16}
-                              aria-hidden="true"
-                              className="mt-1 shrink-0 text-muted"
-                            />
-                            <span className="flex min-w-0 flex-col">
-                              <OpenVersion
-                                document={document}
-                                version={version}
-                                label={version.originalFilename}
-                                reading={reading}
-                                onRead={onRead}
-                              />
-                              {version.note && (
-                                <span className="text-sm text-muted">
-                                  <span className="sr-only">
-                                    <FormattedMessage
-                                      id="documents.notePrefix"
-                                      defaultMessage="Note:"
-                                    />{" "}
-                                  </span>
-                                  {version.note}
-                                </span>
-                              )}
-                            </span>
-                          </span>
-                        </td>
-                        <KindCell version={version} intl={intl} />
-                        <VersionCell version={version} intl={intl} />
-                        <SizeCell version={version} />
-                        <ModifiedCell version={version} />
-                        <UploaderCell version={version} intl={intl} />
-                        {!frozen && (
-                          <td className="px-4 py-2.5">
-                            {/* A superseded round takes the pin as
-                                readily as the current one: a contract
-                                signed in round two and amended in round
-                                three has its signed copy behind its
-                                head. An archived document takes none,
-                                for the reason its own row gives. */}
-                            <span className="flex items-center justify-end gap-1">
-                              {document.archivedAt === null && (
-                                <PinButton
-                                  document={document}
-                                  version={version}
-                                  busy={busy}
-                                  intl={intl}
-                                  onToggle={togglePin}
-                                />
-                              )}
-                            </span>
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                </tbody>
-              );
-            })}
+            {/* The record's organization, above its loose paper
+                (DES-033): folders sort before documents, and the root
+                mixes the two exactly as a file manager does. Each folder
+                brings its own row groups, because the documents inside
+                one are row groups too. */}
+            <FolderRows
+              folders={folders}
+              parentId={null}
+              depth={0}
+              open={openFolders}
+              listings={listings}
+              rows={rowContext}
+              dragOver={dragFolder}
+              onToggle={toggleFolder}
+              onShowMore={(folderId, cursor) => void loadFolder(folderId, cursor)}
+              onDialog={setFolderDialog}
+              onDragFolder={setDragFolder}
+              onDropOnFolder={(folder, transfer) => {
+                setDragging(false);
+                setDragFolder(null);
+                void openDrop(transfer, { id: folder.id, name: folder.name });
+              }}
+            />
+            {/* The record's own loose paper — the documents filed in no
+                folder at all (DES-033). A folder's documents are drawn
+                inside the folder, by the tree above. */}
+            <DocumentRows documents={documents} depth={0} rows={rowContext} />
           </table>
+        </div>
+      )}
+      {/* What a drop on this surface means, said on the surface
+          (DES-033 §8). One gesture, one meaning: a dropped file is
+          always a new document at version 1, and appending a round
+          stays a deliberate act on a named document. Drawn only for
+          somebody who may drop — a control drawn for nobody is worse
+          than none. */}
+      {!frozen && (
+        <div className="border-t border-border-default px-4 py-3">
+          <p className="text-sm text-muted">
+            <FormattedMessage
+              id="documents.dropHint"
+              defaultMessage="Drop files or folders here — each file becomes a new document at version 1"
+            />
+          </p>
+          <p className="text-sm text-muted">
+            <FormattedMessage
+              id="documents.dropChain"
+              defaultMessage="Folder structure is kept. To add a round to an existing chain, use Add version on that document."
+            />
+          </p>
         </div>
       )}
       {/* Under the table's own rows and inside the section's card, so
@@ -920,11 +1424,51 @@ export function DocumentsCard({
           contractNumber={contractNumber}
           document={composer.document}
           onClose={() => setComposer(null)}
+          onBatch={(files) => {
+            // More than one file is a batch, wherever it came from
+            // (DOC-011). The composer's own fields are a round's — one
+            // note about one change — and a batch is not a round, so it
+            // hands over rather than growing a second shape.
+            //
+            // A directory picker's files carry the folder each one sat
+            // at; a plain multi-select's carry none, and land at the
+            // record root. Either way the batch is the same batch, which
+            // is what makes the picker folder drop's pointer-free twin
+            // (DES-033 §7). No empty directory comes through a picker:
+            // a file input carries files, and a directory holding none
+            // produces none.
+            setComposer(null);
+            setBatch({
+              files,
+              emptyFolders: [],
+              unreadable: [],
+              destination: null,
+              source: "picker",
+            });
+          }}
           onSaved={(document) => {
             if (composer.document) replace(document);
             else prepend(document);
             setComposer(null);
           }}
+        />
+      )}
+      {batch && (
+        <BatchDialog
+          contractNumber={contractNumber}
+          files={batch.files}
+          emptyFolders={batch.emptyFolders}
+          unreadable={batch.unreadable}
+          destination={batch.destination}
+          source={batch.source}
+          // Every listing on screen, read again — the record root and
+          // each open folder — with every cached listing the refresh
+          // did not re-read evicted. A batch is a write over the
+          // record's whole paper: it may have taken the primary
+          // designation (CTR-014), and it has certainly moved the
+          // count.
+          onLanded={applyPaper}
+          onClose={() => setBatch(null)}
         />
       )}
       {editing && (
@@ -937,6 +1481,15 @@ export function DocumentsCard({
           }}
         />
       )}
+      {filing && (
+        <MoveDocumentDialog
+          document={filing}
+          folders={folders}
+          busy={busy}
+          onClose={() => setFiling(null)}
+          onConfirm={(folderId) => fileDocument(filing, folderId)}
+        />
+      )}
       {deleting && (
         <DeleteDialog
           document={deleting}
@@ -945,7 +1498,1112 @@ export function DocumentsCard({
           onConfirm={(confirmTitle) => erase(deleting, confirmTitle)}
         />
       )}
+      {(folderDialog?.mode === "create" || folderDialog?.mode === "rename") && (
+        <FolderNameDialog
+          folder={folderDialog.mode === "rename" ? folderDialog.folder : null}
+          parent={folderDialog.mode === "create" ? folderDialog.parent : null}
+          busy={busy}
+          onClose={() => setFolderDialog(null)}
+          onConfirm={async (name) => {
+            const parent = folderDialog.mode === "create" ? folderDialog.parent : null;
+            const refusal = await writeFolders(() =>
+              folderDialog.mode === "create"
+                ? createContractFolder(contractNumber, {
+                    name,
+                    ...(parent ? { parentId: parent.id } : {}),
+                  })
+                : updateContractFolder(folderDialog.folder.id, { name }),
+            );
+            // A folder made inside a closed one opens it. The person
+            // just named the thing; a write that landed and left the
+            // table looking exactly as it did reads as a write that did
+            // not — and a parent that had no children until now had no
+            // chevron for them to press either.
+            if (refusal === null && parent) {
+              setOpenFolders((current) => new Set(current).add(parent.id));
+            }
+            return refusal;
+          }}
+        />
+      )}
+      {folderDialog?.mode === "move" && (
+        <MoveFolderDialog
+          folder={folderDialog.folder}
+          folders={folders}
+          busy={busy}
+          onClose={() => setFolderDialog(null)}
+          onConfirm={(parentId) =>
+            writeFolders(() => updateContractFolder(folderDialog.folder.id, { parentId }))
+          }
+        />
+      )}
+      {folderDialog?.mode === "delete" && (
+        <DeleteFolderDialog
+          folder={folderDialog.folder}
+          folders={folders}
+          busy={busy}
+          onClose={() => setFolderDialog(null)}
+          onConfirm={() =>
+            writeFolders(
+              () => deleteContractFolder(folderDialog.folder.id),
+              // The dissolve re-files this folder's documents into its
+              // parent, so the listings on screen are read again after
+              // it — and this one has stopped existing.
+              folderDialog.folder.id,
+            )
+          }
+        />
+      )}
     </section>
+  );
+}
+
+/**
+ * The document rows of one listing (M11/2, DES-033).
+ *
+ * One row group per document, because one document is one chain: its
+ * current version leads, and the rounds it supersedes belong to it and
+ * to nothing else.
+ *
+ * Drawn at the record root and inside every open folder, which is the
+ * whole reason it is a component: a filed document opens, previews,
+ * versions, and is erased exactly as an unfiled one, and two copies of
+ * this markup would be two places for that to stop being true. `depth`
+ * is the only difference between the two — 18px a level, drawn as a
+ * spacer at the head of the Name cell.
+ */
+function DocumentRows({
+  documents,
+  depth,
+  rows,
+}: Readonly<{
+  documents: readonly ContractDocument[];
+  /** How far in this listing sits. 0 is the record root's own paper. */
+  depth: number;
+  rows: RowContext;
+}>) {
+  return (
+    <>
+      {documents.map((document) => {
+        const chain = chainOf(document);
+        // A document with no version is a broken record, not an
+        // empty one, so it is left undrawn rather than drawn
+        // without a file.
+        if (!chain) return null;
+        const isOpen = rows.opened.has(document.id);
+        return (
+          <tbody key={document.id}>
+            <tr
+              // Focusable only while it is the landing row: a
+              // section of fifty tab stops nobody asked for is
+              // worse than none (DES-031).
+              ref={document.id === rows.appended?.from ? rows.landing : undefined}
+              tabIndex={document.id === rows.appended?.from ? -1 : undefined}
+              className="border-t border-border-default"
+            >
+              <td className="px-4 py-2.5">
+                <span className="flex items-start gap-1">
+                  {depth > 0 && (
+                    <span
+                      aria-hidden="true"
+                      className="shrink-0"
+                      style={{ width: depth * FOLDER_INDENT }}
+                    />
+                  )}
+                  {chain.superseded.length > 0 ? (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-expanded={isOpen}
+                      onClick={() => rows.onToggle(document.id)}
+                      aria-label={rows.intl.formatMessage(
+                        {
+                          id: "documents.chain.toggle",
+                          defaultMessage:
+                            "{open, select, true {Hide} other {Show}} the " +
+                            "{count, plural, one {# earlier version} " +
+                            "other {# earlier versions}} of {title}",
+                        },
+                        {
+                          open: isOpen,
+                          count: chain.superseded.length,
+                          title: document.title,
+                        },
+                      )}
+                    >
+                      {isOpen ? (
+                        <ChevronDown size={16} aria-hidden="true" />
+                      ) : (
+                        <ChevronRight size={16} aria-hidden="true" />
+                      )}
+                    </Button>
+                  ) : (
+                    // The column keeps its width whether a
+                    // document has history or not, so the names
+                    // stay on one line down the section.
+                    <span className="size-6" aria-hidden="true" />
+                  )}
+                  <FileText size={16} aria-hidden="true" className="mt-1 shrink-0 text-muted" />
+                  <span className="flex min-w-0 flex-col">
+                    <span className="flex flex-wrap items-center gap-1.5">
+                      <OpenVersion
+                        document={document}
+                        version={chain.current}
+                        label={document.title}
+                        reading={rows.reading}
+                        onRead={rows.onRead}
+                        className="font-medium"
+                      />
+                      {/* DES-009 Tier 1, beside a document's name
+                          rather than a record's: this file is
+                          narrowed to the contract's named team
+                          (DD-014). It is a mark on a row the
+                          reader can already see — a reader
+                          outside the audience is sent no row, so
+                          nothing here is ever a placeholder. */}
+                      {document.isConfidential && <ConfidentialMarker />}
+                      {/* The instrument the contract is (CTR-014).
+                          Marked on the row rather than in a caption
+                          over the list, because a caption cannot say
+                          which of six documents it means. The quiet
+                          chip is the count badge's own pair: a
+                          designation is a structural fact, not a
+                          status. */}
+                      {document.isPrimary && (
+                        <span className="rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
+                          <FormattedMessage id="documents.primary" defaultMessage="Primary" />
+                        </span>
+                      )}
+                      {/* Off the list and out of the count
+                          (DOC-010), drawn only in the archived
+                          view — the same pill the contracts list
+                          marks an archived record with, because
+                          it is the same fact one level down. */}
+                      {document.archivedAt !== null && (
+                        <span className="rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
+                          <FormattedMessage id="documents.archivedPill" defaultMessage="Archived" />
+                        </span>
+                      )}
+                    </span>
+                    {/* Two muted lines at most, and each says
+                        which one it is to a reader who cannot see
+                        the difference — the DES-021 sr-only
+                        prefix rule, for the same ambiguity. */}
+                    {document.description && (
+                      <span className="text-sm text-muted">
+                        <span className="sr-only">
+                          <FormattedMessage
+                            id="documents.descriptionPrefix"
+                            defaultMessage="Description:"
+                          />{" "}
+                        </span>
+                        {document.description}
+                      </span>
+                    )}
+                    {chain.current.note && (
+                      <span className="text-sm text-muted">
+                        <span className="sr-only">
+                          <FormattedMessage id="documents.notePrefix" defaultMessage="Note:" />{" "}
+                        </span>
+                        {chain.current.note}
+                      </span>
+                    )}
+                  </span>
+                </span>
+              </td>
+              <KindCell version={chain.current} intl={rows.intl} />
+              <VersionCell version={chain.current} intl={rows.intl} />
+              <SizeCell version={chain.current} />
+              <ModifiedCell version={chain.current} />
+              <UploaderCell version={chain.current} intl={rows.intl} />
+              {!rows.frozen && (
+                <td className="px-4 py-2.5">
+                  <span className="flex items-center justify-end gap-1">
+                    {/* The pin is a fact about a version, so it
+                        stays on the version's own row. An archived
+                        document takes no pin — the seam refuses
+                        it — so the control is absent there rather
+                        than dead. */}
+                    {document.archivedAt === null && (
+                      <PinButton
+                        document={document}
+                        version={chain.current}
+                        busy={rows.busy}
+                        intl={rows.intl}
+                        onToggle={rows.onPin}
+                      />
+                    )}
+                    <DocumentActions
+                      document={document}
+                      busy={rows.busy}
+                      canErase={rows.canErase}
+                      canFlag={rows.canFlag(document)}
+                      intl={rows.intl}
+                      onMakePrimary={() => rows.onMakePrimary(document)}
+                      onAddVersion={() => rows.onAddVersion(document)}
+                      onEditDetails={() => rows.onEditDetails(document)}
+                      onMoveToFolder={() => rows.onMoveToFolder(document)}
+                      onSetConfidential={(next) => rows.onSetConfidential(document, next)}
+                      onArchive={() => rows.onArchive(document, true)}
+                      onRestore={() => rows.onArchive(document, false)}
+                      onDelete={() => rows.onDelete(document)}
+                    />
+                  </span>
+                </td>
+              )}
+            </tr>
+            {isOpen &&
+              chain.superseded.map((version) => (
+                <tr key={version.id} className="border-t border-border-default">
+                  <td className="px-4 py-2.5">
+                    {/* Indented under the document it belongs to:
+                        a superseded round is part of one chain,
+                        not a document of its own. */}
+                    <span className="flex items-start gap-1 ps-7">
+                      {depth > 0 && (
+                        <span
+                          aria-hidden="true"
+                          className="shrink-0"
+                          style={{ width: depth * FOLDER_INDENT }}
+                        />
+                      )}
+                      <FileText size={16} aria-hidden="true" className="mt-1 shrink-0 text-muted" />
+                      <span className="flex min-w-0 flex-col">
+                        <OpenVersion
+                          document={document}
+                          version={version}
+                          label={version.originalFilename}
+                          reading={rows.reading}
+                          onRead={rows.onRead}
+                        />
+                        {version.note && (
+                          <span className="text-sm text-muted">
+                            <span className="sr-only">
+                              <FormattedMessage
+                                id="documents.notePrefix"
+                                defaultMessage="Note:"
+                              />{" "}
+                            </span>
+                            {version.note}
+                          </span>
+                        )}
+                      </span>
+                    </span>
+                  </td>
+                  <KindCell version={version} intl={rows.intl} />
+                  <VersionCell version={version} intl={rows.intl} />
+                  <SizeCell version={version} />
+                  <ModifiedCell version={version} />
+                  <UploaderCell version={version} intl={rows.intl} />
+                  {!rows.frozen && (
+                    <td className="px-4 py-2.5">
+                      {/* A superseded round takes the pin as
+                          readily as the current one: a contract
+                          signed in round two and amended in round
+                          three has its signed copy behind its
+                          head. An archived document takes none,
+                          for the reason its own row gives. */}
+                      <span className="flex items-center justify-end gap-1">
+                        {document.archivedAt === null && (
+                          <PinButton
+                            document={document}
+                            version={version}
+                            busy={rows.busy}
+                            intl={rows.intl}
+                            onToggle={rows.onPin}
+                          />
+                        )}
+                      </span>
+                    </td>
+                  )}
+                </tr>
+              ))}
+          </tbody>
+        );
+      })}
+    </>
+  );
+}
+
+/**
+ * One level of the folder tree, everything open under it, and the
+ * documents filed in each open folder (DES-033).
+ *
+ * Recursive rather than flattened, because the indentation is what says
+ * where a folder sits and a flat list would have to carry the depth
+ * beside every row anyway. Only an open folder draws its contents, so a
+ * heavy record stays a short table until somebody opens one.
+ *
+ * **Child folders first, then documents**, which is the same rule the
+ * record root follows and the way a file manager lists a directory. Both
+ * sit one level in from the folder that holds them.
+ *
+ * Each folder is its own row group, because a document row group already
+ * is one: a `tbody` inside a `tbody` is not a table.
+ */
+function FolderRows({
+  folders,
+  parentId,
+  depth,
+  open,
+  listings,
+  rows,
+  dragOver,
+  onToggle,
+  onShowMore,
+  onDialog,
+  onDragFolder,
+  onDropOnFolder,
+}: Readonly<{
+  folders: readonly ContractFolder[];
+  /** The folder whose children this level draws, or null at the record
+   * root. */
+  parentId: string | null;
+  /** How far in this level sits. 0 is the record root's own folders. */
+  depth: number;
+  open: ReadonlySet<string>;
+  /** What each opened folder holds. A folder that has never been opened
+   * is not in here. */
+  listings: ReadonlyMap<string, FolderListing>;
+  rows: RowContext;
+  /** The folder a file drag is currently over, or none. One row lights
+   * up at a time: the drop lands in exactly one folder, and two lit rows
+   * would promise otherwise (DES-033 §7). */
+  dragOver: string | null;
+  onToggle: (folderId: string) => void;
+  onShowMore: (folderId: string, cursor: string) => void;
+  onDialog: (dialog: FolderDialog) => void;
+  onDragFolder: (folderId: string | null) => void;
+  /** A drop that landed on this row rather than on the section. What it
+   * carries is filed into this folder, and a tree it carries is
+   * recreated inside it (DOC-011). */
+  onDropOnFolder: (folder: ContractFolder, transfer: DataTransfer | null) => void;
+}>) {
+  return (
+    <>
+      {childrenOf(folders, parentId).map((folder) => {
+        const isOpen = open.has(folder.id);
+        const listing = listings.get(folder.id);
+        return (
+          <Fragment key={folder.id}>
+            <tbody>
+              <tr
+                className={cn(
+                  "border-t border-border-default",
+                  // The row that will take the drop is the row that says
+                  // so (DES-033 §7). The section's own outline stays on
+                  // as well: the drop is still on the section, filed one
+                  // level in.
+                  dragOver === folder.id && "outline outline-2 -outline-offset-2 outline-link",
+                )}
+                // A frozen record takes no drop, here as on the section:
+                // an archived record's paper is frozen and a Contributor
+                // is offered no control anywhere else on the row either.
+                onDragOver={(event) => {
+                  if (rows.frozen || !dragCarriesFiles(event.dataTransfer)) return;
+                  // Without this the section's own handler answers, and
+                  // the files would land at the record root instead of
+                  // in this folder.
+                  event.stopPropagation();
+                  event.preventDefault();
+                  event.dataTransfer.dropEffect = "copy";
+                  onDragFolder(folder.id);
+                }}
+                onDragLeave={(event) => {
+                  // Crossing between the row's own children is not
+                  // leaving it.
+                  if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+                  onDragFolder(null);
+                }}
+                onDrop={(event) => {
+                  if (rows.frozen) return;
+                  event.stopPropagation();
+                  event.preventDefault();
+                  onDropOnFolder(folder, event.dataTransfer);
+                }}
+              >
+                <td className="px-4 py-2.5">
+                  <span className="flex items-center gap-1">
+                    {/* 18px a level, drawn as a spacer at the head of the
+                        cell rather than as padding on the row: one rule
+                        for both row kinds, and nothing positioned by
+                        eye. */}
+                    {depth > 0 && (
+                      <span
+                        aria-hidden="true"
+                        className="shrink-0"
+                        style={{ width: depth * FOLDER_INDENT }}
+                      />
+                    )}
+                    {/* Every folder takes the chevron, full or empty
+                        (M13/3). A folder that draws "Empty" may be a
+                        folder whose contents this viewer cannot see, so
+                        drawing the control only on the ones with
+                        something in it would be the surface telling the
+                        two apart — which is exactly what DD-014 bars. */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-expanded={isOpen}
+                      onClick={() => onToggle(folder.id)}
+                      aria-label={rows.intl.formatMessage(
+                        {
+                          id: "documents.folder.toggle",
+                          defaultMessage: "{open, select, true {Collapse} other {Expand}} {name}",
+                        },
+                        { open: isOpen, name: folder.name },
+                      )}
+                    >
+                      {isOpen ? (
+                        <ChevronDown size={16} aria-hidden="true" />
+                      ) : (
+                        <ChevronRight size={16} aria-hidden="true" />
+                      )}
+                    </Button>
+                    {isOpen ? (
+                      <FolderOpen size={16} aria-hidden="true" className="shrink-0 text-muted" />
+                    ) : (
+                      <Folder size={16} aria-hidden="true" className="shrink-0 text-muted" />
+                    )}
+                    <span className="min-w-0 truncate text-base font-semibold">{folder.name}</span>
+                    {/* How much is filed here, scoped to this reader
+                        (DES-033). The seam counts it through the one
+                        predicate every document read passes through, so
+                        the number can never announce a document the
+                        listing left out. Its zero reads "Empty", and
+                        nothing on the surface tells an empty folder from
+                        one whose contents this viewer may not see — that
+                        ambiguity is DD-014's promise held at the pixel
+                        level. */}
+                    <span className="shrink-0 text-xs text-muted">
+                      <FormattedMessage
+                        id="documents.folder.count"
+                        defaultMessage="{count, plural, =0 {Empty} one {# document} other {# documents}}"
+                        values={{ count: folder.documentCount }}
+                      />
+                    </span>
+                  </span>
+                </td>
+                {/* A folder has no kind, no version, no size and no
+                    modified date, so those four cells are empty rather
+                    than filled with four em dashes. */}
+                <td className="px-4 py-2.5" />
+                <td className="px-4 py-2.5" />
+                <td className="px-4 py-2.5" />
+                <td className="px-4 py-2.5" />
+                <td className="px-4 py-2.5" />
+                {!rows.frozen && (
+                  <td className="px-4 py-2.5">
+                    <span className="flex items-center justify-end gap-1">
+                      <FolderActions
+                        folder={folder}
+                        busy={rows.busy}
+                        intl={rows.intl}
+                        onDialog={onDialog}
+                      />
+                    </span>
+                  </td>
+                )}
+              </tr>
+            </tbody>
+            {isOpen && (
+              <>
+                <FolderRows
+                  folders={folders}
+                  parentId={folder.id}
+                  depth={depth + 1}
+                  open={open}
+                  listings={listings}
+                  rows={rows}
+                  dragOver={dragOver}
+                  onToggle={onToggle}
+                  onShowMore={onShowMore}
+                  onDialog={onDialog}
+                  onDragFolder={onDragFolder}
+                  onDropOnFolder={onDropOnFolder}
+                />
+                <DocumentRows documents={listing?.documents ?? []} depth={depth + 1} rows={rows} />
+                <FolderListingFoot
+                  folder={folder}
+                  depth={depth + 1}
+                  listing={listing}
+                  rows={rows}
+                  onShowMore={onShowMore}
+                />
+              </>
+            )}
+          </Fragment>
+        );
+      })}
+    </>
+  );
+}
+
+/**
+ * What an open folder says under its documents: that they are still
+ * arriving, that they did not, or that there are more (DES-031,
+ * DES-033).
+ *
+ * The paging foot applies **within** the folder rather than across the
+ * record, because the cursor it carries is a position in this folder's
+ * own listing. A heavy folder pages without moving anything around it.
+ *
+ * The skeleton rows are drawn at the opened folder's depth, so the tree
+ * around them stays readable while its contents arrive.
+ */
+function FolderListingFoot({
+  folder,
+  depth,
+  listing,
+  rows,
+  onShowMore,
+}: Readonly<{
+  folder: ContractFolder;
+  depth: number;
+  /** What the folder holds, or nothing at all while its first read is
+   * still on its way out. */
+  listing: FolderListing | undefined;
+  rows: RowContext;
+  onShowMore: (folderId: string, cursor: string) => void;
+}>) {
+  /** Every column of the table, so a foot spans the row it sits in. The
+   * actions column is absent for a viewer who may not act. */
+  const columns = rows.frozen ? 6 : 7;
+  const loading = listing === undefined || listing.loading;
+  if (!loading && listing.error === null && listing.nextCursor === null) return null;
+
+  return (
+    <tbody>
+      {loading &&
+        Array.from({ length: FOLDER_SKELETON_ROWS }, (_, index) => (
+          <tr key={index} className="border-t border-border-default">
+            <td className="px-4 py-2.5" colSpan={columns}>
+              <span className="flex items-center gap-1">
+                <span
+                  aria-hidden="true"
+                  className="shrink-0"
+                  style={{ width: depth * FOLDER_INDENT }}
+                />
+                {/* One bar, not a fake row of cells: it says "something
+                    is coming here" and promises nothing about what. */}
+                <span
+                  aria-hidden="true"
+                  className="h-4 w-64 animate-pulse rounded-chip bg-control"
+                />
+              </span>
+            </td>
+          </tr>
+        ))}
+      {loading && (
+        // Said once for the whole folder, to a reader who cannot see the
+        // bars move.
+        <tr className="sr-only">
+          <td colSpan={columns}>
+            <span aria-live="polite">
+              <FormattedMessage
+                id="documents.folder.loading"
+                defaultMessage="Loading the documents in {name}"
+                values={{ name: folder.name }}
+              />
+            </span>
+          </td>
+        </tr>
+      )}
+      {!loading && listing.error !== null && (
+        <tr className="border-t border-border-default">
+          <td className="px-4 py-2.5" colSpan={columns}>
+            <span className="flex items-center gap-1">
+              <span
+                aria-hidden="true"
+                className="shrink-0"
+                style={{ width: depth * FOLDER_INDENT }}
+              />
+              <span role="alert" className="text-xs text-status-danger-fg">
+                {listing.error}
+              </span>
+            </span>
+          </td>
+        </tr>
+      )}
+      {!loading && listing.nextCursor !== null && (
+        <tr className="border-t border-border-default">
+          <td className="px-4 py-2.5" colSpan={columns}>
+            <span className="flex items-center gap-1">
+              <span
+                aria-hidden="true"
+                className="shrink-0"
+                style={{ width: depth * FOLDER_INDENT }}
+              />
+              <Button
+                variant="secondary"
+                disabled={rows.busy}
+                onClick={() => onShowMore(folder.id, listing.nextCursor!)}
+              >
+                <FormattedMessage
+                  id="documents.folder.more"
+                  defaultMessage="Show more in {name}"
+                  values={{ name: folder.name }}
+                />
+              </Button>
+            </span>
+          </td>
+        </tr>
+      )}
+    </tbody>
+  );
+}
+
+/**
+ * Everything a viewer may do to one folder, in one overflow menu
+ * (DES-025's pattern, as the document row already follows it).
+ *
+ * Four verbs, and each opens a dialog: renaming and making one inside
+ * collect a name, moving collects a destination, and dissolving asks for
+ * a confirmation that says where the contents go. None of them commits
+ * from the menu, because none of them has everything it needs by the
+ * time the item is pressed.
+ */
+function FolderActions({
+  folder,
+  busy,
+  intl,
+  onDialog,
+}: Readonly<{
+  folder: ContractFolder;
+  busy: boolean;
+  intl: IntlShape;
+  onDialog: (dialog: FolderDialog) => void;
+}>) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          disabled={busy}
+          aria-label={intl.formatMessage(
+            { id: "documents.folder.actionsFor", defaultMessage: "Actions for the {name} folder" },
+            { name: folder.name },
+          )}
+        >
+          <MoreHorizontal size={16} aria-hidden="true" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onSelect={() => onDialog({ mode: "rename", folder })}>
+          <Pencil size={16} aria-hidden="true" />
+          <FormattedMessage {...FOLDER_ACTION_LABEL.rename} />
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => onDialog({ mode: "move", folder })}>
+          <FolderInput size={16} aria-hidden="true" />
+          <FormattedMessage {...FOLDER_ACTION_LABEL.move} />
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => onDialog({ mode: "create", parent: folder })}>
+          <FolderPlus size={16} aria-hidden="true" />
+          <FormattedMessage {...FOLDER_ACTION_LABEL.newInside} />
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => onDialog({ mode: "delete", folder })}>
+          <Trash2 size={16} aria-hidden="true" />
+          <FormattedMessage {...FOLDER_ACTION_LABEL.delete} />
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/**
+ * One name, for a folder being made or a folder being renamed.
+ *
+ * One dialog for both, because it is one form: a folder carries a name
+ * and nothing else. Where it lands is the difference, and that is
+ * settled before the dialog opens — by the toolbar for the record root,
+ * and by the row's own menu for a folder inside another.
+ */
+function FolderNameDialog({
+  folder,
+  parent,
+  busy,
+  onClose,
+  onConfirm,
+}: Readonly<{
+  /** The folder being renamed, or null when one is being made. */
+  folder: ContractFolder | null;
+  /** The folder the new one is being made inside, or null at the record
+   * root. Ignored on a rename. */
+  parent: ContractFolder | null;
+  busy: boolean;
+  onClose: () => void;
+  /** Answers with the refusal to show, or `null` when the write
+   * landed. */
+  onConfirm: (name: string) => Promise<string | null>;
+}>) {
+  const intl = useIntl();
+  const [name, setName] = useState(folder?.name ?? "");
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit() {
+    // One write at a time, for the composer's reason: a form has more
+    // than one way to submit itself.
+    if (busy) return;
+    const named = name.trim();
+    if (named.length === 0) {
+      setError(
+        intl.formatMessage({
+          id: "documents.folder.nameRequired",
+          defaultMessage: "Give the folder a name.",
+        }),
+      );
+      return;
+    }
+    setError(null);
+    setError(await onConfirm(named));
+  }
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent aria-describedby={undefined}>
+        <DialogTitle>
+          {folder ? (
+            <FormattedMessage id="documents.folder.renameTitle" defaultMessage="Rename folder" />
+          ) : parent ? (
+            <FormattedMessage
+              id="documents.folder.createInsideTitle"
+              defaultMessage="New folder in {name}"
+              values={{ name: parent.name }}
+            />
+          ) : (
+            <FormattedMessage id="documents.folder.createTitle" defaultMessage="New folder" />
+          )}
+        </DialogTitle>
+        <form
+          className="mt-4 flex flex-col gap-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submit();
+          }}
+        >
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="folder-name">
+              <FormattedMessage id="documents.folder.name" defaultMessage="Name" />
+            </Label>
+            <Input
+              id="folder-name"
+              value={name}
+              // The viewer opened this dialog to type one thing, so the
+              // caret belongs in the box they opened it for. This is a
+              // mount inside a click handler, not a page load.
+              autoFocus
+              autoComplete="off"
+              // The seam's own ceiling, which refuses a longer name
+              // rather than shortening it.
+              maxLength={MAX_FOLDER_NAME_LENGTH}
+              onChange={(event) => {
+                setName(event.target.value);
+                if (event.target.value.trim().length > 0) setError(null);
+              }}
+            />
+          </div>
+          {error && (
+            <p role="alert" className="text-xs text-status-danger-fg">
+              {error}
+            </p>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={onClose}>
+              <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+            </Button>
+            <Button type="submit" disabled={busy}>
+              <FormattedMessage id="documents.folder.save" defaultMessage="Save" />
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/**
+ * Where a folder goes (DOC-006).
+ *
+ * A select over the record's other folders, plus the record root — a
+ * tree the drop cannot reach is still reachable from a keyboard, which
+ * is the M4 contract on this surface. The folder itself and everything
+ * under it are not offered, because the seam refuses a move that would
+ * close a cycle and a control that cannot succeed is worse than none.
+ *
+ * Each destination is named by its whole path, because a bare "2026"
+ * says nothing when two groupings each have one.
+ */
+function MoveFolderDialog({
+  folder,
+  folders,
+  busy,
+  onClose,
+  onConfirm,
+}: Readonly<{
+  folder: ContractFolder;
+  folders: readonly ContractFolder[];
+  busy: boolean;
+  onClose: () => void;
+  onConfirm: (parentId: string | null) => Promise<string | null>;
+}>) {
+  const intl = useIntl();
+  /** The record root is the empty value, because it is the absence of a
+   * parent rather than a folder with an id. */
+  const [parentId, setParentId] = useState(folder.parentId ?? "");
+  const [error, setError] = useState<string | null>(null);
+  const destinations = movableInto(folders, folder.id);
+  /** What sits between two names of a destination's path. A mark a
+   * reader reads, so it is a message rather than a literal in the
+   * joiner (DES-013); the spacing around it is the joiner's. */
+  const separator = intl.formatMessage({
+    id: "documents.folder.pathSeparator",
+    defaultMessage: "/",
+  });
+
+  async function submit() {
+    if (busy) return;
+    setError(null);
+    setError(await onConfirm(parentId === "" ? null : parentId));
+  }
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent aria-describedby={undefined}>
+        <DialogTitle>
+          <FormattedMessage
+            id="documents.folder.moveTitle"
+            defaultMessage="Move {name}"
+            values={{ name: folder.name }}
+          />
+        </DialogTitle>
+        <form
+          className="mt-4 flex flex-col gap-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submit();
+          }}
+        >
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="folder-parent">
+              <FormattedMessage id="documents.folder.moveInto" defaultMessage="Move into" />
+            </Label>
+            <select
+              id="folder-parent"
+              value={parentId}
+              className={CONTROL_CLASS}
+              onChange={(event) => setParentId(event.target.value)}
+            >
+              <option value="">
+                {intl.formatMessage({
+                  id: "documents.folder.recordRoot",
+                  defaultMessage: "The contract itself",
+                })}
+              </option>
+              {destinations.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {pathOf(folders, option, separator)}
+                </option>
+              ))}
+            </select>
+          </div>
+          {error && (
+            <p role="alert" className="text-xs text-status-danger-fg">
+              {error}
+            </p>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={onClose}>
+              <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+            </Button>
+            <Button type="submit" disabled={busy}>
+              <FormattedMessage {...FOLDER_ACTION_LABEL.move} />
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/**
+ * Where one document is filed (DOC-006, DES-033).
+ *
+ * A select over the record's folders plus the record root, which is the
+ * pointer-free twin of the drop M13/4 will add: every capability of the
+ * drop is reachable from a keyboard, which is the M4 contract on this
+ * surface.
+ *
+ * Every folder is a destination — a document may be filed anywhere on
+ * its own record, and there is no cycle to avoid the way there is when a
+ * folder itself moves. Each one is named by its whole path, because a
+ * bare "2026" says nothing when two groupings each have one.
+ */
+function MoveDocumentDialog({
+  document,
+  folders,
+  busy,
+  onClose,
+  onConfirm,
+}: Readonly<{
+  document: ContractDocument;
+  folders: readonly ContractFolder[];
+  busy: boolean;
+  onClose: () => void;
+  /** Answers with the refusal to show, or `null` when the write
+   * landed. */
+  onConfirm: (folderId: string | null) => Promise<string | null>;
+}>) {
+  const intl = useIntl();
+  /** The record root is the empty value, because it is the absence of a
+   * folder rather than a folder with an id. */
+  const [folderId, setFolderId] = useState(document.folderId ?? "");
+  const [error, setError] = useState<string | null>(null);
+  /** What sits between two names of a destination's path — a mark a
+   * reader reads, so it is a message rather than a literal (DES-013). */
+  const separator = intl.formatMessage({
+    id: "documents.folder.pathSeparator",
+    defaultMessage: "/",
+  });
+
+  async function submit() {
+    if (busy) return;
+    setError(null);
+    setError(await onConfirm(folderId === "" ? null : folderId));
+  }
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent aria-describedby={undefined}>
+        <DialogTitle>
+          <FormattedMessage
+            id="documents.move.title"
+            defaultMessage="Move {title}"
+            values={{ title: document.title }}
+          />
+        </DialogTitle>
+        <form
+          className="mt-4 flex flex-col gap-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submit();
+          }}
+        >
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="document-folder">
+              <FormattedMessage id="documents.move.into" defaultMessage="File in" />
+            </Label>
+            <select
+              id="document-folder"
+              value={folderId}
+              className={CONTROL_CLASS}
+              onChange={(event) => setFolderId(event.target.value)}
+            >
+              <option value="">
+                {intl.formatMessage({
+                  id: "documents.folder.recordRoot",
+                  defaultMessage: "The contract itself",
+                })}
+              </option>
+              {folders.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {pathOf(folders, option, separator)}
+                </option>
+              ))}
+            </select>
+          </div>
+          {error && (
+            <p role="alert" className="text-xs text-status-danger-fg">
+              {error}
+            </p>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={onClose}>
+              <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+            </Button>
+            <Button type="submit" disabled={busy}>
+              <FormattedMessage {...FOLDER_ACTION_LABEL.move} />
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/**
+ * The folder delete, and what it does not do (DOC-006, DES-033).
+ *
+ * One click and no typed name, unlike DOC-010's erasure: nothing is
+ * destroyed here. The child folders are re-filed into this folder's
+ * parent — the record root when it has none — so the dialog states where
+ * the contents go and then offers the verb. A typed confirmation would
+ * be ceremony out of all proportion to a grouping that can be made again
+ * in two seconds.
+ */
+function DeleteFolderDialog({
+  folder,
+  folders,
+  busy,
+  onClose,
+  onConfirm,
+}: Readonly<{
+  folder: ContractFolder;
+  folders: readonly ContractFolder[];
+  busy: boolean;
+  onClose: () => void;
+  onConfirm: () => Promise<string | null>;
+}>) {
+  const [error, setError] = useState<string | null>(null);
+  const parent =
+    folder.parentId === null ? null : folders.find((row) => row.id === folder.parentId);
+
+  async function submit() {
+    if (busy) return;
+    setError(null);
+    setError(await onConfirm());
+  }
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent aria-describedby={undefined}>
+        <DialogTitle>
+          <FormattedMessage
+            id="documents.folder.deleteTitle"
+            defaultMessage="Delete the {name} folder?"
+            values={{ name: folder.name }}
+          />
+        </DialogTitle>
+        <p className="mt-4 text-base text-primary">
+          {parent ? (
+            <FormattedMessage
+              id="documents.folder.deleteIntoParent"
+              defaultMessage="Anything in it moves into {parent}. Nothing is deleted."
+              values={{ parent: parent.name }}
+            />
+          ) : (
+            <FormattedMessage
+              id="documents.folder.deleteIntoRoot"
+              defaultMessage="Anything in it moves onto the contract itself. Nothing is deleted."
+            />
+          )}
+        </p>
+        {error && (
+          <p role="alert" className="mt-2.5 text-xs text-status-danger-fg">
+            {error}
+          </p>
+        )}
+        <div className="mt-4 flex justify-end gap-2">
+          <Button type="button" variant="secondary" onClick={onClose}>
+            <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+          </Button>
+          <Button type="button" variant="danger" disabled={busy} onClick={() => void submit()}>
+            <FormattedMessage {...FOLDER_ACTION_LABEL.delete} />
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -1032,6 +2690,10 @@ const ACTION_LABEL = {
     id: "documents.action.editDetails",
     defaultMessage: "Edit details",
   }),
+  moveToFolder: defineMessage({
+    id: "documents.action.moveToFolder",
+    defaultMessage: "Move to folder",
+  }),
   markConfidential: defineMessage({
     id: "documents.action.markConfidential",
     defaultMessage: "Mark confidential",
@@ -1043,6 +2705,20 @@ const ACTION_LABEL = {
   archive: defineMessage({ id: "documents.action.archive", defaultMessage: "Archive" }),
   restore: defineMessage({ id: "documents.action.restore", defaultMessage: "Restore" }),
   delete: defineMessage({ id: "documents.action.delete", defaultMessage: "Delete" }),
+} as const;
+
+/** What a folder's own menu says (DES-033). Its own set rather than
+ * shared arms, because a folder is dissolved where a document is erased
+ * — the same word, two different acts — and one label that served both
+ * would be one word standing for two promises. */
+const FOLDER_ACTION_LABEL = {
+  rename: defineMessage({ id: "documents.folder.action.rename", defaultMessage: "Rename" }),
+  move: defineMessage({ id: "documents.folder.action.move", defaultMessage: "Move" }),
+  newInside: defineMessage({
+    id: "documents.folder.action.newInside",
+    defaultMessage: "New folder inside",
+  }),
+  delete: defineMessage({ id: "documents.folder.action.delete", defaultMessage: "Delete" }),
 } as const;
 
 /**
@@ -1068,6 +2744,7 @@ function DocumentActions({
   onMakePrimary,
   onAddVersion,
   onEditDetails,
+  onMoveToFolder,
   onSetConfidential,
   onArchive,
   onRestore,
@@ -1083,6 +2760,7 @@ function DocumentActions({
   onMakePrimary: () => void;
   onAddVersion: () => void;
   onEditDetails: () => void;
+  onMoveToFolder: () => void;
   onSetConfidential: (confidential: boolean) => void;
   onArchive: () => void;
   onRestore: () => void;
@@ -1125,6 +2803,14 @@ function DocumentActions({
             <DropdownMenuItem onSelect={onEditDetails}>
               <Pencil size={16} aria-hidden="true" />
               <FormattedMessage {...ACTION_LABEL.editDetails} />
+            </DropdownMenuItem>
+            {/* Filing, and the keyboard twin of the drop M13/4 will add
+                (DES-033): a document is filed from a control, never only
+                by dragging it. Offered on every document, because moving
+                one back out to the record root is the same act. */}
+            <DropdownMenuItem onSelect={onMoveToFolder}>
+              <FolderInput size={16} aria-hidden="true" />
+              <FormattedMessage {...ACTION_LABEL.moveToFolder} />
             </DropdownMenuItem>
             {/* DD-014's flag, one item that says which way it goes
                 (CTR-022). One glyph for confidentiality everywhere, as
@@ -1351,7 +3037,7 @@ function PinButton({
   version: DocumentVersion;
   busy: boolean;
   intl: IntlShape;
-  onToggle: (document: ContractDocument, version: DocumentVersion) => Promise<void>;
+  onToggle: (document: ContractDocument, version: DocumentVersion) => void;
 }>) {
   return (
     <Button
@@ -1359,7 +3045,7 @@ function PinButton({
       size="icon"
       disabled={busy}
       aria-pressed={version.isExecuted}
-      onClick={() => void onToggle(document, version)}
+      onClick={() => onToggle(document, version)}
       aria-label={intl.formatMessage(
         {
           id: "documents.pinExecuted",
@@ -1423,12 +3109,19 @@ function UploadDialog({
   contractNumber,
   document,
   onClose,
+  onBatch,
   onSaved,
 }: Readonly<{
   contractNumber: number;
   /** The document being added to, or undefined for a new one. */
   document: ContractDocument | undefined;
   onClose: () => void;
+  /** Hand several chosen files to the batch confirmation (M13/4,
+   * M13/5). This is the drop's pointer-free twin: the picker is where a
+   * keyboard reaches bulk intake, so it has to reach the same dialog —
+   * and the directory picker beside it is folder drop's twin, handing
+   * over the same shape with a path on each file. */
+  onBatch: (files: DroppedFile[]) => void;
   onSaved: (document: ContractDocument) => void;
 }>) {
   const intl = useIntl();
@@ -1441,6 +3134,11 @@ function UploadDialog({
    * person sees, because a bare file input cannot be styled to the
    * system. */
   const picker = useRef<HTMLInputElement>(null);
+  /** And the directory picker beside it, which is folder drop's
+   * pointer-free twin (DES-033 §7). Its own input, because
+   * `webkitdirectory` is set on the element rather than passed to the
+   * dialog it opens — one input cannot offer both. */
+  const directoryPicker = useRef<HTMLInputElement>(null);
 
   async function submit() {
     // One upload at a time. The CTA is disabled while one is in
@@ -1511,14 +3209,56 @@ function UploadDialog({
                 // control a keyboard reaches, and a second stop on an
                 // invisible input is a trap rather than an affordance.
                 tabIndex={-1}
+                // Many files at once on a new document (DOC-011); one on
+                // a chain, because a version is one file and picking
+                // three for one round is a question with no answer.
+                multiple={document === undefined}
                 // Any file type (DOC-004): the seam accepts whatever the
                 // counterparty sent, so the picker offers no filter.
                 onChange={(event) => {
-                  const chosen = event.target.files?.[0] ?? null;
-                  if (chosen) setError(null);
-                  setFile(chosen);
+                  const chosen = [...(event.target.files ?? [])];
+                  if (chosen.length > 1) {
+                    // Picked flat, so every file lands at the record
+                    // root — the batch's shape is the drop's, with an
+                    // empty path on each row.
+                    onBatch(chosen.map((one) => ({ file: one, path: [] })));
+                    return;
+                  }
+                  const one = chosen[0] ?? null;
+                  if (one) setError(null);
+                  setFile(one);
                 }}
               />
+              {/* Folder drop's pointer-free twin (DES-033 §7). The
+                  browser puts the path each file sat at on the file
+                  itself, so the structure survives a pick exactly as it
+                  survives a drop — one file or a hundred, a directory is
+                  always a batch, because what was picked is a structure
+                  and the composer's own fields are one round's. */}
+              {document === undefined && (
+                <input
+                  ref={directoryPicker}
+                  id="document-directory"
+                  type="file"
+                  className="sr-only"
+                  tabIndex={-1}
+                  multiple
+                  // Named for itself. It is out of the tab order and the
+                  // button beside it is what a person reaches, but the
+                  // input is still the control the pick lands on, and an
+                  // unnamed one says nothing about which field it fills.
+                  aria-label={intl.formatMessage({
+                    id: "documents.composer.folder",
+                    defaultMessage: "Folder",
+                  })}
+                  // React does not know this attribute, and the DOM does.
+                  {...{ webkitdirectory: "" }}
+                  onChange={(event) => {
+                    const chosen = [...(event.target.files ?? [])];
+                    if (chosen.length > 0) onBatch(filesFromDirectoryPicker(chosen));
+                  }}
+                />
+              )}
               {/* The label points at the input, but the input is out of
                   the tab order — this button is the control a keyboard
                   reaches, so it has to carry the field's name itself, or
@@ -1534,8 +3274,30 @@ function UploadDialog({
                 aria-describedby={error ? "document-upload-error" : undefined}
                 onClick={() => picker.current?.click()}
               >
-                <FormattedMessage id="documents.composer.choose" defaultMessage="Choose file" />
+                {document === undefined ? (
+                  <FormattedMessage
+                    id="documents.composer.chooseMany"
+                    defaultMessage="Choose files"
+                  />
+                ) : (
+                  <FormattedMessage id="documents.composer.choose" defaultMessage="Choose file" />
+                )}
               </Button>
+              {document === undefined && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  id="document-directory-choose"
+                  aria-labelledby="document-file-label document-directory-choose"
+                  onClick={() => directoryPicker.current?.click()}
+                >
+                  <FolderPlus size={16} aria-hidden="true" />
+                  <FormattedMessage
+                    id="documents.composer.chooseFolder"
+                    defaultMessage="Choose folder"
+                  />
+                </Button>
+              )}
               <span className="min-w-0 truncate text-sm text-muted">
                 {file?.name ?? (
                   <FormattedMessage

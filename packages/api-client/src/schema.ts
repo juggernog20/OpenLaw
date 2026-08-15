@@ -983,10 +983,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The paper on one contract (DOC-008), newest first, each with its whole version chain in order 1..n and one version of it marked current. Exactly one document is marked primary — the instrument the contract is — and any version the team has pinned as the signed copy is marked executed. A contract holds as many documents as it needs: a loose attachment such as a schedule or a certificate is its own document with its own chain, beside the main instrument rather than inside its history (CTR-014). Access is inherited from the contract and nothing else: a Contributor on the team reads the list, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. Archived documents (DOC-010) are left out; includeArchived=true draws them beside the live ones, which is where restoring one is offered */
+    /** The paper on one contract (DOC-008), newest first, each with its whole version chain in order 1..n and one version of it marked current. Exactly one document is marked primary — the instrument the contract is — and any version the team has pinned as the signed copy is marked executed. A contract holds as many documents as it needs: a loose attachment such as a schedule or a certificate is its own document with its own chain, beside the main instrument rather than inside its history (CTR-014). Access is inherited from the contract and nothing else: a Contributor on the team reads the list, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. Archived documents (DOC-010) are left out; includeArchived=true draws them beside the live ones, which is where restoring one is offered. folder narrows the read to one listing (DOC-006): a folder's own id answers what is filed in that folder, `root` answers the documents filed in no folder, and omitting it answers the record's whole paper. Paging applies within whichever listing was asked for, so a heavy folder pages on its own. A folder on another contract, or one that never existed, answers 404 — exactly as a folder that was never created, because a folder's id says nothing about which record it is on */
     get: operations["listContractDocuments"];
     put?: never;
-    /** Upload a file to a contract, creating a document with version 1 (DOC-001). Any file type is accepted (DOC-004); the ceiling is the deployment's MAX_UPLOAD_MB, and a file over it is refused rather than stored. The version row records the original filename, the declared MIME type, the byte size the server counted, and the SHA-256 it computed while streaming. The blob is written through the storage adapter before the rows commit (DOC-012). The first document uploaded to a contract becomes its primary document — the instrument the contract is (CTR-014) — and every one after it is a loose attachment until somebody moves the designation. Appends document.created on the owning contract, and document.primary_set beside it when the designation was taken (DD-017). The kind and note fields must be sent before the file part. An archived contract takes no new paper until it is restored. A contract the uploader cannot reach answers 404, exactly as one that does not exist */
+    /** Upload a file to a contract, creating a document with version 1 (DOC-001). Any file type is accepted (DOC-004); the ceiling is the deployment's MAX_UPLOAD_MB, and a file over it is refused rather than stored. The version row records the original filename, the declared MIME type, the byte size the server counted, and the SHA-256 it computed while streaming. The blob is written through the storage adapter before the rows commit (DOC-012). The first document uploaded to a contract becomes its primary document — the instrument the contract is (CTR-014) — and every one after it is a loose attachment until somebody moves the designation. Appends document.created on the owning contract, and document.primary_set beside it when the designation was taken (DD-017). The document is filed where the form says (DOC-006, DOC-011): folderId is a folder already on this record, folderPath is a relative chain find-or-created beneath it segment by segment, and sending neither files the document at the record root. The chain is resolved under the owning contract's row lock — the same one that serialises version numbers — so uploads racing on one path converge on a single folder rather than manufacturing one each. A folder a drop creates on its way past writes no activity of its own; the document.created entry names the folder its file landed in (DD-017). A path that misuses the separator or would nest past the tree's ceiling is refused for that one file, and a batch's other files are untouched. The kind, note, folderId and folderPath fields must be sent before the file part. An archived contract takes no new paper until it is restored. A contract the uploader cannot reach answers 404, exactly as one that does not exist */
     post: operations["uploadContractDocument"];
     delete?: never;
     options?: never;
@@ -1025,7 +1025,7 @@ export interface paths {
     delete: operations["hardDeleteDocument"];
     options?: never;
     head?: never;
-    /** Rename a document or edit its description (DOC-007), one field per request as DES-017 commits them. The stored files are untouched by either: a version's own filename is what it arrived as and stays that, and a download still offers it back. Appends document.updated on the owning contract (DD-017), naming what changed. isConfidential is the third field, and it is not one of those two: it sets or clears DD-014's per-document flag, which narrows this one file to the contract's named team, its Owner, and Administrators, even on an open contract. It has an actor set narrower than the route's — an Administrator, the person who uploaded the document, and the contract's Owner — and anybody else who reaches the document is refused 403 rather than 404, because they can already see it. Each set and each clear appends its own action, document.confidentiality_set or document.confidentiality_cleared. An archived contract takes no edit until it is restored. A document on a contract the editor cannot reach — and a confidential document they are outside the audience of — answers 404, exactly as one that does not exist */
+    /** Rename a document or edit its description (DOC-007), one field per request as DES-017 commits them. The stored files are untouched by either: a version's own filename is what it arrived as and stays that, and a download still offers it back. Appends document.updated on the owning contract (DD-017), naming what changed. isConfidential is the third field, and it is not one of those two: it sets or clears DD-014's per-document flag, which narrows this one file to the contract's named team, its Owner, and Administrators, even on an open contract. It has an actor set narrower than the route's — an Administrator, the person who uploaded the document, and the contract's Owner — and anybody else who reaches the document is refused 403 rather than 404, because they can already see it. Each set and each clear appends its own action, document.confidentiality_set or document.confidentiality_cleared. folderId is the fourth, and it files the document (DOC-006): a folder on this document's own record, or null for the record root, with null and omitting the field two different requests. A folder on another contract answers 404, exactly as one that was never created, because a folder's id says nothing about which record it is on. Each move appends document.filed, carrying both folders by name so the entry outlives a rename. An archived contract takes no edit until it is restored. A document on a contract the editor cannot reach — and a confidential document they are outside the audience of — answers 404, exactly as one that does not exist */
     patch: operations["updateDocument"];
     trace?: never;
   };
@@ -1215,6 +1215,42 @@ export interface paths {
     options?: never;
     head?: never;
     patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/folders": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The folders on one contract, whole (DOC-006). Folders are scoped inside the record and nowhere else — there is no global tree, and the repository view stays flat with folder as a facet there. The set comes back in one answer rather than one level at a time, because a record's folder set is small and the Documents section draws the whole tree from it. Siblings are ordered by name without case, the way a file manager lists a directory. Each folder carries how many live documents are filed directly in it, counted for the viewer asking: an archived document is out of the count (DOC-010), and so is a confidential document this viewer is outside the audience of (DD-014) — left out by the same predicate that leaves it out of the folder's listing, so a count can never announce a document the listing hid. A zero therefore reads as an empty folder whether it is empty or its contents are not this viewer's to see. Access is inherited from the contract and nothing else: a Contributor on the team reads the tree, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it */
+    get: operations["listContractFolders"];
+    put?: never;
+    /** Create a folder on a contract, at the record root or inside another folder (DOC-006). The name is trimmed, must not be empty, is bounded at the filesystem's own ceiling, and may not hold a slash — a folder drop addresses a chain by path, and a name with a separator in it could not be one segment of one. Three invariants are refused here rather than left to the database: a parent on another contract is answered exactly as a parent that was never created, a sibling name already taken under the same parent is refused 409, and a folder deeper than the tree's ceiling is refused 409. Appends folder.created on the owning contract (DD-017), carrying the name so the entry outlives a later rename. Send path instead of name to recreate an empty directory of a dropped tree (DOC-011): the relative chain is find-or-created segment by segment beneath parentId, under the owning contract's row lock, so a segment already there is used rather than refused and two drops racing on one path converge on one folder. That form writes no activity — a folder a drop passed through is traversal rather than an act somebody performed, and the drop's story is its uploads (DD-017). Exactly one of name and path. Answers the record's whole folder set, because that is what the tree is drawn from. Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract takes no new folder until it is restored */
+    post: operations["createContractFolder"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/folders/{folderId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Dissolve a folder (DOC-006). Its child folders and the documents filed in it are re-filed into its parent — the record root when it had none — and nothing is destroyed: this route deletes no document, and erasing one stays DOC-010's separate Administrator-only path. Every document in the folder moves, the archived ones and the confidential ones the caller cannot see included: the re-file is a fact about the record's organization, not a read, and a row left behind would point at a folder that no longer exists. Because the children are re-filed rather than removed, a delete that would put two folders of the same name in one place is refused 409 rather than resolved by inventing a name. Appends folder.deleted on the owning contract (DD-017), carrying the folder's name — the entry outlives the row, so it is the only thing left that says what was dissolved. Answers the record's whole folder set, because every re-filed child moved. A folder on a contract the viewer cannot reach answers 404, exactly as one that does not exist; an archived contract takes no delete until it is restored */
+    delete: operations["deleteContractFolder"];
+    options?: never;
+    head?: never;
+    /** Rename a folder, move it under a different parent, or both (DOC-006). parentId null moves it to the record root, and omitting parentId moves nothing — they are two different requests. A move carries the whole subtree, so the tree's depth ceiling is asked about the deepest folder underneath rather than about the moved row alone. The parent chain never cycles: a move that would put a folder inside itself, or inside one of its own descendants, is refused 409. A parent on another contract is answered exactly as a parent that was never created, and a sibling name already taken under the destination is refused 409. Appends folder.renamed and folder.moved on the owning contract (DD-017) — one entry per thing that happened, each carrying the folder's name. Answers the record's whole folder set. A folder on a contract the editor cannot reach answers 404, exactly as one that does not exist; an archived contract takes no edit until it is restored */
+    patch: operations["updateContractFolder"];
     trace?: never;
   };
   "/api/v1/comments": {
@@ -5417,6 +5453,7 @@ export interface operations {
     parameters: {
       query?: {
         includeArchived?: "true" | "false";
+        folder?: "root" | string;
         cursor?: string;
       };
       header?: never;
@@ -5464,6 +5501,7 @@ export interface operations {
               }[];
               archivedAt: string | null;
               isConfidential: boolean;
+              folderId: string | null;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -5514,6 +5552,10 @@ export interface operations {
           kind?: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
           /** @description What changed in this round, kept beside the file. Must be sent before the file part. */
           note?: string;
+          /** @description Where the file is filed: a folder already on this record (DOC-006), or omitted for the record root. Must be sent before the file part. */
+          folderId?: string;
+          /** @description A relative folder path, `/` separated, find-or-created beneath `folderId` before the document is filed into its last segment (DOC-011). Must be sent before the file part. */
+          folderPath?: string;
         };
       };
     };
@@ -5555,6 +5597,7 @@ export interface operations {
               }[];
               archivedAt: string | null;
               isConfidential: boolean;
+              folderId: string | null;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -5645,6 +5688,7 @@ export interface operations {
               }[];
               archivedAt: string | null;
               isConfidential: boolean;
+              folderId: string | null;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -5724,6 +5768,7 @@ export interface operations {
               }[];
               archivedAt: string | null;
               isConfidential: boolean;
+              folderId: string | null;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -5765,6 +5810,7 @@ export interface operations {
           title?: string;
           description?: string | null;
           isConfidential?: boolean;
+          folderId?: string | null;
         };
       };
     };
@@ -5806,6 +5852,7 @@ export interface operations {
               }[];
               archivedAt: string | null;
               isConfidential: boolean;
+              folderId: string | null;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -5879,6 +5926,7 @@ export interface operations {
               }[];
               archivedAt: string | null;
               isConfidential: boolean;
+              folderId: string | null;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -5959,6 +6007,7 @@ export interface operations {
               }[];
               archivedAt: string | null;
               isConfidential: boolean;
+              folderId: string | null;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -6032,6 +6081,7 @@ export interface operations {
               }[];
               archivedAt: string | null;
               isConfidential: boolean;
+              folderId: string | null;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -6105,6 +6155,7 @@ export interface operations {
               }[];
               archivedAt: string | null;
               isConfidential: boolean;
+              folderId: string | null;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -6178,6 +6229,7 @@ export interface operations {
               }[];
               archivedAt: string | null;
               isConfidential: boolean;
+              folderId: string | null;
               createdBy: {
                 id: string;
                 displayName: string;
@@ -6474,6 +6526,189 @@ export interface operations {
           "image/webp": string;
           "image/bmp": string;
           "image/avif": string;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listContractFolders: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            folders: {
+              id: string;
+              name: string;
+              parentId: string | null;
+              documentCount: number;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createContractFolder: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name?: string;
+          path?: string;
+          parentId?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            folders: {
+              id: string;
+              name: string;
+              parentId: string | null;
+              documentCount: number;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteContractFolder: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        folderId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            folders: {
+              id: string;
+              name: string;
+              parentId: string | null;
+              documentCount: number;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateContractFolder: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        folderId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name?: string;
+          parentId?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            folders: {
+              id: string;
+              name: string;
+              parentId: string | null;
+              documentCount: number;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+          };
         };
       };
       /** @description Problem details (RFC 9457) */

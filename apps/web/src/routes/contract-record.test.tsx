@@ -32,9 +32,16 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import {
+  json,
+  problem,
+  renderAt,
+  stubApi,
+  type StubAnswer,
+  type StubCall,
+} from "../testing/helpers";
 import type { CustomFieldValue, CustomFieldValues } from "../lib/custom-fields";
 
 const ADMIN = {
@@ -246,6 +253,82 @@ const BOOK = [
   { id: "cp-orion", name: "Orion Cloud Ltd", jurisdiction: null },
   { id: "cp-the-helix", name: "The Helix Group Ltd", jurisdiction: null },
 ];
+
+/**
+ * The synthetic drop harness (M13/4, M13/5, DOC-011).
+ *
+ * jsdom has neither drag nor the browser's directory-entry API, so a
+ * dropped tree is fed in as synthetic `DataTransfer` entry objects — the
+ * shape the walk reads and nothing else. That was M13's agreed seam
+ * decision, and it lives at module scope so the batch suite and the
+ * folder-drop suite exercise **one** harness: a change to what a
+ * directory reader does under failure has one place to be made.
+ */
+
+/** One node of a dropped tree: a file, or a directory holding more of
+ * them. */
+type DropNode = File | { name: string; children: DropNode[] };
+
+/** A directory of a dropped tree. With no children it is an empty
+ * directory, which is the case M13/5 recreates on its own. */
+const dir = (name: string, children: DropNode[] = []) => ({ name, children });
+
+/**
+ * One node of a dropped tree, as the directory-entry API would hand it
+ * over.
+ *
+ * Both calls are callback-shaped because the real ones are, and
+ * `readEntries` answers its children once and an empty page after —
+ * which is how a real reader says it has finished, and the loop that
+ * reads it has to be exercised against that.
+ */
+function entryOf(node: DropNode): unknown {
+  if (node instanceof File) {
+    return {
+      isFile: true,
+      isDirectory: false,
+      name: node.name,
+      file: (resolve: (file: File) => void) => resolve(node),
+    };
+  }
+  return {
+    isFile: false,
+    isDirectory: true,
+    name: node.name,
+    createReader: () => {
+      let served = false;
+      return {
+        readEntries: (resolve: (entries: unknown[]) => void) => {
+          if (served) return resolve([]);
+          served = true;
+          resolve(node.children.map(entryOf));
+        },
+      };
+    },
+  };
+}
+
+/**
+ * A drop on one target — the Documents section, or a folder row.
+ *
+ * The `DataTransfer` is synthetic for the reason the entries are.
+ * `items` carries them, because that is the list that can say what an
+ * entry *is*: `dataTransfer.files` would hand back a flat list with the
+ * dropped structure already destroyed.
+ */
+function dropOn(target: HTMLElement, nodes: DropNode[]) {
+  const dataTransfer = {
+    types: ["Files"],
+    files: nodes.filter((node): node is File => node instanceof File),
+    items: nodes.map((node) => ({
+      kind: "file",
+      getAsFile: () => (node instanceof File ? node : new File([], node.name)),
+      webkitGetAsEntry: () => entryOf(node),
+    })),
+  };
+  fireEvent.dragOver(target, { dataTransfer });
+  fireEvent.drop(target, { dataTransfer });
+}
 
 /** One party on the record, as the API answers it. */
 function party(id: string, isPrimary: boolean) {
@@ -1195,8 +1278,6 @@ describe("the /contracts/:number record page", () => {
       "Status",
       "Priority",
       "Risk",
-      // The type's own fields freeze with the record (CTR-016).
-      "Payment terms",
       // The value freezes as a group, like it commits as one.
       "Amount",
       "Currency",
@@ -1224,8 +1305,14 @@ describe("the /contracts/:number record page", () => {
     expect(
       screen.queryByRole("button", { name: /Take Nadia Counsel off the team/ }),
     ).not.toBeInTheDocument();
+    // The freeze is the record's, not the section's: the type's own
+    // fields are behind the Fields tab (DES-032) and freeze there too
+    // (CTR-016).
+    await user.click(screen.getByRole("link", { name: "Fields" }));
+    expect(await screen.findByLabelText("Payment terms")).toBeDisabled();
+    await user.click(screen.getByRole("link", { name: "Overview" }));
 
-    await user.click(screen.getByRole("button", { name: "Restore" }));
+    await user.click(await screen.findByRole("button", { name: "Restore" }));
     await waitFor(() => expect(api.posts).toEqual(["archive", "restore"]));
     expect(screen.queryByText(/This contract is archived/)).not.toBeInTheDocument();
     expect(screen.getByLabelText("Title")).toBeEnabled();
@@ -1235,7 +1322,7 @@ describe("the /contracts/:number record page", () => {
   it("draws the type's attached fields in attachment order and commits one by slug", async () => {
     const api = recordApi(contractRow());
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/fields");
     const user = userEvent.setup();
 
     const card = within(await screen.findByRole("region", { name: "Fields" }));
@@ -1256,7 +1343,7 @@ describe("the /contracts/:number record page", () => {
   it("commits nothing when Escape reverts a field, or when a blur changes nothing", async () => {
     const api = recordApi(contractRow({ customFields: { payment_terms: "Net 30" } }));
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/fields");
     const user = userEvent.setup();
 
     const terms = await screen.findByLabelText("Payment terms");
@@ -1274,7 +1361,7 @@ describe("the /contracts/:number record page", () => {
   it("clears a field by emptying it, and sends null rather than a blank", async () => {
     const api = recordApi(contractRow({ customFields: { payment_terms: "Net 30" } }));
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/fields");
     const user = userEvent.setup();
 
     await user.clear(await screen.findByLabelText("Payment terms"));
@@ -1287,7 +1374,7 @@ describe("the /contracts/:number record page", () => {
       contractRow({ contractTypeId: "t-full", contractTypeName: "Every field" }),
     );
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/fields");
     const user = userEvent.setup();
 
     const card = within(await screen.findByRole("region", { name: "Fields" }));
@@ -1333,7 +1420,7 @@ describe("the /contracts/:number record page", () => {
       }),
     );
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/fields");
     const user = userEvent.setup();
 
     const notice = await screen.findByLabelText("Notice period");
@@ -1365,8 +1452,12 @@ describe("the /contracts/:number record page", () => {
     // so the pick commits like any other select.
     await user.selectOptions(await screen.findByLabelText("Contract type"), "t-nda");
     await waitFor(() => expect(api.patches).toEqual([{ contractTypeId: "t-nda" }]));
-    // The new type's fields replace the old type's on the card.
-    const card = within(screen.getByRole("region", { name: "Fields" }));
+    // The new type's fields replace the old type's on the card. The
+    // re-type happens on the Overview and the card is a tab away
+    // (DES-032), so crossing to it is part of the check: the attached
+    // set is the record's state, not the section's.
+    await user.click(screen.getByRole("link", { name: "Fields" }));
+    const card = within(await screen.findByRole("region", { name: "Fields" }));
     expect(await card.findByLabelText(/Our position/)).toBeInTheDocument();
     expect(card.queryByLabelText("Payment terms")).not.toBeInTheDocument();
   });
@@ -1456,7 +1547,7 @@ describe("the /contracts/:number record page", () => {
         return api.handler(call);
       },
     });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/fields");
     const user = userEvent.setup();
 
     await user.type(await screen.findByLabelText("Payment terms"), "Net 45");
@@ -1471,7 +1562,7 @@ describe("the /contracts/:number record page", () => {
       contractRow({ contractTypeId: "t-none", contractTypeName: "Unconfigured" }),
     );
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/fields");
 
     expect(await screen.findByText(/This contract type attaches no fields/)).toBeInTheDocument();
   });
@@ -1486,6 +1577,77 @@ describe("the /contracts/:number record page", () => {
     stubApi({ signedIn: null, needsSetup: false });
     renderAt("/contracts/42");
     expect(await screen.findByRole("heading", { name: "Sign in" })).toBeInTheDocument();
+  });
+});
+
+describe("the contract record's section tabs (DES-032)", () => {
+  it("draws the three sections and lands the bare address on the Overview", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+
+    const strip = within(await screen.findByRole("navigation", { name: "Contract sections" }));
+    expect(strip.getAllByRole("link").map((tab) => tab.textContent)).toEqual([
+      "Overview",
+      "Fields",
+      "Documents",
+    ]);
+    // The Overview is the bare address, so it must not read as active
+    // on its siblings — that is what `end` on the link is for.
+    expect(strip.getByRole("link", { name: "Overview" })).toHaveAttribute("aria-current", "page");
+    expect(strip.getByRole("link", { name: "Fields" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("shows one section at a time, and moves the address with the tab", async () => {
+    const api = recordApi(contractRow(), [person("u1", "creator")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    const { router } = renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    // Overview: the record's own columns, and neither of the other two.
+    expect(await screen.findByLabelText("Title")).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Fields" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Documents" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("link", { name: "Fields" }));
+    expect(await screen.findByRole("region", { name: "Fields" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/contracts/42/fields");
+    expect(screen.queryByLabelText("Title")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("link", { name: "Documents" }));
+    expect(await screen.findByRole("region", { name: "Documents" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/contracts/42/documents");
+    expect(screen.queryByRole("region", { name: "Fields" })).not.toBeInTheDocument();
+  });
+
+  it("keeps the sub-bar and the Team card beside every section", async () => {
+    const api = recordApi(contractRow(), [person("u1", "creator")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+
+    // The breadcrumb, the reference, and the archive action are chrome:
+    // they belong to the record, not to one of its sections.
+    expect(
+      await screen.findByRole("heading", { level: 1, name: /Acme master services agreement/ }),
+    ).toBeInTheDocument();
+    // Scoped to the sub-bar: the top nav carries a "Contracts" link of
+    // its own, and this is about the breadcrumb.
+    const subbar = within(screen.getByRole("region", { name: /Acme master services agreement/ }));
+    expect(subbar.getByRole("link", { name: "Contracts" })).toBeInTheDocument();
+    expect(subbar.getByText("C-42")).toBeInTheDocument();
+    expect(subbar.getByRole("button", { name: "Archive" })).toBeInTheDocument();
+    // The roster stands beside all three sections, so the DES-028
+    // banner's "Manage team" fragment resolves from any of them.
+    expect(screen.getByRole("region", { name: "Team" })).toBeInTheDocument();
+  });
+
+  it("lands a section the record does not have on the Overview", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    const { router } = renderAt("/contracts/42/clauses");
+
+    expect(await screen.findByLabelText("Title")).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/contracts/42");
   });
 });
 
@@ -1535,7 +1697,6 @@ describe("a Contributor on the contract record (M9/1)", () => {
       "Status",
       "Priority",
       "Risk",
-      "Payment terms",
       "Amount",
       "Currency",
       "Cadence",
@@ -1544,6 +1705,10 @@ describe("a Contributor on the contract record (M9/1)", () => {
       expect(screen.getByLabelText(label)).toBeDisabled();
     }
     expect(screen.getByRole("combobox", { name: "Counterparties" })).toBeDisabled();
+    // The type's own fields are a tab away (DES-032) and read the same
+    // way there.
+    await userEvent.setup().click(screen.getByRole("link", { name: "Fields" }));
+    expect(await screen.findByLabelText("Payment terms")).toBeDisabled();
 
     // Archive and restore are record-level actions a Contributor never
     // gets, so they are absent rather than permanently disabled.
@@ -3126,6 +3291,63 @@ describe("the contract record's history applet (M9/6)", () => {
     ]);
   });
 
+  it("narrates folder work by name, and says where the record root is (M13/2)", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([
+      [
+        entry("a5", "folder.deleted", { folderId: "f-2", name: "Correspondence" }),
+        entry("a4", "folder.moved", { folderId: "f-2", name: "Correspondence", parentName: null }),
+        entry("a3", "folder.moved", {
+          folderId: "f-2",
+          name: "Correspondence",
+          parentName: "Amendments",
+        }),
+        entry("a2", "folder.renamed", {
+          folderId: "f-2",
+          name: "Correspondence",
+          previousName: "Corespondence",
+        }),
+        entry("a1", "folder.created", { folderId: "f-1", name: "Amendments", parentName: null }),
+      ],
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const feed = await screen.findByRole("list", { name: "History" });
+    expect(
+      within(feed)
+        .getAllByRole("listitem")
+        .map((row) => row.textContent),
+    ).toEqual([
+      // "Deleted" says what it means here: nothing was destroyed.
+      expect.stringContaining("Nadia Counsel deleted the Correspondence folder and kept what"),
+      expect.stringContaining("Nadia Counsel moved the Correspondence folder onto the contract"),
+      expect.stringContaining("Nadia Counsel moved the Correspondence folder into Amendments"),
+      // The old name is in the payload, so the entry outlives the
+      // rename it records.
+      expect.stringContaining("Nadia Counsel renamed the Corespondence folder to Correspondence"),
+      expect.stringContaining("Nadia Counsel made the Amendments folder"),
+    ]);
+  });
+
+  it("narrates a folder actually named none as a destination, not as the record root", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([
+      [entry("a1", "folder.created", { folderId: "f-1", name: "2026", parentName: "none" })],
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    // Where a folder went is its own fact, not a sentinel hidden in the
+    // parent's name — a folder really can be called "none".
+    const feed = await screen.findByRole("list", { name: "History" });
+    expect(within(feed).getAllByRole("listitem")[0]).toHaveTextContent(
+      "Nadia Counsel made the 2026 folder in none",
+    );
+  });
+
   it("shows the old and the new value of a field edit, formatted as the record formats them", async () => {
     const user = userEvent.setup();
     const activity = activityApi([
@@ -3709,6 +3931,8 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     /** Open to whoever reaches the contract, which is where every
      * document starts (DD-014). */
     isConfidential: false,
+    /** Filed nowhere, which is the record root (DOC-006, M13/3). */
+    folderId: null,
     createdBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
     createdAt: "2026-08-11T09:00:00.000Z",
     updatedAt: "2026-08-11T09:00:00.000Z",
@@ -3997,7 +4221,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
 
   it("draws the section with a count of the paper on the record", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT, THEIRS]).handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
 
     const section = await documentsSection();
     expect(within(section).getByRole("heading", { level: 2, name: "Documents" })).toBeVisible();
@@ -4009,7 +4233,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
 
   it("names each document, marks the version that matters now, and opens the name", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT]).handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
 
     const section = await documentsSection();
     // A Word draft reads in the app (DOC-004, M12/4), so its name is a
@@ -4029,7 +4253,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
 
   it("says so plainly when the record has no paper on it", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([]).handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
 
     const section = await documentsSection();
     expect(within(section).getByText("No documents on this contract yet.")).toBeVisible();
@@ -4038,7 +4262,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
 
   it("shows the current version first and opens the rounds it supersedes", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([CHAIN]).handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4079,7 +4303,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
 
   it("draws no disclosure for a document with one version", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT]).handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
 
     const section = await documentsSection();
     expect(
@@ -4090,7 +4314,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("uploads through the composer, sending the kind and the note with the file", async () => {
     const api = documentsApi([DRAFT]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4123,7 +4347,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("refuses to send a composer with no file on it", async () => {
     const api = documentsApi([]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4135,14 +4359,14 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     // The refusal is about the File field, and the control a keyboard
     // reaches on that field is this button — so the refusal is reachable
     // from it rather than only findable by sight.
-    const choose = within(dialog).getByRole("button", { name: "File Choose file" });
+    const choose = within(dialog).getByRole("button", { name: "File Choose files" });
     expect(choose).toHaveAccessibleDescription("Choose a file to upload.");
   });
 
   it("appends the next version to a document from its own row", async () => {
     const api = documentsApi([DRAFT]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4171,7 +4395,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("renames a document and edits its description, leaving the file's own name alone", async () => {
     const api = documentsApi([DRAFT]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4198,7 +4422,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("refuses to send a rename with no name in it", async () => {
     const api = documentsApi([DRAFT]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4214,7 +4438,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("reports the seam's own refusal when the file is turned away", async () => {
     const api = documentsApi([], { uploadFails: "That file is over the 100 MB upload limit." });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4233,7 +4457,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
 
   it("marks the document the record calls its instrument", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT, THEIRS]).handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4253,7 +4477,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("moves the designation to another document on the record", async () => {
     const api = documentsApi([DRAFT, THEIRS]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4271,7 +4495,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("pins a superseded round as the executed copy, and clears it again", async () => {
     const api = documentsApi([CHAIN]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4319,7 +4543,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       versions: [version({ id: "ver-signed", kind: "executed" })],
     };
     stubApi({ signedIn: MEMBER, extra: documentsApi([signed]).handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
 
     const section = await documentsSection();
     // The kind is what the uploader called this round; the pin is what
@@ -4338,7 +4562,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       designationFails: "That document is already the contract's primary document.",
     });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4361,7 +4585,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
           ? problem(403, "You do not have permission to perform this action.")
           : api.handler(call),
     });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4389,7 +4613,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
           ? json(200, { documents: [DRAFT], nextCursor: null })
           : record.handler(call),
     });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
 
     const section = await documentsSection();
     expect(within(section).queryByRole("button", { name: "Upload" })).not.toBeInTheDocument();
@@ -4406,7 +4630,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("archives a document off the list and out of the count", async () => {
     const api = documentsApi([DRAFT, THEIRS]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4431,7 +4655,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("shows the archived rows on demand and restores one back onto the list", async () => {
     const api = documentsApi([DRAFT, { ...THEIRS, archivedAt: "2026-08-13T09:00:00.000Z" }]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4463,7 +4687,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("offers an archived document its way back and nothing that would be refused", async () => {
     const api = documentsApi([{ ...DRAFT, archivedAt: "2026-08-13T09:00:00.000Z" }]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4481,7 +4705,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
 
   it("keeps the erasure off a Legal Team Member's menu", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT]).handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     // They archive all day and destroy nothing (DOC-010). The seam
@@ -4492,6 +4716,10 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(await menuVerbs(user, member, "Orion_MSA_2026_draft.docx")).toEqual([
       "Add version",
       "Edit details",
+      // Filing is Member+, like every other write on the record's paper
+      // (M13/3), and it is offered on a document at the record root
+      // because moving one back out is the same act.
+      "Move to folder",
       // They uploaded this one, so the flag is theirs to decide
       // (CTR-022). The next test is the row where it is not.
       "Mark confidential",
@@ -4501,7 +4729,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
 
   it("marks a confidential document, and draws nothing where one was left out", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT, WALLED]).handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
 
     // DES-009 Tier 1, on the row it is about: this file is narrowed to
     // the contract's named team even though the record is open.
@@ -4517,7 +4745,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     // is not in it. The section has no hidden state to draw, so the
     // omission is silent by construction (DD-014).
     stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT]).handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
 
     const section = await documentsSection();
     expect(within(section).queryByRole("img", { name: "Confidential" })).not.toBeInTheDocument();
@@ -4529,7 +4757,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("lets the person who uploaded a document mark it confidential, and clear it again", async () => {
     const api = documentsApi([DRAFT]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4558,7 +4786,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("offers the flag to the record's Owner, who uploaded nothing", async () => {
     const api = documentsApi([SOMEONE_ELSES], { ownerId: "u2" });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     // CTR-022's clause: the person accountable for the record decides
@@ -4574,7 +4802,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
         "the contract's Owner can change this.",
     });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4594,7 +4822,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
 
   it("keeps the flag off the menu for a viewer who is none of the three", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([SOMEONE_ELSES]).handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     // On the record, working on it, and that is not a claim on who else
@@ -4607,7 +4835,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("takes a typed name before it destroys a document, and sends it to the seam", async () => {
     const api = documentsApi([DRAFT, THEIRS]);
     stubApi({ signedIn: ADMIN, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4659,7 +4887,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       removalFails: "Type the document's name exactly to delete it.",
     });
     stubApi({ signedIn: ADMIN, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4687,7 +4915,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("reports the seam's own refusal when a removal is turned down", async () => {
     const api = documentsApi([DRAFT], { removalFails: "This document is already archived." });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4770,7 +4998,7 @@ describe("the paged Documents section (CTR-024, DES-031)", () => {
   it("appends the next page in place, and the count follows what is on screen", async () => {
     const api = pagedPaper();
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await screen.findByRole("region", { name: /^Documents/ });
@@ -4789,7 +5017,7 @@ describe("the paged Documents section (CTR-024, DES-031)", () => {
 
   it("puts focus on the first row it appended, and says how many followed", async () => {
     stubApi({ signedIn: MEMBER, extra: pagedPaper().handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await screen.findByRole("region", { name: /^Documents/ });
@@ -4819,7 +5047,7 @@ describe("the paged Documents section (CTR-024, DES-031)", () => {
         return record.handler(call);
       },
     });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await screen.findByRole("region", { name: /^Documents/ });
@@ -4953,7 +5181,7 @@ describe("the doc panel (M12/2)", () => {
 
   it("opens a PDF version in the panel from its name, with no download", async () => {
     stubApi({ signedIn: MEMBER, extra: panelApi([document()]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -4987,7 +5215,7 @@ describe("the doc panel (M12/2)", () => {
 
   it("keeps the panel's header on the record's own words after a rename", async () => {
     stubApi({ signedIn: MEMBER, extra: editablePanelApi() });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5028,7 +5256,7 @@ describe("the doc panel (M12/2)", () => {
       ],
     });
     stubApi({ signedIn: MEMBER, extra: panelApi([image]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     await user.click(within(await section()).getByRole("button", { name: "Signature page" }));
@@ -5055,7 +5283,7 @@ describe("the doc panel (M12/2)", () => {
       ],
     });
     stubApi({ signedIn: MEMBER, extra: panelApi([sheet]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
 
     const list = await section();
     // Nothing in the section opens it, because nothing in the app can
@@ -5082,7 +5310,7 @@ describe("the doc panel (M12/2)", () => {
       ],
     });
     stubApi({ signedIn: MEMBER, extra: panelApi([chain]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5103,7 +5331,7 @@ describe("the doc panel (M12/2)", () => {
 
   it("closes on Esc and puts focus back on the row that opened it", async () => {
     stubApi({ signedIn: MEMBER, extra: panelApi([document()]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5126,7 +5354,7 @@ describe("the doc panel (M12/2)", () => {
 
   it("closes from its own close control", async () => {
     stubApi({ signedIn: MEMBER, extra: panelApi([document()]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5150,7 +5378,7 @@ describe("the doc panel (M12/2)", () => {
     // with it — rather than staying on screen drawing paper the record
     // no longer has.
     stubApi({ signedIn: MEMBER, extra: editablePanelApi() });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5182,7 +5410,7 @@ describe("the doc panel (M12/2)", () => {
 
   it("lets a Contributor on the team read what they can already download", async () => {
     stubApi({ signedIn: CONTRIBUTOR, extra: panelApi([document()]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5225,7 +5453,7 @@ describe("the doc panel (M12/2)", () => {
 
   it("shows a preparing state while a Word draft converts, and draws it when it lands", async () => {
     stubApi({ signedIn: MEMBER, extra: panelApi([wordDraft()], ["pending", "ready"]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5249,7 +5477,7 @@ describe("the doc panel (M12/2)", () => {
 
   it("offers the download when a conversion failed, and says so plainly", async () => {
     stubApi({ signedIn: MEMBER, extra: panelApi([wordDraft()], ["failed"]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5275,7 +5503,7 @@ describe("the doc panel (M12/2)", () => {
     // preparing state that will never resolve: the asking is bounded and
     // ends where every path with no preview ends.
     stubApi({ signedIn: MEMBER, extra: panelApi([wordDraft()]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5351,7 +5579,7 @@ describe("the doc panel (M12/2)", () => {
 
   it("opens an uploaded email as a message, with its headers and its body", async () => {
     stubApi({ signedIn: MEMBER, extra: emailApi([thread()], message()) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5388,7 +5616,7 @@ describe("the doc panel (M12/2)", () => {
         message({ bcc: [{ name: "Iris Auditor", address: "i.auditor@brightline.com" }] }),
       ),
     });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5406,7 +5634,7 @@ describe("the doc panel (M12/2)", () => {
       signedIn: MEMBER,
       extra: emailApi([thread()], message({ html: "<p>Attaching the log.</p>", text: null })),
     });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5448,7 +5676,7 @@ describe("the doc panel (M12/2)", () => {
         }),
       ),
     });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5491,7 +5719,7 @@ describe("the doc panel (M12/2)", () => {
         }),
       ),
     });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5510,7 +5738,7 @@ describe("the doc panel (M12/2)", () => {
 
   it("ends at the download when the message cannot be read", async () => {
     stubApi({ signedIn: MEMBER, extra: emailApi([thread()]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5545,12 +5773,2119 @@ describe("the doc panel (M12/2)", () => {
       ],
     });
     stubApi({ signedIn: MEMBER, extra: panelApi([deck], ["pending"]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
     await user.click(within(list).getByRole("button", { name: "Board pack" }));
     const reading = await panel(/Board pack, version 1/);
     expect(await within(reading).findByText("Preparing this document for reading…")).toBeVisible();
+  });
+});
+
+describe("the folder tree on the contract record (M13/2, DES-033)", () => {
+  /** One folder as the API answers it. */
+  const folder = (
+    id: string,
+    name: string,
+    parentId: string | null = null,
+    documentCount = 0,
+  ): Record<string, unknown> => ({
+    id,
+    name,
+    parentId,
+    // How much this viewer can see filed here (M13/3, DD-014). Zero by
+    // default, which is what the tree draws as "Empty".
+    documentCount,
+    createdAt: "2026-08-15T09:00:00.000Z",
+    updatedAt: "2026-08-15T09:00:00.000Z",
+  });
+
+  /**
+   * The record stub plus the folder read and the four folder writes.
+   *
+   * The tree is stateful and every write answers the whole set, exactly
+   * as the seam does — a delete re-files the children it had, so more
+   * rows move than the one that was addressed.
+   */
+  function foldersApi(
+    initial: Record<string, unknown>[],
+    options: { writeFails?: string } = {},
+    team = [person("u1", "creator")],
+  ) {
+    const record = recordApi(contractRow(), team);
+    /** Every folder write the section made, in order. */
+    const writes: { url: string; method: string; body: unknown }[] = [];
+    let tree = initial;
+    /** Siblings by name without case, the way the seam answers them
+     * (DES-033). */
+    const sorted = () =>
+      [...tree].sort((a, b) =>
+        String(a.name).toLowerCase().localeCompare(String(b.name).toLowerCase()),
+      );
+    const handler = (call: StubCall): Response | undefined => {
+      const { pathname } = call.url;
+      if (pathname === "/api/v1/contracts/42/folders" && call.method === "GET") {
+        return json(200, { folders: sorted() });
+      }
+      if (pathname === "/api/v1/contracts/42/folders" && call.method === "POST") {
+        writes.push({ url: pathname, method: call.method, body: call.body });
+        if (options.writeFails) return problem(409, options.writeFails);
+        const body = call.body as { name: string; parentId?: string };
+        tree = [...tree, folder(`f-${tree.length + 1}`, body.name, body.parentId ?? null)];
+        return json(201, { folders: sorted() });
+      }
+      const addressed = /^\/api\/v1\/folders\/([^/]+)$/.exec(pathname);
+      if (addressed && call.method === "PATCH") {
+        writes.push({ url: pathname, method: call.method, body: call.body });
+        if (options.writeFails) return problem(409, options.writeFails);
+        const patch = call.body as { name?: string; parentId?: string | null };
+        tree = tree.map((row) => (row.id === addressed[1] ? { ...row, ...patch } : row));
+        return json(200, { folders: sorted() });
+      }
+      if (addressed && call.method === "DELETE") {
+        writes.push({ url: pathname, method: call.method, body: call.body });
+        if (options.writeFails) return problem(409, options.writeFails);
+        const removed = tree.find((row) => row.id === addressed[1]);
+        // Dissolved, not destroyed: the children move up into what held
+        // it (DOC-006).
+        tree = tree
+          .filter((row) => row.id !== addressed[1])
+          .map((row) =>
+            row.parentId === addressed[1] ? { ...row, parentId: removed!.parentId } : row,
+          );
+        return json(200, { folders: sorted() });
+      }
+      return record.handler(call);
+    };
+    return { handler, writes };
+  }
+
+  const documentsSection = () => screen.findByRole("region", { name: /^Documents/ });
+
+  /** One act from a folder row's overflow menu, reached the way a person
+   * reaches it. */
+  async function act(
+    user: ReturnType<typeof userEvent.setup>,
+    section: HTMLElement,
+    name: string,
+    verb: string,
+  ) {
+    await user.click(
+      within(section).getByRole("button", { name: `Actions for the ${name} folder` }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: verb }));
+    return screen.findByRole("dialog");
+  }
+
+  /** The folder names on screen, in the order the table draws them. */
+  const drawn = (section: HTMLElement) =>
+    within(section)
+      .getAllByRole("button", { name: /^Actions for the .* folder$/ })
+      .map((trigger) => /^Actions for the (.*) folder$/.exec(trigger.ariaLabel ?? "")?.[1]);
+
+  it("draws the record's folders as rows of the documents table", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: foldersApi([folder("f-1", "Executed"), folder("f-2", "Amendments")]).handler,
+    });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    expect(await within(section).findByText("Amendments")).toBeVisible();
+    expect(within(section).getByText("Executed")).toBeVisible();
+    // A folder with nothing filed in it reads "Empty" rather than
+    // "0 documents" — a plural form, not a special case (DES-033).
+    expect(within(section).getAllByText("Empty")).toHaveLength(2);
+  });
+
+  it("orders siblings by name without case, the way a file manager lists a directory", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: foldersApi([
+        folder("f-1", "Executed"),
+        folder("f-2", "correspondence"),
+        folder("f-3", "Amendments"),
+      ]).handler,
+    });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    await within(section).findByText("Amendments");
+    // "correspondence" belongs between the two capitalized names; a
+    // case-sensitive order would put it last.
+    expect(drawn(section)).toEqual(["Amendments", "correspondence", "Executed"]);
+  });
+
+  it("draws a folder's children only while it is open, indented under it", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: foldersApi([folder("f-1", "Correspondence"), folder("f-2", "2026", "f-1")]).handler,
+    });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await within(section).findByText("Correspondence");
+    expect(within(section).queryByText("2026")).toBeNull();
+
+    await user.click(within(section).getByRole("button", { name: "Expand Correspondence" }));
+
+    expect(await within(section).findByText("2026")).toBeVisible();
+    // Collapsing puts it away again — the tree is one press deep, not a
+    // page of its own.
+    await user.click(within(section).getByRole("button", { name: "Collapse Correspondence" }));
+    expect(within(section).queryByText("2026")).toBeNull();
+  });
+
+  it("offers the chevron on a folder that reads Empty", async () => {
+    stubApi({ signedIn: MEMBER, extra: foldersApi([folder("f-1", "Executed")]).handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    await within(section).findByText("Executed");
+    // Every folder opens (M13/3). "Empty" may be a folder whose
+    // contents this viewer cannot see, so a chevron drawn only on the
+    // folders that hold something would be the surface telling the two
+    // apart — which is what DD-014 bars.
+    expect(within(section).getByRole("button", { name: "Expand Executed" })).toBeVisible();
+    expect(within(section).getByText("Empty")).toBeVisible();
+  });
+
+  it("makes a folder at the record root from the toolbar", async () => {
+    const api = foldersApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(within(section).getByRole("button", { name: "New folder" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.type(within(dialog).getByLabelText("Name"), "Executed");
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]).toMatchObject({
+      url: "/api/v1/contracts/42/folders",
+      method: "POST",
+      body: { name: "Executed" },
+    });
+    expect(await within(section).findByText("Executed")).toBeVisible();
+  });
+
+  it("makes a folder inside another one from its row menu", async () => {
+    const api = foldersApi([folder("f-1", "Correspondence")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await within(section).findByText("Correspondence");
+    const dialog = await act(user, section, "Correspondence", "New folder inside");
+    await user.type(within(dialog).getByLabelText("Name"), "2026");
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    // Where it lands is settled before the dialog opens, by the row the
+    // menu was on — the dialog collects a name and nothing else.
+    expect(api.writes[0]!.body).toEqual({ name: "2026", parentId: "f-1" });
+    // And the parent opens, so the new folder is on screen. A write
+    // that landed and left the table looking exactly as it did would
+    // read as a write that did not.
+    expect(await within(section).findByText("2026")).toBeVisible();
+  });
+
+  it("renames a folder in place", async () => {
+    const api = foldersApi([folder("f-1", "Corespondence")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await within(section).findByText("Corespondence");
+    const dialog = await act(user, section, "Corespondence", "Rename");
+    const field = within(dialog).getByLabelText("Name");
+    await user.clear(field);
+    await user.type(field, "Correspondence");
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]).toMatchObject({
+      url: "/api/v1/folders/f-1",
+      method: "PATCH",
+      body: { name: "Correspondence" },
+    });
+    expect(await within(section).findByText("Correspondence")).toBeVisible();
+  });
+
+  it("moves a folder under a different parent, and back out to the record", async () => {
+    const api = foldersApi([folder("f-1", "Amendments"), folder("f-2", "2026")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await within(section).findByText("2026");
+    const dialog = await act(user, section, "2026", "Move");
+    await user.selectOptions(within(dialog).getByLabelText("Move into"), "f-1");
+    await user.click(within(dialog).getByRole("button", { name: "Move" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]!.body).toEqual({ parentId: "f-1" });
+
+    // Back out again. The record itself is the empty option, because it
+    // is the absence of a parent rather than a folder with an id.
+    await user.click(within(section).getByRole("button", { name: "Expand Amendments" }));
+    const back = await act(user, section, "2026", "Move");
+    await user.selectOptions(within(back).getByLabelText("Move into"), "");
+    await user.click(within(back).getByRole("button", { name: "Move" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(2));
+    expect(api.writes[1]!.body).toEqual({ parentId: null });
+  });
+
+  it("offers no destination that would close a cycle", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: foldersApi([
+        folder("f-1", "Correspondence"),
+        folder("f-2", "2026", "f-1"),
+        folder("f-3", "Amendments"),
+      ]).handler,
+    });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await within(section).findByText("Correspondence");
+    const dialog = await act(user, section, "Correspondence", "Move");
+
+    // Neither the folder itself nor anything under it: the seam refuses
+    // both, and a control that cannot succeed is worse than none.
+    expect(
+      within(dialog)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["The contract itself", "Amendments"]);
+  });
+
+  it("dissolves a folder after saying where the contents go", async () => {
+    const api = foldersApi([folder("f-1", "Correspondence"), folder("f-2", "2026", "f-1")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await within(section).findByText("Correspondence");
+    await user.click(within(section).getByRole("button", { name: "Expand Correspondence" }));
+    const dialog = await act(user, section, "2026", "Delete");
+
+    // No typed name, unlike DOC-010's erasure: nothing is destroyed, so
+    // the dialog states where the contents land and offers the verb.
+    expect(
+      within(dialog).getByText("Anything in it moves into Correspondence. Nothing is deleted."),
+    ).toBeVisible();
+    await user.click(within(dialog).getByRole("button", { name: "Delete" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]).toMatchObject({ url: "/api/v1/folders/f-2", method: "DELETE" });
+    expect(within(section).queryByText("2026")).toBeNull();
+  });
+
+  it("re-files a dissolved folder's children into its parent", async () => {
+    const api = foldersApi([
+      folder("f-1", "Correspondence"),
+      folder("f-2", "2026", "f-1"),
+      folder("f-3", "Q1", "f-2"),
+    ]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Correspondence" }));
+    await user.click(await within(section).findByRole("button", { name: "Expand 2026" }));
+    const dialog = await act(user, section, "2026", "Delete");
+    await user.click(within(dialog).getByRole("button", { name: "Delete" }));
+
+    // Q1 moved up into what held its own parent. Nothing was destroyed,
+    // and it is drawn straight away because Correspondence is still
+    // open — dissolving a folder inside it did not close it.
+    await waitFor(() => expect(within(section).queryByText("2026")).toBeNull());
+    expect(within(section).getByText("Q1")).toBeVisible();
+  });
+
+  it("says what the seam said when a folder write is refused, and changes nothing", async () => {
+    const api = foldersApi([folder("f-1", "Executed")], {
+      writeFails: "A folder named Executed is already here.",
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await within(section).findByText("Executed");
+    await user.click(within(section).getByRole("button", { name: "New folder" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.type(within(dialog).getByLabelText("Name"), "executed");
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    // The dialog stays open with the server's own words in it, so the
+    // person can fix the name rather than start again.
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+      "A folder named Executed is already here.",
+    );
+    // Nothing landed. The tree is read after the dialog closes, because
+    // a modal takes the rest of the page out of the accessibility tree.
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(drawn(section)).toEqual(["Executed"]);
+  });
+
+  it("refuses to send a blank name", async () => {
+    const api = foldersApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(within(section).getByRole("button", { name: "New folder" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent("Give the folder a name.");
+    expect(api.writes).toEqual([]);
+  });
+
+  it("shows a Contributor the tree and offers them no control on it", async () => {
+    stubApi({
+      signedIn: CONTRIBUTOR,
+      extra: foldersApi([folder("f-1", "Correspondence"), folder("f-2", "2026", "f-1")], {}, [
+        person("u1", "creator"),
+        person("u3", "contributor"),
+      ]).handler,
+    });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    expect(await within(section).findByText("Correspondence")).toBeVisible();
+    // Read-only means the controls are absent, not disabled — DES-025's
+    // convention applied to a whole section.
+    expect(within(section).queryByRole("button", { name: "New folder" })).toBeNull();
+    expect(within(section).queryByRole("button", { name: /^Actions for the/ })).toBeNull();
+    // The tree still opens: reading the structure is the whole point of
+    // drawing it for them.
+    await user.click(within(section).getByRole("button", { name: "Expand Correspondence" }));
+    expect(await within(section).findByText("2026")).toBeVisible();
+  });
+});
+
+/**
+ * Filing a document into a folder (M13/3, DES-033).
+ *
+ * The section stops being one list and becomes several: the record root
+ * draws what is filed nowhere, and each folder's documents are read when
+ * it is opened, with the paging foot applying inside that folder. Move
+ * files a document and moves it back out, from a control rather than
+ * only from a drop.
+ *
+ * The count on a folder row is the seam's own number, drawn as it
+ * arrives. Nothing here works one out, because a count the section
+ * derived would be a second answer to a question DD-014 allows only one
+ * of.
+ */
+describe("filing documents into folders (M13/3, DES-033)", () => {
+  const version = (over: Record<string, unknown> = {}) => ({
+    id: "ver-1",
+    versionNumber: 1,
+    kind: "draft_ours",
+    note: null,
+    originalFilename: "signed.pdf",
+    mimeType: "text/plain",
+    /** `other` keeps the row a plain download link, which is what these
+     * assertions read. */
+    renderFamily: "other",
+    byteSize: 10,
+    checksumSha256: "a".repeat(64),
+    uploadedBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+    createdAt: "2026-08-11T09:00:00.000Z",
+    isCurrent: true,
+    isExecuted: false,
+    ...over,
+  });
+
+  const document = (id: string, title: string, folderId: string | null = null) => ({
+    id,
+    title,
+    description: null,
+    isPrimary: false,
+    versions: [version({ id: `ver-${id}`, originalFilename: title })],
+    archivedAt: null,
+    isConfidential: false,
+    folderId,
+    createdBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+    createdAt: "2026-08-11T09:00:00.000Z",
+    updatedAt: "2026-08-11T09:00:00.000Z",
+  });
+
+  const folder = (id: string, name: string, parentId: string | null = null) => ({
+    id,
+    name,
+    parentId,
+    createdAt: "2026-08-15T09:00:00.000Z",
+    updatedAt: "2026-08-15T09:00:00.000Z",
+  });
+
+  /**
+   * A filed document the app can read in place.
+   *
+   * The rest of this suite files plain downloads, because that is what
+   * its assertions are about. A PDF is what opens in the doc panel
+   * (M12/2), and the panel is the record's — so this is the fixture the
+   * "a filed document opens too" tests are stated over.
+   */
+  const readableFiled = (id: string, title: string, folderId: string) => ({
+    ...document(id, title, folderId),
+    versions: [
+      version({
+        id: `ver-${id}`,
+        originalFilename: title,
+        mimeType: "application/pdf",
+        renderFamily: "pdf",
+      }),
+    ],
+  });
+
+  /**
+   * The record, its folders, and its paper — with the filing the seam
+   * really does.
+   *
+   * The list route answers one listing at a time: `folder=root` is what
+   * is filed nowhere, a folder's id is what is filed in it, and each
+   * page is counted inside that listing alone. The folder read answers
+   * the count the same way the seam does, off the same rows, so a test
+   * cannot pass with a count the section invented.
+   */
+  function filingApi(
+    documents: Record<string, unknown>[],
+    folders: Record<string, unknown>[],
+    options: { pageSize?: number; moveFails?: string } = {},
+    team = [person("u1", "creator")],
+  ) {
+    const record = recordApi(contractRow(), team);
+    const reads: string[] = [];
+    const writes: { url: string; body: unknown }[] = [];
+    let paper = documents;
+    /** One listing, in the order the seam answers it. */
+    const listing = (folderId: string | null) =>
+      paper.filter((row) => (row.folderId ?? null) === folderId);
+    const handler = (call: StubCall): Response | undefined => {
+      const { pathname } = call.url;
+      if (pathname === "/api/v1/contracts/42/folders" && call.method === "GET") {
+        return json(200, {
+          folders: folders.map((row) => ({
+            ...row,
+            // Counted off the same rows the listing is answered from,
+            // which is the seam's one predicate said once.
+            documentCount: listing(row.id as string).length,
+          })),
+        });
+      }
+      if (pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
+        const asked = call.url.searchParams.get("folder");
+        reads.push(asked ?? "all");
+        const rows = asked === null ? paper : listing(asked === "root" ? null : asked);
+        const size = options.pageSize ?? rows.length;
+        const cursor = call.url.searchParams.get("cursor");
+        const from = cursor === null ? 0 : rows.findIndex((row) => row.id === cursor) + 1;
+        const page = rows.slice(from, from + size);
+        return json(200, {
+          documents: page,
+          nextCursor: from + size < rows.length ? (page.at(-1)?.id ?? null) : null,
+        });
+      }
+      const addressed = /^\/api\/v1\/documents\/([^/]+)$/.exec(pathname);
+      if (addressed && call.method === "PATCH") {
+        writes.push({ url: pathname, body: call.body });
+        if (options.moveFails) return problem(409, options.moveFails);
+        const patch = call.body as { folderId?: string | null };
+        const moved = { ...paper.find((row) => row.id === addressed[1])!, ...patch };
+        paper = paper.map((row) => (row.id === addressed[1] ? moved : row));
+        return json(200, { document: moved });
+      }
+      // Archiving takes a document off the live listing (DOC-010),
+      // which is how a filed one stops being on screen.
+      const removed = /^\/api\/v1\/documents\/([^/]+)\/archive$/.exec(pathname);
+      if (removed && call.method === "POST") {
+        const gone = {
+          ...paper.find((row) => row.id === removed[1])!,
+          archivedAt: "2026-08-15T10:00:00.000Z",
+        };
+        paper = paper.filter((row) => row.id !== removed[1]);
+        return json(200, { document: gone });
+      }
+      return record.handler(call);
+    };
+    return { handler, reads, writes };
+  }
+
+  const documentsSection = () => screen.findByRole("region", { name: /^Documents/ });
+
+  it("draws the record root as the documents filed nowhere", async () => {
+    const api = filingApi(
+      [document("doc-1", "loose.pdf"), document("doc-2", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    expect(await within(section).findByText("loose.pdf")).toBeVisible();
+    // The filed one belongs to its folder and is drawn there, not twice.
+    expect(within(section).queryByText("signed.pdf")).toBeNull();
+    // The folder row states its own count, which is the seam's number.
+    expect(within(section).getByText("1 document")).toBeVisible();
+    // And the section's badge is the total over both listings: one
+    // document filed nowhere, plus the one the folder says it holds.
+    expect(within(section).getByRole("img", { name: "2 documents" })).toBeVisible();
+    expect(api.reads).toContain("root");
+  });
+
+  it("loads a folder's documents when it is opened, through the folder filter", async () => {
+    const api = filingApi(
+      [document("doc-1", "loose.pdf"), document("doc-2", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await within(section).findByText("Executed");
+    // Nothing is read for a folder nobody opened: a heavy record stays a
+    // short table until somebody asks.
+    expect(api.reads).not.toContain("f-1");
+
+    await user.click(within(section).getByRole("button", { name: "Expand Executed" }));
+
+    expect(await within(section).findByText("signed.pdf")).toBeVisible();
+    expect(api.reads).toContain("f-1");
+  });
+
+  it("opens a filed document in the doc panel, exactly as an unfiled one (M12/2)", async () => {
+    // The panel is the record's and it resolves what it is reading out
+    // of the paper the record holds — which is the record root alone, so
+    // a filed document has to be told about or its name opens nothing.
+    const api = filingApi(
+      [readableFiled("doc-2", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    await user.click(await within(section).findByRole("button", { name: "signed.pdf" }));
+
+    expect(
+      await screen.findByRole("complementary", { name: "signed.pdf, version 1" }),
+    ).toBeVisible();
+  });
+
+  it("keeps a filed document's panel open across a section tab round trip", async () => {
+    // The section is mounted and unmounted by the tab strip (DES-032),
+    // so it comes back holding no folder listing at all. A root
+    // document's panel survives that trip because the record holds that
+    // list itself, and a filed one has to survive it too.
+    const api = filingApi(
+      [readableFiled("doc-2", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    await user.click(await within(section).findByRole("button", { name: "signed.pdf" }));
+    await screen.findByRole("complementary", { name: "signed.pdf, version 1" });
+
+    await user.click(screen.getByRole("link", { name: "Overview" }));
+    await screen.findByLabelText("Title");
+    await user.click(screen.getByRole("link", { name: "Documents" }));
+    await documentsSection();
+
+    expect(
+      await screen.findByRole("complementary", { name: "signed.pdf, version 1" }),
+    ).toBeVisible();
+  });
+
+  /**
+   * The stub, with one folder's next re-read held open (M13/3).
+   *
+   * A write that re-reads the listings puts the folder into its
+   * skeleton state until the read answers. The stub answers in a
+   * microtask, so that state settles before a test can see it — held
+   * open, the moment is real, which is the moment the tests below are
+   * about: a folder being re-read has not stopped holding its
+   * documents, and the panel over one of them must not close.
+   */
+  function heldFolderRead(api: ReturnType<typeof filingApi>, folderId: string) {
+    let release: (() => void) | undefined;
+    let armed = false;
+    const handler = (call: StubCall): StubAnswer => {
+      if (
+        armed &&
+        call.method === "GET" &&
+        call.url.pathname === "/api/v1/contracts/42/documents" &&
+        call.url.searchParams.get("folder") === folderId
+      ) {
+        armed = false;
+        const answer = api.handler(call)!;
+        return new Promise((resolve) => {
+          release = () => resolve(answer);
+        });
+      }
+      return api.handler(call);
+    };
+    return {
+      handler,
+      /** The next read of this folder is the one held open. */
+      arm: () => {
+        armed = true;
+      },
+      /** Lets the held read answer. */
+      release: () => release?.(),
+    };
+  }
+
+  it("keeps a filed document's panel open while an unrelated move re-reads the listings", async () => {
+    // A move re-reads everything on screen, and a folder being re-read
+    // draws its skeletons until the read answers. That moment is
+    // presentation, not the document leaving the record — a panel that
+    // closed on it would close on every write to any other row of the
+    // paper, which is not what happens to a document at the record root.
+    const api = filingApi(
+      [document("doc-1", "loose.pdf"), readableFiled("doc-2", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+    );
+    const held = heldFolderRead(api, "f-1");
+    stubApi({ signedIn: MEMBER, extra: held.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    await user.click(await within(section).findByRole("button", { name: "signed.pdf" }));
+    await screen.findByRole("complementary", { name: "signed.pdf, version 1" });
+
+    // File the other document into the same folder. The write itself
+    // never touches signed.pdf.
+    await user.click(await within(section).findByRole("button", { name: "Actions for loose.pdf" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Move to folder" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.selectOptions(within(dialog).getByLabelText("File in"), "f-1");
+    held.arm();
+    await user.click(within(dialog).getByRole("button", { name: "Move" }));
+
+    // The folder is in its skeleton moment now. The panel cannot be
+    // asked for by role yet — the move dialog is still up over it until
+    // the re-read answers — so what is held is asserted after release:
+    // a panel this moment had closed stays closed.
+    expect(within(section).getByText("Loading the documents in Executed")).toBeInTheDocument();
+
+    held.release();
+    // The re-read has landed: the moved row is drawn inside the folder
+    // (as the download link its `other` family takes), and the panel
+    // still holds.
+    expect(await within(section).findByRole("link", { name: "loose.pdf" })).toBeVisible();
+    expect(screen.getByRole("complementary", { name: "signed.pdf, version 1" })).toBeVisible();
+  });
+
+  it("keeps a filed document's panel open across the show-archived toggle", async () => {
+    // The toggle re-reads every open folder in the view being switched
+    // to, and a live document is in both views — so its panel has no
+    // reason to close, any more than a root document's does.
+    const api = filingApi(
+      [readableFiled("doc-2", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+    );
+    const held = heldFolderRead(api, "f-1");
+    stubApi({ signedIn: MEMBER, extra: held.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    await user.click(await within(section).findByRole("button", { name: "signed.pdf" }));
+    await screen.findByRole("complementary", { name: "signed.pdf, version 1" });
+
+    held.arm();
+    await user.click(within(section).getByRole("switch", { name: "Show archived" }));
+
+    // The folder is re-reading in the archived view, and the panel holds.
+    expect(within(section).getByText("Loading the documents in Executed")).toBeInTheDocument();
+    expect(screen.getByRole("complementary", { name: "signed.pdf, version 1" })).toBeVisible();
+
+    held.release();
+    // The re-read has landed: the folder draws its document again, and
+    // the panel still holds.
+    expect(await within(section).findByRole("button", { name: "signed.pdf" })).toBeVisible();
+    expect(screen.getByRole("complementary", { name: "signed.pdf, version 1" })).toBeVisible();
+  });
+
+  it("keeps the panel while a folder is first expanded after a tab round trip", async () => {
+    // Coming back from the Overview remounts the section with no
+    // listing at all, and the round trip is survived by saying nothing
+    // until there is something to say. Expanding the folder again must
+    // not break that: its first read is "I have not looked yet", not
+    // "the folder holds nothing", so the panel holds until the read
+    // answers — and then holds still, because the document is in it.
+    const api = filingApi(
+      [readableFiled("doc-2", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+    );
+    const held = heldFolderRead(api, "f-1");
+    stubApi({ signedIn: MEMBER, extra: held.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    await user.click(await within(section).findByRole("button", { name: "signed.pdf" }));
+    await screen.findByRole("complementary", { name: "signed.pdf, version 1" });
+
+    await user.click(screen.getByRole("link", { name: "Overview" }));
+    await screen.findByLabelText("Title");
+    await user.click(screen.getByRole("link", { name: "Documents" }));
+    const remounted = await documentsSection();
+
+    held.arm();
+    await user.click(await within(remounted).findByRole("button", { name: "Expand Executed" }));
+    // The folder is in its first read, and the panel holds.
+    expect(within(remounted).getByText("Loading the documents in Executed")).toBeInTheDocument();
+    expect(screen.getByRole("complementary", { name: "signed.pdf, version 1" })).toBeVisible();
+
+    held.release();
+    expect(await within(remounted).findByRole("button", { name: "signed.pdf" })).toBeVisible();
+    expect(screen.getByRole("complementary", { name: "signed.pdf, version 1" })).toBeVisible();
+  });
+
+  it("takes the panel with a filed document that leaves its folder's listing", async () => {
+    // The other half of the same promise: the panel follows what is on
+    // screen, so a filed document archived out of the live view closes
+    // it — exactly as a document at the record root does.
+    const api = filingApi(
+      [readableFiled("doc-2", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    await user.click(await within(section).findByRole("button", { name: "signed.pdf" }));
+    await screen.findByRole("complementary", { name: "signed.pdf, version 1" });
+
+    await user.click(within(section).getByRole("button", { name: "Actions for signed.pdf" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Archive" }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("complementary", { name: "signed.pdf, version 1" }),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  it("pages inside the folder it was pressed in", async () => {
+    const api = filingApi(
+      [
+        document("doc-1", "first.pdf", "f-1"),
+        document("doc-2", "second.pdf", "f-1"),
+        document("doc-3", "loose.pdf"),
+      ],
+      [folder("f-1", "Executed")],
+      { pageSize: 1 },
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    expect(await within(section).findByText("first.pdf")).toBeVisible();
+    expect(within(section).queryByText("second.pdf")).toBeNull();
+
+    // The foot belongs to the folder and says so, and pressing it
+    // appends inside the folder rather than at the record root.
+    await user.click(within(section).getByRole("button", { name: "Show more in Executed" }));
+
+    expect(await within(section).findByText("second.pdf")).toBeVisible();
+    expect(within(section).getByText("first.pdf")).toBeVisible();
+  });
+
+  it("files a document into a folder from its own menu", async () => {
+    const api = filingApi([document("doc-1", "signed.pdf")], [folder("f-1", "Executed")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(
+      await within(section).findByRole("button", { name: "Actions for signed.pdf" }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: "Move to folder" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.selectOptions(within(dialog).getByLabelText("File in"), "f-1");
+    await user.click(within(dialog).getByRole("button", { name: "Move" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]).toEqual({ url: "/api/v1/documents/doc-1", body: { folderId: "f-1" } });
+    // The row has left the record root, and the folder's count says so.
+    await waitFor(() => expect(within(section).queryByText("signed.pdf")).toBeNull());
+    expect(await within(section).findByText("1 document")).toBeVisible();
+  });
+
+  it("moves a filed document back out to the record root", async () => {
+    const api = filingApi([document("doc-1", "signed.pdf", "f-1")], [folder("f-1", "Executed")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    await user.click(
+      await within(section).findByRole("button", { name: "Actions for signed.pdf" }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: "Move to folder" }));
+    const dialog = await screen.findByRole("dialog");
+    // The empty value is the record root, because it is the absence of a
+    // folder rather than a folder with an id.
+    await user.selectOptions(within(dialog).getByLabelText("File in"), "");
+    await user.click(within(dialog).getByRole("button", { name: "Move" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]).toEqual({ url: "/api/v1/documents/doc-1", body: { folderId: null } });
+    expect(await within(section).findByText("Empty")).toBeVisible();
+  });
+
+  it("keeps a refused move inside the dialog, in the server's own words", async () => {
+    const api = filingApi([document("doc-1", "signed.pdf")], [folder("f-1", "Executed")], {
+      moveFails: "This contract is archived. Restore it before changing its folders.",
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(
+      await within(section).findByRole("button", { name: "Actions for signed.pdf" }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: "Move to folder" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.selectOptions(within(dialog).getByLabelText("File in"), "f-1");
+    await user.click(within(dialog).getByRole("button", { name: "Move" }));
+
+    // The refusal is a thing the person can act on, so it is said where
+    // they are looking and the dialog stays open for them to cancel or
+    // choose again.
+    expect(
+      await within(dialog).findByText(
+        "This contract is archived. Restore it before changing its folders.",
+      ),
+    ).toBeVisible();
+    expect(within(section).getByText("signed.pdf")).toBeVisible();
+  });
+
+  it("reads a closed folder fresh after a move filed something into it", async () => {
+    const api = filingApi([document("doc-1", "signed.pdf")], [folder("f-1", "Executed")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    // Open the folder while it is empty, so the section holds a listing
+    // for it, then close it again.
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    await within(section).findByText("Empty");
+    await user.click(within(section).getByRole("button", { name: "Collapse Executed" }));
+
+    // File the loose document into the closed folder.
+    await user.click(
+      await within(section).findByRole("button", { name: "Actions for signed.pdf" }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: "Move to folder" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.selectOptions(within(dialog).getByLabelText("File in"), "f-1");
+    await user.click(within(dialog).getByRole("button", { name: "Move" }));
+    await waitFor(() => expect(within(section).queryByText("signed.pdf")).toBeNull());
+
+    // Reopening draws what the folder holds now, not the listing it held
+    // before the move: a Move names any folder, open or not, so a cache
+    // kept across the write would sit beside a count that has moved on.
+    await user.click(within(section).getByRole("button", { name: "Expand Executed" }));
+    expect(await within(section).findByText("signed.pdf")).toBeVisible();
+  });
+
+  it("names every destination by its whole path", async () => {
+    const api = filingApi(
+      [document("doc-1", "letter.pdf")],
+      [folder("f-1", "Correspondence"), folder("f-2", "2026", "f-1")],
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(
+      await within(section).findByRole("button", { name: "Actions for letter.pdf" }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: "Move to folder" }));
+
+    const dialog = await screen.findByRole("dialog");
+    // A bare "2026" says nothing when two groupings each have one.
+    expect(
+      within(dialog)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["The contract itself", "Correspondence", "Correspondence / 2026"]);
+  });
+
+  it("offers a Contributor the tree and no way to file anything", async () => {
+    const api = filingApi(
+      [document("doc-1", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+      {},
+      [person("u1", "creator"), person("u3", "contributor")],
+    );
+    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    // The folder opens and its documents read: the record reads the same
+    // for everyone on it (DD-015).
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    expect(await within(section).findByText("signed.pdf")).toBeVisible();
+    // What they may not do is not drawn, rather than drawn and dead.
+    expect(within(section).queryByRole("button", { name: /^Actions for/ })).toBeNull();
+  });
+
+  it("says a folder's documents are on their way while they load", async () => {
+    const api = filingApi([document("doc-1", "signed.pdf", "f-1")], [folder("f-1", "Executed")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    // Fired rather than driven through userEvent: the read is what is
+    // being asserted, and userEvent settles it before it can be seen.
+    fireEvent.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+
+    // Said once for the folder, to a reader who cannot see the skeleton
+    // rows (DES-033).
+    expect(within(section).getByText("Loading the documents in Executed")).toBeInTheDocument();
+    expect(await within(section).findByText("signed.pdf")).toBeVisible();
+    // And it stops being said once they are there.
+    expect(within(section).queryByText("Loading the documents in Executed")).toBeNull();
+  });
+});
+
+describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)", () => {
+  const version = (over: Record<string, unknown> = {}) => ({
+    id: "ver-1",
+    versionNumber: 1,
+    kind: "draft_ours",
+    note: null,
+    originalFilename: "signed.pdf",
+    mimeType: "text/plain",
+    renderFamily: "other",
+    byteSize: 10,
+    checksumSha256: "a".repeat(64),
+    uploadedBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+    createdAt: "2026-08-11T09:00:00.000Z",
+    isCurrent: true,
+    isExecuted: false,
+    ...over,
+  });
+
+  const document = (id: string, title: string, folderId: string | null = null) => ({
+    id,
+    title,
+    description: null,
+    isPrimary: false,
+    versions: [version({ id: `ver-${id}`, originalFilename: title })],
+    archivedAt: null,
+    isConfidential: false,
+    folderId,
+    createdBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+    createdAt: "2026-08-11T09:00:00.000Z",
+    updatedAt: "2026-08-11T09:00:00.000Z",
+  });
+
+  const folder = (id: string, name: string) => ({
+    id,
+    name,
+    parentId: null,
+    createdAt: "2026-08-15T09:00:00.000Z",
+    updatedAt: "2026-08-15T09:00:00.000Z",
+  });
+
+  /**
+   * The record, its folders, its paper, and the upload route a batch is
+   * N calls to.
+   *
+   * The seam is the one a single upload already goes through, because
+   * that is the whole decision: nothing on the server knows a batch
+   * happened. So the stub keeps the rules that route keeps — the first
+   * file on a record with no paper takes the primary designation
+   * (CTR-014), and every file lands as a new document at version 1.
+   */
+  function batchApi(
+    initial: Record<string, unknown>[],
+    folders: Record<string, unknown>[] = [],
+    options: {
+      /** Filenames the seam refuses, and how. `413` is the deployment's
+       * size ceiling, which no retry can get past. */
+      refuse?: Record<string, { status: number; detail: string }>;
+      /** Filenames refused on the first attempt only, so a retry can be
+       * seen to land. */
+      refuseOnce?: Record<string, { status: number; detail: string }>;
+      /** Held open until the test releases them, so what is in flight
+       * at once can be counted. */
+      hold?: boolean;
+    } = {},
+    team = [person("u1", "creator")],
+  ) {
+    const record = recordApi(contractRow(), team);
+    let paper = initial;
+    /** Every upload the batch sent, in order: the filename it carried,
+     * the kind that rode with it, and where it said the file goes
+     * (M13/5). */
+    const uploaded: {
+      name: string;
+      kind: string;
+      folderId: string | null;
+      folderPath: string | null;
+    }[] = [];
+    /** Every folder a drop asked for by path — the empty directories of
+     * the dropped tree (DOC-011). */
+    const recreated: { path: string; parentId: string | null }[] = [];
+    /** The filenames whose answers are still being held. */
+    const held: (() => void)[] = [];
+    /** The most files that were ever in flight at one moment. */
+    let inFlight = 0;
+    let peak = 0;
+    /** Where the last upload and the last folder read sit relative to
+     * each other. A finished run re-reads the record's paper and its
+     * folder set *after* it marks its last row, so a test that stopped
+     * at the row would end with two fetches still in flight — and a
+     * fetch that outlives the stub is a real request at a real port. */
+    let sequence = 0;
+    let lastUpload = 0;
+    let lastFolderRead = 0;
+    const attempts = new Map<string, number>();
+    const listing = (folderId: string | null) =>
+      paper.filter((row) => (row.folderId ?? null) === folderId);
+    const handler = (call: StubCall): Response | undefined => {
+      const { pathname } = call.url;
+      if (pathname === "/api/v1/contracts/42/folders" && call.method === "GET") {
+        lastFolderRead = ++sequence;
+        return json(200, {
+          folders: folders.map((row) => ({
+            ...row,
+            documentCount: listing(row.id as string).length,
+          })),
+        });
+      }
+      if (pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
+        const asked = call.url.searchParams.get("folder");
+        const rows = asked === null ? paper : listing(asked === "root" ? null : asked);
+        return json(200, { documents: rows, nextCursor: null });
+      }
+      if (pathname === "/api/v1/contracts/42/folders" && call.method === "POST") {
+        // The drop's own shape: a path rather than a name, which the
+        // seam find-or-creates and narrates not at all (DOC-011).
+        const body = call.body as { path?: string; parentId?: string };
+        recreated.push({ path: String(body.path), parentId: body.parentId ?? null });
+        return json(201, { folders });
+      }
+      if (pathname === "/api/v1/contracts/42/documents" && call.method === "POST") {
+        const form = call.body as FormData;
+        const file = form.get("file") as File;
+        lastUpload = ++sequence;
+        uploaded.push({
+          name: file.name,
+          kind: String(form.get("kind")),
+          folderId: form.has("folderId") ? String(form.get("folderId")) : null,
+          folderPath: form.has("folderPath") ? String(form.get("folderPath")) : null,
+        });
+        const tried = (attempts.get(file.name) ?? 0) + 1;
+        attempts.set(file.name, tried);
+        const refusal =
+          options.refuse?.[file.name] ??
+          (tried === 1 ? options.refuseOnce?.[file.name] : undefined);
+        if (refusal) return problem(refusal.status, refusal.detail);
+        const added = {
+          ...document(`doc-${paper.length + 1}`, file.name),
+          // The first document on a record is the instrument, and every
+          // one after it is a loose attachment (CTR-014).
+          isPrimary: paper.length === 0,
+          versions: [version({ id: `ver-${file.name}`, originalFilename: file.name })],
+        };
+        paper = [added, ...paper];
+        return json(201, { document: added });
+      }
+      return record.handler(call);
+    };
+    /** The upload answer, delayed when the test asked for it, so the
+     * pool's bound is observable rather than inferred. */
+    const gated = (call: StubCall): StubAnswer => {
+      const isUpload =
+        call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "POST";
+      if (!isUpload || !options.hold) return handler(call);
+      inFlight += 1;
+      peak = Math.max(peak, inFlight);
+      const answer = handler(call)!;
+      return new Promise<Response>((resolve) => {
+        held.push(() => {
+          inFlight -= 1;
+          resolve(answer);
+        });
+      });
+    };
+    return {
+      handler: gated,
+      uploaded,
+      recreated,
+      /** The filenames the batch sent, in order. */
+      names: () => uploaded.map((one) => one.name),
+      release: () => {
+        const waiting = [...held];
+        held.length = 0;
+        for (const done of waiting) done();
+      },
+      peak: () => peak,
+      paper: () => paper,
+      /** Nothing the batch started is still on its way: either no file
+       * was ever sent, or the re-read that follows the last one has
+       * answered. */
+      quiet: () => uploaded.length === 0 || lastFolderRead > lastUpload,
+    };
+  }
+
+  const documentsSection = () => screen.findByRole("region", { name: /^Documents/ });
+
+  const file = (name: string, bytes = "some bytes") =>
+    new File([bytes], name, { type: "application/pdf" });
+
+  it("opens one confirmation for a whole drop, and creates nothing until it is confirmed", async () => {
+    const api = batchApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    dropOn(section, [file("MSA_2019_signed.pdf"), file("SOW1_2020_signed.pdf")]);
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("heading", { name: "Import 2 files" })).toBeVisible();
+    // What will be created, named — and where it will land, stated
+    // rather than offered as a choice: the drop already answered that.
+    expect(within(dialog).getByText("MSA_2019_signed.pdf")).toBeVisible();
+    expect(within(dialog).getByText("SOW1_2020_signed.pdf")).toBeVisible();
+    expect(within(dialog).getByText("Record root")).toBeVisible();
+    expect(within(dialog).getByText("Set by the drop")).toBeVisible();
+    expect(within(dialog).getByText("Nothing is created until you import.")).toBeVisible();
+    expect(api.uploaded).toEqual([]);
+  });
+
+  it("collects one kind for the whole batch and no note, and sends it with every file", async () => {
+    const api = batchApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [file("one.pdf"), file("two.pdf")]);
+    const dialog = await screen.findByRole("dialog");
+    // One control over the kinds, defaulting to our own draft, and no
+    // per-file ceremony beside it (DOC-011).
+    const kind = within(dialog).getByLabelText("Version kind");
+    expect(kind).toHaveValue("draft_ours");
+    expect(within(dialog).queryByLabelText("Note")).toBeNull();
+    await user.selectOptions(kind, "executed");
+    await user.click(within(dialog).getByRole("button", { name: "Import 2 files" }));
+
+    await waitFor(() => expect(api.uploaded).toHaveLength(2));
+    expect(api.names().toSorted()).toEqual(["one.pdf", "two.pdf"]);
+    // One kind rode with every file of the batch, and it is the one the
+    // dialog collected.
+    expect(api.uploaded.map((one) => one.kind)).toEqual(["executed", "executed"]);
+    // The dialog closes only on Done, so a reader who retried can see
+    // whether the second attempt worked (DES-033 §11).
+    await user.click(await within(dialog).findByRole("button", { name: "Done" }));
+    // Both rows land, both as new documents at version 1, and the
+    // section counts them.
+    expect(await within(section).findByText("one.pdf")).toBeVisible();
+    expect(within(section).getByRole("img", { name: "2 documents" })).toBeVisible();
+    // The run re-reads the record's paper and its folders after its last
+    // row settles. Waited out here, so no fetch outlives the stub.
+    await waitFor(() => expect(api.quiet()).toBe(true));
+  });
+
+  it("cancels the batch, creating nothing", async () => {
+    const api = batchApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [file("one.pdf"), file("two.pdf")]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(api.uploaded).toEqual([]);
+    expect(within(section).getByText("No documents on this contract yet.")).toBeVisible();
+  });
+
+  it("leaves exactly one primary when a batch lands on a record with no paper", async () => {
+    const api = batchApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [file("one.pdf"), file("two.pdf"), file("three.pdf")]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 3 files" }));
+
+    await waitFor(() => expect(api.uploaded).toHaveLength(3));
+    await user.click(await within(dialog).findByRole("button", { name: "Done" }));
+    // The designation is the seam's, taken by whichever file landed
+    // first — the batch never asks for it and never sets it twice.
+    expect(await within(section).findByText("three.pdf")).toBeVisible();
+    expect(within(section).getAllByText("Primary")).toHaveLength(1);
+    // The run re-reads the record's paper and its folders after its last
+    // row settles. Waited out here, so no fetch outlives the stub.
+    await waitFor(() => expect(api.quiet()).toBe(true));
+  });
+
+  it("reports a failed file on its own row and retries that file alone", async () => {
+    const api = batchApi([], [], {
+      refuseOnce: { "two.pdf": { status: 502, detail: "The storage driver did not answer." } },
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [file("one.pdf"), file("two.pdf")]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 2 files" }));
+
+    // One file failed and says why, in the seam's own sentence. The
+    // other one landed: a refusal costs its own file and nothing else.
+    expect(await within(dialog).findByText("The storage driver did not answer.")).toBeVisible();
+    expect(within(dialog).getByRole("heading", { name: "Imported 1 of 2 files" })).toBeVisible();
+    expect(api.names().toSorted()).toEqual(["one.pdf", "two.pdf"]);
+
+    await user.click(within(dialog).getByRole("button", { name: "Retry two.pdf" }));
+
+    // Only the failed file went again, so nothing can land twice.
+    await waitFor(() => expect(api.uploaded).toHaveLength(3));
+    expect(api.names().at(-1)).toBe("two.pdf");
+    expect(
+      await within(dialog).findByRole("heading", { name: "Imported 2 of 2 files" }),
+    ).toBeVisible();
+    // The run re-reads the record's paper and its folders after its last
+    // row settles. Waited out here, so no fetch outlives the stub.
+    await waitFor(() => expect(api.quiet()).toBe(true));
+  });
+
+  it("names the deployment's limit on an oversized file, offers no retry, and lands the rest", async () => {
+    const api = batchApi([], [], {
+      refuse: {
+        "enormous.pdf": {
+          status: 413,
+          detail: "That file is over the 100 MB upload limit.",
+        },
+      },
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [file("enormous.pdf"), file("small.pdf")]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 2 files" }));
+
+    expect(
+      await within(dialog).findByText("That file is over the 100 MB upload limit."),
+    ).toBeVisible();
+    // No retry anywhere: the same file earns the same answer, and a
+    // control that cannot succeed reads as "try again" when the answer
+    // will not change (DES-033 §11).
+    expect(within(dialog).queryByRole("button", { name: /^Retry/ })).toBeNull();
+    // The rest of the batch went on regardless — the ceiling is per
+    // file, not per drop.
+    expect(within(dialog).getByRole("heading", { name: "Imported 1 of 2 files" })).toBeVisible();
+    await user.click(within(dialog).getByRole("button", { name: "Done" }));
+    expect(await within(section).findByText("small.pdf")).toBeVisible();
+    // The run re-reads the record's paper and its folders after its last
+    // row settles. Waited out here, so no fetch outlives the stub.
+    await waitFor(() => expect(api.quiet()).toBe(true));
+  });
+
+  it("offers no retry on any refusal the file itself earned, not only the size one", async () => {
+    const api = batchApi([], [], {
+      refuse: {
+        "bad_name.pdf": {
+          status: 400,
+          detail: "That file name is too long.",
+        },
+      },
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [file("bad_name.pdf"), file("small.pdf")]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 2 files" }));
+
+    expect(await within(dialog).findByText("That file name is too long.")).toBeVisible();
+    // The size ceiling is one instance of the rule, not the rule. The
+    // seam refuses a name, a folder path and a version kind the same
+    // way, and the same file earns the same answer every time, so no
+    // retry is offered for any of them (DES-033 §11).
+    expect(within(dialog).queryByRole("button", { name: /^Retry/ })).toBeNull();
+    expect(within(dialog).getByRole("heading", { name: "Imported 1 of 2 files" })).toBeVisible();
+    await user.click(within(dialog).getByRole("button", { name: "Done" }));
+    // The run re-reads the record's paper and its folders after its last
+    // row settles. Waited out here, so no fetch outlives the stub.
+    await waitFor(() => expect(api.quiet()).toBe(true));
+  });
+
+  it("still offers retry when the seam refused for a reason the file did not earn", async () => {
+    const api = batchApi([], [], {
+      refuse: {
+        "unlucky.pdf": {
+          status: 503,
+          detail: "The server is not taking uploads right now.",
+        },
+      },
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [file("unlucky.pdf")]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 1 file" }));
+
+    expect(
+      await within(dialog).findByText("The server is not taking uploads right now."),
+    ).toBeVisible();
+    // A bad minute on the server is a fact about the moment, not about
+    // this file, so a second attempt genuinely can end differently.
+    expect(within(dialog).getByRole("button", { name: "Retry unlucky.pdf" })).toBeVisible();
+    await waitFor(() => expect(api.quiet()).toBe(true));
+  });
+
+  it("keeps at most three uploads in flight at once", async () => {
+    const api = batchApi([], [], { hold: true });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(
+      section,
+      [1, 2, 3, 4, 5, 6].map((n) => file(`file-${n}.pdf`)),
+    );
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 6 files" }));
+
+    // Three went, three are waiting for a worker: a 200-file import
+    // does not open 200 connections.
+    await waitFor(() => expect(api.uploaded).toHaveLength(3));
+    expect(api.peak()).toBe(3);
+    api.release();
+    await waitFor(() => expect(api.uploaded).toHaveLength(6));
+    api.release();
+    expect(api.peak()).toBe(3);
+    // The run re-reads the record's paper and its folders after its last
+    // row settles. Waited out here, so no fetch outlives the stub.
+    await waitFor(() => expect(api.quiet()).toBe(true));
+  });
+
+  it("hands a multi-file pick from the upload dialog to the same confirmation", async () => {
+    const api = batchApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(within(section).getByRole("button", { name: "Upload" }));
+    const composer = await screen.findByRole("dialog");
+    // The drop's pointer-free twin: the picker takes many, and many is
+    // a batch wherever it came from.
+    await user.upload(within(composer).getByLabelText("File", { selector: "input" }), [
+      file("one.pdf"),
+      file("two.pdf"),
+    ]);
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("heading", { name: "Import 2 files" })).toBeVisible();
+    // The drop said where; a pick did not, so the line that says so is
+    // absent rather than wrong.
+    expect(within(dialog).queryByText("Set by the drop")).toBeNull();
+    expect(api.uploaded).toEqual([]);
+  });
+
+  it("keeps a single pick in the composer, where the note still belongs", async () => {
+    const api = batchApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(within(section).getByRole("button", { name: "Upload" }));
+    const composer = await screen.findByRole("dialog");
+    await user.upload(
+      within(composer).getByLabelText("File", { selector: "input" }),
+      file("one.pdf"),
+    );
+
+    // One file is one round, and a round takes a note.
+    expect(within(composer).getByLabelText("Note")).toBeVisible();
+    expect(within(composer).getByText("one.pdf")).toBeVisible();
+    expect(within(composer).queryByRole("heading", { name: /^Import/ })).toBeNull();
+  });
+
+  it("re-reads every listing after a batch, including a folder that was closed", async () => {
+    const api = batchApi([document("doc-1", "filed.pdf", "f-1")], [folder("f-1", "Executed")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    // Opened, then closed: the folder's listing is cached, and a write
+    // that does not evict it would draw it as it stood before.
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    expect(await within(section).findByText("filed.pdf")).toBeVisible();
+    await user.click(within(section).getByRole("button", { name: "Collapse Executed" }));
+
+    dropOn(section, [file("dropped.pdf")]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 1 file" }));
+    await waitFor(() => expect(api.uploaded).toHaveLength(1));
+    await user.click(await within(dialog).findByRole("button", { name: "Done" }));
+
+    // The record root has the new document, and the folder still
+    // answers what is in it when it is opened again.
+    expect(await within(section).findByText("dropped.pdf")).toBeVisible();
+    await user.click(within(section).getByRole("button", { name: "Expand Executed" }));
+    expect(await within(section).findByText("filed.pdf")).toBeVisible();
+    expect(within(section).getByRole("img", { name: "2 documents" })).toBeVisible();
+    // The run re-reads the record's paper and its folders after its last
+    // row settles. Waited out here, so no fetch outlives the stub.
+    await waitFor(() => expect(api.quiet()).toBe(true));
+  });
+
+  it("opens nothing for a drop carrying nothing at all", async () => {
+    const api = batchApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    dropOn(section, []);
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(api.uploaded).toEqual([]);
+  });
+
+  it("takes the loose files of a drop that also carried a directory, and the directory with them", async () => {
+    const api = batchApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    dropOn(section, [file("loose.pdf"), dir("Legacy contracts", [file("MSA.pdf")])]);
+
+    // Two files, not one: the directory is walked rather than left
+    // alone, and the file inside it comes with it (DOC-011).
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("heading", { name: "Import 2 files" })).toBeVisible();
+    expect(within(dialog).getByText("loose.pdf")).toBeVisible();
+    expect(within(dialog).getByText("Legacy contracts")).toBeVisible();
+    expect(within(dialog).getByText("MSA.pdf")).toBeVisible();
+  });
+
+  it("stops starting new uploads on Cancel remaining, and lets the ones in flight finish", async () => {
+    const api = batchApi([], [], { hold: true });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(
+      section,
+      [1, 2, 3, 4, 5].map((n) => file(`file-${n}.pdf`)),
+    );
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 5 files" }));
+    await waitFor(() => expect(api.uploaded).toHaveLength(3));
+
+    await user.click(within(dialog).getByRole("button", { name: "Cancel remaining" }));
+    api.release();
+
+    // A request that has left cannot be recalled, so the three in flight
+    // land. The two nobody had started say so and offer the retry, which
+    // is what a file nobody sent deserves.
+    expect(
+      await within(dialog).findByRole("heading", { name: "Imported 3 of 5 files" }),
+    ).toBeVisible();
+    expect(api.uploaded).toHaveLength(3);
+    expect(within(dialog).getAllByText("Cancelled before it was uploaded.")).toHaveLength(2);
+    expect(within(dialog).getByRole("button", { name: "Retry 2 files" })).toBeVisible();
+    // The run re-reads the record's paper and its folders after its last
+    // row settles. Waited out here, so no fetch outlives the stub.
+    await waitFor(() => expect(api.quiet()).toBe(true));
+  });
+
+  it("takes no drop on an archived record", async () => {
+    const record = recordApi(contractRow({ archivedAt: "2026-08-01T00:00:00.000Z" }), [
+      person("u1", "creator"),
+    ]);
+    stubApi({ signedIn: MEMBER, extra: record.handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    dropOn(section, [file("one.pdf")]);
+
+    // A frozen record's paper stays frozen, drop included.
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(within(section).queryByText(/^Drop files here/)).toBeNull();
+  });
+
+  it("lists the first files of a long batch and says how many it did not draw", async () => {
+    const api = batchApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    dropOn(
+      section,
+      Array.from({ length: 10 }, (_, index) => file(`file-${index}.pdf`)),
+    );
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("heading", { name: "Import 10 files" })).toBeVisible();
+    expect(within(dialog).getByText("file-0.pdf")).toBeVisible();
+    expect(within(dialog).queryByText("file-9.pdf")).toBeNull();
+    expect(within(dialog).getByText("…and 4 more files")).toBeVisible();
+  });
+
+  it("says what a drop on this section means, and says it once", async () => {
+    stubApi({ signedIn: MEMBER, extra: batchApi([]).handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    // One gesture, one meaning (DES-033 §8): a dropped file is always a
+    // new document, and appending a round is a deliberate act on a
+    // named document. The hint promises the folder clause now that the
+    // drop can carry one (DES-033 normalization point 9).
+    expect(
+      within(section).getByText(
+        "Drop files or folders here — each file becomes a new document at version 1",
+      ),
+    ).toBeVisible();
+    expect(
+      within(section).getByText(
+        "Folder structure is kept. To add a round to an existing chain, use Add version on that document.",
+      ),
+    ).toBeVisible();
+  });
+});
+
+/**
+ * Folder drop (M13/5, DOC-011, DES-033): the structure survives.
+ *
+ * The traversal is exercised through the route tests like every other
+ * interaction, per M13's seam decision. jsdom has neither drag nor the
+ * directory-entry API, so a dropped tree is fed in as **synthetic
+ * `DataTransfer` entry objects** — the shape the walk reads and nothing
+ * else — and everything below is asserted at what the section drew and
+ * what it sent.
+ *
+ * **The client never creates a folder for a file.** Each upload carries
+ * its own path and the seam find-or-creates the chain under the owning
+ * contract's row lock, which is what makes several files of one folder
+ * converge on one folder. So what is asserted here is the path each
+ * upload carried, not a folder call the client did not make. The only
+ * folders asked for on their own are the empty directories, which no
+ * upload would recreate.
+ */
+describe("dropping a folder tree on the contract record (M13/5, DOC-011, DES-033)", () => {
+  const version = (over: Record<string, unknown> = {}) => ({
+    id: "ver-1",
+    versionNumber: 1,
+    kind: "draft_ours",
+    note: null,
+    originalFilename: "signed.pdf",
+    mimeType: "text/plain",
+    renderFamily: "other",
+    byteSize: 10,
+    checksumSha256: "a".repeat(64),
+    uploadedBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+    createdAt: "2026-08-11T09:00:00.000Z",
+    isCurrent: true,
+    isExecuted: false,
+    ...over,
+  });
+
+  const document = (id: string, title: string, folderId: string | null = null) => ({
+    id,
+    title,
+    description: null,
+    isPrimary: false,
+    versions: [version({ id: `ver-${id}`, originalFilename: title })],
+    archivedAt: null,
+    isConfidential: false,
+    folderId,
+    createdBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+    createdAt: "2026-08-11T09:00:00.000Z",
+    updatedAt: "2026-08-11T09:00:00.000Z",
+  });
+
+  const folderRow = (id: string, name: string, parentId: string | null = null) => ({
+    id,
+    name,
+    parentId,
+    documentCount: 0,
+    createdAt: "2026-08-15T09:00:00.000Z",
+    updatedAt: "2026-08-15T09:00:00.000Z",
+  });
+
+  /** The record, its paper, its folders, and every upload's destination
+   * as it arrived. */
+  function dropApi(folders: Record<string, unknown>[] = []) {
+    const record = recordApi(contractRow(), [person("u1", "creator")]);
+    let paper: Record<string, unknown>[] = [];
+    const uploaded: { name: string; folderId: string | null; folderPath: string | null }[] = [];
+    const recreated: { path: string; parentId: string | null }[] = [];
+    let folderReads = 0;
+    const handler = (call: StubCall): Response | undefined => {
+      const { pathname } = call.url;
+      if (pathname === "/api/v1/contracts/42/folders" && call.method === "GET") {
+        folderReads += 1;
+        return json(200, { folders });
+      }
+      if (pathname === "/api/v1/contracts/42/folders" && call.method === "POST") {
+        const body = call.body as { path?: string; parentId?: string };
+        recreated.push({ path: String(body.path), parentId: body.parentId ?? null });
+        return json(201, { folders });
+      }
+      if (pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
+        const asked = call.url.searchParams.get("folder");
+        return json(200, {
+          documents: asked === null || asked === "root" ? paper : [],
+          nextCursor: null,
+        });
+      }
+      if (pathname === "/api/v1/contracts/42/documents" && call.method === "POST") {
+        const form = call.body as FormData;
+        const file = form.get("file") as File;
+        uploaded.push({
+          name: file.name,
+          folderId: form.has("folderId") ? String(form.get("folderId")) : null,
+          folderPath: form.has("folderPath") ? String(form.get("folderPath")) : null,
+        });
+        const added = {
+          ...document(`doc-${uploaded.length}`, file.name),
+          isPrimary: uploaded.length === 1,
+          versions: [version({ id: `ver-${file.name}`, originalFilename: file.name })],
+        };
+        paper = [added, ...paper];
+        return json(201, { document: added });
+      }
+      return record.handler(call);
+    };
+    return {
+      handler,
+      uploaded,
+      recreated,
+      /** Where each named file said it was going. */
+      pathOf: (name: string) => uploaded.find((one) => one.name === name)?.folderPath ?? null,
+      folderReads: () => folderReads,
+    };
+  }
+
+  const documentsSection = () => screen.findByRole("region", { name: /^Documents/ });
+
+  const file = (name: string, bytes = "some bytes") =>
+    new File([bytes], name, { type: "application/pdf" });
+
+  /** The legacy book of the demo sentence: two levels of folders, files
+   * at both, and one directory holding nothing. */
+  const legacyBook = () =>
+    dir("Legacy contracts", [
+      dir("Executed", [file("MSA_2019_signed.pdf"), file("SOW1_2020_signed.pdf")]),
+      dir("Correspondence", [dir("2019", [file("notice.pdf")])]),
+      dir("Signature packets"),
+      file("cover_letter.pdf"),
+    ]);
+
+  it("shows the folder tree it will create before it creates anything", async () => {
+    const api = dropApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    dropOn(section, [legacyBook()]);
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("heading", { name: "Import 4 files" })).toBeVisible();
+    // The structure, drawn as a structure (DES-033 §9): the dropped
+    // directory, what it holds, and the files inside each level. Read
+    // off the summary list itself, because the version-kind control
+    // below it offers a kind called Executed too.
+    const summary = within(dialog).getByRole("list", { name: "What this import will create" });
+    expect(
+      within(summary)
+        .getAllByRole("listitem")
+        .map((line) => line.textContent),
+    ).toEqual([
+      "Legacy contracts4 folders · 4 files",
+      "Correspondence1 folder · 1 file",
+      "20191 file",
+      "notice.pdf10 byte",
+      "Executed2 files",
+      "MSA_2019_signed.pdf10 byte",
+      "SOW1_2020_signed.pdf10 byte",
+      // An empty directory of the dropped tree is drawn too, because it
+      // is part of the structure that arrived and nothing else will
+      // recreate it.
+      "Signature packetsEmpty",
+      "cover_letter.pdf10 byte",
+    ]);
+    expect(within(dialog).getByText("Folder structure is kept")).toBeVisible();
+    // And nothing is created until it is confirmed.
+    expect(api.uploaded).toEqual([]);
+    expect(api.recreated).toEqual([]);
+  });
+
+  it("sends every file with the folder path it sat at in the dropped tree", async () => {
+    const api = dropApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [legacyBook()]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 4 files" }));
+
+    await waitFor(() => expect(api.uploaded).toHaveLength(4));
+    // The path each file carried is the path it sat at, root-first —
+    // the seam find-or-creates that chain under the contract's row lock,
+    // so nothing here co-ordinates the folders and nothing here creates
+    // one.
+    expect(api.pathOf("MSA_2019_signed.pdf")).toBe("Legacy contracts/Executed");
+    expect(api.pathOf("SOW1_2020_signed.pdf")).toBe("Legacy contracts/Executed");
+    expect(api.pathOf("notice.pdf")).toBe("Legacy contracts/Correspondence/2019");
+    expect(api.pathOf("cover_letter.pdf")).toBe("Legacy contracts");
+    // Every file lands at the record root's own level of the tree, so
+    // none of them names a folder that was already there.
+    expect(api.uploaded.every((one) => one.folderId === null)).toBe(true);
+  });
+
+  it("recreates the empty directories of the dropped tree on their own", async () => {
+    const api = dropApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [legacyBook()]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 4 files" }));
+
+    // No upload would recreate a directory that held nothing, so it is
+    // asked for by path — every level above it may be missing too, and
+    // the seam makes the chain segment by segment (DOC-011).
+    await waitFor(() => expect(api.recreated).toHaveLength(1));
+    expect(api.recreated[0]).toEqual({
+      path: "Legacy contracts/Signature packets",
+      parentId: null,
+    });
+    // And the full ones are not asked for at all: their files made them.
+    await waitFor(() => expect(api.uploaded).toHaveLength(4));
+    expect(api.recreated).toHaveLength(1);
+  });
+
+  it("imports a drop that carried only structure — empty directories and not one file", async () => {
+    const api = dropApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    // A tree of nothing but directories is a real gesture — somebody
+    // scaffolding the folders before the paper arrives — and DOC-011
+    // promises the structure that arrives is the structure that was
+    // dropped, files or none.
+    dropOn(section, [dir("Legacy contracts", [dir("Executed"), dir("Redlines")])]);
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("heading", { name: "Import folders" })).toBeVisible();
+    const before = api.folderReads();
+    await user.click(within(dialog).getByRole("button", { name: "Import folders" }));
+
+    // The deepest leaves carry their whole chain, so recreating them
+    // recreates every level above — and no upload is sent, because
+    // there is no file to send.
+    await waitFor(() => expect(api.recreated).toHaveLength(2));
+    expect(api.recreated).toEqual([
+      { path: "Legacy contracts/Executed", parentId: null },
+      { path: "Legacy contracts/Redlines", parentId: null },
+    ]);
+    expect(api.uploaded).toEqual([]);
+    // Its work done, the dialog closes over a section that has read its
+    // folders again: the tree behind it is the answer.
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(api.folderReads()).toBeGreaterThan(before);
+  });
+
+  it("reads the record's folders again once the import settles", async () => {
+    const api = dropApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    const before = api.folderReads();
+    dropOn(section, [dir("Legacy", [file("MSA.pdf")])]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 1 file" }));
+
+    // The folders the import created are the seam's, so the section
+    // cannot know them: it reads the set again rather than guessing at
+    // what the drop made.
+    await waitFor(() => expect(api.folderReads()).toBeGreaterThan(before));
+  });
+
+  it("creates nothing at all when the drop is cancelled, folders included", async () => {
+    const api = dropApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [legacyBook()]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(api.uploaded).toEqual([]);
+    expect(api.recreated).toEqual([]);
+  });
+
+  it("files a drop onto a folder row into that folder, and a tree dropped there beneath it", async () => {
+    const api = dropApi([folderRow("f-1", "Executed")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    const row = (await within(section).findByText("Executed")).closest("tr")!;
+    dropOn(row, [file("signed.pdf"), dir("2019", [file("notice.pdf")])]);
+
+    const dialog = await screen.findByRole("dialog");
+    // The readout names the folder the gesture landed on rather than the
+    // record root, because that is where the drop said the files go.
+    // Read off the readout strip itself, because the version-kind
+    // control below it offers a kind called Executed too.
+    const readout = within(dialog).getByText("Set by the drop").parentElement!;
+    expect(within(readout).getByText("Executed")).toBeVisible();
+    expect(within(dialog).queryByText("Record root")).toBeNull();
+    await user.click(within(dialog).getByRole("button", { name: "Import 2 files" }));
+
+    await waitFor(() => expect(api.uploaded).toHaveLength(2));
+    // Both files name the folder they were dropped on. The one that sat
+    // in a directory names the chain beneath it too, so a tree dropped
+    // on a row is recreated inside that row.
+    expect(api.uploaded.every((one) => one.folderId === "f-1")).toBe(true);
+    expect(api.pathOf("signed.pdf")).toBeNull();
+    expect(api.pathOf("notice.pdf")).toBe("2019");
+  });
+
+  it("draws each file's destination on its own row while the import runs", async () => {
+    const api = dropApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [dir("Legacy", [dir("Executed", [file("MSA.pdf")])])]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 1 file" }));
+
+    // The path before the name, so a long import of a nested tree reads
+    // as the tree rather than as a list of names (DES-033 §11).
+    expect(await within(dialog).findByText("Legacy/Executed/")).toBeVisible();
+    await waitFor(() => expect(api.uploaded).toHaveLength(1));
+  });
+
+  it("refuses one bad path at the seam and lands the rest of the drop", async () => {
+    const api = dropApi();
+    const refusing = (call: StubCall): StubAnswer => {
+      const isUpload =
+        call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "POST";
+      if (isUpload) {
+        const form = call.body as FormData;
+        if (String(form.get("folderPath")).includes("Broken")) {
+          return problem(400, "A folder path cannot have an empty segment.");
+        }
+      }
+      return api.handler(call);
+    };
+    stubApi({ signedIn: MEMBER, extra: refusing });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [
+      dir("Legacy", [dir("Executed", [file("good.pdf")]), dir("Broken", [file("bad.pdf")])]),
+    ]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 2 files" }));
+
+    // The refused file says why, in the seam's own sentence, and the
+    // file beside it lands: a bad path costs its own file and never the
+    // batch (DOC-011).
+    expect(
+      await within(dialog).findByText("A folder path cannot have an empty segment."),
+    ).toBeVisible();
+    expect(
+      await within(dialog).findByText("1 file failed. The other 1 is on the contract."),
+    ).toBeVisible();
+    expect(api.uploaded.map((one) => one.name)).toEqual(["good.pdf"]);
+  });
+
+  it("takes a whole directory from the picker, structure and all, without a pointer", async () => {
+    const api = dropApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(within(section).getByRole("button", { name: "Upload" }));
+    const composer = await screen.findByRole("dialog");
+    // The directory picker is folder drop's pointer-free twin (DES-033
+    // §7): the browser puts the path each file sat at on the file
+    // itself, so the structure survives a pick as it survives a drop.
+    const picked = [file("MSA_2019_signed.pdf"), file("notice.pdf")];
+    Object.defineProperty(picked[0]!, "webkitRelativePath", {
+      value: "Legacy contracts/Executed/MSA_2019_signed.pdf",
+    });
+    Object.defineProperty(picked[1]!, "webkitRelativePath", {
+      value: "Legacy contracts/Correspondence/notice.pdf",
+    });
+    // The control a keyboard reaches carries the field's own name, as
+    // the file picker's does; the input behind it is what the pick lands
+    // on.
+    expect(within(composer).getByRole("button", { name: "File Choose folder" })).toBeVisible();
+    await user.upload(within(composer).getByLabelText("Folder"), picked);
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText("Legacy contracts")).toBeVisible();
+    await user.click(within(dialog).getByRole("button", { name: "Import 2 files" }));
+
+    await waitFor(() => expect(api.uploaded).toHaveLength(2));
+    expect(api.pathOf("MSA_2019_signed.pdf")).toBe("Legacy contracts/Executed");
+    expect(api.pathOf("notice.pdf")).toBe("Legacy contracts/Correspondence");
+  });
+
+  it("says the drop may be short when a directory could not be read", async () => {
+    const api = dropApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    // A browser that refuses a directory hands back nothing rather than
+    // an error, so a walk that could not read one must not call it
+    // empty: a drop arriving short in silence is the one failure a bulk
+    // import cannot afford.
+    const refused = {
+      isFile: false,
+      isDirectory: true,
+      name: "Locked",
+      createReader: () => ({
+        readEntries: (_resolve: unknown, reject: () => void) => reject(),
+      }),
+    };
+    const dataTransfer = {
+      types: ["Files"],
+      files: [file("loose.pdf")],
+      items: [
+        {
+          kind: "file",
+          getAsFile: () => file("loose.pdf"),
+          webkitGetAsEntry: () => entryOf(file("loose.pdf")),
+        },
+        { kind: "file", getAsFile: () => new File([], "Locked"), webkitGetAsEntry: () => refused },
+      ],
+    };
+    fireEvent.dragOver(section, { dataTransfer });
+    fireEvent.drop(section, { dataTransfer });
+
+    const dialog = await screen.findByRole("dialog");
+    expect(
+      within(dialog).getByText(
+        "1 folder could not be read: Locked. Check the list below — it may be missing files.",
+      ),
+    ).toBeVisible();
+    // And it is not recreated as an empty folder either: nothing here
+    // knows it is empty.
+    expect(within(dialog).queryByText("Empty")).toBeNull();
+  });
+
+  it("takes no drop at all on a folder row of an archived record", async () => {
+    const api = dropApi([folderRow("f-1", "Executed")]);
+    const record = recordApi({ ...contractRow(), archivedAt: "2026-08-01T09:00:00.000Z" }, [
+      person("u1", "creator"),
+    ]);
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call: StubCall) => {
+        const { pathname } = call.url;
+        if (pathname === "/api/v1/contracts/42/folders" && call.method === "GET") {
+          return json(200, { folders: [folderRow("f-1", "Executed")] });
+        }
+        if (pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
+          return json(200, { documents: [], nextCursor: null });
+        }
+        return record.handler(call);
+      },
+    });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    const row = (await within(section).findByText("Executed")).closest("tr")!;
+    dropOn(row, [file("signed.pdf")]);
+
+    // A frozen record's paper stays frozen, organization included — so
+    // the drop opens no confirmation at all rather than one that would
+    // be refused a file at a time.
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(api.uploaded).toEqual([]);
   });
 });

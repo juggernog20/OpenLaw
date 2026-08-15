@@ -1902,6 +1902,190 @@ Naming the thread's control "Show older" rather than "Show more" is not cosmetic
 
 Every list bounded after this inherits the foot rather than inventing one, and any surface that pages backwards inherits the head placement with it. M12's document panel is the first that will.
 
+## DES-032: The record-page section strip — routed tabs under the breadcrumb (extends DES-016, DES-030)
+
+- **Status:** Accepted
+- **Date:** 2026-08-15
+
+### Context
+
+The contract record shipped as one scroll: the Contract card, the Description card, the CTR-016 Fields card, and the M11 Documents section, stacked in the main column with the Team card beside them. The build said so in as many words — "this page is one scroll, not a tab strip" — and noted at the same time that the C4 mock puts the documents behind a tab.
+
+One scroll was the right call while the record held two cards. It is the wrong one now. A reader who opens C-42 to check its paper scrolls past every field on the record to reach it, and a reader who opens it to fix the Owner scrolls past nothing but still pays the render cost of a document list they did not ask for. The three jobs the page does — read the record, fill the type's fields, work the paper — are asked one at a time.
+
+No DES covered a record-page tab strip. `SettingsSectionTabs` (ST10) draws one for settings panes, but that record is SET-001's and is about settings; nothing said whether a record may have sections, where the strip sits, or what a section costs the address bar.
+
+### Decision
+
+**1. A record may divide its body into named sections, drawn as one horizontal strip.** The contract record's are **Overview** (the Contract card and the Description card), **Fields** (the CTR-016 card), and **Documents** (the M11 section). One section is on screen at a time.
+
+**2. Each section is its own URL, and the tabs are links.** The bare record address is the first section — `/contracts/42` is the Overview — and each other section takes one trailing segment: `/contracts/42/fields`, `/contracts/42/documents`. A section the record does not have is not an error; it redirects to the bare address, because the record exists and only the section does not.
+
+The strip is therefore a `nav` of `NavLink`s, not a Radix `Tabs`. An ARIA tablist promises arrow-key semantics that a set of links does not have, and a link promises an address that a tablist does not. Sections are the kind of thing people quote to each other — "the Documents tab of C-42" — so the address is what they must be.
+
+**3. The strip sits in the shell's sub-bar slot, under the breadcrumb, and inside the chrome.** It carries the sub-bar's own `--chrome-subbar-border` as its bottom edge, and the sub-bar drops its border, so the two read as one chrome slab rather than as two stacked strips. A tab strip that scrolled away with the record would be no tab strip at all: DES-030 gives `main` the scroll, and section navigation is not part of what scrolls.
+
+**4. The tab treatment is the settings strip's, verbatim.** 36px-tall links, `px-3`, `text-base`; the active one is `font-semibold text-primary` over a `-mb-px border-b-2 border-accent`; the rest are `text-muted` with a `hover:text-primary`. One tab look in the app. The shared component is `RecordTabs`, a sibling of `RecordApplets` under `components/shell/`.
+
+**5. What is chrome stays chrome, and the side column is not a section.** The breadcrumb, the reference, the title, the status pill, the archived pill, and archive/restore belong to the record and are drawn above the strip on every section. So do DES-028's Tier 2 banner and DES-016's activity bar. The Team card stands beside all three sections rather than living in one: who is on a contract is context for reading any part of it, and DES-028's "Manage team" link is a fragment to that card — a fragment that only resolved on one section would be a link that sometimes goes nowhere. The record-level notices (archived, read-only) sit above the section for the same reason: they explain inert controls wherever the controls are.
+
+**6. The chrome budget takes the 36px, and this is the ceiling.** Header 62 + nav 48 + sub-bar 64 + strip 36 is 210px of fixed chrome, and 246px with DES-009's Tier 2 banner. On a 768px-tall viewport that is 32% — over the 25% guardrail DES-011's reflow reading implies, which the banner already breached at 28%. It is accepted here because the strip buys back far more body than it costs: a reader on the Documents section is no longer scrolling three sections of record to reach the paper. **No further permanent strip may be added to a record page.** A fifth one is a restructure, not an increment, and needs its own record.
+
+### Rationale
+
+The tab is what the mock always drew. The build's own note said so, and deferred it only because the page had two cards at the time and a strip over two cards is chrome for nothing.
+
+Routing the sections rather than holding them in state is the part worth arguing, and the argument is the same one SET-001 made for settings panes: a section that cannot be linked to is a section nobody can point at. It also costs nothing here — the loader already reads the whole record in one round trip, so a section change is a re-render and not a fetch.
+
+Keeping the Team card out of the sections is the other real choice. It could have been a fourth tab, and it is not, because the roster answers a question a reader has _while_ reading something else. A field's Owner, a document's uploader, and a comment's author are all names, and the card is what turns them into people.
+
+### Alternatives considered
+
+- **Stateful tabs (`useState`, no URL).** Rejected: no shareable address, no back button, and a re-mount loses the section. The record page is the one surface people quote by link.
+- **Radix `Tabs`.** Rejected: an ARIA tablist and a set of routed links are two different contracts, and mixing them gives a widget that announces arrow-key navigation it does not have.
+- **A section per child route with its own loader.** Rejected as premature: one read answers the whole record today, and splitting it would trade one round trip for three plus a shared-state problem.
+- **Team as a fourth tab.** Rejected — see the rationale; it also breaks DES-028's fragment link.
+- **Putting the strip at the top of the scrolling body.** Rejected: it stays under the 25% guardrail and loses the thing a tab strip is for. Tabs that scroll off screen are a table of contents.
+- **Folding the tabs into the 64px sub-bar as a second row.** Rejected: it saves nothing real — the strip's height is the strip's height — and it makes the breadcrumb row and the section row one landmark when they are two different navigations.
+
+### Consequences
+
+`RecordTabs` is the shared component; the contract record is the reference mount. The matter, entity, and knowledge record pages inherit it as they grow past two cards, with their own section sets — the same way DES-016's activity bar generalizes.
+
+Three new messages per record (the nav's accessible name and one label per tab). No new tokens: the strip reuses `--chrome-subbar-border` and the accent, and the tab treatment is already shipped in `SettingsSectionTabs`.
+
+Any surface that reads across sections must now say which section it means. A test that archives the record and checks that the type's fields froze has to cross to the Fields section to see them — which is the correct check, because the freeze is the record's state and not the section's.
+
+## DES-033: The folder tree and the record-scoped batch drop (extends DES-032, DES-025)
+
+- **Status:** Accepted
+- **Date:** 2026-08-15
+
+### Context
+
+M13 gives a contract's Documents section two things it never had. Its paper can be filed into folders, and a drop onto it becomes a bulk import rather than one upload. The section itself is the one DES-032 just moved onto its own routed tab.
+
+The mocks answered half of this and only half. `designs/documents.pen` **DOC4 — Upload modal** and **DOC5 — Folder import** already draw a good import confirmation: an indented tree summary, per-row meta, OCR-queued badges on scanned files, a truncation row, an OCR note, and a `Cancel` / `Import 128 files` foot. But both are mounted on the **global Documents repository**, and both collect an owning record — an `Import into` picker, a `Where does this live?` control, a `Record` field. On a record there is nothing to pick. M13 also puts that repository out of scope: it stays flat, and folder becomes a filter facet there [M26].
+
+**C4 — Contract detail · Documents** is the frame this record is really about, and it drew none of the anatomy. It was a flat table — Name, Kind, Version, Size, Modified, uploader — with a toolbar, a drop hint, and a note row. No folder row, no indentation, no expand or collapse, no count.
+
+C4's drop hint also said the wrong thing. It read "Drop a file to add a version to the chain — attachments stay outside the chain". M13 decides the opposite for the drop gesture: a dropped file is always a new document at version 1. Two drop meanings cannot sit on one surface, so this record settles it.
+
+### Decision
+
+This record decides how the surface is drawn and worded. The behaviour it draws is M13's, decided in the module records it cites — folder scope and deletion [DOC-006], batch semantics [DOC-011], silent omission [DD-014], and the record-reach gate [DOC-008]. Where a rule appears below, it is here because the surface has to say it, not because this record settles it.
+
+**1. A folder is a row of the documents table, not a second surface.** Its anatomy lives in the Name cell: the indent spacer, a disclosure chevron, the folder glyph, the name at 13px `font-semibold`, then the count at 11px `text-muted`. Kind, Version, Size and Modified are empty on a folder row — a folder has none of them, and inventing an em dash for each would be four pieces of nothing. The trailing cell carries the row's overflow menu.
+
+**2. Indentation is 18px per level, drawn as a spacer at the head of the Name cell.** A document row carries a 14px spacer where a folder's chevron would be, so a filed document's file glyph lines up with the folder glyphs of its siblings. One rule for both row kinds; nothing is positioned by eye.
+
+**3. The chevron is the expand control, and the folder glyph follows it.** `ChevronRight` plus `Folder` when closed, `ChevronDown` plus `FolderOpen` when open. The chevron is what takes the click and the key; the glyph is a second reading of the same fact for people who scan shapes rather than arrows.
+
+**4. Folders sort before documents, and siblings sort by name, case-insensitively.** The record root follows the same rule: its folders first, then the documents filed nowhere. This is how a file manager lists a directory, and `display_order` is deferred with the reorder surface that would read it.
+
+**5. The count is viewer-scoped, and its zero reads "Empty".** The message is `{count, plural, =0 {Empty} one {# document} other {# documents}}`. A Confidential document outside this viewer's audience is omitted from the folder's listing and from its count, by the one predicate every document read already passes through [DD-014]. **An "Empty" folder may therefore be a folder whose contents this viewer cannot see, and nothing on the surface distinguishes the two.** Nothing may be added that does — no hidden-item count, no "some documents are not shown" line. Both would report the existence of what DD-014 promises to keep silent.
+
+**6. Every row carries DES-025's overflow menu, in the trailing cell.** The shipped `DropdownMenu` on a `ghost` `icon` Button with the 16px `MoreHorizontal`. A folder's items are Rename, Move, New folder inside, and Delete; a document's gain Move to folder alongside what M11 already offers. DES-025's rule holds unchanged: the menu offers what this viewer may do and nothing else, absent rather than disabled, and a row with nothing on offer draws no trigger at all.
+
+**Delete is offered on any folder, full or empty, and its dialog says where the contents go.** M13 dissolves a folder rather than destroying it: its documents and its child folders are re-filed into its parent, or into the record root when it has none, and no document is deleted [DOC-006]. So the confirmation is DES-025's one-click shape, not DOC-010's typed one — it names the folder, states in one sentence where the contents will land, and offers `Cancel` plus `Delete` on a `danger` Button. A refused delete — an archived contract, a folder the viewer may not write — keeps the dialog open and says the reason inside it, with the tree unchanged; normalization point 7 records why this differs from DES-025's own placement. Destroying a document stays DOC-010's job, reached from that document.
+
+**7. The drop targets are the section and each folder row.** A drop on the section files at the record root. A drop on a folder row files into that folder. Every drop capability keeps a pointer-free twin — a multi-select file input, a directory picker, New folder, and Move — so the M4 keyboard contract holds on the new surface.
+
+**8. One drop meaning, and the surface says which one.** M13 decides that a dropped file is always a new document at version 1 [DOC-011]; C4 said the opposite, so C4's hint is rewritten, in two lines:
+
+- "Drop files or folders here — each file becomes a new document at version 1"
+- "Folder structure is kept. To add a round to an existing chain, use Upload version on that document."
+
+Appending a round stays a deliberate act on a named document, reached from that document. The old sentence is gone, not softened.
+
+**9. The batch confirmation is DOC5's tree summary, moved onto the record and stripped of its pickers.** The head names the count. The body is, in order: the **destination readout**, the **tree summary**, the **version-kind control**, and the **OCR note**. The foot is a note, `Cancel`, and the verb carrying the count — "Import 128 files".
+
+- The **destination readout is static**, a strip carrying the folder glyph, the folder's name, the record it belongs to, and the words "Set by the drop" at its trailing edge. It states where the files will land and offers no way to change it, because the drop already answered that.
+- The **tree summary** is DOC5's, unchanged in anatomy: indented rows, a bold root with `3 folders · 128 files`, per-row meta, an OCR-queued badge on each scanned file, and a `…and 126 more files` truncation row.
+
+**10. The kind is collected once, by one select, defaulting to Draft · ours.** One batch takes one kind and no note [DOC-011], so the dialog draws one `Select` over the version kinds with the helper line "Applied to every file in this import. Notes are not collected in bulk." There is no per-file kind control and no note field to draw.
+
+**11. Progress and failure are the same dialog, not new ones.** The confirmation becomes a progress list on confirm: an overall count and bar, then per-file rows carrying the file's folder path in muted text, its name, and its state — Done, a per-file bar with a percentage, or Queued. A failed file states its reason on its own row in `text-danger`. **Retry appears only on a failure a retry could fix.** A refusal the file itself earned — over the deployment's size ceiling, a folder path or a name or a version kind the seam will not take — names the reason and offers no Retry, because the same file earns the same answer. Retry is offered when the seam gave up waiting, when it is being asked too often, when it had a bad minute, and when the connection dropped: those are answers about the moment, not about the file. The batch never aborts for one refusal, and the foot says how many files are already on the contract.
+
+**Retry is per file, and the dialog stays open while it runs.** Pressing Retry on a row re-uploads that file and nothing else; a file that already landed is never sent again, so a retry cannot duplicate a document. The row returns to its uploading state, the head's "Imported N of M" and the foot's count move as files land, and the foot's "Retry N files" repeats the same act over every retryable row. The dialog closes only on `Done` or on the close control, so a reader who retries can see whether the second attempt worked.
+
+**12. The empty state and the loading state.**
+
+- **Empty** replaces the table with the section's own panel — glyph, "No paper on this contract yet", and the drop sentence — with no table header and no separate drop hint, because the panel is the drop target. A Contributor's empty panel keeps the glyph and the headline and swaps the drop sentence for the read-only notice, since offering a drop to somebody who may not drop is a control drawn for nobody.
+- **Loading** is two different loads, and only one of them is new. The folder set arrives with the section, in one read. A folder's documents load when it is opened, drawn as skeleton rows at the opened folder's depth, so the tree around them stays readable while they arrive.
+
+**13. The Contributor's view removes controls rather than disabling them.** The toolbar's buttons are absent, every overflow trigger is absent, and the drop hint is replaced by a read-only notice above the table. This is DES-025's convention applied to a whole section: what a viewer may not do is not drawn.
+
+**14. The global repository's own modals stay exactly as they are.** DOC4 and DOC5 keep their target pickers, because on the repository there genuinely is a target to pick. This record covers the record-scoped surface only. The repository is M26's, and nothing here pre-empts it.
+
+### Recorded normalization points
+
+1. **C4 drew none of this.** Every element above is drawn into C4 by this record, and C4 is now the reference frame for the tree. C24–C29 carry the empty state, the folder load, the Contributor view, and the three states of the batch dialog.
+2. **The table's trailing cell grows from 48px to 76px**, so the uploader avatar and the row menu sit together. Every documents table on a record takes the wider cell.
+3. **The zero count reads "Empty", not "0 documents"** — a plural form, not a special case in code.
+4. **The record dialog drops DOC5's `Import into`, `Where does this live?`, and `Record` controls entirely.** They are not hidden or pre-filled; they are not there.
+5. **C4's drop hint is replaced.** The version-to-the-chain sentence does not survive anywhere on the section.
+6. **The mock names one folder in lower case on purpose.** "correspondence" is drawn between "Amendments" and "Executed", so the case-insensitive order is a thing the mock shows rather than a thing this record only asserts.
+7. **A refused folder Delete stays inside the open dialog, carrying the server's own sentence** — it does not close the dialog and mark the row, which is what DES-025's removal dialogs do. §6 above states the rule; this is why it departs. The consequence sentence and the one-click shape are unchanged, and only where the refusal is said moves. It is said in the dialog because that is where the reader is looking and because every refusal here is one they can act on — a name already taken, a delete that would put two folders of one name in one place — so they can read why and then cancel or fix. It is the DOC-010 erasure dialog's own precedent on this same surface. The same rule holds for a refused document Move.
+
+8. **The batch dialog draws a per-file state, not a per-file percentage, and badges no file "OCR queued."** §9 and §11 draw both, from DOC5's mock, and the build ships neither — for the same reason in two places: the client does not know the fact the mock states.
+
+   - **The percentage.** An upload is one `fetch` of one multipart body, and `fetch` reports nothing about how much of that body has gone. So each row says where the file got to — Queued, Uploading, Done, or the failure and its sentence — and the head and the bar carry the count that _is_ known: how many files of the batch have landed. A per-file percentage drawn anyway would be a number nobody measured, and the batch's whole claim is that it is honest about what it is doing. §11's shape is otherwise unchanged: one dialog, per-file rows, retry only where a retry could succeed, and the foot saying how many files are already on the contract.
+   - **The OCR-queued badge and the scanned-file count.** Whether a PDF is a scan is decided by reading its own text layer, on the server, after the file has landed (DOC-005) — a file that says `.pdf` and a file that is a photograph of a page are the same file to a browser. So no row is badged and no strip counts scans. The strip stays, saying what is true of every file: text extraction and OCR run in the background after each one lands.
+
+   Both are worth revisiting only if the upload seam changes. Real per-file progress needs `XMLHttpRequest`, which would fork the upload path away from the one call every other upload makes; that is a bigger cost than a percentage is worth today.
+
+9. **The surface says nothing about folders until the drop can carry one.** §8, §9 and §11 each draw a fact only a directory drop produces, and M13/4 takes no directory — the drop handler reads the dropped entries and leaves anything that is not a file alone, which is M13/5's to recreate. So four things ship shorter than they are drawn, and all four come back with M13/5:
+
+   - **§8's hint loses its folder clause.** The two lines ship as "Drop files here — each file becomes a new document at version 1" and "To add a round to an existing chain, use Add version on that document." A hint that promises a gesture the surface refuses is worse than a shorter one.
+   - **§8's second line names the control that exists.** The row menu offers **Add version**, not "Upload version". The copy follows the menu rather than the other way round.
+   - **§11's per-file rows carry no folder path.** Every file of a batch lands at the record root, so a path on each row would repeat one value down the list.
+   - **§9's tree summary is a flat file list.** There is no tree to indent and no `3 folders · 128 files` root line to draw, so the body lists the files directly, still with the truncation row. The destination readout stays, reading "Record root", because stating where the files land is what it is for.
+
+   Nothing above is reversed. The anatomy §9 and §11 fix is what M13/5 builds back onto.
+
+10. **M13/5 built all four back, and two of them changed shape on the way.** Point 9 was a deferral, and it is now spent: the hint carries its folder clause, the per-file rows carry their folder path, the summary is a tree, and the destination readout names the folder a drop landed on. Two details of §9 and §11 ship differently from the mock, for the reason point 8 gives about both of its own:
+
+    - **The tree summary draws every folder and truncates only the files.** C27 draws one truncation row, "…and 126 more files", after a tree. The structure is what the reader is confirming, so a truncated structure would be a confirmation of something else — the folder lines are all drawn, however many there are, and the truncation row counts the files it cut.
+    - **The OCR-queued badges and the scanned-file strip stay absent**, exactly as point 8 records: the client still has not read any file's text layer, and a folder drop does not change that.
+
+    One thing the mock has and the build does not, deliberately: C29's failure sentence reads "The other 126 are on the contract, filed where you dropped them." The shipped sentence stops at "on the contract", because the clause is only true when the drop carried a structure and a batch does not always. Worth revisiting if the sentence is ever made conditional on the drop's shape.
+
+11. **The drop targets are the section and each folder row, and only one of them lights up.** §7 names both targets and stops there. The row that will take the drop takes the section's own outline treatment, and the section keeps its own — the drop is still on the section, filed one level in. Two lit rows would promise a drop that lands twice, so one folder is marked at a time.
+
+### Rationale
+
+Drawing folders as rows of the existing table is the whole reason this stays cheap. The columns, the row height, the paging foot, the pills, and the doc panel are all M11's and all unchanged; a folder is a row that fills fewer of them. A separate tree pane would have been a second surface to keep in step with the first, and DES-032 has just spent the record page's remaining chrome budget.
+
+The count rule is the part that carries a promise rather than a preference. DD-014's whole claim is that a viewer outside an audience cannot tell a hidden record from one that was never created. A folder that said "3 documents" and listed one would break that claim inside folders, so the count is scoped to the reader and its zero is left ambiguous on purpose.
+
+Settling the drop meaning was forced. A gesture that sometimes appends a round and sometimes creates a document is a gesture nobody can use without checking first, and the check is the ceremony the drop exists to remove. Making the drop mean one thing puts the other act where it belongs: on a named document, behind its own control.
+
+Keeping Retry off a refusal the file earned is a small honesty. A control that cannot succeed is worse than no control, because it reads as "try again" when the answer will not change.
+
+### Alternatives considered
+
+- **A folder pane beside the table**, file-manager style. Rejected: two surfaces to keep in step, and the record page has no width or chrome budget left after DES-032.
+- **Drill-in listings with a breadcrumb** instead of an in-place tree. Rejected: it hides where a document sits, and it loses the root's mix of folders and unfiled documents — which is the honest shape of a record part way through being organized.
+- **A per-file kind in the batch dialog.** Rejected by DOC-011: 200 decisions is exactly the ceremony bulk intake exists to remove.
+- **A target picker on the record dialog**, carried over from DOC5. Rejected: the drop already said where. A picker would let the confirmation contradict the gesture that opened it.
+- **Keeping the old drop meaning behind a modifier key.** Rejected: one gesture, one meaning. A modifier is undiscoverable, it has no keyboard twin, and DES-010 has no key to spare.
+- **Distinguishing an empty folder from one whose contents are hidden.** Rejected: it is DD-014's failure mode wearing a helpful face.
+- **Dragging documents and folders within the tree to re-file them.** Out of scope for M13 — Move ships as a menu item, and pointer drag stays an intake gesture only.
+- **A separate dialog for progress and for failures.** Rejected: the reader confirmed one thing and is watching one thing. Three dialogs for one import is three places to look.
+- **A typed confirmation on folder Delete**, per DOC-010's hard-delete pattern. Rejected: nothing is destroyed — the contents are re-filed into the parent — so the ceremony is out of proportion, exactly as DES-025 found for a single comment.
+- **Offering Retry on a size refusal**, greyed out. Rejected: a control that cannot succeed reads as "try again" when the answer will not change.
+
+### Consequences
+
+The Documents section grows a tree renderer, a folder row, and the batch dialog with its three states. The folder machinery is built against the owning record rather than against contracts, so matters (M22) and entities (M27) inherit the surface by gaining an owner column, not by forking it.
+
+New messages: the folder count plural, the two drop-hint lines, the read-only notice, the folder and document menu items, the folder-delete dialog's title and consequence sentence, and the batch dialog's strings — title, destination, tree meta, version-kind label and helper, OCR note, the per-file states, the failure reasons, the retry controls, and the two feet. No new tokens: the tree reuses the table's own surfaces, the status families already shipped, and DES-008's Lucide set.
+
+Every documents table on a record takes the 76px trailing cell, whether or not that record has folders yet.
+
+`designs/contracts.pen` is the reference: C4 rebuilt, and C24–C29 added. `designs/documents.pen` DOC4 and DOC5 are untouched and stay that way until M26.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -1937,3 +2121,5 @@ Every list bounded after this inherits the foot rather than inventing one, and a
 | DES-029 | The confidential marker and the composer notice — DES-009's Tier 1 and Tier 3                                                                                        | Accepted |
 | DES-030 | The shell scroll model — one viewport tall, and `main` owns the scroll                                                                                               | Accepted |
 | DES-031 | The paging foot — table placement, the thread's head control, and where focus lands (extends DES-026)                                                                | Accepted |
+| DES-032 | The record-page section strip — routed tabs under the breadcrumb (extends DES-016, DES-030)                                                                          | Accepted |
+| DES-033 | The folder tree and the record-scoped batch drop (extends DES-032, DES-025)                                                                                          | Accepted |

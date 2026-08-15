@@ -141,6 +141,29 @@ export type ActivityAction =
   // file is there.
   | "document.confidentiality_set"
   | "document.confidentiality_cleared"
+  // Where a document sits in the record's tree (M13/3, DOC-006). One
+  // verb for both directions — into a folder and back out to the record
+  // root — because it is one act with a destination, and the payload
+  // carries both folders by name so the entry outlives a rename or a
+  // dissolve. A null on either side is the record root, which has no
+  // name because it is not a folder.
+  | "document.filed"
+  // How a record's paper is filed (M13/2, DOC-006). The entry hangs off
+  // the owning contract, like every other entry in this module, and its
+  // payload carries the folder's **name** — a folder is renamed and
+  // dissolved freely, so the id would not draw a sentence a week later
+  // and the name is what the feed has to say.
+  //
+  // A verb per act, not one generic edit, for the reason the document
+  // verbs give: renaming a grouping and moving it somewhere else are two
+  // different things that happened. Only *manual* folder work writes
+  // here — a folder that a bulk drop find-or-creates on its way to a
+  // file writes nothing (DOC-011), because the drop's story is its
+  // uploads and the feed narrates people rather than traversal.
+  | "folder.created"
+  | "folder.renamed"
+  | "folder.moved"
+  | "folder.deleted"
   | "sso_provider.registered"
   | "sso_provider.updated"
   // Data leaving the system (M9/7, DD-017). An export is a security

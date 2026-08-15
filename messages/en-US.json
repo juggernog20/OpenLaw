@@ -105,13 +105,16 @@
     "defaultMessage": "{actor} marked {title} confidential"
   },
   "activity.document.created": {
-    "defaultMessage": "{actor} uploaded {title}"
+    "defaultMessage": "{atRoot, select, true {{actor} uploaded {title}} other {{actor} uploaded {title} into {folder}}}"
   },
   "activity.document.executedCleared": {
     "defaultMessage": "{actor} cleared the executed copy of {title}"
   },
   "activity.document.executedSet": {
     "defaultMessage": "{version, select, unknown {{actor} pinned the executed copy of {title}} other {{actor} pinned version {version} of {title} as the executed copy}}"
+  },
+  "activity.document.filed": {
+    "defaultMessage": "{atRoot, select, true {{actor} moved {title} onto the contract} other {{actor} filed {title} in {folder}}}"
   },
   "activity.document.hardDeleted": {
     "defaultMessage": "{versions, plural, =0 {{actor} deleted {title} and its files} one {{actor} deleted {title} and its # version} other {{actor} deleted {title} and its # versions}}"
@@ -160,6 +163,21 @@
   },
   "activity.field.promoted": {
     "defaultMessage": "{actor} widened the field {name} to every module"
+  },
+  "activity.folder.created": {
+    "defaultMessage": "{atRoot, select, true {{actor} made the {name} folder} other {{actor} made the {name} folder in {parent}}}"
+  },
+  "activity.folder.deleted": {
+    "defaultMessage": "{actor} deleted the {name} folder and kept what was in it"
+  },
+  "activity.folder.moved": {
+    "defaultMessage": "{atRoot, select, true {{actor} moved the {name} folder onto the contract} other {{actor} moved the {name} folder into {parent}}}"
+  },
+  "activity.folder.renamed": {
+    "defaultMessage": "{actor} renamed the {previousName} folder to {name}"
+  },
+  "activity.folder.unnamed": {
+    "defaultMessage": "unnamed"
   },
   "activity.loadError": {
     "defaultMessage": "The history could not be read. Reopen the panel to try again."
@@ -872,6 +890,18 @@
   "contracts.record.section": {
     "defaultMessage": "Contract"
   },
+  "contracts.record.sections": {
+    "defaultMessage": "Contract sections"
+  },
+  "contracts.record.tab.documents": {
+    "defaultMessage": "Documents"
+  },
+  "contracts.record.tab.fields": {
+    "defaultMessage": "Fields"
+  },
+  "contracts.record.tab.overview": {
+    "defaultMessage": "Overview"
+  },
   "contracts.reference": {
     "defaultMessage": "C-{number}"
   },
@@ -1100,6 +1130,9 @@
   "documents.action.markConfidential": {
     "defaultMessage": "Mark confidential"
   },
+  "documents.action.moveToFolder": {
+    "defaultMessage": "Move to folder"
+  },
   "documents.action.restore": {
     "defaultMessage": "Restore"
   },
@@ -1108,6 +1141,114 @@
   },
   "documents.archivedPill": {
     "defaultMessage": "Archived"
+  },
+  "documents.batch.announce": {
+    "defaultMessage": "{landed} of {total} uploaded, {failed} failed."
+  },
+  "documents.batch.cancelRemaining": {
+    "defaultMessage": "Cancel remaining"
+  },
+  "documents.batch.cancelled": {
+    "defaultMessage": "Cancelled before it was uploaded."
+  },
+  "documents.batch.carriesOn": {
+    "defaultMessage": "A file that fails costs that file. The rest of the import carries on."
+  },
+  "documents.batch.confirmTitle": {
+    "defaultMessage": "{count, plural, =0 {Import folders} one {Import # file} other {Import # files}}"
+  },
+  "documents.batch.derivations": {
+    "defaultMessage": "Text extraction and OCR run in the background after every file lands."
+  },
+  "documents.batch.destination": {
+    "defaultMessage": "Destination"
+  },
+  "documents.batch.failed": {
+    "defaultMessage": "That file could not be uploaded."
+  },
+  "documents.batch.failures": {
+    "defaultMessage": "{failed, plural, one {# file failed} other {# files failed}}. {landed, plural, =0 {Nothing was added to the contract.} one {The other # is on the contract.} other {The other # are on the contract.}}"
+  },
+  "documents.batch.fileMeta": {
+    "defaultMessage": "{files, plural, =0 {Empty} one {# file} other {# files}}"
+  },
+  "documents.batch.folderError": {
+    "defaultMessage": "Some empty folders of the dropped tree could not be created."
+  },
+  "documents.batch.folderMeta": {
+    "defaultMessage": "{folders, plural, one {# folder} other {# folders}} · {files, plural, one {# file} other {# files}}"
+  },
+  "documents.batch.import": {
+    "defaultMessage": "{count, plural, =0 {Import folders} one {Import # file} other {Import # files}}"
+  },
+  "documents.batch.inFlight": {
+    "defaultMessage": "{uploading} uploading · {queued} queued"
+  },
+  "documents.batch.keepOpen": {
+    "defaultMessage": "Keep this dialog open until the import finishes."
+  },
+  "documents.batch.kind": {
+    "defaultMessage": "Version kind"
+  },
+  "documents.batch.kindHelp": {
+    "defaultMessage": "Applied to every file in this import. Notes are not collected in bulk."
+  },
+  "documents.batch.more": {
+    "defaultMessage": "…and {count, plural, one {# more file} other {# more files}}"
+  },
+  "documents.batch.nothingYet": {
+    "defaultMessage": "Nothing is created until you import."
+  },
+  "documents.batch.onRecord": {
+    "defaultMessage": "{count, plural, =0 {Nothing was added to the contract.} one {# file is already on the contract.} other {# files are already on the contract.}}"
+  },
+  "documents.batch.progress": {
+    "defaultMessage": "{landed} of {total, plural, one {# file} other {# files}} uploaded"
+  },
+  "documents.batch.progressList": {
+    "defaultMessage": "Files in this import"
+  },
+  "documents.batch.retry": {
+    "defaultMessage": "Retry"
+  },
+  "documents.batch.retryAll": {
+    "defaultMessage": "{count, plural, one {Retry # file} other {Retry # files}}"
+  },
+  "documents.batch.retryFile": {
+    "defaultMessage": "Retry {name}"
+  },
+  "documents.batch.retryNote": {
+    "defaultMessage": "Retry re-uploads only the file you pick. A file over the size ceiling stays refused until it is made smaller."
+  },
+  "documents.batch.root": {
+    "defaultMessage": "Record root"
+  },
+  "documents.batch.runningTitle": {
+    "defaultMessage": "{count, plural, one {Importing # file} other {Importing # files}}"
+  },
+  "documents.batch.setByDrop": {
+    "defaultMessage": "Set by the drop"
+  },
+  "documents.batch.settledTitle": {
+    "defaultMessage": "Imported {landed} of {total, plural, one {# file} other {# files}}"
+  },
+  "documents.batch.state.done": {
+    "defaultMessage": "Done"
+  },
+  "documents.batch.state.queued": {
+    "defaultMessage": "Queued"
+  },
+  "documents.batch.state.uploading": {
+    "defaultMessage": "Uploading"
+  },
+  "documents.batch.structureKept": {
+    "defaultMessage": "Folder structure is kept"
+  },
+  "documents.batch.summaryList": {
+    "defaultMessage": "What this import will create"
+  },
+  "documents.batch.unreadable": {
+    "defaultMessage": "{count, plural, one {# folder could not be read} other {# folders could not be read}}: {names}. Check the list below — it may be missing files."
   },
   "documents.chain.toggle": {
     "defaultMessage": "{open, select, true {Hide} other {Show}} the {count, plural, one {# earlier version} other {# earlier versions}} of {title}"
@@ -1136,11 +1277,20 @@
   "documents.composer.choose": {
     "defaultMessage": "Choose file"
   },
+  "documents.composer.chooseFolder": {
+    "defaultMessage": "Choose folder"
+  },
+  "documents.composer.chooseMany": {
+    "defaultMessage": "Choose files"
+  },
   "documents.composer.file": {
     "defaultMessage": "File"
   },
   "documents.composer.fileRequired": {
     "defaultMessage": "Choose a file to upload."
+  },
+  "documents.composer.folder": {
+    "defaultMessage": "Folder"
   },
   "documents.composer.kind": {
     "defaultMessage": "Kind"
@@ -1205,11 +1355,86 @@
   "documents.details.title": {
     "defaultMessage": "Edit details"
   },
+  "documents.dropChain": {
+    "defaultMessage": "Folder structure is kept. To add a round to an existing chain, use Add version on that document."
+  },
+  "documents.dropHint": {
+    "defaultMessage": "Drop files or folders here — each file becomes a new document at version 1"
+  },
   "documents.empty": {
     "defaultMessage": "No documents on this contract yet."
   },
   "documents.executed": {
     "defaultMessage": "Executed"
+  },
+  "documents.folder.action.delete": {
+    "defaultMessage": "Delete"
+  },
+  "documents.folder.action.move": {
+    "defaultMessage": "Move"
+  },
+  "documents.folder.action.newInside": {
+    "defaultMessage": "New folder inside"
+  },
+  "documents.folder.action.rename": {
+    "defaultMessage": "Rename"
+  },
+  "documents.folder.actionsFor": {
+    "defaultMessage": "Actions for the {name} folder"
+  },
+  "documents.folder.count": {
+    "defaultMessage": "{count, plural, =0 {Empty} one {# document} other {# documents}}"
+  },
+  "documents.folder.createInsideTitle": {
+    "defaultMessage": "New folder in {name}"
+  },
+  "documents.folder.createTitle": {
+    "defaultMessage": "New folder"
+  },
+  "documents.folder.deleteIntoParent": {
+    "defaultMessage": "Anything in it moves into {parent}. Nothing is deleted."
+  },
+  "documents.folder.deleteIntoRoot": {
+    "defaultMessage": "Anything in it moves onto the contract itself. Nothing is deleted."
+  },
+  "documents.folder.deleteTitle": {
+    "defaultMessage": "Delete the {name} folder?"
+  },
+  "documents.folder.error": {
+    "defaultMessage": "That folder could not be saved. Try again."
+  },
+  "documents.folder.loading": {
+    "defaultMessage": "Loading the documents in {name}"
+  },
+  "documents.folder.more": {
+    "defaultMessage": "Show more in {name}"
+  },
+  "documents.folder.moveInto": {
+    "defaultMessage": "Move into"
+  },
+  "documents.folder.moveTitle": {
+    "defaultMessage": "Move {name}"
+  },
+  "documents.folder.name": {
+    "defaultMessage": "Name"
+  },
+  "documents.folder.nameRequired": {
+    "defaultMessage": "Give the folder a name."
+  },
+  "documents.folder.pathSeparator": {
+    "defaultMessage": "/"
+  },
+  "documents.folder.recordRoot": {
+    "defaultMessage": "The contract itself"
+  },
+  "documents.folder.renameTitle": {
+    "defaultMessage": "Rename folder"
+  },
+  "documents.folder.save": {
+    "defaultMessage": "Save"
+  },
+  "documents.folder.toggle": {
+    "defaultMessage": "{open, select, true {Collapse} other {Expand}} {name}"
   },
   "documents.kind": {
     "defaultMessage": "{kind, select, draft_ours {Draft · ours} redline_theirs {Redline · theirs} redline_ours {Redline · ours} executed {Executed} amendment {Amendment} other {Unknown}}"
@@ -1222,6 +1447,18 @@
   },
   "documents.moreError": {
     "defaultMessage": "The next documents could not be read. Try again."
+  },
+  "documents.move.error": {
+    "defaultMessage": "That document could not be moved. Try again."
+  },
+  "documents.move.into": {
+    "defaultMessage": "File in"
+  },
+  "documents.move.title": {
+    "defaultMessage": "Move {title}"
+  },
+  "documents.newFolder": {
+    "defaultMessage": "New folder"
   },
   "documents.notePrefix": {
     "defaultMessage": "Note:"
