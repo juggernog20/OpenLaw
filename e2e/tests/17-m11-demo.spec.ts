@@ -351,6 +351,22 @@ function documentsSection(page: Page): Locator {
   return page.getByRole("region", { name: "Documents" });
 }
 
+/**
+ * Crosses from the record to its paper, the way a reader does it.
+ *
+ * The paper is one section of the record now, behind its own tab
+ * (DES-032). The strip is a nav of routed links, so the move is a click
+ * and the address is the proof it landed — which is the whole point of
+ * routing the sections rather than holding them in state.
+ */
+async function openDocumentsSection(page: Page, number: number): Promise<void> {
+  await page
+    .getByRole("navigation", { name: "Contract sections" })
+    .getByRole("link", { name: "Documents" })
+    .click();
+  await expect(page).toHaveURL(new RegExp(`/contracts/${number}/documents$`));
+}
+
 /** How much paper the section says is on the record. The badge draws a
  * number and says a phrase, so it is found the way a screen reader finds
  * it — by its name, not by a shape the markup happens to have. */
@@ -537,6 +553,7 @@ test.describe.serial("M11 demo path", () => {
 
       await uploaderPage.goto(`/contracts/${contract.number}`);
       await expect(uploaderPage.getByRole("heading", { level: 1, name: title })).toBeVisible();
+      await openDocumentsSection(uploaderPage, contract.number);
       // The section says there is no paper, and says it as a fact about
       // this record rather than as a shrug.
       await expect(documentCount(uploaderPage)).toHaveText("0");
@@ -707,7 +724,10 @@ test.describe.serial("M11 demo path", () => {
 
       // And the record draws the same chain it drew before, because the
       // deployer story is about the record and not about a byte count.
-      await uploaderPage.goto(`/contracts/${contract.number}`);
+      // Straight to the section's own address (DES-032): the reader's
+      // crossing is proved at the top of the journey, and what this leg
+      // asks about is the chain.
+      await uploaderPage.goto(`/contracts/${contract.number}/documents`);
       const afterRestart = roundRow(uploaderPage, REDLINE_NOTE);
       await expect(afterRestart).toContainText("v2");
       await expect(afterRestart).toContainText("Current");

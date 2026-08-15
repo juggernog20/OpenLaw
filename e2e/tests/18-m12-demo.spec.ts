@@ -401,6 +401,23 @@ function documentsSection(page: Page): Locator {
   return page.getByRole("region", { name: "Documents" });
 }
 
+/**
+ * Crosses from the record to its paper, the way a reader does it.
+ *
+ * The paper is one section of the record now, behind its own tab
+ * (DES-032). The strip is a nav of routed links, so the move is a click
+ * and the address is the proof it landed. It is also a client-side
+ * navigation, so it fetches nothing — which matters here, because this
+ * journey counts every request the browser makes.
+ */
+async function openDocumentsSection(page: Page, number: number): Promise<void> {
+  await page
+    .getByRole("navigation", { name: "Contract sections" })
+    .getByRole("link", { name: "Documents" })
+    .click();
+  await expect(page).toHaveURL(new RegExp(`/contracts/${number}/documents$`));
+}
+
 /** One row of the section, found by the note its round carries. */
 function roundRow(page: Page, note: string): Locator {
   return documentsSection(page).getByRole("row").filter({ hasText: note });
@@ -595,6 +612,7 @@ test.describe.serial("M12 demo path", () => {
 
       await readerPage.goto(`/contracts/${contract.number}`);
       await expect(readerPage.getByRole("heading", { level: 1, name: title })).toBeVisible();
+      await openDocumentsSection(readerPage, contract.number);
 
       // ---- Stories 2 and 12: the Word redline lands, and converts ----
 
