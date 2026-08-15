@@ -119,17 +119,39 @@ async function receive(
   maxBodyBytes: number,
 ): Promise<void> {
   let received = 0;
+  let over = false;
   const ceiling = new Transform({
     transform(chunk: Buffer, _encoding, done) {
       received += chunk.byteLength;
       if (received > maxBodyBytes) {
-        done(bodyTooLarge(maxBodyBytes));
+        // Past the ceiling nothing more is written, and the upload is
+        // still read to its end.
+        //
+        // Erroring here instead would be the obvious thing and it is
+        // wrong: `pipeline` destroys every stream it was given when one
+        // of them fails, and destroying the request resets the
+        // connection mid-upload. The caller then reads a broken socket
+        // rather than the 413 — an engine that could not be reached,
+        // which is transient, so it spends its whole retry budget
+        // re-sending a file that will never fit. Draining first costs a
+        // few seconds of discarded bytes and buys a refusal the caller
+        // can act on.
+        over = true;
+        // And a hard stop behind it, because a drain with no bound is a
+        // way to make the sidecar read for ever. Twice the ceiling is
+        // generous for an honest client that simply sent one large file.
+        if (received > maxBodyBytes * 2) {
+          done(bodyTooLarge(maxBodyBytes));
+          return;
+        }
+        done(null);
         return;
       }
       done(null, chunk);
     },
   });
   await pipeline(request, ceiling, createWriteStream(path));
+  if (over) throw bodyTooLarge(maxBodyBytes);
   if (received === 0) throw sourceUnreadable("The request body has no bytes.");
 }
 

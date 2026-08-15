@@ -207,6 +207,10 @@ describe("render family", () => {
         "image/png",
         "message/rfc822",
         "application/zip",
+        // Both converted families as well, or the equivalence only ever
+        // runs its false side and pins "none of these convert".
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
       ]) {
         const converted = conversionFormatOf(declared, "file.bin") !== null;
         const family = renderFamilyOf(declared, "file.bin");

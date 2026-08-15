@@ -53,7 +53,12 @@ import {
   type Executor,
   type JobAttempt,
 } from "./derivations.js";
-import { readPdfTextLayer, textIsReady, writeTextDerivation } from "./text-extraction.js";
+import {
+  readPdfTextLayer,
+  textDerivationState,
+  textIsReady,
+  writeTextDerivation,
+} from "./text-extraction.js";
 
 /**
  * Whether this version needs a display rendition before the panel can
@@ -266,6 +271,18 @@ export async function convertVersionForDisplay(
     // absence.
     if (await renditionOf(deps, versionId)) {
       await writeRendition(deps, versionId, { state: "failed", fileRef: null, byteSize: null });
+    }
+    // And the text row with it, for the same reason and one more. The
+    // extraction job leaves a Word document's text `pending` on purpose
+    // and defers to this job, so a routing table that no longer maps
+    // this version to a format strands that row: nothing else closes it,
+    // and `derivationOwedBy` asks for nothing on a version that neither
+    // converts nor extracts, so no sweep ever comes back for it. A
+    // `ready` row is left alone, exactly as a failure leaves it, and
+    // where there is no row none is made.
+    const text = await textDerivationState(deps, versionId);
+    if (text !== null && text !== "ready") {
+      await writeTextDerivation(deps, versionId, { state: "failed", source: null, text: null });
     }
     return;
   }

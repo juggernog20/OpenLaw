@@ -16,6 +16,7 @@
 import {
   DEFAULT_DOC_ENGINE_TIMEOUT_MS,
   DEFAULT_DOC_ENGINE_URL,
+  MAX_DOC_ENGINE_TIMEOUT_MS,
   createHttpDocEngine,
   type HttpDocEngineOptions,
 } from "./http.js";
@@ -77,11 +78,22 @@ export function readDocEngineConfig(env: DocEngineEnvironment): HttpDocEngineOpt
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs <= 0) {
     throw new DocEngineConfigError("DOC_ENGINE_TIMEOUT_MS must be a whole number of milliseconds.");
   }
+  // A bound the queue cannot hold is refused rather than accepted and
+  // then broken — see MAX_DOC_ENGINE_TIMEOUT_MS for the arithmetic. An
+  // install that took it would have jobs expire mid-conversion and get
+  // handed to a second worker.
+  if (timeoutMs > MAX_DOC_ENGINE_TIMEOUT_MS) {
+    throw new DocEngineConfigError(
+      `DOC_ENGINE_TIMEOUT_MS must be at most ${MAX_DOC_ENGINE_TIMEOUT_MS} milliseconds, ` +
+        "so two engine calls still fit inside a derivation job's queue budget.",
+    );
+  }
   return { baseUrl, timeoutMs };
 }
 
-/** The default bound, for the deployment that sets no timeout of its own. */
-export { DEFAULT_DOC_ENGINE_TIMEOUT_MS, DEFAULT_DOC_ENGINE_URL };
+/** The default bound, for the deployment that sets no timeout of its own,
+ * and the ceiling the queue's budget puts on the one it may set. */
+export { DEFAULT_DOC_ENGINE_TIMEOUT_MS, DEFAULT_DOC_ENGINE_URL, MAX_DOC_ENGINE_TIMEOUT_MS };
 
 /** Builds the doc engine this install is configured for. */
 export function createDocEngineFromEnv(env: DocEngineEnvironment): DocEngine {

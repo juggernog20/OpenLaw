@@ -78,11 +78,28 @@ import {
  */
 export const MIN_NATIVE_TEXT_CHARACTERS = 16;
 
-/** Letters and digits only: the whitespace, rules, and stray punctuation
- * a scan's text layer collects say nothing about whether the words are
- * there. */
+/**
+ * Letters and digits only, counted no further than the line needs.
+ *
+ * The whitespace, rules, and stray punctuation a scan's text layer
+ * collects say nothing about whether the words are there. The count
+ * stops at {@link MIN_NATIVE_TEXT_CHARACTERS}, because that is the only
+ * question asked of it and the alternative is expensive: a born-digital
+ * deed carries millions of word characters, and matching them all would
+ * build an array of that many one-character strings in the worker to
+ * decide one bit. The log line below reads this count too, and only on
+ * the branch where it came back under the line, so what it prints is
+ * never the capped value.
+ */
 function wordCharacters(text: string): number {
-  return text.match(/[\p{L}\p{N}]/gu)?.length ?? 0;
+  const wordCharacter = /[\p{L}\p{N}]/u;
+  let counted = 0;
+  for (const character of text) {
+    if (!wordCharacter.test(character)) continue;
+    counted += 1;
+    if (counted >= MIN_NATIVE_TEXT_CHARACTERS) return counted;
+  }
+  return counted;
 }
 
 /**
@@ -161,14 +178,28 @@ export async function writeTextDerivation(
   }
 }
 
-/** Whether this version already has its text, so a job may stop. */
-export async function textIsReady(deps: DerivationDeps, versionId: string): Promise<boolean> {
+/**
+ * What this version's text row says, or `null` when there is none.
+ *
+ * Absent and `pending` are two different facts and both jobs branch on
+ * the difference: a row that should not exist is closed, and where there
+ * is no row none is made.
+ */
+export async function textDerivationState(
+  deps: DerivationDeps,
+  versionId: string,
+): Promise<"pending" | "ready" | "failed" | null> {
   const [existing] = await deps.db
     .select({ state: documentVersionText.state })
     .from(documentVersionText)
     .where(eq(documentVersionText.versionId, versionId))
     .limit(1);
-  return existing?.state === "ready";
+  return existing?.state ?? null;
+}
+
+/** Whether this version already has its text, so a job may stop. */
+export async function textIsReady(deps: DerivationDeps, versionId: string): Promise<boolean> {
+  return (await textDerivationState(deps, versionId)) === "ready";
 }
 
 /** One version, as extraction needs it described. */
@@ -217,12 +248,7 @@ export async function extractVersionText(deps: DerivationDeps, versionId: string
     // made: the read answers `unsupported` from that absence, and a
     // `failed` row would turn "this file will never have text" into
     // "something went wrong".
-    const [existing] = await deps.db
-      .select({ versionId: documentVersionText.versionId })
-      .from(documentVersionText)
-      .where(eq(documentVersionText.versionId, versionId))
-      .limit(1);
-    if (existing)
+    if (await textDerivationState(deps, versionId))
       await writeTextDerivation(deps, versionId, { state: "failed", source: null, text: null });
     return;
   }

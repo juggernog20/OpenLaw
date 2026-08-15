@@ -4418,8 +4418,11 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     await waitFor(() => expect(api.writes).toHaveLength(1));
     expect(api.writes[0]!.url).toBe("/api/v1/documents/doc-2/archive");
     await waitFor(() =>
+      // A button, because the row's family is `word` and a file the
+      // panel reads opens rather than downloads (M12/2). Asking for a
+      // link here would pass whether or not the row went away.
       expect(
-        within(section).queryByRole("link", { name: "Orion_MSA_2026_redline_orion.docx" }),
+        within(section).queryByRole("button", { name: "Orion_MSA_2026_redline_orion.docx" }),
       ).not.toBeInTheDocument(),
     );
     expect(countBadge(section, "1 document")).toBeVisible();
@@ -4639,8 +4642,9 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       body: { confirmTitle: "Orion_MSA_2026_draft.docx" },
     });
     await waitFor(() =>
+      // A button, for the same reason the archive case asks for one.
       expect(
-        within(section).queryByRole("link", { name: "Orion_MSA_2026_draft.docx" }),
+        within(section).queryByRole("button", { name: "Orion_MSA_2026_draft.docx" }),
       ).not.toBeInTheDocument(),
     );
     expect(countBadge(section, "1 document")).toBeVisible();
@@ -4724,6 +4728,10 @@ describe("the paged Documents section (CTR-024, DES-031)", () => {
         note: null,
         originalFilename: "Orion_MSA_2026_draft.docx",
         mimeType: "text/plain",
+        /** The API always sends a family (M12/2). `other` is what this
+         * type routes to, and it is what makes these rows download
+         * links — which is what the paging assertions read. */
+        renderFamily: "other",
         byteSize: 10,
         checksumSha256: "a".repeat(64),
         uploadedBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
@@ -4910,14 +4918,25 @@ describe("the doc panel (M12/2)", () => {
     };
   }
 
-  /** The same, plus the metadata edit — for the one test that renames a
-   * document while its panel is open. */
+  /** The same, plus the metadata edit and the archive — for the two
+   * tests that change a document while its panel is open. */
   function editablePanelApi() {
     const record = recordApi(contractRow(), [person("u1", "creator"), person("u2", "member")]);
-    let rows = [document()];
+    let rows: Record<string, unknown>[] = [document()];
     return (call: StubCall): Response | undefined => {
       if (call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
-        return json(200, { documents: rows, nextCursor: null });
+        // Archived paper is off the live list (DOC-010), which is how a
+        // document stops resolving under an open panel.
+        return json(200, {
+          documents: rows.filter((row) => row.archivedAt === null),
+          nextCursor: null,
+        });
+      }
+      const removed = /^\/api\/v1\/documents\/([^/]+)\/archive$/.exec(call.url.pathname);
+      if (removed && call.method === "POST") {
+        const next = { ...rows[0]!, archivedAt: "2026-08-14T10:00:00.000Z" };
+        rows = [next];
+        return json(200, { document: next });
       }
       const edited = /^\/api\/v1\/documents\/([^/]+)$/.exec(call.url.pathname);
       if (edited && call.method === "PATCH") {
@@ -5122,6 +5141,43 @@ describe("the doc panel (M12/2)", () => {
         screen.queryByRole("complementary", { name: /master services agreement, version 1/ }),
       ).toBeNull(),
     );
+  });
+
+  it("takes the panel with a document that leaves the list", async () => {
+    // The panel's third exit, and the only one nobody presses. What it
+    // draws is resolved from the record on every render, so a document
+    // archived out of the live view stops resolving and the panel goes
+    // with it — rather than staying on screen drawing paper the record
+    // no longer has.
+    stubApi({ signedIn: MEMBER, extra: editablePanelApi() });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    const open = within(list).getByRole("button", {
+      name: "Orion Cloud — master services agreement",
+    });
+    await user.click(open);
+    await panel(/master services agreement, version 1/);
+
+    await user.click(
+      within(list).getByRole("button", {
+        name: "Actions for Orion Cloud — master services agreement",
+      }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: "Archive" }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("complementary", { name: /master services agreement, version 1/ }),
+      ).toBeNull(),
+    );
+    // And the row goes too, so there is nothing left to put focus back
+    // on — this path drops the reference rather than restoring to a
+    // control that is no longer there.
+    expect(
+      within(list).queryByRole("button", { name: "Orion Cloud — master services agreement" }),
+    ).toBeNull();
   });
 
   it("lets a Contributor on the team read what they can already download", async () => {

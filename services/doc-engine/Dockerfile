@@ -47,6 +47,13 @@ ENV NODE_ENV=production
 # incidental: a conversion with no fonts installed renders boxes, and
 # the Liberation family is metric-compatible with the Microsoft core
 # fonts, so a Word document breaks its lines where Word broke them.
+#
+# One tool is here by inheritance rather than by name: `ocrmypdf` brings
+# `python3-img2pdf`, and `apps/api/scripts/build-doc-engine-fixtures.ts`
+# runs `python3 -m img2pdf` inside this image to build the image-only
+# scan the tests need. Nothing at run time uses it. If a future Debian
+# drops that dependency, the fixture builder is what breaks, and the
+# repair is to name `python3-img2pdf` in this list.
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends \
         fonts-dejavu-core \

@@ -19,6 +19,7 @@ import {
   SourceUnreadableError,
   unsupportedFormat,
 } from "../lib/doc-engine/engine.js";
+import { EmailUnreadableError } from "../lib/email/parse.js";
 import { BlobNotFoundError, InvalidBlobRefError } from "../lib/storage/adapter.js";
 import { isTerminalFailure } from "./derivations.js";
 
@@ -29,6 +30,15 @@ describe("is this failure the file's fault or the moment's?", () => {
 
   it("gives up on bytes that are not the document they claim to be", () => {
     expect(isTerminalFailure(new SourceUnreadableError("The source is not a PDF."))).toBe(true);
+  });
+
+  it("gives up on bytes that are not the email they claim to be", () => {
+    // The one derivation the engine has no part in (M12/5). A retry
+    // reads the same bytes through the same parser and fails the same
+    // way, so retrying to the queue's limit only delays the card.
+    expect(
+      isTerminalFailure(new EmailUnreadableError("These bytes could not be read as an email.")),
+    ).toBe(true);
   });
 
   it("gives up when the stored blob is not there", () => {

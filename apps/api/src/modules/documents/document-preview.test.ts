@@ -357,7 +357,14 @@ describe("document preview", () => {
     expect(res.json().detail).toMatch(/download/i);
   });
 
-  it("names the families that render in later tickets, and previews none of them yet", async () => {
+  it("names the family the panel routes each of the other three on", async () => {
+    // The family is what the web reads to decide which surface a version
+    // opens on, and it is named from the moment of upload for every
+    // family — not only the two this address streams itself. What the
+    // preview then answers for a Word document or a deck is the
+    // conversion's business, and `document-rendition.test.ts` owns it:
+    // 409 while the job runs, the rendition's bytes once it lands, 415
+    // with the download when it fails.
     const contract = await newContract("Preview · families");
     const word = await uploaded(contract.number, {
       filename: "draft.docx",
@@ -375,10 +382,21 @@ describe("document preview", () => {
     expect(currentOf(word).renderFamily).toBe("word");
     expect(currentOf(deck).renderFamily).toBe("presentation");
     expect(currentOf(mail).renderFamily).toBe("email");
-    for (const document of [word, deck, mail]) {
-      const res = await preview(memberCookies, document.id, currentOf(document).id);
-      expect(res.statusCode, res.body).toBe(415);
-    }
+  });
+
+  it("refuses an email here, because a message is read at its own address", async () => {
+    // The one family with no bytes to draw. It is not "not yet" and it
+    // is not a conversion that might arrive: an email is answered as a
+    // parsed message at the email read, so this address has nothing to
+    // stream and says so instead of leaving a caller polling.
+    const { document, version } = await contractWithFile("Preview · email", {
+      filename: "dispute.eml",
+      contentType: "message/rfc822",
+    });
+
+    const res = await preview(memberCookies, document.id, version.id);
+    expect(res.statusCode, res.body).toBe(415);
+    expect(res.json().detail).toMatch(/download/i);
   });
 
   it("never echoes the type the upload declared", async () => {

@@ -15,7 +15,7 @@
  * it is the one thing a replacement service would have to honour.
  */
 
-import { Readable } from "node:stream";
+import { Readable, Transform, pipeline as pipeStreams } from "node:stream";
 import type { ReadableStream as WebReadableStream } from "node:stream/web";
 import {
   DocEngineTimeoutError,
@@ -38,6 +38,27 @@ export const DEFAULT_DOC_ENGINE_URL = "http://doc-engine:8080";
  * the outer bound for the case where the sidecar itself stops answering.
  */
 export const DEFAULT_DOC_ENGINE_TIMEOUT_MS = 300_000;
+
+/**
+ * The highest bound an install may set, and why there is one.
+ *
+ * A derivation job is given fifteen minutes by the queue
+ * (`TEXT_EXTRACTION_QUEUE_OPTIONS` and `DISPLAY_CONVERSION_QUEUE_OPTIONS`
+ * in `pipeline/pg-boss.ts`, TECH-007) and the worst job makes **two**
+ * sequential engine calls — convert a source to a PDF, then read that
+ * PDF's text. So two bounds plus a minute for the reads and the writes
+ * around them have to fit inside the queue's budget, or a job that is
+ * still working can have its lease expire underneath it: pg-boss hands
+ * the version to another worker while the first is mid-conversion, and
+ * one version gets two derivations at once.
+ *
+ * Seven minutes is what that arithmetic leaves. The alternative was to
+ * raise the queue's budget from the configured bound, which puts a
+ * per-install value into a queue option pg-boss reads once at startup
+ * and makes the two drift silently when only one is changed. Refusing
+ * the bound says the same thing at boot, in a message.
+ */
+export const MAX_DOC_ENGINE_TIMEOUT_MS = 420_000;
 
 export interface HttpDocEngineOptions {
   /** The sidecar's base URL, e.g. `http://doc-engine:8080`. */
@@ -134,6 +155,58 @@ async function refusal(response: Response, path: string): Promise<Error> {
   }
 }
 
+/**
+ * Bounds the **gaps** in an answer that is still arriving.
+ *
+ * The call's own bound has to be released once the headers are in hand:
+ * a rendition may be tens of megabytes and the caller drains it at its
+ * own pace, so a bound still running would cut a PDF that had already
+ * been produced. What that leaves unbounded is a sidecar that sends
+ * headers, sends part of a file, and then stops — the socket stays open
+ * and the caller waits on a stream nothing is feeding.
+ *
+ * So the clock restarts on every chunk instead. A stream that keeps
+ * arriving may take as long as it takes; one that stops for longer than
+ * the configured bound is a stalled call, and it fails as one rather
+ * than as a truncated PDF or an open handle. The HTTP client has an idle
+ * default of its own underneath this, but it is the runtime's and not
+ * ours: an install that sets `DOC_ENGINE_TIMEOUT_MS` means this.
+ */
+function withIdleBound(source: Readable, path: string, timeoutMs: number): Readable {
+  let timer: NodeJS.Timeout | undefined;
+
+  const bounded = new Transform({
+    transform(chunk: Buffer, _encoding, done) {
+      arm();
+      done(null, chunk);
+    },
+  });
+
+  function stop(): void {
+    if (timer) clearTimeout(timer);
+    timer = undefined;
+  }
+
+  function arm(): void {
+    stop();
+    timer = setTimeout(() => {
+      bounded.destroy(
+        new DocEngineTimeoutError(`The doc engine stopped sending ${path} part way through.`),
+      );
+    }, timeoutMs);
+  }
+
+  bounded.once("close", stop);
+  arm();
+  // `pipeline` rather than `pipe`, so the source's own failure reaches
+  // the caller and so destroying either end tears down the other — the
+  // stalled case has to close the socket, not only stop the reader.
+  pipeStreams(source, bounded, () => {
+    stop();
+  });
+  return bounded;
+}
+
 /** Builds the HTTP client for a running sidecar. */
 export function createHttpDocEngine(options: HttpDocEngineOptions): DocEngine {
   const timeoutMs = options.timeoutMs ?? DEFAULT_DOC_ENGINE_TIMEOUT_MS;
@@ -202,13 +275,18 @@ export function createHttpDocEngine(options: HttpDocEngineOptions): DocEngine {
       // The bound is released once the answer's headers are in hand. The
       // PDF may be tens of megabytes and the caller drains it at its own
       // pace — a bound still running would cut the stream part way
-      // through a rendition that had already been produced. A stalled
-      // body is bounded by the HTTP client's own idle timeout.
+      // through a rendition that had already been produced. The same
+      // bound is then applied to the gaps between chunks instead, so a
+      // sidecar that sends half a file and stops is still a timeout.
       call.settle();
       if (!response.body) {
         throw new DocEngineUnavailableError("The doc engine answered /convert with no body.");
       }
-      return Readable.fromWeb(response.body as WebReadableStream<Uint8Array>);
+      return withIdleBound(
+        Readable.fromWeb(response.body as WebReadableStream<Uint8Array>),
+        "convert",
+        timeoutMs,
+      );
     },
 
     ocrPdf(pdf) {

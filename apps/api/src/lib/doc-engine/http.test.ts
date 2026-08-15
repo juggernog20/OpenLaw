@@ -20,6 +20,8 @@
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { Readable } from "node:stream";
+import { buffer } from "node:stream/consumers";
+import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { GenericContainer, Wait, type StartedTestContainer } from "testcontainers";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -67,12 +69,19 @@ function image(): Promise<GenericContainer> {
   return built;
 }
 
-/** Boots one sidecar and answers the engine that talks to it. */
+/** Boots one sidecar and answers the container running it. */
 async function bootSidecar(): Promise<StartedTestContainer> {
-  return (await image())
-    .withExposedPorts(SIDECAR_PORT)
-    .withWaitStrategy(Wait.forHttp("/healthz", SIDECAR_PORT))
-    .start();
+  return (
+    (await image())
+      .withExposedPorts(SIDECAR_PORT)
+      .withWaitStrategy(Wait.forHttp("/healthz", SIDECAR_PORT))
+      // Testcontainers has its own sixty-second default and does not
+      // read the hook's budget. A cold LibreOffice on a loaded machine
+      // takes longer than that, and the failure would name the wait
+      // strategy rather than the machine.
+      .withStartupTimeout(START_TIMEOUT_MS)
+      .start()
+  );
 }
 
 /**
@@ -248,4 +257,112 @@ describe("doc-engine HTTP client", () => {
       ).rejects.toBeInstanceOf(DocEngineTimeoutError);
     });
   });
+
+  describe("against a stub that stops part way through its answer", () => {
+    let server: Server;
+    let baseUrl = "";
+
+    beforeAll(async () => {
+      // Headers, one chunk, and then silence for ever. This is the shape
+      // the call's own bound cannot catch: the bound is released the
+      // moment the headers arrive, because a rendition is drained at the
+      // caller's pace and a bound still running would cut a PDF that had
+      // already been produced.
+      server = createServer((request, response) => {
+        request.resume();
+        response.writeHead(200, { "content-type": "application/pdf" });
+        response.write("%PDF-1.7 ");
+      });
+      await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+      baseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    });
+
+    afterAll(async () => {
+      server.closeAllConnections();
+      await new Promise<void>((resolve, reject) =>
+        server.close((error) => (error ? reject(error) : resolve())),
+      );
+    });
+
+    it("gives up on a rendition that stops arriving", async () => {
+      // The gaps are bounded even though the whole read is not, so a
+      // sidecar that sends half a file and stops is a timeout — worth
+      // retrying — rather than a reader waiting on a stream nothing is
+      // feeding, and rather than a truncated PDF stored as a rendition.
+      const engine = createHttpDocEngine({ baseUrl, timeoutMs: 200 });
+      const rendition = await engine.convertToPdf(
+        Readable.from([DOC_ENGINE_FIXTURES.plainDocx]),
+        "docx",
+      );
+      await expect(buffer(rendition)).rejects.toBeInstanceOf(DocEngineTimeoutError);
+    });
+  });
+});
+
+/**
+ * The body ceiling, against a sidecar started with a small one.
+ *
+ * Its own container, because the ceiling is read from the environment at
+ * startup and the shared sidecar's is the production default — a quarter
+ * of a gigabyte, which is not a thing to upload in a test.
+ */
+describe("a sidecar with a small body ceiling", () => {
+  /** Small enough to cross in a moment, large enough that the upload is
+   * genuinely still being written when it is crossed. */
+  const CEILING_BYTES = 1024 * 1024;
+
+  let container: StartedTestContainer | undefined;
+  let baseUrl = "";
+
+  beforeAll(async () => {
+    container = await (
+      await image()
+    )
+      .withExposedPorts(SIDECAR_PORT)
+      .withEnvironment({ DOC_ENGINE_MAX_BODY_BYTES: String(CEILING_BYTES) })
+      .withWaitStrategy(Wait.forHttp("/healthz", SIDECAR_PORT))
+      .withStartupTimeout(START_TIMEOUT_MS)
+      .start();
+    baseUrl = `http://${container.getHost()}:${container.getMappedPort(SIDECAR_PORT)}`;
+  }, START_TIMEOUT_MS);
+
+  afterAll(async () => {
+    await container?.stop();
+  });
+
+  it(
+    "refuses an upload over it as terminal, not as an engine it could not reach",
+    async () => {
+      // The refusal has to arrive as a refusal. A sidecar that cut the
+      // connection the moment the ceiling was crossed would leave the
+      // client reading a broken socket — unavailable, which is
+      // transient — and the derivation would spend its whole retry
+      // budget re-sending a file that will never fit. So the upload is
+      // read to its end and the 413 is answered, which is terminal.
+      const engine = createHttpDocEngine({ baseUrl });
+      const chunk = Buffer.alloc(64 * 1024);
+      // Paced, and half again over the ceiling, so the client still has
+      // bytes to write when the sidecar decides. An upload that fits in
+      // the socket buffers is over before the answer comes back and
+      // would not tell these two failures apart.
+      const oversize = Readable.from(
+        (async function* () {
+          for (let sent = 0; sent < CEILING_BYTES * 1.5; sent += chunk.byteLength) {
+            await delay(2);
+            yield chunk;
+          }
+        })(),
+      );
+
+      const error = await engine.extractPdfText(oversize).then(
+        () => undefined,
+        (raised: unknown) => raised,
+      );
+      expect(error).toBeInstanceOf(SourceUnreadableError);
+      // The ceiling's own sentence, so this cannot pass because poppler
+      // refused a megabyte of zeros for some other reason.
+      expect((error as Error).message).toContain(String(CEILING_BYTES));
+    },
+    TEST_TIMEOUT_MS,
+  );
 });

@@ -16,7 +16,11 @@ import {
   createDocEngineFromEnv,
   readDocEngineConfig,
 } from "./config.js";
-import { DEFAULT_DOC_ENGINE_TIMEOUT_MS } from "./http.js";
+import { DEFAULT_DOC_ENGINE_TIMEOUT_MS, MAX_DOC_ENGINE_TIMEOUT_MS } from "./http.js";
+import {
+  DISPLAY_CONVERSION_QUEUE_OPTIONS,
+  TEXT_EXTRACTION_QUEUE_OPTIONS,
+} from "../../pipeline/pg-boss.js";
 
 describe("doc engine configuration", () => {
   it("finds the sidecar on the compose network with nothing configured", () => {
@@ -58,18 +62,45 @@ describe("doc engine configuration", () => {
     },
   );
 
-  it.each(["0", "-1", "soon", "1.5", ""])("refuses the bound %j", (timeout) => {
-    // Empty is the one exception: it means unset, so it is the default
-    // rather than a fault.
-    if (timeout === "") {
-      expect(readDocEngineConfig({ DOC_ENGINE_TIMEOUT_MS: timeout })).toEqual({
-        baseUrl: DEFAULT_DOC_ENGINE_URL,
-      });
-      return;
-    }
+  it.each(["0", "-1", "soon", "1.5"])("refuses the bound %j", (timeout) => {
     expect(() => readDocEngineConfig({ DOC_ENGINE_TIMEOUT_MS: timeout })).toThrow(
       DocEngineConfigError,
     );
+  });
+
+  it("refuses a bound the queue could not hold, and says why", () => {
+    // An install that raised the bound past this would have a job's
+    // lease expire while its second engine call was still running, and
+    // pg-boss would hand the same version to a second worker.
+    expect(() =>
+      readDocEngineConfig({ DOC_ENGINE_TIMEOUT_MS: String(MAX_DOC_ENGINE_TIMEOUT_MS + 1) }),
+    ).toThrow(DocEngineConfigError);
+    expect(
+      readDocEngineConfig({ DOC_ENGINE_TIMEOUT_MS: String(MAX_DOC_ENGINE_TIMEOUT_MS) }),
+    ).toEqual({ baseUrl: DEFAULT_DOC_ENGINE_URL, timeoutMs: MAX_DOC_ENGINE_TIMEOUT_MS });
+  });
+
+  it("keeps the ceiling and the queue's budget in step", () => {
+    // The arithmetic the ceiling exists for, asserted rather than
+    // written in a comment: the worst job makes two sequential engine
+    // calls, and both plus a minute of reads and writes have to fit
+    // inside the queue's expiry. Changing one of the three without the
+    // others fails here.
+    const margin = 60_000;
+    for (const queue of [TEXT_EXTRACTION_QUEUE_OPTIONS, DISPLAY_CONVERSION_QUEUE_OPTIONS]) {
+      expect(MAX_DOC_ENGINE_TIMEOUT_MS * 2 + margin).toBeLessThanOrEqual(
+        queue.expireInSeconds * 1000,
+      );
+    }
+    expect(DEFAULT_DOC_ENGINE_TIMEOUT_MS).toBeLessThanOrEqual(MAX_DOC_ENGINE_TIMEOUT_MS);
+  });
+
+  it("takes an empty bound as unset rather than as a fault", () => {
+    // Under Compose a variable that .env leaves out still arrives, as
+    // the empty string. That is "not configured", not a bad value.
+    expect(readDocEngineConfig({ DOC_ENGINE_TIMEOUT_MS: "" })).toEqual({
+      baseUrl: DEFAULT_DOC_ENGINE_URL,
+    });
   });
 
   it("never names the value it refused", () => {

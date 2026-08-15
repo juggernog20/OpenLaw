@@ -54,8 +54,12 @@ export const TEXT_EXTRACTION_QUEUE_OPTIONS = {
    * leaves room for both plus the reads around them, and still notices a
    * wedged worker inside a quarter of an hour.
    *
-   * An install that raises `DOC_ENGINE_TIMEOUT_MS` past two and a half
-   * minutes per call should raise this with it.
+   * This budget is why `DOC_ENGINE_TIMEOUT_MS` has a ceiling
+   * (`MAX_DOC_ENGINE_TIMEOUT_MS`): two bounds plus a minute for the
+   * reads and the writes have to fit inside it, or a job that is
+   * genuinely working loses its lease and a second worker starts the
+   * same version. The configuration refuses a bound this cannot hold,
+   * at boot, rather than letting the two drift apart in service.
    */
   expireInSeconds: 900,
   /**
@@ -93,6 +97,8 @@ export const TEXT_EXTRACTION_QUEUE_OPTIONS = {
  * without also telling every OCR pass it may run for longer.
  */
 export const DISPLAY_CONVERSION_QUEUE_OPTIONS = {
+  /** The same fifteen minutes, and the same ceiling on
+   * `DOC_ENGINE_TIMEOUT_MS` holds it — see the queue above. */
   expireInSeconds: 900,
   retryLimit: 2,
   retryDelay: 30,

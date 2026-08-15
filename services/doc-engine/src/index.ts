@@ -90,6 +90,13 @@ for (const signal of ["SIGTERM", "SIGINT"] as const) {
       process.exit(0);
     }, SHUTDOWN_DEADLINE_MS);
     deadline.unref();
+    // Idle keep-alive sockets go at once. `server.close()` waits for
+    // every open connection, and the API holds its sockets open between
+    // calls — so with nothing in flight the shutdown would still sit
+    // here for the whole deadline, and Compose's own grace period is the
+    // same ten seconds. The deadline is for work that is genuinely
+    // running, not for a socket nobody is using.
+    server.closeIdleConnections();
     server.close(() => process.exit(0));
   });
 }

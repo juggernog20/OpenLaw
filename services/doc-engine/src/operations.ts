@@ -77,7 +77,14 @@ export interface OperationOptions {
 
 /** A tool that failed, as `execFile` reports it. */
 interface ExecFailure {
-  code?: number | null;
+  /**
+   * A number when the tool ran and exited, and a string when it never
+   * ran at all — `ENOENT` for a tool that is not in the image,
+   * `ERR_CHILD_PROCESS_STDIO_MAXBUFFER` for one that outran the buffer.
+   * The two mean opposite things about whose fault the failure is, so
+   * the type says both rather than only the ordinary one.
+   */
+  code?: number | string | null;
   signal?: NodeJS.Signals | null;
   killed?: boolean;
   stderr?: string;
@@ -114,10 +121,14 @@ async function run(command: string, args: string[], options: OperationOptions): 
           reject(operationTimedOut(`${command} ran past ${options.timeoutMs}ms and was killed.`));
           return;
         }
-        if (failure.code === undefined || failure.code === null) {
+        if (typeof failure.code !== "number") {
           // The tool is not in the image, or could not be started at
-          // all. That is the sidecar's own fault, not the source's, so
-          // it must not be reported as an unreadable file.
+          // all, or wrote more than the buffer would hold. That is the
+          // sidecar's own fault, not the source's, so it must not be
+          // reported as an unreadable file — an unreadable file is
+          // terminal, and a missing tool would fail every derivation on
+          // the install for good. Only an exit code says the tool ran
+          // and refused these bytes.
           reject(error);
           return;
         }

@@ -57,7 +57,21 @@ export function pdfjsAssets(): Plugin {
               next();
               return;
             }
-            createReadStream(file).pipe(response);
+            // The one type that has to be right. pdf.js instantiates its
+            // image decoders with `WebAssembly.instantiateStreaming`,
+            // which refuses anything not served as `application/wasm`
+            // and drops the library onto its slower fallback — quietly,
+            // in development only, which is the worst place to lose it.
+            if (file.endsWith(".wasm")) response.setHeader("content-type", "application/wasm");
+            const bytes = createReadStream(file);
+            bytes.on("error", () => {
+              // The answer has already begun, so there is no status left
+              // to send and `next()` would write a second one. Cutting
+              // the connection is what tells the browser the asset did
+              // not arrive whole.
+              response.destroy();
+            });
+            bytes.pipe(response);
           },
           () => next(),
         );
