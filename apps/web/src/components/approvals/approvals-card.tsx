@@ -56,6 +56,7 @@ import {
   type ContractApproval,
 } from "../../lib/approvals";
 import type { ContractTeamMember, UserOption } from "../../lib/contracts";
+import type { Role } from "../../lib/roles";
 import { formatShortDate } from "../../lib/format";
 import { TEXTAREA_CLASS } from "../../lib/form-controls";
 import { Avatar } from "../avatar";
@@ -124,7 +125,7 @@ export function ApprovalsCard({
    * record's audience, and the Owner is the other half. */
   team: readonly ContractTeamMember[];
   viewerId: string;
-  viewerRole: string;
+  viewerRole: Role;
   ownerId: string | null;
   isConfidential: boolean;
   /** An archived record, or a read-only viewer: no control is drawn. */
