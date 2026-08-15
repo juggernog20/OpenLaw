@@ -148,11 +148,12 @@ Some of what OpenLaw does cannot happen while somebody waits: reading a scanned 
 
 There is nothing to configure. It is the same image as the app, started with a different command, and it reads the same `.env` — the same database, the same storage, and the same doc engine.
 
-Three properties are worth knowing about:
+Four properties are worth knowing about:
 
 - **The queue is Postgres.** Jobs are rows in the database you already run, kept by pg-boss in its own schema. There is no Redis and no broker to operate, and a queue backup is the database backup you already take.
 - **It listens on nothing.** No port, no healthcheck, no HTTP surface. It is up when it is running, and what it did is in `docker compose logs worker`.
 - **A failed job is retried, and a permanent failure is recorded.** A transient failure — a doc engine restarting mid-deploy — is tried again with a delay. A failure that no retry would change is recorded against the file it belongs to, and the version, its download, and the record itself are untouched. An upload is never blocked or failed by the work that follows it.
+- **It catches up on old paper at boot.** Every time a worker starts, it looks for documents that are still owed a preview or their extracted text and asks for them. That is what applies an upgrade to the files you uploaded before: nothing is re-uploaded, and the previews and the text arrive on their own. It skips whatever is already done and whatever a job has already given up on, so restarting a worker does not put your whole library through the doc engine again. The line it writes when it finishes is `the backfill sweep finished`.
 
 Running more than one worker is supported and needs no configuration — they take jobs off the same queue and never take the same one twice:
 

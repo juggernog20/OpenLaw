@@ -9,10 +9,11 @@
  * so a handler is written once and the process that runs it is a
  * deployment choice. The API sends; this works.
  *
- * What it does today is text extraction (DOC-005, M12/3). Display
- * conversion (M12/4), the upgrade backfill sweep (M12/6), AI analysis,
- * search indexing, notification digests, and reminders each arrive with
- * their own milestone and register beside it.
+ * What it does today is text extraction (DOC-005, M12/3), display
+ * conversion (M12/4), and the upgrade backfill sweep it runs at boot
+ * (M12/6). AI analysis, search indexing, notification digests, and
+ * reminders each arrive with their own milestone and register beside
+ * them.
  *
  * It runs no migrations. The API is the one process that migrates
  * (TECH-005), and a worker that migrated too would race it on every
@@ -25,6 +26,7 @@ import {
   createConsoleLogger,
   createDocEngineFromEnv,
   createStorageFromEnv,
+  runBackfillSweep,
   startPipeline,
 } from "@openlaw/api/pipeline";
 
@@ -75,6 +77,33 @@ const pipeline = await startPipeline({
 
 log.info({}, "OpenLaw worker started");
 
+/** How long a shutdown waits for the sweep to notice it was stopped. */
+const SWEEP_SHUTDOWN_GRACE_MS = 5_000;
+
+/** Waits, without holding the event loop open on its own. */
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms).unref());
+}
+
+// The upgrade backfill sweep (M12/6). It runs after the handlers are
+// registered, so the worker is already taking jobs while it walks the
+// versions — an install with a large back catalogue must not wait for
+// the sweep before its next upload is derived.
+//
+// It is started rather than awaited, and never raises: a sweep is best
+// effort, and a worker that refused to run because it could not finish
+// one would be a worse answer than a boot that tries again. What it
+// missed is still owed, because the derivation rows are the record.
+const sweeping = new AbortController();
+const swept = runBackfillSweep({ db, log }, pipeline, { signal: sweeping.signal }).then(
+  (summary) => {
+    log.info({ ...summary }, "the backfill sweep finished");
+  },
+  (error: unknown) => {
+    log.error({ reason: reasonOf(error) }, "the backfill sweep did not finish");
+  },
+);
+
 // A container is stopped by a signal, and a job in hand must not be
 // lost to it. Stopping waits for what is running and leaves what has
 // not started in the queue, so the next worker picks it up.
@@ -86,6 +115,18 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
     log.info({ signal }, "stopping the OpenLaw worker");
     void (async () => {
       try {
+        // The sweep first, and waited for: it is only asking, so there
+        // is nothing to lose by cutting it short, and a query still in
+        // flight when the pool closes would report a failure that is
+        // really just the shutdown. The next boot sweeps again.
+        //
+        // The wait is bounded, because the sweep notices the abort
+        // between versions and not inside one. A page query or a queue
+        // send that has already gone out must not be what holds the
+        // container past its grace period, so after a few seconds the
+        // shutdown carries on without it.
+        sweeping.abort();
+        await Promise.race([swept, delay(SWEEP_SHUTDOWN_GRACE_MS)]);
         await pipeline.stop();
       } catch (error) {
         log.error({ reason: reasonOf(error) }, "the worker did not stop cleanly");
