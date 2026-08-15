@@ -1045,6 +1045,58 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/contracts/{number}/approvals": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The approval requests on one contract, oldest ask first (CTR-012) — who was asked, who asked them, where the request came from, the decision, the approver's note, and when it landed. Requests run in parallel, so the roster is a set rather than a queue, and a re-request after a rejection is a new row beneath the one it answers rather than an overwrite of it. Access is inherited from the contract and nothing else: a Contributor on the team reads the roster, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it */
+    get: operations["listContractApprovals"];
+    put?: never;
+    /** Ask one or more named colleagues to sign a contract off (CTR-012). Every request is created at once and every one of them runs in parallel — there are no chains and no order. An approver must be a live Member+ user: a Contributor, a Business User, and an archived person are each refused by name, because a request nobody can act on is worse than no request. On a confidential contract the approver must already be inside the record's audience, so no request is created that its approver could not open. At most one pending request per approver per contract — a second is refused rather than silently collapsed — but a decided one blocks nothing, so a re-request after a rejection writes a new row and the earlier ask stays on the record. Every request made here carries source manual; applying an approver group is its own act. Appends one approval.requested entry per approver on the owning contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract takes no new request until it is restored */
+    post: operations["requestContractApprovals"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/approvals/{approvalId}/decision": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Approve or reject one request, with an optional note (CTR-012). Only the approver named on the request decides it — not the requester, not the Owner, and not an Administrator, because a sign-off somebody else recorded is not a sign-off. The decision is final: a request that has been answered is answered, and a fixed draft goes back to the same person as a new request rather than by reopening this one. Self-approval is allowed. Appends approval.approved or approval.rejected on the owning contract at the working-team tier (DD-017). A request on a contract this viewer cannot reach answers 404, exactly as for one that does not exist; an archived contract takes no decision until it is restored */
+    post: operations["decideContractApproval"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/approvals/{approvalId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Withdraw a pending approval request (CTR-012). Three actors may: the person who asked, the contract's Owner, and an Administrator — a mistaken or obsolete ask should not sit open, and stale requests should not outlive the people or deals they were about. The row is deleted and the approval.cancelled activity entry is the durable record of it, which is why that entry names the approver. A decided request is never cancelled: it is part of the record. A request on a contract this viewer cannot reach answers 404, exactly as for one that does not exist; an archived contract takes no cancellation until it is restored */
+    delete: operations["cancelContractApproval"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/counterparties": {
     parameters: {
       query?: never;
@@ -5767,6 +5819,236 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listContractApprovals: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            approvals: {
+              id: string;
+              approver: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              };
+              requestedBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              };
+              /** @enum {string} */
+              source: "manual" | "group";
+              groupName: string | null;
+              /** @enum {string} */
+              status: "pending" | "approved" | "rejected";
+              note: string | null;
+              /** Format: date-time */
+              requestedAt: string;
+              decidedAt: string | null;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  requestContractApprovals: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          approverIds: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            approvals: {
+              id: string;
+              approver: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              };
+              requestedBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              };
+              /** @enum {string} */
+              source: "manual" | "group";
+              groupName: string | null;
+              /** @enum {string} */
+              status: "pending" | "approved" | "rejected";
+              note: string | null;
+              /** Format: date-time */
+              requestedAt: string;
+              decidedAt: string | null;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  decideContractApproval: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        approvalId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          decision: "approved" | "rejected";
+          note?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            approvals: {
+              id: string;
+              approver: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              };
+              requestedBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              };
+              /** @enum {string} */
+              source: "manual" | "group";
+              groupName: string | null;
+              /** @enum {string} */
+              status: "pending" | "approved" | "rejected";
+              note: string | null;
+              /** Format: date-time */
+              requestedAt: string;
+              decidedAt: string | null;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  cancelContractApproval: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        approvalId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            approvals: {
+              id: string;
+              approver: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              };
+              requestedBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              };
+              /** @enum {string} */
+              source: "manual" | "group";
+              groupName: string | null;
+              /** @enum {string} */
+              status: "pending" | "approved" | "rejected";
+              note: string | null;
+              /** Format: date-time */
+              requestedAt: string;
+              decidedAt: string | null;
+            }[];
           };
         };
       };

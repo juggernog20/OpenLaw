@@ -37,11 +37,8 @@ import {
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity, type ActivityWriter } from "../../lib/activity.js";
+import { eligibleApprovers } from "../../lib/approvers.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
-
-/** Only a Member+ user can be an approver (CTR-012, DD-013): a
- * Contributor or a Business User never signs a contract off. */
-const APPROVER_ROLES = ["administrator", "legal_team_member"] as const;
 
 const MemberSchema = z.object({
   id: z.string(),
@@ -134,44 +131,18 @@ export const approverGroupsRoutes: FastifyPluginAsyncZod = async (app) => {
 
   /**
    * The CTR-012 membership rule, checked once for a whole set: every id
-   * must name a live Member+ user. Returns them in the order the ids
-   * arrived, so the activity entries read in the order the Administrator
-   * picked. The refusal names the first offender rather than counting
-   * them, because the pane's picker only offers eligible people — a
-   * refusal here means the list went stale, and saying which row went
-   * stale is what the Administrator can act on.
+   * must name a live Member+ user. The rule itself is shared with the
+   * contract's own approval request (#233) — a template must never hold
+   * somebody the record would then refuse — and only the archived
+   * sentence differs, because a template holds members and a record
+   * asks people.
    */
   async function eligibleMembers(tx: Tx, ids: string[]): Promise<MemberRow[]> {
-    if (ids.length === 0) return [];
-    const rows = await tx
-      .select({
-        id: users.id,
-        displayName: users.displayName,
-        email: users.email,
-        role: users.role,
-        archivedAt: users.archivedAt,
-      })
-      .from(users)
-      .where(inArray(users.id, ids));
-    const byId = new Map(rows.map((row) => [row.id, row]));
-    for (const id of ids) {
-      const row = byId.get(id);
-      if (!row) throw httpError(422, "No user exists with this id.");
-      if (row.archivedAt) {
-        throw httpError(422, `${row.displayName} is archived and can't be a group member.`);
-      }
-      if (!(APPROVER_ROLES as readonly string[]).includes(row.role)) {
-        throw httpError(
-          422,
-          `${row.displayName} is not an Administrator or a Legal Team Member, ` +
-            "so they can't approve a contract.",
-        );
-      }
-    }
-    return ids.map((id) => {
-      const row = byId.get(id)!;
-      return { id: row.id, displayName: row.displayName, email: row.email };
-    });
+    return eligibleApprovers(
+      tx,
+      ids,
+      (displayName) => `${displayName} is archived and can't be a group member.`,
+    );
   }
 
   app.get(

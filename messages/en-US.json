@@ -35,6 +35,18 @@
   "activity.applet": {
     "defaultMessage": "History"
   },
+  "activity.approval.approved": {
+    "defaultMessage": "{actor} approved this contract"
+  },
+  "activity.approval.cancelled": {
+    "defaultMessage": "{actor} cancelled the approval request to {approver}"
+  },
+  "activity.approval.rejected": {
+    "defaultMessage": "{actor} rejected this contract"
+  },
+  "activity.approval.requested": {
+    "defaultMessage": "{actor} asked {approver} to approve this contract"
+  },
   "activity.approverGroup.memberAdded": {
     "defaultMessage": "{actor} added {member} to the approver group {name}"
   },
@@ -307,6 +319,108 @@
   },
   "applets.labelWithBadge": {
     "defaultMessage": "{label} ({count})"
+  },
+  "approvals.actionsFor": {
+    "defaultMessage": "Actions for {name}"
+  },
+  "approvals.add": {
+    "defaultMessage": "Add approver"
+  },
+  "approvals.addTitle": {
+    "defaultMessage": "Add approver"
+  },
+  "approvals.approve": {
+    "defaultMessage": "Approve"
+  },
+  "approvals.approveTitle": {
+    "defaultMessage": "Approve this contract"
+  },
+  "approvals.approvers": {
+    "defaultMessage": "Approvers"
+  },
+  "approvals.approversHelp": {
+    "defaultMessage": "Everyone you pick is asked at once. They answer in any order."
+  },
+  "approvals.cancel": {
+    "defaultMessage": "Cancel request"
+  },
+  "approvals.column.actions": {
+    "defaultMessage": "Actions"
+  },
+  "approvals.column.approver": {
+    "defaultMessage": "Approver"
+  },
+  "approvals.column.decided": {
+    "defaultMessage": "Decided"
+  },
+  "approvals.column.decision": {
+    "defaultMessage": "Decision"
+  },
+  "approvals.column.note": {
+    "defaultMessage": "Note"
+  },
+  "approvals.column.source": {
+    "defaultMessage": "Source"
+  },
+  "approvals.count.approved": {
+    "defaultMessage": "{count} approved"
+  },
+  "approvals.count.pending": {
+    "defaultMessage": "{count} pending"
+  },
+  "approvals.count.rejected": {
+    "defaultMessage": "{count} rejected"
+  },
+  "approvals.countLabel": {
+    "defaultMessage": "{count, plural, one {# approval} other {# approvals}}"
+  },
+  "approvals.decisionFinal": {
+    "defaultMessage": "A decision is final. To change it, ask for a new approval."
+  },
+  "approvals.empty": {
+    "defaultMessage": "No approvals requested on this contract yet."
+  },
+  "approvals.noCandidates": {
+    "defaultMessage": "Everybody who can approve this contract already has a request open."
+  },
+  "approvals.notYet": {
+    "defaultMessage": "—"
+  },
+  "approvals.note": {
+    "defaultMessage": "Note (optional)"
+  },
+  "approvals.pickSomebody": {
+    "defaultMessage": "Pick at least one approver."
+  },
+  "approvals.reject": {
+    "defaultMessage": "Reject"
+  },
+  "approvals.rejectTitle": {
+    "defaultMessage": "Reject this contract"
+  },
+  "approvals.request": {
+    "defaultMessage": "Request approvals"
+  },
+  "approvals.requestedBy": {
+    "defaultMessage": "Requested by {name}"
+  },
+  "approvals.section": {
+    "defaultMessage": "Approvals"
+  },
+  "approvals.source.manual": {
+    "defaultMessage": "Added manually"
+  },
+  "approvals.status.approved": {
+    "defaultMessage": "Approved"
+  },
+  "approvals.status.pending": {
+    "defaultMessage": "Pending"
+  },
+  "approvals.status.rejected": {
+    "defaultMessage": "Rejected"
+  },
+  "approvals.writeFailed": {
+    "defaultMessage": "The change could not be saved. Try again."
   },
   "audit.col.audience": {
     "defaultMessage": "Audience"
@@ -898,6 +1012,9 @@
   },
   "contracts.record.sections": {
     "defaultMessage": "Contract sections"
+  },
+  "contracts.record.tab.approvals": {
+    "defaultMessage": "Approvals"
   },
   "contracts.record.tab.documents": {
     "defaultMessage": "Documents"
