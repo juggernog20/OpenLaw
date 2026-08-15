@@ -118,7 +118,7 @@ export function ActivityBar({
     <Toolbar.Root
       orientation="vertical"
       aria-label={intl.formatMessage(BAR_LABEL)}
-      className="flex w-(--width-activitybar) shrink-0 flex-col items-center gap-2 border-s border-default bg-raised py-3"
+      className="flex w-(--width-activitybar) shrink-0 flex-col items-center gap-2 border-s border-border-default bg-raised py-3"
     >
       {leading.map(slot)}
       {belowDivider.length > 0 ? (

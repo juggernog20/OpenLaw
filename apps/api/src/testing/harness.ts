@@ -21,6 +21,10 @@ import {
 } from "../lib/mailer.js";
 import type { StorageAdapter } from "../lib/storage/adapter.js";
 import { createLocalStorage } from "../lib/storage/local.js";
+import type { DocEngine } from "../lib/doc-engine/engine.js";
+import { createFakeDocEngine } from "../lib/doc-engine/fake.js";
+import { startPipeline, type Pipeline } from "../pipeline/pg-boss.js";
+import type { PipelineLogger } from "../pipeline/logger.js";
 
 /** Shared by every test app so session cookies verify across instances. */
 export const TEST_AUTH_CONFIG: AuthConfig = {
@@ -162,7 +166,50 @@ export interface TestHarness {
   smtpEnv: { url: string; from: string } | null;
   /** The injected storage adapter — the local driver over a temporary root. */
   storage: StorageAdapter;
+  /**
+   * The injected doc engine (TECH-010): the deterministic fake, not the
+   * sidecar. The rule that tests run production code stops at the
+   * engine binaries — booting LibreOffice for every API suite would buy
+   * nothing an API test can assert. The real image has its own contract
+   * suite, and the fake satisfies the same shape.
+   */
+  docEngine: DocEngine;
+  /**
+   * The real background pipeline (TECH-007), running in this process
+   * against this container's Postgres: the real pg-boss queue, and the
+   * real handlers the worker registers.
+   *
+   * It is not a double. A suite uploads over HTTP and then polls the
+   * same reads the panel polls until the derivation lands, which is the
+   * only way to assert the pipeline at the highest seam — the M12
+   * testing decision, and the reason the queue is on Postgres in the
+   * first place: there is nothing extra to stand up.
+   *
+   * Only the doc engine is faked, and only because booting LibreOffice
+   * for every API suite would buy nothing an API test can assert.
+   */
+  pipeline: Pipeline;
+  /** Lines the pipeline wrote, oldest first. A failed derivation says
+   * so in its own row; why it failed is here. */
+  jobLog: JobLogLine[];
   stop: () => Promise<void>;
+}
+
+/** One line the pipeline logged. */
+export interface JobLogLine {
+  level: "info" | "warn" | "error";
+  message: string;
+  fields: Readonly<Record<string, unknown>>;
+}
+
+/** Captures the pipeline's own lines, so a suite can read why a
+ * derivation failed without a worker process to tail. */
+function capturingLogger(lines: JobLogLine[]): PipelineLogger {
+  return {
+    info: (fields, message) => lines.push({ level: "info", message, fields }),
+    warn: (fields, message) => lines.push({ level: "warn", message, fields }),
+    error: (fields, message) => lines.push({ level: "error", message, fields }),
+  };
 }
 
 /** What a suite may vary about the app the harness builds. */
@@ -184,6 +231,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
   // path: a leak masks the original failure in the suite output and
   // outlives the test run.
   let cleanupStorage: (() => Promise<void>) | undefined;
+  let pipeline: Pipeline | undefined;
   try {
     const db = createDb(container.getConnectionUri());
     await runMigrations(db);
@@ -205,19 +253,36 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
     };
     const { storage, cleanup } = await createTestStorage();
     cleanupStorage = cleanup;
+    const docEngine = createFakeDocEngine();
+    const jobLog: JobLogLine[] = [];
+    // The real queue and the real handlers, on this container's
+    // Postgres. pg-boss installs its schema in about a tenth of a
+    // second, so every suite runs the production pipeline rather than a
+    // double it would have to be kept in step with.
+    pipeline = await startPipeline({
+      connectionString: container.getConnectionUri(),
+      handlers: { db, storage, docEngine, log: capturingLogger(jobLog) },
+      log: capturingLogger(jobLog),
+    });
     const app = await buildApp({
       db,
       config: TEST_AUTH_CONFIG,
       resolveMailer,
       storage,
+      docEngine,
+      jobs: pipeline,
       maxUploadBytes: options.maxUploadBytes,
     });
     await app.ready();
+    const runningPipeline = pipeline;
     return {
       app,
       db,
       mailer,
       storage,
+      docEngine,
+      pipeline: runningPipeline,
+      jobLog,
       get smtpEnv() {
         return smtpEnv;
       },
@@ -226,6 +291,11 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       },
       stop: async () => {
         try {
+          // The pipeline first, and waiting: a handler still running
+          // when the pool closes fails on a connection that has gone,
+          // and that failure would be what the suite reports instead of
+          // whatever really went wrong.
+          await runningPipeline.stop();
           await app.close();
           await db.$client.end();
         } finally {
@@ -239,9 +309,13 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
     };
   } catch (error) {
     try {
-      await cleanupStorage?.();
+      await pipeline?.stop();
     } finally {
-      await container.stop();
+      try {
+        await cleanupStorage?.();
+      } finally {
+        await container.stop();
+      }
     }
     throw error;
   }

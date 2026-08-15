@@ -12,8 +12,10 @@ import { fileURLToPath } from "node:url";
 import { createDb, runMigrations } from "@openlaw/db";
 import { buildApp } from "./app.js";
 import { createMailerResolver } from "./lib/mailer.js";
+import { createDocEngineFromEnv } from "./lib/doc-engine/config.js";
 import { createStorageFromEnv } from "./lib/storage/config.js";
 import { maxUploadBytes } from "./lib/uploads.js";
+import { startPipeline } from "./pipeline/pg-boss.js";
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -24,7 +26,8 @@ function requireEnv(name: string): string {
   return value;
 }
 
-const db = createDb(requireEnv("DATABASE_URL"));
+const databaseUrl = requireEnv("DATABASE_URL");
+const db = createDb(databaseUrl);
 await runMigrations(db);
 
 // TECH-011: SMTP is the universal default, carried by env vars or saved
@@ -46,6 +49,21 @@ const resolveMailer = createMailerResolver(db, {
 const storage = (function readStorage() {
   try {
     return createStorageFromEnv(process.env);
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  }
+})();
+
+// TECH-010: the doc engine is chosen here too, and injected. Nothing is
+// contacted at startup — building the client only parses its URL — so a
+// sidecar that is still coming up does not hold the API's boot. A
+// malformed DOC_ENGINE_URL is a configuration fault and stops the boot,
+// for the storage driver's reason: an install told to reach the engine
+// somewhere specific must not quietly call somewhere else.
+const docEngine = (function readDocEngine() {
+  try {
+    return createDocEngineFromEnv(process.env);
   } catch (error) {
     console.error(error instanceof Error ? error.message : error);
     process.exit(1);
@@ -79,6 +97,13 @@ if (!process.env.BASE_URL && process.env.NODE_ENV === "production") {
 const webDist = fileURLToPath(new URL("../../web/dist", import.meta.url));
 const webDistPresent = existsSync(join(webDist, "index.html"));
 
+// TECH-007: the queue lives on the database this process already has,
+// so there is nothing extra to configure or run. This process only
+// sends — a derivation is asked for after an upload commits and is run
+// by the worker container — so it registers no handlers and leaves the
+// queue's upkeep to the process that works it.
+const jobs = await startPipeline({ connectionString: databaseUrl });
+
 const app = await buildApp(
   {
     db,
@@ -95,6 +120,8 @@ const app = await buildApp(
     },
     resolveMailer,
     storage,
+    docEngine,
+    jobs,
     maxUploadBytes: uploadCeiling,
     webDist: webDistPresent ? webDist : undefined,
   },

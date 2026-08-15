@@ -28,12 +28,16 @@
  * record", and a coloured pill there would argue with the kind pill in
  * the next column, which is a different fact with the same word on it.
  *
- * **Every open is a download in M11.** The name is a plain link to the
- * version's own address, so the browser saves the file the way it saves
- * any other: no client-side blob juggling, no presigned URL, and the
- * session cookie rides the navigation on its own. In-app viewing is
- * M12, and the wider document panel DES-016 places beside it lands with
- * that milestone — this is the record-body section and nothing more.
+ * **The name is the open, and what opening means depends on the file**
+ * (M12/2, DOC-004). A PDF or an image opens in the doc panel — the
+ * wider sibling layer DES-016 places beside the record — and everything
+ * else is still a plain download link to the version's own address, so
+ * the browser saves it the way it saves any other file: no client-side
+ * blob juggling, no presigned URL, and the session cookie rides the
+ * navigation on its own. Every round in the chain opens the same way,
+ * superseded ones included. The panel itself is mounted by the record,
+ * not by this section: it is a layer beside the record body, and this
+ * is the record body.
  *
  * **Two dialogs, because two of these edits are forms.** An upload
  * collects the file, the kind, and the note together, and a metadata
@@ -41,7 +45,7 @@
  * through a purpose-built dialog with its own confirm rather than
  * committing per keystroke (DES-017). Renaming is offered in the dialog
  * rather than in place on the name cell, because on this surface the
- * name is the download.
+ * name is what opens the file.
  *
  * **The two designations are one click each, and they report where the
  * section already reports.** Neither collects anything, so neither is a
@@ -118,6 +122,7 @@ import { Label } from "../ui/label";
 import { Switch } from "../ui/switch";
 import { StatusNote, type FieldStatus } from "../status-note";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
+import { cn } from "../../lib/utils";
 import { formatFileSize, formatShortDate } from "../../lib/format";
 import type { Role } from "../../lib/roles";
 import {
@@ -127,6 +132,7 @@ import {
   documentDownloadHref,
   DOCUMENT_VERSION_KINDS,
   hardDeleteDocument,
+  isPreviewable,
   readContractDocuments,
   restoreDocument,
   setExecutedVersion,
@@ -191,6 +197,8 @@ export function DocumentsCard({
   role,
   viewerId,
   ownerId,
+  reading,
+  onRead,
   onDocuments,
 }: Readonly<{
   /** CTR-003's reference — the address the upload route takes. */
@@ -213,6 +221,22 @@ export function DocumentsCard({
   /** The contract's Owner (CTR-004), or none. The record holds it, so
    * it is passed down rather than read again per row. */
   ownerId: string | null;
+  /** The version the doc panel is reading, or none (M12/2). The record
+   * holds it, because the panel is a layer beside the record and not
+   * part of this section. */
+  reading: string | null;
+  /**
+   * Open one version in the doc panel.
+   *
+   * The control that was pressed rides with it, so closing the panel
+   * puts focus back where it came from (DES-010) — this section knows
+   * which row was clicked and the record does not.
+   */
+  onRead: (
+    document: ContractDocument,
+    version: DocumentVersion,
+    trigger: HTMLElement | null,
+  ) => void;
   /** The list as it now stands, and where the next page starts. The
    * cursor is omitted by a write that changed rows without moving the
    * position — a metadata edit is not a page. */
@@ -683,18 +707,14 @@ export function DocumentsCard({
                         />
                         <span className="flex min-w-0 flex-col">
                           <span className="flex flex-wrap items-center gap-1.5">
-                            <a
-                              href={documentDownloadHref(document.id, chain.current.id)}
-                              // The name is the download. `download` asks
-                              // the browser to save rather than navigate;
-                              // the response says the same thing in its own
-                              // headers, so a browser that ignores the
-                              // attribute still saves the file.
-                              download={chain.current.originalFilename}
-                              className="rounded-chip font-medium text-primary hover:text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
-                            >
-                              {document.title}
-                            </a>
+                            <OpenVersion
+                              document={document}
+                              version={chain.current}
+                              label={document.title}
+                              reading={reading}
+                              onRead={onRead}
+                              className="font-medium"
+                            />
                             {/* DES-009 Tier 1, beside a document's name
                                 rather than a record's: this file is
                                 narrowed to the contract's named team
@@ -812,13 +832,13 @@ export function DocumentsCard({
                               className="mt-1 shrink-0 text-muted"
                             />
                             <span className="flex min-w-0 flex-col">
-                              <a
-                                href={documentDownloadHref(document.id, version.id)}
-                                download={version.originalFilename}
-                                className="rounded-chip text-primary hover:text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
-                              >
-                                {version.originalFilename}
-                              </a>
+                              <OpenVersion
+                                document={document}
+                                version={version}
+                                label={version.originalFilename}
+                                reading={reading}
+                                onRead={onRead}
+                              />
                               {version.note && (
                                 <span className="text-sm text-muted">
                                   <span className="sr-only">
@@ -926,6 +946,77 @@ export function DocumentsCard({
         />
       )}
     </section>
+  );
+}
+
+/**
+ * The name of one version, and what pressing it does (M12/2).
+ *
+ * **A file that reads in the app opens there; a file that does not is
+ * saved.** The name is one affordance either way, because "open this"
+ * is one intention and a reader should not have to know which family
+ * their file is in before they can act on it. Which it does is read off
+ * the family the server routed the version to (DOC-004) — this
+ * component holds no list of file types.
+ *
+ * A version that previews is a button, and one that does not is a
+ * download link. That difference is not cosmetic: a link that opened a
+ * panel would break every expectation a link carries, and a button that
+ * downloaded would lose the right-click, the middle-click, and the
+ * `download` attribute that names the saved file.
+ *
+ * The version being read is marked `aria-current`, so a chain with a
+ * round open says which round that is.
+ */
+function OpenVersion({
+  document,
+  version,
+  label,
+  reading,
+  onRead,
+  className,
+}: Readonly<{
+  document: ContractDocument;
+  version: DocumentVersion;
+  /** What the row calls this file — the document's title on the current
+   * round, the file's own name on a superseded one. */
+  label: string;
+  reading: string | null;
+  onRead: (
+    document: ContractDocument,
+    version: DocumentVersion,
+    trigger: HTMLElement | null,
+  ) => void;
+  className?: string;
+}>) {
+  const shared =
+    "rounded-chip text-start text-primary hover:text-link hover:underline " +
+    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link";
+
+  if (!isPreviewable(version)) {
+    return (
+      <a
+        href={documentDownloadHref(document.id, version.id)}
+        // `download` asks the browser to save rather than navigate; the
+        // response says the same thing in its own headers, so a browser
+        // that ignores the attribute still saves the file.
+        download={version.originalFilename}
+        className={cn(shared, className)}
+      >
+        {label}
+      </a>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      aria-current={reading === version.id ? "true" : undefined}
+      onClick={(event) => onRead(document, version, event.currentTarget)}
+      className={cn(shared, reading === version.id && "underline", className)}
+    >
+      {label}
+    </button>
   );
 }
 

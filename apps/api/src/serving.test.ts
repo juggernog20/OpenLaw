@@ -13,6 +13,8 @@ import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDb } from "@openlaw/db";
 import { buildApp } from "./app.js";
+import { createFakeDocEngine } from "./lib/doc-engine/fake.js";
+import { createUnconfiguredJobQueue } from "./pipeline/jobs.js";
 import {
   CapturingMailer,
   createTestStorage,
@@ -48,6 +50,8 @@ describe("SPA serving", () => {
       config: TEST_AUTH_CONFIG,
       resolveMailer: fixedMailerResolver(new CapturingMailer()),
       storage: storage.storage,
+      docEngine: createFakeDocEngine(),
+      jobs: createUnconfiguredJobQueue(),
       webDist,
     });
     await app.ready();
@@ -144,6 +148,8 @@ describe("readiness", () => {
         config: TEST_AUTH_CONFIG,
         resolveMailer: fixedMailerResolver(new CapturingMailer()),
         storage: storage.storage,
+        docEngine: createFakeDocEngine(),
+        jobs: createUnconfiguredJobQueue(),
       });
       await app.ready();
     });

@@ -57,6 +57,28 @@ export function maxUploadBytes(value: string | undefined): number {
  * without becoming two headers.
  */
 export function attachmentDisposition(filename: string): string {
+  return disposition("attachment", filename);
+}
+
+/**
+ * The `Content-Disposition` value that offers `filename` for display in
+ * place — what a preview answers (M12/2).
+ *
+ * The name is written the same way, and for the same reasons: a browser
+ * that offers the response as a download anyway must still offer it
+ * under the name the file arrived with.
+ *
+ * `inline` is not a claim that the bytes are safe to render. What makes
+ * the preview safe is the type beside it, which is chosen from a table
+ * of families rather than echoed from the upload, and `nosniff`, which
+ * stops the browser looking for a better one (DOC-004).
+ */
+export function inlineDisposition(filename: string): string {
+  return disposition("inline", filename);
+}
+
+/** One disposition header, written the same way for both types. */
+function disposition(type: "attachment" | "inline", filename: string): string {
   const ascii = filename
     // Anything outside printable ASCII, plus the two characters that
     // would end the quoted string early.
@@ -64,7 +86,7 @@ export function attachmentDisposition(filename: string): string {
     .replaceAll(/["\\]/g, "_")
     .trim();
   const fallback = ascii.length > 0 ? ascii : "download";
-  return `attachment; filename="${fallback}"; filename*=UTF-8''${encodeRFC5987(filename)}`;
+  return `${type}; filename="${fallback}"; filename*=UTF-8''${encodeRFC5987(filename)}`;
 }
 
 /**

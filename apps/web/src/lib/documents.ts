@@ -36,6 +36,102 @@ export type DocumentVersion = ContractDocument["versions"][number];
 /** What a version is in the negotiation (CTR-014). */
 export type DocumentVersionKind = DocumentVersion["kind"];
 
+/**
+ * Which of DOC-004's families a file belongs to, as the API routes it.
+ *
+ * Routed on the server from the declared type and the filename, so
+ * nothing here holds a copy of that table: the panel switches on the
+ * family it is handed and a family added later arrives without a client
+ * change.
+ */
+export type RenderFamily = DocumentVersion["renderFamily"];
+
+/**
+ * The families the doc panel renders in place today (M12/2, M12/4,
+ * M12/5).
+ *
+ * Word and PowerPoint are in it because DOC-004 promises they read in
+ * the app: they do not draw in a browser, so the pipeline converts each
+ * one to a PDF and the panel draws that — tracked changes and comments
+ * included. Email is in it because an uploaded MSG or EML is parsed on
+ * the server and drawn as a message. The long tail never is, and gets
+ * the honest download card DOC-004 asks for, never a broken preview.
+ *
+ * A conversion that has not landed yet — or one that failed — is a state
+ * inside the panel, not a reason to keep the row a download link. What
+ * this list answers is "does this file read in the app at all".
+ */
+export const PREVIEWABLE_FAMILIES = [
+  "pdf",
+  "image",
+  "word",
+  "presentation",
+  "email",
+] as const satisfies readonly RenderFamily[];
+
+/** Whether this version opens in the panel or offers its download. */
+export function isPreviewable(version: DocumentVersion): boolean {
+  return (PREVIEWABLE_FAMILIES as readonly RenderFamily[]).includes(version.renderFamily);
+}
+
+/**
+ * The families whose preview is a converted PDF rather than the stored
+ * file (DOC-004, M12/4).
+ *
+ * The panel polls the rendition read for these and draws nothing until
+ * it says ready. Everything else in {@link PREVIEWABLE_FAMILIES} is
+ * drawn straight from the stored bytes.
+ */
+export const CONVERTED_FAMILIES = [
+  "word",
+  "presentation",
+] as const satisfies readonly RenderFamily[];
+
+/** Whether this version has to be converted before the panel can draw
+ * it. */
+export function isConverted(version: DocumentVersion): boolean {
+  return (CONVERTED_FAMILIES as readonly RenderFamily[]).includes(version.renderFamily);
+}
+
+/** Where one version's display conversion has got to (M12/4). */
+export type RenditionState =
+  paths["/api/v1/documents/{documentId}/versions/{versionId}/rendition"]["get"]["responses"]["200"]["content"]["application/json"]["rendition"]["state"];
+
+/**
+ * One poll's outcome: what the server said, or that it said nothing.
+ *
+ * `unreachable` is deliberately not one of the four states. A dropped
+ * request and a refusal are not facts about the conversion, and folding
+ * either into `pending` would have a caller poll for ever at an address
+ * that is never going to answer.
+ */
+export type RenditionPoll = RenditionState | "unreachable";
+
+/**
+ * Asks how far one version's display conversion has got (DOC-004).
+ *
+ * The panel polls this while it shows its preparing state; live push is
+ * M30's job.
+ */
+export async function readRenditionState(
+  documentId: string,
+  versionId: string,
+): Promise<RenditionPoll> {
+  try {
+    const { data } = await api.GET(
+      "/api/v1/documents/{documentId}/versions/{versionId}/rendition",
+      {
+        params: { path: { documentId, versionId } },
+      },
+    );
+    return data?.rendition.state ?? "unreachable";
+  } catch {
+    // No answer at all — a dropped connection. Reported as itself, and
+    // the caller decides how many of these are worth waiting through.
+    return "unreachable";
+  }
+}
+
 /** The five CTR-014 kinds, in the order a negotiation walks them — the
  * order the composer offers and the order the chain usually reads in. */
 export const DOCUMENT_VERSION_KINDS = [
@@ -81,7 +177,105 @@ export function chainOf(
  * there is no presigned URL to build (DOC-012).
  */
 export function documentDownloadHref(documentId: string, versionId: string): string {
-  return `/api/v1/documents/${encodeURIComponent(documentId)}/versions/${encodeURIComponent(versionId)}/download`;
+  return `${versionUrl(documentId, versionId)}/download`;
+}
+
+/**
+ * Where the doc panel reads one version's bytes from (M12/2).
+ *
+ * The download's twin, and the difference is all on the server: the
+ * response comes back inline, under a type the server chose from the
+ * file's family rather than from what the upload declared. The session
+ * cookie rides a same-origin request on its own, here as on the
+ * download, and there is still no presigned URL (DOC-012).
+ */
+export function documentPreviewHref(documentId: string, versionId: string): string {
+  return `${versionUrl(documentId, versionId)}/preview`;
+}
+
+/** Where one version lives, which every read on it hangs off. */
+function versionUrl(documentId: string, versionId: string): string {
+  return `/api/v1/documents/${encodeURIComponent(documentId)}/versions/${encodeURIComponent(versionId)}`;
+}
+
+/** One uploaded email, parsed (M12/5, DOC-004). */
+export type ParsedEmail =
+  paths["/api/v1/documents/{documentId}/versions/{versionId}/email"]["get"]["responses"]["200"]["content"]["application/json"]["email"];
+
+/** One file that came with a message. */
+export type EmailAttachment = ParsedEmail["attachments"][number];
+
+/**
+ * What the email read answered, or that it answered nothing.
+ *
+ * `unreadable` is every way the message did not arrive: the server
+ * refused it, the connection dropped, or the bytes are not the email
+ * they claimed to be. The panel says the same thing for all of them —
+ * this is not going to appear, and the download is here — because that
+ * is what they are to somebody standing in front of it.
+ */
+export type EmailOutcome = { ok: true; email: ParsedEmail } | { ok: false };
+
+/**
+ * Reads one uploaded email as a message (DOC-004).
+ *
+ * The body comes back sanitized: the server is where the sender's markup
+ * is cut down, so no client can render the raw form by forgetting a
+ * step.
+ */
+export async function readEmail(documentId: string, versionId: string): Promise<EmailOutcome> {
+  try {
+    const { data } = await api.GET("/api/v1/documents/{documentId}/versions/{versionId}/email", {
+      params: { path: { documentId, versionId } },
+    });
+    return data ? { ok: true, email: data.email } : { ok: false };
+  } catch {
+    return { ok: false };
+  }
+}
+
+/**
+ * Where one of a rendered email's attachments is downloaded from.
+ *
+ * A plain URL, exactly as a version's own download is: the session
+ * cookie rides a same-origin navigation on its own, and there is no
+ * presigned URL to build (DOC-012).
+ */
+export function emailAttachmentDownloadHref(
+  documentId: string,
+  versionId: string,
+  index: number,
+): string {
+  return `${attachmentUrl(documentId, versionId, index)}/download`;
+}
+
+/**
+ * Where the panel reads one attachment's bytes from, when the
+ * attachment is itself something the panel can draw (M12/5).
+ *
+ * The download's twin, and the difference is all on the server: the
+ * response comes back inline under a type the server chose from the
+ * file's family rather than from what the message declared.
+ */
+export function emailAttachmentPreviewHref(
+  documentId: string,
+  versionId: string,
+  index: number,
+): string {
+  return `${attachmentUrl(documentId, versionId, index)}/preview`;
+}
+
+/** Whether opening this attachment keeps a reader in the app, or hands
+ * them a download (DOC-004). There is no conversion path for an
+ * attachment, so only the families that draw from their own bytes
+ * open. */
+export function isPreviewableAttachment(attachment: EmailAttachment): boolean {
+  return attachment.renderFamily === "pdf" || attachment.renderFamily === "image";
+}
+
+/** Where one attachment lives, which both of its byte reads hang off. */
+function attachmentUrl(documentId: string, versionId: string, index: number): string {
+  return `${versionUrl(documentId, versionId)}/attachments/${encodeURIComponent(String(index))}`;
 }
 
 /** What the composer collects beside the file itself: what this version

@@ -1,6 +1,6 @@
 # Deploying OpenLaw
 
-The blessed path is Docker Compose (TECH-005): one documented `docker compose up` from a clean Linux VM to the first-run setup screen. The stack today is two services — the app (API + built SPA in one container, TECH-017) and Postgres — and grows a service only when a feature needs it.
+The blessed path is Docker Compose (TECH-005): one documented `docker compose up` from a clean Linux VM to the first-run setup screen. The stack today is four services — the app (API + built SPA in one container, TECH-017), the background worker (the same image, a different command, TECH-007), Postgres, and the doc-engine sidecar — and grows a service only when a feature needs it.
 
 ## Requirements
 
@@ -37,6 +37,8 @@ All configuration is environment variables in `.env`; [`.env.example`](../.env.e
 | `STORAGE_PATH`           | no       | The `local` driver's root. Defaults to `/var/lib/openlaw/files`, the mount point of the `openlaw-files` named volume. Keep the default under Compose — see [Files](#files).                                                       |
 | `S3_*`                   | no       | The `s3` driver's bucket, endpoint, region, addressing, and credentials. Required when `STORAGE_DRIVER=s3` — see [Files](#files).                                                                                                 |
 | `MAX_UPLOAD_MB`          | no       | Caps each upload, in whole MB. Defaults to 100. Raise your reverse proxy's body limit to match when you raise this — see [Files](#files).                                                                                         |
+| `DOC_ENGINE_URL`         | no       | Where the doc engine answers (TECH-010). Unset = the bundled `doc-engine` service on the compose network. Set it only to point at an engine you run yourself — see [The doc engine](#the-doc-engine).                             |
+| `DOC_ENGINE_TIMEOUT_MS`  | no       | How long one call to the doc engine may take before it is abandoned. Defaults to 300000 (five minutes).                                                                                                                           |
 | `PORT`                   | no       | The published host port (the container always listens on 3000 internally).                                                                                                                                                        |
 
 ## Reverse proxy contract
@@ -95,6 +97,8 @@ Set `DATABASE_URL` in `.env` to any reachable PostgreSQL 16+ and the app uses it
 
 Uploaded files go through one storage driver (DOC-009, TECH-014), chosen by `STORAGE_DRIVER`. There are two.
 
+The store holds more than what people upload. A Word document or a PowerPoint deck is converted to a PDF so it can be read in the app (DOC-004), and that rendition is written beside the original under `renditions/`. Back it up with everything else — it is cheaper than converting the whole repository again — but nothing is lost if it goes: a rendition is made from its source, and the source is what the download and the record always answer.
+
 ### The local filesystem driver (the default)
 
 Files are stored on disk — no object store, no extra service. The stack mounts the `openlaw-files` named volume at `STORAGE_PATH` (default `/var/lib/openlaw/files`), so files survive `docker compose down`, image upgrades, and rebuilds, exactly like the database volume. (`docker compose down -v` deletes both — don't.)
@@ -125,6 +129,38 @@ Downloads stream through the app, not from the bucket, so the store needs no pub
 
 One upload may carry at most `MAX_UPLOAD_MB` megabytes (default 100), on either driver. A file over the ceiling is refused with a clear message instead of a timeout. If you raise it, raise your reverse proxy's own body limit to match — nginx's `client_max_body_size`, Caddy's `request_body max_size` — or the proxy cuts the request off first and the refusal stops being clear.
 
+## The doc engine
+
+Reading a Word draft in the app, previewing a deck, and getting text out of a scanned PDF all need document tooling that does not belong in the application process: headless LibreOffice, OCRmyPDF/Tesseract, and poppler. They live in one sidecar container, `doc-engine`, built from this repository (TECH-010).
+
+There is nothing to configure. `docker compose up` starts it, and the app finds it by its service name.
+
+Two properties are worth knowing about, because both are deliberate:
+
+- **It is never published to the host.** The service declares no `ports`, exactly as Postgres declares none, so it is reachable only from the other containers on the compose network. Do not add a port mapping. It carries no authentication and has nothing to authorise — the app decides who may read a file long before it sends the bytes — so a published port would be an open document-conversion service on your network.
+- **It holds nothing.** Every call streams a file in, runs one tool, streams the answer back, and removes what it wrote. There is no volume and nothing to back up. Restarting it loses no data; a conversion that was in flight is retried by the job that asked for it.
+
+Set `DOC_ENGINE_URL` only if you run the engine somewhere else — a shared host, or outside Compose. `DOC_ENGINE_TIMEOUT_MS` bounds one call, and defaults to five minutes.
+
+## The background worker
+
+Some of what OpenLaw does cannot happen while somebody waits: reading a scanned contract with OCR takes seconds per page, and an upload must finish at the speed it always did. That work runs in the `worker` service (TECH-007).
+
+There is nothing to configure. It is the same image as the app, started with a different command, and it reads the same `.env` — the same database, the same storage, and the same doc engine.
+
+Four properties are worth knowing about:
+
+- **The queue is Postgres.** Jobs are rows in the database you already run, kept by pg-boss in its own schema. There is no Redis and no broker to operate, and a queue backup is the database backup you already take.
+- **It listens on nothing.** No port, no healthcheck, no HTTP surface. It is up when it is running, and what it did is in `docker compose logs worker`.
+- **A failed job is retried, and a permanent failure is recorded.** A transient failure — a doc engine restarting mid-deploy — is tried again with a delay. A failure that no retry would change is recorded against the file it belongs to, and the version, its download, and the record itself are untouched. An upload is never blocked or failed by the work that follows it.
+- **It catches up on old paper at boot.** Every time a worker starts, it looks for documents that are still owed a preview or their extracted text and asks for them. That is what applies an upgrade to the files you uploaded before: nothing is re-uploaded, and the previews and the text arrive on their own. It skips whatever is already done and whatever a job has already given up on, so restarting a worker does not put your whole library through the doc engine again. The line it writes when it finishes is `the backfill sweep finished`.
+
+Running more than one worker is supported and needs no configuration — they take jobs off the same queue and never take the same one twice:
+
+```bash
+docker compose up -d --scale worker=2
+```
+
 ## Email
 
 OpenLaw sends through whatever SMTP relay you already run (TECH-011). Configure it one of two ways:
@@ -152,7 +188,7 @@ docker compose pull
 docker compose up -d
 ```
 
-Migrations run automatically when the app container boots (TECH-005); replicas booting together serialize on an advisory lock. Data lives in two named volumes — `openlaw-pgdata` (the database) and `openlaw-files` (uploads, see [Files](#files)) — and both survive `docker compose down`, image upgrades, and rebuilds. (`docker compose down -v` deletes them — don't.)
+Migrations run automatically when the app container boots (TECH-005); replicas booting together serialize on an advisory lock. Data lives in two named volumes — `openlaw-pgdata` (the database) and `openlaw-files` (uploads, see [Files](#files)) — and both survive `docker compose down`, image upgrades, and rebuilds. The doc engine holds nothing, so it upgrades by being replaced. (`docker compose down -v` deletes them — don't.)
 
 ## Health
 

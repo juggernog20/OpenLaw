@@ -3682,6 +3682,10 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     note: null,
     originalFilename: "Orion_MSA_2026_draft.docx",
     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    /** DOC-004's family, routed by the server (M12/2). Word reads in
+     * the app from M12/4, converted for display — so the row's name is
+     * a button that opens the panel, not a download link. */
+    renderFamily: "word",
     byteSize: 88_000,
     checksumSha256: "a".repeat(64),
     uploadedBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
@@ -3735,7 +3739,14 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     title: "board_pack.pdf",
     isPrimary: false,
     createdBy: { id: "u1", displayName: "Ada Admin", image: null, archived: false },
-    versions: [version({ id: "ver-4", originalFilename: "board_pack.pdf" })],
+    versions: [
+      version({
+        id: "ver-4",
+        originalFilename: "board_pack.pdf",
+        mimeType: "application/pdf",
+        renderFamily: "pdf",
+      }),
+    ],
   };
 
   /** One file narrowed to the contract's named team, on a record
@@ -3746,7 +3757,14 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     title: "board-memo.txt",
     isPrimary: false,
     isConfidential: true,
-    versions: [version({ id: "ver-5", originalFilename: "board-memo.txt" })],
+    versions: [
+      version({
+        id: "ver-5",
+        originalFilename: "board-memo.txt",
+        mimeType: "text/plain",
+        renderFamily: "other",
+      }),
+    ],
   };
 
   /** Three rounds on one document, the third of them current — the
@@ -3989,16 +4007,18 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(within(section).getAllByRole("row")).toHaveLength(3); // header + two
   });
 
-  it("names each document, marks the version that matters now, and makes the name its download", async () => {
+  it("names each document, marks the version that matters now, and opens the name", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT]).handler });
     renderAt("/contracts/42");
 
     const section = await documentsSection();
-    const link = within(section).getByRole("link", { name: "Orion_MSA_2026_draft.docx" });
-    // Straight at the version's own address: every open is a download
-    // in M11, and there is no presigned URL to build.
-    expect(link).toHaveAttribute("href", "/api/v1/documents/doc-1/versions/ver-1/download");
-    expect(link).toHaveAttribute("download", "Orion_MSA_2026_draft.docx");
+    // A Word draft reads in the app (DOC-004, M12/4), so its name is a
+    // button that opens the panel rather than the download link it was
+    // in M11. What the panel then draws — a converted PDF, a preparing
+    // state, or an honest card — is the doc-panel suite's subject.
+    expect(
+      within(section).getByRole("button", { name: "Orion_MSA_2026_draft.docx" }),
+    ).toBeVisible();
     // The kind, the number, the pin, the size, and when it landed, as
     // the C4 mock draws them.
     expect(within(section).getByText("Draft · ours")).toBeVisible();
@@ -4036,17 +4056,13 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(toggle).toHaveAttribute("aria-expanded", "false");
     await user.click(toggle);
 
-    // The whole chain, newest of the superseded rounds first, each its
-    // own download — a superseded version is not a hidden one.
+    // The whole chain, newest of the superseded rounds first, each of
+    // them openable — a superseded version is not a hidden one.
     expect(within(section).getAllByRole("row")).toHaveLength(4);
     expect(toggle).toHaveAttribute("aria-expanded", "true");
-    const second = within(section).getByRole("link", { name: "round_2.docx" });
-    expect(second).toHaveAttribute("href", "/api/v1/documents/doc-3/versions/ver-b/download");
+    expect(within(section).getByRole("button", { name: "round_2.docx" })).toBeVisible();
     expect(within(section).getByText("Their first pass. Clause 8 is the fight.")).toBeVisible();
-    expect(within(section).getByRole("link", { name: "round_1.docx" })).toHaveAttribute(
-      "href",
-      "/api/v1/documents/doc-3/versions/ver-a/download",
-    );
+    expect(within(section).getByRole("button", { name: "round_1.docx" })).toBeVisible();
     // Ordered newest first under the current round, and the pin is on
     // the round that leads.
     const rows = within(section).getAllByRole("row").slice(1);
@@ -4099,7 +4115,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect([...form.keys()]).toEqual(["kind", "note", "file"]);
     // Newest first, and the count follows.
     expect(
-      await within(section).findByRole("link", { name: "counter_redline.docx" }),
+      await within(section).findByRole("button", { name: "counter_redline.docx" }),
     ).toBeInTheDocument();
     expect(countBadge(section, "2 documents")).toBeVisible();
   });
@@ -4172,10 +4188,10 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       url: "/api/v1/documents/doc-1",
       body: { title: "Orion Cloud — MSA", description: "The main instrument." },
     });
-    // The record reads as renamed, and the download still offers the
-    // file under the name it arrived with.
-    const link = await within(section).findByRole("link", { name: "Orion Cloud — MSA" });
-    expect(link).toHaveAttribute("download", "Orion_MSA_2026_draft.docx");
+    // The record reads as renamed, and the file's own name is untouched
+    // — a rename changes what the record calls the document, never what
+    // the stored file is called.
+    expect(await within(section).findByRole("button", { name: "Orion Cloud — MSA" })).toBeVisible();
     expect(within(section).getByText("The main instrument.")).toBeVisible();
   });
 
@@ -4292,7 +4308,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     // Every round is still there: the pin is one column on the
     // document, and clearing it takes nothing else with it.
     await waitFor(() => expect(within(section).queryByText("Executed")).not.toBeInTheDocument());
-    expect(within(section).getByRole("link", { name: "round_2.docx" })).toBeInTheDocument();
+    expect(within(section).getByRole("button", { name: "round_2.docx" })).toBeInTheDocument();
   });
 
   it("never reads the pin off a round's kind", async () => {
@@ -4354,7 +4370,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     await user.click(
       within(section).getByRole("button", { name: /Show the 2 earlier versions of/ }),
     );
-    expect(within(section).getByRole("link", { name: "round_1.docx" })).toBeInTheDocument();
+    expect(within(section).getByRole("button", { name: "round_1.docx" })).toBeInTheDocument();
     // Every control that writes is absent rather than disabled — the
     // convention every other card on this page follows. Their write
     // grid arrives in M23.
@@ -4380,9 +4396,9 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(within(section).queryByRole("button", { name: /^Actions for/ })).not.toBeInTheDocument();
     expect(within(section).queryByRole("button", { name: /^Pin version/ })).not.toBeInTheDocument();
     expect(within(section).queryByRole("switch")).not.toBeInTheDocument();
-    // Reading it is not editing it: the download and the marks stay.
+    // Reading it is not editing it: the file opens and the marks stay.
     expect(
-      within(section).getByRole("link", { name: "Orion_MSA_2026_draft.docx" }),
+      within(section).getByRole("button", { name: "Orion_MSA_2026_draft.docx" }),
     ).toBeInTheDocument();
     expect(within(section).getByText("Primary")).toBeVisible();
   });
@@ -4402,8 +4418,11 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     await waitFor(() => expect(api.writes).toHaveLength(1));
     expect(api.writes[0]!.url).toBe("/api/v1/documents/doc-2/archive");
     await waitFor(() =>
+      // A button, because the row's family is `word` and a file the
+      // panel reads opens rather than downloads (M12/2). Asking for a
+      // link here would pass whether or not the row went away.
       expect(
-        within(section).queryByRole("link", { name: "Orion_MSA_2026_redline_orion.docx" }),
+        within(section).queryByRole("button", { name: "Orion_MSA_2026_redline_orion.docx" }),
       ).not.toBeInTheDocument(),
     );
     expect(countBadge(section, "1 document")).toBeVisible();
@@ -4419,17 +4438,16 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     // Off the list and out of the count until they are asked for.
     expect(countBadge(section, "1 document")).toBeVisible();
     expect(
-      within(section).queryByRole("link", { name: "Orion_MSA_2026_redline_orion.docx" }),
+      within(section).queryByRole("button", { name: "Orion_MSA_2026_redline_orion.docx" }),
     ).not.toBeInTheDocument();
 
     await user.click(within(section).getByRole("switch"));
 
     // Drawn beside the live ones, marked for what they are, and still
-    // downloadable — nothing was destroyed.
-    const link = await within(section).findByRole("link", {
-      name: "Orion_MSA_2026_redline_orion.docx",
-    });
-    expect(link).toHaveAttribute("href", "/api/v1/documents/doc-2/versions/ver-2/download");
+    // readable — nothing was destroyed.
+    expect(
+      await within(section).findByRole("button", { name: "Orion_MSA_2026_redline_orion.docx" }),
+    ).toBeVisible();
     expect(within(section).getByText("Archived")).toBeVisible();
     // The count still says what is on the record, not what is on screen.
     expect(countBadge(section, "1 document")).toBeVisible();
@@ -4624,8 +4642,9 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       body: { confirmTitle: "Orion_MSA_2026_draft.docx" },
     });
     await waitFor(() =>
+      // A button, for the same reason the archive case asks for one.
       expect(
-        within(section).queryByRole("link", { name: "Orion_MSA_2026_draft.docx" }),
+        within(section).queryByRole("button", { name: "Orion_MSA_2026_draft.docx" }),
       ).not.toBeInTheDocument(),
     );
     expect(countBadge(section, "1 document")).toBeVisible();
@@ -4677,7 +4696,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(await within(section).findByText("This document is already archived.")).toBeVisible();
     // Nothing moved: the section draws what the record says.
     expect(
-      within(section).getByRole("link", { name: "Orion_MSA_2026_draft.docx" }),
+      within(section).getByRole("button", { name: "Orion_MSA_2026_draft.docx" }),
     ).toBeInTheDocument();
     expect(countBadge(section, "1 document")).toBeVisible();
   });
@@ -4709,6 +4728,10 @@ describe("the paged Documents section (CTR-024, DES-031)", () => {
         note: null,
         originalFilename: "Orion_MSA_2026_draft.docx",
         mimeType: "text/plain",
+        /** The API always sends a family (M12/2). `other` is what this
+         * type routes to, and it is what makes these rows download
+         * links — which is what the paging assertions read. */
+        renderFamily: "other",
         byteSize: 10,
         checksumSha256: "a".repeat(64),
         uploadedBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
@@ -4817,5 +4840,717 @@ describe("the paged Documents section (CTR-024, DES-031)", () => {
     expect(await within(section).findByRole("link", { name: SECOND.title })).toBeInTheDocument();
     expect(within(section).getByRole("link", { name: FIRST.title })).toBeInTheDocument();
     expect(within(section).getByRole("img", { name: "2 documents" })).toBeVisible();
+  });
+});
+
+/**
+ * The doc panel (M12/2, DOC-004, DES-016).
+ *
+ * The demand is one sentence: a Legal Team Member clicks a PDF version
+ * on a contract and reads it in-app, no download. What this asserts is
+ * the panel around that — that the name opens it, that the family the
+ * server routed the file to decides which surface it gets, that a file
+ * outside the render set gets an honest card and never a broken
+ * preview, that any round in the chain opens, and that the M4 keyboard
+ * contract holds: Esc closes it and focus comes back to the row.
+ *
+ * The rendering itself is not asserted here and cannot be: pdf.js draws
+ * into a canvas, which jsdom has none of. What the panel promises this
+ * layer is the right surface at the right address — the pixels are the
+ * library's job, and the demo spec is where the whole stack is watched
+ * drawing them.
+ */
+describe("the doc panel (M12/2)", () => {
+  const version = (over: Record<string, unknown> = {}) => ({
+    id: "pv-1",
+    versionNumber: 1,
+    kind: "draft_ours",
+    note: null,
+    originalFilename: "msa-signed.pdf",
+    mimeType: "application/pdf",
+    renderFamily: "pdf",
+    byteSize: 240_000,
+    checksumSha256: "a".repeat(64),
+    uploadedBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+    createdAt: "2026-08-11T09:00:00.000Z",
+    isCurrent: true,
+    isExecuted: false,
+    ...over,
+  });
+
+  const document = (over: Record<string, unknown> = {}) => ({
+    id: "pdoc-1",
+    title: "Orion Cloud — master services agreement",
+    description: null,
+    isPrimary: true,
+    archivedAt: null,
+    isConfidential: false,
+    createdBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+    createdAt: "2026-08-11T09:00:00.000Z",
+    updatedAt: "2026-08-11T09:00:00.000Z",
+    versions: [version()],
+    ...over,
+  });
+
+  /**
+   * The record's three loader reads plus the paper, and — for a file
+   * that has to be converted — the rendition read the panel polls
+   * (M12/4). The preview itself is never stubbed: it is an address the
+   * browser fetches, not a client call.
+   *
+   * `renditionStates` is read one answer per poll, and the last one
+   * repeats — so a test states "pending, then ready" and the panel walks
+   * it the way it would walk a real conversion.
+   */
+  function panelApi(rows: Record<string, unknown>[], renditionStates?: readonly string[]) {
+    const record = recordApi(contractRow(), [person("u1", "creator"), person("u2", "member")]);
+    let poll = 0;
+    return (call: StubCall): Response | undefined => {
+      if (call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
+        return json(200, { documents: rows, nextCursor: null });
+      }
+      if (renditionStates && call.url.pathname.endsWith("/rendition") && call.method === "GET") {
+        const state = renditionStates[Math.min(poll, renditionStates.length - 1)];
+        poll += 1;
+        return json(200, { rendition: { state, updatedAt: null } });
+      }
+      return record.handler(call);
+    };
+  }
+
+  /** The same, plus the metadata edit and the archive — for the two
+   * tests that change a document while its panel is open. */
+  function editablePanelApi() {
+    const record = recordApi(contractRow(), [person("u1", "creator"), person("u2", "member")]);
+    let rows: Record<string, unknown>[] = [document()];
+    return (call: StubCall): Response | undefined => {
+      if (call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
+        // Archived paper is off the live list (DOC-010), which is how a
+        // document stops resolving under an open panel.
+        return json(200, {
+          documents: rows.filter((row) => row.archivedAt === null),
+          nextCursor: null,
+        });
+      }
+      const removed = /^\/api\/v1\/documents\/([^/]+)\/archive$/.exec(call.url.pathname);
+      if (removed && call.method === "POST") {
+        const next = { ...rows[0]!, archivedAt: "2026-08-14T10:00:00.000Z" };
+        rows = [next];
+        return json(200, { document: next });
+      }
+      const edited = /^\/api\/v1\/documents\/([^/]+)$/.exec(call.url.pathname);
+      if (edited && call.method === "PATCH") {
+        const next = { ...rows[0]!, ...(call.body as Record<string, unknown>) };
+        rows = [next];
+        return json(200, { document: next });
+      }
+      return record.handler(call);
+    };
+  }
+
+  const section = () => screen.findByRole("region", { name: /^Documents/ });
+  const panel = (name: RegExp) => screen.findByRole("complementary", { name });
+
+  it("opens a PDF version in the panel from its name, with no download", async () => {
+    stubApi({ signedIn: MEMBER, extra: panelApi([document()]) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    // A file that reads in the app is a button, not a download link:
+    // pressing it opens the panel rather than saving the file.
+    const open = within(list).getByRole("button", {
+      name: "Orion Cloud — master services agreement",
+    });
+    expect(
+      within(list).queryByRole("link", { name: "Orion Cloud — master services agreement" }),
+    ).toBeNull();
+
+    await user.click(open);
+    const reading = await panel(/master services agreement, version 1/);
+    // The name, the round, and the file's own name — the DOC2 mock's
+    // header and toolbar.
+    expect(within(reading).getByRole("heading", { level: 2 })).toHaveTextContent(
+      "Orion Cloud — master services agreement",
+    );
+    expect(within(reading).getByText("v1")).toBeVisible();
+    expect(within(reading).getByText("msa-signed.pdf")).toBeVisible();
+    // The download is still one click away, from inside the panel.
+    expect(within(reading).getByRole("link", { name: "Download" })).toHaveAttribute(
+      "href",
+      "/api/v1/documents/pdoc-1/versions/pv-1/download",
+    );
+    // The chain says which round is on screen, so a reader coming back
+    // to the list can see where they are.
+    expect(open).toHaveAttribute("aria-current", "true");
+  });
+
+  it("keeps the panel's header on the record's own words after a rename", async () => {
+    stubApi({ signedIn: MEMBER, extra: editablePanelApi() });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(
+      within(list).getByRole("button", { name: "Orion Cloud — master services agreement" }),
+    );
+    await panel(/master services agreement, version 1/);
+
+    // Renaming the document while it is open moves the panel's header
+    // with it: what the panel draws is resolved from the list, never
+    // from a copy taken when it opened.
+    await user.click(
+      within(list).getByRole("button", {
+        name: "Actions for Orion Cloud — master services agreement",
+      }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: "Edit details" }));
+    const dialog = await screen.findByRole("dialog");
+    const name = within(dialog).getByLabelText("Name");
+    await user.clear(name);
+    await user.type(name, "Orion Cloud MSA");
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    expect(await panel(/Orion Cloud MSA, version 1/)).toBeVisible();
+  });
+
+  it("draws a raster image inline, from the preview address", async () => {
+    const image = document({
+      id: "pdoc-img",
+      title: "Signature page",
+      versions: [
+        version({
+          id: "pv-img",
+          originalFilename: "signature-page.png",
+          mimeType: "image/png",
+          renderFamily: "image",
+        }),
+      ],
+    });
+    stubApi({ signedIn: MEMBER, extra: panelApi([image]) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    await user.click(within(await section()).getByRole("button", { name: "Signature page" }));
+    const reading = await panel(/Signature page, version 1/);
+    // Inline, and read from the preview rather than the download: the
+    // server sets the type and the disposition there.
+    expect(within(reading).getByRole("img", { name: "signature-page.png" })).toHaveAttribute(
+      "src",
+      "/api/v1/documents/pdoc-img/versions/pv-img/preview",
+    );
+  });
+
+  it("gives an out-of-set file an honest download card, never a broken preview", async () => {
+    const sheet = document({
+      id: "pdoc-x",
+      title: "fee-schedule.xlsx",
+      versions: [
+        version({
+          id: "pv-x",
+          originalFilename: "fee-schedule.xlsx",
+          mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          renderFamily: "other",
+        }),
+      ],
+    });
+    stubApi({ signedIn: MEMBER, extra: panelApi([sheet]) });
+    renderAt("/contracts/42");
+
+    const list = await section();
+    // Nothing in the section opens it, because nothing in the app can
+    // read it: the name stays the download it was in M11.
+    expect(within(list).getByRole("link", { name: "fee-schedule.xlsx" })).toHaveAttribute(
+      "href",
+      "/api/v1/documents/pdoc-x/versions/pv-x/download",
+    );
+    expect(within(list).queryByRole("button", { name: "fee-schedule.xlsx" })).toBeNull();
+  });
+
+  it("opens a superseded round as readily as the current one", async () => {
+    const chain = document({
+      id: "pdoc-chain",
+      title: "Negotiated agreement",
+      versions: [
+        version({
+          id: "pv-a",
+          versionNumber: 1,
+          originalFilename: "round_1.pdf",
+          isCurrent: false,
+        }),
+        version({ id: "pv-b", versionNumber: 2, originalFilename: "round_2.pdf" }),
+      ],
+    });
+    stubApi({ signedIn: MEMBER, extra: panelApi([chain]) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(
+      within(list).getByRole("button", { name: /Show the 1 earlier version of Negotiated/ }),
+    );
+    await user.click(within(list).getByRole("button", { name: "round_1.pdf" }));
+
+    // The round on screen is the one that was asked for, not the head
+    // of the chain.
+    const reading = await panel(/Negotiated agreement, version 1/);
+    expect(within(reading).getByText("round_1.pdf")).toBeVisible();
+    expect(within(reading).getByRole("link", { name: "Download" })).toHaveAttribute(
+      "href",
+      "/api/v1/documents/pdoc-chain/versions/pv-a/download",
+    );
+  });
+
+  it("closes on Esc and puts focus back on the row that opened it", async () => {
+    stubApi({ signedIn: MEMBER, extra: panelApi([document()]) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    const open = within(list).getByRole("button", {
+      name: "Orion Cloud — master services agreement",
+    });
+    await user.click(open);
+    await panel(/master services agreement, version 1/);
+
+    await user.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("complementary", { name: /master services agreement, version 1/ }),
+      ).toBeNull(),
+    );
+    // DES-010's restore-to-trigger rule: the panel is a plain aside, so
+    // this is wired by hand and has to be asserted.
+    expect(open).toHaveFocus();
+  });
+
+  it("closes from its own close control", async () => {
+    stubApi({ signedIn: MEMBER, extra: panelApi([document()]) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(
+      within(list).getByRole("button", { name: "Orion Cloud — master services agreement" }),
+    );
+    const reading = await panel(/master services agreement, version 1/);
+    await user.click(within(reading).getByRole("button", { name: "Close the document" }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("complementary", { name: /master services agreement, version 1/ }),
+      ).toBeNull(),
+    );
+  });
+
+  it("takes the panel with a document that leaves the list", async () => {
+    // The panel's third exit, and the only one nobody presses. What it
+    // draws is resolved from the record on every render, so a document
+    // archived out of the live view stops resolving and the panel goes
+    // with it — rather than staying on screen drawing paper the record
+    // no longer has.
+    stubApi({ signedIn: MEMBER, extra: editablePanelApi() });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    const open = within(list).getByRole("button", {
+      name: "Orion Cloud — master services agreement",
+    });
+    await user.click(open);
+    await panel(/master services agreement, version 1/);
+
+    await user.click(
+      within(list).getByRole("button", {
+        name: "Actions for Orion Cloud — master services agreement",
+      }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: "Archive" }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("complementary", { name: /master services agreement, version 1/ }),
+      ).toBeNull(),
+    );
+    // And the row goes too, so there is nothing left to put focus back
+    // on — this path drops the reference rather than restoring to a
+    // control that is no longer there.
+    expect(
+      within(list).queryByRole("button", { name: "Orion Cloud — master services agreement" }),
+    ).toBeNull();
+  });
+
+  it("lets a Contributor on the team read what they can already download", async () => {
+    stubApi({ signedIn: CONTRIBUTOR, extra: panelApi([document()]) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(
+      within(list).getByRole("button", { name: "Orion Cloud — master services agreement" }),
+    );
+    // Read access means reading, on every surface: the panel is not a
+    // write and is offered to everyone the record names.
+    expect(await panel(/master services agreement, version 1/)).toBeVisible();
+  });
+
+  /**
+   * Word and PowerPoint, converted for display (M12/4, DOC-004).
+   *
+   * The demand is the milestone's first sentence: a Legal Team Member
+   * previews a Word draft in-app without downloading it. No browser
+   * draws a DOCX, so what the panel promises this layer is the three
+   * states of the conversion behind it — preparing while it runs, the
+   * PDF surface when it lands, and an honest card with the download when
+   * it gave up.
+   *
+   * The conversion's own fidelity is not asserted here and cannot be:
+   * the tracked changes and comments live in bytes a real LibreOffice
+   * produced, which is the doc-engine contract suite's subject, and the
+   * demo spec is where the whole stack is watched drawing them.
+   */
+  const wordDraft = () =>
+    document({
+      id: "pdoc-w",
+      title: "Counterparty redline",
+      versions: [
+        version({
+          id: "pv-w",
+          originalFilename: "nda-redline.docx",
+          mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          renderFamily: "word",
+        }),
+      ],
+    });
+
+  it("shows a preparing state while a Word draft converts, and draws it when it lands", async () => {
+    stubApi({ signedIn: MEMBER, extra: panelApi([wordDraft()], ["pending", "ready"]) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    // A Word draft reads in the app, so its name opens the panel rather
+    // than saving the file.
+    await user.click(within(list).getByRole("button", { name: "Counterparty redline" }));
+    const reading = await panel(/Counterparty redline, version 1/);
+
+    // While the conversion runs the panel says so, rather than showing
+    // nothing or a broken surface.
+    expect(await within(reading).findByText("Preparing this document for reading…")).toBeVisible();
+    // And it keeps asking until the answer changes — live push is M30's
+    // job, so this is a poll.
+    await waitFor(
+      () => expect(within(reading).queryByText("Preparing this document for reading…")).toBeNull(),
+      { timeout: 5000 },
+    );
+    // No download card: the file is being drawn, not offered.
+    expect(within(reading).queryByText(/could not be prepared/)).toBeNull();
+  });
+
+  it("offers the download when a conversion failed, and says so plainly", async () => {
+    stubApi({ signedIn: MEMBER, extra: panelApi([wordDraft()], ["failed"]) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(within(list).getByRole("button", { name: "Counterparty redline" }));
+    const reading = await panel(/Counterparty redline, version 1/);
+
+    // One click, not a support ticket: the card says what happened and
+    // the download is on it.
+    expect(
+      await within(reading).findByText(
+        "This file could not be prepared for reading here. Download it to read it.",
+      ),
+    ).toBeVisible();
+    expect(within(reading).getAllByRole("link", { name: "Download" }).at(-1)).toHaveAttribute(
+      "href",
+      "/api/v1/documents/pdoc-w/versions/pv-w/download",
+    );
+  });
+
+  it("stops asking when nothing answers, and ends at the download", async () => {
+    // The rendition read is stubbed away entirely, so every poll comes
+    // back with nothing. A reader must never be left in front of a
+    // preparing state that will never resolve: the asking is bounded and
+    // ends where every path with no preview ends.
+    stubApi({ signedIn: MEMBER, extra: panelApi([wordDraft()]) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(within(list).getByRole("button", { name: "Counterparty redline" }));
+    const reading = await panel(/Counterparty redline, version 1/);
+
+    expect(
+      await within(reading).findByText(
+        "This file could not be prepared for reading here. Download it to read it.",
+        undefined,
+        { timeout: 15_000 },
+      ),
+    ).toBeVisible();
+  }, 30_000);
+
+  /**
+   * Rendered emails (M12/5, DOC-004).
+   *
+   * The demand is one sentence: a Legal Team Member opens an uploaded
+   * MSG or EML and reads a message — headers, body, attachment list —
+   * rather than downloading a blob. What this layer asserts is the
+   * surface around the parse: that the message is drawn, that the body
+   * is drawn where it can reach nothing, that an attachment that reads
+   * in the app opens here, that one that does not is a download, and
+   * that a message nobody can read ends where every path with no
+   * preview ends.
+   *
+   * The parse and the sanitizing are the server's, and they are
+   * asserted there: this panel is handed a body that is already safe and
+   * never sees a sender's own markup.
+   */
+  const thread = () =>
+    document({
+      id: "pdoc-m",
+      title: "Delivery dispute — correspondence",
+      versions: [
+        version({
+          id: "pv-m",
+          originalFilename: "RE_delivery_dispute.msg",
+          mimeType: "application/vnd.ms-outlook",
+          renderFamily: "email",
+        }),
+      ],
+    });
+
+  /** The record's reads, plus the email read the panel makes. `email`
+   * is what the server answered; `undefined` is a server that refused
+   * it. */
+  function emailApi(rows: Record<string, unknown>[], email?: Record<string, unknown>) {
+    const base = panelApi(rows);
+    return (call: StubCall): Response | undefined => {
+      if (call.url.pathname.endsWith("/email") && call.method === "GET") {
+        return email
+          ? json(200, { email })
+          : problem(422, "This email could not be read. Download it instead.");
+      }
+      return base(call);
+    };
+  }
+
+  const message = (over: Record<string, unknown> = {}) => ({
+    subject: "RE: delivery dispute — June shipment damage",
+    from: { name: "Tom Alvarez", address: "t.alvarez@brightline.com" },
+    to: [{ name: null, address: "legal@aldgate.co.uk" }],
+    cc: [{ name: "Sarah Chen", address: "s.chen@aldgate.co.uk" }],
+    bcc: [],
+    date: "2026-08-07T16:12:00.000Z",
+    html: null,
+    text: "Sarah,\n\nAttaching the June delivery log.",
+    attachments: [],
+    ...over,
+  });
+
+  it("opens an uploaded email as a message, with its headers and its body", async () => {
+    stubApi({ signedIn: MEMBER, extra: emailApi([thread()], message()) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    // An email reads in the app, so its name opens the panel rather
+    // than saving the file.
+    await user.click(
+      within(list).getByRole("button", { name: "Delivery dispute — correspondence" }),
+    );
+    const reading = await panel(/Delivery dispute — correspondence, version 1/);
+
+    expect(
+      await within(reading).findByText("RE: delivery dispute — June shipment damage"),
+    ).toBeVisible();
+    expect(within(reading).getByText("Tom Alvarez <t.alvarez@brightline.com>")).toBeVisible();
+    expect(within(reading).getByText("legal@aldgate.co.uk")).toBeVisible();
+    expect(within(reading).getByText("Sarah Chen <s.chen@aldgate.co.uk>")).toBeVisible();
+    expect(within(reading).getByText(/Attaching the June delivery log/)).toBeVisible();
+    // No Bcc row for a message that carries none: an empty label would
+    // read as a redaction.
+    expect(within(reading).queryByText("Bcc")).toBeNull();
+    // Never a download card: the message is being drawn, not offered.
+    expect(within(reading).queryByText(/could not be prepared/)).toBeNull();
+  });
+
+  it("shows who a message was blind-copied to, when the file says", async () => {
+    // A MSG saved from the sender's own mailbox — Sent Items, not an
+    // inbox — names its Bcc recipients, and hiding a recipient class the
+    // server handed over would misread the message for whoever it
+    // matters most to.
+    stubApi({
+      signedIn: MEMBER,
+      extra: emailApi(
+        [thread()],
+        message({ bcc: [{ name: "Iris Auditor", address: "i.auditor@brightline.com" }] }),
+      ),
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(
+      within(list).getByRole("button", { name: "Delivery dispute — correspondence" }),
+    );
+    const reading = await panel(/Delivery dispute — correspondence, version 1/);
+
+    expect(await within(reading).findByText("Bcc")).toBeVisible();
+    expect(within(reading).getByText("Iris Auditor <i.auditor@brightline.com>")).toBeVisible();
+  });
+
+  it("draws an HTML body where it can reach nothing", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: emailApi([thread()], message({ html: "<p>Attaching the log.</p>", text: null })),
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(
+      within(list).getByRole("button", { name: "Delivery dispute — correspondence" }),
+    );
+    const reading = await panel(/Delivery dispute — correspondence, version 1/);
+
+    // The second wall. The server already cut the sender's markup down;
+    // this frame is what makes a hole in that sanitizer cost nothing.
+    const frame = await within(reading).findByTitle("Message body");
+    expect(frame.tagName).toBe("IFRAME");
+    // No `allow-scripts`, and no `allow-same-origin`: nothing in the
+    // message runs, and nothing in it shares this origin.
+    const sandbox = frame.getAttribute("sandbox") ?? "";
+    expect(sandbox).not.toContain("allow-scripts");
+    expect(sandbox).not.toContain("allow-same-origin");
+    // And the document it holds refuses every request it could make.
+    expect(frame.getAttribute("srcdoc")).toContain("default-src 'none'");
+    expect(frame.getAttribute("srcdoc")).toContain("Attaching the log.");
+  });
+
+  it("opens an attachment that reads in the app, and comes back to the message", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: emailApi(
+        [thread()],
+        message({
+          attachments: [
+            {
+              index: 0,
+              filename: "warehouse-photo.png",
+              mimeType: "image/png",
+              byteSize: 240_000,
+              renderFamily: "image",
+              isInline: false,
+            },
+          ],
+        }),
+      ),
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(
+      within(list).getByRole("button", { name: "Delivery dispute — correspondence" }),
+    );
+    const reading = await panel(/Delivery dispute — correspondence, version 1/);
+
+    // A file that reads in the app is a button, not a download link.
+    const open = await within(reading).findByRole("button", { name: /warehouse-photo\.png/ });
+    await user.click(open);
+
+    // Read in the panel, from the attachment's own preview address —
+    // no round trip through a Downloads folder.
+    expect(within(reading).getByRole("img", { name: "warehouse-photo.png" })).toHaveAttribute(
+      "src",
+      "/api/v1/documents/pdoc-m/versions/pv-m/attachments/0/preview",
+    );
+    // And one control back to the message it came from.
+    await user.click(within(reading).getByRole("button", { name: "Back to the message" }));
+    expect(within(reading).getByText(/Attaching the June delivery log/)).toBeVisible();
+  });
+
+  it("offers an attachment outside the render set as a download", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: emailApi(
+        [thread()],
+        message({
+          attachments: [
+            {
+              index: 0,
+              filename: "damage-photos.zip",
+              mimeType: "application/zip",
+              byteSize: 8_400_000,
+              renderFamily: "other",
+              isInline: false,
+            },
+          ],
+        }),
+      ),
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(
+      within(list).getByRole("button", { name: "Delivery dispute — correspondence" }),
+    );
+    const reading = await panel(/Delivery dispute — correspondence, version 1/);
+
+    // Nothing in the app can read an archive, so the chip is the
+    // download it has to be — what a control looks like says what it
+    // will do.
+    expect(
+      await within(reading).findByRole("link", { name: /damage-photos\.zip/ }),
+    ).toHaveAttribute("href", "/api/v1/documents/pdoc-m/versions/pv-m/attachments/0/download");
+  });
+
+  it("ends at the download when the message cannot be read", async () => {
+    stubApi({ signedIn: MEMBER, extra: emailApi([thread()]) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(
+      within(list).getByRole("button", { name: "Delivery dispute — correspondence" }),
+    );
+    const reading = await panel(/Delivery dispute — correspondence, version 1/);
+
+    // The same honest card every path with no preview ends at.
+    expect(
+      await within(reading).findByText(
+        "This file could not be prepared for reading here. Download it to read it.",
+      ),
+    ).toBeVisible();
+    expect(within(reading).getAllByRole("link", { name: "Download" }).at(-1)).toHaveAttribute(
+      "href",
+      "/api/v1/documents/pdoc-m/versions/pv-m/download",
+    );
+  });
+
+  it("draws a PowerPoint deck the same way", async () => {
+    const deck = document({
+      id: "pdoc-p",
+      title: "Board pack",
+      versions: [
+        version({
+          id: "pv-p",
+          originalFilename: "board-pack.pptx",
+          mimeType: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          renderFamily: "presentation",
+        }),
+      ],
+    });
+    stubApi({ signedIn: MEMBER, extra: panelApi([deck], ["pending"]) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(within(list).getByRole("button", { name: "Board pack" }));
+    const reading = await panel(/Board pack, version 1/);
+    expect(await within(reading).findByText("Preparing this document for reading…")).toBeVisible();
   });
 });

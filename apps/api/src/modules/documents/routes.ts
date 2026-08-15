@@ -83,6 +83,25 @@
  * access predicate. There are no presigned URLs — one authentication
  * path, and the local filesystem driver has no other way anyway.
  *
+ * **An email reads as a message, not as a blob** (DOC-004, M12/5). An
+ * uploaded MSG or EML is parsed in process — no doc engine, no
+ * conversion, and nothing derived is stored — and answered as headers, a
+ * sanitized body, and a list of the files that came with it. Each of
+ * those files has its own download and its own preview, and both sit
+ * behind the same two predicates the version does: an attachment is not
+ * a side door past the contract gate or the confidentiality flag.
+ *
+ * **What a preview streams is not always what was uploaded** (DOC-004,
+ * M12/4). A PDF and a raster image are drawn as they are. A Word
+ * document and a PowerPoint deck are drawn from the PDF rendition the
+ * pipeline converted them to, because no browser draws a DOCX — and
+ * that conversion is what carries the tracked changes and the comments
+ * DOC-004 promises are visible. The download is untouched by any of it:
+ * it always answers the bytes a person uploaded. The rendition read says
+ * where the conversion has got to, so the panel can show a preparing
+ * state and poll; both new reads sit behind the same two predicates
+ * every other document read does, so rendering opens no side door.
+ *
  * **Two removals, for two different problems** (DOC-010). Archive is the
  * soft delete and it answers the wrong upload: anyone who can reach and
  * write the record archives a document, it leaves the list and the
@@ -119,12 +138,16 @@ import {
   contracts,
   desc,
   documents,
+  documentVersionRenditions,
   documentVersions,
+  documentVersionText,
   DOCUMENT_VERSION_KINDS,
   eq,
   inArray,
+  isNotNull,
   isNull,
   sql,
+  TEXT_SOURCES,
   users,
   type DocumentVersionKind,
   type SQL,
@@ -137,8 +160,24 @@ import {
   documentConfidentialityWrite,
   type ContractAccessReader,
 } from "../../lib/contract-access.js";
+import {
+  EmailUnreadableError,
+  isEmail,
+  parseStoredEmail,
+  type EmailAttachment,
+  type ParsedEmail,
+} from "../../lib/email/parse.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
-import { attachmentDisposition, MEGABYTE } from "../../lib/uploads.js";
+import {
+  conversionFormatOf,
+  previewContentType,
+  RENDER_FAMILIES,
+  renderFamilyOf,
+  RENDITION_CONTENT_TYPE,
+} from "../../lib/render-family.js";
+import { attachmentDisposition, inlineDisposition, MEGABYTE } from "../../lib/uploads.js";
+import { needsDisplayRendition, recordRenditionOwed } from "../../pipeline/display-conversion.js";
+import { extractsText, recordTextOwed } from "../../pipeline/text-extraction.js";
 
 /** The contract read floor (CTR-021), which is the document floor too:
  * a Contributor reads and downloads the paper on a contract they are
@@ -178,6 +217,29 @@ const DocumentParams = z.object({ documentId: RecordIdSchema });
 const VersionParams = z.object({
   documentId: RecordIdSchema,
   versionId: RecordIdSchema,
+});
+
+/**
+ * One file inside a rendered email, addressed by where it sits in the
+ * message (M12/5).
+ *
+ * The position is the identity because the thing it indexes into cannot
+ * change: a version's bytes are immutable (DOC-001), so parsing the same
+ * blob always produces the same list in the same order. There is no row
+ * to give an attachment an id of its own, and inventing one would mean
+ * storing a parse the panel can redo in milliseconds.
+ *
+ * Bounded, and the bound is an inclusive position rather than a count: a
+ * position this far into a message names no attachment on any of them,
+ * and answering it would cost a blob read and a parse before the list
+ * could say so.
+ */
+const MAX_ATTACHMENT_INDEX = 1000;
+
+const AttachmentParams = z.object({
+  documentId: RecordIdSchema,
+  versionId: RecordIdSchema,
+  attachmentIndex: z.coerce.number().int().nonnegative().max(MAX_ATTACHMENT_INDEX),
 });
 
 /** The longest filename the common filesystems carry. */
@@ -228,6 +290,21 @@ const VersionSchema = z.object({
   /** What the upload declared it was — a rendering hint (DOC-004),
    * never a decision. */
   mimeType: z.string(),
+  /**
+   * Which of DOC-004's families this file belongs to, and therefore
+   * which surface the doc panel opens for it (M12/2).
+   *
+   * Routed on the server from the declared type and the filename, so
+   * the panel holds no copy of that table and a family added later
+   * reaches every client at once. `pdf` and `image` render in the panel
+   * today; `word`, `presentation`, and `email` show a download card
+   * until M12/3 and M12/4 flip them; `other` is download-only for good.
+   *
+   * It is a hint about how to draw the file and never a statement about
+   * what the bytes are. The preview read decides for itself what to
+   * call them, from the same table.
+   */
+  renderFamily: z.enum(RENDER_FAMILIES),
   /** Counted by the server as the bytes streamed past. */
   byteSize: z.int().nonnegative(),
   /** Lowercase hex SHA-256, computed over the same pass. */
@@ -313,6 +390,157 @@ const DocumentsEnvelope = z.object({
   nextCursor: z.string().nullable(),
 });
 const DocumentEnvelope = z.object({ document: DocumentSchema });
+
+/**
+ * What the extracted-text read can say (DOC-005, M12/3).
+ *
+ * Four answers, and the fourth is why this is a state rather than a
+ * status code. `pending`, `ready`, and `failed` are the derivation's own
+ * three states. `unsupported` is the file that will never have text — an
+ * image, a spreadsheet — and it is said plainly so a caller stops asking
+ * rather than polling for something that is not coming.
+ *
+ * None of them is `404`. A missing document has one answer here and it
+ * is the silent-omission one (DD-014), so a state and an absence must
+ * never be the same response.
+ */
+const TEXT_STATES = ["pending", "ready", "failed", "unsupported"] as const;
+
+const ExtractedTextSchema = z.object({
+  state: z.enum(TEXT_STATES),
+  /**
+   * Where the text came from (DOC-005): a PDF's own text layer, or OCR
+   * over pictures of pages. NULL unless the state is `ready`.
+   *
+   * Stated because the two are not equally trustworthy — OCR text is a
+   * machine's reading of a photograph — and a surface that quotes it
+   * should be able to say so.
+   */
+  source: z.enum(TEXT_SOURCES).nullable(),
+  /**
+   * The words. NULL unless the state is `ready`; an empty string is a
+   * different answer and a legitimate one, because a blank page was read
+   * successfully and had nothing on it.
+   *
+   * It is an index, never a rendering (DOC-005). What a reader sees is
+   * always the original file the preview streams.
+   */
+  text: z.string().nullable(),
+  /** When the derivation last moved, so a poller can tell a job that is
+   * working from one that is wedged. NULL for a file that has no
+   * derivation at all. */
+  updatedAt: z.iso.datetime({ offset: true }).nullable(),
+});
+
+const ExtractedTextEnvelope = z.object({ text: ExtractedTextSchema });
+
+/**
+ * What the display-rendition read can say (DOC-004, M12/4).
+ *
+ * The same four answers the extracted-text read gives, and for the same
+ * reason. `pending`, `ready`, and `failed` are the conversion's own three
+ * states, so the panel can show a preparing state and poll until the
+ * preview lands. `unsupported` is the file that needs no conversion at
+ * all — a PDF, an image, a spreadsheet — and it is said plainly so a
+ * caller stops asking.
+ *
+ * None of them is `404`. A document the reader cannot reach has one
+ * answer here and it is the silent-omission one (DD-014).
+ */
+const RENDITION_STATES = ["pending", "ready", "failed", "unsupported"] as const;
+
+const RenditionSchema = z.object({
+  state: z.enum(RENDITION_STATES),
+  /** When the conversion last moved, so a poller can tell a job that is
+   * working from one that is wedged. NULL for a file that has no
+   * conversion at all. */
+  updatedAt: z.iso.datetime({ offset: true }).nullable(),
+});
+
+const RenditionEnvelope = z.object({ rendition: RenditionSchema });
+
+/**
+ * What the email read answers (DOC-004, M12/5).
+ *
+ * An uploaded MSG or EML reads as a message rather than as a blob: who
+ * sent it, who it went to, when, what it said, and what came with it.
+ * Every field is what the parser found, and the parser is handed bytes
+ * nobody in this system wrote — so every one of them is nullable, and
+ * none of them is trusted.
+ */
+const EmailAddressSchema = z.object({
+  /** The display name, or NULL when the message carried only an
+   * address. */
+  name: z.string().nullable(),
+  /** The address, or NULL when the message named somebody it could not
+   * resolve — an Exchange directory entry with no SMTP form. */
+  address: z.string().nullable(),
+});
+
+const EmailAttachmentSchema = z.object({
+  /**
+   * Where the file sits in the message, counted from zero, and the id
+   * every attachment address uses.
+   *
+   * A version's bytes are immutable (DOC-001), so the same parse always
+   * lists the same files in the same order and this number always names
+   * the same file.
+   */
+  index: z.int().nonnegative(),
+  /** What the message called it, or a name the parser made when it
+   * called it nothing — a download has to offer some name. */
+  filename: z.string(),
+  /** What the message declared it was. A rendering hint (DOC-004), never
+   * a decision: the attachment preview sets its own type from the same
+   * routing table every other preview uses. */
+  mimeType: z.string(),
+  byteSize: z.int().nonnegative(),
+  /**
+   * Which of DOC-004's families this attachment belongs to, routed on
+   * the server exactly as a stored version's is.
+   *
+   * It is what tells the panel whether opening this file keeps a reader
+   * in the app: a PDF and a raster image open on the panel's own
+   * surfaces, and everything else is a download.
+   */
+  renderFamily: z.enum(RENDER_FAMILIES),
+  /**
+   * Whether the body referred to this file rather than presenting it —
+   * a signature logo, a screenshot pasted into the message.
+   *
+   * Listed either way, because the sanitized body draws no images at
+   * all and an inline attachment nobody listed would be unreachable.
+   */
+  isInline: z.boolean(),
+});
+
+const EmailSchema = z.object({
+  subject: z.string().nullable(),
+  from: EmailAddressSchema.nullable(),
+  to: z.array(EmailAddressSchema),
+  cc: z.array(EmailAddressSchema),
+  bcc: z.array(EmailAddressSchema),
+  /** When it was sent. NULL when the message carried no readable date —
+   * a broken `Date` header is not a broken message. */
+  date: z.iso.datetime({ offset: true }).nullable(),
+  /**
+   * The HTML body, **sanitized on the server** — never the sender's own
+   * markup (DOC-004). NULL when the message had no HTML body.
+   *
+   * Scripts, frames, styles, and images are gone: nothing in it runs and
+   * nothing in it loads, so a tracking pixel cannot report that a lawyer
+   * opened a disclosed email. An attached image is in the list below,
+   * where it is downloadable and — if it is a raster image — openable in
+   * the panel.
+   */
+  html: z.string().nullable(),
+  /** The plain-text body as the message carried it, or NULL when it
+   * carried only HTML. */
+  text: z.string().nullable(),
+  attachments: z.array(EmailAttachmentSchema),
+});
+
+const EmailEnvelope = z.object({ email: EmailSchema });
 
 /** What the record is called, and what it says about itself (DOC-007).
  * The title is bounded where the contract's own is; the description is
@@ -638,6 +866,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       note: row.note,
       originalFilename: row.originalFilename,
       mimeType: row.mimeType,
+      renderFamily: renderFamilyOf(row.mimeType, row.originalFilename),
       byteSize: row.byteSize,
       checksumSha256: row.checksumSha256,
       uploadedBy: toPerson(row.uploadedBy),
@@ -988,6 +1217,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         return documentWithChain(tx, documentId, primaryDocumentId);
       });
 
+      await askForDerivations(versionId, file);
       return reply.status(201).send({ document: created });
     },
   );
@@ -1071,6 +1301,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         return documentWithChain(tx, documentId, locked.primaryDocumentId);
       });
 
+      await askForDerivations(versionId, file);
       return reply.status(201).send({ document: updated });
     },
   );
@@ -1564,8 +1795,10 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "Destroy a whole document — the lawful-erasure answer " +
           "(DOC-010). It removes the document row, every version row " +
-          "under it, and every stored blob those versions name, through " +
-          "the storage adapter. It is whole-document by design: there " +
+          "under it, every stored blob those versions name, and " +
+          "everything the pipeline derived from them: the extracted " +
+          "text and the display renditions, rows and blobs alike. It " +
+          "is whole-document by design: there " +
           "is no route that deletes one version, because a chain " +
           "somebody can cut pieces out of is not negotiation history " +
           "(DOC-001), so the whole document goes or nothing does. It " +
@@ -1616,6 +1849,22 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           .from(documentVersions)
           .where(eq(documentVersions.documentId, documentId));
 
+        // And what the machine derived (DOC-004, M12/4). A display
+        // rendition is a second blob beside its version, and no database
+        // cascade can reach a storage driver — so it is read here and
+        // deleted below with the rest. Lawful erasure erases everything,
+        // including the PDF a converter made of a Word draft.
+        const renditions = await tx
+          .select({ fileRef: documentVersionRenditions.fileRef })
+          .from(documentVersionRenditions)
+          .innerJoin(documentVersions, eq(documentVersionRenditions.versionId, documentVersions.id))
+          .where(
+            and(
+              eq(documentVersions.documentId, documentId),
+              isNotNull(documentVersionRenditions.fileRef),
+            ),
+          );
+
         // The entry is written first and it hangs off the owning
         // contract, never off the document (DOC-008), so nothing
         // cascades it away with the row it describes. It names the
@@ -1631,8 +1880,11 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           payload: { documentId, title: target.title, versionCount: chain.length },
         });
 
-        // The rows: the document, and its whole chain behind the
-        // cascade. `contracts.primary_document_id` and
+        // The rows: the document, its whole chain behind the cascade,
+        // and behind that chain everything the pipeline derived — the
+        // extracted text and the rendition rows, each keyed by a version
+        // id and each cascading with it (DOC-005, DOC-004).
+        // `contracts.primary_document_id` and
         // `documents.executed_version_id` are both SET NULL, so a
         // record whose instrument was erased has no instrument rather
         // than a dangling one.
@@ -1659,7 +1911,19 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         // defines that behaviour for. This window is accepted and
         // recorded in DOC-010; it is not a guarantee that the record
         // still holds every file it names.
-        for (const version of chain) await app.storage.delete(version.fileRef);
+        //
+        // The renditions go the same way and in the same loop, because
+        // they are the same problem: a derived blob left on disk after
+        // an erasure reported success is an erasure that did not
+        // happen. They go first, so a failure part way through has
+        // destroyed derived copies rather than originals — a rendition
+        // can be made again from its source, and a source cannot be
+        // made again from anything.
+        const blobs = [
+          ...renditions.flatMap((row) => (row.fileRef === null ? [] : [row.fileRef])),
+          ...chain.map((version) => version.fileRef),
+        ];
+        for (const fileRef of blobs) await app.storage.delete(fileRef);
 
         return paperOf(tx, request.user, {
           id: target.contractId,
@@ -1701,30 +1965,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const { documentId, versionId } = request.params;
-      // Document, owning contract, and reach in one read: the scope
-      // rides beside the ids, so a version on a contract this viewer
-      // cannot reach is not distinguishable from one that is not there.
-      const [row] = await app.db
-        .select({
-          fileRef: documentVersions.fileRef,
-          originalFilename: documentVersions.originalFilename,
-          mimeType: documentVersions.mimeType,
-          byteSize: documentVersions.byteSize,
-        })
-        .from(documentVersions)
-        .innerJoin(documents, eq(documentVersions.documentId, documents.id))
-        .innerJoin(contracts, eq(documents.contractId, contracts.id))
-        .where(
-          and(
-            eq(documentVersions.id, versionId),
-            eq(documentVersions.documentId, documentId),
-            contractTeamScope(app.db, request.user),
-            documentAudienceScope(app.db, request.user),
-          ),
-        )
-        .limit(1);
-      if (!row) throw httpError(404, NO_DOCUMENT);
+      const row = await reachedVersion(request.user, request.params);
 
       const body = await app.storage.get(row.fileRef);
       return (
@@ -1744,6 +1985,613 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       );
     },
   );
+
+  app.get(
+    "/documents/:documentId/versions/:versionId/preview",
+    {
+      preHandler: requireDocumentReader,
+      schema: {
+        operationId: "previewDocumentVersion",
+        summary:
+          "Stream one version's file back for display in place — what " +
+          "the doc panel reads (M12/2, DOC-004). It is the download's " +
+          "twin and differs in exactly two headers: the disposition is " +
+          "inline, and the content type is the server's own rather than " +
+          "the one the upload declared. The type is routed from that " +
+          "declaration and the filename together — a hint, never a " +
+          "security decision — so a file that lies about itself can " +
+          "change which card the panel draws and can never change what " +
+          "the browser is told to do with it. A Word document and a " +
+          "PowerPoint deck stream the PDF rendition the pipeline " +
+          "converted them to (M12/4, DOC-004) rather than their own " +
+          "bytes, so the tracked changes and comments a conversion " +
+          "carries are what a reader sees; while that conversion is " +
+          "still running the answer is 409, and the rendition read is " +
+          "what a client polls. A family with no in-app " +
+          "preview is refused 415 and the panel offers the download " +
+          "instead: PDFs and raster images render today, and SVG does " +
+          "not, because an inline SVG is a script. Any version in the " +
+          "chain previews, superseded rounds included. It sits behind " +
+          "the same two predicates every document read does: a " +
+          "Contributor on the team previews what they may download, and " +
+          "anyone who cannot reach the contract — or is outside a " +
+          "confidential document's audience — is answered 404, exactly " +
+          "as for a document that was never uploaded",
+        tags: ["documents"],
+        // The whole fixed set the routing table can choose from — a
+        // response is one of these or it is a problem document. Unlike
+        // the download's single octet-stream, this list is knowable,
+        // because the server picks the type rather than echoing one.
+        produces: [
+          "application/pdf",
+          "image/png",
+          "image/jpeg",
+          "image/gif",
+          "image/webp",
+          "image/bmp",
+          "image/avif",
+        ],
+        params: VersionParams,
+        response: {
+          200: DownloadSchema,
+          default: problemResponse,
+        },
+      },
+    },
+    async (request, reply) => {
+      const row = await reachedVersion(request.user, request.params);
+
+      // Which bytes this file previews as, and what to call them. Both
+      // are chosen from the routing table and never echoed from the row.
+      // This is the whole of what "a hint, never a security decision"
+      // buys: the uploader's string reaches the routing and never the
+      // header.
+      const served = conversionFormatOf(row.mimeType, row.originalFilename)
+        ? await renditionToServe(request.params.versionId, row)
+        : {
+            contentType: previewContentType(row.mimeType, row.originalFilename),
+            fileRef: row.fileRef,
+            byteSize: row.byteSize,
+            filename: row.originalFilename,
+          };
+      if (!served.contentType) {
+        // Plainly, not as a 404. The reader can already see the
+        // document — they were handed its row — so hiding here would
+        // hide nothing and would make an honest "this does not preview"
+        // read as a bug.
+        throw httpError(415, "This file type has no in-app preview. Download it instead.");
+      }
+
+      const body = await app.storage.get(served.fileRef);
+      return (
+        reply
+          .header("content-type", served.contentType)
+          .header("content-length", String(served.byteSize))
+          // The uploaded file's own name, and `.pdf` on the end of it
+          // when what is going out is a rendition. A reader who saves
+          // what the panel is showing them gets a name they recognise
+          // that also says what the bytes are — and the rendition's
+          // storage key stays ours, never theirs to see.
+          .header("content-disposition", inlineDisposition(served.filename))
+          // Belt and braces on a server-set type: the browser must use
+          // the type it was given rather than sniffing the bytes for a
+          // more interesting one.
+          .header("x-content-type-options", "nosniff")
+          // The panel fetches these bytes and draws them itself, so
+          // nothing here needs to run. A browser navigated straight at
+          // this address gets an inert document: no scripts, no
+          // subresources, no same-origin reach.
+          .header("content-security-policy", "default-src 'none'; sandbox")
+          .header("cache-control", "private, max-age=0, must-revalidate")
+          .send(body)
+      );
+    },
+  );
+
+  app.get(
+    "/documents/:documentId/versions/:versionId/text",
+    {
+      preHandler: requireDocumentReader,
+      schema: {
+        operationId: "readDocumentVersionText",
+        summary:
+          "Read one version's extracted text (M12/3, DOC-005). Every " +
+          "uploaded PDF has its text read in the background: a native " +
+          "text layer is taken as it is, and a PDF that is only " +
+          "pictures of pages is read with OCR. The original is always " +
+          "what the preview serves — this text is an index, never a " +
+          "displayed conversion, and no OCR'd file is stored. The " +
+          "answer is a state, never a status code: pending while the " +
+          "job is owed, ready with the words, failed when the job gave " +
+          "up, and unsupported for a file that will never have text, " +
+          "so a caller polls until it lands and stops when it will not. " +
+          "It sits behind the same two predicates every document read " +
+          "does: a Contributor on the team reads what they may " +
+          "download, and anyone who cannot reach the contract — or is " +
+          "outside a confidential document's audience — is answered " +
+          "404, exactly as for a document that was never uploaded",
+        tags: ["documents"],
+        params: VersionParams,
+        response: { 200: ExtractedTextEnvelope, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      // The same read the preview and the download make, so the three
+      // cannot drift into three answers. A version this viewer cannot
+      // reach is a 404 from here, before anything is said about text.
+      const version = await reachedVersion(request.user, request.params);
+
+      // As the two byte reads set it, and for both of their reasons. Who
+      // may read a document changes, so this is private to the browser
+      // that asked; and a client polls this address, so a cached answer
+      // would have it poll a stale one for ever.
+      void reply.header("cache-control", "private, max-age=0, must-revalidate");
+
+      const [row] = await app.db
+        .select({
+          state: documentVersionText.state,
+          source: documentVersionText.source,
+          text: documentVersionText.text,
+          updatedAt: documentVersionText.updatedAt,
+        })
+        .from(documentVersionText)
+        .where(eq(documentVersionText.versionId, request.params.versionId))
+        .limit(1);
+
+      if (!row) {
+        // No derivation, for one of two reasons. Either this file has no
+        // text to read — an image, a spreadsheet — or it predates the
+        // pipeline and M12/6's sweep has not reached it yet. The first
+        // is the honest answer for a reader; the second reads as pending
+        // because that is what it is.
+        return {
+          text: {
+            state: extractsText(version.mimeType, version.originalFilename)
+              ? ("pending" as const)
+              : ("unsupported" as const),
+            source: null,
+            text: null,
+            updatedAt: null,
+          },
+        };
+      }
+
+      return {
+        text: {
+          state: row.state,
+          source: row.source,
+          text: row.text,
+          updatedAt: row.updatedAt.toISOString(),
+        },
+      };
+    },
+  );
+
+  app.get(
+    "/documents/:documentId/versions/:versionId/rendition",
+    {
+      preHandler: requireDocumentReader,
+      schema: {
+        operationId: "readDocumentVersionRendition",
+        summary:
+          "Say whether this version's display rendition is ready to " +
+          "preview (M12/4, DOC-004). A Word document and a PowerPoint " +
+          "deck do not draw in a browser, so the pipeline converts each " +
+          "one to a PDF in the background and the panel draws that — " +
+          "tracked changes and comments included. This is the state of " +
+          "that conversion, and it is what the panel polls while it " +
+          "shows its preparing state; live push is M30's job. The " +
+          "answer is a state, never a status code: pending while the " +
+          "job is owed, ready once the preview address will stream it, " +
+          "failed when the job gave up, and unsupported for a file that " +
+          "needs no conversion at all — a PDF, an image, a spreadsheet. " +
+          "A version whose conversion failed is offered its download " +
+          "instead; the upload itself is never blocked or failed by " +
+          "its pipeline. It sits behind the same two predicates every " +
+          "document read does: a Contributor on the team reads what " +
+          "they may download, and anyone who cannot reach the contract " +
+          "— or is outside a confidential document's audience — is " +
+          "answered 404, exactly as for a document that was never " +
+          "uploaded",
+        tags: ["documents"],
+        params: VersionParams,
+        response: { 200: RenditionEnvelope, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      // The same read the preview, the download, and the text read make,
+      // so the four cannot drift into four answers. A version this
+      // viewer cannot reach is a 404 from here, before anything is said
+      // about a conversion.
+      const version = await reachedVersion(request.user, request.params);
+
+      // As every other read on a version sets it, and for both of their
+      // reasons. Who may read a document changes, so this is private to
+      // the browser that asked; and a client polls this address, so a
+      // cached answer would have it poll a stale one for ever.
+      void reply.header("cache-control", "private, max-age=0, must-revalidate");
+
+      if (!needsDisplayRendition(version.mimeType, version.originalFilename)) {
+        // Nothing is being converted and nothing ever will be. Said
+        // plainly, so a caller stops asking rather than polling for
+        // something that is not coming.
+        return { rendition: { state: "unsupported" as const, updatedAt: null } };
+      }
+
+      const [row] = await app.db
+        .select({
+          state: documentVersionRenditions.state,
+          updatedAt: documentVersionRenditions.updatedAt,
+        })
+        .from(documentVersionRenditions)
+        .where(eq(documentVersionRenditions.versionId, request.params.versionId))
+        .limit(1);
+
+      // No row, for one of two reasons. Either the version predates the
+      // pipeline and M12/6's sweep has not reached it yet, or the queue
+      // send was lost — and both read as pending, because that is what
+      // they are.
+      if (!row) return { rendition: { state: "pending" as const, updatedAt: null } };
+      return { rendition: { state: row.state, updatedAt: row.updatedAt.toISOString() } };
+    },
+  );
+
+  app.get(
+    "/documents/:documentId/versions/:versionId/email",
+    {
+      preHandler: requireDocumentReader,
+      schema: {
+        operationId: "readDocumentVersionEmail",
+        summary:
+          "Read one uploaded email as a message (M12/5, DOC-004): its " +
+          "headers, its body, and the files that came with it. A MSG or " +
+          "an EML is parsed in process by a Node library — no doc " +
+          "engine, no conversion, and nothing stored — so the answer is " +
+          "the message as the file holds it, read fresh on every call. " +
+          "The HTML body is sanitized here, on the server, before it is " +
+          "handed out: nothing in it runs and nothing in it loads, so a " +
+          "tracking pixel cannot report that a lawyer opened a disclosed " +
+          "email. Attachments are listed with the family each one would " +
+          "render as, and each is reachable at its own address. A file " +
+          "that is not an email is refused 415, and one whose bytes " +
+          "cannot be read as the email they claim to be is refused 422 " +
+          "with the download offered. It sits behind the same two " +
+          "predicates every document read does: a Contributor on the " +
+          "team reads what they may download, and anyone who cannot " +
+          "reach the contract — or is outside a confidential document's " +
+          "audience — is answered 404, exactly as for a document that " +
+          "was never uploaded",
+        tags: ["documents"],
+        params: VersionParams,
+        response: { 200: EmailEnvelope, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      const email = await reachedEmail(request.user, request.params);
+
+      // As every other read on a version sets it. Who may read a
+      // document changes, so this answer is private to the browser that
+      // asked for it.
+      void reply.header("cache-control", "private, max-age=0, must-revalidate");
+
+      return {
+        email: {
+          subject: email.subject,
+          from: email.from,
+          to: email.to,
+          cc: email.cc,
+          bcc: email.bcc,
+          date: email.date,
+          // Already sanitized by the parser, which is the only thing
+          // that ever holds the sender's own markup.
+          html: email.html,
+          text: email.text,
+          attachments: email.attachments.map((attachment) => ({
+            index: attachment.index,
+            filename: attachment.filename,
+            mimeType: attachment.mimeType,
+            byteSize: attachment.byteSize,
+            // Routed from the attachment's own declared type and name,
+            // through the same table a stored version goes through — so
+            // the panel holds no second copy of it and an attachment
+            // that lies about itself changes a card and never a header.
+            renderFamily: renderFamilyOf(attachment.mimeType, attachment.filename),
+            isInline: attachment.isInline,
+          })),
+        },
+      };
+    },
+  );
+
+  app.get(
+    "/documents/:documentId/versions/:versionId/attachments/:attachmentIndex/download",
+    {
+      preHandler: requireDocumentReader,
+      schema: {
+        operationId: "downloadEmailAttachment",
+        summary:
+          "Stream one file out of a rendered email, as an attachment " +
+          "(M12/5, DOC-004). The index is the file's position in the " +
+          "message, which is a stable name for it because the version's " +
+          "bytes are immutable (DOC-001). Unlike a version's own " +
+          "download, this never echoes a declared type: a version's " +
+          "type was bounded and shape-checked when it was uploaded, and " +
+          "this one came out of the middle of a file nobody checked at " +
+          "all — so the bytes go out as `application/octet-stream`, " +
+          "with the attachment disposition and sniffing off. An " +
+          "attachment is not a side door: it sits behind the same two " +
+          "predicates its version does, so anyone who cannot reach the " +
+          "contract — or is outside a confidential document's audience " +
+          "— is answered 404, exactly as for a document that was never " +
+          "uploaded",
+        tags: ["documents"],
+        produces: ["application/octet-stream"],
+        params: AttachmentParams,
+        response: { 200: DownloadSchema, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      const attachment = await reachedAttachment(request.user, request.params);
+      return (
+        reply
+          // Never the type the message declared. The disposition below
+          // makes this a download whatever the type says, and a type
+          // this server did not choose is not one it will repeat.
+          .header("content-type", "application/octet-stream")
+          .header("content-length", String(attachment.byteSize))
+          .header("content-disposition", attachmentDisposition(attachment.filename))
+          .header("x-content-type-options", "nosniff")
+          .header("cache-control", "private, max-age=0, must-revalidate")
+          .send(attachment.content)
+      );
+    },
+  );
+
+  app.get(
+    "/documents/:documentId/versions/:versionId/attachments/:attachmentIndex/preview",
+    {
+      preHandler: requireDocumentReader,
+      schema: {
+        operationId: "previewEmailAttachment",
+        summary:
+          "Stream one file out of a rendered email for display in place " +
+          "(M12/5, DOC-004), so a PDF or a photographed page attached to " +
+          "a message opens in the panel rather than in a Downloads " +
+          "folder. It is the attachment download's twin and differs in " +
+          "the same two headers a version's preview differs in: the " +
+          "disposition is inline, and the content type is chosen from " +
+          "the routing table rather than echoed from the message. An " +
+          "attachment outside the render set is refused 415 and the " +
+          "panel offers its download instead — there is no conversion " +
+          "path for an attachment, so a Word file inside an email " +
+          "downloads. It sits behind the same two predicates its version " +
+          "does: anyone who cannot reach the contract, or is outside a " +
+          "confidential document's audience, is answered 404",
+        tags: ["documents"],
+        produces: [
+          "application/pdf",
+          "image/png",
+          "image/jpeg",
+          "image/gif",
+          "image/webp",
+          "image/bmp",
+          "image/avif",
+        ],
+        params: AttachmentParams,
+        response: { 200: DownloadSchema, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      const attachment = await reachedAttachment(request.user, request.params);
+      const contentType = previewContentType(attachment.mimeType, attachment.filename);
+      if (!contentType) {
+        // Plainly, not as a 404, for the version preview's own reason:
+        // the reader was already handed this attachment's row, so hiding
+        // here would hide nothing.
+        throw httpError(415, "This attachment has no in-app preview. Download it instead.");
+      }
+      return (
+        reply
+          .header("content-type", contentType)
+          .header("content-length", String(attachment.byteSize))
+          .header("content-disposition", inlineDisposition(attachment.filename))
+          .header("x-content-type-options", "nosniff")
+          // The panel fetches these bytes and draws them itself. A
+          // browser navigated straight at this address gets an inert
+          // document: no scripts, no subresources, no same-origin reach.
+          .header("content-security-policy", "default-src 'none'; sandbox")
+          .header("cache-control", "private, max-age=0, must-revalidate")
+          .send(attachment.content)
+      );
+    },
+  );
+
+  /**
+   * One uploaded email this viewer reaches, parsed (M12/5).
+   *
+   * Reach is answered first and in exactly the same words every other
+   * document read answers it in, so an email opens no side door past the
+   * contract gate or the confidentiality flag (DOC-008, DD-014). Only
+   * then is anything said about the file.
+   *
+   * The parse happens on every call rather than once at upload. An email
+   * has no rendition and no derived row: the bytes are immutable, the
+   * parse is deterministic, and reading a message is milliseconds of
+   * work in this process — so there is nothing to store, nothing to
+   * poll, and no state that could disagree with the file.
+   *
+   * The cost is named rather than cached away: opening an attachment
+   * reads the whole message again. It is bounded on both sides — the
+   * parser refuses anything past `MAX_PARSEABLE_EMAIL_BYTES`, and every
+   * call here has already passed the same session and the same two
+   * predicates a download passes — so what it buys, a surface with no
+   * derived state to invalidate, is worth more than the read it repeats.
+   * A cache is the answer if a profile ever says otherwise, and nothing
+   * above this function would have to change for it.
+   */
+  async function reachedEmail(
+    user: AuthenticatedUser,
+    params: Readonly<{ documentId: string; versionId: string }>,
+  ): Promise<ParsedEmail> {
+    const version = await reachedVersion(user, params);
+    if (!isEmail(version.mimeType, version.originalFilename)) {
+      throw httpError(415, "This file is not an email.");
+    }
+    const blob = await app.storage.get(version.fileRef);
+    try {
+      return await parseStoredEmail(blob, version.mimeType, version.originalFilename);
+    } catch (error) {
+      if (error instanceof EmailUnreadableError) {
+        // The bytes are not the email they said they were, or there are
+        // more of them than this parser will open. Neither is an access
+        // answer and neither heals, so it is said plainly with the
+        // download offered — DOC-004's honest card, in a status code.
+        throw httpError(422, "This email could not be read. Download it instead.");
+      }
+      throw error;
+    } finally {
+      // An email is parsed to the end, so there is usually nothing left
+      // to close — but a parse that refused part way through leaves the
+      // stream open, and on the local driver that is a file handle this
+      // process holds until it notices. A close that fails must not
+      // replace the answer above: tidying up is never the news.
+      try {
+        blob.destroy();
+      } catch (error) {
+        app.log.warn({ err: error, versionId: params.versionId }, "could not close an email");
+      }
+    }
+  }
+
+  /** One file inside one reachable email, or the refusal it earned. */
+  async function reachedAttachment(
+    user: AuthenticatedUser,
+    params: Readonly<{ documentId: string; versionId: string; attachmentIndex: number }>,
+  ): Promise<EmailAttachment & { content: Buffer }> {
+    const email = await reachedEmail(user, params);
+    const attachment = email.attachments[params.attachmentIndex];
+    // An index past the end of the list is a 404, and it is the only
+    // 404 here that is about the attachment rather than about reach.
+    // Nothing is hidden by it: the reader can see the list it is not on.
+    if (!attachment) throw httpError(404, "No attachment exists at that position.");
+    if (attachment.content === null) {
+      // The message named this file and the container could not give up
+      // its bytes. It is on the list — losing it would have shifted
+      // every attachment after it onto somebody else's address — and it
+      // is the one entry that cannot be served. Said as the unreadable
+      // email is said, because it is the same fact one file down.
+      throw httpError(
+        422,
+        "This attachment could not be read out of the message. Download the email instead.",
+      );
+    }
+    return { ...attachment, content: attachment.content };
+  }
+
+  /** What the preview streams for one version, and what to call it. */
+  interface ServedPreview {
+    contentType: string | null;
+    fileRef: string;
+    byteSize: number;
+    filename: string;
+  }
+
+  /**
+   * The display rendition the preview streams for a converted family
+   * (M12/4, DOC-004), or the refusal its state has earned.
+   *
+   * A conversion that is still running is a 409 rather than a 415: the
+   * two say different things, and only one of them is worth polling. The
+   * panel does not usually arrive here in that state — it polls the
+   * rendition read and opens this address once it says ready — but a
+   * browser pointed straight at it must be told which of the two it has
+   * hit.
+   *
+   * A conversion that failed is a 415 with the download offered, which
+   * is DOC-004's honest card in the words of a status code: a LibreOffice
+   * failure costs one click, not a support ticket.
+   */
+  async function renditionToServe(
+    versionId: string,
+    version: ReachedVersion,
+  ): Promise<ServedPreview> {
+    const [row] = await app.db
+      .select({
+        state: documentVersionRenditions.state,
+        fileRef: documentVersionRenditions.fileRef,
+        byteSize: documentVersionRenditions.byteSize,
+      })
+      .from(documentVersionRenditions)
+      .where(eq(documentVersionRenditions.versionId, versionId))
+      .limit(1);
+
+    if (row?.state === "ready" && row.fileRef !== null && row.byteSize !== null) {
+      return {
+        contentType: RENDITION_CONTENT_TYPE,
+        fileRef: row.fileRef,
+        byteSize: row.byteSize,
+        filename: `${version.originalFilename}.pdf`,
+      };
+    }
+    if (row?.state === "failed") {
+      throw httpError(
+        415,
+        "This file could not be converted for reading in the app. Download it instead.",
+      );
+    }
+    // Pending, or no row at all — a version that predates the pipeline,
+    // or one whose queue send was lost. Both are "not yet", and both are
+    // worth asking about again.
+    throw httpError(409, "This file is still being prepared for reading. Try again in a moment.");
+  }
+
+  /** One stored version, as the two byte reads need it described. */
+  interface ReachedVersion {
+    fileRef: string;
+    originalFilename: string;
+    mimeType: string;
+    byteSize: number;
+  }
+
+  /**
+   * One version this viewer reaches, by its own id and its document's,
+   * or a 404.
+   *
+   * Shared by the download, the preview, and the extracted-text read,
+   * because they ask one question and must not drift into three
+   * answers. Document, owning
+   * contract, and both scopes ride in one read: a version on a contract
+   * the viewer cannot reach, and a version of a confidential document
+   * they are outside the audience of, are each answered exactly as one
+   * that was never uploaded (DOC-008, DD-014). Rendering opens no side
+   * door past the contract gate.
+   */
+  async function reachedVersion(
+    user: AuthenticatedUser,
+    params: Readonly<{ documentId: string; versionId: string }>,
+  ): Promise<ReachedVersion> {
+    const [row] = await app.db
+      .select({
+        fileRef: documentVersions.fileRef,
+        originalFilename: documentVersions.originalFilename,
+        mimeType: documentVersions.mimeType,
+        byteSize: documentVersions.byteSize,
+      })
+      .from(documentVersions)
+      .innerJoin(documents, eq(documentVersions.documentId, documents.id))
+      .innerJoin(contracts, eq(documents.contractId, contracts.id))
+      .where(
+        and(
+          eq(documentVersions.id, params.versionId),
+          eq(documentVersions.documentId, params.documentId),
+          contractTeamScope(app.db, user),
+          documentAudienceScope(app.db, user),
+        ),
+      )
+      .limit(1);
+    if (!row) throw httpError(404, NO_DOCUMENT);
+    return row;
+  }
 
   /** Where one version's blob lives (DOC-012): minted from the two ids,
    * never from the uploaded filename, so no name a person chose can
@@ -1884,7 +2732,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
   /** One row in the chain, written from what arrived. The only INSERT
    * into `document_versions` there is, and there is no UPDATE and no
    * DELETE anywhere beside it (DOC-001). */
-  function insertVersion(
+  async function insertVersion(
     tx: Tx,
     row: Readonly<{
       documentId: string;
@@ -1894,7 +2742,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       by: AuthenticatedUser;
     }>,
   ) {
-    return tx.insert(documentVersions).values({
+    await tx.insert(documentVersions).values({
       id: row.versionId,
       documentId: row.documentId,
       versionNumber: row.versionNumber,
@@ -1907,6 +2755,83 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       checksumSha256: row.file.checksumSha256,
       createdBy: row.by.id,
     });
+    // What the pipeline owes this version (DOC-005), written here so it
+    // is written in the upload's own transaction. A rolled-back upload
+    // asks for nothing, and a committed one always leaves the request on
+    // the record — the queue send that follows the commit only wakes a
+    // worker, and a lost send leaves a pending row for the M12/6
+    // backfill sweep rather than a version nobody will ever read.
+    //
+    // Only a file that has text to read gets a row. An image or a
+    // spreadsheet gets none, and the text read says so plainly rather
+    // than leaving a caller polling for an answer that is not coming.
+    if (extractsText(row.file.mimeType, row.file.filename)) {
+      await recordTextOwed(tx, row.versionId);
+    }
+    // And a display rendition for a file a browser cannot draw
+    // (DOC-004). Written here for the same reason and in the same
+    // transaction: a rolled-back upload owes no conversion, and a
+    // committed one always does.
+    if (needsDisplayRendition(row.file.mimeType, row.file.filename)) {
+      await recordRenditionOwed(tx, row.versionId);
+    }
+  }
+
+  /**
+   * Wakes the pipeline for whatever a freshly uploaded version is owed —
+   * its text (DOC-005), or its display rendition (DOC-004).
+   *
+   * **One job per version, chosen by family.** A PDF's text is read
+   * straight off the file, so it asks for extraction. A Word document
+   * and a PowerPoint deck have to be converted before anything can read
+   * them, so they ask for conversion — and the conversion job reads the
+   * rendition's text at the end of its own work, which is why nothing
+   * asks for both. Everything else asks for nothing.
+   *
+   * Called after the transaction has committed, and never inside it. Two
+   * things follow from that, and both are the decision:
+   *
+   * A rolled-back upload asks for nothing, because there was no commit
+   * to ask after.
+   *
+   * A queue that cannot be reached never fails the upload, and never
+   * holds it up. The file is stored, the chain is written, and the
+   * person who uploaded it is owed a 201 — a pipeline that is down is
+   * not their problem (story 11). A refusal is logged, and so is a
+   * wake-up that takes too long: the pending rows are already committed,
+   * so the request survives either, and M12/6's sweep is what picks it
+   * up.
+   */
+  async function askForDerivations(versionId: string, file: StoredUpload): Promise<void> {
+    const converts = needsDisplayRendition(file.mimeType, file.filename);
+    if (!converts && !extractsText(file.mimeType, file.filename)) return;
+    // The bound is the point. The queue is an interface, so what is
+    // behind it might one day be something that hangs rather than
+    // refuses, and "an upload is never delayed by its pipeline" has to
+    // hold whichever it is.
+    let timer: NodeJS.Timeout | undefined;
+    const asked = converts
+      ? app.jobs.requestDisplayConversion(versionId)
+      : app.jobs.requestTextExtraction(versionId);
+    // Whichever side loses settles later, unobserved — both get a
+    // handler up front so neither becomes an unhandled rejection. Same
+    // shape as the readiness probe in app.ts.
+    asked.catch(() => {});
+    const bound = new Promise<never>((_resolve, reject) => {
+      timer = setTimeout(() => reject(new Error("the queue did not answer in time")), 2000);
+      timer.unref();
+    });
+    bound.catch(() => {});
+    try {
+      await Promise.race([asked, bound]);
+    } catch (error) {
+      app.log.error(
+        { err: error, versionId },
+        "could not ask the pipeline for a version's derivations",
+      );
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   /** The one refusal a bad `kind` earns, thrown rather than returned so

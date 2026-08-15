@@ -995,6 +995,90 @@
   "dialog.close": {
     "defaultMessage": "Close"
   },
+  "docPanel.close": {
+    "defaultMessage": "Close the document"
+  },
+  "docPanel.conversionFailed": {
+    "defaultMessage": "This file could not be prepared for reading here. Download it to read it."
+  },
+  "docPanel.converting": {
+    "defaultMessage": "Preparing this document for reading…"
+  },
+  "docPanel.download": {
+    "defaultMessage": "Download"
+  },
+  "docPanel.downloadOnly": {
+    "defaultMessage": "This file type does not open here. Download it to read it."
+  },
+  "docPanel.email.attachments": {
+    "defaultMessage": "{count, plural, one {# attachment} other {# attachments}}"
+  },
+  "docPanel.email.back": {
+    "defaultMessage": "Back to the message"
+  },
+  "docPanel.email.bcc": {
+    "defaultMessage": "Bcc"
+  },
+  "docPanel.email.body": {
+    "defaultMessage": "Message body"
+  },
+  "docPanel.email.cc": {
+    "defaultMessage": "Cc"
+  },
+  "docPanel.email.date": {
+    "defaultMessage": "Date"
+  },
+  "docPanel.email.empty": {
+    "defaultMessage": "This message has no body."
+  },
+  "docPanel.email.from": {
+    "defaultMessage": "From"
+  },
+  "docPanel.email.loading": {
+    "defaultMessage": "Opening…"
+  },
+  "docPanel.email.noAddress": {
+    "defaultMessage": "Not recorded"
+  },
+  "docPanel.email.noSubject": {
+    "defaultMessage": "No subject"
+  },
+  "docPanel.email.subject": {
+    "defaultMessage": "Subject"
+  },
+  "docPanel.email.to": {
+    "defaultMessage": "To"
+  },
+  "docPanel.label": {
+    "defaultMessage": "{title}, version {version}"
+  },
+  "docPanel.pdf.failed": {
+    "defaultMessage": "This PDF could not be shown here. Download it to read it."
+  },
+  "docPanel.pdf.loading": {
+    "defaultMessage": "Opening…"
+  },
+  "docPanel.pdf.nextPage": {
+    "defaultMessage": "Next page"
+  },
+  "docPanel.pdf.pageOf": {
+    "defaultMessage": "Page {page} of {total}"
+  },
+  "docPanel.pdf.pages": {
+    "defaultMessage": "{filename}, page {page} of {total}"
+  },
+  "docPanel.pdf.previousPage": {
+    "defaultMessage": "Previous page"
+  },
+  "docPanel.pdf.zoomIn": {
+    "defaultMessage": "Zoom in"
+  },
+  "docPanel.pdf.zoomOut": {
+    "defaultMessage": "Zoom out"
+  },
+  "docPanel.version": {
+    "defaultMessage": "v{number}"
+  },
   "documents.action.addVersion": {
     "defaultMessage": "Add version"
   },
