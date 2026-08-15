@@ -1142,6 +1142,93 @@
   "documents.archivedPill": {
     "defaultMessage": "Archived"
   },
+  "documents.batch.announce": {
+    "defaultMessage": "{landed} of {total} uploaded, {failed} failed."
+  },
+  "documents.batch.cancelRemaining": {
+    "defaultMessage": "Cancel remaining"
+  },
+  "documents.batch.cancelled": {
+    "defaultMessage": "Cancelled before it was uploaded."
+  },
+  "documents.batch.carriesOn": {
+    "defaultMessage": "A file that fails costs that file. The rest of the import carries on."
+  },
+  "documents.batch.confirmTitle": {
+    "defaultMessage": "{count, plural, one {Import # file} other {Import # files}}"
+  },
+  "documents.batch.derivations": {
+    "defaultMessage": "Text extraction and OCR run in the background after every file lands."
+  },
+  "documents.batch.destination": {
+    "defaultMessage": "Destination"
+  },
+  "documents.batch.failed": {
+    "defaultMessage": "That file could not be uploaded."
+  },
+  "documents.batch.failures": {
+    "defaultMessage": "{failed, plural, one {# file failed} other {# files failed}}. {landed, plural, =0 {Nothing was added to the contract.} one {The other # is on the contract.} other {The other # are on the contract.}}"
+  },
+  "documents.batch.import": {
+    "defaultMessage": "{count, plural, one {Import # file} other {Import # files}}"
+  },
+  "documents.batch.inFlight": {
+    "defaultMessage": "{uploading} uploading · {queued} queued"
+  },
+  "documents.batch.keepOpen": {
+    "defaultMessage": "Keep this dialog open until the import finishes."
+  },
+  "documents.batch.kind": {
+    "defaultMessage": "Version kind"
+  },
+  "documents.batch.kindHelp": {
+    "defaultMessage": "Applied to every file in this import. Notes are not collected in bulk."
+  },
+  "documents.batch.more": {
+    "defaultMessage": "…and {count, plural, one {# more file} other {# more files}}"
+  },
+  "documents.batch.nothingYet": {
+    "defaultMessage": "Nothing is created until you import."
+  },
+  "documents.batch.onRecord": {
+    "defaultMessage": "{count, plural, =0 {Nothing was added to the contract.} one {# file is already on the contract.} other {# files are already on the contract.}}"
+  },
+  "documents.batch.progress": {
+    "defaultMessage": "{landed} of {total, plural, one {# file} other {# files}} uploaded"
+  },
+  "documents.batch.retry": {
+    "defaultMessage": "Retry"
+  },
+  "documents.batch.retryAll": {
+    "defaultMessage": "{count, plural, one {Retry # file} other {Retry # files}}"
+  },
+  "documents.batch.retryFile": {
+    "defaultMessage": "Retry {name}"
+  },
+  "documents.batch.retryNote": {
+    "defaultMessage": "Retry re-uploads only the file you pick. A file over the size ceiling stays refused until it is made smaller."
+  },
+  "documents.batch.root": {
+    "defaultMessage": "Record root"
+  },
+  "documents.batch.runningTitle": {
+    "defaultMessage": "{count, plural, one {Importing # file} other {Importing # files}}"
+  },
+  "documents.batch.setByDrop": {
+    "defaultMessage": "Set by the drop"
+  },
+  "documents.batch.settledTitle": {
+    "defaultMessage": "Imported {landed} of {total, plural, one {# file} other {# files}}"
+  },
+  "documents.batch.state.done": {
+    "defaultMessage": "Done"
+  },
+  "documents.batch.state.queued": {
+    "defaultMessage": "Queued"
+  },
+  "documents.batch.state.uploading": {
+    "defaultMessage": "Uploading"
+  },
   "documents.chain.toggle": {
     "defaultMessage": "{open, select, true {Hide} other {Show}} the {count, plural, one {# earlier version} other {# earlier versions}} of {title}"
   },
@@ -1168,6 +1255,9 @@
   },
   "documents.composer.choose": {
     "defaultMessage": "Choose file"
+  },
+  "documents.composer.chooseMany": {
+    "defaultMessage": "Choose files"
   },
   "documents.composer.file": {
     "defaultMessage": "File"
@@ -1237,6 +1327,12 @@
   },
   "documents.details.title": {
     "defaultMessage": "Edit details"
+  },
+  "documents.dropChain": {
+    "defaultMessage": "To add a round to an existing chain, use Add version on that document."
+  },
+  "documents.dropHint": {
+    "defaultMessage": "Drop files here — each file becomes a new document at version 1"
   },
   "documents.empty": {
     "defaultMessage": "No documents on this contract yet."

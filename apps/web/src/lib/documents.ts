@@ -297,9 +297,17 @@ export interface UploadDraft {
   note: string;
 }
 
-/** What an upload answers: the document as it now stands, or why not. */
+/**
+ * What an upload answers: the document as it now stands, or why not.
+ *
+ * A refusal carries the seam's own status beside its sentence, because
+ * the batch has to tell one refusal from another: a file over the
+ * deployment's size ceiling is refused again by the same seam, so it is
+ * offered no retry, and everything else is (DES-033 §11). A connection
+ * that dropped carries no status at all.
+ */
 export type UploadOutcome =
-  { ok: true; document: ContractDocument } | { ok: false; detail?: string };
+  { ok: true; document: ContractDocument } | { ok: false; status?: number; detail?: string };
 
 /**
  * Sends one file to a contract, creating a document with version 1.
@@ -338,7 +346,9 @@ async function send(url: string, draft: UploadDraft): Promise<UploadOutcome> {
   form.append("file", draft.file, draft.file.name);
   try {
     const response = await fetch(url, { method: "POST", body: form });
-    if (!response.ok) return { ok: false, detail: await problemDetailOf(response) };
+    if (!response.ok) {
+      return { ok: false, status: response.status, detail: await problemDetailOf(response) };
+    }
     const document = documentIn(await response.json());
     // A 201 whose body is not a document is not a success this caller
     // can render — it would put a row on the list with nothing in it.

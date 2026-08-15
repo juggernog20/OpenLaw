@@ -2028,6 +2028,22 @@ Appending a round stays a deliberate act on a named document, reached from that 
 6. **The mock names one folder in lower case on purpose.** "correspondence" is drawn between "Amendments" and "Executed", so the case-insensitive order is a thing the mock shows rather than a thing this record only asserts.
 7. **A refused folder Delete stays inside the open dialog, carrying the server's own sentence** — it does not close the dialog and mark the row, as §6 above says. This normalizes §6 rather than reversing it: the consequence sentence and the one-click shape are unchanged, and only where the refusal is said moves. It is said in the dialog because that is where the reader is looking and because every refusal here is one they can act on — a name already taken, a delete that would put two folders of one name in one place — so they can read why and then cancel or fix. It is the DOC-010 erasure dialog's own precedent on this same surface. The same rule holds for a refused document Move.
 
+8. **The batch dialog draws a per-file state, not a per-file percentage, and badges no file "OCR queued."** §9 and §11 draw both, from DOC5's mock, and the build ships neither — for the same reason in two places: the client does not know the fact the mock states.
+
+   - **The percentage.** An upload is one `fetch` of one multipart body, and `fetch` reports nothing about how much of that body has gone. So each row says where the file got to — Queued, Uploading, Done, or the failure and its sentence — and the head and the bar carry the count that _is_ known: how many files of the batch have landed. A per-file percentage drawn anyway would be a number nobody measured, and the batch's whole claim is that it is honest about what it is doing. §11's shape is otherwise unchanged: one dialog, per-file rows, retry only where a retry could succeed, and the foot saying how many files are already on the contract.
+   - **The OCR-queued badge and the scanned-file count.** Whether a PDF is a scan is decided by reading its own text layer, on the server, after the file has landed (DOC-005) — a file that says `.pdf` and a file that is a photograph of a page are the same file to a browser. So no row is badged and no strip counts scans. The strip stays, saying what is true of every file: text extraction and OCR run in the background after each one lands.
+
+   Both are worth revisiting only if the upload seam changes. Real per-file progress needs `XMLHttpRequest`, which would fork the upload path away from the one call every other upload makes; that is a bigger cost than a percentage is worth today.
+
+9. **The surface says nothing about folders until the drop can carry one.** §8, §9 and §11 each draw a fact only a directory drop produces, and M13/4 takes no directory — the drop handler reads the dropped entries and leaves anything that is not a file alone, which is M13/5's to recreate. So four things ship shorter than they are drawn, and all four come back with M13/5:
+
+   - **§8's hint loses its folder clause.** The two lines ship as "Drop files here — each file becomes a new document at version 1" and "To add a round to an existing chain, use Add version on that document." A hint that promises a gesture the surface refuses is worse than a shorter one.
+   - **§8's second line names the control that exists.** The row menu offers **Add version**, not "Upload version". The copy follows the menu rather than the other way round.
+   - **§11's per-file rows carry no folder path.** Every file of a batch lands at the record root, so a path on each row would repeat one value down the list.
+   - **§9's tree summary is a flat file list.** There is no tree to indent and no `3 folders · 128 files` root line to draw, so the body lists the files directly, still with the truncation row. The destination readout stays, reading "Record root", because stating where the files land is what it is for.
+
+   Nothing above is reversed. The anatomy §9 and §11 fix is what M13/5 builds back onto.
+
 ### Rationale
 
 Drawing folders as rows of the existing table is the whole reason this stays cheap. The columns, the row height, the paging foot, the pills, and the doc panel are all M11's and all unchanged; a folder is a row that fills fewer of them. A separate tree pane would have been a second surface to keep in step with the first, and DES-032 has just spent the record page's remaining chrome budget.

@@ -146,6 +146,7 @@ import {
   Upload,
 } from "lucide-react";
 import { Avatar } from "../avatar";
+import { BatchDialog, type BatchSource } from "./batch-dialog";
 import { ConfidentialMarker } from "../confidential-marker";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
@@ -162,6 +163,7 @@ import { StatusNote, type FieldStatus } from "../status-note";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
 import { cn } from "../../lib/utils";
 import { formatFileSize, formatShortDate } from "../../lib/format";
+import { dragCarriesFiles, filesFromDrop } from "../../lib/batch-upload";
 import type { Role } from "../../lib/roles";
 import {
   archiveDocument,
@@ -416,6 +418,13 @@ export function DocumentsCard({
   /** The document a "Move to folder" dialog is open for, or none. */
   const [filing, setFiling] = useState<ContractDocument | null>(null);
   const [composer, setComposer] = useState<Composer | null>(null);
+  /** The files a batch confirmation is open for, and what started it, or
+   * none (M13/4, DOC-011). Nothing is sent until the dialog is
+   * confirmed, so an accidental drop of the wrong files costs nothing. */
+  const [batch, setBatch] = useState<{ files: File[]; source: BatchSource } | null>(null);
+  /** A drag carrying files is over the section, so the surface says it
+   * is a target rather than leaving the reader to guess (DES-033 §7). */
+  const [dragging, setDragging] = useState(false);
   const [editing, setEditing] = useState<ContractDocument | null>(null);
   /** Whether the archived rows are drawn beside the live ones — the
    * view restoring one is offered in (DOC-010), as the contracts list
@@ -1037,7 +1046,39 @@ export function DocumentsCard({
   return (
     <section
       aria-labelledby="contract-documents-heading"
-      className="w-full overflow-hidden rounded-card border border-border-default bg-raised"
+      className={cn(
+        "w-full overflow-hidden rounded-card border border-border-default bg-raised",
+        dragging && "outline outline-2 outline-offset-2 outline-link",
+      )}
+      // The whole section is the target (DES-033 §7). A frozen record
+      // takes no drop at all: an archived record's paper is frozen, and
+      // a Contributor is offered no control anywhere else here either.
+      onDragOver={(event) => {
+        if (frozen || !dragCarriesFiles(event.dataTransfer)) return;
+        // Without this the browser opens the dropped file instead of
+        // handing it over.
+        event.preventDefault();
+        // The section takes a copy of what is dropped and moves nothing.
+        // Left unset, the cursor can promise a move that never happens.
+        event.dataTransfer.dropEffect = "copy";
+        setDragging(true);
+      }}
+      onDragLeave={(event) => {
+        // Crossing between the section's own children is not leaving it.
+        if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+        setDragging(false);
+      }}
+      onDrop={(event) => {
+        if (frozen) return;
+        event.preventDefault();
+        setDragging(false);
+        const dropped = filesFromDrop(event.dataTransfer);
+        // A drop carrying no file — a dragged selection, or a directory,
+        // which is M13/5's to recreate — creates nothing and opens
+        // nothing. There is no batch to confirm.
+        if (dropped.length === 0) return;
+        setBatch({ files: dropped, source: "drop" });
+      }}
     >
       <header className="flex h-section-header items-center justify-between gap-2 rounded-t-card border-b border-border-default bg-section-header px-4">
         <div className="flex min-w-0 items-center gap-2">
@@ -1174,6 +1215,28 @@ export function DocumentsCard({
           </table>
         </div>
       )}
+      {/* What a drop on this surface means, said on the surface
+          (DES-033 §8). One gesture, one meaning: a dropped file is
+          always a new document at version 1, and appending a round
+          stays a deliberate act on a named document. Drawn only for
+          somebody who may drop — a control drawn for nobody is worse
+          than none. */}
+      {!frozen && (
+        <div className="border-t border-border-default px-4 py-3">
+          <p className="text-sm text-muted">
+            <FormattedMessage
+              id="documents.dropHint"
+              defaultMessage="Drop files here — each file becomes a new document at version 1"
+            />
+          </p>
+          <p className="text-sm text-muted">
+            <FormattedMessage
+              id="documents.dropChain"
+              defaultMessage="To add a round to an existing chain, use Add version on that document."
+            />
+          </p>
+        </div>
+      )}
       {/* Under the table's own rows and inside the section's card, so
           the control reads as part of the list (DES-031). */}
       {nextCursor !== null && (
@@ -1207,11 +1270,34 @@ export function DocumentsCard({
           contractNumber={contractNumber}
           document={composer.document}
           onClose={() => setComposer(null)}
+          onBatch={(files) => {
+            // More than one file is a batch, wherever it came from
+            // (DOC-011). The composer's own fields are a round's — one
+            // note about one change — and a batch is not a round, so it
+            // hands over rather than growing a second shape.
+            setComposer(null);
+            setBatch({ files, source: "picker" });
+          }}
           onSaved={(document) => {
             if (composer.document) replace(document);
             else prepend(document);
             setComposer(null);
           }}
+        />
+      )}
+      {batch && (
+        <BatchDialog
+          contractNumber={contractNumber}
+          files={batch.files}
+          source={batch.source}
+          // Every listing on screen, read again — the record root and
+          // each open folder — with every cached listing the refresh
+          // did not re-read evicted. A batch is a write over the
+          // record's whole paper: it may have taken the primary
+          // designation (CTR-014), and it has certainly moved the
+          // count.
+          onLanded={applyPaper}
+          onClose={() => setBatch(null)}
         />
       )}
       {editing && (
@@ -2803,12 +2889,17 @@ function UploadDialog({
   contractNumber,
   document,
   onClose,
+  onBatch,
   onSaved,
 }: Readonly<{
   contractNumber: number;
   /** The document being added to, or undefined for a new one. */
   document: ContractDocument | undefined;
   onClose: () => void;
+  /** Hand several chosen files to the batch confirmation (M13/4). This
+   * is the drop's pointer-free twin: the picker is where a keyboard
+   * reaches bulk intake, so it has to reach the same dialog. */
+  onBatch: (files: File[]) => void;
   onSaved: (document: ContractDocument) => void;
 }>) {
   const intl = useIntl();
@@ -2891,12 +2982,21 @@ function UploadDialog({
                 // control a keyboard reaches, and a second stop on an
                 // invisible input is a trap rather than an affordance.
                 tabIndex={-1}
+                // Many files at once on a new document (DOC-011); one on
+                // a chain, because a version is one file and picking
+                // three for one round is a question with no answer.
+                multiple={document === undefined}
                 // Any file type (DOC-004): the seam accepts whatever the
                 // counterparty sent, so the picker offers no filter.
                 onChange={(event) => {
-                  const chosen = event.target.files?.[0] ?? null;
-                  if (chosen) setError(null);
-                  setFile(chosen);
+                  const chosen = [...(event.target.files ?? [])];
+                  if (chosen.length > 1) {
+                    onBatch(chosen);
+                    return;
+                  }
+                  const one = chosen[0] ?? null;
+                  if (one) setError(null);
+                  setFile(one);
                 }}
               />
               {/* The label points at the input, but the input is out of
@@ -2914,7 +3014,14 @@ function UploadDialog({
                 aria-describedby={error ? "document-upload-error" : undefined}
                 onClick={() => picker.current?.click()}
               >
-                <FormattedMessage id="documents.composer.choose" defaultMessage="Choose file" />
+                {document === undefined ? (
+                  <FormattedMessage
+                    id="documents.composer.chooseMany"
+                    defaultMessage="Choose files"
+                  />
+                ) : (
+                  <FormattedMessage id="documents.composer.choose" defaultMessage="Choose file" />
+                )}
               </Button>
               <span className="min-w-0 truncate text-sm text-muted">
                 {file?.name ?? (
