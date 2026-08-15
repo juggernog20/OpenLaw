@@ -447,6 +447,17 @@ export function DocumentsCard({
    * refresh evicted takes its documents with it, which is what closes
    * the panel over a document that has been erased.
    *
+   * **A folder that is re-reading has not stopped holding its
+   * documents.** A write that re-reads the listings puts each open
+   * folder into its skeleton state until the read answers, and the
+   * skeleton is presentation, not the paper leaving the record. So
+   * while a listing is loading, the report keeps the last word it said
+   * for that folder — otherwise the panel over a filed document would
+   * close on every write to any other row of the paper, which is not
+   * what happens to a document at the record root. The word moves on
+   * when the read answers: a document the fresh listing no longer holds
+   * leaves the report then, and the panel with it.
+   *
    * **"I hold nothing" and "I have not looked" are different answers.**
    * This section is mounted and unmounted by the record's tab strip
    * (DES-032), so it starts again with no listing at all every time the
@@ -461,10 +472,27 @@ export function DocumentsCard({
    * callback would say the same thing again on every render of the page.
    */
   const told = useRef(false);
+  /** The last word said for each folder, kept so a listing that is
+   * mid-read can repeat it rather than say "nothing". */
+  const spoken = useRef<ReadonlyMap<string, readonly ContractDocument[]>>(new Map());
   useEffect(() => {
     if (!told.current && listings.size === 0) return;
+    const word = new Map<string, readonly ContractDocument[]>();
+    for (const [folderId, listing] of listings) {
+      if (listing.loading) {
+        const last = spoken.current.get(folderId);
+        // A first read with no earlier word is "I have not looked yet"
+        // for this folder — the remount rule again, one folder at a
+        // time. Nothing is said this round; the read's answer speaks.
+        if (last === undefined) return;
+        word.set(folderId, last);
+      } else {
+        word.set(folderId, listing.documents);
+      }
+    }
     told.current = true;
-    onFiled([...listings.values()].flatMap((listing) => listing.documents));
+    spoken.current = word;
+    onFiled([...word.values()].flat());
   }, [listings]);
   /** The folder dialog that is open, or none. */
   const [folderDialog, setFolderDialog] = useState<FolderDialog | null>(null);
@@ -799,9 +827,21 @@ export function DocumentsCard({
     setAppended(null);
     setShowArchived(next);
     // Read in the view being switched to, not the one being left. The
-    // listings are dropped first so a folder that fails to re-read draws
-    // its skeletons rather than the other view's rows.
-    setListings(new Map());
+    // rows are dropped first so a folder that fails to re-read draws
+    // its skeletons rather than the other view's rows — but each open
+    // folder keeps a listing, marked loading, because a folder that is
+    // re-reading has not stopped holding its documents: the report
+    // above repeats its last word until the new view answers, and the
+    // panel over a filed document survives the toggle the way a root
+    // document's does. Closed folders' caches go entirely, as before.
+    setListings(
+      new Map(
+        [...openFolders].map((folderId) => [
+          folderId,
+          { documents: [], nextCursor: null, loading: true, error: null },
+        ]),
+      ),
+    );
     for (const folderId of openFolders) {
       const folder = await readContractDocuments(contractNumber, next, undefined, folderId);
       putListing(folderId, {
