@@ -60,9 +60,21 @@
  * log write rolls the mutation back rather than leaving an unrecorded
  * change.
  *
- * Applying an approver group is the next ticket (#234); every request
- * made here carries `source = manual`. The soft gate is the one after
- * that (#235) — nothing here branches on stage.
+ * **Applying an approver group asks its whole membership at once, and
+ * the ask is a snapshot** (CTR-012, #234). One row per current
+ * unarchived member, each stamped `source = group` with the template it
+ * came from, and nothing about the template is read again afterwards:
+ * renaming it, editing its members, or archiving it leaves every
+ * request it already made exactly as it was. Somebody who already holds
+ * a pending request on the record is **skipped** rather than refused —
+ * applying a group is one act about a set, and a set that overlaps what
+ * has already been asked is normal. A group with nobody left to ask is
+ * refused as the no-op it would be. Everything else — Member+, live,
+ * and inside a confidential record's audience — is the same rule the
+ * manual ask applies, asked by the same code.
+ *
+ * The soft gate is the next ticket (#235) — nothing here branches on
+ * stage.
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -70,19 +82,21 @@ import { z } from "zod";
 import {
   and,
   APPROVAL_STATUSES,
+  approverGroupMembers,
   approverGroups,
   asc,
   contractApprovals,
   contracts,
   eq,
   inArray,
+  isNull,
   users,
   type ApprovalStatus,
   type Db,
 } from "@openlaw/db";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
-import { eligibleApprovers } from "../../lib/approvers.js";
+import { eligibleApprovers, type ApproverRow } from "../../lib/approvers.js";
 import {
   contractMentionCandidates,
   contractTeamScope,
@@ -118,10 +132,13 @@ const NO_APPROVAL = "No approval request exists with this id.";
  * sign-off is part of the record rather than a conversation about it. */
 const FROZEN = "This contract is archived. Restore it before changing its approvals.";
 
-/** How many approvers one request may name at once. Generous rather
- * than tight — a group snapshot (#234) comes through the same door —
- * and a bound rather than a preference, because the whole set is
- * checked in memory under a row lock. */
+/** How many approvers one **named** request may list at once. A bound
+ * rather than a preference, because the whole set is checked in memory
+ * under a row lock; generous rather than tight, because naming a dozen
+ * people by hand is a real ask. A group apply carries no second bound —
+ * a template's own member ceiling is already the answer, and refusing
+ * to apply a group an Administrator was allowed to configure would be a
+ * dead end the person applying it cannot clear. */
 const MAX_APPROVERS_PER_REQUEST = 50;
 
 /** The approver's own words on their decision (CTR-012, optional). The
@@ -337,6 +354,113 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
     if (contract.archivedAt) throw httpError(409, FROZEN);
   }
 
+  /**
+   * The record's own audience, asked over the people about to be asked
+   * (DD-014).
+   *
+   * The reach rule said over **people** rather than over rows, so what
+   * may be asked here can never disagree with what the record itself
+   * would answer. Shared by the manual ask and the group apply, because
+   * a group-sourced request is a request: a walled-off record refuses an
+   * outsider whichever door the ask came through.
+   */
+  async function assertInAudience(
+    tx: ContractAccessReader & Executor,
+    contractId: string,
+    approvers: readonly ApproverRow[],
+  ): Promise<void> {
+    const reachable = new Set(
+      (
+        await contractMentionCandidates(
+          tx,
+          contractId,
+          approvers.map((person) => person.id),
+        )
+      ).map((person) => person.id),
+    );
+    for (const approver of approvers) {
+      if (!reachable.has(approver.id)) {
+        throw httpError(
+          422,
+          `${approver.displayName} can't see this contract, so they can't be asked to approve it.`,
+        );
+      }
+    }
+  }
+
+  /** Who already holds a pending ask on this record. Read under the
+   * contract's row lock, which is what makes it a decision rather than a
+   * guess: the manual ask refuses these people, and the group apply
+   * skips them. */
+  async function pendingApproverIds(tx: Executor, contractId: string): Promise<Set<string>> {
+    const rows = await tx
+      .select({ approverId: contractApprovals.approverId })
+      .from(contractApprovals)
+      .where(
+        and(eq(contractApprovals.contractId, contractId), eq(contractApprovals.status, "pending")),
+      );
+    return new Set(rows.map((row) => row.approverId));
+  }
+
+  /** Where a set of requests came from (CTR-012): a person picking names
+   * by hand, or a template being applied. */
+  type RequestOrigin =
+    { source: "manual" } | { source: "group"; group: { id: string; name: string } };
+
+  /**
+   * Writes one pending request per person named, and narrates one entry
+   * per person (DD-017).
+   *
+   * One entry per person asked, not one per act: being asked to sign a
+   * contract off is a fact about that person, and a reader of the feed
+   * has to be able to see who was asked without opening a payload of
+   * names. A group apply says which template it came from in the same
+   * entry, so the feed reads "asked X, from the Commercial sign-off
+   * group" rather than making the reader join it up.
+   */
+  async function createRequests(
+    tx: Executor,
+    contractId: string,
+    actorId: string,
+    approvers: readonly ApproverRow[],
+    origin: RequestOrigin,
+  ): Promise<void> {
+    const groupId = origin.source === "group" ? origin.group.id : null;
+    const created = await tx
+      .insert(contractApprovals)
+      .values(
+        approvers.map((approver) => ({
+          contractId,
+          approverId: approver.id,
+          source: origin.source,
+          groupId,
+          requestedBy: actorId,
+        })),
+      )
+      .returning({ id: contractApprovals.id, approverId: contractApprovals.approverId });
+    const idByApprover = new Map(created.map((row) => [row.approverId, row.id]));
+
+    await recordActivity(
+      tx,
+      approvers.map((approver) => ({
+        entityType: "contract" as const,
+        entityId: contractId,
+        actorId,
+        action: "approval.requested" as const,
+        visibility: RECORD_ACTIVITY_TIER,
+        payload: {
+          approvalId: idByApprover.get(approver.id) ?? null,
+          approverId: approver.id,
+          approverName: approver.displayName,
+          source: origin.source,
+          ...(origin.source === "group"
+            ? { groupId: origin.group.id, groupName: origin.group.name }
+            : {}),
+        },
+      })),
+    );
+  }
+
   app.get(
     "/contracts/:number/approvals",
     {
@@ -423,41 +547,18 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
           (displayName) => `${displayName} is archived and can't be asked to approve.`,
         );
 
-        // Then the record's own audience (DD-014). The reach rule said
-        // over people rather than over rows, so what may be asked here
-        // can never disagree with what the record itself would answer.
-        const reachable = new Set(
-          (
-            await contractMentionCandidates(
-              tx,
-              contract.id,
-              approvers.map((person) => person.id),
-            )
-          ).map((person) => person.id),
-        );
-        for (const approver of approvers) {
-          if (!reachable.has(approver.id)) {
-            throw httpError(
-              422,
-              `${approver.displayName} can't see this contract, so they can't be asked to approve it.`,
-            );
-          }
-        }
+        // Then the record's own audience (DD-014).
+        await assertInAudience(tx, contract.id, approvers);
 
         // One pending ask per person, decided under the lock above. The
         // partial unique index stands behind this as the database's own
         // last word; this is what turns a constraint violation into a
         // sentence the caller can act on.
-        const pending = await tx
-          .select({ approverId: contractApprovals.approverId })
-          .from(contractApprovals)
-          .where(
-            and(
-              eq(contractApprovals.contractId, contract.id),
-              eq(contractApprovals.status, "pending"),
-            ),
-          );
-        const alreadyAsked = new Set(pending.map((row) => row.approverId));
+        //
+        // A named ask is **refused** where a group apply skips: naming
+        // somebody by hand says the caller believes they have not been
+        // asked, and swallowing that would leave them believing it.
+        const alreadyAsked = await pendingApproverIds(tx, contract.id);
         for (const approver of approvers) {
           if (alreadyAsked.has(approver.id)) {
             throw httpError(
@@ -467,39 +568,111 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
           }
         }
 
-        const created = await tx
-          .insert(contractApprovals)
-          .values(
-            approvers.map((approver) => ({
-              contractId: contract.id,
-              approverId: approver.id,
-              source: "manual" as const,
-              requestedBy: request.user.id,
-            })),
-          )
-          .returning({ id: contractApprovals.id, approverId: contractApprovals.approverId });
-        const idByApprover = new Map(created.map((row) => [row.approverId, row.id]));
+        await createRequests(tx, contract.id, request.user.id, approvers, { source: "manual" });
 
-        // One entry per person asked, not one per request: being asked
-        // to sign a contract off is a fact about that person, and a
-        // reader of the feed has to be able to see who was asked
-        // without opening a payload of names.
-        await recordActivity(
+        return rosterOf(tx, contract.id);
+      });
+      return reply.status(201).send(roster);
+    },
+  );
+
+  app.post(
+    "/contracts/:number/approvals/group",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "applyApproverGroup",
+        summary:
+          "Apply an approver group to a contract (CTR-012): every " +
+          "current member of the template is asked to sign the record " +
+          "off, in one act and in parallel. The ask is a **snapshot** — " +
+          "each request records the group it came from, and renaming " +
+          "the template, editing its members, or archiving it never " +
+          "touches a request that already exists. A member who already " +
+          "holds a pending request on this contract is skipped rather " +
+          "than refused, because applying a group is one act about a " +
+          "set. An archived member is skipped too: they have left, so " +
+          "the ask would reach nobody. A group with nobody left to ask " +
+          "— no members, or every member already asked — is refused as " +
+          "the no-op it would be, and an archived group is refused " +
+          "because it has left the picker. Every other rule is the " +
+          "named ask's, applied by the same code: a member who is no " +
+          "longer Member+ is refused by name, and on a confidential " +
+          "contract a member outside the record's audience is refused " +
+          "by name too. Appends one approval.requested entry per person " +
+          "asked, naming the group, at the working-team tier (DD-017). " +
+          "Member+; an archived contract takes no request until it is " +
+          "restored",
+        tags: ["approvals"],
+        params: NumberParams,
+        body: z.object({ groupId: RecordIdSchema }),
+        response: { 201: ApprovalsEnvelope, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      const roster = await app.db.transaction(async (tx) => {
+        const contract = await reachedContract(tx, request.user, request.params.number, true);
+        assertOpen(contract);
+
+        const [group] = await tx
+          .select({
+            id: approverGroups.id,
+            name: approverGroups.name,
+            archivedAt: approverGroups.archivedAt,
+          })
+          .from(approverGroups)
+          .where(eq(approverGroups.id, request.body.groupId))
+          .limit(1);
+        if (!group) throw httpError(404, "No approver group exists with this id.");
+        // An archived template has left the apply picker (SET-003), so
+        // a call naming one is a client holding a stale list.
+        if (group.archivedAt) {
+          throw httpError(409, `${group.name} is archived, so it can't be applied.`);
+        }
+
+        // The snapshot's raw material: the template's members as they
+        // stand right now. Archived people are left out here rather
+        // than refused — they have left (SET-005), and a template that
+        // outlives somebody should still be appliable by the person who
+        // did not archive them.
+        const members = await tx
+          .select({ id: users.id })
+          .from(approverGroupMembers)
+          .innerJoin(users, eq(users.id, approverGroupMembers.userId))
+          .where(and(eq(approverGroupMembers.groupId, group.id), isNull(users.archivedAt)))
+          .orderBy(asc(users.displayName), asc(users.id));
+
+        // Then the people this record has already asked, who are
+        // skipped. Both filters run before any refusal is raised, so a
+        // group is never refused on account of somebody it would not
+        // have asked anyway.
+        const alreadyAsked = await pendingApproverIds(tx, contract.id);
+        const wanted = members.map((row) => row.id).filter((id) => !alreadyAsked.has(id));
+        if (wanted.length === 0) {
+          throw httpError(
+            422,
+            members.length === 0
+              ? `${group.name} has no members to ask.`
+              : `Everybody in ${group.name} already has a pending approval request on this contract.`,
+          );
+        }
+
+        // What is left is asked exactly as a named ask is: Member+ and
+        // live, then inside a confidential record's audience. A member
+        // who has since lost their standing is refused by name rather
+        // than dropped — the record must not quietly ask fewer people
+        // than the template says.
+        const approvers = await eligibleApprovers(
           tx,
-          approvers.map((approver) => ({
-            entityType: "contract" as const,
-            entityId: contract.id,
-            actorId: request.user.id,
-            action: "approval.requested" as const,
-            visibility: RECORD_ACTIVITY_TIER,
-            payload: {
-              approvalId: idByApprover.get(approver.id) ?? null,
-              approverId: approver.id,
-              approverName: approver.displayName,
-              source: "manual",
-            },
-          })),
+          wanted,
+          (displayName) => `${displayName} is archived and can't be asked to approve.`,
         );
+        await assertInAudience(tx, contract.id, approvers);
+
+        await createRequests(tx, contract.id, request.user.id, approvers, {
+          source: "group",
+          group: { id: group.id, name: group.name },
+        });
 
         return rosterOf(tx, contract.id);
       });

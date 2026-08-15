@@ -846,13 +846,23 @@ const ARMS: Readonly<Record<string, Arm>> = {
   // cancellation the two are different people, and on a cancellation
   // the entry is the only record left that the ask was ever made: the
   // row itself is deleted.
+  // The request says where it came from, because a group apply asks
+  // several people in one act and a feed that narrated each of them as
+  // a separate hand-picked ask would hide the act (CTR-012, M14/4). An
+  // entry with no source at all reads as the manual arm, which is what
+  // every entry written before the group apply landed is.
   "approval.requested": {
     icon: Stamp,
     message: defineMessage({
       id: "activity.approval.requested",
-      defaultMessage: "{actor} asked {approver} to approve this contract",
+      defaultMessage:
+        "{source, select, group {{actor} asked {approver} to approve this contract, from the {group} group} other {{actor} asked {approver} to approve this contract}}",
     }),
-    values: (intl, payload) => ({ approver: named(intl, payload, "approverName") }),
+    values: (intl, payload) => ({
+      approver: named(intl, payload, "approverName"),
+      source: text(payload, "source") ?? "manual",
+      group: named(intl, payload, "groupName"),
+    }),
   },
   "approval.approved": {
     icon: Check,

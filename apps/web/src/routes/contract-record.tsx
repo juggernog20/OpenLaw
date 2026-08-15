@@ -276,6 +276,10 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     contractTypes: options?.data?.contractTypes ?? [],
     contractStatuses: options?.data?.contractStatuses ?? [],
     users: options?.data?.users ?? [],
+    /** The live approver-group templates the Approvals section's apply
+     * picker offers (M14/4, CTR-012). Member+ only, like the rest of
+     * the options answer: a read-only viewer applies nothing. */
+    approverGroups: options?.data?.approverGroups ?? [],
     entities: registry?.data?.entities ?? [],
   };
 }
@@ -349,6 +353,7 @@ function ContractRecord() {
     contractTypes,
     contractStatuses,
     users,
+    approverGroups,
     entities,
   } = useLoaderData<typeof contractRecordLoader>();
   const intl = useIntl();
@@ -1351,6 +1356,7 @@ function ContractRecord() {
                   contractNumber={saved.number}
                   approvals={approvals}
                   users={users}
+                  approverGroups={approverGroups}
                   // The live roster and the saved row, not the loader's
                   // copies: putting somebody on the team widens a
                   // confidential record's audience on the same page,

@@ -898,7 +898,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The live contract types in display order, each with the fields it attaches (CTR-016) so the create dialog can grow the ones it requires; the live statuses; and the live people the Owner and team pickers offer — the create dialog's and the record's Member+ picker source (the settings surfaces stay Administrator-only per SET-002) */
+    /** The live contract types in display order, each with the fields it attaches (CTR-016) so the create dialog can grow the ones it requires; the live statuses; and the live people the Owner and team pickers offer — the create dialog's and the record's Member+ picker source; and the live approver groups the record's apply picker offers, each with the ids of the people applying it would ask (CTR-012) — the settings surfaces that manage all of these stay Administrator-only per SET-002 */
     get: operations["listContractOptions"];
     put?: never;
     post?: never;
@@ -1057,6 +1057,23 @@ export interface paths {
     put?: never;
     /** Ask one or more named colleagues to sign a contract off (CTR-012). Every request is created at once and every one of them runs in parallel — there are no chains and no order. An approver must be a live Member+ user: a Contributor, a Business User, and an archived person are each refused by name, because a request nobody can act on is worse than no request. On a confidential contract the approver must already be inside the record's audience, so no request is created that its approver could not open. At most one pending request per approver per contract — a second is refused rather than silently collapsed — but a decided one blocks nothing, so a re-request after a rejection writes a new row and the earlier ask stays on the record. Every request made here carries source manual; applying an approver group is its own act. Appends one approval.requested entry per approver on the owning contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract takes no new request until it is restored */
     post: operations["requestContractApprovals"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/approvals/group": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Apply an approver group to a contract (CTR-012): every current member of the template is asked to sign the record off, in one act and in parallel. The ask is a **snapshot** — each request records the group it came from, and renaming the template, editing its members, or archiving it never touches a request that already exists. A member who already holds a pending request on this contract is skipped rather than refused, because applying a group is one act about a set. An archived member is skipped too: they have left, so the ask would reach nobody. A group with nobody left to ask — no members, or every member already asked — is refused as the no-op it would be, and an archived group is refused because it has left the picker. Every other rule is the named ask's, applied by the same code: a member who is no longer Member+ is refused by name, and on a confidential contract a member outside the record's audience is refused by name too. Appends one approval.requested entry per person asked, naming the group, at the working-team tier (DD-017). Member+; an archived contract takes no request until it is restored */
+    post: operations["applyApproverGroup"];
     delete?: never;
     options?: never;
     head?: never;
@@ -5068,6 +5085,11 @@ export interface operations {
               /** @enum {string} */
               role: "administrator" | "legal_team_member" | "contributor" | "business_user";
             }[];
+            approverGroups: {
+              id: string;
+              name: string;
+              memberIds: string[];
+            }[];
           };
         };
       };
@@ -5900,6 +5922,66 @@ export interface operations {
       content: {
         "application/json": {
           approverIds: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            approvals: {
+              id: string;
+              approver: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              };
+              requestedBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              };
+              /** @enum {string} */
+              source: "manual" | "group";
+              groupName: string | null;
+              /** @enum {string} */
+              status: "pending" | "approved" | "rejected";
+              note: string | null;
+              /** Format: date-time */
+              requestedAt: string;
+              decidedAt: string | null;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  applyApproverGroup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          groupId: string;
         };
       };
     };
