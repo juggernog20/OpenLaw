@@ -232,9 +232,24 @@ async function foldersOf(db: FolderExecutor, contractId: string): Promise<Folder
  * name nobody typed. Non-empty, because a folder with no name cannot be
  * pointed at. Bounded at the filesystem's own ceiling, because a folder
  * is created from a directory name as often as it is typed (DOC-011).
- * And free of the path separator, because a folder drop addresses a
- * chain by path and a name holding a separator could not be one segment
- * of one.
+ * Free of the path separator, because a folder drop addresses a chain by
+ * path and a name holding a separator could not be one segment of one.
+ * And never `.` or `..`, for the same reason one step further on: those
+ * two are the names a path is written with rather than names a path can
+ * carry, so a folder called `..` is a folder no `folderPath` could ever
+ * address (#227).
+ *
+ * That last rule is refused **here** and not beside the path parser, and
+ * that is the whole point of it. It used to live only in
+ * {@link folderPathSegments}, so a name the drop route refused was a
+ * name the create route took — and what a person typed could be a folder
+ * no drop could ever file into. The set of legal folder names has to be
+ * one set, or the two routes describe two different trees.
+ *
+ * They are refused rather than resolved. Nothing here touches a
+ * filesystem — a storage key is minted from two ids and never from a
+ * name — so they were never an escape, and resolving them would invent
+ * navigation a record's folder set does not have.
  *
  * Exported because a dropped path's segments are folder names and are
  * held to exactly these rules (M13/5). One copy of them, so a directory
@@ -249,6 +264,12 @@ export function folderName(raw: string): string {
   if (name.includes("/") || name.includes("\\")) {
     throw httpError(400, "A folder name cannot contain a slash. Make a folder inside instead.");
   }
+  // After the trim, so padding walks around this rule no more than it
+  // walks around the empty-name rule above it. The two exact names and
+  // nothing wider: `...` and `.hidden` are names somebody meant.
+  if (name === "." || name === "..") {
+    throw httpError(400, "A folder cannot be named . or .. — those address a path, not a folder.");
+  }
   return name;
 }
 
@@ -262,13 +283,17 @@ export function folderName(raw: string): string {
  * person who typed something — so it is refused plainly for that one
  * file, and the rest of the batch carries on.
  *
- * `.` and `..` are refused rather than resolved. Nothing here touches a
- * filesystem — a storage key is minted from two ids and never from a
- * name — so they are not an escape, they are a folder called `..`, which
- * is a folder nobody meant to make.
+ * `.` and `..` are refused rather than resolved, and that rule now lives
+ * in {@link folderName} where every route reaches it (#227). What stays
+ * here is only the **sentence**: a client walking a dropped directory
+ * tree is told which segment of its path is wrong, which is what it can
+ * act on, rather than being told about a folder name it never typed. So
+ * the check below is deliberately redundant with the shared rule, and
+ * the shared rule is the one that decides.
  *
  * Every segment is a folder name and goes through {@link folderName}, so
- * a drop can create nothing that could not have been typed.
+ * a drop can create nothing that could not have been typed — and, since
+ * #227, nothing that could be typed is refused only here.
  */
 export function folderPathSegments(raw: string): string[] {
   const path = raw.trim();
@@ -858,10 +883,14 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "Create a folder on a contract, at the record root or inside " +
           "another folder (DOC-006). The name is trimmed, must not be " +
-          "empty, is bounded at the filesystem's own ceiling, and may " +
-          "not hold a slash — a folder drop addresses a chain by path, " +
-          "and a name with a separator in it could not be one segment " +
-          "of one. Three invariants are refused here rather than left " +
+          "empty, is bounded at the filesystem's own ceiling, may " +
+          "not hold a slash, and may not be . or .. — a folder drop " +
+          "addresses a chain by path, and neither a name with a " +
+          "separator in it nor one of the two names a path is written " +
+          "with could be one segment of one. Those are the same rules " +
+          "every segment of a dropped path is held to, so a folder that " +
+          "can be typed can always be addressed by path and the reverse. " +
+          "Three invariants are refused here rather than left " +
           "to the database: a parent on another contract is answered " +
           "exactly as a parent that was never created, a sibling name " +
           "already taken under the same parent is refused 409, and a " +
@@ -961,7 +990,11 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "updateContractFolder",
         summary:
           "Rename a folder, move it under a different parent, or both " +
-          "(DOC-006). parentId null moves it to the record root, and " +
+          "(DOC-006). A new name is held to exactly the rules a created " +
+          "one is, . and .. among them; a request that names no name " +
+          "leaves the folder's own name unjudged, so a folder that " +
+          "predates a narrowing of those rules can still be moved and " +
+          "still be renamed out. parentId null moves it to the record root, and " +
           "omitting parentId moves nothing — they are two different " +
           "requests. A move carries the whole subtree, so the tree's " +
           "depth ceiling is asked about the deepest folder underneath " +

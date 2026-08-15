@@ -21,6 +21,14 @@
  * find-or-create deterministic (DOC-011) — so it is asserted with case
  * as well, because that is the reading the sort already takes.
  *
+ * The name rules are asserted as **one rule shared by every route that
+ * names a folder** (#227). What may be typed and what may be a segment
+ * of a dropped path have to be the same set, or a folder can be created
+ * that no path could ever address; `.` and `..` are the pair that used
+ * to fall through the gap, and they are asserted at both routes here.
+ * A row that predates the narrowing keeps reading, renaming, moving,
+ * and dissolving — which is what makes the narrowing owe no migration.
+ *
  * Access is the third subject, and it is written the M10 way. A viewer
  * who cannot reach the owning contract must get, on the list and on
  * every write alike, exactly the answer a contract that was never
@@ -35,7 +43,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { eq, users } from "@openlaw/db";
+import { documentFolders, eq, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -331,13 +339,77 @@ describe("creating a folder", () => {
     ]);
   });
 
-  it("refuses a blank name, an over-long one, and one holding a separator", async () => {
+  it("refuses a blank name, an over-long one, one holding a separator, and . or ..", async () => {
     const contract = await newContract("Orion Cloud — the bad names");
 
-    for (const name of ["", "   ", "a".repeat(256), "2026/Executed", "2026\\Executed"]) {
+    for (const name of [
+      "",
+      "   ",
+      "a".repeat(256),
+      "2026/Executed",
+      "2026\\Executed",
+      // `.` and `..` are refused as names rather than resolved as
+      // navigation (#227): nothing here touches a filesystem, so they
+      // are not an escape — they are a folder nobody meant to make, and
+      // one no `folderPath` could ever address.
+      ".",
+      "..",
+      // And the trim runs first, so padding does not walk around the
+      // rule the way it does not walk around the empty-name rule.
+      " . ",
+      "  ..  ",
+    ]) {
       const res = await createFolder(adminCookies, contract.number, { name });
       expect(res.statusCode, name).toBe(400);
     }
+    expect(await folders(adminCookies, contract.number)).toEqual([]);
+  });
+
+  it("keeps a name that merely holds dots", async () => {
+    const contract = await newContract("Orion Cloud — the dotted names");
+
+    // The rule is the two exact names and nothing wider. A folder called
+    // `...` or `.hidden` is a folder somebody meant to make, and
+    // narrowing past what #227 asked for would strand names people use.
+    for (const name of ["...", ".hidden", "Q1.2026", "a.b"]) {
+      const res = await createFolder(adminCookies, contract.number, { name });
+      expect(res.statusCode, name).toBe(201);
+    }
+    // The set, not the order: how punctuation sorts is the database
+    // collation's business, and DES-033's ordering is asserted on plain
+    // names elsewhere.
+    const kept = (await folders(adminCookies, contract.number)).map((row) => row.name);
+    expect(kept).toHaveLength(4);
+    expect(kept).toEqual(expect.arrayContaining(["...", ".hidden", "Q1.2026", "a.b"]));
+  });
+
+  it("refuses . and .. through the name route and the path route alike", async () => {
+    const contract = await newContract("Orion Cloud — the two routes");
+
+    // The regression #227 is actually about. The name rule and the path
+    // rule used to disagree: a folder typed as `..` was created and then
+    // unreachable by any path, because no path segment may be `..`. One
+    // shared rule now answers both, so this fails if either drifts.
+    for (const name of [".", ".."]) {
+      const viaName = await createFolder(adminCookies, contract.number, { name });
+      const viaPath = await createFolder(adminCookies, contract.number, { path: name });
+      expect(viaName.statusCode, `name ${name}`).toBe(400);
+      expect(viaPath.statusCode, `path ${name}`).toBe(400);
+      // Two refusals, and the path one still says `path`, because that
+      // is the sentence a client walking a dropped tree can act on.
+      expect(viaPath.json().detail, `path ${name}`).toContain("path");
+    }
+    expect(await folders(adminCookies, contract.number)).toEqual([]);
+  });
+
+  it("refuses a . or .. segment buried in a path without creating the rest of the chain", async () => {
+    const contract = await newContract("Orion Cloud — the buried segment");
+
+    const res = await createFolder(adminCookies, contract.number, { path: "Legacy/../Executed" });
+
+    expect(res.statusCode, res.body).toBe(400);
+    // Half a chain is worse than no chain: `Legacy` must not survive the
+    // refusal of the segment after it.
     expect(await folders(adminCookies, contract.number)).toEqual([]);
   });
 
@@ -423,6 +495,19 @@ describe("renaming and moving a folder", () => {
     expect(renamed!.id).toBe(folder.id);
     expect(renamed!.name).toBe("Correspondence");
     expect(renamed!.parentId).toBeNull();
+  });
+
+  it("refuses a rename to . or ..", async () => {
+    const contract = await newContract("Orion Cloud — the rename to a dot");
+    const folder = await made(contract.number, "Correspondence");
+
+    // The same shared rule the create route answers with (#227): a name
+    // no route may create is a name no route may rename to either.
+    for (const name of [".", "..", " . ", "  ..  "]) {
+      const res = await patchFolder(adminCookies, folder.id, { name });
+      expect(res.statusCode, name).toBe(400);
+    }
+    expect((await folders(adminCookies, contract.number))[0]!.name).toBe("Correspondence");
   });
 
   it("moves a folder under a different parent", async () => {
@@ -606,6 +691,64 @@ describe("deleting a folder", () => {
     const folder = await made(contract.number, "Executed");
 
     expect((await deleteFolder(adminCookies, folder.id)).statusCode).toBe(200);
+    expect(await folders(adminCookies, contract.number)).toEqual([]);
+  });
+});
+
+describe("a folder named . or .. that predates the rule", () => {
+  /**
+   * The rule narrowed in #227, and an install that ran M13 before it may
+   * be holding such a row. Narrowing a name rule must not strand what it
+   * cannot un-create: the row keeps reading, and every way out of it —
+   * rename, move, dissolve — keeps working, which is why no migration is
+   * owed. The rows are written straight into the table because no route
+   * will make one any more.
+   */
+  async function legacyFolder(contractId: string, name: string): Promise<string> {
+    const [row] = await harness.db
+      .insert(documentFolders)
+      .values({ contractId, parentId: null, name })
+      .returning({ id: documentFolders.id });
+    return row!.id;
+  }
+
+  it("still reads, and still moves without the unchanged name being re-checked", async () => {
+    const contract = await newContract("Orion Cloud — the legacy dot folder");
+    const legacy = await legacyFolder(contract.id, "..");
+    const home = await made(contract.number, "Executed");
+
+    expect((await folders(adminCookies, contract.number)).map((row) => row.name)).toContain("..");
+
+    // The move names no name, so the folder keeps the one it has. That
+    // must not be re-checked against the new rule — a folder that could
+    // not be moved is a folder nobody can tidy away.
+    const res = await patchFolder(adminCookies, legacy, { parentId: home.id });
+
+    expect(res.statusCode, res.body).toBe(200);
+    expect((res.json().folders as FolderRow[]).find((row) => row.id === legacy)!.parentId).toBe(
+      home.id,
+    );
+  });
+
+  it("still renames out to a legal name", async () => {
+    const contract = await newContract("Orion Cloud — the legacy dot rename");
+    const legacy = await legacyFolder(contract.id, "..");
+
+    const res = await patchFolder(adminCookies, legacy, { name: "Archive" });
+
+    // The new name is what the rule judges, never the old one — so the
+    // way out of a stranded name is open.
+    expect(res.statusCode, res.body).toBe(200);
+    expect((res.json().folders as FolderRow[])[0]!.name).toBe("Archive");
+  });
+
+  it("still dissolves", async () => {
+    const contract = await newContract("Orion Cloud — the legacy dot delete");
+    const legacy = await legacyFolder(contract.id, ".");
+
+    const res = await deleteFolder(adminCookies, legacy);
+
+    expect(res.statusCode, res.body).toBe(200);
     expect(await folders(adminCookies, contract.number)).toEqual([]);
   });
 });
