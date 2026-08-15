@@ -37,7 +37,7 @@
  *   other: M8 ships no route that archives or deletes one.
  */
 
-import { test, expect, type APIRequestContext, type Page } from "@playwright/test";
+import { test, expect, type APIRequestContext, type Locator, type Page } from "@playwright/test";
 import { z } from "zod";
 import {
   ADMIN,
@@ -128,6 +128,13 @@ function contractPatched(page: Page) {
     (response) =>
       /\/api\/v1\/contracts\/\d+$/.test(response.url()) && response.request().method() === "PATCH",
   );
+}
+
+/** One tab of the record's section strip (DES-032). The sections are
+ * routed links inside a nav of their own, so a tab is found by that
+ * nav's name — never by a tab role the strip does not claim. */
+function sectionTab(page: Page, name: string): Locator {
+  return page.getByRole("navigation", { name: "Contract sections" }).getByRole("link", { name });
 }
 
 async function listContracts(request: APIRequestContext) {
@@ -457,6 +464,13 @@ test.describe.serial("M8 demo path", () => {
       const primary = page.getByRole("listitem").filter({ hasText: /Primary/ });
       await expect(primary).toHaveCount(1);
       await expect(primary).toContainText(COUNTERPARTIES[0]);
+
+      // The type's own fields are a section of the record now, behind
+      // their own tab (DES-032). The person asks for them the way the
+      // strip offers them — one click — and the address says which
+      // section is on screen.
+      await sectionTab(page, "Fields").click();
+      await expect(page).toHaveURL(new RegExp(`/contracts/${number}/fields$`));
 
       // The custom field the type attaches but does not demand, filled
       // where every field on this record is filled — in place, on its
