@@ -30,22 +30,31 @@ export const PROBLEM_CONTENT_TYPE = "application/problem+json; charset=utf-8";
  * 5xx message is scrubbed unless `expose` opts it in — set that only on
  * copy authored for the client (the 502 test-send reasons), never on
  * text relayed from another component, which could quote internals.
+ *
+ * `type` is the RFC 9457 problem type URI, and it defaults to
+ * `about:blank` because almost every refusal here is one a client
+ * prints rather than one it acts on. Set it only where a client has to
+ * tell *this* refusal apart from every other refusal the same route can
+ * give — a client that told them apart by reading the sentence would
+ * break the first time the sentence was reworded.
  */
 export class HttpError extends Error {
   readonly statusCode: number;
   readonly expose: boolean;
+  readonly type: string;
 
-  constructor(statusCode: number, message: string, options?: { expose?: boolean }) {
+  constructor(statusCode: number, message: string, options?: { expose?: boolean; type?: string }) {
     super(message);
     this.statusCode = statusCode;
     this.expose = options?.expose ?? false;
+    this.type = options?.type ?? "about:blank";
   }
 }
 
 export function httpError(
   statusCode: number,
   message: string,
-  options?: { expose?: boolean },
+  options?: { expose?: boolean; type?: string },
 ): HttpError {
   return new HttpError(statusCode, message, options);
 }

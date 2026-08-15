@@ -572,6 +572,45 @@ CodeRabbit's `docstrings` pre-merge check reported 36.05% coverage against its s
 - The convention is enforced by review instruction rather than by tooling — no linter measures it, deliberately.
 - New modules are expected to cite a decision record; where none applies, that is a signal the decision has not been recorded yet.
 
+## TECH-020: Problem `type` URIs — a refusal names itself only when a client must act on it
+
+- **Status:** Accepted
+- **Date:** 2026-08-16
+
+### Context
+
+Every non-2xx answer is an RFC 9457 problem detail (TECH-016's consequence: one error envelope, generated into the OpenAPI document and the typed client). Until M14 every one of them carried `type: "about:blank"`, because every one of them was a refusal the client **prints**.
+
+CTR-012's soft gate (#235) is the first refusal a client has to **act on**. `PATCH /contracts/:number` refuses a status change that crosses past the approval stage while approvals are unresolved, and the web record turns that refusal into a confirmation dialog and retries with an override flag. The same route already answers 409 for an archived contract, so the status code does not tell the two apart, and the only thing left to branch on was the wording of `detail`.
+
+### Decision
+
+1. **`HttpError` carries an optional `type`, and the error handler renders it.** It defaults to `about:blank`, which stays the answer for every refusal a client prints.
+2. **Set it only where a client is expected to branch.** A refusal that a client renders as a sentence and nothing else keeps `about:blank`. A refusal that drives a second request, a dialog, or a different code path names itself.
+3. **The URI is a URN under `urn:openlaw:problem:`** — `urn:openlaw:problem:approval-soft-gate` is the first. OpenLaw is self-hosted, so an `https:` type would name a domain that resolves for nobody who runs it.
+4. **The type is part of the API contract.** It is a stable identifier: rewording `detail` is a copy change, and changing a `type` is a breaking change.
+
+### Rationale
+
+- **Branching on copy is a latent break.** `detail` is product copy written for a human, and copy gets rewritten. A client that matched on it would fail silently at the first rewording, on the path that matters most — the one where a warning is meant to be raised.
+- **RFC 9457 already answers this.** §4.2.1 makes `type` the problem's identity and `detail` the human-readable explanation. Nothing new was invented; the field was there and unused.
+- **A default of `about:blank` keeps the cost at zero.** No existing refusal changes, no route has to opt out, and the generated client already carries the field.
+- **A URN says the truth about the deployment.** Every self-hoster runs their own OpenLaw; there is no shared origin to hang a dereferenceable type URI on.
+
+### Alternatives considered
+
+- **Match on `detail`.** Rejected: copy is not a contract.
+- **A dedicated extension member on the envelope** (a `code`, or a structured `unresolvedApprovals` array). Rejected: `type` is the field the RFC already spends on exactly this, and a per-feature member on a shared envelope grows one field per feature that ever needs to be acted on.
+- **A distinct status code for the gate** (422 rather than 409). Rejected: status codes are a small closed set shared across every refusal a route can give, and the next feature that needs to be acted on would collide.
+- **Answering 200 with a "would need confirmation" body instead of refusing.** Rejected: the gate has to be honest for every API client, and a 200 that did not commit is a lie to the ones that do not read the body.
+
+### Consequences
+
+- `apps/api/src/lib/problem.ts` owns the field; `app.ts`'s error handler renders it. Every existing refusal is unchanged.
+- The web helper layer gains `problemType` beside `problemDetail` (`apps/web/src/lib/messages.ts`).
+- Each acted-on type is declared next to the rule that throws it — `SOFT_GATE_PROBLEM_TYPE` in `apps/api/src/lib/soft-gate.ts`, mirrored for the client in `apps/web/src/lib/approvals.ts`.
+- The OpenAPI document does not enumerate the types; they are documented in the route summary that can raise them.
+
 ## Index of decisions
 
 | #        | Decision                                                                      | Status               |
@@ -595,3 +634,4 @@ CodeRabbit's `docstrings` pre-merge check reported 36.05% coverage against its s
 | TECH-017 | Compose topology — single app container, BYO proxy, incremental growth        | Accepted             |
 | TECH-018 | Deployment fidelity — hybrid dev loop, E2E gate on built images, `e2e/` pkg   | Accepted             |
 | TECH-019 | Code documentation — module-granular doc comments, no coverage percentage     | Accepted             |
+| TECH-020 | Problem `type` URIs — a refusal names itself only when a client acts on it    | Accepted             |

@@ -102,7 +102,15 @@ export type ActivityAction =
   // actor and timestamp, and a verb an Administrator can filter the
   // audit log on is what makes that a query rather than a hunt through
   // `contract.updated` payloads.
-  | `contract.${"created" | "updated" | "status_changed" | "type_reassigned" | "team_added" | "team_removed" | "counterparty_added" | "counterparty_removed" | "counterparty_primary_changed" | "confidentiality_set" | "confidentiality_cleared" | "archived" | "restored"}`
+  //
+  // `stage_gate_overridden` (M14/5, CTR-012) keeps its own verb for
+  // that third reason again: the soft gate is allowed to be pushed
+  // past, and the whole reason it is allowed is that the push is
+  // recorded. It rides beside the `status_changed` entry of the same
+  // commit rather than inside it, because two things happened — the
+  // contract moved, and somebody moved it past open sign-off — and only
+  // one of them is a fact about the status.
+  | `contract.${"created" | "updated" | "status_changed" | "stage_gate_overridden" | "type_reassigned" | "team_added" | "team_removed" | "counterparty_added" | "counterparty_removed" | "counterparty_primary_changed" | "confidentiality_set" | "confidentiality_cleared" | "archived" | "restored"}`
   // The conversation on a record (M9/2, M9/4). Every entry carries the
   // comment's own tier, so a Legal Only comment leaves no trace for
   // anyone who could not read it. They carry ids and metadata only —

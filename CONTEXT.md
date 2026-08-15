@@ -86,6 +86,10 @@ _Avoid_: state, stage
 **Category**:
 The matter equivalent of Stage — `open` or `closed`, immutable once set on a status [MTR-002].
 
+**Soft gate**:
+The warning a Contract meets when it moves from a Stage at or before `approval` to a Stage after it while an Approval request is still unresolved — pending or rejected. It names the unresolved requests and asks for one deliberate confirmation. It never blocks: the confirmed move commits and is recorded on the Activity feed as an override [CTR-012, CTR-001].
+_Avoid_: approval gate, hard gate, block, approval lock
+
 **Inbox**:
 The single triage queue, containing exactly the Requests whose fate is undecided [INT-006, INT-007].
 _Avoid_: queue, triage list, backlog

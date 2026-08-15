@@ -116,6 +116,7 @@ import {
 } from "react-router";
 import { FormattedMessage, defineMessage, useIntl, type IntlShape } from "react-intl";
 import { Archive, ArchiveRestore, ChevronRight, FileText, Plus, Settings, X } from "lucide-react";
+import { SOFT_GATE_PROBLEM_TYPE } from "@openlaw/shared";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import {
@@ -154,11 +155,11 @@ import {
   type CustomFieldValues,
 } from "../lib/custom-fields";
 import { currencyFractionDigits, currencyOptions, toMajorUnits, toMinorUnits } from "../lib/format";
-import { type ContractApproval } from "../lib/approvals";
+import { APPROVAL_PILL, isUnresolved, type ContractApproval } from "../lib/approvals";
 import { FOLDER_ROOT, type ContractDocument } from "../lib/documents";
 import type { ContractFolder } from "../lib/folders";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
-import { problemDetail } from "../lib/messages";
+import { problemDetail, problemType } from "../lib/messages";
 import { cn } from "../lib/utils";
 import { canReadContracts, isMemberPlus } from "../lib/roles";
 import { currentUser, needsSetup } from "../lib/session";
@@ -292,8 +293,10 @@ type TextFieldKey = "title" | "description";
  * "Title" and the record's own title are never one micro-state. */
 type CustomFieldKey = `field:${string}`;
 /** What one committed field answers with: nothing more when it landed,
- * and the seam's own refusal when it did not. */
-type CommitOutcome = { ok: true } | { ok: false; detail?: string };
+ * and the seam's own refusal when it did not — its sentence, and the
+ * RFC 9457 `type` that identifies it, for the one refusal the record
+ * acts on rather than prints (CTR-012's soft gate). */
+type CommitOutcome = { ok: true } | { ok: false; detail?: string; type?: string };
 type FieldKey =
   | TextFieldKey
   | CustomFieldKey
@@ -386,6 +389,10 @@ function ContractRecord() {
    * pickers so an archived one still renders as itself. */
   const [refs, setRefs] = useState<CustomFieldRefs>(customFieldRefs);
   const [retypeTo, setRetypeTo] = useState<ContractTypeOption | null>(null);
+  /** The status the soft gate stopped on its way in, or none (CTR-012).
+   * Set by the seam's refusal and cleared by the confirm or the
+   * dismiss; while it is set, nothing has committed. */
+  const [gateTo, setGateTo] = useState<ContractStatusOption | null>(null);
   const [roster, setRoster] = useState<ContractTeamMember[]>(team);
   /** The record's paper (M11/2, M11/3). State rather than loader data
    * because an upload, an appended version, and a metadata edit each
@@ -572,7 +579,7 @@ function ContractRecord() {
     if (!data) {
       const detail = problemDetail(error);
       note(key, "error", detail);
-      return { ok: false, detail };
+      return { ok: false, detail, type: problemType(error) };
     }
     const row = data.contract;
     setSaved(row);
@@ -583,6 +590,41 @@ function ContractRecord() {
     }
     note(key, "saved");
     return { ok: true };
+  }
+
+  /**
+   * The status, committed like any other select — until CTR-012's soft
+   * gate stops it.
+   *
+   * The gate is the seam's, and it stays the seam's: this does not
+   * work out whether the move crosses the approval stage, and it does
+   * not read the roster to decide whether to warn. It sends the commit,
+   * and a refusal carrying the gate's own problem type is what raises
+   * the dialog. One rule, in one place — a second copy here would drift
+   * the first time a stage moved.
+   *
+   * The refusal's micro-state under the select is cleared as the dialog
+   * opens: the dialog is the refusal, and printing it twice reads as
+   * two failures (DES-035 clause 12).
+   */
+  async function changeStatus(statusId: string, override = false) {
+    const outcome = await commit(
+      "statusId",
+      override ? { statusId, overrideSoftGate: true } : { statusId },
+    );
+    if (outcome.ok) {
+      setGateTo(null);
+      return undefined;
+    }
+    if (outcome.type === SOFT_GATE_PROBLEM_TYPE) {
+      const target = statusOptions.find((option) => option.id === statusId);
+      if (target) {
+        note("statusId", "idle");
+        setGateTo(target);
+        return undefined;
+      }
+    }
+    return outcome.detail ?? "";
   }
 
   /** One custom field, committed by slug (CTR-016). `null` clears it. */
@@ -1104,14 +1146,17 @@ function ContractRecord() {
                           <FormattedMessage id="contracts.form.status" defaultMessage="Status" />
                         </Label>
                         <div className="flex items-center gap-2">
+                          {/* Inert while a status commit is in flight, the
+                          way the Confidential flag's own control is. The
+                          soft gate is why it matters here: a second pick
+                          landing behind the first would raise a dialog
+                          about a status nobody is moving to any more. */}
                           <select
                             id="contract-status"
                             value={saved.statusId}
                             className={CONTROL_CLASS}
-                            disabled={frozen}
-                            onChange={(event) =>
-                              void commit("statusId", { statusId: event.target.value })
-                            }
+                            disabled={frozen || fieldStatus.statusId === "saving"}
+                            onChange={(event) => void changeStatus(event.target.value)}
                           >
                             {statusOptions.map((option) => (
                               <option key={option.id} value={option.id}>
@@ -1412,6 +1457,16 @@ function ContractRecord() {
             // covering the field it would read on.
             return outcome.detail ?? "";
           }}
+        />
+      )}
+      {gateTo && (
+        <SoftGateDialog
+          target={gateTo}
+          unresolved={approvals.filter(isUnresolved)}
+          onOpenChange={(open) => {
+            if (!open) setGateTo(null);
+          }}
+          onConfirm={() => changeStatus(gateTo.id, true)}
         />
       )}
     </AppShell>
@@ -2501,6 +2556,130 @@ function CustomFieldRow({
         <StatusNote status={status} detail={error} />
       </div>
     </div>
+  );
+}
+
+/**
+ * CTR-012's soft gate, raised by the seam's refusal (#235).
+ *
+ * The record is on its way past the approval stage while somebody's
+ * sign-off is still open. That is allowed — CTR-001 restricts no
+ * transition and CTR-012 chose a warning over a lock, because in a
+ * 2–10 person team the person holding the policy and the person
+ * overriding it are often the same human. So this costs one deliberate
+ * press, and the press is what the activity feed records.
+ *
+ * **It names the people, and says what each of them said.** "Approvals
+ * are open" is not something anybody can act on; "Sarah Chen is
+ * pending, Marcus Webb rejected" is. The state rides in the same
+ * DES-005 pill the Approvals roster draws it in, so the dialog and the
+ * section behind it say the same thing in the same colour.
+ *
+ * **It states nothing the seam did not say.** Whether the move crosses
+ * the line, and whether anything is unresolved, is the seam's decision
+ * and its refusal is what opened this — the same one-rule-one-place
+ * shape the apply dialog takes (DES-035 clause 16). What is drawn here
+ * is the record's own roster, filtered to the asks an approval has not
+ * answered.
+ */
+function SoftGateDialog({
+  target,
+  unresolved,
+  onOpenChange,
+  onConfirm,
+}: Readonly<{
+  target: ContractStatusOption;
+  unresolved: readonly ContractApproval[];
+  onOpenChange: (open: boolean) => void;
+  /** Answers `undefined` when the override landed, and the seam's own
+   * refusal — or an empty string when it gave none — when it did not. */
+  onConfirm: () => Promise<string | undefined>;
+}>) {
+  const intl = useIntl();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit() {
+    if (busy) return;
+    setError(null);
+    setBusy(true);
+    const refusal = await onConfirm().finally(() => setBusy(false));
+    if (refusal !== undefined) {
+      setError(
+        refusal ||
+          intl.formatMessage({
+            id: "contracts.softGate.error",
+            defaultMessage: "The status could not be changed.",
+          }),
+      );
+    }
+  }
+
+  /** A dismissal is ignored while the override is in flight: the
+   * commit either lands or is refused, and a dialog that vanished
+   * mid-write would leave the reader with neither answer. */
+  function close(open: boolean) {
+    if (!open && busy) return;
+    onOpenChange(open);
+  }
+
+  return (
+    <Dialog open onOpenChange={close}>
+      <DialogContent aria-describedby="contract-soft-gate-note">
+        <DialogTitle>
+          <FormattedMessage id="contracts.softGate.title" defaultMessage="Move past approval" />
+        </DialogTitle>
+        <p id="contract-soft-gate-note" className="mt-2 text-base text-muted">
+          <FormattedMessage
+            id="contracts.softGate.note"
+            defaultMessage="{count, plural, one {# approval on this contract is unresolved.} other {# approvals on this contract are unresolved.}} Moving to {status} goes past sign-off."
+            values={{ count: unresolved.length, status: target.displayName }}
+          />
+        </p>
+        <ul className="mt-4 flex flex-col gap-2">
+          {unresolved.map((approval) => (
+            <li key={approval.id} className="flex items-center gap-2">
+              <Avatar
+                name={approval.approver.displayName}
+                image={approval.approver.image}
+                className="size-6"
+              />
+              <span className="text-base text-primary">{approval.approver.displayName}</span>
+              <span
+                className={`inline-flex rounded-pill px-2 py-0.5 text-xs font-medium ${APPROVAL_PILL[approval.status]}`}
+              >
+                {approval.status === "rejected" ? (
+                  <FormattedMessage id="approvals.status.rejected" defaultMessage="Rejected" />
+                ) : (
+                  <FormattedMessage id="approvals.status.pending" defaultMessage="Pending" />
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+        {/* The C5 mock's soft-gate note row, said where the act is taken
+        rather than under the roster (DES-035 clauses 17 and 18). */}
+        <p className="mt-4 text-xs text-muted">
+          <FormattedMessage
+            id="contracts.softGate.override"
+            defaultMessage="This is allowed. It is recorded on the record's activity as an override."
+          />
+        </p>
+        {error && (
+          <p role="alert" className="mt-4 text-xs text-status-danger-fg">
+            {error}
+          </p>
+        )}
+        <div className="mt-4 flex justify-end gap-2">
+          <Button type="button" variant="secondary" disabled={busy} onClick={() => close(false)}>
+            <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+          </Button>
+          <Button type="button" disabled={busy} onClick={() => void submit()}>
+            <FormattedMessage id="contracts.softGate.submit" defaultMessage="Move anyway" />
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

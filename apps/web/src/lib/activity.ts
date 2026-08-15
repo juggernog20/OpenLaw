@@ -74,6 +74,7 @@ import {
   Tag,
   Tags,
   Trash2,
+  TriangleAlert,
   Undo2,
   Unlink,
   Upload,
@@ -431,6 +432,23 @@ function named(intl: IntlShape, payload: Payload, key: string): string {
 }
 
 /**
+ * The people a soft-gate override went past (CTR-012), in the order the
+ * payload holds them — the roster's own order, oldest ask first.
+ *
+ * A row with no readable name is dropped rather than rendered as
+ * "someone": the sentence is a list, and "Sarah Chen and someone" reads
+ * as a second person nobody can look up. The count comes from what is
+ * left, so the plural and the list always agree.
+ */
+function approverNames(payload: Payload): string[] {
+  const rows = payload.approvers;
+  if (!Array.isArray(rows)) return [];
+  return rows
+    .map((row) => (row && typeof row === "object" ? text(row as Payload, "approverName") : null))
+    .filter((name): name is string => name !== null);
+}
+
+/**
  * A `contract_team` role (CTR-004) in the words the record's Team card
  * uses, so one fact does not read as "Contributor" on the card and
  * `contributor` in the feed.
@@ -763,6 +781,29 @@ const ARMS: Readonly<Record<string, Arm>> = {
       defaultMessage: "{actor} changed the status",
     }),
     changes: (intl, payload, context) => directChange(intl, payload, "status", context),
+  },
+  // CTR-012's soft gate, pushed past (M14/5). Its own entry beside the
+  // status change of the same commit: the contract moved, and somebody
+  // moved it past open sign-off, and only the first of those is a fact
+  // about the status. The warning glyph is the point — the entry says a
+  // warning was accepted, not that something failed.
+  //
+  // It names the people it went past, because "an override happened" is
+  // not something a reader can act on and "went past Sarah Chen and
+  // Marcus Webb" is. The `=0` arm is the append-only floor: an entry
+  // whose payload a later build cannot read still has to come out as a
+  // sentence.
+  "contract.stage_gate_overridden": {
+    icon: TriangleAlert,
+    message: defineMessage({
+      id: "activity.contract.stageGateOverridden",
+      defaultMessage:
+        "{count, plural, =0 {{actor} moved this contract past approval, overriding the soft gate} other {{actor} moved this contract past approval, overriding {approvers}}}",
+    }),
+    values: (intl, payload) => {
+      const names = approverNames(payload);
+      return { count: names.length, approvers: intl.formatList(names, { type: "conjunction" }) };
+    },
   },
   "contract.type_reassigned": {
     icon: Tag,

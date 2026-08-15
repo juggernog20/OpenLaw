@@ -24,3 +24,19 @@ export function problemDetail(problem: unknown): string | undefined {
   }
   return undefined;
 }
+
+/**
+ * The problem envelope's RFC 9457 `type` — the refusal's own identity.
+ *
+ * Almost every refusal is one the client prints, and `type` on those is
+ * `about:blank`. A handful are refusals the client has to **act on**,
+ * and this is what tells one of those apart. Never branch on the
+ * wording of `detail`: it is copy, and copy is rewritten.
+ */
+export function problemType(problem: unknown): string | undefined {
+  if (problem && typeof problem === "object" && "type" in problem) {
+    const { type } = problem as { type?: unknown };
+    if (typeof type === "string") return type;
+  }
+  return undefined;
+}

@@ -18,6 +18,7 @@
  */
 
 import type { paths } from "@openlaw/api-client";
+import { UNRESOLVED_APPROVAL_STATUSES } from "@openlaw/shared";
 import { api } from "./api";
 import { problemDetail } from "./messages";
 
@@ -54,6 +55,17 @@ export const APPROVAL_PILL: Record<ApprovalStatus, string> = {
   approved: "bg-status-success-bg text-status-success-fg",
   rejected: "bg-status-danger-bg text-status-danger-fg",
 };
+
+/**
+ * An ask CTR-012's soft gate counts as unresolved — pending, or a
+ * rejection nobody re-requested.
+ *
+ * The two states come from `@openlaw/shared`, which is the same list
+ * the seam refuses on. A client that decided this for itself could name
+ * a different set than the refusal it is explaining.
+ */
+export const isUnresolved = (approval: ContractApproval): boolean =>
+  (UNRESOLVED_APPROVAL_STATUSES as readonly string[]).includes(approval.status);
 
 /** Reads one contract's approvals, whole. */
 export async function readContractApprovals(contractNumber: number): Promise<ApprovalsOutcome> {

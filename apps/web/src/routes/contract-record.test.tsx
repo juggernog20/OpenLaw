@@ -3534,6 +3534,58 @@ describe("the contract record's history applet (M9/6)", () => {
     expect(status).toHaveTextContent("Draft → Internal review");
   });
 
+  it("narrates a soft-gate override beside its status change, naming who it went past", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([
+      [
+        entry("a2", "contract.stage_gate_overridden", {
+          fromStage: "approval",
+          toStage: "signature",
+          approvers: [
+            { approverId: "u4", approverName: "Sarah Chen", status: "pending" },
+            { approverId: "u5", approverName: "Marcus Webb", status: "rejected" },
+          ],
+        }),
+        entry("a1", "contract.status_changed", {
+          from: "Awaiting approval",
+          to: "Out for signature",
+          fromStage: "approval",
+          toStage: "signature",
+        }),
+      ],
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const feed = await screen.findByRole("list", { name: "History" });
+    const [override, status] = within(feed).getAllByRole("listitem");
+    // CTR-012: the whole reason the gate may be pushed past is that the
+    // push is recorded — and it names the people it went past, because
+    // "an override happened" is not something a reader can act on.
+    expect(override).toHaveTextContent(
+      "Nadia Counsel moved this contract past approval, overriding Sarah Chen and Marcus Webb",
+    );
+    // Two entries from one commit: the contract moved, and somebody
+    // moved it past open sign-off.
+    expect(status).toHaveTextContent("Nadia Counsel changed the status");
+  });
+
+  it("narrates an override whose payload names nobody as the override it was", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([[entry("a1", "contract.stage_gate_overridden", {})]]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    // The log is append-only, so an entry a later build cannot fully
+    // read still has to come out as a sentence.
+    const feed = await screen.findByRole("list", { name: "History" });
+    expect(within(feed).getAllByRole("listitem")[0]).toHaveTextContent(
+      "Nadia Counsel moved this contract past approval, overriding the soft gate",
+    );
+  });
+
   it("names the person and the Entity a reference field stores by id", async () => {
     const user = userEvent.setup();
     const activity = activityApi([
