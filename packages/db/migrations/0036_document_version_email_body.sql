@@ -1,0 +1,2 @@
+ALTER TABLE "document_version_text" DROP CONSTRAINT "document_version_text_source_check";--> statement-breakpoint
+ALTER TABLE "document_version_text" ADD CONSTRAINT "document_version_text_source_check" CHECK ("document_version_text"."source" is null or "document_version_text"."source" in ('native_layer', 'ocr', 'rendition', 'email_body'));

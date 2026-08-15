@@ -5235,6 +5235,246 @@ describe("the doc panel (M12/2)", () => {
     ).toBeVisible();
   }, 30_000);
 
+  /**
+   * Rendered emails (M12/5, DOC-004).
+   *
+   * The demand is one sentence: a Legal Team Member opens an uploaded
+   * MSG or EML and reads a message — headers, body, attachment list —
+   * rather than downloading a blob. What this layer asserts is the
+   * surface around the parse: that the message is drawn, that the body
+   * is drawn where it can reach nothing, that an attachment that reads
+   * in the app opens here, that one that does not is a download, and
+   * that a message nobody can read ends where every path with no
+   * preview ends.
+   *
+   * The parse and the sanitizing are the server's, and they are
+   * asserted there: this panel is handed a body that is already safe and
+   * never sees a sender's own markup.
+   */
+  const thread = () =>
+    document({
+      id: "pdoc-m",
+      title: "Delivery dispute — correspondence",
+      versions: [
+        version({
+          id: "pv-m",
+          originalFilename: "RE_delivery_dispute.msg",
+          mimeType: "application/vnd.ms-outlook",
+          renderFamily: "email",
+        }),
+      ],
+    });
+
+  /** The record's reads, plus the email read the panel makes. `email`
+   * is what the server answered; `undefined` is a server that refused
+   * it. */
+  function emailApi(rows: Record<string, unknown>[], email?: Record<string, unknown>) {
+    const base = panelApi(rows);
+    return (call: StubCall): Response | undefined => {
+      if (call.url.pathname.endsWith("/email") && call.method === "GET") {
+        return email
+          ? json(200, { email })
+          : problem(422, "This email could not be read. Download it instead.");
+      }
+      return base(call);
+    };
+  }
+
+  const message = (over: Record<string, unknown> = {}) => ({
+    subject: "RE: delivery dispute — June shipment damage",
+    from: { name: "Tom Alvarez", address: "t.alvarez@brightline.com" },
+    to: [{ name: null, address: "legal@aldgate.co.uk" }],
+    cc: [{ name: "Sarah Chen", address: "s.chen@aldgate.co.uk" }],
+    bcc: [],
+    date: "2026-08-07T16:12:00.000Z",
+    html: null,
+    text: "Sarah,\n\nAttaching the June delivery log.",
+    attachments: [],
+    ...over,
+  });
+
+  it("opens an uploaded email as a message, with its headers and its body", async () => {
+    stubApi({ signedIn: MEMBER, extra: emailApi([thread()], message()) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    // An email reads in the app, so its name opens the panel rather
+    // than saving the file.
+    await user.click(
+      within(list).getByRole("button", { name: "Delivery dispute — correspondence" }),
+    );
+    const reading = await panel(/Delivery dispute — correspondence, version 1/);
+
+    expect(
+      await within(reading).findByText("RE: delivery dispute — June shipment damage"),
+    ).toBeVisible();
+    expect(within(reading).getByText("Tom Alvarez <t.alvarez@brightline.com>")).toBeVisible();
+    expect(within(reading).getByText("legal@aldgate.co.uk")).toBeVisible();
+    expect(within(reading).getByText("Sarah Chen <s.chen@aldgate.co.uk>")).toBeVisible();
+    expect(within(reading).getByText(/Attaching the June delivery log/)).toBeVisible();
+    // No Bcc row for a message that carries none: an empty label would
+    // read as a redaction.
+    expect(within(reading).queryByText("Bcc")).toBeNull();
+    // Never a download card: the message is being drawn, not offered.
+    expect(within(reading).queryByText(/could not be prepared/)).toBeNull();
+  });
+
+  it("shows who a message was blind-copied to, when the file says", async () => {
+    // A MSG saved from the sender's own mailbox — Sent Items, not an
+    // inbox — names its Bcc recipients, and hiding a recipient class the
+    // server handed over would misread the message for whoever it
+    // matters most to.
+    stubApi({
+      signedIn: MEMBER,
+      extra: emailApi(
+        [thread()],
+        message({ bcc: [{ name: "Iris Auditor", address: "i.auditor@brightline.com" }] }),
+      ),
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(
+      within(list).getByRole("button", { name: "Delivery dispute — correspondence" }),
+    );
+    const reading = await panel(/Delivery dispute — correspondence, version 1/);
+
+    expect(await within(reading).findByText("Bcc")).toBeVisible();
+    expect(within(reading).getByText("Iris Auditor <i.auditor@brightline.com>")).toBeVisible();
+  });
+
+  it("draws an HTML body where it can reach nothing", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: emailApi([thread()], message({ html: "<p>Attaching the log.</p>", text: null })),
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(
+      within(list).getByRole("button", { name: "Delivery dispute — correspondence" }),
+    );
+    const reading = await panel(/Delivery dispute — correspondence, version 1/);
+
+    // The second wall. The server already cut the sender's markup down;
+    // this frame is what makes a hole in that sanitizer cost nothing.
+    const frame = await within(reading).findByTitle("Message body");
+    expect(frame.tagName).toBe("IFRAME");
+    // No `allow-scripts`, and no `allow-same-origin`: nothing in the
+    // message runs, and nothing in it shares this origin.
+    const sandbox = frame.getAttribute("sandbox") ?? "";
+    expect(sandbox).not.toContain("allow-scripts");
+    expect(sandbox).not.toContain("allow-same-origin");
+    // And the document it holds refuses every request it could make.
+    expect(frame.getAttribute("srcdoc")).toContain("default-src 'none'");
+    expect(frame.getAttribute("srcdoc")).toContain("Attaching the log.");
+  });
+
+  it("opens an attachment that reads in the app, and comes back to the message", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: emailApi(
+        [thread()],
+        message({
+          attachments: [
+            {
+              index: 0,
+              filename: "warehouse-photo.png",
+              mimeType: "image/png",
+              byteSize: 240_000,
+              renderFamily: "image",
+              isInline: false,
+            },
+          ],
+        }),
+      ),
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(
+      within(list).getByRole("button", { name: "Delivery dispute — correspondence" }),
+    );
+    const reading = await panel(/Delivery dispute — correspondence, version 1/);
+
+    // A file that reads in the app is a button, not a download link.
+    const open = await within(reading).findByRole("button", { name: /warehouse-photo\.png/ });
+    await user.click(open);
+
+    // Read in the panel, from the attachment's own preview address —
+    // no round trip through a Downloads folder.
+    expect(within(reading).getByRole("img", { name: "warehouse-photo.png" })).toHaveAttribute(
+      "src",
+      "/api/v1/documents/pdoc-m/versions/pv-m/attachments/0/preview",
+    );
+    // And one control back to the message it came from.
+    await user.click(within(reading).getByRole("button", { name: "Back to the message" }));
+    expect(within(reading).getByText(/Attaching the June delivery log/)).toBeVisible();
+  });
+
+  it("offers an attachment outside the render set as a download", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: emailApi(
+        [thread()],
+        message({
+          attachments: [
+            {
+              index: 0,
+              filename: "damage-photos.zip",
+              mimeType: "application/zip",
+              byteSize: 8_400_000,
+              renderFamily: "other",
+              isInline: false,
+            },
+          ],
+        }),
+      ),
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(
+      within(list).getByRole("button", { name: "Delivery dispute — correspondence" }),
+    );
+    const reading = await panel(/Delivery dispute — correspondence, version 1/);
+
+    // Nothing in the app can read an archive, so the chip is the
+    // download it has to be — what a control looks like says what it
+    // will do.
+    expect(
+      await within(reading).findByRole("link", { name: /damage-photos\.zip/ }),
+    ).toHaveAttribute("href", "/api/v1/documents/pdoc-m/versions/pv-m/attachments/0/download");
+  });
+
+  it("ends at the download when the message cannot be read", async () => {
+    stubApi({ signedIn: MEMBER, extra: emailApi([thread()]) });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    const list = await section();
+    await user.click(
+      within(list).getByRole("button", { name: "Delivery dispute — correspondence" }),
+    );
+    const reading = await panel(/Delivery dispute — correspondence, version 1/);
+
+    // The same honest card every path with no preview ends at.
+    expect(
+      await within(reading).findByText(
+        "This file could not be prepared for reading here. Download it to read it.",
+      ),
+    ).toBeVisible();
+    expect(within(reading).getAllByRole("link", { name: "Download" }).at(-1)).toHaveAttribute(
+      "href",
+      "/api/v1/documents/pdoc-m/versions/pv-m/download",
+    );
+  });
+
   it("draws a PowerPoint deck the same way", async () => {
     const deck = document({
       id: "pdoc-p",

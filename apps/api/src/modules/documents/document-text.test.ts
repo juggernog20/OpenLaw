@@ -439,21 +439,13 @@ describe("extracting a version's text", () => {
     });
   });
 
-  it("says the same of an email, until the step that parses it", async () => {
-    // M12/5 parses MSG/EML in process and the parsed body is the text.
-    // Word and PowerPoint no longer answer this way: M12/4 reads them
-    // from the PDF rendition it converts them to, so their text is owed
-    // from the moment they are uploaded and the read says `pending`.
-    // That path is asserted whole in document-rendition.test.ts.
-    const { document, version } = await contractWithFile("Text · email", {
-      filename: "dispute.eml",
-      contentType: "message/rfc822",
-    });
-
-    const res = await readText(memberCookies, document.id, version.id);
-    expect(res.statusCode, res.body).toBe(200);
-    expect((res.json().text as TextRow).state).toBe("unsupported");
-  });
+  // Three families are deliberately absent from this list, and each has
+  // its own suite. Word and PowerPoint are read from the PDF rendition
+  // M12/4 converts them to, so their text is owed from the moment they
+  // are uploaded and the read says `pending` — asserted whole in
+  // document-rendition.test.ts. An email's body is its text, parsed in
+  // process (M12/5), and that path is asserted whole in
+  // document-email.test.ts.
 });
 
 describe("when a derivation fails", () => {

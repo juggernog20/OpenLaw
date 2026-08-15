@@ -47,14 +47,15 @@ export type DocumentVersionKind = DocumentVersion["kind"];
 export type RenderFamily = DocumentVersion["renderFamily"];
 
 /**
- * The families the doc panel renders in place today (M12/2, M12/4).
+ * The families the doc panel renders in place today (M12/2, M12/4,
+ * M12/5).
  *
  * Word and PowerPoint are in it because DOC-004 promises they read in
  * the app: they do not draw in a browser, so the pipeline converts each
  * one to a PDF and the panel draws that — tracked changes and comments
- * included. Email joins them in M12/5. The long tail never does, and
- * gets the honest download card DOC-004 asks for, never a broken
- * preview.
+ * included. Email is in it because an uploaded MSG or EML is parsed on
+ * the server and drawn as a message. The long tail never is, and gets
+ * the honest download card DOC-004 asks for, never a broken preview.
  *
  * A conversion that has not landed yet — or one that failed — is a state
  * inside the panel, not a reason to keep the row a download link. What
@@ -65,6 +66,7 @@ export const PREVIEWABLE_FAMILIES = [
   "image",
   "word",
   "presentation",
+  "email",
 ] as const satisfies readonly RenderFamily[];
 
 /** Whether this version opens in the panel or offers its download. */
@@ -191,9 +193,89 @@ export function documentPreviewHref(documentId: string, versionId: string): stri
   return `${versionUrl(documentId, versionId)}/preview`;
 }
 
-/** Where one version lives, which both byte reads hang off. */
+/** Where one version lives, which every read on it hangs off. */
 function versionUrl(documentId: string, versionId: string): string {
   return `/api/v1/documents/${encodeURIComponent(documentId)}/versions/${encodeURIComponent(versionId)}`;
+}
+
+/** One uploaded email, parsed (M12/5, DOC-004). */
+export type ParsedEmail =
+  paths["/api/v1/documents/{documentId}/versions/{versionId}/email"]["get"]["responses"]["200"]["content"]["application/json"]["email"];
+
+/** One file that came with a message. */
+export type EmailAttachment = ParsedEmail["attachments"][number];
+
+/**
+ * What the email read answered, or that it answered nothing.
+ *
+ * `unreadable` is every way the message did not arrive: the server
+ * refused it, the connection dropped, or the bytes are not the email
+ * they claimed to be. The panel says the same thing for all of them —
+ * this is not going to appear, and the download is here — because that
+ * is what they are to somebody standing in front of it.
+ */
+export type EmailOutcome = { ok: true; email: ParsedEmail } | { ok: false };
+
+/**
+ * Reads one uploaded email as a message (DOC-004).
+ *
+ * The body comes back sanitized: the server is where the sender's markup
+ * is cut down, so no client can render the raw form by forgetting a
+ * step.
+ */
+export async function readEmail(documentId: string, versionId: string): Promise<EmailOutcome> {
+  try {
+    const { data } = await api.GET("/api/v1/documents/{documentId}/versions/{versionId}/email", {
+      params: { path: { documentId, versionId } },
+    });
+    return data ? { ok: true, email: data.email } : { ok: false };
+  } catch {
+    return { ok: false };
+  }
+}
+
+/**
+ * Where one of a rendered email's attachments is downloaded from.
+ *
+ * A plain URL, exactly as a version's own download is: the session
+ * cookie rides a same-origin navigation on its own, and there is no
+ * presigned URL to build (DOC-012).
+ */
+export function emailAttachmentDownloadHref(
+  documentId: string,
+  versionId: string,
+  index: number,
+): string {
+  return `${attachmentUrl(documentId, versionId, index)}/download`;
+}
+
+/**
+ * Where the panel reads one attachment's bytes from, when the
+ * attachment is itself something the panel can draw (M12/5).
+ *
+ * The download's twin, and the difference is all on the server: the
+ * response comes back inline under a type the server chose from the
+ * file's family rather than from what the message declared.
+ */
+export function emailAttachmentPreviewHref(
+  documentId: string,
+  versionId: string,
+  index: number,
+): string {
+  return `${attachmentUrl(documentId, versionId, index)}/preview`;
+}
+
+/** Whether opening this attachment keeps a reader in the app, or hands
+ * them a download (DOC-004). There is no conversion path for an
+ * attachment, so only the families that draw from their own bytes
+ * open. */
+export function isPreviewableAttachment(attachment: EmailAttachment): boolean {
+  return attachment.renderFamily === "pdf" || attachment.renderFamily === "image";
+}
+
+/** Where one attachment lives, which both of its byte reads hang off. */
+function attachmentUrl(documentId: string, versionId: string, index: number): string {
+  return `${versionUrl(documentId, versionId)}/attachments/${encodeURIComponent(String(index))}`;
 }
 
 /** What the composer collects beside the file itself: what this version

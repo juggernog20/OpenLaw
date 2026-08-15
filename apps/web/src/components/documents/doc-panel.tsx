@@ -35,6 +35,12 @@
  * while the job runs, and offers the download if the job gave up. Live
  * push is M30's job.
  *
+ * **An email is read as a message** (M12/5). An uploaded MSG or EML is
+ * parsed on the server and drawn here as headers, a sanitized body, and
+ * an attachment list — and an attachment that is itself a PDF or an
+ * image opens on this panel's own surfaces rather than in a Downloads
+ * folder.
+ *
  * **Any version in the chain opens**, superseded rounds included: the
  * panel is handed one version and reads that one, so round two of a
  * negotiation is as readable as round five.
@@ -67,6 +73,16 @@ import {
  */
 const PdfPreview = lazy(async () => ({
   default: (await import("./pdf-preview")).PdfPreview,
+}));
+
+/**
+ * The email surface, loaded only when an email is opened.
+ *
+ * It brings the PDF surface with it — an attached PDF opens in the panel
+ * — so a record page that never opens a message pays for neither.
+ */
+const EmailPreview = lazy(async () => ({
+  default: (await import("./email-preview")).EmailPreview,
 }));
 
 export function DocPanel({
@@ -174,6 +190,8 @@ function Surface({
   switch (version.renderFamily) {
     case "pdf":
       return <PdfSurface src={previewHref} filename={version.originalFilename} />;
+    case "email":
+      return <EmailSurface documentId={documentId} version={version} />;
     case "image":
       return (
         // The well takes focus and a name of its own, so a keyboard can
@@ -200,6 +218,49 @@ function Surface({
     default:
       return <DownloadCard documentId={documentId} version={version} />;
   }
+}
+
+/**
+ * The email surface (M12/5), and the card a message that cannot be read
+ * falls back to.
+ *
+ * The fallback is here rather than inside the surface so that every path
+ * in this panel with no preview ends at one card: a spreadsheet, a
+ * conversion that failed, and an email whose bytes are not the message
+ * they claimed to be all say the same thing to a reader — this is not
+ * going to appear, and the download is here.
+ */
+function EmailSurface({
+  documentId,
+  version,
+}: Readonly<{ documentId: string; version: DocumentVersion }>) {
+  const [unreadable, setUnreadable] = useState(false);
+
+  // Reset on the way in: the panel can move from one version to another
+  // without unmounting, and a refusal carried over would hide a message
+  // that reads perfectly well.
+  useEffect(() => {
+    setUnreadable(false);
+  }, [documentId, version.id]);
+
+  if (unreadable) {
+    return <DownloadCard documentId={documentId} version={version} reason="conversionFailed" />;
+  }
+  return (
+    <Suspense
+      fallback={
+        <p role="status" className="px-4 py-6 text-base text-muted">
+          <FormattedMessage id="docPanel.email.loading" defaultMessage="Opening…" />
+        </p>
+      }
+    >
+      <EmailPreview
+        documentId={documentId}
+        versionId={version.id}
+        onUnreadable={() => setUnreadable(true)}
+      />
+    </Suspense>
+  );
 }
 
 /** The PDF surface, and the one line shown while its parser is being
@@ -332,9 +393,10 @@ function ConvertedSurface({
  *
  * Two reasons reach it, and they are different facts. A spreadsheet or
  * an archive does not open here at all. A Word document whose conversion
- * failed was supposed to open here and could not — so it is told that,
- * rather than being told its whole file type is unreadable. Email keeps
- * its own "not yet" sentence until M12/5 renders it.
+ * failed, and an email whose bytes cannot be read as the message they
+ * claim to be, were each supposed to open here and could not — so they
+ * are told that, rather than being told their whole file type is
+ * unreadable.
  */
 function DownloadCard({
   documentId,
@@ -361,8 +423,7 @@ function DownloadCard({
           ) : (
             <FormattedMessage
               id="docPanel.downloadOnly"
-              defaultMessage="{family, select, email {Emails do not open here yet. Download it to read it.} other {This file type does not open here. Download it to read it.}}"
-              values={{ family: version.renderFamily }}
+              defaultMessage="This file type does not open here. Download it to read it."
             />
           )}
         </p>

@@ -253,6 +253,13 @@
       "when": 1786743755409,
       "tag": "0035_document_version_rendition",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1786747156387,
+      "tag": "0036_document_version_email_body",
+      "breakpoints": true
     }
   ]
 }

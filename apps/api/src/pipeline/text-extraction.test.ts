@@ -92,8 +92,11 @@ describe("which files have text to read", () => {
     expect(extractsText("application/octet-stream", "board.pptx")).toBe(true);
   });
 
-  it("reads nothing from an email until the step that parses it", () => {
-    // M12/5 parses MSG/EML in process and the parsed body is the text.
-    expect(extractsText("message/rfc822", "dispute.eml")).toBe(false);
+  it("reads an email, whose body is its text", () => {
+    // Parsed in process (M12/5, TECH-010): the doc engine has no part in
+    // it, and the words a sender wrote are already text.
+    expect(extractsText("message/rfc822", "dispute.eml")).toBe(true);
+    expect(extractsText("application/vnd.ms-outlook", "dispute.msg")).toBe(true);
+    expect(extractsText("application/octet-stream", "dispute.msg")).toBe(true);
   });
 });

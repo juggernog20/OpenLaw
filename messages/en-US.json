@@ -998,11 +998,56 @@
   "docPanel.close": {
     "defaultMessage": "Close the document"
   },
+  "docPanel.conversionFailed": {
+    "defaultMessage": "This file could not be prepared for reading here. Download it to read it."
+  },
+  "docPanel.converting": {
+    "defaultMessage": "Preparing this document for reading…"
+  },
   "docPanel.download": {
     "defaultMessage": "Download"
   },
   "docPanel.downloadOnly": {
-    "defaultMessage": "{family, select, word {Word documents do not open here yet. Download it to read it.} presentation {Presentations do not open here yet. Download it to read it.} email {Emails do not open here yet. Download it to read it.} other {This file type does not open here. Download it to read it.}}"
+    "defaultMessage": "This file type does not open here. Download it to read it."
+  },
+  "docPanel.email.attachments": {
+    "defaultMessage": "{count, plural, one {# attachment} other {# attachments}}"
+  },
+  "docPanel.email.back": {
+    "defaultMessage": "Back to the message"
+  },
+  "docPanel.email.bcc": {
+    "defaultMessage": "Bcc"
+  },
+  "docPanel.email.body": {
+    "defaultMessage": "Message body"
+  },
+  "docPanel.email.cc": {
+    "defaultMessage": "Cc"
+  },
+  "docPanel.email.date": {
+    "defaultMessage": "Date"
+  },
+  "docPanel.email.empty": {
+    "defaultMessage": "This message has no body."
+  },
+  "docPanel.email.from": {
+    "defaultMessage": "From"
+  },
+  "docPanel.email.loading": {
+    "defaultMessage": "Opening…"
+  },
+  "docPanel.email.noAddress": {
+    "defaultMessage": "Not recorded"
+  },
+  "docPanel.email.noSubject": {
+    "defaultMessage": "No subject"
+  },
+  "docPanel.email.subject": {
+    "defaultMessage": "Subject"
+  },
+  "docPanel.email.to": {
+    "defaultMessage": "To"
   },
   "docPanel.label": {
     "defaultMessage": "{title}, version {version}"

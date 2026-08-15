@@ -83,6 +83,14 @@
  * access predicate. There are no presigned URLs — one authentication
  * path, and the local filesystem driver has no other way anyway.
  *
+ * **An email reads as a message, not as a blob** (DOC-004, M12/5). An
+ * uploaded MSG or EML is parsed in process — no doc engine, no
+ * conversion, and nothing derived is stored — and answered as headers, a
+ * sanitized body, and a list of the files that came with it. Each of
+ * those files has its own download and its own preview, and both sit
+ * behind the same two predicates the version does: an attachment is not
+ * a side door past the contract gate or the confidentiality flag.
+ *
  * **What a preview streams is not always what was uploaded** (DOC-004,
  * M12/4). A PDF and a raster image are drawn as they are. A Word
  * document and a PowerPoint deck are drawn from the PDF rendition the
@@ -152,6 +160,13 @@ import {
   documentConfidentialityWrite,
   type ContractAccessReader,
 } from "../../lib/contract-access.js";
+import {
+  EmailUnreadableError,
+  isEmail,
+  parseStoredEmail,
+  type EmailAttachment,
+  type ParsedEmail,
+} from "../../lib/email/parse.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import {
   conversionFormatOf,
@@ -202,6 +217,29 @@ const DocumentParams = z.object({ documentId: RecordIdSchema });
 const VersionParams = z.object({
   documentId: RecordIdSchema,
   versionId: RecordIdSchema,
+});
+
+/**
+ * One file inside a rendered email, addressed by where it sits in the
+ * message (M12/5).
+ *
+ * The position is the identity because the thing it indexes into cannot
+ * change: a version's bytes are immutable (DOC-001), so parsing the same
+ * blob always produces the same list in the same order. There is no row
+ * to give an attachment an id of its own, and inventing one would mean
+ * storing a parse the panel can redo in milliseconds.
+ *
+ * Bounded, and the bound is an inclusive position rather than a count: a
+ * position this far into a message names no attachment on any of them,
+ * and answering it would cost a blob read and a parse before the list
+ * could say so.
+ */
+const MAX_ATTACHMENT_INDEX = 1000;
+
+const AttachmentParams = z.object({
+  documentId: RecordIdSchema,
+  versionId: RecordIdSchema,
+  attachmentIndex: z.coerce.number().int().nonnegative().max(MAX_ATTACHMENT_INDEX),
 });
 
 /** The longest filename the common filesystems carry. */
@@ -420,6 +458,89 @@ const RenditionSchema = z.object({
 });
 
 const RenditionEnvelope = z.object({ rendition: RenditionSchema });
+
+/**
+ * What the email read answers (DOC-004, M12/5).
+ *
+ * An uploaded MSG or EML reads as a message rather than as a blob: who
+ * sent it, who it went to, when, what it said, and what came with it.
+ * Every field is what the parser found, and the parser is handed bytes
+ * nobody in this system wrote — so every one of them is nullable, and
+ * none of them is trusted.
+ */
+const EmailAddressSchema = z.object({
+  /** The display name, or NULL when the message carried only an
+   * address. */
+  name: z.string().nullable(),
+  /** The address, or NULL when the message named somebody it could not
+   * resolve — an Exchange directory entry with no SMTP form. */
+  address: z.string().nullable(),
+});
+
+const EmailAttachmentSchema = z.object({
+  /**
+   * Where the file sits in the message, counted from zero, and the id
+   * every attachment address uses.
+   *
+   * A version's bytes are immutable (DOC-001), so the same parse always
+   * lists the same files in the same order and this number always names
+   * the same file.
+   */
+  index: z.int().nonnegative(),
+  /** What the message called it, or a name the parser made when it
+   * called it nothing — a download has to offer some name. */
+  filename: z.string(),
+  /** What the message declared it was. A rendering hint (DOC-004), never
+   * a decision: the attachment preview sets its own type from the same
+   * routing table every other preview uses. */
+  mimeType: z.string(),
+  byteSize: z.int().nonnegative(),
+  /**
+   * Which of DOC-004's families this attachment belongs to, routed on
+   * the server exactly as a stored version's is.
+   *
+   * It is what tells the panel whether opening this file keeps a reader
+   * in the app: a PDF and a raster image open on the panel's own
+   * surfaces, and everything else is a download.
+   */
+  renderFamily: z.enum(RENDER_FAMILIES),
+  /**
+   * Whether the body referred to this file rather than presenting it —
+   * a signature logo, a screenshot pasted into the message.
+   *
+   * Listed either way, because the sanitized body draws no images at
+   * all and an inline attachment nobody listed would be unreachable.
+   */
+  isInline: z.boolean(),
+});
+
+const EmailSchema = z.object({
+  subject: z.string().nullable(),
+  from: EmailAddressSchema.nullable(),
+  to: z.array(EmailAddressSchema),
+  cc: z.array(EmailAddressSchema),
+  bcc: z.array(EmailAddressSchema),
+  /** When it was sent. NULL when the message carried no readable date —
+   * a broken `Date` header is not a broken message. */
+  date: z.iso.datetime({ offset: true }).nullable(),
+  /**
+   * The HTML body, **sanitized on the server** — never the sender's own
+   * markup (DOC-004). NULL when the message had no HTML body.
+   *
+   * Scripts, frames, styles, and images are gone: nothing in it runs and
+   * nothing in it loads, so a tracking pixel cannot report that a lawyer
+   * opened a disclosed email. An attached image is in the list below,
+   * where it is downloadable and — if it is a raster image — openable in
+   * the panel.
+   */
+  html: z.string().nullable(),
+  /** The plain-text body as the message carried it, or NULL when it
+   * carried only HTML. */
+  text: z.string().nullable(),
+  attachments: z.array(EmailAttachmentSchema),
+});
+
+const EmailEnvelope = z.object({ email: EmailSchema });
 
 /** What the record is called, and what it says about itself (DOC-007).
  * The title is bounded where the contract's own is; the description is
@@ -2114,6 +2235,258 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       return { rendition: { state: row.state, updatedAt: row.updatedAt.toISOString() } };
     },
   );
+
+  app.get(
+    "/documents/:documentId/versions/:versionId/email",
+    {
+      preHandler: requireDocumentReader,
+      schema: {
+        operationId: "readDocumentVersionEmail",
+        summary:
+          "Read one uploaded email as a message (M12/5, DOC-004): its " +
+          "headers, its body, and the files that came with it. A MSG or " +
+          "an EML is parsed in process by a Node library — no doc " +
+          "engine, no conversion, and nothing stored — so the answer is " +
+          "the message as the file holds it, read fresh on every call. " +
+          "The HTML body is sanitized here, on the server, before it is " +
+          "handed out: nothing in it runs and nothing in it loads, so a " +
+          "tracking pixel cannot report that a lawyer opened a disclosed " +
+          "email. Attachments are listed with the family each one would " +
+          "render as, and each is reachable at its own address. A file " +
+          "that is not an email is refused 415, and one whose bytes " +
+          "cannot be read as the email they claim to be is refused 422 " +
+          "with the download offered. It sits behind the same two " +
+          "predicates every document read does: a Contributor on the " +
+          "team reads what they may download, and anyone who cannot " +
+          "reach the contract — or is outside a confidential document's " +
+          "audience — is answered 404, exactly as for a document that " +
+          "was never uploaded",
+        tags: ["documents"],
+        params: VersionParams,
+        response: { 200: EmailEnvelope, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      const email = await reachedEmail(request.user, request.params);
+
+      // As every other read on a version sets it. Who may read a
+      // document changes, so this answer is private to the browser that
+      // asked for it.
+      void reply.header("cache-control", "private, max-age=0, must-revalidate");
+
+      return {
+        email: {
+          subject: email.subject,
+          from: email.from,
+          to: email.to,
+          cc: email.cc,
+          bcc: email.bcc,
+          date: email.date,
+          // Already sanitized by the parser, which is the only thing
+          // that ever holds the sender's own markup.
+          html: email.html,
+          text: email.text,
+          attachments: email.attachments.map((attachment) => ({
+            index: attachment.index,
+            filename: attachment.filename,
+            mimeType: attachment.mimeType,
+            byteSize: attachment.byteSize,
+            // Routed from the attachment's own declared type and name,
+            // through the same table a stored version goes through — so
+            // the panel holds no second copy of it and an attachment
+            // that lies about itself changes a card and never a header.
+            renderFamily: renderFamilyOf(attachment.mimeType, attachment.filename),
+            isInline: attachment.isInline,
+          })),
+        },
+      };
+    },
+  );
+
+  app.get(
+    "/documents/:documentId/versions/:versionId/attachments/:attachmentIndex/download",
+    {
+      preHandler: requireDocumentReader,
+      schema: {
+        operationId: "downloadEmailAttachment",
+        summary:
+          "Stream one file out of a rendered email, as an attachment " +
+          "(M12/5, DOC-004). The index is the file's position in the " +
+          "message, which is a stable name for it because the version's " +
+          "bytes are immutable (DOC-001). Unlike a version's own " +
+          "download, this never echoes a declared type: a version's " +
+          "type was bounded and shape-checked when it was uploaded, and " +
+          "this one came out of the middle of a file nobody checked at " +
+          "all — so the bytes go out as `application/octet-stream`, " +
+          "with the attachment disposition and sniffing off. An " +
+          "attachment is not a side door: it sits behind the same two " +
+          "predicates its version does, so anyone who cannot reach the " +
+          "contract — or is outside a confidential document's audience " +
+          "— is answered 404, exactly as for a document that was never " +
+          "uploaded",
+        tags: ["documents"],
+        produces: ["application/octet-stream"],
+        params: AttachmentParams,
+        response: { 200: DownloadSchema, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      const attachment = await reachedAttachment(request.user, request.params);
+      return (
+        reply
+          // Never the type the message declared. The disposition below
+          // makes this a download whatever the type says, and a type
+          // this server did not choose is not one it will repeat.
+          .header("content-type", "application/octet-stream")
+          .header("content-length", String(attachment.byteSize))
+          .header("content-disposition", attachmentDisposition(attachment.filename))
+          .header("x-content-type-options", "nosniff")
+          .header("cache-control", "private, max-age=0, must-revalidate")
+          .send(attachment.content)
+      );
+    },
+  );
+
+  app.get(
+    "/documents/:documentId/versions/:versionId/attachments/:attachmentIndex/preview",
+    {
+      preHandler: requireDocumentReader,
+      schema: {
+        operationId: "previewEmailAttachment",
+        summary:
+          "Stream one file out of a rendered email for display in place " +
+          "(M12/5, DOC-004), so a PDF or a photographed page attached to " +
+          "a message opens in the panel rather than in a Downloads " +
+          "folder. It is the attachment download's twin and differs in " +
+          "the same two headers a version's preview differs in: the " +
+          "disposition is inline, and the content type is chosen from " +
+          "the routing table rather than echoed from the message. An " +
+          "attachment outside the render set is refused 415 and the " +
+          "panel offers its download instead — there is no conversion " +
+          "path for an attachment, so a Word file inside an email " +
+          "downloads. It sits behind the same two predicates its version " +
+          "does: anyone who cannot reach the contract, or is outside a " +
+          "confidential document's audience, is answered 404",
+        tags: ["documents"],
+        produces: [
+          "application/pdf",
+          "image/png",
+          "image/jpeg",
+          "image/gif",
+          "image/webp",
+          "image/bmp",
+          "image/avif",
+        ],
+        params: AttachmentParams,
+        response: { 200: DownloadSchema, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      const attachment = await reachedAttachment(request.user, request.params);
+      const contentType = previewContentType(attachment.mimeType, attachment.filename);
+      if (!contentType) {
+        // Plainly, not as a 404, for the version preview's own reason:
+        // the reader was already handed this attachment's row, so hiding
+        // here would hide nothing.
+        throw httpError(415, "This attachment has no in-app preview. Download it instead.");
+      }
+      return (
+        reply
+          .header("content-type", contentType)
+          .header("content-length", String(attachment.byteSize))
+          .header("content-disposition", inlineDisposition(attachment.filename))
+          .header("x-content-type-options", "nosniff")
+          // The panel fetches these bytes and draws them itself. A
+          // browser navigated straight at this address gets an inert
+          // document: no scripts, no subresources, no same-origin reach.
+          .header("content-security-policy", "default-src 'none'; sandbox")
+          .header("cache-control", "private, max-age=0, must-revalidate")
+          .send(attachment.content)
+      );
+    },
+  );
+
+  /**
+   * One uploaded email this viewer reaches, parsed (M12/5).
+   *
+   * Reach is answered first and in exactly the same words every other
+   * document read answers it in, so an email opens no side door past the
+   * contract gate or the confidentiality flag (DOC-008, DD-014). Only
+   * then is anything said about the file.
+   *
+   * The parse happens on every call rather than once at upload. An email
+   * has no rendition and no derived row: the bytes are immutable, the
+   * parse is deterministic, and reading a message is milliseconds of
+   * work in this process — so there is nothing to store, nothing to
+   * poll, and no state that could disagree with the file.
+   *
+   * The cost is named rather than cached away: opening an attachment
+   * reads the whole message again. It is bounded on both sides — the
+   * parser refuses anything past `MAX_PARSEABLE_EMAIL_BYTES`, and every
+   * call here has already passed the same session and the same two
+   * predicates a download passes — so what it buys, a surface with no
+   * derived state to invalidate, is worth more than the read it repeats.
+   * A cache is the answer if a profile ever says otherwise, and nothing
+   * above this function would have to change for it.
+   */
+  async function reachedEmail(
+    user: AuthenticatedUser,
+    params: Readonly<{ documentId: string; versionId: string }>,
+  ): Promise<ParsedEmail> {
+    const version = await reachedVersion(user, params);
+    if (!isEmail(version.mimeType, version.originalFilename)) {
+      throw httpError(415, "This file is not an email.");
+    }
+    const blob = await app.storage.get(version.fileRef);
+    try {
+      return await parseStoredEmail(blob, version.mimeType, version.originalFilename);
+    } catch (error) {
+      if (error instanceof EmailUnreadableError) {
+        // The bytes are not the email they said they were, or there are
+        // more of them than this parser will open. Neither is an access
+        // answer and neither heals, so it is said plainly with the
+        // download offered — DOC-004's honest card, in a status code.
+        throw httpError(422, "This email could not be read. Download it instead.");
+      }
+      throw error;
+    } finally {
+      // An email is parsed to the end, so there is usually nothing left
+      // to close — but a parse that refused part way through leaves the
+      // stream open, and on the local driver that is a file handle this
+      // process holds until it notices. A close that fails must not
+      // replace the answer above: tidying up is never the news.
+      try {
+        blob.destroy();
+      } catch (error) {
+        app.log.warn({ err: error, versionId: params.versionId }, "could not close an email");
+      }
+    }
+  }
+
+  /** One file inside one reachable email, or the refusal it earned. */
+  async function reachedAttachment(
+    user: AuthenticatedUser,
+    params: Readonly<{ documentId: string; versionId: string; attachmentIndex: number }>,
+  ): Promise<EmailAttachment & { content: Buffer }> {
+    const email = await reachedEmail(user, params);
+    const attachment = email.attachments[params.attachmentIndex];
+    // An index past the end of the list is a 404, and it is the only
+    // 404 here that is about the attachment rather than about reach.
+    // Nothing is hidden by it: the reader can see the list it is not on.
+    if (!attachment) throw httpError(404, "No attachment exists at that position.");
+    if (attachment.content === null) {
+      // The message named this file and the container could not give up
+      // its bytes. It is on the list — losing it would have shifted
+      // every attachment after it onto somebody else's address — and it
+      // is the one entry that cannot be served. Said as the unreadable
+      // email is said, because it is the same fact one file down.
+      throw httpError(
+        422,
+        "This attachment could not be read out of the message. Download the email instead.",
+      );
+    }
+    return { ...attachment, content: attachment.content };
+  }
 
   /** What the preview streams for one version, and what to call it. */
   interface ServedPreview {
