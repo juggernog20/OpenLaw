@@ -29,7 +29,14 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { count, documentVersionRenditions, documentVersionText, eq, users } from "@openlaw/db";
+import {
+  count,
+  documentVersionRenditions,
+  documentVersions,
+  documentVersionText,
+  eq,
+  users,
+} from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import { buildApp } from "../../app.js";
 import {
@@ -41,6 +48,7 @@ import {
 import {
   BACKFILL_REFUSAL_LIMIT,
   runBackfillSweep,
+  type BackfillOptions,
   type BackfillSummary,
 } from "../../pipeline/backfill.js";
 import { createUnconfiguredJobQueue, type JobQueue } from "../../pipeline/jobs.js";
@@ -291,7 +299,10 @@ async function forgetDerivations(versionId: string): Promise<void> {
 const sweepLog: JobLogLine[] = [];
 
 /** Runs one sweep, exactly as the worker runs it at boot. */
-function sweep(jobs: JobQueue = harness.pipeline): Promise<BackfillSummary> {
+function sweep(
+  jobs: JobQueue = harness.pipeline,
+  options: BackfillOptions = {},
+): Promise<BackfillSummary> {
   return runBackfillSweep(
     {
       db: harness.db,
@@ -302,6 +313,7 @@ function sweep(jobs: JobQueue = harness.pipeline): Promise<BackfillSummary> {
       },
     },
     jobs,
+    options,
   );
 }
 
@@ -429,6 +441,25 @@ describe("asking twice", () => {
     expect(again.displayConversion).toBe(0);
   }, 60_000);
 
+  it("reads every version exactly once, however small its pages", async () => {
+    // The default page holds an entire test install, so this is the one
+    // case that makes the sweep turn pages. The cursor is keyset on the
+    // version id: a boundary that skipped a row would leave paper
+    // unswept for ever, and one that re-read a row would double the
+    // scan. Scanning exactly the table, in pages of two, pins both.
+    await sweep();
+    await untilNothingIsOwed();
+    const [versions] = await harness.db.select({ total: count() }).from(documentVersions);
+    const total = versions?.total ?? 0;
+    expect(total, "a back catalogue of more than one page").toBeGreaterThan(2);
+
+    const paged = await sweep(harness.pipeline, { pageSize: 2 });
+    expect(paged.scanned).toBe(total);
+    expect(paged.textExtraction).toBe(0);
+    expect(paged.displayConversion).toBe(0);
+    expect(paged.stopped).toBe(false);
+  }, 60_000);
+
   it("leaves a version alone whose derivation gave up", async () => {
     // A file that says it is a PDF and is not. The job runs, decides no
     // retry reads the same bytes differently, and records the failure —
@@ -530,4 +561,19 @@ describe("when the queue cannot be reached", () => {
       expect((await settledText(documentId, versionId)).state).toBe("ready");
     }
   }, 60_000);
+});
+
+describe("when the worker is shut down", () => {
+  it("stops before reading anything, and says it was stopped", async () => {
+    // The worker aborts the sweep on SIGTERM and waits a bounded few
+    // seconds for it. That wait is only bounded because the sweep
+    // checks the signal before every page and every version — a sweep
+    // that read one more page first would be what holds a container
+    // past its grace period.
+    const stopped = new AbortController();
+    stopped.abort();
+    const summary = await sweep(harness.pipeline, { signal: stopped.signal });
+    expect(summary.stopped).toBe(true);
+    expect(summary.scanned).toBe(0);
+  });
 });
