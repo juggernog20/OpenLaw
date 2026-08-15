@@ -3208,6 +3208,63 @@ describe("the contract record's history applet (M9/6)", () => {
     ]);
   });
 
+  it("narrates folder work by name, and says where the record root is (M13/2)", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([
+      [
+        entry("a5", "folder.deleted", { folderId: "f-2", name: "Correspondence" }),
+        entry("a4", "folder.moved", { folderId: "f-2", name: "Correspondence", parentName: null }),
+        entry("a3", "folder.moved", {
+          folderId: "f-2",
+          name: "Correspondence",
+          parentName: "Amendments",
+        }),
+        entry("a2", "folder.renamed", {
+          folderId: "f-2",
+          name: "Correspondence",
+          previousName: "Corespondence",
+        }),
+        entry("a1", "folder.created", { folderId: "f-1", name: "Amendments", parentName: null }),
+      ],
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const feed = await screen.findByRole("list", { name: "History" });
+    expect(
+      within(feed)
+        .getAllByRole("listitem")
+        .map((row) => row.textContent),
+    ).toEqual([
+      // "Deleted" says what it means here: nothing was destroyed.
+      expect.stringContaining("Nadia Counsel deleted the Correspondence folder and kept what"),
+      expect.stringContaining("Nadia Counsel moved the Correspondence folder onto the contract"),
+      expect.stringContaining("Nadia Counsel moved the Correspondence folder into Amendments"),
+      // The old name is in the payload, so the entry outlives the
+      // rename it records.
+      expect.stringContaining("Nadia Counsel renamed the Corespondence folder to Correspondence"),
+      expect.stringContaining("Nadia Counsel made the Amendments folder"),
+    ]);
+  });
+
+  it("narrates a folder actually named none as a destination, not as the record root", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([
+      [entry("a1", "folder.created", { folderId: "f-1", name: "2026", parentName: "none" })],
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    // Where a folder went is its own fact, not a sentinel hidden in the
+    // parent's name — a folder really can be called "none".
+    const feed = await screen.findByRole("list", { name: "History" });
+    expect(within(feed).getAllByRole("listitem")[0]).toHaveTextContent(
+      "Nadia Counsel made the 2026 folder in none",
+    );
+  });
+
   it("shows the old and the new value of a field edit, formatted as the record formats them", async () => {
     const user = userEvent.setup();
     const activity = activityApi([
@@ -5634,5 +5691,396 @@ describe("the doc panel (M12/2)", () => {
     await user.click(within(list).getByRole("button", { name: "Board pack" }));
     const reading = await panel(/Board pack, version 1/);
     expect(await within(reading).findByText("Preparing this document for reading…")).toBeVisible();
+  });
+});
+
+describe("the folder tree on the contract record (M13/2, DES-033)", () => {
+  /** One folder as the API answers it. */
+  const folder = (
+    id: string,
+    name: string,
+    parentId: string | null = null,
+  ): Record<string, unknown> => ({
+    id,
+    name,
+    parentId,
+    createdAt: "2026-08-15T09:00:00.000Z",
+    updatedAt: "2026-08-15T09:00:00.000Z",
+  });
+
+  /**
+   * The record stub plus the folder read and the four folder writes.
+   *
+   * The tree is stateful and every write answers the whole set, exactly
+   * as the seam does — a delete re-files the children it had, so more
+   * rows move than the one that was addressed.
+   */
+  function foldersApi(
+    initial: Record<string, unknown>[],
+    options: { writeFails?: string } = {},
+    team = [person("u1", "creator")],
+  ) {
+    const record = recordApi(contractRow(), team);
+    /** Every folder write the section made, in order. */
+    const writes: { url: string; method: string; body: unknown }[] = [];
+    let tree = initial;
+    /** Siblings by name without case, the way the seam answers them
+     * (DES-033). */
+    const sorted = () =>
+      [...tree].sort((a, b) =>
+        String(a.name).toLowerCase().localeCompare(String(b.name).toLowerCase()),
+      );
+    const handler = (call: StubCall): Response | undefined => {
+      const { pathname } = call.url;
+      if (pathname === "/api/v1/contracts/42/folders" && call.method === "GET") {
+        return json(200, { folders: sorted() });
+      }
+      if (pathname === "/api/v1/contracts/42/folders" && call.method === "POST") {
+        writes.push({ url: pathname, method: call.method, body: call.body });
+        if (options.writeFails) return problem(409, options.writeFails);
+        const body = call.body as { name: string; parentId?: string };
+        tree = [...tree, folder(`f-${tree.length + 1}`, body.name, body.parentId ?? null)];
+        return json(201, { folders: sorted() });
+      }
+      const addressed = /^\/api\/v1\/folders\/([^/]+)$/.exec(pathname);
+      if (addressed && call.method === "PATCH") {
+        writes.push({ url: pathname, method: call.method, body: call.body });
+        if (options.writeFails) return problem(409, options.writeFails);
+        const patch = call.body as { name?: string; parentId?: string | null };
+        tree = tree.map((row) => (row.id === addressed[1] ? { ...row, ...patch } : row));
+        return json(200, { folders: sorted() });
+      }
+      if (addressed && call.method === "DELETE") {
+        writes.push({ url: pathname, method: call.method, body: call.body });
+        if (options.writeFails) return problem(409, options.writeFails);
+        const removed = tree.find((row) => row.id === addressed[1]);
+        // Dissolved, not destroyed: the children move up into what held
+        // it (DOC-006).
+        tree = tree
+          .filter((row) => row.id !== addressed[1])
+          .map((row) =>
+            row.parentId === addressed[1] ? { ...row, parentId: removed!.parentId } : row,
+          );
+        return json(200, { folders: sorted() });
+      }
+      return record.handler(call);
+    };
+    return { handler, writes };
+  }
+
+  const documentsSection = () => screen.findByRole("region", { name: /^Documents/ });
+
+  /** One act from a folder row's overflow menu, reached the way a person
+   * reaches it. */
+  async function act(
+    user: ReturnType<typeof userEvent.setup>,
+    section: HTMLElement,
+    name: string,
+    verb: string,
+  ) {
+    await user.click(
+      within(section).getByRole("button", { name: `Actions for the ${name} folder` }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: verb }));
+    return screen.findByRole("dialog");
+  }
+
+  /** The folder names on screen, in the order the table draws them. */
+  const drawn = (section: HTMLElement) =>
+    within(section)
+      .getAllByRole("button", { name: /^Actions for the .* folder$/ })
+      .map((trigger) => /^Actions for the (.*) folder$/.exec(trigger.ariaLabel ?? "")?.[1]);
+
+  it("draws the record's folders as rows of the documents table", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: foldersApi([folder("f-1", "Executed"), folder("f-2", "Amendments")]).handler,
+    });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    expect(await within(section).findByText("Amendments")).toBeVisible();
+    expect(within(section).getByText("Executed")).toBeVisible();
+    // A folder holds nothing until filing lands (M13/3), and its zero
+    // reads "Empty" rather than "0 documents" (DES-033).
+    expect(within(section).getAllByText("Empty")).toHaveLength(2);
+  });
+
+  it("orders siblings by name without case, the way a file manager lists a directory", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: foldersApi([
+        folder("f-1", "Executed"),
+        folder("f-2", "correspondence"),
+        folder("f-3", "Amendments"),
+      ]).handler,
+    });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    await within(section).findByText("Amendments");
+    // "correspondence" belongs between the two capitalized names; a
+    // case-sensitive order would put it last.
+    expect(drawn(section)).toEqual(["Amendments", "correspondence", "Executed"]);
+  });
+
+  it("draws a folder's children only while it is open, indented under it", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: foldersApi([folder("f-1", "Correspondence"), folder("f-2", "2026", "f-1")]).handler,
+    });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await within(section).findByText("Correspondence");
+    expect(within(section).queryByText("2026")).toBeNull();
+
+    await user.click(within(section).getByRole("button", { name: "Expand Correspondence" }));
+
+    expect(await within(section).findByText("2026")).toBeVisible();
+    // Collapsing puts it away again — the tree is one press deep, not a
+    // page of its own.
+    await user.click(within(section).getByRole("button", { name: "Collapse Correspondence" }));
+    expect(within(section).queryByText("2026")).toBeNull();
+  });
+
+  it("offers no chevron on a folder with nothing to open", async () => {
+    stubApi({ signedIn: MEMBER, extra: foldersApi([folder("f-1", "Executed")]).handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    await within(section).findByText("Executed");
+    // A control that opens nothing is worse than none. It turns on with
+    // filing (M13/3), when a folder always has something inside.
+    expect(within(section).queryByRole("button", { name: /Expand/ })).toBeNull();
+  });
+
+  it("makes a folder at the record root from the toolbar", async () => {
+    const api = foldersApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(within(section).getByRole("button", { name: "New folder" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.type(within(dialog).getByLabelText("Name"), "Executed");
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]).toMatchObject({
+      url: "/api/v1/contracts/42/folders",
+      method: "POST",
+      body: { name: "Executed" },
+    });
+    expect(await within(section).findByText("Executed")).toBeVisible();
+  });
+
+  it("makes a folder inside another one from its row menu", async () => {
+    const api = foldersApi([folder("f-1", "Correspondence")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await within(section).findByText("Correspondence");
+    const dialog = await act(user, section, "Correspondence", "New folder inside");
+    await user.type(within(dialog).getByLabelText("Name"), "2026");
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    // Where it lands is settled before the dialog opens, by the row the
+    // menu was on — the dialog collects a name and nothing else.
+    expect(api.writes[0]!.body).toEqual({ name: "2026", parentId: "f-1" });
+    // And the parent opens, so the new folder is on screen. A write
+    // that landed and left the table looking exactly as it did would
+    // read as a write that did not.
+    expect(await within(section).findByText("2026")).toBeVisible();
+  });
+
+  it("renames a folder in place", async () => {
+    const api = foldersApi([folder("f-1", "Corespondence")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await within(section).findByText("Corespondence");
+    const dialog = await act(user, section, "Corespondence", "Rename");
+    const field = within(dialog).getByLabelText("Name");
+    await user.clear(field);
+    await user.type(field, "Correspondence");
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]).toMatchObject({
+      url: "/api/v1/folders/f-1",
+      method: "PATCH",
+      body: { name: "Correspondence" },
+    });
+    expect(await within(section).findByText("Correspondence")).toBeVisible();
+  });
+
+  it("moves a folder under a different parent, and back out to the record", async () => {
+    const api = foldersApi([folder("f-1", "Amendments"), folder("f-2", "2026")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await within(section).findByText("2026");
+    const dialog = await act(user, section, "2026", "Move");
+    await user.selectOptions(within(dialog).getByLabelText("Move into"), "f-1");
+    await user.click(within(dialog).getByRole("button", { name: "Move" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]!.body).toEqual({ parentId: "f-1" });
+
+    // Back out again. The record itself is the empty option, because it
+    // is the absence of a parent rather than a folder with an id.
+    await user.click(within(section).getByRole("button", { name: "Expand Amendments" }));
+    const back = await act(user, section, "2026", "Move");
+    await user.selectOptions(within(back).getByLabelText("Move into"), "");
+    await user.click(within(back).getByRole("button", { name: "Move" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(2));
+    expect(api.writes[1]!.body).toEqual({ parentId: null });
+  });
+
+  it("offers no destination that would close a cycle", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: foldersApi([
+        folder("f-1", "Correspondence"),
+        folder("f-2", "2026", "f-1"),
+        folder("f-3", "Amendments"),
+      ]).handler,
+    });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await within(section).findByText("Correspondence");
+    const dialog = await act(user, section, "Correspondence", "Move");
+
+    // Neither the folder itself nor anything under it: the seam refuses
+    // both, and a control that cannot succeed is worse than none.
+    expect(
+      within(dialog)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["The contract itself", "Amendments"]);
+  });
+
+  it("dissolves a folder after saying where the contents go", async () => {
+    const api = foldersApi([folder("f-1", "Correspondence"), folder("f-2", "2026", "f-1")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await within(section).findByText("Correspondence");
+    await user.click(within(section).getByRole("button", { name: "Expand Correspondence" }));
+    const dialog = await act(user, section, "2026", "Delete");
+
+    // No typed name, unlike DOC-010's erasure: nothing is destroyed, so
+    // the dialog states where the contents land and offers the verb.
+    expect(
+      within(dialog).getByText("Anything in it moves into Correspondence. Nothing is deleted."),
+    ).toBeVisible();
+    await user.click(within(dialog).getByRole("button", { name: "Delete" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]).toMatchObject({ url: "/api/v1/folders/f-2", method: "DELETE" });
+    expect(within(section).queryByText("2026")).toBeNull();
+  });
+
+  it("re-files a dissolved folder's children into its parent", async () => {
+    const api = foldersApi([
+      folder("f-1", "Correspondence"),
+      folder("f-2", "2026", "f-1"),
+      folder("f-3", "Q1", "f-2"),
+    ]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Correspondence" }));
+    await user.click(await within(section).findByRole("button", { name: "Expand 2026" }));
+    const dialog = await act(user, section, "2026", "Delete");
+    await user.click(within(dialog).getByRole("button", { name: "Delete" }));
+
+    // Q1 moved up into what held its own parent. Nothing was destroyed,
+    // and it is drawn straight away because Correspondence is still
+    // open — dissolving a folder inside it did not close it.
+    await waitFor(() => expect(within(section).queryByText("2026")).toBeNull());
+    expect(within(section).getByText("Q1")).toBeVisible();
+  });
+
+  it("says what the seam said when a folder write is refused, and changes nothing", async () => {
+    const api = foldersApi([folder("f-1", "Executed")], {
+      writeFails: "A folder named Executed is already here.",
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await within(section).findByText("Executed");
+    await user.click(within(section).getByRole("button", { name: "New folder" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.type(within(dialog).getByLabelText("Name"), "executed");
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    // The dialog stays open with the server's own words in it, so the
+    // person can fix the name rather than start again.
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+      "A folder named Executed is already here.",
+    );
+    // Nothing landed. The tree is read after the dialog closes, because
+    // a modal takes the rest of the page out of the accessibility tree.
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(drawn(section)).toEqual(["Executed"]);
+  });
+
+  it("refuses to send a blank name", async () => {
+    const api = foldersApi([]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(within(section).getByRole("button", { name: "New folder" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent("Give the folder a name.");
+    expect(api.writes).toEqual([]);
+  });
+
+  it("shows a Contributor the tree and offers them no control on it", async () => {
+    stubApi({
+      signedIn: CONTRIBUTOR,
+      extra: foldersApi([folder("f-1", "Correspondence"), folder("f-2", "2026", "f-1")], {}, [
+        person("u1", "creator"),
+        person("u3", "contributor"),
+      ]).handler,
+    });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    expect(await within(section).findByText("Correspondence")).toBeVisible();
+    // Read-only means the controls are absent, not disabled — DES-025's
+    // convention applied to a whole section.
+    expect(within(section).queryByRole("button", { name: "New folder" })).toBeNull();
+    expect(within(section).queryByRole("button", { name: /^Actions for the/ })).toBeNull();
+    // The tree still opens: reading the structure is the whole point of
+    // drawing it for them.
+    await user.click(within(section).getByRole("button", { name: "Expand Correspondence" }));
+    expect(await within(section).findByText("2026")).toBeVisible();
   });
 });

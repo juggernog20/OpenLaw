@@ -146,6 +146,7 @@ import {
 } from "../lib/custom-fields";
 import { currencyFractionDigits, currencyOptions, toMajorUnits, toMinorUnits } from "../lib/format";
 import type { ContractDocument } from "../lib/documents";
+import type { ContractFolder } from "../lib/folders";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
 import { problemDetail } from "../lib/messages";
 import { cn } from "../lib/utils";
@@ -195,13 +196,17 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
   // Contributor anyway; the record read alone carries every name the
   // page has to draw.
   const canEdit = isMemberPlus(user.role);
-  const [record, documents, options, registry] = await Promise.all([
+  const [record, documents, folders, options, registry] = await Promise.all([
     api.GET("/api/v1/contracts/{number}", { params: { path: { number } } }),
     // The record's paper (M11/2). Read by every viewer who reaches the
     // page — a Contributor on the team reads and downloads it too
     // (DD-015) — and answered 404 for anyone the record itself is
     // hidden from, which is the same refusal the record read gives.
     api.GET("/api/v1/contracts/{number}/documents", { params: { path: { number } } }),
+    // How that paper is filed (M13/2, DOC-006). One read for the whole
+    // tree, because a record's folder set is small and drawing it a
+    // level at a time would be a round trip per press.
+    api.GET("/api/v1/contracts/{number}/folders", { params: { path: { number } } }),
     canEdit ? api.GET("/api/v1/contracts/options") : undefined,
     // The registry's own Member+ list is the signing-entity picker's
     // source (CTR-011): it is ordered by legal name and already leaves
@@ -214,7 +219,12 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
   // here must not render as "No documents on this contract yet" — an
   // empty list is a fact about the record, not a fallback for a read
   // that did not happen.
-  if (!record.data || !documents.data || (canEdit && !(options?.data && registry?.data))) {
+  if (
+    !record.data ||
+    !documents.data ||
+    !folders.data ||
+    (canEdit && !(options?.data && registry?.data))
+  ) {
     throw new Error("The contract could not be read.");
   }
   return {
@@ -222,6 +232,10 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     canEdit,
     contract: record.data.contract,
     documents: documents.data.documents,
+    /** The record's folders, whole (M13/2). Required like the paper: an
+     * empty tree is a fact about the record, not a fallback for a read
+     * that did not happen. */
+    folders: folders.data.folders,
     /** Where the next page of paper starts, or null when the first page
      * is all of it (CTR-024). */
     documentsCursor: documents.data.nextCursor,
@@ -295,6 +309,7 @@ function ContractRecord() {
     canEdit,
     contract,
     documents: contractDocuments,
+    folders: contractFolders,
     documentsCursor,
     fields,
     customFieldRefs,
@@ -344,6 +359,10 @@ function ContractRecord() {
    * section pages itself; the record holds the position, because the
    * record holds the list (CTR-024). */
   const [paperCursor, setPaperCursor] = useState<string | null>(documentsCursor);
+  /** How the record's paper is filed (M13/2). State rather than loader
+   * data because every folder write answers the whole set, and the
+   * section replaces what it holds without a page re-read. */
+  const [tree, setTree] = useState<ContractFolder[]>(contractFolders);
   /**
    * Which version the doc panel is reading, or none (M12/2).
    *
@@ -1209,6 +1228,7 @@ function ContractRecord() {
                 <DocumentsCard
                   contractNumber={saved.number}
                   documents={paper}
+                  folders={tree}
                   nextCursor={paperCursor}
                   frozen={frozen}
                   // DOC-010's erasure is the Administrator's alone, and it
@@ -1237,6 +1257,7 @@ function ContractRecord() {
                     // moving the position: a metadata edit is not a page.
                     if (cursor !== undefined) setPaperCursor(cursor);
                   }}
+                  onFolders={setTree}
                 />
               )}
             </div>

@@ -48,6 +48,7 @@ import { auditLogRoutes } from "./modules/audit-log/routes.js";
 import { commentsRoutes } from "./modules/comments/routes.js";
 import { contractsRoutes } from "./modules/contracts/routes.js";
 import { documentsRoutes } from "./modules/documents/routes.js";
+import { documentFoldersRoutes } from "./modules/documents/folders.js";
 import { counterpartiesRoutes } from "./modules/counterparties/routes.js";
 import { entitiesRoutes } from "./modules/entities/routes.js";
 import { entityTypesRoutes } from "./modules/entity-types/routes.js";
@@ -339,6 +340,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(contractsRoutes, { prefix: "/api/v1" });
   await app.register(counterpartiesRoutes, { prefix: "/api/v1" });
   await app.register(documentsRoutes, { prefix: "/api/v1" });
+  await app.register(documentFoldersRoutes, { prefix: "/api/v1" });
   await app.register(commentsRoutes, { prefix: "/api/v1" });
   await app.register(activityRoutes, { prefix: "/api/v1" });
   await app.register(auditLogRoutes, { prefix: "/api/v1" });

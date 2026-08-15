@@ -161,6 +161,21 @@
   "activity.field.promoted": {
     "defaultMessage": "{actor} widened the field {name} to every module"
   },
+  "activity.folder.created": {
+    "defaultMessage": "{atRoot, select, true {{actor} made the {name} folder} other {{actor} made the {name} folder in {parent}}}"
+  },
+  "activity.folder.deleted": {
+    "defaultMessage": "{actor} deleted the {name} folder and kept what was in it"
+  },
+  "activity.folder.moved": {
+    "defaultMessage": "{atRoot, select, true {{actor} moved the {name} folder onto the contract} other {{actor} moved the {name} folder into {parent}}}"
+  },
+  "activity.folder.renamed": {
+    "defaultMessage": "{actor} renamed the {previousName} folder to {name}"
+  },
+  "activity.folder.unnamed": {
+    "defaultMessage": "unnamed"
+  },
   "activity.loadError": {
     "defaultMessage": "The history could not be read. Reopen the panel to try again."
   },
@@ -1223,6 +1238,69 @@
   "documents.executed": {
     "defaultMessage": "Executed"
   },
+  "documents.folder.action.delete": {
+    "defaultMessage": "Delete"
+  },
+  "documents.folder.action.move": {
+    "defaultMessage": "Move"
+  },
+  "documents.folder.action.newInside": {
+    "defaultMessage": "New folder inside"
+  },
+  "documents.folder.action.rename": {
+    "defaultMessage": "Rename"
+  },
+  "documents.folder.actionsFor": {
+    "defaultMessage": "Actions for the {name} folder"
+  },
+  "documents.folder.count": {
+    "defaultMessage": "{count, plural, =0 {Empty} one {# document} other {# documents}}"
+  },
+  "documents.folder.createInsideTitle": {
+    "defaultMessage": "New folder in {name}"
+  },
+  "documents.folder.createTitle": {
+    "defaultMessage": "New folder"
+  },
+  "documents.folder.deleteIntoParent": {
+    "defaultMessage": "Anything in it moves into {parent}. Nothing is deleted."
+  },
+  "documents.folder.deleteIntoRoot": {
+    "defaultMessage": "Anything in it moves onto the contract itself. Nothing is deleted."
+  },
+  "documents.folder.deleteTitle": {
+    "defaultMessage": "Delete the {name} folder?"
+  },
+  "documents.folder.error": {
+    "defaultMessage": "That folder could not be saved. Try again."
+  },
+  "documents.folder.moveInto": {
+    "defaultMessage": "Move into"
+  },
+  "documents.folder.moveTitle": {
+    "defaultMessage": "Move {name}"
+  },
+  "documents.folder.name": {
+    "defaultMessage": "Name"
+  },
+  "documents.folder.nameRequired": {
+    "defaultMessage": "Give the folder a name."
+  },
+  "documents.folder.pathSeparator": {
+    "defaultMessage": "/"
+  },
+  "documents.folder.recordRoot": {
+    "defaultMessage": "The contract itself"
+  },
+  "documents.folder.renameTitle": {
+    "defaultMessage": "Rename folder"
+  },
+  "documents.folder.save": {
+    "defaultMessage": "Save"
+  },
+  "documents.folder.toggle": {
+    "defaultMessage": "{open, select, true {Collapse} other {Expand}} {name}"
+  },
   "documents.kind": {
     "defaultMessage": "{kind, select, draft_ours {Draft · ours} redline_theirs {Redline · theirs} redline_ours {Redline · ours} executed {Executed} amendment {Amendment} other {Unknown}}"
   },
@@ -1234,6 +1312,9 @@
   },
   "documents.moreError": {
     "defaultMessage": "The next documents could not be read. Try again."
+  },
+  "documents.newFolder": {
+    "defaultMessage": "New folder"
   },
   "documents.notePrefix": {
     "defaultMessage": "Note:"
