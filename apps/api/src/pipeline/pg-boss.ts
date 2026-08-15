@@ -212,7 +212,34 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // what let a handler tell "try again" from "this was the last
       // try", which is the difference between a derivation that is still
       // coming and one that is marked failed.
-      const oneAtATime = { batchSize: 1, includeMetadata: true } as const;
+      //
+      // One at a time is also what keeps the queue's expiry honest: a
+      // job is active from the moment it is fetched, so a batch of two
+      // would run the second one's fifteen-minute clock while the first
+      // one's conversion was still going.
+      //
+      // A backlog is drained rather than polled through. While more than
+      // one job is ready — which is what M12/6's sweep leaves behind on
+      // an upgrading install — the worker fetches again the moment it
+      // finishes rather than waiting for the next poll. A queue with one
+      // job at a time, which is the ordinary upload, is untouched by it.
+      //
+      // And the poll underneath is a few seconds rather than pg-boss's
+      // half a minute. It drops its backstop that far once a queue is
+      // woken by notification, on the reasoning that the notification is
+      // what delivers the job. That is too far apart to be the
+      // correctness floor this pipeline leans on: notifications sent
+      // while a worker is busy coalesce, so a second request arriving
+      // during a job would wait half a minute for a poll — and the burst
+      // above only engages once the backlog shows in pg-boss's own
+      // cached statistics, which lag by up to a minute. Two seconds
+      // costs one small query per queue while there is nothing to do.
+      const oneAtATime = {
+        batchSize: 1,
+        includeMetadata: true,
+        burstWhenReadyExceeds: 1,
+        notifyPollingIntervalSeconds: 2,
+      } as const;
       await boss.work(
         JOB_QUEUES.textExtraction,
         oneAtATime,

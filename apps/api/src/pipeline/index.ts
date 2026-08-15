@@ -21,6 +21,14 @@
 // API chooses them (DOC-009, TECH-010).
 export { createDocEngineFromEnv } from "../lib/doc-engine/config.js";
 export { createStorageFromEnv } from "../lib/storage/config.js";
+export {
+  runBackfillSweep,
+  BACKFILL_PAGE_SIZE,
+  BACKFILL_REFUSAL_LIMIT,
+  type BackfillDeps,
+  type BackfillOptions,
+  type BackfillSummary,
+} from "./backfill.js";
 export { isTerminalFailure, type DerivationDeps } from "./derivations.js";
 export { needsDisplayRendition, recordRenditionOwed } from "./display-conversion.js";
 export {

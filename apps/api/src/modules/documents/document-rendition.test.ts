@@ -37,6 +37,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { documentVersionRenditions, eq, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import { fakeConversionText } from "../../lib/doc-engine/fake.js";
+import { DOCX_MIME_TYPE, PPTX_MIME_TYPE, officePackage } from "../../testing/fixtures/office.js";
 import {
   CapturingMailer,
   fixedMailerResolver,
@@ -122,60 +123,9 @@ interface TextRow {
  * compared against. */
 const NEVER_CREATED = "0198f2ab-0000-7000-8000-0000000034cd";
 
-/** What a real DOCX is to the fake engine and to any reader: a ZIP
- * package. The fake refuses a package that is not whole, exactly as
- * LibreOffice does, so the bytes have to be a real archive. */
-function officePackage(label: string): Buffer {
-  const name = Buffer.from("word/document.xml", "ascii");
-  const body = Buffer.from(label, "utf8");
-  // A ZIP with one stored (uncompressed) entry, written by hand so the
-  // fixture is exact and carries no dependency.
-  const local = Buffer.concat([
-    Buffer.from([0x50, 0x4b, 0x03, 0x04]),
-    Buffer.from([
-      0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    ]),
-    sizes(body.byteLength, name.byteLength),
-    name,
-    body,
-  ]);
-  const central = Buffer.concat([
-    Buffer.from([0x50, 0x4b, 0x01, 0x02]),
-    Buffer.from([
-      0x14, 0x00, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00,
-    ]),
-    sizes(body.byteLength, name.byteLength),
-    Buffer.alloc(10),
-    Buffer.alloc(4),
-    name,
-  ]);
-  const end = Buffer.alloc(22);
-  end.writeUInt32LE(0x06054b50, 0);
-  end.writeUInt16LE(1, 8);
-  end.writeUInt16LE(1, 10);
-  end.writeUInt32LE(central.byteLength, 12);
-  end.writeUInt32LE(local.byteLength, 16);
-  return Buffer.concat([local, central, end]);
-}
-
-/** The CRC, the two sizes, and the name length a ZIP entry header
- * carries. The CRC is left at zero: nothing in this suite verifies one,
- * and the fake engine checks the archive's shape rather than its
- * checksums. */
-function sizes(bodyLength: number, nameLength: number): Buffer {
-  const header = Buffer.alloc(14);
-  header.writeUInt32LE(0, 0);
-  header.writeUInt32LE(bodyLength, 4);
-  header.writeUInt32LE(bodyLength, 8);
-  header.writeUInt16LE(nameLength, 12);
-  return header;
-}
-
-/** The declared type a browser sends for a .docx. */
-const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-/** And for a .pptx. */
-const PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+/** The declared type a browser sends for a .docx, and for a .pptx. */
+const DOCX = DOCX_MIME_TYPE;
+const PPTX = PPTX_MIME_TYPE;
 
 beforeAll(async () => {
   harness = await startHarness();
