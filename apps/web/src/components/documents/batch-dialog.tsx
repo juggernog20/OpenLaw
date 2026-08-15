@@ -30,10 +30,11 @@
  * **A failure costs its own file and nothing else.** Each file is its
  * own upload, so a refusal marks one row and the pool carries on. A row
  * that failed says why in the seam's own sentence and offers Retry —
- * unless a retry cannot succeed. A file over the deployment's size
- * ceiling names the limit and offers none, because the same file will
- * be refused again and a control that cannot succeed reads as "try
- * again" when the answer will not change.
+ * unless a retry cannot succeed. A refusal the file itself earned —
+ * over the size ceiling, a path or a name or a kind the seam will not
+ * take — names the reason and offers no control, because the same file
+ * earns the same answer and a control that cannot succeed reads as
+ * "try again" when the answer will not change.
  *
  * **A file that landed is never sent again.** Retry re-runs the failed
  * rows alone, so no retry can put the same document on the record
@@ -102,10 +103,37 @@ import {
  */
 const BATCH_ROWS = 6;
 
-/** The seam's refusal of a file over the deployment's ceiling. It names
- * the limit itself, and the same file earns the same answer, so the row
- * that carries it is offered no retry (DES-033 §11). */
-const PAYLOAD_TOO_LARGE = 413;
+/** The seam gave up waiting for the body. About the moment, not the
+ * file. */
+const REQUEST_TIMEOUT = 408;
+
+/** The seam is being asked too often. About the moment, not the file. */
+const TOO_MANY_REQUESTS = 429;
+
+/**
+ * Whether sending this file again could end any differently
+ * (DES-033 §11).
+ *
+ * A 4xx is the seam's answer about *this file*: over the ceiling, a
+ * folder path it will not accept, a name too long, a kind it does not
+ * know. The file does not change between attempts, so neither does the
+ * answer, and a Retry control on that row promises something it cannot
+ * deliver.
+ *
+ * Two are the exception, because they are answers about the moment
+ * rather than about the file: 408, the seam gave up waiting, and 429,
+ * the seam is being asked too often. A later attempt genuinely can
+ * succeed.
+ *
+ * Everything else is retryable — a 5xx is the server having a bad
+ * minute, and no status at all is the connection dropping mid-flight.
+ * Both are worth another go.
+ */
+function retryCouldSucceed(status: number | undefined): boolean {
+  if (status === undefined) return true;
+  if (status === REQUEST_TIMEOUT || status === TOO_MANY_REQUESTS) return true;
+  return status < 400 || status >= 500;
+}
 
 /** How the batch was started. It decides one line: a drop already said
  * where the files land, and a pick did not. */
@@ -271,7 +299,7 @@ export function BatchDialog({
             id: "documents.batch.failed",
             defaultMessage: "That file could not be uploaded.",
           }),
-        retryable: outcome.status !== PAYLOAD_TOO_LARGE,
+        retryable: retryCouldSucceed(outcome.status),
       });
     });
     running.current = false;

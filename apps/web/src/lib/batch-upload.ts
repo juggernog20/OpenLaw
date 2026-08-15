@@ -318,8 +318,10 @@ async function entriesOf(
 export function filesFromDirectoryPicker(files: readonly File[]): DroppedFile[] {
   return files.map((file) => {
     // `webkitRelativePath` is the path inside the chosen directory,
-    // including that directory's own name and the file's. Only the
-    // folders between them are the destination.
+    // including that directory's own name and the file's own. Only the
+    // filename comes off, so the chosen directory is recreated at the
+    // destination too — picking a folder brings the folder, not just
+    // its contents.
     const segments = file.webkitRelativePath
       .split(PATH_SEPARATOR)
       .filter((segment) => segment.length > 0);

@@ -233,9 +233,10 @@ function uploadForm(filename: string): {
   };
 }
 
-/** Uploads one file to a record, requiring success. Every document here
- * starts at the record root, because filing is an edit and not something
- * the upload route takes until M13/4. */
+/** Uploads one file to a record, requiring success. The form carries no
+ * folder, so every document here starts at the record root — which is
+ * what this suite wants, because it exercises filing as the edit it is
+ * rather than as the destination an upload can now carry itself. */
 async function uploaded(
   number: number,
   filename: string,

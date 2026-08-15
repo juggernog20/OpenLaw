@@ -7140,6 +7140,64 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     await waitFor(() => expect(api.quiet()).toBe(true));
   });
 
+  it("offers no retry on any refusal the file itself earned, not only the size one", async () => {
+    const api = batchApi([], [], {
+      refuse: {
+        "bad_name.pdf": {
+          status: 400,
+          detail: "That file name is too long.",
+        },
+      },
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [file("bad_name.pdf"), file("small.pdf")]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 2 files" }));
+
+    expect(await within(dialog).findByText("That file name is too long.")).toBeVisible();
+    // The size ceiling is one instance of the rule, not the rule. The
+    // seam refuses a name, a folder path and a version kind the same
+    // way, and the same file earns the same answer every time, so no
+    // retry is offered for any of them (DES-033 §11).
+    expect(within(dialog).queryByRole("button", { name: /^Retry/ })).toBeNull();
+    expect(within(dialog).getByRole("heading", { name: "Imported 1 of 2 files" })).toBeVisible();
+    await user.click(within(dialog).getByRole("button", { name: "Done" }));
+    // The run re-reads the record's paper and its folders after its last
+    // row settles. Waited out here, so no fetch outlives the stub.
+    await waitFor(() => expect(api.quiet()).toBe(true));
+  });
+
+  it("still offers retry when the seam refused for a reason the file did not earn", async () => {
+    const api = batchApi([], [], {
+      refuse: {
+        "unlucky.pdf": {
+          status: 503,
+          detail: "The server is not taking uploads right now.",
+        },
+      },
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    dropOn(section, [file("unlucky.pdf")]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Import 1 file" }));
+
+    expect(
+      await within(dialog).findByText("The server is not taking uploads right now."),
+    ).toBeVisible();
+    // A bad minute on the server is a fact about the moment, not about
+    // this file, so a second attempt genuinely can end differently.
+    expect(within(dialog).getByRole("button", { name: "Retry unlucky.pdf" })).toBeVisible();
+    await waitFor(() => expect(api.quiet()).toBe(true));
+  });
+
   it("keeps at most three uploads in flight at once", async () => {
     const api = batchApi([], [], { hold: true });
     stubApi({ signedIn: MEMBER, extra: api.handler });

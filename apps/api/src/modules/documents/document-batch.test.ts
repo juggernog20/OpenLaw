@@ -406,4 +406,28 @@ describe("the per-file ceiling inside a batch", () => {
     for (const document of paper) expect(document.versions).toHaveLength(1);
     expect(paper.filter((row) => row.isPrimary)).toHaveLength(1);
   }, 60_000);
+
+  it("leaves exactly one primary when a refused file races the rest of the batch", async () => {
+    const contract = await newContract("Batch · the race with a casualty");
+
+    // The two rules this file has asserted apart, now at once: the
+    // refusal is isolated, and the designation is taken once. Sent one
+    // after another, the refused file never overlaps a survivor. Sent
+    // together, it does — and the survivors are racing for the primary
+    // designation at the same moment, on a record that has no paper
+    // yet.
+    const answers = await Promise.all([
+      sendFile(contract.number, "a.pdf", { content: Buffer.alloc(LIMIT - 1, 0x61) }, small),
+      sendFile(contract.number, "enormous.pdf", { content: Buffer.alloc(LIMIT * 4, 0x61) }, small),
+      sendFile(contract.number, "b.pdf", { content: Buffer.alloc(LIMIT - 1, 0x61) }, small),
+    ]);
+
+    expect(answers.map((res) => res.statusCode)).toEqual([201, 413, 201]);
+
+    const paper = await paperOf(contract.number);
+    // The refused file left no row, and the two that landed did not
+    // both take the designation.
+    expect(paper.map((row) => row.title).toSorted()).toEqual(["a.pdf", "b.pdf"]);
+    expect(paper.filter((row) => row.isPrimary)).toHaveLength(1);
+  }, 60_000);
 });
