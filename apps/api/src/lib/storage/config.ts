@@ -194,11 +194,30 @@ function readAzureBlobConfig(env: StorageEnvironment): StorageConfig {
       "Set AZURE_BLOB_ACCOUNT (Azure answers at the account's own address) or AZURE_BLOB_ENDPOINT.",
     );
   }
+  // Parsed once, so the scheme is read as a scheme. A prefix match
+  // would be case-sensitive where URLs are not, and would let a value
+  // that is no URL at all — a bare host, most likely — through to fail
+  // later inside the SDK, where the message names no variable. The
+  // Blob API is spoken over HTTP and nothing else, so any other scheme
+  // is a typing mistake and is refused here too.
+  let endpointUrl: URL | undefined;
+  if (endpoint) {
+    try {
+      endpointUrl = new URL(endpoint);
+    } catch {
+      endpointUrl = undefined;
+    }
+    if (endpointUrl?.protocol !== "http:" && endpointUrl?.protocol !== "https:") {
+      throw new StorageConfigError(
+        "AZURE_BLOB_ENDPOINT must be a whole http:// or https:// URL — for example https://openlaw.blob.core.windows.net.",
+      );
+    }
+  }
   // The Azure credential chain hands out bearer tokens, and the SDK
   // refuses to send one over plain HTTP. Refused here instead, where
   // the refusal can name the variables — at the first read it would
   // name neither.
-  if (endpoint?.startsWith("http://") && !key) {
+  if (endpointUrl?.protocol === "http:" && !key) {
     throw new StorageConfigError(
       "An http:// AZURE_BLOB_ENDPOINT needs AZURE_BLOB_ACCOUNT_KEY — the Azure credential chain sends bearer tokens, which never travel unencrypted.",
     );

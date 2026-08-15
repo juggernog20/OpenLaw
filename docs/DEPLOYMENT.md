@@ -149,7 +149,7 @@ A named store is a configured reader whether or not it is the write driver: sett
 
 ### The upload ceiling
 
-One upload may carry at most `MAX_UPLOAD_MB` megabytes (default 100), on every driver. A file over the ceiling is refused with a clear message instead of a timeout. If you raise it, raise your reverse proxy's own body limit to match — nginx's `client_max_body_size`, Caddy's `request_body max_size` — or the proxy cuts the request off first and the refusal stops being clear.
+One upload may carry at most `MAX_UPLOAD_MB` megabytes (default 100), on every driver. A file over the ceiling is refused with a clear message instead of a timeout. Raising it does not raise what an upload costs in memory: the `s3` and `azure-blob` drivers both stream in 5 MB blocks, four at a time, so each upload in flight holds about 20 MB whatever its size — size the app's memory by how many uploads may overlap, not by the ceiling. If you raise it, raise your reverse proxy's own body limit to match — nginx's `client_max_body_size`, Caddy's `request_body max_size` — or the proxy cuts the request off first and the refusal stops being clear.
 
 ## The doc engine
 

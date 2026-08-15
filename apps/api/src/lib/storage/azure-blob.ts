@@ -38,6 +38,22 @@ import {
 /** The driver name this module registers under, and its reference prefix. */
 export const AZURE_BLOB_DRIVER = "azure-blob";
 
+/**
+ * What one upload in flight costs in memory, spelled out rather than
+ * left to the SDK. A streaming upload stages blocks in buffers it
+ * allocates itself, so the ceiling is the block size times how many
+ * are held at once — and the SDK's own defaults (8 MiB, 5) would make
+ * one Azure upload cost twice what one S3 upload costs, for no reason
+ * a reader of either file could find.
+ *
+ * These match the S3 driver's uploader instead: 5 MiB in 4 buffers, so
+ * both drivers hold 20 MiB per upload in flight. MAX_UPLOAD_MB bounds
+ * the file, not this — a 100 MB upload still passes through 20 MiB of
+ * buffers, twenty blocks at a time.
+ */
+const BLOCK_BYTES = 5 * 1024 * 1024;
+const BLOCK_CONCURRENCY = 4;
+
 export interface AzureBlobStorageOptions {
   /** The container every blob is stored in. */
   container: string;
@@ -156,9 +172,9 @@ export function createAzureBlobStorage(options: AzureBlobStorageOptions): Storag
       // service reaps on its own within a week. Block machinery stops
       // here: the interface above knows nothing about it.
       try {
-        await container
-          .getBlockBlobClient(key)
-          .uploadStream(body, undefined, undefined, { conditions: { ifNoneMatch: "*" } });
+        await container.getBlockBlobClient(key).uploadStream(body, BLOCK_BYTES, BLOCK_CONCURRENCY, {
+          conditions: { ifNoneMatch: "*" },
+        });
       } catch (error) {
         if (isAlreadyExists(error)) throw new BlobExistsError(ref);
         throw error;

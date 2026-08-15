@@ -88,7 +88,11 @@ describe("Azure Blob driver", () => {
   }, START_TIMEOUT_MS);
 
   afterAll(async () => {
-    await store.azurite.stop();
+    // Guarded the way the contract suite guards its own harness: if
+    // the start rejected, `store` was never assigned, and reaching
+    // through it here would make a TypeError the thing the run
+    // reports — burying the Azurite failure that actually happened.
+    await store?.azurite.stop();
   });
 
   /** Everything a download yields, as one string. The body is optional
@@ -136,9 +140,9 @@ describe("Azure Blob driver", () => {
   });
 
   it("round-trips a blob larger than one staged block", async () => {
-    // Over the SDK's 8 MiB buffer size, so the upload stages more than
-    // one block and the commit is what makes the blob appear — the
-    // path an uploaded hundred-page scan takes.
+    // Over the driver's 5 MiB block size, so the upload stages more
+    // than one block and the commit is what makes the blob appear —
+    // the path an uploaded hundred-page scan takes.
     const large = Buffer.alloc(9 * 1024 * 1024, "x");
     const ref = await storage.put(randomUUID(), Readable.from([large]));
 

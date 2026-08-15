@@ -219,6 +219,23 @@ describe("the Azure Blob driver's environment", () => {
     ).toMatchObject({ endpoint: "http://azurite:10000/openlaw" });
   });
 
+  it("refuses a plain-http endpoint whatever case the scheme is written in", () => {
+    // The scheme is read as a scheme, not matched as a prefix, so the
+    // refusal cannot be stepped around by shouting it.
+    expect(() =>
+      readStorageConfig({ ...AZURE_ENV, AZURE_BLOB_ENDPOINT: "HTTP://azurite:10000/openlaw" }),
+    ).toThrow(StorageConfigError);
+  });
+
+  it("refuses an endpoint that is not an http URL, rather than letting the SDK find out", () => {
+    // A bare host, and a scheme the Blob API is never spoken over.
+    for (const endpoint of ["blob.example.com", "azurite:10000/openlaw"]) {
+      expect(() => readStorageConfig({ ...AZURE_ENV, AZURE_BLOB_ENDPOINT: endpoint })).toThrow(
+        StorageConfigError,
+      );
+    }
+  });
+
   it("refuses a driver with neither an account nor an endpoint to reach", () => {
     expect(() =>
       readStorageConfig({ STORAGE_DRIVER: "azure-blob", AZURE_BLOB_CONTAINER: "openlaw-files" }),
