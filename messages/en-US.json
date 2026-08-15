@@ -605,6 +605,12 @@
   "comments.mention.unreachable": {
     "defaultMessage": "{names} cannot be reached on this record at any audience you can post to. Take the mention out."
   },
+  "comments.older": {
+    "defaultMessage": "Show older"
+  },
+  "comments.olderError": {
+    "defaultMessage": "The earlier comments could not be read. Try again."
+  },
   "comments.placeholder": {
     "defaultMessage": "Add a comment…"
   },
@@ -709,6 +715,9 @@
   },
   "contracts.count": {
     "defaultMessage": "{count, plural, one {# contract} other {# contracts}}"
+  },
+  "contracts.countShown": {
+    "defaultMessage": "{count, plural, one {# contract shown} other {# contracts shown}}"
   },
   "contracts.counterparties.list": {
     "defaultMessage": "Counterparties"
@@ -832,6 +841,15 @@
   },
   "contracts.listError": {
     "defaultMessage": "The contract list could not be read. Try again."
+  },
+  "contracts.more": {
+    "defaultMessage": "Show more"
+  },
+  "contracts.moreAdded": {
+    "defaultMessage": "{count, plural, one {# more contract} other {# more contracts}}. {total} shown."
+  },
+  "contracts.moreError": {
+    "defaultMessage": "The next contracts could not be read. Try again."
   },
   "contracts.ownerUnassigned": {
     "defaultMessage": "Unassigned"
@@ -1111,6 +1129,15 @@
   },
   "documents.kind": {
     "defaultMessage": "{kind, select, draft_ours {Draft · ours} redline_theirs {Redline · theirs} redline_ours {Redline · ours} executed {Executed} amendment {Amendment} other {Unknown}}"
+  },
+  "documents.more": {
+    "defaultMessage": "Show more"
+  },
+  "documents.moreAdded": {
+    "defaultMessage": "{count, plural, one {# more document} other {# more documents}}. {total} shown."
+  },
+  "documents.moreError": {
+    "defaultMessage": "The next documents could not be read. Try again."
   },
   "documents.notePrefix": {
     "defaultMessage": "Note:"
@@ -2185,6 +2212,9 @@
   },
   "settings.users.invited": {
     "defaultMessage": "Invited"
+  },
+  "settings.users.neverActive": {
+    "defaultMessage": "—"
   },
   "settings.users.resend": {
     "defaultMessage": "Resend the invite to {email}"
