@@ -40,6 +40,7 @@ import type { StorageAdapter } from "./lib/storage/adapter.js";
 import { DEFAULT_MAX_UPLOAD_MB, MEGABYTE } from "./lib/uploads.js";
 import { metaRoutes } from "./modules/meta/routes.js";
 import { authRoutes } from "./modules/auth/routes.js";
+import { approverGroupsRoutes } from "./modules/approver-groups/routes.js";
 import { contractStatusesRoutes } from "./modules/contract-statuses/routes.js";
 import { contractTypesRoutes } from "./modules/contract-types/routes.js";
 import { attachedFieldsRoutes } from "./modules/contract-types/attached-fields.js";
@@ -337,6 +338,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(matterTypesRoutes, { prefix: "/api/v1" });
   await app.register(matterAttachedFieldsRoutes, { prefix: "/api/v1" });
   await app.register(contractStatusesRoutes, { prefix: "/api/v1" });
+  await app.register(approverGroupsRoutes, { prefix: "/api/v1" });
   await app.register(contractsRoutes, { prefix: "/api/v1" });
   await app.register(counterpartiesRoutes, { prefix: "/api/v1" });
   await app.register(documentsRoutes, { prefix: "/api/v1" });

@@ -23,6 +23,17 @@ window.matchMedia ??= ((query: string) => ({
   dispatchEvent: () => false,
 })) as unknown as typeof window.matchMedia;
 
+// jsdom ships no ResizeObserver either. Radix measures a control it
+// mirrors into a hidden form input — a Checkbox inside a <form> is the
+// first case (#231's member picker) — and calls the constructor on
+// mount. Nothing here is laid out, so an observer that never fires is
+// the honest stand-in.
+globalThis.ResizeObserver ??= class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+} as unknown as typeof ResizeObserver;
+
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();

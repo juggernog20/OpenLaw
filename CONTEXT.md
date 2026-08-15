@@ -149,6 +149,10 @@ _Avoid_: task, deadline, compliance item
 **Urgency**:
 What a requester supplies on a Request. It maps 1:1 to **priority** at conversion; **risk** is never requester-set [INT-002, MTR-012].
 
+**Approver group**:
+An Administrator-managed template naming a reusable set of approvers — "Commercial sign-off" = GC plus CFO. Members must be Member+ users. Applying a group copies its members onto the Contract at apply time, so a later edit or archive never changes an approval already requested [CTR-012].
+_Avoid_: approval group, approver team, sign-off rule
+
 ## Relationships
 
 - A **Matter** contains many **Contracts** and many **Documents**

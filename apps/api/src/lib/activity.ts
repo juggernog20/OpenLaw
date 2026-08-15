@@ -51,6 +51,14 @@ export type ActivityAction =
   | `${TypeFieldActionPrefix}.${"attached" | "detached" | "reordered" | "required_changed"}`
   | `contract_status.${"created" | "renamed" | "reordered" | "archived" | "restored" | "deleted"}`
   | `field.${"created" | "updated" | "promoted" | "narrowed" | "archived" | "restored"}`
+  // The CTR-012 approver-group templates (M14/1). The five list verbs
+  // are the taxonomy set minus reorder and delete: a group has no
+  // display order, and nothing hard-deletes one. The two member verbs
+  // are their own, for the reason the contract team's are (CTR-004) —
+  // putting a person on a template is not an edit of a field, and an
+  // Administrator asking "who was on Commercial sign-off in March" has
+  // to be able to filter the audit log on it.
+  | `approver_group.${"created" | "renamed" | "updated" | "archived" | "restored" | "member_added" | "member_removed"}`
   // The registry record's own feed (M7): create and archive from #98,
   // the record surface's verbs from #99. A status change keeps its own
   // verb — status is the fixed code-branching enum (ENT-001), so the M9

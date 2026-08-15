@@ -11,6 +11,7 @@ import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
 import * as activitySchema from "./schema/activity.js";
+import * as approverGroupsSchema from "./schema/approver-groups.js";
 import * as authSchema from "./schema/auth.js";
 import * as commentsSchema from "./schema/comments.js";
 import * as contractCounterpartiesSchema from "./schema/contract-counterparties.js";
@@ -32,6 +33,7 @@ import * as matterTypesSchema from "./schema/matter-types.js";
 import * as orgSchema from "./schema/org.js";
 
 export * from "./schema/activity.js";
+export * from "./schema/approver-groups.js";
 export * from "./schema/auth.js";
 export * from "./schema/comments.js";
 export * from "./schema/contract-counterparties.js";
@@ -53,6 +55,7 @@ export * from "./schema/matter-types.js";
 export * from "./schema/org.js";
 export const schema = {
   ...activitySchema,
+  ...approverGroupsSchema,
   ...authSchema,
   ...commentsSchema,
   ...contractCounterpartiesSchema,
