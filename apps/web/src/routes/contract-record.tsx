@@ -10,13 +10,15 @@
  * chrome — with the Owner, the type, status, priority, and risk as
  * selects.
  *
- * Three sections, three addresses. **Overview** (`/contracts/42`) is
+ * Four sections, four addresses. **Overview** (`/contracts/42`) is
  * the record's own columns: the Contract card and the Description card
  * under it. **Fields** (`/contracts/42/fields`) is what this contract's
  * type asks for on top of them. **Documents**
- * (`/contracts/42/documents`) is the paper. The Team card is not one of
- * the three — it stands beside all of them, because who is on a
- * contract is context for reading any part of it.
+ * (`/contracts/42/documents`) is the paper. **Approvals**
+ * (`/contracts/42/approvals`) is who has been asked to sign it off
+ * (CTR-012, DES-035). The Team card is not one of the four — it stands
+ * beside all of them, because who is on a contract is context for
+ * reading any part of it.
  *
  * The custom fields are CTR-016's, and they earn the card the C2 mock
  * draws for them. The contract's type decides which of them appear and
@@ -152,6 +154,7 @@ import {
   type CustomFieldValues,
 } from "../lib/custom-fields";
 import { currencyFractionDigits, currencyOptions, toMajorUnits, toMinorUnits } from "../lib/format";
+import { type ContractApproval } from "../lib/approvals";
 import { FOLDER_ROOT, type ContractDocument } from "../lib/documents";
 import type { ContractFolder } from "../lib/folders";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
@@ -165,6 +168,7 @@ import { useCommentApplet } from "../components/comments/comment-applet";
 import { RecordApplets } from "../components/shell/record-applets";
 import { RecordTabs } from "../components/shell/record-tabs";
 import type { Applet } from "../components/shell/applets";
+import { ApprovalsCard } from "../components/approvals/approvals-card";
 import { Avatar } from "../components/avatar";
 import { ConfidentialBanner } from "../components/confidential-banner";
 import { ConfidentialToggle } from "../components/confidential-toggle";
@@ -182,7 +186,7 @@ import { Label } from "../components/ui/label";
 
 /** The record's sections (DES-032), in the order the strip draws them.
  * The Overview is the bare address, so it has no segment of its own. */
-const RECORD_TABS = ["fields", "documents"] as const;
+const RECORD_TABS = ["fields", "documents", "approvals"] as const;
 type RecordTabName = "overview" | (typeof RECORD_TABS)[number];
 
 export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
@@ -204,7 +208,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
   // Contributor anyway; the record read alone carries every name the
   // page has to draw.
   const canEdit = isMemberPlus(user.role);
-  const [record, documents, folders, options, registry] = await Promise.all([
+  const [record, documents, folders, approvals, options, registry] = await Promise.all([
     api.GET("/api/v1/contracts/{number}", { params: { path: { number } } }),
     // The record's paper (M11/2). Read by every viewer who reaches the
     // page — a Contributor on the team reads and downloads it too
@@ -222,6 +226,12 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     // tree, because a record's folder set is small and drawing it a
     // level at a time would be a round trip per press.
     api.GET("/api/v1/contracts/{number}/folders", { params: { path: { number } } }),
+    // Who has been asked to sign the record off (M14/3, CTR-012). Read
+    // by every viewer who reaches the page — a Contributor on the team
+    // reads the roster too — and answered 404 for anyone the record
+    // itself is hidden from, which is the same refusal the record read
+    // gives.
+    api.GET("/api/v1/contracts/{number}/approvals", { params: { path: { number } } }),
     canEdit ? api.GET("/api/v1/contracts/options") : undefined,
     // The registry's own Member+ list is the signing-entity picker's
     // source (CTR-011): it is ordered by legal name and already leaves
@@ -238,6 +248,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     !record.data ||
     !documents.data ||
     !folders.data ||
+    !approvals.data ||
     (canEdit && !(options?.data && registry?.data))
   ) {
     throw new Error("The contract could not be read.");
@@ -251,6 +262,10 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
      * empty tree is a fact about the record, not a fallback for a read
      * that did not happen. */
     folders: folders.data.folders,
+    /** Who has been asked to approve the record (M14/3). Required like
+     * the paper: an empty roster is a fact about the record, not a
+     * fallback for a read that did not happen. */
+    approvals: approvals.data.approvals,
     /** Where the next page of paper starts, or null when the first page
      * is all of it (CTR-024). */
     documentsCursor: documents.data.nextCursor,
@@ -317,7 +332,7 @@ export function ContractRecordPage() {
 function ContractRecord() {
   // Which section is on screen (DES-032). The loader has already sent
   // an unknown segment to the Overview, so anything that survives to
-  // here is one of the three.
+  // here is one of the four.
   const tab = (useParams().tab ?? "overview") as RecordTabName;
   const {
     user,
@@ -325,6 +340,7 @@ function ContractRecord() {
     contract,
     documents: contractDocuments,
     folders: contractFolders,
+    approvals: contractApprovals,
     documentsCursor,
     fields,
     customFieldRefs,
@@ -387,6 +403,11 @@ function ContractRecord() {
    * data because every folder write answers the whole set, and the
    * section replaces what it holds without a page re-read. */
   const [tree, setTree] = useState<ContractFolder[]>(contractFolders);
+  /** Who has been asked to sign the record off (M14/3). State rather
+   * than loader data because every approval write answers the whole
+   * roster — an ask adds rows, a cancellation takes one away — and the
+   * section replaces what it holds without a page re-read. */
+  const [approvals, setApprovals] = useState<ContractApproval[]>(contractApprovals);
   /**
    * Which version the doc panel is reading, or none (M12/2).
    *
@@ -814,6 +835,15 @@ function ContractRecord() {
                   />
                 ),
               },
+              {
+                to: `/contracts/${saved.number}/approvals`,
+                label: (
+                  <FormattedMessage
+                    id="contracts.record.tab.approvals"
+                    defaultMessage="Approvals"
+                  />
+                ),
+              },
             ]}
           />
         </>
@@ -876,7 +906,7 @@ function ContractRecord() {
 
               The section tab decides what the main column holds; the
               Team column is not one of the sections and stands beside
-              all three. Who is on a contract is context for reading any
+              all four. Who is on a contract is context for reading any
               part of it, and the DES-028 banner's "Manage team" link is
               a fragment to that card — a link that only resolved on one
               tab would be a link that sometimes goes nowhere. */}
@@ -1310,6 +1340,29 @@ function ContractRecord() {
                   // function across a render.
                   onFiled={setFiled}
                   onFolders={setTree}
+                />
+              )}
+              {/* Who has been asked to sign the record off (M14/3,
+                  CTR-012), in the section the C5 mock draws it in. The
+                  roster is auto-derived: nothing here authors an event,
+                  and the request affordances are the only writes. */}
+              {tab === "approvals" && (
+                <ApprovalsCard
+                  contractNumber={saved.number}
+                  approvals={approvals}
+                  users={users}
+                  // The live roster and the saved row, not the loader's
+                  // copies: putting somebody on the team widens a
+                  // confidential record's audience on the same page,
+                  // and taking the Owner off takes their cancel with
+                  // them.
+                  team={roster}
+                  viewerId={user.id}
+                  viewerRole={user.role}
+                  ownerId={saved.manager?.id ?? null}
+                  isConfidential={saved.isConfidential}
+                  frozen={frozen}
+                  onApprovals={setApprovals}
                 />
               )}
             </div>

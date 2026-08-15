@@ -46,6 +46,7 @@ import {
   Archive,
   ArchiveRestore,
   Building2,
+  Check,
   Clock,
   Download,
   FilePlus2,
@@ -69,15 +70,18 @@ import {
   ShieldOff,
   SquareCheck,
   Star,
+  Stamp,
   Tag,
   Tags,
   Trash2,
+  Undo2,
   Unlink,
   Upload,
   UserCog,
   UserMinus,
   UserPlus,
   Users,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { defineMessage, type IntlShape, type MessageDescriptor } from "react-intl";
@@ -832,6 +836,45 @@ const ARMS: Readonly<Record<string, Arm>> = {
       id: "activity.contract.confidentialityCleared",
       defaultMessage: "{actor} cleared this contract's confidential mark",
     }),
+  },
+  // The sign-off on the record (M14/3, CTR-012). A verb per act, so a
+  // reader can tell an approval from a rejection without opening a
+  // payload — and so an Administrator can filter the audit log on the
+  // one they are looking for.
+  //
+  // Each names the approver, not only the actor. On a request and a
+  // cancellation the two are different people, and on a cancellation
+  // the entry is the only record left that the ask was ever made: the
+  // row itself is deleted.
+  "approval.requested": {
+    icon: Stamp,
+    message: defineMessage({
+      id: "activity.approval.requested",
+      defaultMessage: "{actor} asked {approver} to approve this contract",
+    }),
+    values: (intl, payload) => ({ approver: named(intl, payload, "approverName") }),
+  },
+  "approval.approved": {
+    icon: Check,
+    message: defineMessage({
+      id: "activity.approval.approved",
+      defaultMessage: "{actor} approved this contract",
+    }),
+  },
+  "approval.rejected": {
+    icon: X,
+    message: defineMessage({
+      id: "activity.approval.rejected",
+      defaultMessage: "{actor} rejected this contract",
+    }),
+  },
+  "approval.cancelled": {
+    icon: Undo2,
+    message: defineMessage({
+      id: "activity.approval.cancelled",
+      defaultMessage: "{actor} cancelled the approval request to {approver}",
+    }),
+    values: (intl, payload) => ({ approver: named(intl, payload, "approverName") }),
   },
   "contract.archived": {
     icon: Archive,

@@ -1717,7 +1717,7 @@ describe("the contract record's stage pipeline (M14/2)", () => {
 });
 
 describe("the contract record's section tabs (DES-032)", () => {
-  it("draws the three sections and lands the bare address on the Overview", async () => {
+  it("draws the four sections and lands the bare address on the Overview", async () => {
     const api = recordApi(contractRow());
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42");
@@ -1727,6 +1727,7 @@ describe("the contract record's section tabs (DES-032)", () => {
       "Overview",
       "Fields",
       "Documents",
+      "Approvals",
     ]);
     // The Overview is the bare address, so it must not read as active
     // on its siblings — that is what `end` on the link is for.

@@ -188,6 +188,12 @@ export function stubApi(state: ApiState) {
     if (/^\/api\/v1\/contracts\/\d+\/folders$/.test(call.url.pathname) && call.method === "GET") {
       return json(200, { folders: [] });
     }
+    // And who has been asked to sign it off (M14/3). Empty by default
+    // for the same reason: a record nobody has asked about yet is the
+    // ordinary case, and only the suites about the roster supply one.
+    if (/^\/api\/v1\/contracts\/\d+\/approvals$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { approvals: [] });
+    }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
       return json(200, state.onboarding ?? { completed: true, emailConfigured: true });
     }

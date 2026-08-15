@@ -2150,6 +2150,83 @@ Anything reading the record's sub-bar by text now finds stage names there as wel
 
 `designs/contracts.pen` is the reference: `S2 StagePipe` in every C-frame, C2 and C22 being the clearest.
 
+## DES-035: The record's Approvals section — the roster table and its row actions (extends DES-032, DES-020, DES-005)
+
+- **Status:** Accepted
+- **Date:** 2026-08-16
+
+### Context
+
+CTR-012 gave contracts manual approvals: a Member+ user asks named colleagues to sign a record off, each of them answers with an approval or a rejection plus an optional note, and the roster is what the record shows. Grill-plan section H is the surface — the Events card, renamed "Approvals & signing", auto-derived rows only, decision pills per DES-005 (H.H2, H.C4, H.X1, H.H4).
+
+`designs/contracts.pen` draws it as **C5 — Contract detail · Approvals**: a toolbar with a tally on the left and `Apply group` plus `Add approver` on the right, then a five-column table — Approver, Source, Decision, Note, Decided — with an avatar, a name, and a **job title** in the Approver cell, and two informational note rows underneath.
+
+Four things the mock draws do not exist in the product being built, and one thing the product needs is not drawn:
+
+1. **There is no job title.** OpenLaw records a display name, an email, and a role, and CTR-004 already settled that a person on a contract is drawn "name only, no job-title suffix". The mock's secondary line has no datum behind it.
+2. **The roster must say who asked.** CTR-012 records `requested_by`, and a reader of the record has to be able to answer "who asked for this" without opening the feed. The mock has no column for it.
+3. **The mock draws no row action at all** — no way for the named approver to answer, and no way for anybody to withdraw an ask. Those are the two things the surface exists for.
+4. **The card holds one kind of row today.** Envelope rows arrive with M15 (CTR-013) and confirmed-renewal rows with M16 (CTR-006).
+5. **Both note rows describe behaviour that is not built here**: the soft gate, and the group snapshot.
+
+DES-032 also enumerated the record's sections as three — Overview, Fields, Documents — and this is a fourth.
+
+### Decision
+
+**1. Approvals is a fourth section on the DES-032 strip, at `/contracts/42/approvals`.** It follows Documents, as the C5 mock's own tab order does. This is not a new strip and does not touch DES-032's chrome ceiling: the strip already exists, and a section is a link inside it. The enumeration in DES-032 clause 1 is extended, not amended — a record may divide its body into named sections, and this is one more.
+
+**2. The section is one self-contained card, drawn as the Documents section is.** The `bg-raised` card with a `bg-section-header` head; the heading, the DES-020 count badge, the write micro-state, and the section's own control in that head; the table under it; and a plain empty line when there is nothing to draw. One section anatomy on the record, so a reader who has learnt the Documents section has learnt this one.
+
+**3. The heading is "Approvals", not the mock's "Approvals & signing".** The card holds approval rows alone until M15 puts envelopes in it. A heading naming two things while showing one reads as a surface that is broken rather than as one that is early. The name changes when the rows do.
+
+**4. The mock's toolbar tally moves into the card head, and a state nobody is in is left out.** "2 approved · 1 pending" is drawn beside the count badge at `text-sm text-muted`, one message per state, with the separator drawn rather than written into a message. A zero is omitted rather than printed: three counts of which two are zero is noise on a line that has to stay readable beside a heading.
+
+**5. The columns are the mock's five, and the Approver cell's secondary line is the requester.** Approver | Source | Decision | Note | Decided, with a trailing action cell. The secondary line under the approver's name reads "Requested by {name}" where the mock drew a job title — the drawn anatomy keeps its shape, and the line says the thing the record actually knows. A sixth column for the requester was rejected: the roster is already five columns wide on a section that shares its page with the Team card, and the requester is a fact **about the ask**, which is what the Approver cell is.
+
+**6. Source says the group's name, or "Added manually".** The mock's own two readings. The column stays drawn while every row is manual, because the datum is on the row and the group case lands in the same milestone.
+
+**7. Decision pills take the DES-005 paired families, keyed to the status** (H.X1): pending is `assigned`, approved is `success`, rejected is `danger`. Pending is `assigned` on purpose — it is the family `STAGE_PILL` already gives the approval **stage**, so the pipeline in the sub-bar and the roster below it say the same thing about the same contract in the same colour. The pill is drawn exactly as the sub-bar's status pill and the pipeline's marker are: `rounded-pill px-2 py-0.5 text-xs font-medium`.
+
+**8. An undecided row prints an em dash in Note and in Decided, from one message.** Two cells with nothing to say, saying it the same way.
+
+**9. Row actions live in one overflow menu, and every item is absent rather than disabled.** The menu is the shipped `DropdownMenu` on a `ghost` `icon` Button, labelled "Actions for {name}" — DES-025's pattern, for its reason. It holds **Approve** and **Reject** for the named approver of a pending row, and **Cancel request** for its requester, the contract's Owner, and an Administrator. A viewer who may do neither gets no trigger at all: a greyed-out control on somebody else's sign-off is an invitation to ask why, and the answer is not a permissions lesson.
+
+**10. Deciding opens a dialog; cancelling does not.** A decision is the decision **and** an optional note, committed together — the compound edit DES-017 carves out of the inline-commit rule. The dialog says the decision is final before it asks for anything, and its confirm is the verb ("Approve" / "Reject") rather than "Save", because a decision that cannot be taken back should not be pressed by reflex. Rejecting takes the `danger` button; approving takes the primary one. Cancelling collects nothing and destroys nothing that matters — the ask goes, the activity entry keeps it (CTR-012), and asking again is one dialog away — so it takes no confirmation, exactly as archiving a document takes none.
+
+**11. Asking is one dialog and a multi-select.** Requests run in parallel, so naming three people is one act and three requests; collecting them one at a time would be three dialogs for one decision. The picker offers Member+ only, leaves out anybody who already has a pending request, and on a confidential record offers only its audience — the same rule the seam applies, mirrored here for the reason the record's own confidentiality control gives.
+
+**12. A refusal is printed once.** A write raised from a dialog reports in that dialog's form, where the reader's attention already is; a write with no dialog — the row's cancel — reports in the card head's micro-state. The same sentence in both places reads as two failures.
+
+**13. The mock's two note rows are not drawn.** Each describes behaviour that lands in a later slice — the soft gate, and the group snapshot. A surface that explains a rule it does not yet apply is a surface that is wrong.
+
+### Rationale
+
+The mock is a good drawing of a roster and a poor drawing of a workflow: it shows the state and offers no way to change it. Everything decided above that is not in the mock is one of the two acts CTR-012 is about — answering an ask, and withdrawing one — and both had to be put somewhere.
+
+The job-title swap is the smallest honest change. The cell already reserves two lines and the eye already reads the second as "something about this person"; putting the requester there costs no width on a table that has none to spare, and it is the datum the roster is missing.
+
+Pending being `assigned` rather than `warning` is the one colour choice worth stating. A pending approval is not a problem — it is a thing waiting on a named human, which is exactly what DES-018 spends the `assigned` family on, and it is what the stage pipeline beside it is already drawing.
+
+### Alternatives considered
+
+- **A sixth "Requested by" column.** Rejected: six columns plus an action cell on a section sharing its page with the Team card, to carry a fact that belongs to the ask the first cell is already about.
+- **Approve and Reject as two inline buttons on the row.** Rejected: two labelled buttons on a 13px row crowd out the Note column, and the menu is where the record's other row actions already live.
+- **A confirmation on cancel.** Rejected: it withdraws an ask, and the ask can be made again in one dialog. Confirmations spent on recoverable acts are confirmations nobody reads on the unrecoverable ones.
+- **Keeping the mock's "Approvals & signing" heading now.** Rejected: naming M15's rows a milestone before they exist.
+- **A separate dialog per approver.** Rejected: CTR-012's whole point is that approvals are parallel, and the seam creates the set or refuses the set.
+- **Drawing the mock's two note rows now.** Rejected: they describe the soft gate and the group snapshot, neither of which this surface does yet.
+- **Putting the roster on the Overview as a card.** Rejected: the Overview is the record's own columns, the C5 mock puts approvals behind their own tab, and DES-032 exists precisely so a job the record does one at a time gets an address.
+
+### Consequences
+
+`ApprovalsCard` is the component; the contract record's `approvals` section is the reference mount. It takes the roster, the people the record's pickers already hold, and the viewer's standing, and it answers the whole roster back on every write.
+
+The record now has four sections. `RECORD_TABS` grows by one, and the loader reads the roster beside the record, its paper, and its folders.
+
+No new tokens. The pills reuse the DES-005 families already shipped, the card reuses the Documents section's own surfaces, and the menu reuses DES-025's trigger.
+
+`designs/contracts.pen` frame **C5 — Contract detail · Approvals** is the reference, with clauses 1, 3, 5, 9, 10, and 13 above recording where the build departs from it and why.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -2188,3 +2265,4 @@ Anything reading the record's sub-bar by text now finds stage names there as wel
 | DES-032 | The record-page section strip — routed tabs under the breadcrumb (extends DES-016, DES-030)                                                                          | Accepted |
 | DES-033 | The folder tree and the record-scoped batch drop (extends DES-032, DES-025)                                                                                          | Accepted |
 | DES-034 | The stage pipeline — six fixed steps beside the status pill (extends DES-005, DES-032)                                                                               | Accepted |
+| DES-035 | The record's Approvals section — the roster table and its row actions (extends DES-032, DES-020, DES-005)                                                            | Accepted |
