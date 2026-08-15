@@ -1190,7 +1190,10 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // The live templates and their membership in one read (CTR-012).
         // An archived group is absent, which is the whole of what
         // archiving one does: it leaves the apply picker and disturbs
-        // nothing it already produced.
+        // nothing it already produced. The members ride in display-name
+        // order — the order the apply itself asks in — so the dialog's
+        // preview names people in the order the roster will then draw
+        // them, rather than in whatever order the join happened to give.
         app.db
           .select({
             id: approverGroups.id,
@@ -1199,8 +1202,14 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           })
           .from(approverGroups)
           .leftJoin(approverGroupMembers, eq(approverGroupMembers.groupId, approverGroups.id))
+          .leftJoin(users, eq(users.id, approverGroupMembers.userId))
           .where(isNull(approverGroups.archivedAt))
-          .orderBy(asc(approverGroups.name), asc(approverGroups.createdAt)),
+          .orderBy(
+            asc(approverGroups.name),
+            asc(approverGroups.createdAt),
+            asc(users.displayName),
+            asc(users.id),
+          ),
       ]);
       // A left join, so a group with no members is still offered — the
       // apply refuses it by name, which is a better answer than a

@@ -2238,7 +2238,7 @@ No new tokens. The pills reuse the DES-005 families already shipped, the card re
 
 `designs/contracts.pen` frame **C5 — Contract detail · Approvals** is the reference, with clauses 1, 3, 5, 9, 10, 13, 14, and 17 above recording where the build departs from it and why.
 
-The apply picker needs the live approver groups on the record, so the Member+ contract-options answer carries them — the names alone, with the ids of the people each would ask. Managing them stays Administrator-only (SET-002); this is the list an apply reads.
+The apply picker needs the live approver groups on the record, so the Member+ contract-options answer carries them — the names alone, with the ids of the people each would ask, in the display-name order the apply asks in, so the clause 16 preview names people in the order the roster will then draw them. Managing them stays Administrator-only (SET-002); this is the list an apply reads.
 
 ## Index of decisions
 

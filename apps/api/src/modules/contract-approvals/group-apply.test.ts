@@ -511,7 +511,10 @@ describe("the apply picker's own list", () => {
     const found = offered.find((group) => group.id === live);
     expect(found, "the live template").toBeDefined();
     expect(found!.name).toBe("Picker live template");
-    expect(found!.memberIds.sort()).toEqual([idOf(FIRST), idOf(SECOND)].sort());
+    // Display-name order — Marcus before Sarah — because that is the
+    // order the apply asks in, and the dialog's preview reads this
+    // list straight into its sentence.
+    expect(found!.memberIds).toEqual([idOf(SECOND), idOf(FIRST)]);
     expect(offered.some((group) => group.id === retired)).toBe(false);
   });
 
