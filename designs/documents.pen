@@ -116,7 +116,8 @@
                           "fill": "$text-subtle",
                           "content": "Search",
                           "fontFamily": "Inter",
-                          "fontSize": 13
+                          "fontSize": 13,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -139,7 +140,8 @@
                           "fill": "$text-subtle",
                           "content": "/",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -408,7 +410,8 @@
                       "fill": "$text-subtle",
                       "content": "Search documents",
                       "fontFamily": "Inter",
-                      "fontSize": 13
+                      "fontSize": 13,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -554,7 +557,8 @@
                           "fill": "$text-subtle",
                           "content": "C-42 · Contract",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "rectangle",
@@ -572,7 +576,8 @@
                           "fill": "$text-subtle",
                           "content": "2h ago",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -639,7 +644,8 @@
                           "fill": "$text-subtle",
                           "content": "C-51 · Contract",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "rectangle",
@@ -657,7 +663,8 @@
                           "fill": "$text-subtle",
                           "content": "5h ago",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -747,7 +754,8 @@
                           "fill": "$text-subtle",
                           "content": "C-33 · Contract",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "rectangle",
@@ -765,7 +773,8 @@
                           "fill": "$text-subtle",
                           "content": "Yesterday",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -832,7 +841,8 @@
                           "fill": "$text-subtle",
                           "content": "M-12 · Matter",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "rectangle",
@@ -850,7 +860,8 @@
                           "fill": "$text-subtle",
                           "content": "Yesterday",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -917,7 +928,8 @@
                           "fill": "$text-subtle",
                           "content": "Aldgate Holdings Ltd · Entity",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "rectangle",
@@ -935,7 +947,8 @@
                           "fill": "$text-subtle",
                           "content": "Aug 5",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -1151,7 +1164,8 @@
                   "fill": "$text-subtle",
                   "content": "128 documents",
                   "fontFamily": "Inter",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -1374,7 +1388,8 @@
                           "fill": "$text-muted",
                           "content": "C-42 · Contract",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -1424,7 +1439,8 @@
                           "fill": "$text-muted",
                           "content": "1.4 MB",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -1488,7 +1504,8 @@
                           "fill": "$text-muted",
                           "content": "2h ago",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -1578,7 +1595,8 @@
                           "fill": "$text-muted",
                           "content": "C-51 · Contract",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -1628,7 +1646,8 @@
                           "fill": "$text-muted",
                           "content": "86 KB",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -1692,7 +1711,8 @@
                           "fill": "$text-muted",
                           "content": "5h ago",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -1805,7 +1825,8 @@
                           "fill": "$text-muted",
                           "content": "C-33 · Contract",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -1855,7 +1876,8 @@
                           "fill": "$text-muted",
                           "content": "6.8 MB",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -1929,7 +1951,8 @@
                           "fill": "$text-muted",
                           "content": "Yesterday",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -2019,7 +2042,8 @@
                           "fill": "$text-muted",
                           "content": "M-12 · Matter",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -2037,7 +2061,8 @@
                           "fill": "$text-subtle",
                           "content": "—",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -2055,7 +2080,8 @@
                           "fill": "$text-muted",
                           "content": "214 KB",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -2129,7 +2155,8 @@
                           "fill": "$text-muted",
                           "content": "Yesterday",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -2219,7 +2246,8 @@
                           "fill": "$text-muted",
                           "content": "C-42 · Contract",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -2269,7 +2297,8 @@
                           "fill": "$text-muted",
                           "content": "190 KB",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -2333,7 +2362,8 @@
                           "fill": "$text-muted",
                           "content": "Aug 4",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -2423,7 +2453,8 @@
                           "fill": "$text-muted",
                           "content": "Aldgate Holdings Ltd · Entity",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -2441,7 +2472,8 @@
                           "fill": "$text-subtle",
                           "content": "—",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -2459,7 +2491,8 @@
                           "fill": "$text-muted",
                           "content": "9.1 MB",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -2523,7 +2556,8 @@
                           "fill": "$text-muted",
                           "content": "Jul 30",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -2648,7 +2682,8 @@
                           "fill": "$text-muted",
                           "content": "M-9 · Matter",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -2698,7 +2733,8 @@
                           "fill": "$text-muted",
                           "content": "128 KB",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -2762,7 +2798,8 @@
                           "fill": "$text-muted",
                           "content": "Jul 28",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -2852,7 +2889,8 @@
                           "fill": "$text-muted",
                           "content": "C-29 · Contract",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -2902,7 +2940,8 @@
                           "fill": "$text-muted",
                           "content": "342 KB",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -2976,7 +3015,8 @@
                           "fill": "$text-muted",
                           "content": "Jul 24",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -3103,7 +3143,8 @@
                           "fill": "$text-subtle",
                           "content": "Search",
                           "fontFamily": "Inter",
-                          "fontSize": 13
+                          "fontSize": 13,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -3126,7 +3167,8 @@
                           "fill": "$text-subtle",
                           "content": "/",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -3326,7 +3368,8 @@
                   "fill": "$text-link",
                   "content": "Documents",
                   "fontFamily": "Inter",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "icon",
@@ -3616,7 +3659,8 @@
                           "fill": "$text-muted",
                           "content": "MSA_Meridian_executed.docx",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -3678,7 +3722,8 @@
                           "fill": "$text-muted",
                           "content": "Page 1 of 24",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "rectangle",
@@ -3809,7 +3854,8 @@
                           "content": "This Master Services Agreement (the \"Agreement\") is entered into as of 8 August 2026 (the \"Effective Date\") by and between Aldgate Holdings Ltd, a company incorporated in England and Wales (\"Client\"), and Meridian Systems Inc., a Delaware corporation (\"Provider\").",
                           "lineHeight": 1.6,
                           "fontFamily": "Tinos",
-                          "fontSize": 13
+                          "fontSize": 13,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -3831,7 +3877,8 @@
                           "content": "1.1 \"Services\" means the professional services described in one or more statements of work executed by the parties and governed by the terms of this Agreement.",
                           "lineHeight": 1.6,
                           "fontFamily": "Tinos",
-                          "fontSize": 13
+                          "fontSize": 13,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "frame",
@@ -3850,7 +3897,8 @@
                               "content": "1.2 \"Deliverables\" means the work product identified in an applicable statement of work to be delivered to Client, excluding Provider background technology.",
                               "lineHeight": 1.6,
                               "fontFamily": "Tinos",
-                              "fontSize": 13
+                              "fontSize": 13,
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "frame",
@@ -3897,7 +3945,8 @@
                           "content": "2.1 This Agreement commences on the Effective Date and continues for an initial term of twenty-four (24) months, renewing automatically for successive twelve (12) month periods unless either party gives written notice of non-renewal at least sixty (60) days before the end of the then-current term.",
                           "lineHeight": 1.6,
                           "fontFamily": "Tinos",
-                          "fontSize": 13
+                          "fontSize": 13,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -3983,7 +4032,8 @@
                                   "fill": "$text-subtle",
                                   "content": "Owner",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -4041,7 +4091,8 @@
                                   "fill": "$text-subtle",
                                   "content": "Folder",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -4070,7 +4121,8 @@
                                   "fill": "$text-primary",
                                   "content": "Executed",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -4096,7 +4148,8 @@
                                   "fill": "$text-subtle",
                                   "content": "Format",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -4115,7 +4168,8 @@
                                   "fill": "$text-primary",
                                   "content": "DOCX",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -4141,7 +4195,8 @@
                                   "fill": "$text-subtle",
                                   "content": "Size",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -4160,7 +4215,8 @@
                                   "fill": "$text-primary",
                                   "content": "1.4 MB",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -4186,7 +4242,8 @@
                                   "fill": "$text-subtle",
                                   "content": "Uploaded by",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -4218,7 +4275,8 @@
                                   "fill": "$text-primary",
                                   "content": "Blair Wentworth",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -4244,7 +4302,8 @@
                                   "fill": "$text-subtle",
                                   "content": "Created",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -4263,7 +4322,8 @@
                                   "fill": "$text-primary",
                                   "content": "May 3",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -4289,7 +4349,8 @@
                                   "fill": "$text-subtle",
                                   "content": "Modified",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -4308,7 +4369,8 @@
                                   "fill": "$text-primary",
                                   "content": "2h ago",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -4334,7 +4396,8 @@
                                   "fill": "$text-subtle",
                                   "content": "Notes",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -4355,7 +4418,8 @@
                                   "width": "fill_container",
                                   "content": "Primary document on C-42; executed via DocuSign.",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -4552,7 +4616,8 @@
                               "width": "fill_container",
                               "content": "Executed copy from DocuSign",
                               "fontFamily": "Inter",
-                              "fontSize": 12
+                              "fontSize": 12,
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "frame",
@@ -4581,7 +4646,8 @@
                                   "fill": "$text-subtle",
                                   "content": "Aug 8",
                                   "fontFamily": "Inter",
-                                  "fontSize": 11
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -4686,7 +4752,8 @@
                               "width": "fill_container",
                               "content": "Final position on liability cap",
                               "fontFamily": "Inter",
-                              "fontSize": 12
+                              "fontSize": 12,
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "frame",
@@ -4715,7 +4782,8 @@
                                   "fill": "$text-subtle",
                                   "content": "Aug 1",
                                   "fontFamily": "Inter",
-                                  "fontSize": 11
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -4820,7 +4888,8 @@
                               "width": "fill_container",
                               "content": "Compared v2 to v1",
                               "fontFamily": "Inter",
-                              "fontSize": 12
+                              "fontSize": 12,
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "frame",
@@ -4859,7 +4928,8 @@
                                   "fill": "$text-subtle",
                                   "content": "Jun 2",
                                   "fontFamily": "Inter",
-                                  "fontSize": 11
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -4964,7 +5034,8 @@
                               "width": "fill_container",
                               "content": "Counterparty first pass",
                               "fontFamily": "Inter",
-                              "fontSize": 12
+                              "fontSize": 12,
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "frame",
@@ -4993,7 +5064,8 @@
                                   "fill": "$text-subtle",
                                   "content": "Jun 2",
                                   "fontFamily": "Inter",
-                                  "fontSize": 11
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -5098,7 +5170,8 @@
                               "width": "fill_container",
                               "content": "From NDA playbook base",
                               "fontFamily": "Inter",
-                              "fontSize": 12
+                              "fontSize": 12,
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "frame",
@@ -5127,7 +5200,8 @@
                                   "fill": "$text-subtle",
                                   "content": "May 3",
                                   "fontFamily": "Inter",
-                                  "fontSize": 11
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -5268,7 +5342,8 @@
                           "fill": "$text-subtle",
                           "content": "Search",
                           "fontFamily": "Inter",
-                          "fontSize": 13
+                          "fontSize": 13,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -5291,7 +5366,8 @@
                           "fill": "$text-subtle",
                           "content": "/",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -5491,7 +5567,8 @@
                   "fill": "$text-link",
                   "content": "Documents",
                   "fontFamily": "Inter",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "icon",
@@ -5510,7 +5587,8 @@
                   "fill": "$text-link",
                   "content": "Master services agreement — Meridian Systems",
                   "fontFamily": "Inter",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "icon",
@@ -5825,7 +5903,8 @@
                           "width": "fill_container",
                           "content": "Notice period 30 → 60 days",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -5897,7 +5976,8 @@
                           "width": "fill_container",
                           "content": "Added SOW change-control clause",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -5969,7 +6049,8 @@
                           "width": "fill_container",
                           "content": "Removed unilateral price uplift",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -6041,7 +6122,8 @@
                           "width": "fill_container",
                           "content": "Payment terms Net 30 → Net 45",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -6115,7 +6197,8 @@
                           "width": "fill_container",
                           "content": "Liability cap — 2× fees",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -6187,7 +6270,8 @@
                           "width": "fill_container",
                           "content": "Removed consequential-loss carve-out",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -6259,7 +6343,8 @@
                           "width": "fill_container",
                           "content": "Governing law NY → England & Wales",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -6331,7 +6416,8 @@
                           "width": "fill_container",
                           "content": "Added escalation before arbitration",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -6403,7 +6489,8 @@
                           "width": "fill_container",
                           "content": "Removed auto-assignment right",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -6475,7 +6562,8 @@
                           "width": "fill_container",
                           "content": "Added data-protection annex ref",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -6663,7 +6751,8 @@
                           "fill": "$text-muted",
                           "content": "Page 14 of 24",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -6717,7 +6806,8 @@
                           "content": "8.1 Nothing in this Agreement limits or excludes either party's liability for death or personal injury caused by negligence, fraud, or any other liability that cannot be limited by law.",
                           "lineHeight": 1.6,
                           "fontFamily": "Tinos",
-                          "fontSize": 13
+                          "fontSize": 13,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -6729,7 +6819,8 @@
                           "content": "8.2 Subject to clause 8.1, neither party shall be liable for any indirect or consequential loss arising under or in connection with this Agreement.",
                           "lineHeight": 1.6,
                           "fontFamily": "Tinos",
-                          "fontSize": 13
+                          "fontSize": 13,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "frame",
@@ -6744,7 +6835,8 @@
                               "fill": "#1F2328",
                               "content": "8.3 Provider's aggregate liability under this Agreement shall not exceed",
                               "fontFamily": "Tinos",
-                              "fontSize": 13
+                              "fontSize": 13,
+                              "fontWeight": "normal"
                             }
                           ]
                         },
@@ -6774,7 +6866,8 @@
                                   "fill": "#CF222E",
                                   "content": "the fees paid",
                                   "fontFamily": "Tinos",
-                                  "fontSize": 13
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -6796,7 +6889,8 @@
                                   "fill": "#1F883D",
                                   "content": "an amount equal to two (2) times the fees paid",
                                   "fontFamily": "Tinos",
-                                  "fontSize": 13
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -6807,7 +6901,8 @@
                               "fill": "#1F2328",
                               "content": "by Client",
                               "fontFamily": "Tinos",
-                              "fontSize": 13
+                              "fontSize": 13,
+                              "fontWeight": "normal"
                             }
                           ]
                         },
@@ -6824,7 +6919,8 @@
                               "fill": "#1F2328",
                               "content": "in the twelve (12) months preceding the event giving rise to the claim.",
                               "fontFamily": "Tinos",
-                              "fontSize": 13
+                              "fontSize": 13,
+                              "fontWeight": "normal"
                             }
                           ]
                         },
@@ -6853,7 +6949,8 @@
                               "fill": "#1F2328",
                               "content": "9.1 This Agreement is governed by the laws of",
                               "fontFamily": "Tinos",
-                              "fontSize": 13
+                              "fontSize": 13,
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "frame",
@@ -6873,7 +6970,8 @@
                                   "fill": "#CF222E",
                                   "content": "the State of New York",
                                   "fontFamily": "Tinos",
-                                  "fontSize": 13
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -6905,7 +7003,8 @@
                                   "fill": "#1F883D",
                                   "content": "England and Wales",
                                   "fontFamily": "Tinos",
-                                  "fontSize": 13
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -6916,7 +7015,8 @@
                               "fill": "#1F2328",
                               "content": ", and the parties submit to the exclusive",
                               "fontFamily": "Tinos",
-                              "fontSize": 13
+                              "fontSize": 13,
+                              "fontWeight": "normal"
                             }
                           ]
                         },
@@ -6933,7 +7033,8 @@
                               "fill": "#1F2328",
                               "content": "jurisdiction of its courts in respect of any dispute arising under it.",
                               "fontFamily": "Tinos",
-                              "fontSize": 13
+                              "fontSize": 13,
+                              "fontWeight": "normal"
                             }
                           ]
                         }
@@ -7503,7 +7604,8 @@
                           "fill": "$text-subtle",
                           "content": "C-42 · Contract",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "rectangle",
@@ -7521,7 +7623,8 @@
                           "fill": "$text-subtle",
                           "content": "2h ago",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -7588,7 +7691,8 @@
                           "fill": "$text-subtle",
                           "content": "C-51 · Contract",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "rectangle",
@@ -7606,7 +7710,8 @@
                           "fill": "$text-subtle",
                           "content": "5h ago",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -7696,7 +7801,8 @@
                           "fill": "$text-subtle",
                           "content": "C-33 · Contract",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "rectangle",
@@ -7714,7 +7820,8 @@
                           "fill": "$text-subtle",
                           "content": "Yesterday",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -7781,7 +7888,8 @@
                           "fill": "$text-subtle",
                           "content": "M-12 · Matter",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "rectangle",
@@ -7799,7 +7907,8 @@
                           "fill": "$text-subtle",
                           "content": "Yesterday",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -7866,7 +7975,8 @@
                           "fill": "$text-subtle",
                           "content": "Aldgate Holdings Ltd · Entity",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "rectangle",
@@ -7884,7 +7994,8 @@
                           "fill": "$text-subtle",
                           "content": "Aug 5",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -10074,7 +10185,8 @@
                           "fill": "$text-subtle",
                           "content": "Folder structure is kept",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -10131,7 +10243,8 @@
                               "fill": "$text-primary",
                               "content": "Meridian_MSA_pricing_update.docx",
                               "fontFamily": "Inter",
-                              "fontSize": 13
+                              "fontSize": 13,
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "frame",
@@ -10147,7 +10260,8 @@
                               "fill": "$text-subtle",
                               "content": "96 KB",
                               "fontFamily": "Inter",
-                              "fontSize": 12
+                              "fontSize": 12,
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "icon",
@@ -10206,7 +10320,8 @@
                               "fill": "$text-primary",
                               "content": "Meridian_signature_page.pdf",
                               "fontFamily": "Inter",
-                              "fontSize": 13
+                              "fontSize": 13,
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "frame",
@@ -10222,7 +10337,8 @@
                               "fill": "$text-subtle",
                               "content": "1.2 MB",
                               "fontFamily": "Inter",
-                              "fontSize": 12
+                              "fontSize": 12,
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "icon",
@@ -10419,7 +10535,8 @@
                                   "fill": "$text-primary",
                                   "content": "C-42 · MSA — Meridian Systems",
                                   "fontFamily": "Inter",
-                                  "fontSize": 13
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -10496,7 +10613,8 @@
                                   "fill": "$text-primary",
                                   "content": "Executed",
                                   "fontFamily": "Inter",
-                                  "fontSize": 13
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -11148,7 +11266,8 @@
                           "fill": "$text-subtle",
                           "content": "C-42 · Contract",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "rectangle",
@@ -11166,7 +11285,8 @@
                           "fill": "$text-subtle",
                           "content": "2h ago",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -11233,7 +11353,8 @@
                           "fill": "$text-subtle",
                           "content": "C-51 · Contract",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "rectangle",
@@ -11251,7 +11372,8 @@
                           "fill": "$text-subtle",
                           "content": "5h ago",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -11341,7 +11463,8 @@
                           "fill": "$text-subtle",
                           "content": "C-33 · Contract",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "rectangle",
@@ -11359,7 +11482,8 @@
                           "fill": "$text-subtle",
                           "content": "Yesterday",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -11426,7 +11550,8 @@
                           "fill": "$text-subtle",
                           "content": "M-12 · Matter",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "rectangle",
@@ -11444,7 +11569,8 @@
                           "fill": "$text-subtle",
                           "content": "Yesterday",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -11511,7 +11637,8 @@
                           "fill": "$text-subtle",
                           "content": "Aldgate Holdings Ltd · Entity",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "rectangle",
@@ -11529,7 +11656,8 @@
                           "fill": "$text-subtle",
                           "content": "Aug 5",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -13736,7 +13864,8 @@
                                   "fill": "$text-primary",
                                   "content": "C-42 · MSA — Meridian Systems",
                                   "fontFamily": "Inter",
-                                  "fontSize": 13
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -13837,7 +13966,8 @@
                                   "fill": "$text-subtle",
                                   "content": "3 folders · 128 files",
                                   "fontFamily": "Inter",
-                                  "fontSize": 11
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -13881,7 +14011,8 @@
                                   "fill": "$text-primary",
                                   "content": "Executed",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 },
                                 {
                                   "type": "frame",
@@ -13897,7 +14028,8 @@
                                   "fill": "$text-subtle",
                                   "content": "12 files",
                                   "fontFamily": "Inter",
-                                  "fontSize": 11
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -13941,7 +14073,8 @@
                                   "fill": "$text-primary",
                                   "content": "MSA_2019_signed.pdf",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 },
                                 {
                                   "type": "frame",
@@ -13980,7 +14113,8 @@
                                   "fill": "$text-subtle",
                                   "content": "4.2 MB",
                                   "fontFamily": "Inter",
-                                  "fontSize": 11
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -14024,7 +14158,8 @@
                                   "fill": "$text-primary",
                                   "content": "SOW1_2020_signed.pdf",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 },
                                 {
                                   "type": "frame",
@@ -14063,7 +14198,8 @@
                                   "fill": "$text-subtle",
                                   "content": "2.9 MB",
                                   "fontFamily": "Inter",
-                                  "fontSize": 11
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -14107,7 +14243,8 @@
                                   "fill": "$text-primary",
                                   "content": "Redlines",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 },
                                 {
                                   "type": "frame",
@@ -14123,7 +14260,8 @@
                                   "fill": "$text-subtle",
                                   "content": "34 files",
                                   "fontFamily": "Inter",
-                                  "fontSize": 11
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -14167,7 +14305,8 @@
                                   "fill": "$text-primary",
                                   "content": "2024",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 },
                                 {
                                   "type": "frame",
@@ -14183,7 +14322,8 @@
                                   "fill": "$text-subtle",
                                   "content": "18 files",
                                   "fontFamily": "Inter",
-                                  "fontSize": 11
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -14227,7 +14367,8 @@
                                   "fill": "$text-primary",
                                   "content": "Correspondence",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 },
                                 {
                                   "type": "frame",
@@ -14243,7 +14384,8 @@
                                   "fill": "$text-subtle",
                                   "content": "82 files",
                                   "fontFamily": "Inter",
-                                  "fontSize": 11
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -14277,7 +14419,8 @@
                                   "fill": "$text-subtle",
                                   "content": "…and 126 more files",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -14318,7 +14461,8 @@
                           "width": "fill_container",
                           "content": "96 scanned PDFs detected. OCR runs in the background after import.",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -14515,7 +14659,8 @@
                           "fill": "$text-subtle",
                           "content": "Search",
                           "fontFamily": "Inter",
-                          "fontSize": 13
+                          "fontSize": 13,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -14538,7 +14683,8 @@
                           "fill": "$text-subtle",
                           "content": "/",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -14738,7 +14884,8 @@
                   "fill": "$text-link",
                   "content": "Documents",
                   "fontFamily": "Inter",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "icon",
@@ -14968,7 +15115,8 @@
                           "fill": "$text-muted",
                           "content": "RE_delivery_dispute_June.msg",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -15139,7 +15287,8 @@
                                   "width": "fill_container",
                                   "content": "Tom Alvarez <t.alvarez@brightline.com>",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -15177,7 +15326,8 @@
                                   "width": "fill_container",
                                   "content": "legal@aldgate.co.uk",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -15215,7 +15365,8 @@
                                   "width": "fill_container",
                                   "content": "Sarah Chen <s.chen@aldgate.co.uk>",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -15253,7 +15404,8 @@
                                   "width": "fill_container",
                                   "content": "Aug 7, 2026, 4:12 PM",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -15278,7 +15430,8 @@
                               "fill": "$text-primary",
                               "content": "Sarah,",
                               "fontFamily": "Inter",
-                              "fontSize": 13
+                              "fontSize": 13,
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "text",
@@ -15290,7 +15443,8 @@
                               "content": "Following our call, attaching the June delivery log and the warehouse photos taken on receipt. Sixteen pallets show water damage consistent with transit exposure, not storage.",
                               "lineHeight": 1.6,
                               "fontFamily": "Inter",
-                              "fontSize": 13
+                              "fontSize": 13,
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "text",
@@ -15302,7 +15456,8 @@
                               "content": "Our position remains that clause 6.2 of the carriage terms places risk with the carrier until signed receipt. We expect a substantive response on the claim by 15 August, failing which we will refer the matter to our insurers.",
                               "lineHeight": 1.6,
                               "fontFamily": "Inter",
-                              "fontSize": 13
+                              "fontSize": 13,
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "text",
@@ -15311,7 +15466,8 @@
                               "fill": "$text-primary",
                               "content": "Regards,",
                               "fontFamily": "Inter",
-                              "fontSize": 13
+                              "fontSize": 13,
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "text",
@@ -15320,7 +15476,8 @@
                               "fill": "$text-muted",
                               "content": "Tom Alvarez · Commercial Director, Brightline Logistics",
                               "fontFamily": "Inter",
-                              "fontSize": 13
+                              "fontSize": 13,
+                              "fontWeight": "normal"
                             }
                           ]
                         },
@@ -15397,7 +15554,8 @@
                                       "fill": "$text-subtle",
                                       "content": "1.1 MB",
                                       "fontFamily": "Inter",
-                                      "fontSize": 11
+                                      "fontSize": 11,
+                                      "fontWeight": "normal"
                                     }
                                   ]
                                 },
@@ -15442,7 +15600,8 @@
                                       "fill": "$text-subtle",
                                       "content": "8.4 MB",
                                       "fontFamily": "Inter",
-                                      "fontSize": 11
+                                      "fontSize": 11,
+                                      "fontWeight": "normal"
                                     }
                                   ]
                                 }
@@ -15534,7 +15693,8 @@
                                   "fill": "$text-subtle",
                                   "content": "Owner",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -15592,7 +15752,8 @@
                                   "fill": "$text-subtle",
                                   "content": "Folder",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -15621,7 +15782,8 @@
                                   "fill": "$text-primary",
                                   "content": "Correspondence",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -15647,7 +15809,8 @@
                                   "fill": "$text-subtle",
                                   "content": "Format",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -15666,7 +15829,8 @@
                                   "fill": "$text-primary",
                                   "content": "MSG",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -15692,7 +15856,8 @@
                                   "fill": "$text-subtle",
                                   "content": "Size",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -15711,7 +15876,8 @@
                                   "fill": "$text-primary",
                                   "content": "214 KB",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -15737,7 +15903,8 @@
                                   "fill": "$text-subtle",
                                   "content": "Uploaded by",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -15779,7 +15946,8 @@
                                   "fill": "$text-primary",
                                   "content": "Tom Alvarez",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -15805,7 +15973,8 @@
                                   "fill": "$text-subtle",
                                   "content": "Source",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -15824,7 +15993,8 @@
                                   "fill": "$text-primary",
                                   "content": "Filed from intake · R-51",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -15850,7 +16020,8 @@
                                   "fill": "$text-subtle",
                                   "content": "Created",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             },
@@ -15869,7 +16040,8 @@
                                   "fill": "$text-primary",
                                   "content": "Yesterday",
                                   "fontFamily": "Inter",
-                                  "fontSize": 12
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -16012,7 +16184,8 @@
                               "width": "fill_container",
                               "content": "Original email as received",
                               "fontFamily": "Inter",
-                              "fontSize": 12
+                              "fontSize": 12,
+                              "fontWeight": "normal"
                             },
                             {
                               "type": "frame",
@@ -16051,7 +16224,8 @@
                                   "fill": "$text-subtle",
                                   "content": "Yesterday",
                                   "fontFamily": "Inter",
-                                  "fontSize": 11
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
@@ -18377,7 +18551,8 @@
                           "content": "This permanently deletes “Master services agreement — Meridian Systems” and all 5 versions. This cannot be undone.",
                           "lineHeight": 1.5,
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -18390,7 +18565,8 @@
                       "width": "fill_container",
                       "content": "Archive keeps the document recoverable and hides it from lists and search.",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "frame",
@@ -18433,7 +18609,8 @@
                               "fill": "$text-primary",
                               "content": "delete",
                               "fontFamily": "Inter",
-                              "fontSize": 13
+                              "fontSize": 13,
+                              "fontWeight": "normal"
                             }
                           ]
                         }
@@ -18463,7 +18640,8 @@
                           "fill": "$text-subtle",
                           "content": "Admin action · recorded in the activity log",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
