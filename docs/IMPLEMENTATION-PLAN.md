@@ -36,7 +36,7 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arc 3, milestone 14** — stages and approvals. Arc 1 is done: the monorepo and CI, the
+**Arc 3, milestone 15** — e-signature. Arc 1 is done: the monorepo and CI, the
 authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
 `/settings` destination with its Personal and Organization rails. Arc 2 is done too: the
 configurable types and statuses, the Entities registry, the contract record, the conversation on a
@@ -44,8 +44,10 @@ record with the two read surfaces over the activity log, and the confidentiality
 walled-off contract out of the reach of everyone outside its team. Arc 3 is under way: M11 puts the
 paper on the record — the version chain, the storage adapter, and the two drivers behind it — M12
 makes that paper readable, with the doc panel over five families, the doc-engine sidecar, and the
-background pipeline that extracts every version's text, and M13 organizes it, with folders inside
-the record and a folder drop that recreates the structure it arrived with.
+background pipeline that extracts every version's text, M13 organizes it, with folders inside
+the record and a folder drop that recreates the structure it arrived with, and M14 puts the
+six-stage backbone and its sign-off on the record — the stage pipeline, parallel approvals with
+reusable approver groups, and the soft gate that warns before a contract goes past open sign-off.
 
 ---
 
@@ -235,13 +237,27 @@ makes OpenLaw a CLM rather than a database with a form on it.
     and Move
   - _Decisions:_ DOC-006, DOC-011, DES-033
 
-- [ ] **M14 — Stages and approvals**
+- [x] **M14 — Stages and approvals**
       _Demo:_ Move a contract from draft through review into approval, request two approvals in parallel, and
       watch the soft gate.
-  - Stage progression driven by status changes; code branches on stage, never on the label
-  - Manual approvers plus reusable approver groups; applying a group snapshots its members
-  - Parallel approvals as a soft gate, not a hard lock
-  - _Decisions:_ CTR-001, CTR-012
+  - The record draws the fixed six-stage pipeline beside the status pill — one datum at two zooms — and the
+    marker follows the derived stage, never the renameable label; it renders position, so a regression moves
+    the marker back
+  - `approver_groups`, `approver_group_members`, and `contract_approvals`, with the pending ask held unique
+    per approver per contract by a partial index
+  - Approver groups in Settings → Contracts, Administrator-only, in the DES-020 list-editor anatomy; archiving
+    one takes it out of the apply picker and touches no request it already made
+  - Manual approvers and the group apply through one door: the same audience rule, the same pending-set read,
+    and the same write that makes the rows and narrates them; applying a group snapshots its members, so a
+    later edit never changes who was asked
+  - Every request runs in parallel — no chains and no order; a decision is final, a re-request after a
+    rejection writes a new row, and a cancellation deletes the row and leaves the activity entry as the record
+  - The soft gate is the first server-side branch on stage: a status change crossing past `approval` with
+    unresolved approvals is refused 409, naming each unresolved approver and their state, and the same commit
+    with the override flag succeeds and writes its own activity entry
+  - The refusal carries an RFC 9457 `type`, so the web client tells the gate from the other 409 the same PATCH
+    gives and raises its confirmation dialog on the type rather than on the sentence
+  - _Decisions:_ CTR-001, CTR-012, DES-034, DES-035, TECH-020
 
 - [ ] **M15 — E-signature**
       _Demo:_ Send a contract for signature through DocuSign, sign it, and watch the executed PDF land back
