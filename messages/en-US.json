@@ -35,6 +35,12 @@
   "activity.applet": {
     "defaultMessage": "History"
   },
+  "activity.approverGroup.memberAdded": {
+    "defaultMessage": "{actor} added {member} to the approver group {name}"
+  },
+  "activity.approverGroup.memberRemoved": {
+    "defaultMessage": "{actor} took {member} off the approver group {name}"
+  },
   "activity.boolean": {
     "defaultMessage": "{value, select, true {Yes} other {No}}"
   },
@@ -204,25 +210,25 @@
     "defaultMessage": "{actor} changed the identity provider {provider}"
   },
   "activity.taxonomy.archived": {
-    "defaultMessage": "{actor} archived the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+    "defaultMessage": "{actor} archived the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
   },
   "activity.taxonomy.created": {
-    "defaultMessage": "{actor} added the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+    "defaultMessage": "{actor} added the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
   },
   "activity.taxonomy.deleted": {
-    "defaultMessage": "{actor} deleted the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+    "defaultMessage": "{actor} deleted the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
   },
   "activity.taxonomy.renamed": {
-    "defaultMessage": "{actor} renamed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+    "defaultMessage": "{actor} renamed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
   },
   "activity.taxonomy.reordered": {
-    "defaultMessage": "{actor} reordered the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} list"
+    "defaultMessage": "{actor} reordered the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} list"
   },
   "activity.taxonomy.restored": {
-    "defaultMessage": "{actor} restored the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+    "defaultMessage": "{actor} restored the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
   },
   "activity.taxonomy.updated": {
-    "defaultMessage": "{actor} changed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+    "defaultMessage": "{actor} changed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
   },
   "activity.teamRole": {
     "defaultMessage": "{role, select, member {Member} watcher {Watcher} creator {Creator} contributor {Contributor} other {{role}}}"
@@ -1679,6 +1685,96 @@
   "settings.appearance.theme": {
     "defaultMessage": "Theme"
   },
+  "settings.approverGroups.add": {
+    "defaultMessage": "Add group"
+  },
+  "settings.approverGroups.addTitle": {
+    "defaultMessage": "Add approver group"
+  },
+  "settings.approverGroups.archive": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.approverGroups.archiveError": {
+    "defaultMessage": "The group could not be archived."
+  },
+  "settings.approverGroups.archiveSubmit": {
+    "defaultMessage": "Archive group"
+  },
+  "settings.approverGroups.archiveTitle": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.approverGroups.archiveWarning": {
+    "defaultMessage": "{count, plural, =0 {{name} leaves the apply picker. It has no members, and it can be restored.} one {{name} leaves the apply picker. Its # member is kept, and approvals already requested from the group are untouched.} other {{name} leaves the apply picker. Its # members are kept, and approvals already requested from the group are untouched.}}"
+  },
+  "settings.approverGroups.auditNote": {
+    "defaultMessage": "The change applies immediately and is recorded in the audit log."
+  },
+  "settings.approverGroups.count": {
+    "defaultMessage": "{count, plural, one {# group} other {# groups}}"
+  },
+  "settings.approverGroups.createError": {
+    "defaultMessage": "The group could not be created."
+  },
+  "settings.approverGroups.createSubmit": {
+    "defaultMessage": "Add group"
+  },
+  "settings.approverGroups.descriptionHelp": {
+    "defaultMessage": "Shown beside the group wherever it is applied."
+  },
+  "settings.approverGroups.descriptionLabel": {
+    "defaultMessage": "Description"
+  },
+  "settings.approverGroups.edit": {
+    "defaultMessage": "Edit {name}"
+  },
+  "settings.approverGroups.editError": {
+    "defaultMessage": "The group could not be saved."
+  },
+  "settings.approverGroups.editSubmit": {
+    "defaultMessage": "Save"
+  },
+  "settings.approverGroups.editTitle": {
+    "defaultMessage": "Edit {name}"
+  },
+  "settings.approverGroups.help": {
+    "defaultMessage": "Only Administrators and Legal team members can be group members. Applying a group copies its members onto the contract, so editing or archiving a group never changes an approval already requested."
+  },
+  "settings.approverGroups.ineligible": {
+    "defaultMessage": "Can no longer approve"
+  },
+  "settings.approverGroups.memberCount": {
+    "defaultMessage": "{count, plural, one {# member} other {# members}}"
+  },
+  "settings.approverGroups.membersError": {
+    "defaultMessage": "The member list could not be saved."
+  },
+  "settings.approverGroups.membersHelp": {
+    "defaultMessage": "Only Administrators and Legal team members can approve a contract."
+  },
+  "settings.approverGroups.membersLabel": {
+    "defaultMessage": "Members"
+  },
+  "settings.approverGroups.nameLabel": {
+    "defaultMessage": "Name"
+  },
+  "settings.approverGroups.nameMissing": {
+    "defaultMessage": "Name the group."
+  },
+  "settings.approverGroups.noCandidates": {
+    "defaultMessage": "No Administrator or Legal team member is available yet."
+  },
+  "settings.approverGroups.pageTitle": {
+    "defaultMessage": "Approver groups"
+  },
+  "settings.approverGroups.renameLabel": {
+    "defaultMessage": "Rename {name}"
+  },
+  "settings.approverGroups.restore": {
+    "defaultMessage": "Restore {name}"
+  },
+  "settings.approverGroups.title": {
+    "defaultMessage": "Approver groups"
+  },
   "settings.auth.addDomain": {
     "defaultMessage": "Add"
   },
@@ -2104,6 +2200,9 @@
   },
   "settings.contractTypes.title": {
     "defaultMessage": "Contract types"
+  },
+  "settings.contracts.tab.approverGroups": {
+    "defaultMessage": "Approver groups"
   },
   "settings.contracts.tab.fields": {
     "defaultMessage": "Fields"

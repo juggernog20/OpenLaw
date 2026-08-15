@@ -557,49 +557,56 @@ const TAXONOMY = {
     defaultMessage:
       "{actor} added the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
-      "contract_status {contract status} field {field} other {type}} {name}",
+      "contract_status {contract status} field {field} " +
+      "approver_group {approver group} other {type}} {name}",
   }),
   renamed: defineMessage({
     id: "activity.taxonomy.renamed",
     defaultMessage:
       "{actor} renamed the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
-      "contract_status {contract status} field {field} other {type}} {name}",
+      "contract_status {contract status} field {field} " +
+      "approver_group {approver group} other {type}} {name}",
   }),
   updated: defineMessage({
     id: "activity.taxonomy.updated",
     defaultMessage:
       "{actor} changed the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
-      "contract_status {contract status} field {field} other {type}} {name}",
+      "contract_status {contract status} field {field} " +
+      "approver_group {approver group} other {type}} {name}",
   }),
   reordered: defineMessage({
     id: "activity.taxonomy.reordered",
     defaultMessage:
       "{actor} reordered the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
-      "contract_status {contract status} field {field} other {type}} list",
+      "contract_status {contract status} field {field} " +
+      "approver_group {approver group} other {type}} list",
   }),
   archived: defineMessage({
     id: "activity.taxonomy.archived",
     defaultMessage:
       "{actor} archived the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
-      "contract_status {contract status} field {field} other {type}} {name}",
+      "contract_status {contract status} field {field} " +
+      "approver_group {approver group} other {type}} {name}",
   }),
   restored: defineMessage({
     id: "activity.taxonomy.restored",
     defaultMessage:
       "{actor} restored the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
-      "contract_status {contract status} field {field} other {type}} {name}",
+      "contract_status {contract status} field {field} " +
+      "approver_group {approver group} other {type}} {name}",
   }),
   deleted: defineMessage({
     id: "activity.taxonomy.deleted",
     defaultMessage:
       "{actor} deleted the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
-      "contract_status {contract status} field {field} other {type}} {name}",
+      "contract_status {contract status} field {field} " +
+      "approver_group {approver group} other {type}} {name}",
   }),
 } as const;
 
@@ -1291,6 +1298,41 @@ const ARMS: Readonly<Record<string, Arm>> = {
   // The catalog is unordered (DES-021), names through its editor dialog
   // rather than a rename verb, and is never hard-deleted.
   ...taxonomyArms("field", Tags, ["created", "updated", "archived", "restored"]),
+  // The CTR-012 approver-group templates (M14/1). Unordered like the
+  // catalog, and never hard-deleted; unlike the catalog it renames in
+  // place and carries a description, so it writes both `renamed` and
+  // `updated`.
+  ...taxonomyArms("approver_group", Users, [
+    "created",
+    "renamed",
+    "updated",
+    "archived",
+    "restored",
+  ]),
+  // Who is on a template is its own fact, not an edit of it — the rule
+  // the contract team's entries follow (CTR-004).
+  "approver_group.member_added": {
+    icon: Users,
+    message: defineMessage({
+      id: "activity.approverGroup.memberAdded",
+      defaultMessage: "{actor} added {member} to the approver group {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      member: named(intl, payload, "memberName"),
+    }),
+  },
+  "approver_group.member_removed": {
+    icon: Users,
+    message: defineMessage({
+      id: "activity.approverGroup.memberRemoved",
+      defaultMessage: "{actor} took {member} off the approver group {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      member: named(intl, payload, "memberName"),
+    }),
+  },
   // The catalog's two scope moves keep their own verbs, because the
   // scope is what decides which modules can attach the field.
   "field.promoted": {
