@@ -6535,12 +6535,21 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     /** The most files that were ever in flight at one moment. */
     let inFlight = 0;
     let peak = 0;
+    /** Where the last upload and the last folder read sit relative to
+     * each other. A finished run re-reads the record's paper and its
+     * folder set *after* it marks its last row, so a test that stopped
+     * at the row would end with two fetches still in flight — and a
+     * fetch that outlives the stub is a real request at a real port. */
+    let sequence = 0;
+    let lastUpload = 0;
+    let lastFolderRead = 0;
     const attempts = new Map<string, number>();
     const listing = (folderId: string | null) =>
       paper.filter((row) => (row.folderId ?? null) === folderId);
     const handler = (call: StubCall): Response | undefined => {
       const { pathname } = call.url;
       if (pathname === "/api/v1/contracts/42/folders" && call.method === "GET") {
+        lastFolderRead = ++sequence;
         return json(200, {
           folders: folders.map((row) => ({
             ...row,
@@ -6556,6 +6565,7 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
       if (pathname === "/api/v1/contracts/42/documents" && call.method === "POST") {
         const form = call.body as FormData;
         const file = form.get("file") as File;
+        lastUpload = ++sequence;
         uploaded.push({ name: file.name, kind: String(form.get("kind")) });
         const tried = (attempts.get(file.name) ?? 0) + 1;
         attempts.set(file.name, tried);
@@ -6603,6 +6613,10 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
       },
       peak: () => peak,
       paper: () => paper,
+      /** Nothing the batch started is still on its way: either no file
+       * was ever sent, or the re-read that follows the last one has
+       * answered. */
+      quiet: () => uploaded.length === 0 || lastFolderRead > lastUpload,
     };
   }
 
@@ -6689,6 +6703,9 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     // section counts them.
     expect(await within(section).findByText("one.pdf")).toBeVisible();
     expect(within(section).getByRole("img", { name: "2 documents" })).toBeVisible();
+    // The run re-reads the record's paper and its folders after its last
+    // row settles. Waited out here, so no fetch outlives the stub.
+    await waitFor(() => expect(api.quiet()).toBe(true));
   });
 
   it("cancels the batch, creating nothing", async () => {
@@ -6724,6 +6741,9 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     // first — the batch never asks for it and never sets it twice.
     expect(await within(section).findByText("three.pdf")).toBeVisible();
     expect(within(section).getAllByText("Primary")).toHaveLength(1);
+    // The run re-reads the record's paper and its folders after its last
+    // row settles. Waited out here, so no fetch outlives the stub.
+    await waitFor(() => expect(api.quiet()).toBe(true));
   });
 
   it("reports a failed file on its own row and retries that file alone", async () => {
@@ -6753,6 +6773,9 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     expect(
       await within(dialog).findByRole("heading", { name: "Imported 2 of 2 files" }),
     ).toBeVisible();
+    // The run re-reads the record's paper and its folders after its last
+    // row settles. Waited out here, so no fetch outlives the stub.
+    await waitFor(() => expect(api.quiet()).toBe(true));
   });
 
   it("names the deployment's limit on an oversized file, offers no retry, and lands the rest", async () => {
@@ -6785,6 +6808,9 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     expect(within(dialog).getByRole("heading", { name: "Imported 1 of 2 files" })).toBeVisible();
     await user.click(within(dialog).getByRole("button", { name: "Done" }));
     expect(await within(section).findByText("small.pdf")).toBeVisible();
+    // The run re-reads the record's paper and its folders after its last
+    // row settles. Waited out here, so no fetch outlives the stub.
+    await waitFor(() => expect(api.quiet()).toBe(true));
   });
 
   it("keeps at most three uploads in flight at once", async () => {
@@ -6809,6 +6835,9 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     await waitFor(() => expect(api.uploaded).toHaveLength(6));
     api.release();
     expect(api.peak()).toBe(3);
+    // The run re-reads the record's paper and its folders after its last
+    // row settles. Waited out here, so no fetch outlives the stub.
+    await waitFor(() => expect(api.quiet()).toBe(true));
   });
 
   it("hands a multi-file pick from the upload dialog to the same confirmation", async () => {
@@ -6880,6 +6909,9 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     await user.click(within(section).getByRole("button", { name: "Expand Executed" }));
     expect(await within(section).findByText("filed.pdf")).toBeVisible();
     expect(within(section).getByRole("img", { name: "2 documents" })).toBeVisible();
+    // The run re-reads the record's paper and its folders after its last
+    // row settles. Waited out here, so no fetch outlives the stub.
+    await waitFor(() => expect(api.quiet()).toBe(true));
   });
 
   it("opens nothing for a drop carrying no file of its own", async () => {
@@ -6939,6 +6971,9 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     expect(api.uploaded).toHaveLength(3);
     expect(within(dialog).getAllByText("Cancelled before it was uploaded.")).toHaveLength(2);
     expect(within(dialog).getByRole("button", { name: "Retry 2 files" })).toBeVisible();
+    // The run re-reads the record's paper and its folders after its last
+    // row settles. Waited out here, so no fetch outlives the stub.
+    await waitFor(() => expect(api.quiet()).toBe(true));
   });
 
   it("takes no drop on an archived record", async () => {
