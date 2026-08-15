@@ -1195,8 +1195,6 @@ describe("the /contracts/:number record page", () => {
       "Status",
       "Priority",
       "Risk",
-      // The type's own fields freeze with the record (CTR-016).
-      "Payment terms",
       // The value freezes as a group, like it commits as one.
       "Amount",
       "Currency",
@@ -1224,8 +1222,14 @@ describe("the /contracts/:number record page", () => {
     expect(
       screen.queryByRole("button", { name: /Take Nadia Counsel off the team/ }),
     ).not.toBeInTheDocument();
+    // The freeze is the record's, not the section's: the type's own
+    // fields are behind the Fields tab (DES-032) and freeze there too
+    // (CTR-016).
+    await user.click(screen.getByRole("link", { name: "Fields" }));
+    expect(await screen.findByLabelText("Payment terms")).toBeDisabled();
+    await user.click(screen.getByRole("link", { name: "Overview" }));
 
-    await user.click(screen.getByRole("button", { name: "Restore" }));
+    await user.click(await screen.findByRole("button", { name: "Restore" }));
     await waitFor(() => expect(api.posts).toEqual(["archive", "restore"]));
     expect(screen.queryByText(/This contract is archived/)).not.toBeInTheDocument();
     expect(screen.getByLabelText("Title")).toBeEnabled();
@@ -1235,7 +1239,7 @@ describe("the /contracts/:number record page", () => {
   it("draws the type's attached fields in attachment order and commits one by slug", async () => {
     const api = recordApi(contractRow());
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/fields");
     const user = userEvent.setup();
 
     const card = within(await screen.findByRole("region", { name: "Fields" }));
@@ -1256,7 +1260,7 @@ describe("the /contracts/:number record page", () => {
   it("commits nothing when Escape reverts a field, or when a blur changes nothing", async () => {
     const api = recordApi(contractRow({ customFields: { payment_terms: "Net 30" } }));
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/fields");
     const user = userEvent.setup();
 
     const terms = await screen.findByLabelText("Payment terms");
@@ -1274,7 +1278,7 @@ describe("the /contracts/:number record page", () => {
   it("clears a field by emptying it, and sends null rather than a blank", async () => {
     const api = recordApi(contractRow({ customFields: { payment_terms: "Net 30" } }));
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/fields");
     const user = userEvent.setup();
 
     await user.clear(await screen.findByLabelText("Payment terms"));
@@ -1287,7 +1291,7 @@ describe("the /contracts/:number record page", () => {
       contractRow({ contractTypeId: "t-full", contractTypeName: "Every field" }),
     );
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/fields");
     const user = userEvent.setup();
 
     const card = within(await screen.findByRole("region", { name: "Fields" }));
@@ -1333,7 +1337,7 @@ describe("the /contracts/:number record page", () => {
       }),
     );
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/fields");
     const user = userEvent.setup();
 
     const notice = await screen.findByLabelText("Notice period");
@@ -1365,8 +1369,12 @@ describe("the /contracts/:number record page", () => {
     // so the pick commits like any other select.
     await user.selectOptions(await screen.findByLabelText("Contract type"), "t-nda");
     await waitFor(() => expect(api.patches).toEqual([{ contractTypeId: "t-nda" }]));
-    // The new type's fields replace the old type's on the card.
-    const card = within(screen.getByRole("region", { name: "Fields" }));
+    // The new type's fields replace the old type's on the card. The
+    // re-type happens on the Overview and the card is a tab away
+    // (DES-032), so crossing to it is part of the check: the attached
+    // set is the record's state, not the section's.
+    await user.click(screen.getByRole("link", { name: "Fields" }));
+    const card = within(await screen.findByRole("region", { name: "Fields" }));
     expect(await card.findByLabelText(/Our position/)).toBeInTheDocument();
     expect(card.queryByLabelText("Payment terms")).not.toBeInTheDocument();
   });
@@ -1456,7 +1464,7 @@ describe("the /contracts/:number record page", () => {
         return api.handler(call);
       },
     });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/fields");
     const user = userEvent.setup();
 
     await user.type(await screen.findByLabelText("Payment terms"), "Net 45");
@@ -1471,7 +1479,7 @@ describe("the /contracts/:number record page", () => {
       contractRow({ contractTypeId: "t-none", contractTypeName: "Unconfigured" }),
     );
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/fields");
 
     expect(await screen.findByText(/This contract type attaches no fields/)).toBeInTheDocument();
   });
@@ -1486,6 +1494,77 @@ describe("the /contracts/:number record page", () => {
     stubApi({ signedIn: null, needsSetup: false });
     renderAt("/contracts/42");
     expect(await screen.findByRole("heading", { name: "Sign in" })).toBeInTheDocument();
+  });
+});
+
+describe("the contract record's section tabs (DES-032)", () => {
+  it("draws the three sections and lands the bare address on the Overview", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+
+    const strip = within(await screen.findByRole("navigation", { name: "Contract sections" }));
+    expect(strip.getAllByRole("link").map((tab) => tab.textContent)).toEqual([
+      "Overview",
+      "Fields",
+      "Documents",
+    ]);
+    // The Overview is the bare address, so it must not read as active
+    // on its siblings — that is what `end` on the link is for.
+    expect(strip.getByRole("link", { name: "Overview" })).toHaveAttribute("aria-current", "page");
+    expect(strip.getByRole("link", { name: "Fields" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("shows one section at a time, and moves the address with the tab", async () => {
+    const api = recordApi(contractRow(), [person("u1", "creator")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    const { router } = renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    // Overview: the record's own columns, and neither of the other two.
+    expect(await screen.findByLabelText("Title")).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Fields" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Documents" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("link", { name: "Fields" }));
+    expect(await screen.findByRole("region", { name: "Fields" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/contracts/42/fields");
+    expect(screen.queryByLabelText("Title")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("link", { name: "Documents" }));
+    expect(await screen.findByRole("region", { name: "Documents" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/contracts/42/documents");
+    expect(screen.queryByRole("region", { name: "Fields" })).not.toBeInTheDocument();
+  });
+
+  it("keeps the sub-bar and the Team card beside every section", async () => {
+    const api = recordApi(contractRow(), [person("u1", "creator")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+
+    // The breadcrumb, the reference, and the archive action are chrome:
+    // they belong to the record, not to one of its sections.
+    expect(
+      await screen.findByRole("heading", { level: 1, name: /Acme master services agreement/ }),
+    ).toBeInTheDocument();
+    // Scoped to the sub-bar: the top nav carries a "Contracts" link of
+    // its own, and this is about the breadcrumb.
+    const subbar = within(screen.getByRole("region", { name: /Acme master services agreement/ }));
+    expect(subbar.getByRole("link", { name: "Contracts" })).toBeInTheDocument();
+    expect(subbar.getByText("C-42")).toBeInTheDocument();
+    expect(subbar.getByRole("button", { name: "Archive" })).toBeInTheDocument();
+    // The roster stands beside all three sections, so the DES-028
+    // banner's "Manage team" fragment resolves from any of them.
+    expect(screen.getByRole("region", { name: "Team" })).toBeInTheDocument();
+  });
+
+  it("lands a section the record does not have on the Overview", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    const { router } = renderAt("/contracts/42/clauses");
+
+    expect(await screen.findByLabelText("Title")).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/contracts/42");
   });
 });
 
@@ -1535,7 +1614,6 @@ describe("a Contributor on the contract record (M9/1)", () => {
       "Status",
       "Priority",
       "Risk",
-      "Payment terms",
       "Amount",
       "Currency",
       "Cadence",
@@ -1544,6 +1622,10 @@ describe("a Contributor on the contract record (M9/1)", () => {
       expect(screen.getByLabelText(label)).toBeDisabled();
     }
     expect(screen.getByRole("combobox", { name: "Counterparties" })).toBeDisabled();
+    // The type's own fields are a tab away (DES-032) and read the same
+    // way there.
+    await userEvent.setup().click(screen.getByRole("link", { name: "Fields" }));
+    expect(await screen.findByLabelText("Payment terms")).toBeDisabled();
 
     // Archive and restore are record-level actions a Contributor never
     // gets, so they are absent rather than permanently disabled.
@@ -3997,7 +4079,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
 
   it("draws the section with a count of the paper on the record", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT, THEIRS]).handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
 
     const section = await documentsSection();
     expect(within(section).getByRole("heading", { level: 2, name: "Documents" })).toBeVisible();
@@ -4009,7 +4091,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
 
   it("names each document, marks the version that matters now, and opens the name", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT]).handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
 
     const section = await documentsSection();
     // A Word draft reads in the app (DOC-004, M12/4), so its name is a
@@ -4029,7 +4111,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
 
   it("says so plainly when the record has no paper on it", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([]).handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
 
     const section = await documentsSection();
     expect(within(section).getByText("No documents on this contract yet.")).toBeVisible();
@@ -4038,7 +4120,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
 
   it("shows the current version first and opens the rounds it supersedes", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([CHAIN]).handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4079,7 +4161,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
 
   it("draws no disclosure for a document with one version", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT]).handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
 
     const section = await documentsSection();
     expect(
@@ -4090,7 +4172,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("uploads through the composer, sending the kind and the note with the file", async () => {
     const api = documentsApi([DRAFT]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4123,7 +4205,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("refuses to send a composer with no file on it", async () => {
     const api = documentsApi([]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4142,7 +4224,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("appends the next version to a document from its own row", async () => {
     const api = documentsApi([DRAFT]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4171,7 +4253,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("renames a document and edits its description, leaving the file's own name alone", async () => {
     const api = documentsApi([DRAFT]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4198,7 +4280,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("refuses to send a rename with no name in it", async () => {
     const api = documentsApi([DRAFT]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4214,7 +4296,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("reports the seam's own refusal when the file is turned away", async () => {
     const api = documentsApi([], { uploadFails: "That file is over the 100 MB upload limit." });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4233,7 +4315,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
 
   it("marks the document the record calls its instrument", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT, THEIRS]).handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4253,7 +4335,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("moves the designation to another document on the record", async () => {
     const api = documentsApi([DRAFT, THEIRS]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4271,7 +4353,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("pins a superseded round as the executed copy, and clears it again", async () => {
     const api = documentsApi([CHAIN]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4319,7 +4401,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       versions: [version({ id: "ver-signed", kind: "executed" })],
     };
     stubApi({ signedIn: MEMBER, extra: documentsApi([signed]).handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
 
     const section = await documentsSection();
     // The kind is what the uploader called this round; the pin is what
@@ -4338,7 +4420,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       designationFails: "That document is already the contract's primary document.",
     });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4361,7 +4443,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
           ? problem(403, "You do not have permission to perform this action.")
           : api.handler(call),
     });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4389,7 +4471,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
           ? json(200, { documents: [DRAFT], nextCursor: null })
           : record.handler(call),
     });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
 
     const section = await documentsSection();
     expect(within(section).queryByRole("button", { name: "Upload" })).not.toBeInTheDocument();
@@ -4406,7 +4488,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("archives a document off the list and out of the count", async () => {
     const api = documentsApi([DRAFT, THEIRS]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4431,7 +4513,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("shows the archived rows on demand and restores one back onto the list", async () => {
     const api = documentsApi([DRAFT, { ...THEIRS, archivedAt: "2026-08-13T09:00:00.000Z" }]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4463,7 +4545,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("offers an archived document its way back and nothing that would be refused", async () => {
     const api = documentsApi([{ ...DRAFT, archivedAt: "2026-08-13T09:00:00.000Z" }]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4481,7 +4563,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
 
   it("keeps the erasure off a Legal Team Member's menu", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT]).handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     // They archive all day and destroy nothing (DOC-010). The seam
@@ -4501,7 +4583,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
 
   it("marks a confidential document, and draws nothing where one was left out", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT, WALLED]).handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
 
     // DES-009 Tier 1, on the row it is about: this file is narrowed to
     // the contract's named team even though the record is open.
@@ -4517,7 +4599,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     // is not in it. The section has no hidden state to draw, so the
     // omission is silent by construction (DD-014).
     stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT]).handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
 
     const section = await documentsSection();
     expect(within(section).queryByRole("img", { name: "Confidential" })).not.toBeInTheDocument();
@@ -4529,7 +4611,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("lets the person who uploaded a document mark it confidential, and clear it again", async () => {
     const api = documentsApi([DRAFT]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4558,7 +4640,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("offers the flag to the record's Owner, who uploaded nothing", async () => {
     const api = documentsApi([SOMEONE_ELSES], { ownerId: "u2" });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     // CTR-022's clause: the person accountable for the record decides
@@ -4574,7 +4656,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
         "the contract's Owner can change this.",
     });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4594,7 +4676,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
 
   it("keeps the flag off the menu for a viewer who is none of the three", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([SOMEONE_ELSES]).handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     // On the record, working on it, and that is not a claim on who else
@@ -4607,7 +4689,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("takes a typed name before it destroys a document, and sends it to the seam", async () => {
     const api = documentsApi([DRAFT, THEIRS]);
     stubApi({ signedIn: ADMIN, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4659,7 +4741,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       removalFails: "Type the document's name exactly to delete it.",
     });
     stubApi({ signedIn: ADMIN, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4687,7 +4769,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
   it("reports the seam's own refusal when a removal is turned down", async () => {
     const api = documentsApi([DRAFT], { removalFails: "This document is already archived." });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
@@ -4770,7 +4852,7 @@ describe("the paged Documents section (CTR-024, DES-031)", () => {
   it("appends the next page in place, and the count follows what is on screen", async () => {
     const api = pagedPaper();
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await screen.findByRole("region", { name: /^Documents/ });
@@ -4789,7 +4871,7 @@ describe("the paged Documents section (CTR-024, DES-031)", () => {
 
   it("puts focus on the first row it appended, and says how many followed", async () => {
     stubApi({ signedIn: MEMBER, extra: pagedPaper().handler });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await screen.findByRole("region", { name: /^Documents/ });
@@ -4819,7 +4901,7 @@ describe("the paged Documents section (CTR-024, DES-031)", () => {
         return record.handler(call);
       },
     });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await screen.findByRole("region", { name: /^Documents/ });
@@ -4953,7 +5035,7 @@ describe("the doc panel (M12/2)", () => {
 
   it("opens a PDF version in the panel from its name, with no download", async () => {
     stubApi({ signedIn: MEMBER, extra: panelApi([document()]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -4987,7 +5069,7 @@ describe("the doc panel (M12/2)", () => {
 
   it("keeps the panel's header on the record's own words after a rename", async () => {
     stubApi({ signedIn: MEMBER, extra: editablePanelApi() });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5028,7 +5110,7 @@ describe("the doc panel (M12/2)", () => {
       ],
     });
     stubApi({ signedIn: MEMBER, extra: panelApi([image]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     await user.click(within(await section()).getByRole("button", { name: "Signature page" }));
@@ -5055,7 +5137,7 @@ describe("the doc panel (M12/2)", () => {
       ],
     });
     stubApi({ signedIn: MEMBER, extra: panelApi([sheet]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
 
     const list = await section();
     // Nothing in the section opens it, because nothing in the app can
@@ -5082,7 +5164,7 @@ describe("the doc panel (M12/2)", () => {
       ],
     });
     stubApi({ signedIn: MEMBER, extra: panelApi([chain]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5103,7 +5185,7 @@ describe("the doc panel (M12/2)", () => {
 
   it("closes on Esc and puts focus back on the row that opened it", async () => {
     stubApi({ signedIn: MEMBER, extra: panelApi([document()]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5126,7 +5208,7 @@ describe("the doc panel (M12/2)", () => {
 
   it("closes from its own close control", async () => {
     stubApi({ signedIn: MEMBER, extra: panelApi([document()]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5150,7 +5232,7 @@ describe("the doc panel (M12/2)", () => {
     // with it — rather than staying on screen drawing paper the record
     // no longer has.
     stubApi({ signedIn: MEMBER, extra: editablePanelApi() });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5182,7 +5264,7 @@ describe("the doc panel (M12/2)", () => {
 
   it("lets a Contributor on the team read what they can already download", async () => {
     stubApi({ signedIn: CONTRIBUTOR, extra: panelApi([document()]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5225,7 +5307,7 @@ describe("the doc panel (M12/2)", () => {
 
   it("shows a preparing state while a Word draft converts, and draws it when it lands", async () => {
     stubApi({ signedIn: MEMBER, extra: panelApi([wordDraft()], ["pending", "ready"]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5249,7 +5331,7 @@ describe("the doc panel (M12/2)", () => {
 
   it("offers the download when a conversion failed, and says so plainly", async () => {
     stubApi({ signedIn: MEMBER, extra: panelApi([wordDraft()], ["failed"]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5275,7 +5357,7 @@ describe("the doc panel (M12/2)", () => {
     // preparing state that will never resolve: the asking is bounded and
     // ends where every path with no preview ends.
     stubApi({ signedIn: MEMBER, extra: panelApi([wordDraft()]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5351,7 +5433,7 @@ describe("the doc panel (M12/2)", () => {
 
   it("opens an uploaded email as a message, with its headers and its body", async () => {
     stubApi({ signedIn: MEMBER, extra: emailApi([thread()], message()) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5388,7 +5470,7 @@ describe("the doc panel (M12/2)", () => {
         message({ bcc: [{ name: "Iris Auditor", address: "i.auditor@brightline.com" }] }),
       ),
     });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5406,7 +5488,7 @@ describe("the doc panel (M12/2)", () => {
       signedIn: MEMBER,
       extra: emailApi([thread()], message({ html: "<p>Attaching the log.</p>", text: null })),
     });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5448,7 +5530,7 @@ describe("the doc panel (M12/2)", () => {
         }),
       ),
     });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5491,7 +5573,7 @@ describe("the doc panel (M12/2)", () => {
         }),
       ),
     });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5510,7 +5592,7 @@ describe("the doc panel (M12/2)", () => {
 
   it("ends at the download when the message cannot be read", async () => {
     stubApi({ signedIn: MEMBER, extra: emailApi([thread()]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();
@@ -5545,7 +5627,7 @@ describe("the doc panel (M12/2)", () => {
       ],
     });
     stubApi({ signedIn: MEMBER, extra: panelApi([deck], ["pending"]) });
-    renderAt("/contracts/42");
+    renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const list = await section();

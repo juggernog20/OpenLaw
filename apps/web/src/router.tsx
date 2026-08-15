@@ -85,8 +85,10 @@ export const routes: RouteObject[] = [
   },
   {
     // One contract's record page, addressed by its CTR-003 number —
-    // the reference people quote is what the URL carries.
-    path: "/contracts/:contractNumber",
+    // the reference people quote is what the URL carries. The optional
+    // trailing segment is the DES-032 section tab; the bare address is
+    // the Overview, so an existing link to a contract still opens one.
+    path: "/contracts/:contractNumber/:tab?",
     loader: contractRecordLoader,
     element: <ContractRecordPage />,
     errorElement: <RouteErrorPage />,

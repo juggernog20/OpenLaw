@@ -1902,6 +1902,60 @@ Naming the thread's control "Show older" rather than "Show more" is not cosmetic
 
 Every list bounded after this inherits the foot rather than inventing one, and any surface that pages backwards inherits the head placement with it. M12's document panel is the first that will.
 
+## DES-032: The record-page section strip — routed tabs under the breadcrumb (extends DES-016, DES-030)
+
+- **Status:** Accepted
+- **Date:** 2026-08-15
+
+### Context
+
+The contract record shipped as one scroll: the Contract card, the Description card, the CTR-016 Fields card, and the M11 Documents section, stacked in the main column with the Team card beside them. The build said so in as many words — "this page is one scroll, not a tab strip" — and noted at the same time that the C4 mock puts the documents behind a tab.
+
+One scroll was the right call while the record held two cards. It is the wrong one now. A reader who opens C-42 to check its paper scrolls past every field on the record to reach it, and a reader who opens it to fix the Owner scrolls past nothing but still pays the render cost of a document list they did not ask for. The three jobs the page does — read the record, fill the type's fields, work the paper — are asked one at a time.
+
+No DES covered a record-page tab strip. `SettingsSectionTabs` (ST10) draws one for settings panes, but that record is SET-001's and is about settings; nothing said whether a record may have sections, where the strip sits, or what a section costs the address bar.
+
+### Decision
+
+**1. A record may divide its body into named sections, drawn as one horizontal strip.** The contract record's are **Overview** (the Contract card and the Description card), **Fields** (the CTR-016 card), and **Documents** (the M11 section). One section is on screen at a time.
+
+**2. Each section is its own URL, and the tabs are links.** The bare record address is the first section — `/contracts/42` is the Overview — and each other section takes one trailing segment: `/contracts/42/fields`, `/contracts/42/documents`. A section the record does not have is not an error; it redirects to the bare address, because the record exists and only the section does not.
+
+The strip is therefore a `nav` of `NavLink`s, not a Radix `Tabs`. An ARIA tablist promises arrow-key semantics that a set of links does not have, and a link promises an address that a tablist does not. Sections are the kind of thing people quote to each other — "the Documents tab of C-42" — so the address is what they must be.
+
+**3. The strip sits in the shell's sub-bar slot, under the breadcrumb, and inside the chrome.** It carries the sub-bar's own `--chrome-subbar-border` as its bottom edge, and the sub-bar drops its border, so the two read as one chrome slab rather than as two stacked strips. A tab strip that scrolled away with the record would be no tab strip at all: DES-030 gives `main` the scroll, and section navigation is not part of what scrolls.
+
+**4. The tab treatment is the settings strip's, verbatim.** 36px-tall links, `px-3`, `text-base`; the active one is `font-semibold text-primary` over a `-mb-px border-b-2 border-accent`; the rest are `text-muted` with a `hover:text-primary`. One tab look in the app. The shared component is `RecordTabs`, a sibling of `RecordApplets` under `components/shell/`.
+
+**5. What is chrome stays chrome, and the side column is not a section.** The breadcrumb, the reference, the title, the status pill, the archived pill, and archive/restore belong to the record and are drawn above the strip on every section. So do DES-028's Tier 2 banner and DES-016's activity bar. The Team card stands beside all three sections rather than living in one: who is on a contract is context for reading any part of it, and DES-028's "Manage team" link is a fragment to that card — a fragment that only resolved on one section would be a link that sometimes goes nowhere. The record-level notices (archived, read-only) sit above the section for the same reason: they explain inert controls wherever the controls are.
+
+**6. The chrome budget takes the 36px, and this is the ceiling.** Header 62 + nav 48 + sub-bar 64 + strip 36 is 210px of fixed chrome, and 246px with DES-009's Tier 2 banner. On a 768px-tall viewport that is 32% — over the 25% guardrail DES-011's reflow reading implies, which the banner already breached at 28%. It is accepted here because the strip buys back far more body than it costs: a reader on the Documents section is no longer scrolling three sections of record to reach the paper. **No further permanent strip may be added to a record page.** A fifth one is a restructure, not an increment, and needs its own record.
+
+### Rationale
+
+The tab is what the mock always drew. The build's own note said so, and deferred it only because the page had two cards at the time and a strip over two cards is chrome for nothing.
+
+Routing the sections rather than holding them in state is the part worth arguing, and the argument is the same one SET-001 made for settings panes: a section that cannot be linked to is a section nobody can point at. It also costs nothing here — the loader already reads the whole record in one round trip, so a section change is a re-render and not a fetch.
+
+Keeping the Team card out of the sections is the other real choice. It could have been a fourth tab, and it is not, because the roster answers a question a reader has _while_ reading something else. A field's Owner, a document's uploader, and a comment's author are all names, and the card is what turns them into people.
+
+### Alternatives considered
+
+- **Stateful tabs (`useState`, no URL).** Rejected: no shareable address, no back button, and a re-mount loses the section. The record page is the one surface people quote by link.
+- **Radix `Tabs`.** Rejected: an ARIA tablist and a set of routed links are two different contracts, and mixing them gives a widget that announces arrow-key navigation it does not have.
+- **A section per child route with its own loader.** Rejected as premature: one read answers the whole record today, and splitting it would trade one round trip for three plus a shared-state problem.
+- **Team as a fourth tab.** Rejected — see the rationale; it also breaks DES-028's fragment link.
+- **Putting the strip at the top of the scrolling body.** Rejected: it stays under the 25% guardrail and loses the thing a tab strip is for. Tabs that scroll off screen are a table of contents.
+- **Folding the tabs into the 64px sub-bar as a second row.** Rejected: it saves nothing real — the strip's height is the strip's height — and it makes the breadcrumb row and the section row one landmark when they are two different navigations.
+
+### Consequences
+
+`RecordTabs` is the shared component; the contract record is the reference mount. The matter, entity, and knowledge record pages inherit it as they grow past two cards, with their own section sets — the same way DES-016's activity bar generalizes.
+
+Three new messages per record (the nav's accessible name and one label per tab). No new tokens: the strip reuses `--chrome-subbar-border` and the accent, and the tab treatment is already shipped in `SettingsSectionTabs`.
+
+Any surface that reads across sections must now say which section it means. A test that archives the record and checks that the type's fields froze has to cross to the Fields section to see them — which is the correct check, because the freeze is the record's state and not the section's.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -1937,3 +1991,4 @@ Every list bounded after this inherits the foot rather than inventing one, and a
 | DES-029 | The confidential marker and the composer notice — DES-009's Tier 1 and Tier 3                                                                                        | Accepted |
 | DES-030 | The shell scroll model — one viewport tall, and `main` owns the scroll                                                                                               | Accepted |
 | DES-031 | The paging foot — table placement, the thread's head control, and where focus lands (extends DES-026)                                                                | Accepted |
+| DES-032 | The record-page section strip — routed tabs under the breadcrumb (extends DES-016, DES-030)                                                                          | Accepted |

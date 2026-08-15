@@ -872,6 +872,18 @@
   "contracts.record.section": {
     "defaultMessage": "Contract"
   },
+  "contracts.record.sections": {
+    "defaultMessage": "Contract sections"
+  },
+  "contracts.record.tab.documents": {
+    "defaultMessage": "Documents"
+  },
+  "contracts.record.tab.fields": {
+    "defaultMessage": "Fields"
+  },
+  "contracts.record.tab.overview": {
+    "defaultMessage": "Overview"
+  },
   "contracts.reference": {
     "defaultMessage": "C-{number}"
   },
