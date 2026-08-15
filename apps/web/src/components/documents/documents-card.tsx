@@ -346,6 +346,7 @@ export function DocumentsCard({
   reading,
   onRead,
   onDocuments,
+  onFiled,
   onFolders,
 }: Readonly<{
   /** CTR-003's reference — the address the upload route takes. */
@@ -392,6 +393,19 @@ export function DocumentsCard({
    * cursor is omitted by a write that changed rows without moving the
    * position — a metadata edit is not a page. */
   onDocuments: (documents: ContractDocument[], nextCursor?: string | null) => void;
+  /**
+   * The documents this section is holding **inside folders** (M13/3).
+   *
+   * The record draws the doc panel, and it resolves what the panel is
+   * reading from the paper it holds — which is the record root alone,
+   * because a folder's documents are read when the folder is opened.
+   * Without this a filed document's name could be pressed and nothing
+   * would open: the reference would be resolved against a list it was
+   * never in.
+   *
+   * Told rather than asked for, because the folder listings live here.
+   */
+  onFiled: (documents: ContractDocument[]) => void;
   /** The record's folders as the seam now answers them. Every folder
    * write answers the whole set, because a delete re-files the children
    * it had and more rows move than the one addressed. */
@@ -418,6 +432,40 @@ export function DocumentsCard({
    * that has never been opened is not in here at all, which is what
    * makes a heavy record a short table until somebody opens one. */
   const [listings, setListings] = useState<ReadonlyMap<string, FolderListing>>(() => new Map());
+  /**
+   * The record is told what this section is holding inside folders
+   * (M13/3, M12/2).
+   *
+   * The doc panel is the record's, and it resolves the version it is
+   * reading out of the paper the record holds. That paper is the record
+   * root, so a filed document would never resolve and its name would
+   * open nothing. This is the one place that knows what the folders on
+   * screen hold.
+   *
+   * A listing survives a folder being closed (M13/3), so a document
+   * stays resolvable while its folder is shut — and a listing the
+   * refresh evicted takes its documents with it, which is what closes
+   * the panel over a document that has been erased.
+   *
+   * **"I hold nothing" and "I have not looked" are different answers.**
+   * This section is mounted and unmounted by the record's tab strip
+   * (DES-032), so it starts again with no listing at all every time the
+   * reader comes back to the paper. Saying "nothing" then would take
+   * away a panel the reader left open — while a root document's panel
+   * survives the same trip, because the record holds that list itself.
+   * So the first word is only spoken once there is something to say,
+   * and every word after it is spoken whatever it says.
+   *
+   * The listings are the whole of what this says, so they are the whole
+   * of what it watches: re-running because the record passed a new
+   * callback would say the same thing again on every render of the page.
+   */
+  const told = useRef(false);
+  useEffect(() => {
+    if (!told.current && listings.size === 0) return;
+    told.current = true;
+    onFiled([...listings.values()].flatMap((listing) => listing.documents));
+  }, [listings]);
   /** The folder dialog that is open, or none. */
   const [folderDialog, setFolderDialog] = useState<FolderDialog | null>(null);
   /** The document a "Move to folder" dialog is open for, or none. */

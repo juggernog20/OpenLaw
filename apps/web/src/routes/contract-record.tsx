@@ -366,6 +366,15 @@ function ContractRecord() {
    * section pages itself; the record holds the position, because the
    * record holds the list (CTR-024). */
   const [paperCursor, setPaperCursor] = useState<string | null>(documentsCursor);
+  /**
+   * The paper the Documents section is holding inside folders (M13/3).
+   *
+   * The list above is the record root, because a folder's documents are
+   * read when the folder is opened — so this is the rest of what is on
+   * screen, and the doc panel below resolves against both. Without it a
+   * filed document's name would open nothing.
+   */
+  const [filed, setFiled] = useState<ContractDocument[]>([]);
   /** How the record's paper is filed (M13/2). State rather than loader
    * data because every folder write answers the whole set, and the
    * section replaces what it holds without a page re-read. */
@@ -382,10 +391,10 @@ function ContractRecord() {
    * the chain opens — reading round three of a negotiation is not a
    * different feature from reading round five.
    *
-   * Two ids, and nothing else: what the panel draws is resolved from the
-   * list below on every render, so renaming a document while it is open
-   * changes the panel's own header, and a document that leaves the list
-   * takes the panel with it.
+   * Two ids, and nothing else: what the panel draws is resolved from
+   * the paper on screen on every render, so renaming a document while it
+   * is open changes the panel's own header, and a document that leaves
+   * the listing takes the panel with it.
    */
   const [reading, setReading] = useState<{ documentId: string; versionId: string } | null>(null);
   /** What opened the panel, so closing it puts focus back there —
@@ -470,7 +479,9 @@ function ContractRecord() {
    */
   const open = (() => {
     if (!reading) return null;
-    const document = paper.find((row) => row.id === reading.documentId);
+    // The record root and the folders on screen, because a document
+    // opens the same way wherever it is filed (M13/3).
+    const document = [...paper, ...filed].find((row) => row.id === reading.documentId);
     const version = document?.versions.find((row) => row.id === reading.versionId);
     return document && version ? { document, version } : null;
   })();
@@ -1264,6 +1275,11 @@ function ContractRecord() {
                     // moving the position: a metadata edit is not a page.
                     if (cursor !== undefined) setPaperCursor(cursor);
                   }}
+                  // The setter itself rather than a lambda around it:
+                  // the section's report watches its own listings and
+                  // nothing else, so what it calls has to stay the same
+                  // function across a render.
+                  onFiled={setFiled}
                   onFolders={setTree}
                 />
               )}
