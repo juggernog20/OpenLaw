@@ -98,6 +98,9 @@
   "activity.contract.restored": {
     "defaultMessage": "{actor} restored this contract"
   },
+  "activity.contract.stageGateOverridden": {
+    "defaultMessage": "{count, plural, =0 {{actor} moved this contract past approval, overriding the soft gate} other {{actor} moved this contract past approval, overriding {approvers}}}"
+  },
   "activity.contract.statusChanged": {
     "defaultMessage": "{actor} changed the status"
   },
@@ -1087,6 +1090,21 @@
   },
   "contracts.showArchived": {
     "defaultMessage": "Show archived"
+  },
+  "contracts.softGate.error": {
+    "defaultMessage": "The status could not be changed."
+  },
+  "contracts.softGate.note": {
+    "defaultMessage": "{count, plural, one {# approval on this contract is unresolved.} other {# approvals on this contract are unresolved.}} Moving to {status} goes past sign-off."
+  },
+  "contracts.softGate.override": {
+    "defaultMessage": "This is allowed. It is recorded on the record's activity as an override."
+  },
+  "contracts.softGate.submit": {
+    "defaultMessage": "Move anyway"
+  },
+  "contracts.softGate.title": {
+    "defaultMessage": "Move past approval"
   },
   "contracts.stage.done": {
     "defaultMessage": "done"

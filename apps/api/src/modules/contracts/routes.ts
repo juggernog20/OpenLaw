@@ -149,6 +149,7 @@ import {
   type AttachedCustomField,
 } from "../../lib/custom-fields.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
+import { assertApprovalGate, type UnresolvedApproval } from "../../lib/soft-gate.js";
 
 /** Every mutation, and every picker read behind one, is Member+. */
 const requireMember = requireRole("administrator", "legal_team_member");
@@ -1457,8 +1458,12 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           "(DD-014) commits here too, but only for an Administrator, the " +
           "contract's creator, or its Owner: anyone else who reaches the " +
           "record is refused 403, and anyone who does not reach it is " +
-          "answered 404 like a contract that does not exist. Never on an " +
-          "archived contract",
+          "answered 404 like a contract that does not exist. A status " +
+          "change that moves the contract past the approval stage while " +
+          "approvals are pending or rejected meets CTR-012's soft gate: " +
+          "it is refused 409 with the unresolved approvals named, and " +
+          "the same commit with `overrideSoftGate` succeeds and is " +
+          "logged as an override. Never on an archived contract",
         tags: ["contracts"],
         params: NumberParams,
         // Strict: an unknown key is a client bug, not a silent strip.
@@ -1493,6 +1498,13 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
            * actor set narrower than the route's, and it keeps its own
            * audit verb rather than joining the changed map. */
           isConfidential: z.boolean().optional(),
+          /** CTR-012's soft gate, pressed through. It is not a field —
+           * nothing is stored for it — it is this one commit's
+           * confirmation that the unresolved approvals were seen and
+           * the move is deliberate. It only means anything beside a
+           * `statusId` that crosses past the approval stage; anywhere
+           * else it is ignored, because there is nothing to override. */
+          overrideSoftGate: z.boolean().optional(),
         }),
         response: { 200: ContractFieldsEnvelope, default: problemResponse },
       },
@@ -1697,6 +1709,10 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // stays out of the changed map.
         let statusChange:
           { from: string; to: string; fromStage: string; toStage: string } | undefined;
+        /** CTR-012's soft gate, pressed through: the asks that were
+         * still open when the move committed, so the override entry can
+         * name them. `null` whenever the gate had nothing to say. */
+        let overridden: UnresolvedApproval[] | null = null;
         let statusName = current.statusName;
         let stage = current.stage;
         if (body.statusId !== undefined && body.statusId !== target.statusId) {
@@ -1716,6 +1732,21 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           if (!status || status.archivedAt) {
             throw httpError(400, "The status must be a live contract status.");
           }
+          // CTR-012's soft gate, and the first server-side branch on
+          // stage (CTR-001). Both stages are already resolved here —
+          // the one being left and the one being moved to — so the gate
+          // costs a stage comparison on every status change and a read
+          // of the approvals only on a move that crosses the line. It
+          // refuses before anything is written; the contract row is
+          // locked, so the set it names cannot move underneath the
+          // UPDATE that follows.
+          overridden = await assertApprovalGate(
+            tx,
+            target.id,
+            current.stage,
+            status.stage,
+            body.overrideSoftGate ?? false,
+          );
           patch.statusId = status.id;
           statusChange = {
             from: current.statusName,
@@ -1754,6 +1785,35 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             action: "contract.status_changed",
             visibility: RECORD_ACTIVITY_TIER,
             payload: { number: row!.number, title: row!.title, ...statusChange },
+          });
+        }
+        if (overridden && statusChange) {
+          // Its own verb, beside the status change rather than inside
+          // it (DD-017). Pushing past sign-off is a second thing that
+          // happened, and CTR-012 requires it to be accountable in its
+          // own right — so an Administrator filters the audit log on
+          // this verb rather than hunting through status payloads for
+          // the ones that crossed the line. The payload names the
+          // people who were unresolved, because "who was skipped" is
+          // the question the entry exists to answer.
+          await recordActivity(tx, {
+            entityType: "contract",
+            entityId: target.id,
+            actorId: request.user.id,
+            action: "contract.stage_gate_overridden",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: {
+              number: row!.number,
+              title: row!.title,
+              fromStage: statusChange.fromStage,
+              toStage: statusChange.toStage,
+              approvers: overridden.map((approval) => ({
+                approvalId: approval.id,
+                approverId: approval.approverId,
+                approverName: approval.approverName,
+                status: approval.status,
+              })),
+            },
           });
         }
         if (confidentialityChange !== undefined) {

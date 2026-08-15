@@ -27,8 +27,13 @@ export function json(status: number, body: unknown): Response {
   });
 }
 
-export function problem(status: number, detail: string): Response {
-  return new Response(JSON.stringify({ type: "about:blank", title: "Error", status, detail }), {
+/**
+ * An RFC 9457 refusal. `type` defaults to `about:blank`, which is what
+ * the API sends for every refusal a client prints; pass it only for the
+ * few a client is expected to branch on.
+ */
+export function problem(status: number, detail: string, type = "about:blank"): Response {
+  return new Response(JSON.stringify({ type, title: "Error", status, detail }), {
     status,
     headers: { "content-type": "application/problem+json" },
   });

@@ -314,7 +314,10 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
     // summary either way; the authored copy rides in `detail` only.
     const expose = status < 500 || (error instanceof HttpError && error.expose);
     const problem: Problem = {
-      type: "about:blank",
+      // `about:blank` unless the refusal named itself: a client that has
+      // to act on one particular refusal branches on this rather than on
+      // the wording of `detail` (RFC 9457 §4.2.1).
+      type: error instanceof HttpError ? error.type : "about:blank",
       title:
         status < 500 ? error.message : status === 502 ? "Bad gateway" : "Internal server error",
       status,
