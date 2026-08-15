@@ -33,9 +33,10 @@ All configuration is environment variables in `.env`; [`.env.example`](../.env.e
 | `DATABASE_URL`           | no       | Unset = the bundled Postgres. Set for external/managed Postgres (TECH-004 — equally supported).                                                                                                                                   |
 | `BASE_URL`               | in prod  | The public origin (e.g. `https://legal.example.com`). Emailed links and OIDC callbacks point here, and the auth layer checks request origins against it.                                                                          |
 | `SMTP_URL` / `SMTP_FROM` | no       | Outbound email; setting `SMTP_URL` pins SMTP to the environment, overriding anything saved in the app (see [Email](#email)). Unset = configurable in the app; with neither, email flows report "unconfigured" instead of sending. |
-| `STORAGE_DRIVER`         | no       | Where uploaded files go (DOC-009): `local` (the default — a directory, no extra service) or `s3` (an S3-compatible object store). See [Files](#files).                                                                            |
+| `STORAGE_DRIVER`         | no       | Where uploaded files go (DOC-009): `local` (the default — a directory, no extra service), `s3` (an S3-compatible object store), or `azure-blob` (Azure Blob Storage). See [Files](#files).                                        |
 | `STORAGE_PATH`           | no       | The `local` driver's root. Defaults to `/var/lib/openlaw/files`, the mount point of the `openlaw-files` named volume. Keep the default under Compose — see [Files](#files).                                                       |
 | `S3_*`                   | no       | The `s3` driver's bucket, endpoint, region, addressing, and credentials. Required when `STORAGE_DRIVER=s3` — see [Files](#files).                                                                                                 |
+| `AZURE_BLOB_*`           | no       | The `azure-blob` driver's container, account, key, and endpoint. Required when `STORAGE_DRIVER=azure-blob` — see [Files](#files).                                                                                                 |
 | `MAX_UPLOAD_MB`          | no       | Caps each upload, in whole MB. Defaults to 100. Raise your reverse proxy's body limit to match when you raise this — see [Files](#files).                                                                                         |
 | `DOC_ENGINE_URL`         | no       | Where the doc engine answers (TECH-010). Unset = the bundled `doc-engine` service on the compose network. Set it only to point at an engine you run yourself — see [The doc engine](#the-doc-engine).                             |
 | `DOC_ENGINE_TIMEOUT_MS`  | no       | How long one call to the doc engine may take before it is abandoned. Defaults to 300000 (five minutes).                                                                                                                           |
@@ -95,7 +96,7 @@ Set `DATABASE_URL` in `.env` to any reachable PostgreSQL 16+ and the app uses it
 
 ## Files
 
-Uploaded files go through one storage driver (DOC-009, TECH-014), chosen by `STORAGE_DRIVER`. There are two.
+Uploaded files are written through one storage driver (DOC-009, TECH-014), chosen by `STORAGE_DRIVER`. There are three.
 
 The store holds more than what people upload. A Word document or a PowerPoint deck is converted to a PDF so it can be read in the app (DOC-004), and that rendition is written beside the original under `renditions/`. Back it up with everything else — it is cheaper than converting the whole repository again — but nothing is lost if it goes: a rendition is made from its source, and the source is what the download and the record always answer.
 
@@ -121,9 +122,26 @@ Set `STORAGE_DRIVER=s3` to keep files in an object store instead — AWS S3, Min
 
 Set the driver and forget the bucket, and the app stops at boot with the variable named. It never falls back to the local disk: files written where nobody would look for them are worse than a refused start.
 
-Every file records the driver that stored it, so **changing driver does not lose the files already stored**. Files written by the local driver stay readable from the volume after you switch to `s3`; keep the volume. Nothing copies old files into the bucket — that is a migration to run yourself, and there is no tool for it yet.
-
 Downloads stream through the app, not from the bucket, so the store needs no public access and no CORS rules. Give the credentials read, write, and delete on the bucket and nothing else.
+
+### The Azure Blob driver
+
+Set `STORAGE_DRIVER=azure-blob` to keep files in Azure Blob Storage — the one major object store the `s3` driver cannot reach. Fabric / OneLake speaks the same Blob API, so this driver reaches OneLake too.
+
+| Variable                 | Meaning                                                                                                                                                         |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AZURE_BLOB_CONTAINER`   | Required. The container every file is stored in. **It must already exist** — OpenLaw never creates one.                                                         |
+| `AZURE_BLOB_ACCOUNT`     | The storage account. Azure answers at the account's own address (`https://<account>.blob.core.windows.net`), so with this set no endpoint is needed.            |
+| `AZURE_BLOB_ACCOUNT_KEY` | The account's shared key. Leave it unset to use the Azure credential chain instead, so a deployment on Azure can use a managed or workload identity and no key. |
+| `AZURE_BLOB_ENDPOINT`    | The store's URL. Leave it unset for Azure itself; set it for anything else that answers the Blob API (Azurite, OneLake).                                        |
+
+The same boot rule holds: name the driver and leave out the container, and the app stops with the variable named.
+
+Downloads stream through the app here too. Give the credential read, write, and delete on the container and nothing else — `Storage Blob Data Contributor` scoped to the container, when the credential chain is used.
+
+### Changing driver
+
+Every file records the driver that stored it, and reads follow that record across every configured driver (DOC-014) — so **changing driver does not lose the files already stored**. Files written by the local driver stay readable from the volume after you switch to `s3` or `azure-blob`; keep the volume, and keep the old driver's variables set. Drop them and those files' reads fail with a message naming the driver and what to set — never a false "not found". Nothing copies old files into the new store — that is a migration to run yourself, and there is no tool for it yet.
 
 ### The upload ceiling
 

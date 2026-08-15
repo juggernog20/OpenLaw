@@ -40,10 +40,12 @@ const resolveMailer = createMailerResolver(db, {
   from: process.env.SMTP_FROM,
 });
 
-// DOC-009/TECH-014: the storage driver is chosen here, at startup, and
+// DOC-009/TECH-014: the storage drivers are chosen here, at startup, and
 // the adapter is injected — no module below ever reads the environment
 // for it, or knows which driver it got. The local filesystem driver is
-// the default; STORAGE_DRIVER=s3 points the install at an object store.
+// the default; STORAGE_DRIVER points writes at an object store (`s3` or
+// `azure-blob`), and reads route across every configured driver by the
+// reference's prefix (DOC-014), so history survives a driver switch.
 // A configuration fault stops the boot rather than silently falling back
 // to a local disk nobody would think to look at.
 const storage = (function readStorage() {
