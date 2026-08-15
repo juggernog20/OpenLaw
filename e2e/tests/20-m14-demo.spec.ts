@@ -611,8 +611,8 @@ test.describe.serial("M14 demo path", () => {
       //
       // Each move is a status, and each status carries a stage the label
       // does not say. "Internal review" is not "Review" and "Awaiting
-      // approval" is not "Approval" — so a marker that followed the pill
-      // beside it would land on nothing at all.
+      // approval" is not "Approval" — so a marker that followed the
+      // label beside it would land on nothing at all.
 
       const review = statusAt(withGroup, "review");
       const approval = statusAt(withGroup, "approval");
@@ -630,9 +630,9 @@ test.describe.serial("M14 demo path", () => {
       await expectPipelineAt(page, "Approval");
       const atApproval = await readContract(page.request, number);
       expect(atApproval.stage).toBe("approval");
-      // Said out loud, because it is the whole point of the two pills
-      // sitting on one row: the marker is on Approval and the label
-      // beside it says something else entirely.
+      // Said out loud, because it is what makes the marker above worth
+      // asserting: the label the record holds is not the name of the
+      // stage the marker landed on, so nothing here followed a word.
       expect(atApproval.statusName).not.toBe("Approval");
 
       // ---- Stories 1, 2 and 6: two asks, in parallel, two doors ----
@@ -871,9 +871,9 @@ test.describe.serial("M14 demo path", () => {
           status: "pending",
         }),
       ]);
-      // The approval story is four entries of its own beside it, and the
-      // override is not one of them: pushing past sign-off is a
-      // different act from asking for it.
+      // The approval story is three entries of its own beside it — two
+      // asks and the answer — and the override is not one of them:
+      // pushing past sign-off is a different act from asking for it.
       expect(
         feed
           .filter((entry) => entry.action.startsWith("approval."))
