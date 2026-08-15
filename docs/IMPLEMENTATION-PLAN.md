@@ -36,15 +36,16 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arc 3, milestone 13** — folders and bulk upload. Arc 1 is done: the monorepo and CI, the
+**Arc 3, milestone 14** — stages and approvals. Arc 1 is done: the monorepo and CI, the
 authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
 `/settings` destination with its Personal and Organization rails. Arc 2 is done too: the
 configurable types and statuses, the Entities registry, the contract record, the conversation on a
 record with the two read surfaces over the activity log, and the confidentiality gate that takes a
 walled-off contract out of the reach of everyone outside its team. Arc 3 is under way: M11 puts the
-paper on the record — the version chain, the storage adapter, and the two drivers behind it — and
-M12 makes that paper readable, with the doc panel over five families, the doc-engine sidecar, and
-the background pipeline that extracts every version's text.
+paper on the record — the version chain, the storage adapter, and the two drivers behind it — M12
+makes that paper readable, with the doc panel over five families, the doc-engine sidecar, and the
+background pipeline that extracts every version's text, and M13 organizes it, with folders inside
+the record and a folder drop that recreates the structure it arrived with.
 
 ---
 
@@ -209,12 +210,30 @@ makes OpenLaw a CLM rather than a database with a form on it.
   - _Decisions:_ DOC-004, DOC-005, DOC-010 (extended to derived artifacts), DES-006 (addendum),
     DES-016 (clarified), TECH-007, TECH-010
 
-- [ ] **M13 — Folders and bulk upload**
+- [x] **M13 — Folders and bulk upload**
       _Demo:_ Drag a folder of legacy contract files onto a contract and watch the nested structure survive
       the drop.
-  - Nested folders inside matters and contracts; no global tree
-  - Multi-file drop and folder drop retaining structure
-  - _Decisions:_ DOC-006, DOC-011
+  - `document_folders` scoped to the owning record — nested, created and renamed and dissolved in place,
+    and never a global tree; `documents` gains the nullable folder reference, and none means the record
+    root
+  - Three invariants held in the write path under the owning contract's row lock: one owning record for a
+    folder, its parent, and the paper filed in it; no cycle in the parent chain; no two siblings of one
+    name — which is what makes find-or-create deterministic
+  - Dissolving a folder re-files its child folders and its documents into the parent and destroys nothing;
+    document deletion stays DOC-010's job
+  - The upload route takes a folder destination — an id, a relative path, or both — and find-or-creates the
+    chain segment by segment under that same lock, so parallel uploads racing on one path converge on one
+    folder
+  - A batch is N ordinary uploads and never a bulk call: one confirmation for the whole drop, one version
+    kind for every file in it, per-file progress, and a failure that costs its own file and nothing else
+  - Every dropped file is a new document at version 1; the drop's own story is its `document.created`
+    entries, which name the destination folder, and folders a drop passed through narrate nothing
+  - The folder tree in the Documents section, each folder's documents read when it is opened, with the
+    paging foot applying inside that listing — and confidential documents silently out of both the
+    listings and the counts, so an empty folder and a walled one read the same
+  - Every drop capability has a pointer-free twin: a multi-select picker, a directory picker, New folder,
+    and Move
+  - _Decisions:_ DOC-006, DOC-011, DES-033
 
 - [ ] **M14 — Stages and approvals**
       _Demo:_ Move a contract from draft through review into approval, request two approvals in parallel, and

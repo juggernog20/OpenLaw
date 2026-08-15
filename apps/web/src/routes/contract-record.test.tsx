@@ -6238,6 +6238,26 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
   });
 
   /**
+   * A filed document the app can read in place.
+   *
+   * The rest of this suite files plain downloads, because that is what
+   * its assertions are about. A PDF is what opens in the doc panel
+   * (M12/2), and the panel is the record's — so this is the fixture the
+   * "a filed document opens too" tests are stated over.
+   */
+  const readableFiled = (id: string, title: string, folderId: string) => ({
+    ...document(id, title, folderId),
+    versions: [
+      version({
+        id: `ver-${id}`,
+        originalFilename: title,
+        mimeType: "application/pdf",
+        renderFamily: "pdf",
+      }),
+    ],
+  });
+
+  /**
    * The record, its folders, and its paper — with the filing the seam
    * really does.
    *
@@ -6294,6 +6314,17 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
         paper = paper.map((row) => (row.id === addressed[1] ? moved : row));
         return json(200, { document: moved });
       }
+      // Archiving takes a document off the live listing (DOC-010),
+      // which is how a filed one stops being on screen.
+      const removed = /^\/api\/v1\/documents\/([^/]+)\/archive$/.exec(pathname);
+      if (removed && call.method === "POST") {
+        const gone = {
+          ...paper.find((row) => row.id === removed[1])!,
+          archivedAt: "2026-08-15T10:00:00.000Z",
+        };
+        paper = paper.filter((row) => row.id !== removed[1]);
+        return json(200, { document: gone });
+      }
       return record.handler(call);
     };
     return { handler, reads, writes };
@@ -6340,6 +6371,233 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
 
     expect(await within(section).findByText("signed.pdf")).toBeVisible();
     expect(api.reads).toContain("f-1");
+  });
+
+  it("opens a filed document in the doc panel, exactly as an unfiled one (M12/2)", async () => {
+    // The panel is the record's and it resolves what it is reading out
+    // of the paper the record holds — which is the record root alone, so
+    // a filed document has to be told about or its name opens nothing.
+    const api = filingApi(
+      [readableFiled("doc-2", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    await user.click(await within(section).findByRole("button", { name: "signed.pdf" }));
+
+    expect(
+      await screen.findByRole("complementary", { name: "signed.pdf, version 1" }),
+    ).toBeVisible();
+  });
+
+  it("keeps a filed document's panel open across a section tab round trip", async () => {
+    // The section is mounted and unmounted by the tab strip (DES-032),
+    // so it comes back holding no folder listing at all. A root
+    // document's panel survives that trip because the record holds that
+    // list itself, and a filed one has to survive it too.
+    const api = filingApi(
+      [readableFiled("doc-2", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    await user.click(await within(section).findByRole("button", { name: "signed.pdf" }));
+    await screen.findByRole("complementary", { name: "signed.pdf, version 1" });
+
+    await user.click(screen.getByRole("link", { name: "Overview" }));
+    await screen.findByLabelText("Title");
+    await user.click(screen.getByRole("link", { name: "Documents" }));
+    await documentsSection();
+
+    expect(
+      await screen.findByRole("complementary", { name: "signed.pdf, version 1" }),
+    ).toBeVisible();
+  });
+
+  /**
+   * The stub, with one folder's next re-read held open (M13/3).
+   *
+   * A write that re-reads the listings puts the folder into its
+   * skeleton state until the read answers. The stub answers in a
+   * microtask, so that state settles before a test can see it — held
+   * open, the moment is real, which is the moment the tests below are
+   * about: a folder being re-read has not stopped holding its
+   * documents, and the panel over one of them must not close.
+   */
+  function heldFolderRead(api: ReturnType<typeof filingApi>, folderId: string) {
+    let release: (() => void) | undefined;
+    let armed = false;
+    const handler = (call: StubCall): StubAnswer => {
+      if (
+        armed &&
+        call.method === "GET" &&
+        call.url.pathname === "/api/v1/contracts/42/documents" &&
+        call.url.searchParams.get("folder") === folderId
+      ) {
+        armed = false;
+        const answer = api.handler(call)!;
+        return new Promise((resolve) => {
+          release = () => resolve(answer);
+        });
+      }
+      return api.handler(call);
+    };
+    return {
+      handler,
+      /** The next read of this folder is the one held open. */
+      arm: () => {
+        armed = true;
+      },
+      /** Lets the held read answer. */
+      release: () => release?.(),
+    };
+  }
+
+  it("keeps a filed document's panel open while an unrelated move re-reads the listings", async () => {
+    // A move re-reads everything on screen, and a folder being re-read
+    // draws its skeletons until the read answers. That moment is
+    // presentation, not the document leaving the record — a panel that
+    // closed on it would close on every write to any other row of the
+    // paper, which is not what happens to a document at the record root.
+    const api = filingApi(
+      [document("doc-1", "loose.pdf"), readableFiled("doc-2", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+    );
+    const held = heldFolderRead(api, "f-1");
+    stubApi({ signedIn: MEMBER, extra: held.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    await user.click(await within(section).findByRole("button", { name: "signed.pdf" }));
+    await screen.findByRole("complementary", { name: "signed.pdf, version 1" });
+
+    // File the other document into the same folder. The write itself
+    // never touches signed.pdf.
+    await user.click(await within(section).findByRole("button", { name: "Actions for loose.pdf" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Move to folder" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.selectOptions(within(dialog).getByLabelText("File in"), "f-1");
+    held.arm();
+    await user.click(within(dialog).getByRole("button", { name: "Move" }));
+
+    // The folder is in its skeleton moment now. The panel cannot be
+    // asked for by role yet — the move dialog is still up over it until
+    // the re-read answers — so what is held is asserted after release:
+    // a panel this moment had closed stays closed.
+    expect(within(section).getByText("Loading the documents in Executed")).toBeInTheDocument();
+
+    held.release();
+    // The re-read has landed: the moved row is drawn inside the folder
+    // (as the download link its `other` family takes), and the panel
+    // still holds.
+    expect(await within(section).findByRole("link", { name: "loose.pdf" })).toBeVisible();
+    expect(screen.getByRole("complementary", { name: "signed.pdf, version 1" })).toBeVisible();
+  });
+
+  it("keeps a filed document's panel open across the show-archived toggle", async () => {
+    // The toggle re-reads every open folder in the view being switched
+    // to, and a live document is in both views — so its panel has no
+    // reason to close, any more than a root document's does.
+    const api = filingApi(
+      [readableFiled("doc-2", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+    );
+    const held = heldFolderRead(api, "f-1");
+    stubApi({ signedIn: MEMBER, extra: held.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    await user.click(await within(section).findByRole("button", { name: "signed.pdf" }));
+    await screen.findByRole("complementary", { name: "signed.pdf, version 1" });
+
+    held.arm();
+    await user.click(within(section).getByRole("switch", { name: "Show archived" }));
+
+    // The folder is re-reading in the archived view, and the panel holds.
+    expect(within(section).getByText("Loading the documents in Executed")).toBeInTheDocument();
+    expect(screen.getByRole("complementary", { name: "signed.pdf, version 1" })).toBeVisible();
+
+    held.release();
+    // The re-read has landed: the folder draws its document again, and
+    // the panel still holds.
+    expect(await within(section).findByRole("button", { name: "signed.pdf" })).toBeVisible();
+    expect(screen.getByRole("complementary", { name: "signed.pdf, version 1" })).toBeVisible();
+  });
+
+  it("keeps the panel while a folder is first expanded after a tab round trip", async () => {
+    // Coming back from the Overview remounts the section with no
+    // listing at all, and the round trip is survived by saying nothing
+    // until there is something to say. Expanding the folder again must
+    // not break that: its first read is "I have not looked yet", not
+    // "the folder holds nothing", so the panel holds until the read
+    // answers — and then holds still, because the document is in it.
+    const api = filingApi(
+      [readableFiled("doc-2", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+    );
+    const held = heldFolderRead(api, "f-1");
+    stubApi({ signedIn: MEMBER, extra: held.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    await user.click(await within(section).findByRole("button", { name: "signed.pdf" }));
+    await screen.findByRole("complementary", { name: "signed.pdf, version 1" });
+
+    await user.click(screen.getByRole("link", { name: "Overview" }));
+    await screen.findByLabelText("Title");
+    await user.click(screen.getByRole("link", { name: "Documents" }));
+    const remounted = await documentsSection();
+
+    held.arm();
+    await user.click(await within(remounted).findByRole("button", { name: "Expand Executed" }));
+    // The folder is in its first read, and the panel holds.
+    expect(within(remounted).getByText("Loading the documents in Executed")).toBeInTheDocument();
+    expect(screen.getByRole("complementary", { name: "signed.pdf, version 1" })).toBeVisible();
+
+    held.release();
+    expect(await within(remounted).findByRole("button", { name: "signed.pdf" })).toBeVisible();
+    expect(screen.getByRole("complementary", { name: "signed.pdf, version 1" })).toBeVisible();
+  });
+
+  it("takes the panel with a filed document that leaves its folder's listing", async () => {
+    // The other half of the same promise: the panel follows what is on
+    // screen, so a filed document archived out of the live view closes
+    // it — exactly as a document at the record root does.
+    const api = filingApi(
+      [readableFiled("doc-2", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    await user.click(await within(section).findByRole("button", { name: "signed.pdf" }));
+    await screen.findByRole("complementary", { name: "signed.pdf, version 1" });
+
+    await user.click(within(section).getByRole("button", { name: "Actions for signed.pdf" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Archive" }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("complementary", { name: "signed.pdf, version 1" }),
+      ).not.toBeInTheDocument(),
+    );
   });
 
   it("pages inside the folder it was pressed in", async () => {

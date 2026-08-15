@@ -355,9 +355,17 @@ export function BatchDialog({
           )}
         </DialogTitle>
         <div className="mt-4 flex flex-col gap-3.5">
+          {/* The destination is named as a group, because the readout
+              under the label is a value and not a control: without the
+              association a reader landing on "Record root" is told a
+              folder name with nothing saying what it answers. */}
           {!started && (
-            <div className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium">
+            <div
+              role="group"
+              aria-labelledby="batch-destination-label"
+              className="flex flex-col gap-1.5"
+            >
+              <span id="batch-destination-label" className="text-sm font-medium">
                 <FormattedMessage id="documents.batch.destination" defaultMessage="Destination" />
               </span>
               {/* Static, and offered no way to change it: the gesture
