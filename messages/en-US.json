@@ -113,6 +113,9 @@
   "activity.document.executedSet": {
     "defaultMessage": "{version, select, unknown {{actor} pinned the executed copy of {title}} other {{actor} pinned version {version} of {title} as the executed copy}}"
   },
+  "activity.document.filed": {
+    "defaultMessage": "{atRoot, select, true {{actor} moved {title} onto the contract} other {{actor} filed {title} in {folder}}}"
+  },
   "activity.document.hardDeleted": {
     "defaultMessage": "{versions, plural, =0 {{actor} deleted {title} and its files} one {{actor} deleted {title} and its # version} other {{actor} deleted {title} and its # versions}}"
   },
@@ -1127,6 +1130,9 @@
   "documents.action.markConfidential": {
     "defaultMessage": "Mark confidential"
   },
+  "documents.action.moveToFolder": {
+    "defaultMessage": "Move to folder"
+  },
   "documents.action.restore": {
     "defaultMessage": "Restore"
   },
@@ -1274,6 +1280,12 @@
   "documents.folder.error": {
     "defaultMessage": "That folder could not be saved. Try again."
   },
+  "documents.folder.loading": {
+    "defaultMessage": "Loading the documents in {name}"
+  },
+  "documents.folder.more": {
+    "defaultMessage": "Show more in {name}"
+  },
   "documents.folder.moveInto": {
     "defaultMessage": "Move into"
   },
@@ -1312,6 +1324,15 @@
   },
   "documents.moreError": {
     "defaultMessage": "The next documents could not be read. Try again."
+  },
+  "documents.move.error": {
+    "defaultMessage": "That document could not be moved. Try again."
+  },
+  "documents.move.into": {
+    "defaultMessage": "File in"
+  },
+  "documents.move.title": {
+    "defaultMessage": "Move {title}"
   },
   "documents.newFolder": {
     "defaultMessage": "New folder"

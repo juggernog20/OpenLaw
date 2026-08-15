@@ -9005,7 +9005,7 @@
     "/api/v1/contracts/{number}/documents": {
       "get": {
         "operationId": "listContractDocuments",
-        "summary": "The paper on one contract (DOC-008), newest first, each with its whole version chain in order 1..n and one version of it marked current. Exactly one document is marked primary — the instrument the contract is — and any version the team has pinned as the signed copy is marked executed. A contract holds as many documents as it needs: a loose attachment such as a schedule or a certificate is its own document with its own chain, beside the main instrument rather than inside its history (CTR-014). Access is inherited from the contract and nothing else: a Contributor on the team reads the list, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. Archived documents (DOC-010) are left out; includeArchived=true draws them beside the live ones, which is where restoring one is offered",
+        "summary": "The paper on one contract (DOC-008), newest first, each with its whole version chain in order 1..n and one version of it marked current. Exactly one document is marked primary — the instrument the contract is — and any version the team has pinned as the signed copy is marked executed. A contract holds as many documents as it needs: a loose attachment such as a schedule or a certificate is its own document with its own chain, beside the main instrument rather than inside its history (CTR-014). Access is inherited from the contract and nothing else: a Contributor on the team reads the list, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. Archived documents (DOC-010) are left out; includeArchived=true draws them beside the live ones, which is where restoring one is offered. folder narrows the read to one listing (DOC-006): a folder's own id answers what is filed in that folder, `root` answers the documents filed in no folder, and omitting it answers the record's whole paper. Paging applies within whichever listing was asked for, so a heavy folder pages on its own. A folder on another contract, or one that never existed, answers 404 — exactly as a folder that was never created, because a folder's id says nothing about which record it is on",
         "tags": ["documents"],
         "parameters": [
           {
@@ -9015,6 +9015,24 @@
             },
             "in": "query",
             "name": "includeArchived",
+            "required": false
+          },
+          {
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": ["root"]
+                },
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                }
+              ]
+            },
+            "in": "query",
+            "name": "folder",
             "required": false
           },
           {
@@ -9192,6 +9210,16 @@
                           "isConfidential": {
                             "type": "boolean"
                           },
+                          "folderId": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "createdBy": {
                             "type": "object",
                             "properties": {
@@ -9237,6 +9265,7 @@
                           "versions",
                           "archivedAt",
                           "isConfidential",
+                          "folderId",
                           "createdBy",
                           "createdAt",
                           "updatedAt"
@@ -9475,6 +9504,16 @@
                         "isConfidential": {
                           "type": "boolean"
                         },
+                        "folderId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "createdBy": {
                           "type": "object",
                           "properties": {
@@ -9520,6 +9559,7 @@
                         "versions",
                         "archivedAt",
                         "isConfidential",
+                        "folderId",
                         "createdBy",
                         "createdAt",
                         "updatedAt"
@@ -9749,6 +9789,16 @@
                         "isConfidential": {
                           "type": "boolean"
                         },
+                        "folderId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "createdBy": {
                           "type": "object",
                           "properties": {
@@ -9794,6 +9844,7 @@
                         "versions",
                         "archivedAt",
                         "isConfidential",
+                        "folderId",
                         "createdBy",
                         "createdAt",
                         "updatedAt"
@@ -9823,7 +9874,7 @@
     "/api/v1/documents/{documentId}": {
       "patch": {
         "operationId": "updateDocument",
-        "summary": "Rename a document or edit its description (DOC-007), one field per request as DES-017 commits them. The stored files are untouched by either: a version's own filename is what it arrived as and stays that, and a download still offers it back. Appends document.updated on the owning contract (DD-017), naming what changed. isConfidential is the third field, and it is not one of those two: it sets or clears DD-014's per-document flag, which narrows this one file to the contract's named team, its Owner, and Administrators, even on an open contract. It has an actor set narrower than the route's — an Administrator, the person who uploaded the document, and the contract's Owner — and anybody else who reaches the document is refused 403 rather than 404, because they can already see it. Each set and each clear appends its own action, document.confidentiality_set or document.confidentiality_cleared. An archived contract takes no edit until it is restored. A document on a contract the editor cannot reach — and a confidential document they are outside the audience of — answers 404, exactly as one that does not exist",
+        "summary": "Rename a document or edit its description (DOC-007), one field per request as DES-017 commits them. The stored files are untouched by either: a version's own filename is what it arrived as and stays that, and a download still offers it back. Appends document.updated on the owning contract (DD-017), naming what changed. isConfidential is the third field, and it is not one of those two: it sets or clears DD-014's per-document flag, which narrows this one file to the contract's named team, its Owner, and Administrators, even on an open contract. It has an actor set narrower than the route's — an Administrator, the person who uploaded the document, and the contract's Owner — and anybody else who reaches the document is refused 403 rather than 404, because they can already see it. Each set and each clear appends its own action, document.confidentiality_set or document.confidentiality_cleared. folderId is the fourth, and it files the document (DOC-006): a folder on this document's own record, or null for the record root, with null and omitting the field two different requests. A folder on another contract answers 404, exactly as one that was never created, because a folder's id says nothing about which record it is on. Each move appends document.filed, carrying both folders by name so the entry outlives a rename. An archived contract takes no edit until it is restored. A document on a contract the editor cannot reach — and a confidential document they are outside the audience of — answers 404, exactly as one that does not exist",
         "tags": ["documents"],
         "requestBody": {
           "required": true,
@@ -9850,6 +9901,18 @@
                   },
                   "isConfidential": {
                     "type": "boolean"
+                  },
+                  "folderId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 }
               }
@@ -10020,6 +10083,16 @@
                         "isConfidential": {
                           "type": "boolean"
                         },
+                        "folderId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "createdBy": {
                           "type": "object",
                           "properties": {
@@ -10065,6 +10138,7 @@
                         "versions",
                         "archivedAt",
                         "isConfidential",
+                        "folderId",
                         "createdBy",
                         "createdAt",
                         "updatedAt"
@@ -10278,6 +10352,16 @@
                           "isConfidential": {
                             "type": "boolean"
                           },
+                          "folderId": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "createdBy": {
                             "type": "object",
                             "properties": {
@@ -10323,6 +10407,7 @@
                           "versions",
                           "archivedAt",
                           "isConfidential",
+                          "folderId",
                           "createdBy",
                           "createdAt",
                           "updatedAt"
@@ -10531,6 +10616,16 @@
                           "isConfidential": {
                             "type": "boolean"
                           },
+                          "folderId": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "createdBy": {
                             "type": "object",
                             "properties": {
@@ -10576,6 +10671,7 @@
                           "versions",
                           "archivedAt",
                           "isConfidential",
+                          "folderId",
                           "createdBy",
                           "createdAt",
                           "updatedAt"
@@ -10800,6 +10896,16 @@
                         "isConfidential": {
                           "type": "boolean"
                         },
+                        "folderId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "createdBy": {
                           "type": "object",
                           "properties": {
@@ -10845,6 +10951,7 @@
                         "versions",
                         "archivedAt",
                         "isConfidential",
+                        "folderId",
                         "createdBy",
                         "createdAt",
                         "updatedAt"
@@ -11038,6 +11145,16 @@
                         "isConfidential": {
                           "type": "boolean"
                         },
+                        "folderId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "createdBy": {
                           "type": "object",
                           "properties": {
@@ -11083,6 +11200,7 @@
                         "versions",
                         "archivedAt",
                         "isConfidential",
+                        "folderId",
                         "createdBy",
                         "createdAt",
                         "updatedAt"
@@ -11278,6 +11396,16 @@
                         "isConfidential": {
                           "type": "boolean"
                         },
+                        "folderId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "createdBy": {
                           "type": "object",
                           "properties": {
@@ -11323,6 +11451,7 @@
                         "versions",
                         "archivedAt",
                         "isConfidential",
+                        "folderId",
                         "createdBy",
                         "createdAt",
                         "updatedAt"
@@ -11518,6 +11647,16 @@
                         "isConfidential": {
                           "type": "boolean"
                         },
+                        "folderId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "createdBy": {
                           "type": "object",
                           "properties": {
@@ -11563,6 +11702,7 @@
                         "versions",
                         "archivedAt",
                         "isConfidential",
+                        "folderId",
                         "createdBy",
                         "createdAt",
                         "updatedAt"
@@ -12347,7 +12487,7 @@
     "/api/v1/contracts/{number}/folders": {
       "get": {
         "operationId": "listContractFolders",
-        "summary": "The folders on one contract, whole (DOC-006). Folders are scoped inside the record and nowhere else — there is no global tree, and the repository view stays flat with folder as a facet there. The set comes back in one answer rather than one level at a time, because a record's folder set is small and the Documents section draws the whole tree from it. Siblings are ordered by name without case, the way a file manager lists a directory. Access is inherited from the contract and nothing else: a Contributor on the team reads the tree, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it",
+        "summary": "The folders on one contract, whole (DOC-006). Folders are scoped inside the record and nowhere else — there is no global tree, and the repository view stays flat with folder as a facet there. The set comes back in one answer rather than one level at a time, because a record's folder set is small and the Documents section draws the whole tree from it. Siblings are ordered by name without case, the way a file manager lists a directory. Each folder carries how many live documents are filed directly in it, counted for the viewer asking: an archived document is out of the count (DOC-010), and so is a confidential document this viewer is outside the audience of (DD-014) — left out by the same predicate that leaves it out of the folder's listing, so a count can never announce a document the listing hid. A zero therefore reads as an empty folder whether it is empty or its contents are not this viewer's to see. Access is inherited from the contract and nothing else: a Contributor on the team reads the tree, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it",
         "tags": ["documents"],
         "parameters": [
           {
@@ -12390,6 +12530,11 @@
                               }
                             ]
                           },
+                          "documentCount": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time",
@@ -12401,7 +12546,14 @@
                             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
                           }
                         },
-                        "required": ["id", "name", "parentId", "createdAt", "updatedAt"],
+                        "required": [
+                          "id",
+                          "name",
+                          "parentId",
+                          "documentCount",
+                          "createdAt",
+                          "updatedAt"
+                        ],
                         "additionalProperties": false
                       }
                     }
@@ -12490,6 +12642,11 @@
                               }
                             ]
                           },
+                          "documentCount": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time",
@@ -12501,7 +12658,14 @@
                             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
                           }
                         },
-                        "required": ["id", "name", "parentId", "createdAt", "updatedAt"],
+                        "required": [
+                          "id",
+                          "name",
+                          "parentId",
+                          "documentCount",
+                          "createdAt",
+                          "updatedAt"
+                        ],
                         "additionalProperties": false
                       }
                     }
@@ -12598,6 +12762,11 @@
                               }
                             ]
                           },
+                          "documentCount": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time",
@@ -12609,7 +12778,14 @@
                             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
                           }
                         },
-                        "required": ["id", "name", "parentId", "createdAt", "updatedAt"],
+                        "required": [
+                          "id",
+                          "name",
+                          "parentId",
+                          "documentCount",
+                          "createdAt",
+                          "updatedAt"
+                        ],
                         "additionalProperties": false
                       }
                     }
@@ -12634,7 +12810,7 @@
       },
       "delete": {
         "operationId": "deleteContractFolder",
-        "summary": "Dissolve a folder (DOC-006). Its child folders are re-filed into its parent — the record root when it had none — and nothing is destroyed: this route deletes no document, and erasing one stays DOC-010's separate Administrator-only path. Because the children are re-filed rather than removed, a delete that would put two folders of the same name in one place is refused 409 rather than resolved by inventing a name. Appends folder.deleted on the owning contract (DD-017), carrying the folder's name — the entry outlives the row, so it is the only thing left that says what was dissolved. Answers the record's whole folder set, because every re-filed child moved. A folder on a contract the viewer cannot reach answers 404, exactly as one that does not exist; an archived contract takes no delete until it is restored",
+        "summary": "Dissolve a folder (DOC-006). Its child folders and the documents filed in it are re-filed into its parent — the record root when it had none — and nothing is destroyed: this route deletes no document, and erasing one stays DOC-010's separate Administrator-only path. Every document in the folder moves, the archived ones and the confidential ones the caller cannot see included: the re-file is a fact about the record's organization, not a read, and a row left behind would point at a folder that no longer exists. Because the children are re-filed rather than removed, a delete that would put two folders of the same name in one place is refused 409 rather than resolved by inventing a name. Appends folder.deleted on the owning contract (DD-017), carrying the folder's name — the entry outlives the row, so it is the only thing left that says what was dissolved. Answers the record's whole folder set, because every re-filed child moved. A folder on a contract the viewer cannot reach answers 404, exactly as one that does not exist; an archived contract takes no delete until it is restored",
         "tags": ["documents"],
         "parameters": [
           {
@@ -12677,6 +12853,11 @@
                               }
                             ]
                           },
+                          "documentCount": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time",
@@ -12688,7 +12869,14 @@
                             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
                           }
                         },
-                        "required": ["id", "name", "parentId", "createdAt", "updatedAt"],
+                        "required": [
+                          "id",
+                          "name",
+                          "parentId",
+                          "documentCount",
+                          "createdAt",
+                          "updatedAt"
+                        ],
                         "additionalProperties": false
                       }
                     }

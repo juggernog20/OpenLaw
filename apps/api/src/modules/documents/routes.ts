@@ -137,6 +137,7 @@ import {
   asc,
   contracts,
   desc,
+  documentFolders,
   documents,
   documentVersionRenditions,
   documentVersions,
@@ -176,6 +177,11 @@ import {
   RENDITION_CONTENT_TYPE,
 } from "../../lib/render-family.js";
 import { attachmentDisposition, inlineDisposition, MEGABYTE } from "../../lib/uploads.js";
+// A folder named by a filing, or by a folder-filtered read (M13/3). The
+// refusal is imported rather than copied: a folder on another contract
+// answers exactly as one that was never created (DOC-006), and two
+// copies of that sentence are two things that can drift apart.
+import { NO_FOLDER } from "./folders.js";
 import { needsDisplayRendition, recordRenditionOwed } from "../../pipeline/display-conversion.js";
 import { extractsText, recordTextOwed } from "../../pipeline/text-extraction.js";
 
@@ -376,6 +382,19 @@ const DocumentSchema = z.object({
    * placeholder for one they cannot.
    */
   isConfidential: z.boolean(),
+  /**
+   * Which folder on the owning record this document is filed in, or NULL
+   * at the record root (DOC-006, M13/3).
+   *
+   * Stated on the row rather than inferred from which listing it came
+   * back in: the unfiltered list draws filed and unfiled documents
+   * together, and the Move control has to know where the document is
+   * before it can offer somewhere else.
+   *
+   * A folder carries no audience of its own, so this leaks nothing: the
+   * name behind the id is visible to everybody who reaches the record.
+   */
+  folderId: z.string().nullable(),
   createdBy: PersonSchema,
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -565,6 +584,20 @@ const MetadataPatch = z.object({
    * than joining the changed map.
    */
   isConfidential: z.boolean().optional(),
+  /**
+   * Where this document is filed (DOC-006, M13/3): a folder on the
+   * document's own record, or `null` for the record root.
+   *
+   * `null` and omitting the field are two different requests, exactly as
+   * they are on a folder's own move: one takes the document out of
+   * whatever folder it is in, the other leaves it where it is.
+   *
+   * It rides the per-field PATCH rather than taking a route of its own,
+   * because filing is one field of the document. It keeps its own audit
+   * verb for the confidential flag's reason: a move is an act somebody
+   * did, not one key inside an edit.
+   */
+  folderId: RecordIdSchema.nullable().optional(),
 });
 
 /**
@@ -612,6 +645,30 @@ const PAGE_SIZE = 50;
 
 /** A cursor is a document id, and nothing longer is worth reading. */
 const CursorSchema = z.string().min(1).max(64);
+
+/**
+ * The listing context the record root is asked for by name (M13/3).
+ *
+ * A folder filter has three answers — every document on the record, the
+ * documents in one folder, and the documents filed nowhere — and the
+ * third has no id to be addressed by. So it is addressed by a word, and
+ * the word is safe to reserve: every id in this API is a uuidv7, so no
+ * folder can ever be called this.
+ */
+const ROOT_FOLDER = "root";
+
+/**
+ * Which listing this read is about (DOC-006, DES-031).
+ *
+ * Omitted is the record's whole paper, which is what the list has always
+ * answered. `root` is the documents filed in no folder, which is what
+ * the tree draws beneath its folder rows. Anything else is a folder's
+ * own id, and the paging foot then applies within that folder rather
+ * than across the record — a heavy folder pages on its own.
+ */
+const FolderQuery = z.object({
+  folder: z.union([z.literal(ROOT_FOLDER), CursorSchema]).optional(),
+});
 
 /**
  * The multipart form, described for the OpenAPI document only.
@@ -732,6 +789,14 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     primaryDocumentId: string | null;
     /** DD-014's per-document flag, as it stands on this row. */
     isConfidential: boolean;
+    /** Which folder on the owning record this document is filed in, or
+     * NULL at the record root (DOC-006). */
+    folderId: string | null;
+    /** That folder's name, or NULL when the document sits at the record
+     * root. Read here so a filing's activity entry can name the folder
+     * the document came out of — an id would not draw a sentence once
+     * the folder is renamed or gone. */
+    folderName: string | null;
     /** Who uploaded it — one of the three actors who may decide its
      * audience (DD-014, CTR-022). */
     createdBy: string;
@@ -770,11 +835,16 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         executedVersionId: documents.executedVersionId,
         primaryDocumentId: contracts.primaryDocumentId,
         isConfidential: documents.isConfidential,
+        folderId: documents.folderId,
+        folderName: documentFolders.name,
         createdBy: documents.createdBy,
         contractManagerId: contracts.managerId,
       })
       .from(documents)
       .innerJoin(contracts, eq(documents.contractId, contracts.id))
+      // Left, because most documents sit at the record root and an inner
+      // join would answer none of them.
+      .leftJoin(documentFolders, eq(documents.folderId, documentFolders.id))
       .where(
         and(
           eq(documents.id, documentId),
@@ -785,6 +855,40 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       .limit(1);
     const [row] = await (lock ? query.for("update", { of: contracts }) : query);
     return row ?? null;
+  }
+
+  /**
+   * One folder of one contract, by its own id, or a 404 (DOC-006,
+   * M13/3).
+   *
+   * **This is the shared-owner invariant, at the seam.** A folder id is
+   * opaque and says nothing about which record it belongs to, so the
+   * contract is part of the question rather than something checked
+   * afterwards: a folder on another contract is simply not found, and is
+   * answered exactly as one that was never created. Any other refusal
+   * would tell the caller that the folder is there.
+   *
+   * The caller has already proved they reach the contract, so nothing
+   * here re-asks it. A folder carries no audience of its own — what
+   * DD-014 narrows is the documents in it — so there is nothing else to
+   * narrow.
+   *
+   * Answers the folder's name, because every activity payload that
+   * mentions a folder carries the name rather than the id: the entry has
+   * to still say what happened after a rename or a delete.
+   */
+  async function reachedFolderOn(
+    db: Executor,
+    contractId: string,
+    folderId: string,
+  ): Promise<{ id: string; name: string }> {
+    const [row] = await db
+      .select({ id: documentFolders.id, name: documentFolders.name })
+      .from(documentFolders)
+      .where(and(eq(documentFolders.id, folderId), eq(documentFolders.contractId, contractId)))
+      .limit(1);
+    if (!row) throw httpError(404, NO_FOLDER);
+    return row;
   }
 
   /** The one document projection, joined to its creator. The chain is
@@ -806,6 +910,10 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
          * audience can see which file is narrowed. Only rows this
          * viewer already reaches get here. */
         isConfidential: documents.isConfidential,
+        /** DOC-006's grouping, so the row says where it is filed rather
+         * than leaving it to be inferred from which listing answered
+         * it (M13/3). */
+        folderId: documents.folderId,
         createdAt: documents.createdAt,
         updatedAt: documents.updatedAt,
         createdBy: {
@@ -908,6 +1016,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       ),
       archivedAt: row.archivedAt?.toISOString() ?? null,
       isConfidential: row.isConfidential,
+      folderId: row.folderId,
       createdBy: toPerson(row.createdBy),
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
@@ -991,10 +1100,21 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     contract: ReachedContract,
     includeArchived = false,
     cursor?: string,
+    folder?: string,
   ) {
     const scope = and(
       eq(documents.contractId, contract.id),
       includeArchived ? undefined : isNull(documents.archivedAt),
+      // The listing context (M13/3). Omitted is the record's whole
+      // paper. It sits in the same WHERE clause as the audience scope
+      // and for the same reason: the limit below has to cut rows that
+      // are already in this listing, or a folder's page would be as
+      // short as the documents from elsewhere that fell in the window.
+      folder === undefined
+        ? undefined
+        : folder === ROOT_FOLDER
+          ? isNull(documents.folderId)
+          : eq(documents.folderId, folder),
       // The per-document audience is in the WHERE clause, so the limit
       // below cuts rows this viewer can already see. A read that limited
       // first and filtered after would answer pages that shrink by
@@ -1071,10 +1191,19 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "confidential record's audience — is answered 404, exactly as " +
           "for a contract that does not exist. Archived documents " +
           "(DOC-010) are left out; includeArchived=true draws them " +
-          "beside the live ones, which is where restoring one is offered",
+          "beside the live ones, which is where restoring one is " +
+          "offered. folder narrows the read to one listing (DOC-006): a " +
+          "folder's own id answers what is filed in that folder, `root` " +
+          "answers the documents filed in no folder, and omitting it " +
+          "answers the record's whole paper. Paging applies within " +
+          "whichever listing was asked for, so a heavy folder pages on " +
+          "its own. A folder on another contract, or one that never " +
+          "existed, answers 404 — exactly as a folder that was never " +
+          "created, because a folder's id says nothing about which " +
+          "record it is on",
         tags: ["documents"],
         params: NumberParams,
-        querystring: ArchivedQuery.extend({
+        querystring: ArchivedQuery.extend(FolderQuery.shape).extend({
           /** The previous page's `nextCursor`. Omit for the first page. */
           cursor: CursorSchema.optional(),
         }),
@@ -1084,6 +1213,14 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const contract = await reachedContract(app.db, request.user, request.params.number);
       if (!contract) throw httpError(404, NO_CONTRACT);
+      const { folder } = request.query;
+      // A folder is addressed by its own id, which says nothing about
+      // which record it is on — so it is checked against this contract
+      // before it is filtered on. Skipping the check would make the
+      // list route a way to ask whether a folder id exists somewhere.
+      if (folder !== undefined && folder !== ROOT_FOLDER) {
+        await reachedFolderOn(app.db, contract.id, folder);
+      }
       // An archived record still reads: archiving is a soft delete for
       // mistakes and imports, and restore has to be reachable.
       return await paperOf(
@@ -1092,6 +1229,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         contract,
         request.query.includeArchived === "true",
         request.query.cursor,
+        folder,
       );
     },
   );
@@ -1328,7 +1466,14 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "reaches the document is refused 403 rather than 404, because " +
           "they can already see it. Each set and each clear appends its " +
           "own action, document.confidentiality_set or " +
-          "document.confidentiality_cleared. An archived contract takes " +
+          "document.confidentiality_cleared. folderId is the fourth, and " +
+          "it files the document (DOC-006): a folder on this document's " +
+          "own record, or null for the record root, with null and " +
+          "omitting the field two different requests. A folder on " +
+          "another contract answers 404, exactly as one that was never " +
+          "created, because a folder's id says nothing about which " +
+          "record it is on. Each move appends document.filed, carrying " +
+          "both folders by name so the entry outlives a rename. An archived contract takes " +
           "no " +
           "edit until it is restored. A document on a contract the " +
           "editor cannot reach — and a confidential document they are " +
@@ -1363,6 +1508,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             title?: string;
             description?: string | null;
             isConfidential?: boolean;
+            folderId?: string | null;
           } = {};
           /** The DD-017 changed map — old and new per edited field,
            * feeding the M9 viewer's narration. */
@@ -1390,6 +1536,30 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           if (body.isConfidential !== undefined && body.isConfidential !== target.isConfidential) {
             patch.isConfidential = body.isConfidential;
             confidentialityChange = body.isConfidential;
+          }
+
+          // Where the document is filed (DOC-006, M13/3). Sending null
+          // takes it out to the record root; omitting the field leaves
+          // it where it is — two different requests, exactly as on a
+          // folder's own move.
+          //
+          // The destination is resolved against **this document's own
+          // contract**, which is the shared-owner invariant: a folder on
+          // another record is not found, and is answered exactly as one
+          // that was never created. It rides the same UPDATE and stays
+          // out of the changed map, for the confidential flag's reason —
+          // filing is an act somebody did, not one key inside an edit.
+          let filing: { to: string | null; from: string | null } | undefined;
+          if (body.folderId !== undefined && body.folderId !== target.folderId) {
+            const destination =
+              body.folderId === null
+                ? null
+                : await reachedFolderOn(tx, target.contractId, body.folderId);
+            patch.folderId = destination?.id ?? null;
+            filing = {
+              to: destination?.name ?? null,
+              from: target.folderName,
+            };
           }
 
           // Nothing changed: answer with the row and write no
@@ -1429,6 +1599,27 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
                 : "document.confidentiality_cleared",
               visibility: RECORD_ACTIVITY_TIER,
               payload: { documentId, title: patch.title ?? target.title },
+            });
+          }
+          if (filing) {
+            // One entry per filing (DD-017), at the record tier. Both
+            // folders are carried **by name**: a folder is renamed and
+            // dissolved freely, and the entry has to still say where the
+            // document went a week after the row stopped saying it. A
+            // null on either side is the record root, which has no name
+            // because it is not a folder.
+            await recordActivity(tx, {
+              entityType: "contract",
+              entityId: target.contractId,
+              actorId: request.user.id,
+              action: "document.filed",
+              visibility: RECORD_ACTIVITY_TIER,
+              payload: {
+                documentId,
+                title: patch.title ?? target.title,
+                folderName: filing.to,
+                previousFolderName: filing.from,
+              },
             });
           }
 

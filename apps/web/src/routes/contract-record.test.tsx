@@ -32,7 +32,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 import type { CustomFieldValue, CustomFieldValues } from "../lib/custom-fields";
@@ -3848,6 +3848,8 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     /** Open to whoever reaches the contract, which is where every
      * document starts (DD-014). */
     isConfidential: false,
+    /** Filed nowhere, which is the record root (DOC-006, M13/3). */
+    folderId: null,
     createdBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
     createdAt: "2026-08-11T09:00:00.000Z",
     updatedAt: "2026-08-11T09:00:00.000Z",
@@ -4631,6 +4633,10 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(await menuVerbs(user, member, "Orion_MSA_2026_draft.docx")).toEqual([
       "Add version",
       "Edit details",
+      // Filing is Member+, like every other write on the record's paper
+      // (M13/3), and it is offered on a document at the record root
+      // because moving one back out is the same act.
+      "Move to folder",
       // They uploaded this one, so the flag is theirs to decide
       // (CTR-022). The next test is the row where it is not.
       "Mark confidential",
@@ -5700,10 +5706,14 @@ describe("the folder tree on the contract record (M13/2, DES-033)", () => {
     id: string,
     name: string,
     parentId: string | null = null,
+    documentCount = 0,
   ): Record<string, unknown> => ({
     id,
     name,
     parentId,
+    // How much this viewer can see filed here (M13/3, DD-014). Zero by
+    // default, which is what the tree draws as "Empty".
+    documentCount,
     createdAt: "2026-08-15T09:00:00.000Z",
     updatedAt: "2026-08-15T09:00:00.000Z",
   });
@@ -5801,8 +5811,8 @@ describe("the folder tree on the contract record (M13/2, DES-033)", () => {
     const section = await documentsSection();
     expect(await within(section).findByText("Amendments")).toBeVisible();
     expect(within(section).getByText("Executed")).toBeVisible();
-    // A folder holds nothing until filing lands (M13/3), and its zero
-    // reads "Empty" rather than "0 documents" (DES-033).
+    // A folder with nothing filed in it reads "Empty" rather than
+    // "0 documents" — a plural form, not a special case (DES-033).
     expect(within(section).getAllByText("Empty")).toHaveLength(2);
   });
 
@@ -5845,15 +5855,18 @@ describe("the folder tree on the contract record (M13/2, DES-033)", () => {
     expect(within(section).queryByText("2026")).toBeNull();
   });
 
-  it("offers no chevron on a folder with nothing to open", async () => {
+  it("offers the chevron on a folder that reads Empty", async () => {
     stubApi({ signedIn: MEMBER, extra: foldersApi([folder("f-1", "Executed")]).handler });
     renderAt("/contracts/42/documents");
 
     const section = await documentsSection();
     await within(section).findByText("Executed");
-    // A control that opens nothing is worse than none. It turns on with
-    // filing (M13/3), when a folder always has something inside.
-    expect(within(section).queryByRole("button", { name: /Expand/ })).toBeNull();
+    // Every folder opens (M13/3). "Empty" may be a folder whose
+    // contents this viewer cannot see, so a chevron drawn only on the
+    // folders that hold something would be the surface telling the two
+    // apart — which is what DD-014 bars.
+    expect(within(section).getByRole("button", { name: "Expand Executed" })).toBeVisible();
+    expect(within(section).getByText("Empty")).toBeVisible();
   });
 
   it("makes a folder at the record root from the toolbar", async () => {
@@ -6082,5 +6095,359 @@ describe("the folder tree on the contract record (M13/2, DES-033)", () => {
     // drawing it for them.
     await user.click(within(section).getByRole("button", { name: "Expand Correspondence" }));
     expect(await within(section).findByText("2026")).toBeVisible();
+  });
+});
+
+/**
+ * Filing a document into a folder (M13/3, DES-033).
+ *
+ * The section stops being one list and becomes several: the record root
+ * draws what is filed nowhere, and each folder's documents are read when
+ * it is opened, with the paging foot applying inside that folder. Move
+ * files a document and moves it back out, from a control rather than
+ * only from a drop.
+ *
+ * The count on a folder row is the seam's own number, drawn as it
+ * arrives. Nothing here works one out, because a count the section
+ * derived would be a second answer to a question DD-014 allows only one
+ * of.
+ */
+describe("filing documents into folders (M13/3, DES-033)", () => {
+  const version = (over: Record<string, unknown> = {}) => ({
+    id: "ver-1",
+    versionNumber: 1,
+    kind: "draft_ours",
+    note: null,
+    originalFilename: "signed.pdf",
+    mimeType: "text/plain",
+    /** `other` keeps the row a plain download link, which is what these
+     * assertions read. */
+    renderFamily: "other",
+    byteSize: 10,
+    checksumSha256: "a".repeat(64),
+    uploadedBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+    createdAt: "2026-08-11T09:00:00.000Z",
+    isCurrent: true,
+    isExecuted: false,
+    ...over,
+  });
+
+  const document = (id: string, title: string, folderId: string | null = null) => ({
+    id,
+    title,
+    description: null,
+    isPrimary: false,
+    versions: [version({ id: `ver-${id}`, originalFilename: title })],
+    archivedAt: null,
+    isConfidential: false,
+    folderId,
+    createdBy: { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
+    createdAt: "2026-08-11T09:00:00.000Z",
+    updatedAt: "2026-08-11T09:00:00.000Z",
+  });
+
+  const folder = (id: string, name: string, parentId: string | null = null) => ({
+    id,
+    name,
+    parentId,
+    createdAt: "2026-08-15T09:00:00.000Z",
+    updatedAt: "2026-08-15T09:00:00.000Z",
+  });
+
+  /**
+   * The record, its folders, and its paper — with the filing the seam
+   * really does.
+   *
+   * The list route answers one listing at a time: `folder=root` is what
+   * is filed nowhere, a folder's id is what is filed in it, and each
+   * page is counted inside that listing alone. The folder read answers
+   * the count the same way the seam does, off the same rows, so a test
+   * cannot pass with a count the section invented.
+   */
+  function filingApi(
+    documents: Record<string, unknown>[],
+    folders: Record<string, unknown>[],
+    options: { pageSize?: number; moveFails?: string } = {},
+    team = [person("u1", "creator")],
+  ) {
+    const record = recordApi(contractRow(), team);
+    const reads: string[] = [];
+    const writes: { url: string; body: unknown }[] = [];
+    let paper = documents;
+    /** One listing, in the order the seam answers it. */
+    const listing = (folderId: string | null) =>
+      paper.filter((row) => (row.folderId ?? null) === folderId);
+    const handler = (call: StubCall): Response | undefined => {
+      const { pathname } = call.url;
+      if (pathname === "/api/v1/contracts/42/folders" && call.method === "GET") {
+        return json(200, {
+          folders: folders.map((row) => ({
+            ...row,
+            // Counted off the same rows the listing is answered from,
+            // which is the seam's one predicate said once.
+            documentCount: listing(row.id as string).length,
+          })),
+        });
+      }
+      if (pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
+        const asked = call.url.searchParams.get("folder");
+        reads.push(asked ?? "all");
+        const rows = asked === null ? paper : listing(asked === "root" ? null : asked);
+        const size = options.pageSize ?? rows.length;
+        const cursor = call.url.searchParams.get("cursor");
+        const from = cursor === null ? 0 : rows.findIndex((row) => row.id === cursor) + 1;
+        const page = rows.slice(from, from + size);
+        return json(200, {
+          documents: page,
+          nextCursor: from + size < rows.length ? (page.at(-1)?.id ?? null) : null,
+        });
+      }
+      const addressed = /^\/api\/v1\/documents\/([^/]+)$/.exec(pathname);
+      if (addressed && call.method === "PATCH") {
+        writes.push({ url: pathname, body: call.body });
+        if (options.moveFails) return problem(409, options.moveFails);
+        const patch = call.body as { folderId?: string | null };
+        const moved = { ...paper.find((row) => row.id === addressed[1])!, ...patch };
+        paper = paper.map((row) => (row.id === addressed[1] ? moved : row));
+        return json(200, { document: moved });
+      }
+      return record.handler(call);
+    };
+    return { handler, reads, writes };
+  }
+
+  const documentsSection = () => screen.findByRole("region", { name: /^Documents/ });
+
+  it("draws the record root as the documents filed nowhere", async () => {
+    const api = filingApi(
+      [document("doc-1", "loose.pdf"), document("doc-2", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    expect(await within(section).findByText("loose.pdf")).toBeVisible();
+    // The filed one belongs to its folder and is drawn there, not twice.
+    expect(within(section).queryByText("signed.pdf")).toBeNull();
+    // The folder row states its own count, which is the seam's number.
+    expect(within(section).getByText("1 document")).toBeVisible();
+    // And the section's badge is the total over both listings: one
+    // document filed nowhere, plus the one the folder says it holds.
+    expect(within(section).getByRole("img", { name: "2 documents" })).toBeVisible();
+    expect(api.reads).toContain("root");
+  });
+
+  it("loads a folder's documents when it is opened, through the folder filter", async () => {
+    const api = filingApi(
+      [document("doc-1", "loose.pdf"), document("doc-2", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await within(section).findByText("Executed");
+    // Nothing is read for a folder nobody opened: a heavy record stays a
+    // short table until somebody asks.
+    expect(api.reads).not.toContain("f-1");
+
+    await user.click(within(section).getByRole("button", { name: "Expand Executed" }));
+
+    expect(await within(section).findByText("signed.pdf")).toBeVisible();
+    expect(api.reads).toContain("f-1");
+  });
+
+  it("pages inside the folder it was pressed in", async () => {
+    const api = filingApi(
+      [
+        document("doc-1", "first.pdf", "f-1"),
+        document("doc-2", "second.pdf", "f-1"),
+        document("doc-3", "loose.pdf"),
+      ],
+      [folder("f-1", "Executed")],
+      { pageSize: 1 },
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    expect(await within(section).findByText("first.pdf")).toBeVisible();
+    expect(within(section).queryByText("second.pdf")).toBeNull();
+
+    // The foot belongs to the folder and says so, and pressing it
+    // appends inside the folder rather than at the record root.
+    await user.click(within(section).getByRole("button", { name: "Show more in Executed" }));
+
+    expect(await within(section).findByText("second.pdf")).toBeVisible();
+    expect(within(section).getByText("first.pdf")).toBeVisible();
+  });
+
+  it("files a document into a folder from its own menu", async () => {
+    const api = filingApi([document("doc-1", "signed.pdf")], [folder("f-1", "Executed")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(
+      await within(section).findByRole("button", { name: "Actions for signed.pdf" }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: "Move to folder" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.selectOptions(within(dialog).getByLabelText("File in"), "f-1");
+    await user.click(within(dialog).getByRole("button", { name: "Move" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]).toEqual({ url: "/api/v1/documents/doc-1", body: { folderId: "f-1" } });
+    // The row has left the record root, and the folder's count says so.
+    await waitFor(() => expect(within(section).queryByText("signed.pdf")).toBeNull());
+    expect(await within(section).findByText("1 document")).toBeVisible();
+  });
+
+  it("moves a filed document back out to the record root", async () => {
+    const api = filingApi([document("doc-1", "signed.pdf", "f-1")], [folder("f-1", "Executed")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    await user.click(
+      await within(section).findByRole("button", { name: "Actions for signed.pdf" }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: "Move to folder" }));
+    const dialog = await screen.findByRole("dialog");
+    // The empty value is the record root, because it is the absence of a
+    // folder rather than a folder with an id.
+    await user.selectOptions(within(dialog).getByLabelText("File in"), "");
+    await user.click(within(dialog).getByRole("button", { name: "Move" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]).toEqual({ url: "/api/v1/documents/doc-1", body: { folderId: null } });
+    expect(await within(section).findByText("Empty")).toBeVisible();
+  });
+
+  it("keeps a refused move inside the dialog, in the server's own words", async () => {
+    const api = filingApi([document("doc-1", "signed.pdf")], [folder("f-1", "Executed")], {
+      moveFails: "This contract is archived. Restore it before changing its folders.",
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(
+      await within(section).findByRole("button", { name: "Actions for signed.pdf" }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: "Move to folder" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.selectOptions(within(dialog).getByLabelText("File in"), "f-1");
+    await user.click(within(dialog).getByRole("button", { name: "Move" }));
+
+    // The refusal is a thing the person can act on, so it is said where
+    // they are looking and the dialog stays open for them to cancel or
+    // choose again.
+    expect(
+      await within(dialog).findByText(
+        "This contract is archived. Restore it before changing its folders.",
+      ),
+    ).toBeVisible();
+    expect(within(section).getByText("signed.pdf")).toBeVisible();
+  });
+
+  it("reads a closed folder fresh after a move filed something into it", async () => {
+    const api = filingApi([document("doc-1", "signed.pdf")], [folder("f-1", "Executed")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    // Open the folder while it is empty, so the section holds a listing
+    // for it, then close it again.
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    await within(section).findByText("Empty");
+    await user.click(within(section).getByRole("button", { name: "Collapse Executed" }));
+
+    // File the loose document into the closed folder.
+    await user.click(
+      await within(section).findByRole("button", { name: "Actions for signed.pdf" }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: "Move to folder" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.selectOptions(within(dialog).getByLabelText("File in"), "f-1");
+    await user.click(within(dialog).getByRole("button", { name: "Move" }));
+    await waitFor(() => expect(within(section).queryByText("signed.pdf")).toBeNull());
+
+    // Reopening draws what the folder holds now, not the listing it held
+    // before the move: a Move names any folder, open or not, so a cache
+    // kept across the write would sit beside a count that has moved on.
+    await user.click(within(section).getByRole("button", { name: "Expand Executed" }));
+    expect(await within(section).findByText("signed.pdf")).toBeVisible();
+  });
+
+  it("names every destination by its whole path", async () => {
+    const api = filingApi(
+      [document("doc-1", "letter.pdf")],
+      [folder("f-1", "Correspondence"), folder("f-2", "2026", "f-1")],
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(
+      await within(section).findByRole("button", { name: "Actions for letter.pdf" }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: "Move to folder" }));
+
+    const dialog = await screen.findByRole("dialog");
+    // A bare "2026" says nothing when two groupings each have one.
+    expect(
+      within(dialog)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["The contract itself", "Correspondence", "Correspondence / 2026"]);
+  });
+
+  it("offers a Contributor the tree and no way to file anything", async () => {
+    const api = filingApi(
+      [document("doc-1", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+      {},
+      [person("u1", "creator"), person("u3", "contributor")],
+    );
+    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    // The folder opens and its documents read: the record reads the same
+    // for everyone on it (DD-015).
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    expect(await within(section).findByText("signed.pdf")).toBeVisible();
+    // What they may not do is not drawn, rather than drawn and dead.
+    expect(within(section).queryByRole("button", { name: /^Actions for/ })).toBeNull();
+  });
+
+  it("says a folder's documents are on their way while they load", async () => {
+    const api = filingApi([document("doc-1", "signed.pdf", "f-1")], [folder("f-1", "Executed")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    // Fired rather than driven through userEvent: the read is what is
+    // being asserted, and userEvent settles it before it can be seen.
+    fireEvent.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+
+    // Said once for the folder, to a reader who cannot see the skeleton
+    // rows (DES-033).
+    expect(within(section).getByText("Loading the documents in Executed")).toBeInTheDocument();
+    expect(await within(section).findByText("signed.pdf")).toBeVisible();
+    // And it stops being said once they are there.
+    expect(within(section).queryByText("Loading the documents in Executed")).toBeNull();
   });
 });

@@ -21,10 +21,14 @@
  * M11/6 adds `is_confidential`, DD-014's per-document flag, which M10
  * deferred until this table existed.
  *
- * What is deliberately not here yet, and the step that brings it:
- * `folder_id` (DOC-006), and the version chain's `source` plus the two
- * comparison-provenance columns (M32's generated redlines). Each
- * arrives with the feature that reads it.
+ * M13/3 adds `folder_id` (DOC-006), the optional grouping inside the
+ * owning record. NULL is the record root, which is where every document
+ * uploaded before folders existed sits and where most of them stay.
+ *
+ * What is deliberately not here yet, and the step that brings it: the
+ * version chain's `source` plus the two comparison-provenance columns
+ * (M32's generated redlines). Each arrives with the feature that reads
+ * it.
  */
 
 import { sql } from "drizzle-orm";
@@ -42,6 +46,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { users } from "./auth.js";
 import { contracts } from "./contracts.js";
+import { documentFolders } from "./document-folders.js";
 import { uuidPk } from "./helpers.js";
 
 /**
@@ -162,6 +167,24 @@ export const documents = pgTable(
      * permissions.
      */
     isConfidential: boolean("is_confidential").notNull().default(false),
+    /**
+     * Which folder on the owning record this document is filed in, or
+     * NULL at the record root (DOC-006, M13/3).
+     *
+     * **Shared-owner invariant**: the named folder belongs to this
+     * document's own contract. It is enforced in the write path, under
+     * that contract's row lock, exactly as the folder tree's own
+     * invariants are — a folder id says nothing about which record it is
+     * on, so a folder from another contract is answered as one that was
+     * never created rather than refused as a mismatch.
+     *
+     * **No cascade, and no SET NULL**, for `document_folders.parent_id`'s
+     * reason: deleting a folder dissolves it, and the route re-files
+     * every document in it into the parent — the record root when it had
+     * none — before the row goes. The database refusing to orphan a
+     * filed document is the backstop for a write that forgot to.
+     */
+    folderId: text("folder_id").references(() => documentFolders.id),
     // No cascade, as everywhere a record names a person: someone is
     // archived, never deleted (SET-005).
     createdBy: text("created_by")
@@ -185,6 +208,12 @@ export const documents = pgTable(
     // is a sequential scan of `documents` per deleted version — the cost
     // the M11/4 review parked until this step.
     index("documents_executed_version_idx").on(table.executedVersionId),
+    // The read a folder makes when it is opened: this folder's
+    // documents, newest first (M13/3). The same index answers the
+    // folder's count and the re-file a delete runs, and it is what keeps
+    // opening one folder on a heavy record off a scan of the record's
+    // whole paper.
+    index("documents_folder_idx").on(table.folderId, table.createdAt),
   ],
 );
 
