@@ -106,3 +106,29 @@ export async function sendContractEnvelope(
     ? { ok: true, ...data }
     : { ok: false, detail: problemDetail(error), type: problemType(error) };
 }
+
+/**
+ * Withdraws a live envelope (CTR-013).
+ *
+ * The envelope is addressed by its own id rather than by the record it
+ * sits on, because a void is about the round: the seam reads the
+ * contract from the envelope, and answers the record's whole signing
+ * state back — the ending on the row, and the send control that comes
+ * back with it, in one answer.
+ *
+ * The reason is required. The provider records it with the withdrawal
+ * and the row draws it under the status pill, so a void with no words
+ * would leave the record unable to say why the round ended.
+ */
+export async function voidContractEnvelope(
+  envelopeId: string,
+  reason: string,
+): Promise<SigningOutcome> {
+  const { data, error } = await api.POST("/api/v1/envelopes/{envelopeId}/void", {
+    params: { path: { envelopeId } },
+    body: { reason },
+  });
+  return data
+    ? { ok: true, ...data }
+    : { ok: false, detail: problemDetail(error), type: problemType(error) };
+}

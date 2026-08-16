@@ -74,13 +74,22 @@
  * sign a contract are on the other side of a deal: they have no account
  * here, so there is no picker to offer them from. Every one of them is
  * asked at once — the send dialog collects a list, not an order.
+ *
+ * **Voiding is the envelope row's one action, and its audience is the
+ * cancel's** (M15/4, CTR-013). The person who sent it, the contract's
+ * Owner, and an Administrator withdraw a live round; everybody else
+ * gets no menu on that row at all, which is the absence rule again. The
+ * act opens a dialog because it collects the reason the provider and
+ * the row both keep — and because a round already out to signers is not
+ * a thing to end by reflex.
  */
 
 import { useRef, useState } from "react";
 import { FormattedMessage, useIntl, defineMessage, type IntlShape } from "react-intl";
-import { Check, MoreHorizontal, Plus, Send, Users, X } from "lucide-react";
+import { Check, MoreHorizontal, Plus, Send, Undo2, Users, X } from "lucide-react";
 import {
   MAX_APPROVAL_NOTE_LENGTH,
+  MAX_ENVELOPE_REASON_LENGTH,
   MAX_ENVELOPE_SIGNERS,
   MAX_ENVELOPE_SUBJECT_LENGTH,
 } from "@openlaw/shared";
@@ -98,6 +107,7 @@ import {
   ENVELOPE_PILL,
   liveEnvelope,
   sendContractEnvelope,
+  voidContractEnvelope,
   type ContractEnvelope,
   type EnvelopeSigner,
   type EnvelopeStatus,
@@ -204,6 +214,7 @@ export function ApprovalsSigningCard({
   const [asking, setAsking] = useState(false);
   const [sending, setSending] = useState(false);
   const [applying, setApplying] = useState(false);
+  const [voiding, setVoiding] = useState<ContractEnvelope | null>(null);
   const [deciding, setDeciding] = useState<{
     approval: ContractApproval;
     decision: ApprovalDecision;
@@ -324,7 +335,14 @@ export function ApprovalsSigningCard({
    * and the chain a next send would offer. Collapsing the two would
    * mean a caller unpacking a union at every call site.
    */
-  async function runSend(write: () => Promise<SigningOutcome>): Promise<string | null> {
+  async function runSend(
+    write: () => Promise<SigningOutcome>,
+    /** What to print when the seam refused without a sentence of its
+     * own. It is the caller's, because a send and a void fail at
+     * different things and one message could only describe one of
+     * them. */
+    fallback: string,
+  ): Promise<string | null> {
     setStatus("saving");
     setDetail(null);
     const outcome = await write();
@@ -334,13 +352,7 @@ export function ApprovalsSigningCard({
       // screen rather than printing it a second time behind a modal.
       setStatus("idle");
       setDetail(null);
-      return (
-        outcome.detail ??
-        intl.formatMessage({
-          id: "signing.sendFailed",
-          defaultMessage: "The envelope could not be sent. Try again.",
-        })
-      );
+      return outcome.detail ?? fallback;
     }
     onSigning({
       envelopes: outcome.envelopes,
@@ -471,11 +483,37 @@ export function ApprovalsSigningCard({
                   <th scope="col" className="w-28 px-4 py-2 text-start font-medium">
                     <FormattedMessage id="signing.column.completed" defaultMessage="Completed" />
                   </th>
+                  {!frozen && (
+                    <th scope="col" className="w-16 px-4 py-2 text-end font-medium">
+                      <span className="sr-only">
+                        <FormattedMessage id="signing.column.actions" defaultMessage="Actions" />
+                      </span>
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
                 {signing.envelopes.map((envelope) => (
-                  <EnvelopeRow key={envelope.id} envelope={envelope} intl={intl} />
+                  <EnvelopeRow
+                    key={envelope.id}
+                    envelope={envelope}
+                    intl={intl}
+                    busy={busy}
+                    frozen={frozen}
+                    // The approvals-cancellation audience, said over the
+                    // facts this page already holds (CTR-013). It is the
+                    // seam's rule mirrored, not a second rule: the void
+                    // is refused by name either way, and this is only
+                    // what keeps the record from drawing a control that
+                    // could not be used.
+                    canVoid={
+                      envelope.status === "sent" &&
+                      (viewerRole === "administrator" ||
+                        envelope.sentBy.id === viewerId ||
+                        ownerId === viewerId)
+                    }
+                    onVoid={() => setVoiding(envelope)}
+                  />
                 ))}
               </tbody>
             </table>
@@ -489,7 +527,7 @@ export function ApprovalsSigningCard({
             <p className="px-4 pb-3 text-xs text-muted">
               <FormattedMessage
                 id="signing.statusArrives"
-                defaultMessage="Signed and declined status arrives by webhook."
+                defaultMessage="Signed, declined, and voided status arrives by webhook."
               />
             </p>
           )}
@@ -572,8 +610,31 @@ export function ApprovalsSigningCard({
           busy={busy}
           onClose={() => setSending(false)}
           onConfirm={async (input) => {
-            const refusal = await runSend(() => sendContractEnvelope(contractNumber, input));
+            const refusal = await runSend(
+              () => sendContractEnvelope(contractNumber, input),
+              intl.formatMessage({
+                id: "signing.sendFailed",
+                defaultMessage: "The envelope could not be sent. Try again.",
+              }),
+            );
             if (refusal === null) setSending(false);
+            return refusal;
+          }}
+        />
+      )}
+      {voiding !== null && (
+        <VoidEnvelopeDialog
+          busy={busy}
+          onClose={() => setVoiding(null)}
+          onConfirm={async (reason) => {
+            const refusal = await runSend(
+              () => voidContractEnvelope(voiding.id, reason),
+              intl.formatMessage({
+                id: "signing.voidFailed",
+                defaultMessage: "The envelope could not be voided. Try again.",
+              }),
+            );
+            if (refusal === null) setVoiding(null);
             return refusal;
           }}
         />
@@ -648,7 +709,18 @@ export function ApprovalsSigningCard({
 function EnvelopeRow({
   envelope,
   intl,
-}: Readonly<{ envelope: ContractEnvelope; intl: IntlShape }>) {
+  busy,
+  frozen,
+  canVoid,
+  onVoid,
+}: Readonly<{
+  envelope: ContractEnvelope;
+  intl: IntlShape;
+  busy: boolean;
+  frozen: boolean;
+  canVoid: boolean;
+  onVoid: () => void;
+}>) {
   const dash = intl.formatMessage(NOT_YET);
   return (
     <tr className="border-t border-border-muted">
@@ -721,6 +793,43 @@ function EnvelopeRow({
           {envelope.completedAt === null ? dash : formatShortDate(envelope.completedAt)}
         </span>
       </td>
+      {!frozen && (
+        <td className="px-4 py-2.5 text-end">
+          {/* The row's one act, in the menu the card's other rows put
+              their acts in (DES-035 clause 9). Absent — never disabled
+              — for a round this reader may not withdraw and for one
+              that has already ended: a greyed-out "Void envelope" on
+              somebody else's send is an invitation to ask why, and the
+              answer is not a permissions lesson. */}
+          {canVoid && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  disabled={busy}
+                  aria-label={intl.formatMessage(
+                    {
+                      id: "signing.actionsFor",
+                      defaultMessage: "Actions for the envelope sent on {date}",
+                    },
+                    { date: formatShortDate(envelope.sentAt) },
+                  )}
+                >
+                  <MoreHorizontal size={16} aria-hidden="true" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={onVoid}>
+                  <Undo2 size={16} aria-hidden="true" />
+                  <FormattedMessage id="signing.void" defaultMessage="Void envelope" />
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </td>
+      )}
     </tr>
   );
 }
@@ -1228,6 +1337,121 @@ function DecisionDialog({
               ) : (
                 <FormattedMessage id="approvals.reject" defaultMessage="Reject" />
               )}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/**
+ * Why a live round is being withdrawn (CTR-013, M15/4).
+ *
+ * A dialog rather than a one-click act, which is where this parts
+ * company with the roster's cancel: cancelling an ask destroys nothing
+ * that matters, while voiding ends a round that is already out with
+ * people who are not on this install. The reason is **required**,
+ * because the provider records it with the withdrawal and the row draws
+ * it under the status pill — a void with no words leaves the record
+ * unable to say why the round ended.
+ *
+ * The confirm is the mock's own verb, and it is the primary button
+ * rather than the `danger` one: withdrawing a send is a normal act on
+ * the way to a better one, which is the same reading DES-036 clause 5
+ * gives the `voided` pill its neutral family for.
+ *
+ * The refusal is printed here rather than in the card head, because
+ * this is where the reader's attention already is (DES-035 clause 12).
+ */
+function VoidEnvelopeDialog({
+  busy,
+  onClose,
+  onConfirm,
+}: Readonly<{
+  busy: boolean;
+  onClose: () => void;
+  /** Answers with the refusal to show, or `null` when the void
+   * landed. */
+  onConfirm: (reason: string) => Promise<string | null>;
+}>) {
+  const intl = useIntl();
+  const [reason, setReason] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit() {
+    if (busy) return;
+    const words = reason.trim();
+    if (words === "") {
+      setError(
+        intl.formatMessage({
+          id: "signing.needReason",
+          defaultMessage: "Say why this envelope is being voided.",
+        }),
+      );
+      return;
+    }
+    setError(await onConfirm(words));
+  }
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent aria-describedby={undefined}>
+        <DialogTitle>
+          <FormattedMessage id="signing.voidTitle" defaultMessage="Void envelope" />
+        </DialogTitle>
+        <form
+          className="mt-4 flex flex-col gap-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submit();
+          }}
+        >
+          {/* Said where the act is taken, as every other note on this
+              card is (DES-035 clauses 17 and 18). Two facts, and both
+              of them the reason somebody hesitates: the signers lose
+              the round, and the record is free to send another. */}
+          <p className="text-sm text-muted">
+            <FormattedMessage
+              id="signing.voidExplains"
+              defaultMessage="The signers can no longer sign this round. The contract can be sent again straight after."
+            />
+          </p>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="envelope-void-reason">
+              <FormattedMessage id="signing.reason" defaultMessage="Reason" />
+            </Label>
+            <textarea
+              id="envelope-void-reason"
+              value={reason}
+              rows={3}
+              autoFocus
+              maxLength={MAX_ENVELOPE_REASON_LENGTH}
+              className={TEXTAREA_CLASS}
+              onChange={(event) => {
+                setReason(event.target.value);
+                setError(null);
+              }}
+            />
+            <p className="text-xs text-muted">
+              <FormattedMessage
+                id="signing.reasonHelp"
+                defaultMessage="The provider records this with the withdrawal, and the record keeps it on the row."
+              />
+            </p>
+          </div>
+          {error && (
+            <p role="alert" className="text-xs text-status-danger-fg">
+              {error}
+            </p>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={onClose}>
+              <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+            </Button>
+            <Button type="submit" disabled={busy}>
+              <Undo2 size={16} aria-hidden="true" />
+              <FormattedMessage id="signing.void" defaultMessage="Void envelope" />
             </Button>
           </div>
         </form>

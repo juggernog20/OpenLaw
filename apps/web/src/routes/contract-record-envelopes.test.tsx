@@ -38,6 +38,29 @@ const CONTRIBUTOR = {
   displayName: "Casey Contributor",
   role: "contributor",
 };
+/** CTR-004's Owner — one of the void's three actors, and somebody who
+ * sent nothing. */
+const OWNER = {
+  id: "u4",
+  email: "owner@example.com",
+  displayName: "Omar Owner",
+  role: "legal_team_member",
+};
+/** The Owner as the record answers them. */
+const OWNER_PERSON = { id: "u4", displayName: "Omar Owner", image: null };
+/** A Member+ who reaches the record and is none of the three actors. */
+const BYSTANDER = {
+  id: "u5",
+  email: "bystander@example.com",
+  displayName: "Bea Bystander",
+  role: "legal_team_member",
+};
+const ADMIN = {
+  id: "u1",
+  email: "admin@example.com",
+  displayName: "Ada Admin",
+  role: "administrator",
+};
 
 const PEOPLE = [
   {
@@ -182,6 +205,28 @@ function recordApi(
       };
       return json(201, state);
     }
+    // The withdrawal, addressed by the envelope's own id. It answers
+    // the record's whole signing state, exactly as the send does, which
+    // is what brings the send control back with the ending.
+    if (call.url.pathname === "/api/v1/envelopes/e1/void" && call.method === "POST") {
+      writes.push({ path: call.url.pathname, body: call.body });
+      if (refuse) return problem(refuse.status, refuse.detail, refuse.type);
+      const body = call.body as { reason: string };
+      state = {
+        ...state,
+        envelopes: state.envelopes.map((row) =>
+          row.id === "e1"
+            ? {
+                ...row,
+                status: "voided",
+                reason: body.reason,
+                completedAt: "2026-08-13T00:00:00.000Z",
+              }
+            : row,
+        ),
+      };
+      return json(200, state);
+    }
     return undefined;
   };
   return {
@@ -249,7 +294,7 @@ describe("the record's signing block", () => {
     renderAt("/contracts/42/approvals");
 
     expect(
-      await screen.findByText("Signed and declined status arrives by webhook."),
+      await screen.findByText("Signed, declined, and voided status arrives by webhook."),
     ).toBeInTheDocument();
   });
 
@@ -262,7 +307,7 @@ describe("the record's signing block", () => {
 
     await envelopeRows();
     expect(
-      screen.queryByText("Signed and declined status arrives by webhook."),
+      screen.queryByText("Signed, declined, and voided status arrives by webhook."),
     ).not.toBeInTheDocument();
   });
 
@@ -476,5 +521,125 @@ describe("when the send control is absent", () => {
     const rows = await envelopeRows();
     expect(within(rows[0]!).getByText("Out for signature")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
+  });
+});
+
+/** The row's action menu, once the card has drawn the signing block. */
+const ROW_ACTIONS = "Actions for the envelope sent on Aug 10";
+
+describe("voiding a live envelope", () => {
+  it("collects the reason and withdraws the round, in one write", async () => {
+    const user = userEvent.setup();
+    const api = recordApi({ envelopes: [envelopeRow()] });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    await user.click(await screen.findByRole("button", { name: ROW_ACTIONS }));
+    await user.click(await screen.findByRole("menuitem", { name: "Void envelope" }));
+
+    const dialog = await screen.findByRole("dialog");
+    await user.type(within(dialog).getByLabelText("Reason"), "We sent the wrong redline.");
+    await user.click(within(dialog).getByRole("button", { name: "Void envelope" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]).toEqual({
+      path: "/api/v1/envelopes/e1/void",
+      body: { reason: "We sent the wrong redline." },
+    });
+
+    // The state the write answered with is what the card now draws:
+    // the ending on the row, its reason under the pill, and the send
+    // control back — the next round goes out as easily as the first.
+    const rows = await envelopeRows();
+    expect(within(rows[0]!).getByText("Voided")).toBeInTheDocument();
+    expect(within(rows[0]!).getByText("We sent the wrong redline.")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Send for signature" })).toBeInTheDocument();
+  });
+
+  it("refuses a void with no words, without writing anything", async () => {
+    const user = userEvent.setup();
+    const api = recordApi({ envelopes: [envelopeRow()] });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    await user.click(await screen.findByRole("button", { name: ROW_ACTIONS }));
+    await user.click(await screen.findByRole("menuitem", { name: "Void envelope" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Void envelope" }));
+
+    expect(
+      await within(dialog).findByText("Say why this envelope is being voided."),
+    ).toBeInTheDocument();
+    expect(api.writes).toHaveLength(0);
+  });
+
+  it("prints the seam's own refusal in the dialog, and keeps what was typed", async () => {
+    const user = userEvent.setup();
+    const api = recordApi({ envelopes: [envelopeRow()] });
+    api.refuseNext(409, "This envelope has already ended. It cannot be voided.");
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    await user.click(await screen.findByRole("button", { name: ROW_ACTIONS }));
+    await user.click(await screen.findByRole("menuitem", { name: "Void envelope" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.type(within(dialog).getByLabelText("Reason"), "Superseded by the new draft.");
+    await user.click(within(dialog).getByRole("button", { name: "Void envelope" }));
+
+    expect(await within(dialog).findByText(/already ended/)).toBeInTheDocument();
+    expect(within(dialog).getByLabelText("Reason")).toHaveValue("Superseded by the new draft.");
+  });
+
+  it("offers the act to the contract's Owner, who sent nothing", async () => {
+    const api = recordApi({ envelopes: [envelopeRow()] }, contractRow({ manager: OWNER_PERSON }));
+    stubApi({ signedIn: OWNER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    await envelopeRows();
+    expect(await screen.findByRole("button", { name: ROW_ACTIONS })).toBeInTheDocument();
+  });
+
+  it("offers the act to an Administrator", async () => {
+    const api = recordApi({ envelopes: [envelopeRow()] });
+    stubApi({ signedIn: ADMIN, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    await envelopeRows();
+    expect(await screen.findByRole("button", { name: ROW_ACTIONS })).toBeInTheDocument();
+  });
+});
+
+describe("when the void control is absent", () => {
+  it("draws no menu for a Member+ who neither sent it nor owns the record", async () => {
+    const api = recordApi({ envelopes: [envelopeRow()] });
+    stubApi({ signedIn: BYSTANDER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    // They read the round; absence is about standing, not about reach.
+    const rows = await envelopeRows();
+    expect(within(rows[0]!).getByText("Out for signature")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: ROW_ACTIONS })).not.toBeInTheDocument();
+  });
+
+  it("draws no menu on a round that has already ended", async () => {
+    const api = recordApi({
+      envelopes: [envelopeRow({ status: "signed", completedAt: "2026-08-12T00:00:00.000Z" })],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    const rows = await envelopeRows();
+    expect(within(rows[0]!).getByText("Signed")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: ROW_ACTIONS })).not.toBeInTheDocument();
+  });
+
+  it("draws no action cell at all for a read-only viewer", async () => {
+    const api = recordApi({ envelopes: [envelopeRow()] });
+    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    const table = await screen.findByRole("table", { name: "Signing" });
+    expect(within(table).queryByRole("columnheader", { name: "Actions" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: ROW_ACTIONS })).not.toBeInTheDocument();
   });
 });

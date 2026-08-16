@@ -1167,6 +1167,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/envelopes/{envelopeId}/void": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Withdraw a live envelope (CTR-013). Three actors may: the person who sent it, the contract's Owner, and an Administrator — a mistaken or superseded send should not sit open, and it should not wait on the one person who made it. The reason is required, because the provider records it with the withdrawal and the record draws it on the row. The provider is told first and the voided transition is applied after it accepts, so the record never says withdrawn while the envelope is still collecting signatures. An envelope that has already ended — signed, declined, or voided — is refused: an ending is part of the record. Appends one envelope.voided entry on the contract at the working-team tier, attributed to the voider (DD-017). Once it is voided the contract sends again, because the one-live-envelope rule holds only while an envelope is out. An envelope on a contract this viewer cannot reach answers 404, exactly as for one that was never sent; an archived contract takes no void until it is restored */
+    post: operations["voidContractEnvelope"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/counterparties": {
     parameters: {
       query?: never;
@@ -6426,6 +6443,78 @@ export interface operations {
     responses: {
       /** @description Default Response */
       201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            envelopes: {
+              id: string;
+              provider: string;
+              /** @enum {string} */
+              status: "sent" | "signed" | "declined" | "voided";
+              signers: {
+                name: string;
+                email: string;
+              }[];
+              documentTitle: string | null;
+              documentVersionNumber: number | null;
+              reason: string | null;
+              sentBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              };
+              /** Format: date-time */
+              sentAt: string;
+              completedAt: string | null;
+            }[];
+            signingConfigured: boolean;
+            primaryDocument: {
+              id: string;
+              title: string;
+              versions: {
+                id: string;
+                versionNumber: number;
+                kind: string;
+                originalFilename: string;
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+            } | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  voidContractEnvelope: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        envelopeId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          reason: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
         headers: {
           [name: string]: unknown;
         };

@@ -60,13 +60,33 @@
  * transaction as the write — so a failed log write rolls the send's row
  * back rather than leaving an unrecorded envelope.
  *
- * **The status comes back on its own** (M15/3). Nothing here moves an
- * envelope: the provider's Connect webhook does, through the one status
- * funnel in `lib/signing/transitions.ts`. These routes only read what
- * that funnel wrote — the status, its reason, and its completion time.
+ * **The status comes back on its own** (M15/3). The provider's Connect
+ * webhook reports what happened to an envelope, through the one status
+ * funnel in `lib/signing/transitions.ts`.
  *
- * The reconciliation sweep, the executed-copy fetch, and the void are
- * the later slices, and nothing here moves a contract's status.
+ * **A live envelope is withdrawn where it was sent** (M15/4). The
+ * sender, the contract's Owner, or an Administrator voids it — the
+ * approvals-cancellation audience, for its reason: a mistaken or
+ * superseded send should not sit open, and it should not need the
+ * person who made it. The void tells the **provider first** and then
+ * applies the `voided` transition through that same funnel, with the
+ * voider's reason stored and narrated. The order is the send's order
+ * inverted for the send's reason: a record that says "voided" while the
+ * envelope is still collecting signatures is the failure that matters,
+ * and telling the provider first cannot produce it.
+ *
+ * **Nothing here moves an envelope by hand.** Every status change on
+ * this module's rows goes through `applyEnvelopeStatus`, which owns its
+ * own transaction, locks the row, and refuses to move an envelope that
+ * has already ended. A void racing a decline therefore loses cleanly.
+ *
+ * **After an ending, the record sends again** (CTR-013). The partial
+ * unique index holds only while an envelope is `sent`, so a voided or
+ * declined round blocks nothing: the next send is a new row and the
+ * earlier one stays on the record.
+ *
+ * The reconciliation sweep and the executed-copy fetch are the later
+ * slices, and nothing here moves a contract's status.
  */
 
 import type { Readable } from "node:stream";
@@ -86,9 +106,12 @@ import {
   inArray,
   users,
   type Db,
+  type EnvelopeStatus,
+  type SigningProviderKey,
 } from "@openlaw/db";
 import {
   ENVELOPE_LIVE_PROBLEM_TYPE,
+  MAX_ENVELOPE_REASON_LENGTH,
   MAX_ENVELOPE_SIGNERS,
   MAX_ENVELOPE_SUBJECT_LENGTH,
   SIGNING_NOT_CONFIGURED_PROBLEM_TYPE,
@@ -102,12 +125,14 @@ import {
 } from "../../lib/contract-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import {
+  EnvelopeNotFoundError,
   SigningConfigError,
   SigningRefusedError,
   SigningTimeoutError,
   SigningUnavailableError,
   type SigningProvider,
 } from "../../lib/signing/provider.js";
+import { applyEnvelopeStatus } from "../../lib/signing/transitions.js";
 
 /** The contract read floor (CTR-021), which is the envelope read floor
  * too: a Contributor on the team sees whether the record's paper is out
@@ -127,6 +152,14 @@ const NO_CONTRACT = "No contract exists with this number.";
  * an archived contract reads as facts until it is restored, and sending
  * its paper out is a change to the record, not a reading of it. */
 const FROZEN = "This contract is archived. Restore it before sending it for signature.";
+
+/** An envelope on a contract this viewer cannot reach reads exactly as
+ * one that does not exist, for the reason `NO_CONTRACT` gives. */
+const NO_ENVELOPE = "No envelope exists with that id.";
+
+/** CTR-021 again, said for the act being refused: a frozen record takes
+ * no writes, and withdrawing a send is a write. */
+const FROZEN_VOID = "This contract is archived. Restore it before voiding its envelope.";
 
 const RecordIdSchema = z.string().min(1).max(64);
 
@@ -208,6 +241,10 @@ const EnvelopesEnvelope = z.object({
 });
 
 const NumberParams = z.object({ number: z.coerce.number().int().positive() });
+/** One envelope, addressed by its own id — as an approval's own writes
+ * are addressed (CTR-012's precedent). A void is about the round, not
+ * about the record, and the record it belongs to is read from it. */
+const EnvelopeParams = z.object({ envelopeId: RecordIdSchema });
 
 export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
   type Tx = Parameters<Parameters<typeof app.db.transaction>[0]>[0];
@@ -399,6 +436,72 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
     return row !== undefined;
   }
 
+  /** One envelope this viewer reaches, with the state of the record
+   * that owns it. */
+  interface ReachedEnvelope {
+    id: string;
+    contractId: string;
+    provider: SigningProviderKey;
+    providerEnvelopeId: string;
+    status: EnvelopeStatus;
+    /** Who sent it — one of the void's three actors (CTR-013). */
+    sentBy: string;
+    /** The owning contract's SET-003 soft delete (CTR-021). */
+    contractArchivedAt: Date | null;
+    /** The owning contract's Owner (CTR-004) — the second actor. */
+    contractManagerId: string | null;
+    /** CTR-014's instrument, so the answer can be built without a
+     * second read of the record. */
+    contractPrimaryDocumentId: string | null;
+  }
+
+  /**
+   * One envelope this viewer reaches, by its own id, or `null`.
+   *
+   * The owning contract is joined in and the reach predicate rides
+   * beside the id, so an envelope on a contract the viewer cannot reach
+   * is indistinguishable from one that was never sent. Confidentiality
+   * therefore inherits here exactly as it does on the read.
+   */
+  async function reachedEnvelope(
+    db: ContractAccessReader,
+    user: AuthenticatedUser,
+    envelopeId: string,
+  ): Promise<ReachedEnvelope | null> {
+    const [row] = await db
+      .select({
+        id: contractEnvelopes.id,
+        contractId: contractEnvelopes.contractId,
+        provider: contractEnvelopes.provider,
+        providerEnvelopeId: contractEnvelopes.providerEnvelopeId,
+        status: contractEnvelopes.status,
+        sentBy: contractEnvelopes.sentBy,
+        contractArchivedAt: contracts.archivedAt,
+        contractManagerId: contracts.managerId,
+        contractPrimaryDocumentId: contracts.primaryDocumentId,
+      })
+      .from(contractEnvelopes)
+      .innerJoin(contracts, eq(contractEnvelopes.contractId, contracts.id))
+      .where(and(eq(contractEnvelopes.id, envelopeId), contractTeamScope(db, user)))
+      .limit(1);
+    return row ?? null;
+  }
+
+  /** The record's whole signing state, as every route here answers it.
+   * The connector is known to be resolvable by the time a write answers,
+   * which is why that fact is passed in rather than asked again. */
+  async function signingStateOf(
+    user: AuthenticatedUser,
+    contract: { id: string; primaryDocumentId: string | null },
+    signingConfigured: boolean,
+  ): Promise<z.infer<typeof EnvelopesEnvelope>> {
+    const [envelopes, primaryDocument] = await Promise.all([
+      envelopesOf(app.db, contract.id),
+      sendableDocument(app.db, user, contract.primaryDocumentId),
+    ]);
+    return { envelopes, signingConfigured, primaryDocument };
+  }
+
   /** The typed refusal a second send answers with (TECH-020). One
    * function, because the route raises it twice — once before dialling
    * the provider, and once under the lock for the send that raced it. */
@@ -438,6 +541,47 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
         502,
         "The provider refused this install's credentials. An Administrator has to " +
           "check the e-signature connector before anything can be sent.",
+        { expose: true },
+      );
+    }
+    if (error instanceof SigningTimeoutError) {
+      return httpError(502, "The provider did not answer in time. Try again.", { expose: true });
+    }
+    if (error instanceof SigningUnavailableError) {
+      return httpError(502, "The provider could not be reached. Try again.", { expose: true });
+    }
+    return error;
+  }
+
+  /**
+   * The provider's own failures, as the voider reads them.
+   *
+   * Its own function rather than `sendFailure`'s second caller, because
+   * the one refusal that matters means something different here: a
+   * provider that will not take a withdrawal is telling us the envelope
+   * has already ended on its side, and the sentence a sender gets about
+   * signers and versions would be nonsense to a voider. The transient
+   * failures are the send's, said again, because they are the same
+   * failures.
+   */
+  function voidFailure(error: unknown): unknown {
+    if (error instanceof SigningRefusedError) {
+      // The provider's own words stay in the log, for the reason
+      // `sendFailure` gives: a driver builds this message from a
+      // response that can quote back what it was just handed.
+      app.log.error({ err: error }, "signing: the provider refused a void");
+      return httpError(
+        409,
+        "The provider says this envelope is no longer live. Its ending arrives on the " +
+          "record from the provider's own feed.",
+        { expose: true },
+      );
+    }
+    if (error instanceof SigningConfigError) {
+      return httpError(
+        502,
+        "The provider refused this install's credentials. An Administrator has to " +
+          "check the e-signature connector before anything can be withdrawn.",
         { expose: true },
       );
     }
@@ -766,6 +910,153 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       }
 
       return reply.status(201).send(answer);
+    },
+  );
+
+  app.post(
+    "/envelopes/:envelopeId/void",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "voidContractEnvelope",
+        summary:
+          "Withdraw a live envelope (CTR-013). Three actors may: the " +
+          "person who sent it, the contract's Owner, and an " +
+          "Administrator — a mistaken or superseded send should not sit " +
+          "open, and it should not wait on the one person who made it. " +
+          "The reason is required, because the provider records it with " +
+          "the withdrawal and the record draws it on the row. The " +
+          "provider is told first and the voided transition is applied " +
+          "after it accepts, so the record never says withdrawn while " +
+          "the envelope is still collecting signatures. An envelope " +
+          "that has already ended — signed, declined, or voided — is " +
+          "refused: an ending is part of the record. Appends one " +
+          "envelope.voided entry on the contract at the working-team " +
+          "tier, attributed to the voider (DD-017). Once it is voided " +
+          "the contract sends again, because the one-live-envelope rule " +
+          "holds only while an envelope is out. An envelope on a " +
+          "contract this viewer cannot reach answers 404, exactly as " +
+          "for one that was never sent; an archived contract takes no " +
+          "void until it is restored",
+        tags: ["envelopes"],
+        params: EnvelopeParams,
+        body: z.object({
+          /** Why it is being withdrawn, in the voider's own words. The
+           * provider keeps it with the withdrawal and the row keeps it
+           * for the record, bounded exactly as a decline's reason is. */
+          reason: z.string().trim().min(1).max(MAX_ENVELOPE_REASON_LENGTH),
+        }),
+        response: { 200: EnvelopesEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const { reason } = request.body;
+
+      // Everything that can be refused without dialling anybody is
+      // refused first, for the send's reason: a void that was never
+      // going to be recorded must not withdraw an envelope somebody is
+      // in the middle of signing.
+      const envelope = await reachedEnvelope(app.db, request.user, request.params.envelopeId);
+      if (!envelope) throw httpError(404, NO_ENVELOPE);
+      if (envelope.contractArchivedAt) throw httpError(409, FROZEN_VOID);
+
+      // The approvals-cancellation audience (CTR-012's shape, CTR-013's
+      // rule). A 403 rather than a 404 for the same reason the cancel
+      // route gives one: the viewer can already read the row.
+      const mayVoid =
+        request.user.role === "administrator" ||
+        envelope.sentBy === request.user.id ||
+        envelope.contractManagerId === request.user.id;
+      if (!mayVoid) {
+        throw httpError(
+          403,
+          "Only the person who sent it, the contract's Owner, or an Administrator " +
+            "can void this envelope.",
+        );
+      }
+      if (envelope.status !== "sent") {
+        throw httpError(409, "This envelope has already ended. It cannot be voided.");
+      }
+
+      const signing = await app.resolveSigningProvider();
+      if (!signing) {
+        throw httpError(
+          409,
+          "This install has no e-signature connector. An Administrator configures one " +
+            "in Settings before an envelope can be withdrawn.",
+          { type: SIGNING_NOT_CONFIGURED_PROBLEM_TYPE },
+        );
+      }
+      // A record sent through one provider is never voided through
+      // another: the row keeps the adapter that carried it precisely so
+      // a connector swapped since the send cannot withdraw somebody
+      // else's envelope by id collision.
+      //
+      // Unreachable while `docusign` is the only adapter — the column's
+      // own check constraint allows no other value, so no row can
+      // disagree with the resolver. It is written as a refusal rather
+      // than left out so that the second adapter cannot arrive and
+      // quietly make one connector able to withdraw another's envelope.
+      if (signing.provider !== envelope.provider) {
+        throw httpError(
+          409,
+          "This envelope was sent through a different e-signature connector. " +
+            "It can only be voided through the one that sent it.",
+        );
+      }
+
+      // The provider first. A withdrawal it refuses leaves the row
+      // exactly as it was, which is the state a reader can act on.
+      try {
+        await signing.voidEnvelope(envelope.providerEnvelopeId, reason);
+      } catch (error) {
+        // The provider does not hold this envelope at all. It cannot
+        // then be signed, and refusing the void would leave the record
+        // holding a live round forever — the one-live-envelope rule
+        // would block every later send over a thing that does not
+        // exist. So the record's own row is ended, and the reason the
+        // voider gave stands.
+        if (error instanceof EnvelopeNotFoundError) {
+          request.log.warn(
+            { err: error, providerEnvelopeId: envelope.providerEnvelopeId },
+            "signing: voided an envelope the provider does not hold",
+          );
+        } else {
+          throw voidFailure(error);
+        }
+      }
+
+      // One funnel, its own transaction, and no wrapper around it: the
+      // lock, the move, and the narration are one act. `unchanged` is
+      // not a failure — a decline that landed while the provider was
+      // being dialled is an ending, and the first ending stands.
+      //
+      // The archive check is deliberately **not** asked again here, and
+      // this is the one place where the send's pattern is inverted on
+      // purpose. The send re-asks under the lock because a refusal
+      // there leaves nothing behind. Here the envelope is already
+      // withdrawn at the provider, so a refusal would leave the record
+      // showing a live round that no signer can sign — a record
+      // somebody archived mid-request is still better served by the
+      // truth than by a frozen lie.
+      const applied = await applyEnvelopeStatus(app.db, {
+        provider: envelope.provider,
+        providerEnvelopeId: envelope.providerEnvelopeId,
+        status: "voided",
+        reason,
+        // A person took this act, which is what tells the feed to
+        // narrate it as theirs rather than as the integration's.
+        actorId: request.user.id,
+      });
+      // The row went between the read and the move — the record was
+      // deleted under this request. It reads as one that never existed.
+      if (applied.outcome === "unknown") throw httpError(404, NO_ENVELOPE);
+
+      return await signingStateOf(
+        request.user,
+        { id: envelope.contractId, primaryDocumentId: envelope.contractPrimaryDocumentId },
+        true,
+      );
     },
   );
 };

@@ -173,6 +173,18 @@
   "activity.entity.updated": {
     "defaultMessage": "{actor} changed {name}"
   },
+  "activity.envelope.declined": {
+    "defaultMessage": "This contract's envelope was declined{hasReason, select, yes { — {reason}} other {}}"
+  },
+  "activity.envelope.sent": {
+    "defaultMessage": "{actor} sent this contract for signature"
+  },
+  "activity.envelope.signed": {
+    "defaultMessage": "This contract's envelope was signed"
+  },
+  "activity.envelope.voided": {
+    "defaultMessage": "{hasActor, select, yes {{actor} voided this contract's envelope} other {This contract's envelope was voided}}{hasReason, select, yes { — {reason}} other {}}"
+  },
   "activity.export.performed": {
     "defaultMessage": "{actor} exported the audit log"
   },
@@ -2939,11 +2951,20 @@
   "shell.workspace": {
     "defaultMessage": "workspace"
   },
+  "signing.actionsFor": {
+    "defaultMessage": "Actions for the envelope sent on {date}"
+  },
   "signing.addSigner": {
     "defaultMessage": "Add signer"
   },
   "signing.block": {
     "defaultMessage": "Signing"
+  },
+  "signing.column.actions": {
+    "defaultMessage": "Actions"
+  },
+  "signing.column.completed": {
+    "defaultMessage": "Completed"
   },
   "signing.column.document": {
     "defaultMessage": "Document"
@@ -2957,8 +2978,17 @@
   "signing.column.status": {
     "defaultMessage": "Status"
   },
+  "signing.needReason": {
+    "defaultMessage": "Say why this envelope is being voided."
+  },
   "signing.needSigners": {
     "defaultMessage": "Give every signer a name and an email address."
+  },
+  "signing.reason": {
+    "defaultMessage": "Reason"
+  },
+  "signing.reasonHelp": {
+    "defaultMessage": "The provider records this with the withdrawal, and the record keeps it on the row."
   },
   "signing.removeSigner": {
     "defaultMessage": "Remove signer {number}"
@@ -3002,6 +3032,9 @@
   "signing.status.voided": {
     "defaultMessage": "Voided"
   },
+  "signing.statusArrives": {
+    "defaultMessage": "Signed, declined, and voided status arrives by webhook."
+  },
   "signing.subject": {
     "defaultMessage": "Subject (optional)"
   },
@@ -3022,6 +3055,18 @@
   },
   "signing.versionOption": {
     "defaultMessage": "Version {number} — {filename}"
+  },
+  "signing.void": {
+    "defaultMessage": "Void envelope"
+  },
+  "signing.voidExplains": {
+    "defaultMessage": "The signers can no longer sign this round. The contract can be sent again straight after."
+  },
+  "signing.voidFailed": {
+    "defaultMessage": "The envelope could not be voided. Try again."
+  },
+  "signing.voidTitle": {
+    "defaultMessage": "Void envelope"
   },
   "theme.dark": {
     "defaultMessage": "Dark"

@@ -951,11 +951,12 @@ const ARMS: Readonly<Record<string, Arm>> = {
   // verb per act, so a reader can tell a completed signature from a
   // withdrawn one without opening a payload.
   //
-  // The send names its actor, because a person made it. The three
-  // endings do not: the signers sign on the provider's own ceremony,
+  // The send names its actor, because a person made it. Signed and
+  // declined never do: the signers sign on the provider's own ceremony,
   // and the status arrives from the provider's feed with no human here
   // behind it. A sentence reading "{actor} signed this contract" would
-  // then name whoever the entry fell back to, which is nobody.
+  // then name whoever the entry fell back to, which is nobody. A void
+  // is the one ending that can be either, and it selects on which.
   "envelope.sent": {
     icon: Send,
     message: defineMessage({
@@ -982,12 +983,18 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
     values: (_intl, payload) => reasonValues(payload),
   },
+  // The one ending a person can take (M15/4). A void on the record is
+  // somebody's act and names them; a void taken in the provider's own
+  // console arrives through the same feed with nobody here behind it,
+  // and the passive sentence is the honest one for it.
   "envelope.voided": {
     icon: Undo2,
     message: defineMessage({
       id: "activity.envelope.voided",
       defaultMessage:
-        "This contract's envelope was voided{hasReason, select, yes { — {reason}} other {}}",
+        "{hasActor, select, yes {{actor} voided this contract's envelope} " +
+        "other {This contract's envelope was voided}}" +
+        "{hasReason, select, yes { — {reason}} other {}}",
     }),
     values: (_intl, payload) => reasonValues(payload),
   },
@@ -1627,6 +1634,13 @@ export function narrateActivity(
   context: NarrationContext = {},
 ): Narration {
   const actor = actorName(intl, entry);
+  // Whether a person is behind this entry at all, for the one verb that
+  // both a person and the integration can take: an envelope voided on
+  // the record names the voider, and one voided in the provider's own
+  // console has nobody here to name. Every sentence gets it, because
+  // ICU takes what it is given and ignores what it does not use, and a
+  // second machinery for one arm would be a machinery to maintain.
+  const hasActor = entry.actor ? "yes" : "no";
   const arm = ARMS[entry.action];
   if (!arm) {
     return {
@@ -1640,6 +1654,7 @@ export function narrateActivity(
     icon: arm.icon,
     sentence: intl.formatMessage(arm.message, {
       actor,
+      hasActor,
       ...arm.values?.(intl, entry.payload, changes),
     }),
     changes,
