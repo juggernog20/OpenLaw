@@ -69,6 +69,12 @@ services:
       # run. A stack on the S3 driver leaves this volume empty; it costs
       # nothing and keeps whatever the local driver wrote before.
       - openlaw-files:${STORAGE_PATH:-/var/lib/openlaw/files}
+    networks:
+      # Both, because the app is the only thing that needs to be: it
+      # talks to Postgres on one and to the doc engine on the other, and
+      # it is what keeps those two apart.
+      - openlaw-backend
+      - openlaw-doc-engine
     ports:
       - "${PORT:-3000}:3000"
     depends_on:
@@ -114,6 +120,11 @@ services:
       # The same files the app wrote. A worker that could not read the
       # uploaded blob would fail every job it was given.
       - openlaw-files:${STORAGE_PATH:-/var/lib/openlaw/files}
+    networks:
+      # The app's two, for the app's reasons: the queue is in Postgres
+      # and the derivation jobs call the doc engine.
+      - openlaw-backend
+      - openlaw-doc-engine
     depends_on:
       postgres:
         condition: service_healthy
@@ -153,6 +164,49 @@ services:
     # Stateless by design: it streams a file in, runs one tool, streams
     # the answer out, and keeps nothing. No volume, and nothing to back
     # up.
+    #
+    # This is the one container that opens files a counterparty sent us,
+    # with LibreOffice and OCRmyPDF — large C++ parsers with a long
+    # history of file-parsing bugs. Everything below assumes that one day
+    # one of them is made to run attacker-chosen code, and asks what that
+    # code can then reach. The answer should be: this container, its
+    # /tmp, and nothing else.
+    networks:
+      # Not on `openlaw-backend`, so it cannot open a socket to Postgres
+      # at all — there is no route, not merely no password. It needs
+      # nothing from the database: it holds no state, reads no
+      # DATABASE_URL, and every byte it works on arrives in a request
+      # body. `openlaw-doc-engine` is `internal`, so it has no route off
+      # the host either; the sidecar makes no outbound calls of its own,
+      # and the apt install that builds the image happens at build time.
+      - openlaw-doc-engine
+    # Nothing writes to the image. LibreOffice and OCRmyPDF are given
+    # /tmp and only /tmp: the Dockerfile sets HOME=/tmp, each conversion
+    # gets a fresh LibreOffice user profile under a mkdtemp'd scratch
+    # directory (`-env:UserInstallation`), OCRmyPDF and the Ghostscript
+    # and Tesseract it drives inherit TMPDIR, and fontconfig's per-user
+    # cache resolves under HOME. A tampered binary or a dropped payload
+    # therefore does not survive a restart.
+    read_only: true
+    tmpfs:
+      # mode 1777 because the container runs as the unprivileged `node`
+      # user, not root. The size cap is what keeps a hostile file from
+      # turning a conversion into a host memory event: tmpfs is RAM, and
+      # an uncapped one defaults to half of it. Two gigabytes clears the
+      # 100 MB upload ceiling with room for OCR's rasterised
+      # intermediates, which are much larger than the file that produced
+      # them. Raise DOC_ENGINE_TMPFS_SIZE if you OCR very long scans.
+      - /tmp:mode=1777,size=${DOC_ENGINE_TMPFS_SIZE:-2g}
+    # It binds port 8080 — above 1024 — and runs as `node`, so it needs
+    # no capabilities whatsoever. Dropping all of them costs nothing and
+    # takes the usual escalation primitives off the table.
+    cap_drop:
+      - ALL
+    security_opt:
+      # setuid binaries in the image cannot raise privilege. Ghostscript
+      # and Tesseract are spawned as child processes of an untrusted
+      # parse; this is what stops one of them being a way back up.
+      - "no-new-privileges:true"
     restart: unless-stopped
     healthcheck:
       # The image has node, so the probe is the same shape as the app's.
@@ -178,12 +232,34 @@ services:
       POSTGRES_DB: openlaw
     volumes:
       - openlaw-pgdata:/var/lib/postgresql/data
+    networks:
+      # Only this one. The doc engine is not on it, which is the whole
+      # point of splitting them.
+      - openlaw-backend
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U openlaw -d openlaw"]
       interval: 5s
       timeout: 5s
       retries: 10
+
+# Two networks rather than one flat default, so that the container which
+# opens counterparty files cannot reach the database (TECH-010,
+# TECH-017). Every service names its networks explicitly: the moment one
+# service declares `networks`, it stops joining `default` implicitly, and
+# a service left off the list would silently lose name resolution to the
+# rest of the stack.
+networks:
+  # The app, the worker, and Postgres — plus Mailpit in the dev overlay.
+  # Not `internal`: the app reaches an SMTP relay, object storage,
+  # DocuSign, and an IdP from here.
+  openlaw-backend:
+  # The app, the worker, and the doc engine. `internal` because the
+  # sidecar makes no outbound calls at all, so the ability to make one is
+  # pure downside. The app and the worker keep their egress through
+  # openlaw-backend.
+  openlaw-doc-engine:
+    internal: true
 
 volumes:
   openlaw-pgdata:
