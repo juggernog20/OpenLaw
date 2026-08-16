@@ -35,6 +35,7 @@ import {
   documentVersions,
   documentVersionText,
   eq,
+  sql,
   users,
 } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
@@ -51,7 +52,8 @@ import {
   type BackfillOptions,
   type BackfillSummary,
 } from "../../pipeline/backfill.js";
-import { createUnconfiguredJobQueue, type JobQueue } from "../../pipeline/jobs.js";
+import { JOB_QUEUES, createUnconfiguredJobQueue, type JobQueue } from "../../pipeline/jobs.js";
+import { BACKFILL_SWEEP_CRON } from "../../pipeline/pg-boss.js";
 import { DOCX_MIME_TYPE, officePackage } from "../../testing/fixtures/office.js";
 import { testDeps } from "../../testing/deps.js";
 import {
@@ -574,5 +576,24 @@ describe("when the worker is shut down", () => {
     const summary = await sweep(harness.pipeline, { signal: stopped.signal });
     expect(summary.stopped).toBe(true);
     expect(summary.scanned).toBe(0);
+  });
+});
+
+describe("when the install is never restarted", () => {
+  // The sweep used to run at boot and nowhere else, so an install that
+  // nobody restarts could carry a document with no extracted text for
+  // ever — the upgrade that would have reached it only ran on a reboot
+  // that never came. The boot run is still there, because a fresh
+  // install should not wait until the small hours for its first sweep;
+  // this is the second trigger, not a replacement.
+  it("registers the sweep on a recurring schedule", async () => {
+    const rows = await harness.db
+      .execute<{ name: string; cron: string }>(
+        sql`select name, cron from pgboss.schedule where name = ${JOB_QUEUES.backfillSweep}`,
+      )
+      .then((result) => result.rows);
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.cron).toBe(BACKFILL_SWEEP_CRON);
   });
 });

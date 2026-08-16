@@ -623,6 +623,53 @@ CTR-012's soft gate (#235) is the first refusal a client has to **act on**. `PAT
 - Each acted-on type is declared once, in `packages/shared` (TECH-016's home for definitions both ends of the wire must agree on), and imported by the rule that throws it and the client that branches on it — `SOFT_GATE_PROBLEM_TYPE` in `packages/shared/src/index.ts` is the first. A mirrored copy per side was rejected in review: two copies that drifted would not fail loudly — the client would simply stop recognizing the refusal.
 - The OpenAPI document does not enumerate the types; they are documented in the route summary that can raise them.
 
+## TECH-021: Secrets at rest — plaintext for v1, with one owner and one trigger
+
+- **Status:** Accepted
+- **Date:** 2026-08-16
+
+### Context
+
+Four credential columns are written to Postgres in the clear:
+
+| Column                                   | What it is                                   | Recorded in |
+| ---------------------------------------- | -------------------------------------------- | ----------- |
+| `signing_connectors.private_key`         | The RSA private key that signs DocuSign JWTs | TECH-013    |
+| `signing_connectors.webhook_secret`      | The DocuSign Connect HMAC secret             | TECH-013    |
+| `org_settings.smtp_url`                  | The SMTP relay URL, credentials inline       | TECH-011    |
+| better-auth's `sso_provider` OIDC config | The IdP client secret                        | TECH-008    |
+
+All four are runtime organisation configuration, not deployment environment. An Administrator pastes them into Settings and every use reads them live, so they have to be stored somewhere the application can read on its own. Postgres is that somewhere.
+
+Three schema comments already defer encryption to "a future pass" — TECH-008's SSO note, TECH-011's SMTP note, and the `signing_connectors` table header. None of them names an owner and none names a trigger, so the same deferral has now been written three times and scheduled zero times. An architecture review on 2026-08-16 raised it as a standing risk with nobody holding it. This record replaces the three loose notes with one decision.
+
+### Decision
+
+1. **v1 stores all four plaintext.** No encryption ships in v1. The three schema comments stay where they are; this record is the single place the posture is stated, and they point at it.
+2. **The trigger is the production recommendation.** Encryption lands before OpenLaw is recommended for production use. The project is pre-alpha today, and it does not stop being pre-alpha with these columns in the clear.
+3. **The open work is issue #259**, which carries the question this decision does not answer: where the encryption key lives, given that a key sitting in the same database backup as the data protects nothing.
+
+### Rationale
+
+- **Name the exposure exactly.** Anyone holding a database backup holds the DocuSign RSA private key. With it they mint their own JWT assertions and act as the install's integration user — they can send, void, and read envelopes as OpenLaw, on the organisation's real DocuSign account. The same backup holds the Connect HMAC secret, so they can also forge webhook deliveries and drive a Contract to a signed Stage for a signature that never happened. The SMTP relay URL lets them send mail as the organisation. The OIDC client secret is half of an SSO client credential. A backup file is a lower bar than a live database, and backups get copied to laptops. This is the reason the trigger exists, and it should not be read as a small residual risk.
+- **Encryption without key management is theatre.** The cheap version of this change — a key in an environment variable, read at boot — moves the secret from one file the deployer backs up to another file the deployer backs up. It would let us delete the schema comments while changing almost nothing about who can read the key. Issue #259 exists because the key-management answer is the hard half, and shipping the easy half first would remove the pressure to finish.
+- **The under-an-hour install constraint is real.** PRODUCT.md's success criterion is a self-host from a clean Linux VM in under an hour, by a non-specialist sysadmin. Any answer here adds a key the deployer must generate, store outside the backup, and be able to rotate without locking themselves out of their own integration. That is a deploy-docs problem as much as a code problem, and it is worth doing once, properly.
+- **The deferral was already the decision — it was just never written as one.** Three schema comments saying "future pass" are three descriptions of the same accepted trade-off. Writing it down changes nothing in the code and everything about whether it can be forgotten.
+
+### Alternatives considered
+
+- **Encrypt now, key in the environment.** Rejected for the theatre reason above. It is the likely shape of the eventual answer, but only alongside a key-handling story in the deploy docs, and that is #259's job.
+- **Move the four back to environment variables.** Rejected: TECH-011 and CTR-013 deliberately made these runtime configuration so a rotation applies to the next send with no restart, and so an Administrator can do it without shell access. Undoing that to avoid a database write would trade a real usability property for a marginal security one — the deployer's `.env` is backed up too.
+- **`pgcrypto` column encryption.** Rejected for the same reason: the passphrase has to reach the query, so it lands in the environment or in the database, and we are back where we started with more moving parts.
+- **Leave the three schema comments as the record.** Rejected: that is the state this decision exists to end. A comment on a column is read by whoever edits that column, which is exactly the person who is not deciding project-wide security posture.
+
+### Consequences
+
+- No code changes. The four columns keep their current types and their current comments.
+- Issue #259 is the single tracking item, and it blocks any change of the README's `pre-alpha` status line to something that invites production use.
+- A fifth credential column added before #259 closes joins this record's table rather than growing a fourth "future pass" comment.
+- Whoever closes #259 supersedes this record rather than deleting it, and the deploy docs gain a key-handling section in the same change.
+
 ## Index of decisions
 
 | #        | Decision                                                                      | Status               |
@@ -647,3 +694,4 @@ CTR-012's soft gate (#235) is the first refusal a client has to **act on**. `PAT
 | TECH-018 | Deployment fidelity — hybrid dev loop, E2E gate on built images, `e2e/` pkg   | Accepted             |
 | TECH-019 | Code documentation — module-granular doc comments, no coverage percentage     | Accepted             |
 | TECH-020 | Problem `type` URIs — a refusal names itself only when a client acts on it    | Accepted             |
+| TECH-021 | Secrets at rest — plaintext for v1, with one owner and one trigger            | Accepted             |

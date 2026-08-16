@@ -27,6 +27,11 @@ services:
     # Pinned like every other image: `latest` could change delivery
     # behaviour between E2E runs without a repository change.
     image: axllent/mailpit:v1.30
+    networks:
+      # The app's network, because the app is what delivers to it. Not
+      # the doc-engine one — a mail catcher has no business being
+      # reachable from the container that opens counterparty files.
+      - openlaw-backend
     ports:
       # Loopback only — the UI and REST API are unauthenticated and show
       # every delivered token (set-password, magic links). MAILPIT_PORT

@@ -1,6 +1,12 @@
 {
   "$schema": "https://turborepo.com/schema.json",
-  "globalDependencies": ["tsconfig.base.json", "eslint.config.js"],
+  // Files outside every package that a task's output still depends on.
+  // `styles/` is here because apps/web's entry imports it across the
+  // package boundary (`apps/web/src/main.tsx` -> `../../../styles/globals.css`),
+  // so a theme-token edit changes the web bundle. Turbo cannot see that
+  // from the package's own inputs, and without this line a token edit
+  // replays a stale build.
+  "globalDependencies": ["tsconfig.base.json", "eslint.config.js", "styles/**"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

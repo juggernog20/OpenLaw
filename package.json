@@ -42,6 +42,7 @@
     "@types/node": "^26.2.0",
     "@typescript/native": "npm:typescript@^7.0.2",
     "eslint": "^10.8.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "prettier": "^3.9.6",
     "secretlint": "^13.0.4",
     "turbo": "^2.10.10",
