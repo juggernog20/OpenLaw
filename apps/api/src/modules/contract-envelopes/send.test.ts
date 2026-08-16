@@ -495,6 +495,42 @@ describe("what a send is refused for", () => {
   });
 });
 
+describe("the invitation's subject line", () => {
+  beforeAll(configureConnector);
+
+  it("carries the sender's subject verbatim", async () => {
+    const contract = await newContract("Subject as typed");
+    await paperOn(contract.number, Buffer.from("v1"), Buffer.from("v2"));
+    const paper = (await signingState(as(MEMBER), contract.number)).primaryDocument!;
+
+    const res = await send(
+      as(MEMBER),
+      contract.number,
+      paper.versions[0]!.id,
+      SIGNERS,
+      "Please sign the Orion MSA",
+    );
+    expect(res.statusCode, res.body).toBe(201);
+    const id = provider().sentEnvelopeIds().at(-1)!;
+    expect(provider().subjectOf(id)).toBe("Please sign the Orion MSA");
+  });
+
+  it("names the record when the subject is blank, exactly as when it is omitted", async () => {
+    // Blank, not absent: the schema trims, so a subject of spaces
+    // arrives as an empty string — and an empty subject line forwarded
+    // to the provider would be refused there. Blank has to mean what
+    // omitted means, which is the promise the dialog's help text makes.
+    const contract = await newContract("Subject left blank");
+    await paperOn(contract.number, Buffer.from("v1"), Buffer.from("v2"));
+    const paper = (await signingState(as(MEMBER), contract.number)).primaryDocument!;
+
+    const res = await send(as(MEMBER), contract.number, paper.versions[0]!.id, SIGNERS, "   ");
+    expect(res.statusCode, res.body).toBe(201);
+    const id = provider().sentEnvelopeIds().at(-1)!;
+    expect(provider().subjectOf(id)).toBe(`C-${String(contract.number)} ${contract.title}`);
+  });
+});
+
 describe("an install with no connector", () => {
   let contract: ContractRow;
   let paper: SendableDocument;

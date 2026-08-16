@@ -654,8 +654,13 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       if (await hasLiveEnvelope(app.db, contract.id)) throw liveEnvelopeRefusal();
 
       const fileRef = await versionFileRef(version.id);
+      // `||`, not `??`: the schema trims the subject, so a blank one
+      // arrives as an empty string, and an empty subject line forwarded
+      // to the provider is refused there with a sentence about signers
+      // and versions. Blank means what omitted means — the record names
+      // itself — which is the promise the dialog's help text makes.
       const subject =
-        request.body.subject ?? `C-${String(contract.number)} ${contract.title}`.trim();
+        request.body.subject || `C-${String(contract.number)} ${contract.title}`.trim();
 
       const sent = await sendThroughProvider(signing, {
         fileRef,
