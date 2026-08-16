@@ -700,7 +700,7 @@ function EnvelopeRow({
               there or it is not, and the row is silent when it is not
               rather than printing an apology for the provider. */}
           {envelope.reason !== null && (
-            <span className="text-xs text-muted">{envelope.reason}</span>
+            <span className="text-xs break-words text-muted">{envelope.reason}</span>
           )}
         </div>
       </td>

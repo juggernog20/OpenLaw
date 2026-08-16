@@ -133,7 +133,13 @@ function keptReason(status: EnvelopeStatus, reason: string | undefined): string 
   if (!REASONED_STATUSES.has(status)) return null;
   const trimmed = reason?.trim();
   if (!trimmed) return null;
-  return trimmed.slice(0, MAX_ENVELOPE_REASON_LENGTH);
+  if (trimmed.length <= MAX_ENVELOPE_REASON_LENGTH) return trimmed;
+  const cut = trimmed.slice(0, MAX_ENVELOPE_REASON_LENGTH);
+  // The bound counts UTF-16 units, so the cut can land between the two
+  // halves of a surrogate pair. A stranded high half reaches the
+  // database as U+FFFD, so the character is dropped whole instead.
+  const last = cut.charCodeAt(cut.length - 1);
+  return last >= 0xd800 && last <= 0xdbff ? cut.slice(0, -1) : cut;
 }
 
 /**

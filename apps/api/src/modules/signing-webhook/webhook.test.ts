@@ -360,6 +360,21 @@ describe("a delivery the install can believe", () => {
     expect(envelope.reason).toHaveLength(MAX_ENVELOPE_REASON_LENGTH);
   });
 
+  it("drops whole a character the bound would cut in half", async () => {
+    const record = await recordWithEnvelopeOut("Astral decline");
+    // The last character is an astral one — two UTF-16 units — placed
+    // so the bound falls between its halves. Half a character is not a
+    // character, and a stranded half would store as U+FFFD.
+    await deliver({
+      providerEnvelopeId: record.providerEnvelopeId,
+      status: "declined",
+      reason: "x".repeat(MAX_ENVELOPE_REASON_LENGTH - 1) + "\u{1F4B0}",
+    });
+
+    const envelope = await envelopeOn(record.number);
+    expect(envelope.reason).toBe("x".repeat(MAX_ENVELOPE_REASON_LENGTH - 1));
+  });
+
   it("stamps the moment we were told when the provider names no date", async () => {
     const record = await recordWithEnvelopeOut("Undated ending");
     const before = Date.now();
