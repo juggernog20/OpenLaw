@@ -30,7 +30,19 @@
  */
 
 import type { Readable } from "node:stream";
-import type { SigningEnvironment, SigningProviderKey } from "@openlaw/db";
+import type { EnvelopeStatus, SigningEnvironment, SigningProviderKey } from "@openlaw/db";
+
+/**
+ * The envelope states CTR-013 tracks. One status for the envelope; who
+ * has signed so far is provider-side detail v1 does not surface.
+ *
+ * Re-exported from the schema rather than restated here (M15/2), for
+ * the reason `SigningProviderKey` is imported from there: the column
+ * that holds the value and the interface that answers it are one closed
+ * union, and a second copy would let a driver answer a status the
+ * record could not store.
+ */
+export { ENVELOPE_STATUSES, type EnvelopeStatus } from "@openlaw/db";
 
 /** Base class of every failure this interface defines. */
 export class SigningError extends Error {}
@@ -97,11 +109,6 @@ export class SigningTimeoutError extends SigningError {
     this.name = "SigningTimeoutError";
   }
 }
-
-/** The envelope states CTR-013 tracks. One status for the envelope; who
- * has signed so far is provider-side detail v1 does not surface. */
-export const ENVELOPE_STATUSES = ["sent", "signed", "declined", "voided"] as const;
-export type EnvelopeStatus = (typeof ENVELOPE_STATUSES)[number];
 
 /** One person asked to sign. All signers are asked in parallel in v1 —
  * there is no routing order. */

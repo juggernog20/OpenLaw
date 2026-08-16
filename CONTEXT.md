@@ -86,6 +86,14 @@ _Avoid_: state, stage
 **Category**:
 The matter equivalent of Stage — `open` or `closed`, immutable once set on a status [MTR-002].
 
+**Envelope**:
+One round of signature on one version of a Contract's primary document, sent through the signing connector and held by the provider. It carries one status — `sent`, `signed`, `declined`, or `voided` — and the Signers it was sent to. A Contract has at most one **live** envelope at a time; a declined or voided one blocks nothing, and the next round is a new envelope [CTR-013].
+_Avoid_: signature request, signing packet, DocuSign envelope (the term is provider-neutral), request (that is the intake term)
+
+**Signer**:
+One person an Envelope is sent to, as a name and an email address. A Signer is not a user of this install and not a Counterparty contact — the other side of a deal has no account here. Every Signer on an Envelope is asked in parallel; there is no routing order [CTR-013].
+_Avoid_: signatory, recipient, approver (an Approval is a different act, by a colleague, inside the product)
+
 **Soft gate**:
 The warning a Contract meets when it moves from a Stage at or before `approval` to a Stage after it while an Approval request is still unresolved — pending or rejected. It names the unresolved requests and asks for one deliberate confirmation. It never blocks: the confirmed move commits and is recorded on the Activity feed as an override [CTR-012, CTR-001].
 _Avoid_: approval gate, hard gate, block, approval lock

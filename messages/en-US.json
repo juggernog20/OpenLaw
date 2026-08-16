@@ -356,6 +356,9 @@
   "approvals.approversHelp": {
     "defaultMessage": "Everyone you pick is asked at once. They answer in any order."
   },
+  "approvals.block": {
+    "defaultMessage": "Approvals"
+  },
   "approvals.cancel": {
     "defaultMessage": "Cancel request"
   },
@@ -443,8 +446,8 @@
   "approvals.requestedBy": {
     "defaultMessage": "Requested by {name}"
   },
-  "approvals.section": {
-    "defaultMessage": "Approvals"
+  "approvals.sectionSigning": {
+    "defaultMessage": "Approvals & signing"
   },
   "approvals.source.manual": {
     "defaultMessage": "Added manually"
@@ -1039,6 +1042,18 @@
   },
   "contracts.record.documentTitle": {
     "defaultMessage": "{reference} {title}"
+  },
+  "contracts.record.envelope.declined": {
+    "defaultMessage": "Envelope declined"
+  },
+  "contracts.record.envelope.sent": {
+    "defaultMessage": "Envelope sent"
+  },
+  "contracts.record.envelope.signed": {
+    "defaultMessage": "Envelope signed"
+  },
+  "contracts.record.envelope.voided": {
+    "defaultMessage": "Envelope voided"
   },
   "contracts.record.readOnlyNote": {
     "defaultMessage": "This record is read-only. Ask a Legal Team Member to make a change."
@@ -2923,6 +2938,90 @@
   },
   "shell.workspace": {
     "defaultMessage": "workspace"
+  },
+  "signing.addSigner": {
+    "defaultMessage": "Add signer"
+  },
+  "signing.block": {
+    "defaultMessage": "Signing"
+  },
+  "signing.column.document": {
+    "defaultMessage": "Document"
+  },
+  "signing.column.sent": {
+    "defaultMessage": "Sent"
+  },
+  "signing.column.signers": {
+    "defaultMessage": "Signers"
+  },
+  "signing.column.status": {
+    "defaultMessage": "Status"
+  },
+  "signing.needSigners": {
+    "defaultMessage": "Give every signer a name and an email address."
+  },
+  "signing.removeSigner": {
+    "defaultMessage": "Remove signer {number}"
+  },
+  "signing.send": {
+    "defaultMessage": "Send for signature"
+  },
+  "signing.sendEnvelope": {
+    "defaultMessage": "Send envelope"
+  },
+  "signing.sendFailed": {
+    "defaultMessage": "The envelope could not be sent. Try again."
+  },
+  "signing.sendTitle": {
+    "defaultMessage": "Send for signature"
+  },
+  "signing.sentBy": {
+    "defaultMessage": "by {name}"
+  },
+  "signing.signerEmail": {
+    "defaultMessage": "Signer {number} email"
+  },
+  "signing.signerName": {
+    "defaultMessage": "Signer {number} name"
+  },
+  "signing.signers": {
+    "defaultMessage": "Signers"
+  },
+  "signing.signersHelp": {
+    "defaultMessage": "Everyone you name is asked at once. They sign in any order."
+  },
+  "signing.status.declined": {
+    "defaultMessage": "Declined"
+  },
+  "signing.status.sent": {
+    "defaultMessage": "Out for signature"
+  },
+  "signing.status.signed": {
+    "defaultMessage": "Signed"
+  },
+  "signing.status.voided": {
+    "defaultMessage": "Voided"
+  },
+  "signing.subject": {
+    "defaultMessage": "Subject (optional)"
+  },
+  "signing.subjectHelp": {
+    "defaultMessage": "Signers see this on the invitation. Left blank, it names this contract."
+  },
+  "signing.version": {
+    "defaultMessage": "Version {number}"
+  },
+  "signing.versionCurrent": {
+    "defaultMessage": "Version {number} — {filename} (current)"
+  },
+  "signing.versionHelp": {
+    "defaultMessage": "Only the primary document goes out. Attachments are not sent."
+  },
+  "signing.versionLabel": {
+    "defaultMessage": "Version"
+  },
+  "signing.versionOption": {
+    "defaultMessage": "Version {number} — {filename}"
   },
   "theme.dark": {
     "defaultMessage": "Dark"

@@ -199,6 +199,13 @@ export function stubApi(state: ApiState) {
     if (/^\/api\/v1\/contracts\/\d+\/approvals$/.test(call.url.pathname) && call.method === "GET") {
       return json(200, { approvals: [] });
     }
+    // And what paper it has sent out for signature (M15/2). The default
+    // is the zero-config install CTR-013 promises: no connector, no
+    // envelope, and therefore no send control anywhere on the record.
+    // Only the suites about signing supply one.
+    if (/^\/api\/v1\/contracts\/\d+\/envelopes$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { envelopes: [], signingConfigured: false, primaryDocument: null });
+    }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
       return json(200, state.onboarding ?? { completed: true, emailConfigured: true });
     }

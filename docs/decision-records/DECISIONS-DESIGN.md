@@ -2177,7 +2177,7 @@ DES-032 also enumerated the record's sections as three — Overview, Fields, Doc
 
 **2. The section is one self-contained card, drawn as the Documents section is.** The `bg-raised` card with a `bg-section-header` head; the heading, the DES-020 count badge, the write micro-state, and the section's own control in that head; the table under it; and a plain empty line when there is nothing to draw. One section anatomy on the record, so a reader who has learnt the Documents section has learnt this one.
 
-**3. The heading is "Approvals", not the mock's "Approvals & signing".** The card holds approval rows alone until M15 puts envelopes in it. A heading naming two things while showing one reads as a surface that is broken rather than as one that is early. The name changes when the rows do.
+**3. The heading is "Approvals", not the mock's "Approvals & signing".** The card holds approval rows alone until M15 puts envelopes in it. A heading naming two things while showing one reads as a surface that is broken rather than as one that is early. The name changes when the rows do. _(The rows changed with M15/2: the card holds envelope rows, and the heading takes the two-part name — see **DES-036** clause 1.)_
 
 **4. The mock's toolbar tally moves into the card head, and a state nobody is in is left out.** "2 approved · 1 pending" is drawn beside the count badge at `text-sm text-muted`, one message per state, with the separator drawn rather than written into a message. A zero is omitted rather than printed: three counts of which two are zero is noise on a line that has to stay readable beside a heading.
 
@@ -2237,7 +2237,7 @@ Pending being `assigned` rather than `warning` is the one colour choice worth st
 
 ### Consequences
 
-`ApprovalsCard` is the component; the contract record's `approvals` section is the reference mount. It takes the roster, the people the record's pickers already hold, and the viewer's standing, and it answers the whole roster back on every write.
+`ApprovalsCard` is the component; the contract record's `approvals` section is the reference mount. _(Renamed `ApprovalsSigningCard` with M15/2, when the card took its second row family — DES-036.)_ It takes the roster, the people the record's pickers already hold, and the viewer's standing, and it answers the whole roster back on every write.
 
 The record now has four sections. `RECORD_TABS` grows by one, and the loader reads the roster beside the record, its paper, and its folders.
 
@@ -2248,6 +2248,92 @@ No new tokens. The pills reuse the DES-005 families already shipped, the card re
 `SoftGateDialog` lives on the contract record beside `RetypeDialog`, because the status select it guards is on the record's Overview section rather than inside `ApprovalsCard`. It reads the roster the record already holds.
 
 The apply picker needs the live approver groups on the record, so the Member+ contract-options answer carries them — the names alone, with the ids of the people each would ask, in the display-name order the apply asks in, so the clause 16 preview names people in the order the roster will then draw them. Managing them stays Administrator-only (SET-002); this is the list an apply reads.
+
+## DES-036: The signing half of the record — the envelope row, the send dialog, and the sub-bar chip (extends DES-035, DES-034, DES-005)
+
+- **Status:** Accepted
+- **Date:** 2026-08-16
+
+### Context
+
+CTR-013 gives a contract an **envelope**: one round of signature on one version of its primary document, sent from the record through a configured connector. M15/2 is the send. Grill row X.2 scheduled the value-to-family pill mapping as a DES addendum at build, and this is that addendum plus the three surfaces the send needs.
+
+DES-035 clause 3 reserved the card's second name for exactly this moment: the heading reads "Approvals" while the card holds approval rows alone, and takes the two-part name when M15's envelope rows join it. They join it here.
+
+Three mocks are the drawn reference, and each of them draws something the product being built does not have.
+
+`designs/contracts.pen` frame **C12 — Send for signature** draws the send modal: a provider row naming DocuSign with a **Connected** chip and a "Use manual hand-off instead" link; a **Signers — in signing order** block, each signer an ordinal, an avatar, a name, an email, and a drag grip; a **Message** box; a note reading "The executed file auto-files on the contract; stage advances to Active when everyone signs."; and a footer of Cancel and **Send envelope**.
+
+Frames **C20 — Contract detail · Signatures** and **C21 — · Manual hand-off** draw the envelope itself as an **applet panel** on the record's right side: an envelope line with a provider chip, one row per signer with a per-signer pill (**Signed**, **Viewed**), a **Remind** action beside **Void envelope**, and a note about the webhook.
+
+What is not there to draw:
+
+1. **There is no routing order.** CTR-013 v1 asks every signer in parallel. The ordinals and the drag grip order something that does not exist.
+2. **There is no per-signer status.** The envelope carries one status; who has signed so far is provider-side detail v1 does not surface (CTR-013's own scope). **Viewed** is not a state this product holds at all.
+3. **There is no reminder.** Not in the `SigningProvider` seam, and not in M15's scope.
+4. **A signer is not a user of this install.** The mock's avatars imply a picker over people the product knows. The people who sign a contract are on the other side of a deal: CTR-013 collects a name and an email.
+5. **The seam carries a subject and no body.** The mock's "Message" has no field behind it.
+6. **The mock draws no version picker**, and CTR-013 requires one: the sender picks which round of the primary document goes out, defaulting to the current one.
+7. **The Signatures applet does not exist.** The spec for M15 is explicit that there is no new Signatories section and that the signers' home is the envelope row in the record's card, with a status chip beside the sub-bar (grill row E.5). DES-016's applet bar is a closed set of page-scoped panels, and DES-032's section strip is where a record's jobs get addresses.
+
+### Decision
+
+**1. The card takes its two-part name: "Approvals & signing".** DES-035 clause 3 said the name changes when the rows do, and envelope rows exist from this slice on. The heading is unconditional from here: it names what the card is for, not what one record happens to hold.
+
+**2. The card holds two blocks, each its own table, and the sub-headings appear only when both are on screen.** An approval row and an envelope row share no column — one is about a person's decision, the other about a document's journey — so merging them into DES-035's five columns would give every row cells that mean nothing on it. The signing block is drawn **first**, above the roster, and only when the record has an envelope (grill row E.5's conditional, applied to the row as well as to the chip). A record with no envelope reads exactly as it did before M15: one table, no sub-headings. Sub-headings on a card drawing one kind of row would label an absence.
+
+**3. The envelope row is four cells: Signers | Document | Status | Sent.** Each is a fact the seam answers. **Signers** comes first, because "who was asked to sign this" is the question the row exists for, and each signer takes the two-line anatomy the Approver cell already uses — the name, and under it the address the invitation went to. **Document** names what went out with "Version {n}" beneath it, and both halves go to the DES-035 clause 8 em dash together once that version has been erased (DOC-010): the row still says an envelope was sent, which is the fact it is there for. **Sent** is the short date with "by {name}" beneath it, the Decided column's shape.
+
+**4. There is no action cell on the envelope row in this slice.** Voiding is the next slice's act, and DES-035 clause 9's rule stands: a control is absent rather than disabled, and a control for an act that does not exist yet is neither.
+
+**5. The envelope pill takes the DES-005 paired families** (grill row X.2): `sent` is **warning**, `signed` is **success**, `declined` is **danger**, `voided` is **neutral**. `sent` is `warning` on purpose — it is the family `STAGE_PILL` already gives the **signature** stage, so the pipeline in the sub-bar and the row below it say the same thing about the same contract in the same colour, exactly as DES-035 clause 7 pairs a pending approval with the approval stage. `voided` is `neutral` rather than `danger`: withdrawing a send is a normal act on the way to a better one, and red would read as a failure where there was only a decision. The pill is drawn as every other status pill is: `rounded-pill px-2 py-0.5 text-xs font-medium`.
+
+**6. The card head's badge and tally stay about the approvals.** The DES-020 count badge sits beside the tally, and the tally answers "where does sign-off stand" — one question, one number. Counting envelopes into it would put two questions in one figure. Where the signature stands is answered by the envelope row and by the chip in clause 11.
+
+**7. "Send for signature" is the card head's first control, and it is absent in three cases.** It is a `secondary` Button with Lucide's `Send` glyph at 16, before "Apply group" and "Add approver", because sending is the act the card's new half exists for. It is not drawn at all when this install has no connector, when the record has no primary document, or when an envelope is already out. All three are DES-035 clause 14's rule again — a control whose dialog could only report that there is nothing to do is not a control — and the first one is also CTR-013's promise: an install with no connector must not advertise a feature it does not have, and the manual hand-off is not a lesser path that needs explaining.
+
+**8. Sending opens a dialog, and the dialog is C12 with everything undrawable removed.** The version select comes first (`CONTROL_CLASS`, the record's own single-choice control), listing the primary document's chain **newest first** with the current round marked and selected — a send is consequential enough to name what it is sending rather than to imply it. Then the signers, as **two text boxes per row** with an "Add signer" button and a per-row remove that is absent on the only row; the mock's ordinals, avatars, and drag grip are not drawn, because there is no routing order and no picker (context 1 and 4). Then one optional line, labelled **Subject** where the mock says "Message": the seam carries a subject and no body in v1, so a box labelled "Message" would promise a letter the envelope cannot carry. Left blank, it names the contract. The confirm is the mock's own "Send envelope", the primary button.
+
+**9. The dialog's own note rows are not drawn in this slice.** C12's "The executed file auto-files on the contract; stage advances to Active when everyone signs" and C20's webhook note each describe behaviour that lands in a later M15 slice. DES-035 clause 13's rule holds: a surface that explains a rule it does not yet apply is a surface that is wrong. Each is drawn when its slice exists, in the place the act is taken, exactly as DES-035 clauses 17 and 18 drew theirs.
+
+**10. A refusal is printed once, in the dialog.** DES-035 clause 12, unchanged: the send is raised from a dialog, so its refusal reports in that dialog's form and the card head's micro-state stays clear.
+
+**11. The envelope status chip renders in the record's sub-bar, after the status pill and the archived pill, and only when an envelope exists** (grill row E.5). It carries Lucide's `PenLine` at **12px** — DES-034's carve-out from DES-008's 16/20/24, because the glyph is interior to a pill set in 12px text and a 16px glyph would read as the larger of the two — and the clause 5 family of the newest envelope, and it says a whole sentence — "Envelope sent", "Envelope signed", "Envelope declined", "Envelope voided". The glyph and the noun are what keep two pills side by side from reading as one: the left one names the contract's **status**, this one names its **envelope**. A contract signed by hand draws nothing here, which is grill row E.5's own "hidden for manual hand-off contracts".
+
+**12. The C20 and C21 Signatures applet panels are not built.** The signers' home is the envelope row (clause 3), the envelope's state is the chip (clause 11), and the record's paper is the Documents section. An applet panel would be a fourth place to look for facts that are already on the page, and DES-016's bar is a closed set. C21's manual hand-off panel has nothing to draw at all: the manual path is an upload, a pin, and a status change, each of which already has its own surface.
+
+### Rationale
+
+The mocks were drawn for a signing product with routing order, per-signer telemetry, and reminders. CTR-013 chose a narrower thing on purpose — one envelope, one status, parallel signers, the executed copy back on the chain — and every departure above is that choice, drawn.
+
+The two-block card is the smallest honest answer to "one card, two kinds of row". Merging them would give an envelope an Approver cell; splitting them into two cards would put two answers to "where does this contract stand with people" in two places on the same page. Two tables under one heading keeps the reading in one place and the columns meaningful.
+
+`sent` being `warning` is the one colour choice worth stating twice. It is not a warning about a problem; it is the family the signature stage already wears, and the record must not say "signature" in one colour at the top of the page and another colour six inches down.
+
+### Alternatives considered
+
+- **One merged table over both row families.** Rejected: an envelope has no approver and an approval has no signers, so most cells on most rows would be an em dash.
+- **A separate "Signing" card beside the Approvals card.** Rejected: DES-035 already spent the card's name on holding both, and two cards would make the reader decide which one answers "is this contract signed off and out".
+- **Building the C20 Signatures applet.** Rejected with clause 12: it draws per-signer states and a reminder the product does not have, and the two facts it does hold are already on the page.
+- **A disabled send control with a tooltip explaining the missing connector.** Rejected: it advertises a feature the deployment does not have and turns the zero-config manual path into something that needs apologising for (CTR-013).
+- **Defaulting the version silently and offering no picker.** Rejected: CTR-013 requires the choice, and the version that goes out is what comes back executed and pinned.
+- **A signer picker over the install's users.** Rejected: the people who sign are on the other side of the deal and have no account here. A picker would offer exactly the wrong set.
+- **Keeping the mock's "Message" label.** Rejected with clause 8: the field is the invitation's subject line, and a label promising a message body would be a promise the seam cannot keep.
+- **Counting envelopes into the card head's badge.** Rejected with clause 6: the badge and the tally answer one question together, and a number that means "asks plus sends" answers neither.
+- **`sent` as `info` rather than `warning`.** Rejected: the stage pipeline six inches above already draws the signature stage `warning`, and two colours for one fact is the drift DES-034 exists to prevent.
+- **`voided` as `danger`.** Rejected with clause 5: a void is a decision, and the next round goes out as easily as the first.
+
+### Consequences
+
+`ApprovalsSigningCard` is the component — DES-035's `ApprovalsCard` renamed, because the card now holds two row families and its name should say so. The contract record's `approvals` section stays the reference mount, and the loader reads the record's signing state beside the roster.
+
+The record's sub-bar gains one conditional chip. No new tokens: the chip and the pill reuse the DES-005 families already shipped, and the dialog reuses the record's own `CONTROL_CLASS` field and `Dialog`.
+
+`designs/contracts.pen` frames **C12**, **C20**, and **C21** are the reference, with clauses 3, 8, 9, 11, and 12 above recording where the build departs from them and why.
+
+Grill rows **E.5** and **X.2** are discharged for signing: the chip is conditional as E.5 decided, and the envelope value-to-family mapping is clause 5.
+
+The later M15 slices extend this record rather than replace it: the void action joins the envelope row's action cell, the decline and void reason joins the row, the executed file joins a signed row (grill rows H.C5 and H.C6), and each of the two note rows clause 9 withheld is drawn where its act is taken.
 
 ## Index of decisions
 
@@ -2288,3 +2374,4 @@ The apply picker needs the live approver groups on the record, so the Member+ co
 | DES-033 | The folder tree and the record-scoped batch drop (extends DES-032, DES-025)                                                                                          | Accepted |
 | DES-034 | The stage pipeline — six fixed steps beside the status pill (extends DES-005, DES-032)                                                                               | Accepted |
 | DES-035 | The record's Approvals section — the roster table and its row actions (extends DES-032, DES-020, DES-005)                                                            | Accepted |
+| DES-036 | The signing half of the record — the envelope row, the send dialog, and the sub-bar chip (extends DES-035, DES-034, DES-005)                                         | Accepted |
