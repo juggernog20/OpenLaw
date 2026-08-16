@@ -8,8 +8,36 @@
  * Settings, and it changes while the process runs. So the app is
  * injected with a resolver rather than with a provider — the #37
  * mailer-resolver pattern — and every use reads the stored row live. A
- * rotated key applies to the next call with no restart and no cache to
- * invalidate.
+ * rotated key applies to the next call with no restart.
+ *
+ * **The row is read every time; the driver is not rebuilt every time.**
+ * A `DocuSignProvider` caches the access token it minted and the account
+ * it discovered, on the instance. Building a fresh one per resolution
+ * threw both away, so a burst through one instance cost one JWT grant
+ * and two resolutions cost two — against the endpoint DocuSign rate
+ * limits hardest. The reconciliation sweep made that visible: it
+ * resolves once per page, so a five-minute round on a self-hosted
+ * install minted a fresh token every five minutes and discarded one that
+ * had not expired.
+ *
+ * The cache is keyed on **the row's identity and its `updatedAt`**,
+ * which is what keeps the rotation promise intact rather than trading it
+ * away. A save changes `updatedAt` (the column's own `$onUpdate`), so
+ * the very next call reads a key that does not match and builds a driver
+ * from the new credentials. An unchanged row reuses the token it already
+ * has. The read is not skipped — that is the part that must stay live,
+ * because it is what notices the rotation.
+ *
+ * **No lifetime of its own.** The driver refreshes its own token when it
+ * expires, so a ceiling here would throw away a working driver to
+ * rebuild an identical one. The entry is replaced when the row changes
+ * and dropped when the row goes, and there is at most one of it, because
+ * the table holds at most one row per adapter.
+ *
+ * A rotation that lands in the same millisecond as the previous one
+ * would not be noticed. Two saves are serialized by the route's own row
+ * lock, so this needs two Administrators pressing Save inside one
+ * millisecond, and it costs one stale driver until the next save.
  *
  * **An unconfigured install resolves to nothing.** `null` is the whole
  * answer for "no connector", which is what lets the record surfaces
@@ -49,6 +77,9 @@ export function createSigningResolver(
   db: Db,
   buildDriver: SigningDriverFactory = createDocuSignProvider,
 ): SigningResolver {
+  /** The driver last built, and the row state it was built from. */
+  let cached: { key: string; driver: SigningProvider } | null = null;
+
   return async () => {
     // Keyed on the adapter, not "whatever row is first": a second
     // provider's row must never be handed to the DocuSign driver.
@@ -57,14 +88,24 @@ export function createSigningResolver(
       .from(signingConnectors)
       .where(eq(signingConnectors.provider, "docusign"))
       .limit(1);
-    if (!row) return null;
-    return buildDriver({
+    if (!row) {
+      // The connector was removed. Dropped rather than left behind: a
+      // driver kept past its row is credentials this install has said
+      // it no longer holds.
+      cached = null;
+      return null;
+    }
+    const key = `${row.id}:${row.updatedAt.getTime()}`;
+    if (cached?.key === key) return cached.driver;
+    const driver = buildDriver({
       environment: row.environment,
       integrationKey: row.integrationKey,
       apiUserId: row.apiUserId,
       privateKey: row.privateKey,
       webhookSecret: row.webhookSecret,
     });
+    cached = { key, driver };
+    return driver;
   };
 }
 

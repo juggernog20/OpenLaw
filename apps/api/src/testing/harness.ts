@@ -302,6 +302,15 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
     // still script it on the next request; a rotated credential builds
     // a new one, which is honest — a different connector is a different
     // account, and it holds none of the old one's envelopes.
+    //
+    // The resolver has a cache of its own now (#278) and this one stays,
+    // because the two key on different things for a stated reason. The
+    // resolver keys on the row's `updatedAt`, so **any** save builds a
+    // new driver; this keys on the three fields the fake can observe, so
+    // a rotated RSA key — which changes nothing a fake provider does —
+    // keeps the envelopes a suite already sent. A suite that asserts the
+    // resolver's own caching builds its own resolver rather than reading
+    // this one (see `signing/resolver.test.ts`).
     let signingKey: string | null = null;
     const resolveSigningProvider = createSigningResolver(db, (config) => {
       // Only the fields the fake is built from. A rotated RSA key
