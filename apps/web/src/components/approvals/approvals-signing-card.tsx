@@ -1393,7 +1393,12 @@ function SendEnvelopeDialog({
                     onClick={() => {
                       setSigners((held) => held.filter((row) => row.key !== signer.key));
                       setError(null);
-                      addSigner.current?.focus();
+                      // After the re-render, not before it: on a full
+                      // list the "Add signer" button is not mounted
+                      // until this removal brings the count back under
+                      // the cap, and focusing synchronously would find
+                      // nothing and drop focus on the document body.
+                      requestAnimationFrame(() => addSigner.current?.focus());
                     }}
                   >
                     <X size={16} aria-hidden="true" />

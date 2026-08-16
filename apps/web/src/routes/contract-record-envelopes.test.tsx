@@ -22,6 +22,7 @@
 import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MAX_ENVELOPE_SIGNERS } from "@openlaw/shared";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const MEMBER = {
@@ -290,6 +291,31 @@ describe("sending for signature", () => {
 
     await waitFor(() => expect(api.writes).toHaveLength(1));
     expect(api.writes[0]!.body).toMatchObject({ documentVersionId: "v1" });
+  });
+
+  it("restores focus to Add signer on a removal, even from a full list", async () => {
+    const user = userEvent.setup();
+    const api = recordApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    await user.click(await screen.findByRole("button", { name: "Send for signature" }));
+    const dialog = await screen.findByRole("dialog");
+
+    // Fill the list to the cap, at which point "Add signer" is absent —
+    // the edge where a synchronous focus restore would find nothing,
+    // because the control to focus is not mounted until the removal has
+    // re-rendered the list back under the cap.
+    for (let row = 1; row < MAX_ENVELOPE_SIGNERS; row += 1) {
+      await user.click(within(dialog).getByRole("button", { name: "Add signer" }));
+    }
+    expect(within(dialog).queryByRole("button", { name: "Add signer" })).not.toBeInTheDocument();
+
+    await user.click(
+      within(dialog).getByRole("button", { name: `Remove signer ${MAX_ENVELOPE_SIGNERS}` }),
+    );
+    const addSigner = await within(dialog).findByRole("button", { name: "Add signer" });
+    await waitFor(() => expect(addSigner).toHaveFocus());
   });
 
   it("prints the seam's own refusal in the dialog, and keeps the form", async () => {
