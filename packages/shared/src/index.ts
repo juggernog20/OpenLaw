@@ -126,6 +126,22 @@ export const TERM_EXPIRY_ON_EVERGREEN_PROBLEM_TYPE = "urn:openlaw:problem:term-e
 export const TERM_RENEWAL_PERIOD_PROBLEM_TYPE = "urn:openlaw:problem:term-renewal-period";
 
 /**
+ * The two bounds one key date is held to (CTR-009).
+ *
+ * A label is a line and a note is a paragraph. Neither is the record's
+ * long-form conversation — that is what comments are for (CMT-004) — and
+ * the deadline table draws both in one row, so a label that ran to a
+ * paragraph would break the surface it exists for.
+ *
+ * Shared for `MAX_APPROVAL_NOTE_LENGTH`'s reason: the dialog's boxes
+ * stop at these and the write refuses past them, and two literals for
+ * one wire contract would let a box keep accepting text the seam has
+ * stopped taking.
+ */
+export const MAX_KEY_DATE_LABEL_LENGTH = 200;
+export const MAX_KEY_DATE_NOTE_LENGTH = 2000;
+
+/**
  * How many people one envelope may be sent to (CTR-013).
  *
  * A bound rather than a preference, and a generous one: naming a

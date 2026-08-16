@@ -707,14 +707,22 @@ Source: **CTR-009** (mirrors `matter_key_dates`, MTR-004)
 
 Free-form named dates beyond the typed term machinery (price reviews, milestones, option-exercise windows). Deadline surfaces show the union of these, `expiry_date`, and the derived notice deadline.
 
-| Column                     | Type        | Notes                         |
-| -------------------------- | ----------- | ----------------------------- |
-| `id`                       | UUID        | PK                            |
-| `contract_id`              | UUID        | FK → `contracts.id`, not null |
-| `date`                     | date        | not null                      |
-| `label`                    | text        | not null                      |
-| `note`                     | text        | nullable                      |
-| `created_at`, `updated_at` | timestamptz |                               |
+Landed in M16/3, migration `0047_contract_key_dates`, with the columns CTR-009 names and nothing else.
+
+| Column                     | Type        | Notes                                                                                            |
+| -------------------------- | ----------- | ------------------------------------------------------------------------------------------------ |
+| `id`                       | UUID        | PK                                                                                               |
+| `contract_id`              | UUID        | FK → `contracts.id`, not null, cascade — a key date is part of the contract                      |
+| `date`                     | date        | not null; a calendar date, not a timestamp (deadlines are day-granular; display per **DES-014**) |
+| `label`                    | text        | not null, 1–200 trimmed characters                                                               |
+| `note`                     | text        | nullable, 1–2000 trimmed characters; the write path normalizes a blank string to NULL            |
+| `created_at`, `updated_at` | timestamptz |                                                                                                  |
+
+Indexed on (`contract_id`, `date`) — the shape every deadline surface reads. CRUD audit-logged per **DD-017**, one closed-union action per act (`key_date.added`, `key_date.edited`, `key_date.removed`), each at the record tier on the owning contract.
+
+- **Deliberately flat** (CTR-009). No owner column: the matters-side owner question stays a matters question. No per-date reminder schedule: **NOT-004** fixed one global offset list for every tracked date.
+- **No audience of its own.** Access is the owning contract's (DD-014, CTR-021), so confidentiality composes without this table holding a flag, a team, or a tier.
+- **Derived, never stored.** The notice deadline in the union beside these rows is `expiry_date − notice_period_days`, computed where the answer is assembled (**CTR-006**). Which date is next, and how many days away each is, are answered there too — one place, so a surface cannot disagree with the order it was given.
 
 ---
 

@@ -251,6 +251,34 @@ type ApprovalPayloads = {
 };
 
 /**
+ * The free-form dates on one contract (M16/3, CTR-009). These hang off
+ * the contract for `ApprovalPayloads`' reason: a key date is a thing
+ * about the record, and its story belongs in that record's feed at the
+ * standing record tier — so a Contributor on the team reads it exactly
+ * as a Member does, and a confidential contract's audience is the only
+ * audience it has.
+ *
+ * A verb per act. Putting a date on a record, moving one, and taking one
+ * off are three different things that happened, and a reader of the feed
+ * has to be able to tell them apart without opening a payload.
+ *
+ * **Every payload carries the label**, because a removal deletes the row
+ * and the entry is then the only thing left that says which date went —
+ * the rule `approval.cancelled` and every `document.*` payload already
+ * follow. On an edit it is the label as it stands **after** the edit, so
+ * the sentence names the date the reader would go and look at; a rename
+ * carries both sides in `changed`.
+ */
+type KeyDatePayloads = {
+  "key_date.added": { keyDateId: string; label: string; date: string };
+  /** `changed` holds only what moved, keyed `date`, `label`, or `note`
+   * — the `contract.updated` shape, so the narrator reads one kind of
+   * edit payload rather than two. */
+  "key_date.edited": { keyDateId: string; label: string; changed: ChangedFields };
+  "key_date.removed": { keyDateId: string; label: string; date: string };
+};
+
+/**
  * The registry record's own feed (M7): create and archive from #98, the
  * record surface's verbs from #99. A status change keeps its own verb —
  * status is the fixed code-branching enum (ENT-001), so the viewer
@@ -626,6 +654,7 @@ export type ActivityPayloadMap = UserPayloads &
   FieldCatalogPayloads &
   ApproverGroupPayloads &
   ApprovalPayloads &
+  KeyDatePayloads &
   EntityPayloads &
   ContractPayloads &
   CommentPayloads &

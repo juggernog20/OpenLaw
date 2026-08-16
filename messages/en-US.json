@@ -189,7 +189,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -211,6 +211,15 @@
   },
   "activity.folder.unnamed": {
     "defaultMessage": "unnamed"
+  },
+  "activity.keyDate.added": {
+    "defaultMessage": "{actor} added the key date {label} on {date}"
+  },
+  "activity.keyDate.edited": {
+    "defaultMessage": "{actor} changed the key date {label}"
+  },
+  "activity.keyDate.removed": {
+    "defaultMessage": "{actor} removed the key date {label} on {date}"
   },
   "activity.loadError": {
     "defaultMessage": "The history could not be read. Reopen the panel to try again."
@@ -1127,6 +1136,9 @@
   "contracts.record.tab.fields": {
     "defaultMessage": "Fields"
   },
+  "contracts.record.tab.keyDates": {
+    "defaultMessage": "Key dates"
+  },
   "contracts.record.tab.overview": {
     "defaultMessage": "Overview"
   },
@@ -1909,6 +1921,96 @@
   },
   "home.title": {
     "defaultMessage": "Home"
+  },
+  "keyDates.actionsFor": {
+    "defaultMessage": "Actions for {label}"
+  },
+  "keyDates.add": {
+    "defaultMessage": "Add date"
+  },
+  "keyDates.addTitle": {
+    "defaultMessage": "Add a key date"
+  },
+  "keyDates.column.actions": {
+    "defaultMessage": "Actions"
+  },
+  "keyDates.column.date": {
+    "defaultMessage": "Date"
+  },
+  "keyDates.column.due": {
+    "defaultMessage": "Due"
+  },
+  "keyDates.column.event": {
+    "defaultMessage": "Event"
+  },
+  "keyDates.column.source": {
+    "defaultMessage": "Source"
+  },
+  "keyDates.count.past": {
+    "defaultMessage": "{count} past"
+  },
+  "keyDates.count.upcoming": {
+    "defaultMessage": "{count} upcoming"
+  },
+  "keyDates.countLabel": {
+    "defaultMessage": "{count, plural, one {# date} other {# dates}}"
+  },
+  "keyDates.edit": {
+    "defaultMessage": "Edit date"
+  },
+  "keyDates.editTitle": {
+    "defaultMessage": "Edit key date"
+  },
+  "keyDates.empty": {
+    "defaultMessage": "No key dates on this contract yet, and no term dates to show beside them."
+  },
+  "keyDates.event.expiry": {
+    "defaultMessage": "Current term expires"
+  },
+  "keyDates.event.notice": {
+    "defaultMessage": "Renewal notice deadline"
+  },
+  "keyDates.event.noticeWithPeriod": {
+    "defaultMessage": "Renewal notice deadline — {days, plural, one {# day} other {# days}} before expiry"
+  },
+  "keyDates.field.date": {
+    "defaultMessage": "Date"
+  },
+  "keyDates.field.label": {
+    "defaultMessage": "Event"
+  },
+  "keyDates.field.note": {
+    "defaultMessage": "Note (optional)"
+  },
+  "keyDates.needDate": {
+    "defaultMessage": "Pick a date."
+  },
+  "keyDates.needLabel": {
+    "defaultMessage": "Name what the date is."
+  },
+  "keyDates.next": {
+    "defaultMessage": "Next deadline"
+  },
+  "keyDates.past": {
+    "defaultMessage": "Past"
+  },
+  "keyDates.remindersNote": {
+    "defaultMessage": "Every tracked date uses the same reminder offsets, set once in Settings."
+  },
+  "keyDates.remove": {
+    "defaultMessage": "Remove date"
+  },
+  "keyDates.section": {
+    "defaultMessage": "Key dates"
+  },
+  "keyDates.source.derived": {
+    "defaultMessage": "Derived"
+  },
+  "keyDates.source.keyDate": {
+    "defaultMessage": "Key date"
+  },
+  "keyDates.writeFailed": {
+    "defaultMessage": "The change could not be saved. Try again."
   },
   "keys.arrows": {
     "defaultMessage": "Move within menus and lists"
