@@ -129,6 +129,44 @@ const ENTRIES = [
       reason: "The indemnity cap is wrong.",
     },
   },
+  // A void a person took on the record (#248, CTR-013). It carries the
+  // voider as its actor, and its sentence names them: the void is the
+  // one envelope ending a person here can take, and the sentence
+  // selects on whether one did.
+  {
+    id: "a5",
+    action: "envelope.voided",
+    entityType: "contract",
+    entityId: "c1",
+    visibility: "working_team",
+    actor: BLAIR,
+    createdAt: "2026-08-12T05:00:00.000Z",
+    payload: {
+      envelopeId: "e2",
+      provider: "docusign",
+      providerEnvelopeId: "fake-envelope-0002",
+      status: "voided",
+      reason: "We sent the wrong redline.",
+    },
+  },
+  // The same verb from the provider's own console. No actor, so the
+  // sentence reads passively, exactly as a decline's always does.
+  {
+    id: "a6",
+    action: "envelope.voided",
+    entityType: "contract",
+    entityId: "c1",
+    visibility: "working_team",
+    actor: null,
+    createdAt: "2026-08-12T04:00:00.000Z",
+    payload: {
+      envelopeId: "e3",
+      provider: "docusign",
+      providerEnvelopeId: "fake-envelope-0003",
+      status: "voided",
+      reason: "Voided at the provider.",
+    },
+  },
 ];
 
 interface LogCalls {
@@ -254,6 +292,18 @@ describe("what the pane shows", () => {
     // status arrives from its feed.
     expect(
       screen.getByText("This contract's envelope was declined — The indemnity cap is wrong."),
+    ).toBeVisible();
+
+    // The void, both ways round (#248). Taken on the record it names
+    // the voider; taken in the provider's own console it reads
+    // passively, because nobody here is behind it.
+    expect(
+      screen.getByText(
+        "Blair Wentworth voided this contract's envelope — We sent the wrong redline.",
+      ),
+    ).toBeVisible();
+    expect(
+      screen.getByText("This contract's envelope was voided — Voided at the provider."),
     ).toBeVisible();
   });
 
