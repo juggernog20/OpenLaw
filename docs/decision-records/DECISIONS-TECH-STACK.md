@@ -241,6 +241,18 @@ The reconciliation sweep (CTR-013) is the third sweep on the worker, and the fir
 
 **A provider outage is the round's, not the envelope's.** Nothing is marked failed, no envelope is given up on, and the next round asks again — the executed-copy sweep's `failed` state has no counterpart here, because a status that could not be read is not a status this install may invent. The refusal bound then stops a round after a few unreachable answers in a row, for the backfill sweep's reason: a provider that is down is down for all of them, and asking once per live envelope costs a round trip each to learn the same thing. Credentials the provider refuses end the round at once, because they are install-wide.
 
+### Addendum (2026-08-16, [#277](https://github.com/juggernog20/OpenLaw/issues/277)) — a repeating sweep is a scheduled job, not a timer
+
+The addendum above gave the reconciliation sweep an in-process interval loop on the worker. **That makes replica count multiply the provider requests.** Two worker replicas each walked every live envelope and each asked the provider about it, every round — against the endpoint DocuSign rate-limits hardest. Nothing was corrupted by it: the sweep is a reader and `applyEnvelopeStatus` makes a second application a no-op. The cost was requests, not correctness.
+
+**It is now a scheduled pg-boss job on `*/5 * * * *`, the shape the backfill sweep already had.** pg-boss elects one cron worker per queue, so an install running N workers gets one round. The queue is `singleton`, so a tick landing while a round is still walking waits for it rather than joining it — which is the loop's non-overlap property, kept. The interval and the refusal bound moved with it unchanged.
+
+**The rule this settles is wider than one sweep, and it is the boot-versus-schedule line.** A sweep that runs **once** recovers work the rows already say is owed, so a second replica walks the same table, finds nothing left to ask for, and costs one query. A sweep that **repeats** is asking somebody the same question over and over, and a second replica doubles that. So: anything that runs once may live in the worker's boot; anything that repeats belongs on pg-boss's clock. The two boot sweeps stay where they are.
+
+**What it costs is a round at boot.** The loop swept immediately on start; the schedule waits for the next tick, so a worker that has just restarted can be up to five minutes behind. That is the right trade for a fallback feed measured in minutes, and the alternative — a boot round per replica beside the schedule — puts the duplication straight back on every rolling deploy, which is the one moment replica count is guaranteed to be greater than one.
+
+**Alternatives considered.** _Document a single worker replica and pin it in `compose.yml`_ — cheaper, and it makes correct scaling a thing an operator can silently break with no error and no sign. _A leader-election flag of our own_ — a second source of the truth pg-boss already holds, and TECH-007's own M12/6 note declines exactly that reasoning for the backfill sweep.
+
 ## TECH-008: Authentication — onboarding-selectable: built-in basic or bring-your-own IdP (OIDC)
 
 - **Status:** Accepted

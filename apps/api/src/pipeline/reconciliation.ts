@@ -50,6 +50,24 @@
  * misses — a stopped container, a provider outage, a page it never
  * reached — is still `sent` at the next round, so there is no progress
  * to persist and nothing to get wrong about resuming.
+ *
+ * **A round belongs to the install, not to a process.** The other two
+ * sweeps ask for work the rows already say is owed, so a second worker
+ * replica walks the same table and finds nothing left to ask for. This
+ * one asks a third party the same question every round, so an in-process
+ * timer meant that replica count multiplied the provider requests — and
+ * this is the endpoint DocuSign rate-limits hardest. It is therefore a
+ * scheduled pg-boss job on {@link RECONCILIATION_SWEEP_CRON}, the shape
+ * the backfill sweep already has: pg-boss elects one cron worker per
+ * queue, so N replicas produce one round. The queue is a singleton, so a
+ * tick that lands while a round is still going waits for it rather than
+ * joining it.
+ *
+ * The cost of that move is named rather than hidden: **there is no round
+ * at boot any more.** A worker that has just restarted waits for the
+ * next tick. That is the right trade for a fallback feed measured in
+ * minutes, and a boot round per replica would have put the duplication
+ * straight back on every rolling deploy.
  */
 
 import { and, asc, contractEnvelopes, eq, gt, type Db, type SigningProviderKey } from "@openlaw/db";
@@ -85,7 +103,7 @@ export const RECONCILIATION_PAGE_SIZE = 100;
 export const RECONCILIATION_REFUSAL_LIMIT = 5;
 
 /**
- * How long the worker waits between rounds.
+ * How often a round runs.
  *
  * Five minutes is chosen from what it is for. It is the fallback feed,
  * so it is measured against "somebody signed and nobody has told us",
@@ -94,8 +112,14 @@ export const RECONCILIATION_REFUSAL_LIMIT = 5;
  * round then finds nothing to do. Shorter would ask a third party for
  * the same answer more often; longer would leave a firewalled install
  * watching a stale record over a coffee.
+ *
+ * It is a cron rather than a timer because the round belongs to the
+ * install and not to a process: pg-boss elects one cron worker, so two
+ * worker replicas produce one round's worth of provider requests rather
+ * than two. Read in UTC, which is pg-boss's default and the only
+ * timezone this install agrees on.
  */
-export const RECONCILIATION_SWEEP_INTERVAL_MS = 5 * 60_000;
+export const RECONCILIATION_SWEEP_CRON = "*/5 * * * *";
 
 /** What the sweep is built from: the rows, the connector, somewhere to
  * ask for follow-on work, and somewhere to say what it did. */
@@ -362,65 +386,4 @@ export async function runReconciliationSweep(
     // round trip to be told the same thing.
     if (page.length < pageSize) return summary;
   }
-}
-
-/** What a caller may vary about the repeating sweep. */
-export interface ReconciliationScheduleOptions extends ReconciliationOptions {
-  /** How long to wait between rounds. Defaults to
-   * {@link RECONCILIATION_SWEEP_INTERVAL_MS}. */
-  intervalMs?: number;
-}
-
-/**
- * Runs the sweep at boot and then for ever, on an interval.
- *
- * The other two sweeps run once, because they recover work that was lost
- * and the rows say what is owed. This one is a **feed**: it converges
- * nothing by running once, because the envelope it is waiting on has not
- * been signed yet. So the shape is the same walk, repeated.
- *
- * It resolves when the signal aborts, and never rejects: a round that
- * raised is logged and the next one runs. The rounds do not overlap —
- * the wait starts when a round ends, so a slow provider stretches the
- * gap rather than stacking rounds on top of each other.
- */
-export async function startReconciliationSweeps(
-  deps: ReconciliationDeps,
-  jobs: JobQueue,
-  options: ReconciliationScheduleOptions = {},
-): Promise<void> {
-  const intervalMs = options.intervalMs ?? RECONCILIATION_SWEEP_INTERVAL_MS;
-  while (!options.signal?.aborted) {
-    try {
-      const summary = await runReconciliationSweep(deps, jobs, options);
-      deps.log.info({ ...summary }, "the reconciliation sweep finished a round");
-    } catch (error) {
-      // The sweep answers rather than throws, so this is the database
-      // being unreachable or something nobody has thought of. Either
-      // way the next round is the answer, not a dead worker.
-      deps.log.error({ reason: reasonOf(error) }, "the reconciliation sweep round did not finish");
-    }
-    await waitFor(intervalMs, options.signal);
-  }
-}
-
-/**
- * Waits, or stops waiting when the signal aborts.
- *
- * The timer is unreferenced so a worker between rounds is not what keeps
- * the process alive, and the listener is removed on both paths so a
- * long-lived signal does not collect one per round.
- */
-function waitFor(ms: number, signal?: AbortSignal): Promise<void> {
-  if (signal?.aborted) return Promise.resolve();
-  return new Promise((resolve) => {
-    const done = () => {
-      clearTimeout(timer);
-      signal?.removeEventListener("abort", done);
-      resolve();
-    };
-    const timer = setTimeout(done, ms);
-    timer.unref();
-    signal?.addEventListener("abort", done, { once: true });
-  });
 }
