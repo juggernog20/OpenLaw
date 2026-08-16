@@ -110,6 +110,7 @@ import {
   MAX_FOLDER_NAME_LENGTH,
   sql,
   type Executor,
+  type Transaction,
 } from "@openlaw/db";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
@@ -376,8 +377,8 @@ function folderIn(tree: Tree, folderId: string | null): FolderRow | null {
  * one place and one sentence. The read is the whole set because that is
  * what the tree is built from; a record's tree is bounded by
  * {@link MAX_FOLDER_DEPTH} and by what a person will make by hand, so
- * the cost is one small query on a path that is already inside a
- * transaction.
+ * the cost is one small query either way it is called — under the
+ * filing path's lock or on the list's plain read.
  *
  * Answers the folder's name as well as its id, because every activity
  * payload that mentions a folder carries the name rather than the id:
@@ -543,7 +544,11 @@ export interface FolderDestination {
  * case-insensitive comparison that refuses a duplicate.
  */
 export async function findOrCreateFolderPath(
-  tx: Executor,
+  // A `Transaction`, not any executor: the brand proves the lock was
+  // taken, and this parameter is what keeps the tree read and the
+  // inserts on the connection that holds it. On a pooled handle they
+  // would run outside the lock the brand vouches for.
+  tx: Transaction,
   contract: LockedContract,
   destination: FolderDestination,
 ): Promise<ResolvedFolder | null> {
