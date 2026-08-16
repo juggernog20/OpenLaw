@@ -31,7 +31,17 @@ jobs:
         # a pipeline is silently forgiven.
         shell: bash
     steps:
+      # `persist-credentials: false`, because this job runs the branch's
+      # own code. Checkout writes the job token into `.git/config` by
+      # default, and the steps below run `pnpm install` and the
+      # extractor from the pull request — anything in a lifecycle script
+      # or a plugin could read that token and use the `pull-requests:
+      # write` above. The job needs no git credential: it reads the tree
+      # it was given, and posts its comment through `gh` with a token
+      # passed to that step alone.
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - uses: pnpm/action-setup@v4
 

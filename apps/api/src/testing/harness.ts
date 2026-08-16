@@ -209,11 +209,12 @@ export interface TestHarness {
    * about a real provider that a deterministic one does not already
    * say, and no test may call DocuSign.
    *
-   * It is null until an Administrator saves a connector through the
-   * settings routes, because the production resolver reads the stored
-   * row live and an install with no row resolves to nothing. Once one
-   * exists, this is the instance every request resolves, so a suite
-   * scripts the envelopes it sent.
+   * It is null until the resolver has run at least once over a stored
+   * connector row. The production resolver reads that row live and
+   * builds the driver only when something asks for one, so saving the
+   * connector is not on its own enough: the first request that resolves
+   * the provider is what fills this in. From then on it is the instance
+   * every request resolves, so a suite scripts the envelopes it sent.
    */
   readonly signing: FakeSigningProvider | null;
   /**

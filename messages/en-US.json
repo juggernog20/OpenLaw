@@ -3012,7 +3012,7 @@
     "defaultMessage": "The envelope could not be sent. Try again."
   },
   "signing.sendNote": {
-    "defaultMessage": "When everyone signs, the executed file lands on this contract and the status moves to the active stage."
+    "defaultMessage": "When everyone signs, the executed file lands on this contract and the stage advances to Active."
   },
   "signing.sendTitle": {
     "defaultMessage": "Send for signature"

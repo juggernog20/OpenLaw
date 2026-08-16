@@ -103,6 +103,19 @@ export function SettingsESignaturePage() {
   });
   const [account, setAccount] = useState<string | null>(null);
 
+  /**
+   * Whether each write is already out.
+   *
+   * Refs, not `status`: `status` is state, and state has not
+   * re-rendered while the click that set it is still on the stack, so
+   * two submits in one tick would both pass a check on it. The buttons
+   * below are disabled from `status` as well — that is what the reader
+   * sees — and these are what actually stop the second write. A saved
+   * connector twice over is one act with two audit entries.
+   */
+  const saving = useRef(false);
+  const testing = useRef(false);
+
   function note(field: "connector" | "test", value: FieldStatus, message?: string) {
     setStatus((current) => ({ ...current, [field]: value }));
     setDetail((current) => ({ ...current, [field]: message }));
@@ -110,6 +123,8 @@ export function SettingsESignaturePage() {
 
   async function saveConnector(event: FormSubmitEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
+    if (saving.current) return;
+    saving.current = true;
     note("connector", "saving");
     // A test result describes the credentials that were stored when it
     // ran; a save can replace them, so the old answer must not linger.
@@ -139,10 +154,14 @@ export function SettingsESignaturePage() {
       note("connector", "saved");
     } catch {
       note("connector", "error");
+    } finally {
+      saving.current = false;
     }
   }
 
   async function testConnection(): Promise<void> {
+    if (testing.current) return;
+    testing.current = true;
     note("test", "saving");
     setAccount(null);
     try {
@@ -157,6 +176,8 @@ export function SettingsESignaturePage() {
       note("test", "saved");
     } catch {
       note("test", "error");
+    } finally {
+      testing.current = false;
     }
   }
 
@@ -320,14 +341,19 @@ export function SettingsESignaturePage() {
             </p>
           </FormField>
           <div className="flex items-center gap-2">
-            <Button type="submit" variant="secondary" size="sm">
+            <Button
+              type="submit"
+              variant="secondary"
+              size="sm"
+              disabled={status.connector === "saving"}
+            >
               <FormattedMessage id="settings.eSignature.save" defaultMessage="Save connector" />
             </Button>
             <Button
               type="button"
               variant="secondary"
               size="sm"
-              disabled={!connector.configured}
+              disabled={!connector.configured || status.test === "saving"}
               onClick={() => void testConnection()}
             >
               <FormattedMessage id="settings.eSignature.test" defaultMessage="Test connection" />

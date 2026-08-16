@@ -79,6 +79,7 @@ import {
 import { isTerminalSigningError, SigningConfigError } from "../lib/signing/provider.js";
 import type { SigningResolver } from "../lib/signing/resolver.js";
 import type { StorageAdapter } from "../lib/storage/adapter.js";
+import { DEFAULT_MAX_UPLOAD_MB, MEGABYTE } from "../lib/uploads.js";
 import { isTerminalFailure, reasonOf } from "./derivations.js";
 import type { JobQueue } from "./jobs.js";
 import type { PipelineLogger } from "./logger.js";
@@ -97,6 +98,20 @@ export interface ExecutedCopyDeps {
   /** Where the appended round's own derivations are asked for, after
    * this job's transaction commits. */
   jobs: JobQueue;
+  /**
+   * The biggest executed copy this install will file, in bytes.
+   *
+   * The same ceiling the upload route enforces, asked here for the same
+   * reason: a file arriving over the network goes to the store a chunk
+   * at a time, and a stream nobody is counting fills a self-hoster's
+   * disk. The provider is a third party, so its answer is no more
+   * trusted than a person's upload — and the download runs on the
+   * worker, where nobody is watching it happen.
+   *
+   * Optional, defaulting to the same `MAX_UPLOAD_MB` default: a process
+   * that does not set it gets a working ceiling rather than none.
+   */
+  maxUploadBytes?: number;
 }
 
 /** One executed-copy job, as the retry policy needs it described —
@@ -510,15 +525,30 @@ async function storeExecutedCopy(
   }>,
 ): Promise<StoredExecutedCopy> {
   const source = await input.fetch();
+  const ceiling = deps.maxUploadBytes ?? DEFAULT_MAX_UPLOAD_MB * MEGABYTE;
   const digest = createHash("sha256");
   let byteSize = 0;
   // The chunks are passed straight through: hashed, counted, and
   // yielded without a copy, exactly as the upload path meters a file on
   // its way to the driver.
+  //
+  // The count is also the bound. It is checked as the bytes arrive
+  // rather than from a `Content-Length` the provider states, because a
+  // stated length is a claim and the chunks are the fact. Overflow is
+  // terminal, not transient: the same envelope answers the same file
+  // next time, so a retry would download the same too-large PDF again
+  // and refuse it again at the same byte. The record then says the
+  // fetch failed, and the manual hand-off is the answer — the same
+  // answer an install with no connector has.
   async function* metered(stream: AsyncIterable<Buffer>) {
     for await (const chunk of stream) {
-      digest.update(chunk);
       byteSize += chunk.length;
+      if (byteSize > ceiling) {
+        throw new ExecutedCopyUnfilableError(
+          `The executed copy is larger than this install accepts (${String(ceiling)} bytes).`,
+        );
+      }
+      digest.update(chunk);
       yield chunk;
     }
   }

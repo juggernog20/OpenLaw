@@ -141,6 +141,10 @@ export interface PipelineHandlers extends DerivationDeps {
    * connector resolves to nothing, and an executed-copy job then
    * records a terminal failure rather than waiting for one. */
   resolveSigningProvider: SigningResolver;
+  /** The size ceiling the executed-copy fetch files under — the API's
+   * upload ceiling, asked of the provider's answer for the same reason.
+   * Optional: unset, the job takes the same default the API does. */
+  maxUploadBytes?: number;
 }
 
 /**

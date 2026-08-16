@@ -55,7 +55,7 @@ import { provisionUser } from "../../auth/instance.js";
 import { crossesApprovalGate } from "../../lib/soft-gate.js";
 import { FAKE_SIGNATURE_HEADER, FAKE_VALID_INTEGRATION_KEY } from "../../lib/signing/fake.js";
 import type { WebhookDelivery } from "../../lib/signing/provider.js";
-import { runExecutedCopySweep } from "../../pipeline/executed-copy.js";
+import { handleExecutedCopyFetch, runExecutedCopySweep } from "../../pipeline/executed-copy.js";
 import {
   signInCookies,
   startHarness,
@@ -699,6 +699,69 @@ describe("a job that was lost between the commit and the queue send", () => {
     expect(summary.scanned).toBe(0);
     expect(summary.requested).toBe(0);
     expect(summary.stopped).toBe(false);
+  }, 30_000);
+});
+
+describe("an executed copy larger than this install accepts", () => {
+  // The ceiling is passed to the handler rather than scripted onto the
+  // provider, because the fake answers one small PDF and a test that
+  // needed a hundred-megabyte one would be a hundred-megabyte test. The
+  // bound is a number the job is built with, so a small number and the
+  // ordinary file prove the same thing.
+  const CEILING = 8;
+
+  let contract: { id: string; number: number };
+  let envelope: EnvelopeRow;
+
+  beforeAll(async () => {
+    contract = await recordWithPaper("Ardent Health services agreement");
+    await moveTo(contract.number, "signature");
+    envelope = await sendFrom(contract.number);
+    provider().complete(await providerIdOf(envelope.id));
+    // Signed on the record with nothing asked of the queue, the
+    // lost-job shape above — so this suite runs the fetch itself,
+    // under its own ceiling, rather than racing the pipeline for it.
+    await harness.db
+      .update(contractEnvelopes)
+      .set({ status: "signed", completedAt: new Date() })
+      .where(eq(contractEnvelopes.id, envelope.id));
+
+    await handleExecutedCopyFetch(
+      {
+        db: harness.db,
+        storage: harness.storage,
+        log: sweepLog(),
+        resolveSigningProvider: harness.resolveSigningProvider,
+        jobs: harness.pipeline,
+        maxUploadBytes: CEILING,
+      },
+      // First attempt of several. A retry bound that has not run out is
+      // what makes the next assertion mean something: the fetch settles
+      // because the failure is terminal, not because it gave up.
+      { envelopeId: envelope.id, retryCount: 0, retryLimit: 3 },
+    );
+  }, 60_000);
+
+  it("records a terminal failure rather than retrying the same bytes", async () => {
+    const row = await envelopeRow(contract.number, envelope.id);
+    expect(row.executedFetch).toBe("failed");
+    expect(row.executedCopy).toBeNull();
+  });
+
+  it("files nothing, so the chain and the status are as they were", async () => {
+    const primary = await primaryOf(contract.number);
+    expect(primary.versions).toHaveLength(1);
+    expect(primary.versions[0]!.isExecuted).toBe(false);
+    expect((await statusOf(contract.id)).stage).toBe("signature");
+  });
+
+  it("is settled, so the boot sweep walks past it", async () => {
+    const summary = await runExecutedCopySweep(
+      { db: harness.db, log: sweepLog() },
+      harness.pipeline,
+    );
+    expect(summary.scanned).toBe(0);
+    expect(summary.requested).toBe(0);
   }, 30_000);
 });
 
