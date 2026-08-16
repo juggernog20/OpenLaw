@@ -548,6 +548,25 @@ The works-on-my-machine failures this guards against — dev-server masking buil
 - The magic-link E2E needs the domain allowlist reachable through the front door: an Administrator-only `GET`/`PUT /api/v1/auth/allowed-domains` (read + replace-whole-list) lands with this workstream — the surface a future SET-004 settings pane consumes.
 - Playwright joins the dependency set (TECH-014's E2E confirmation becomes concrete).
 
+### Addendum (2026-08-16, M15/7) — the outbound side of a test stack goes to a stand-in
+
+The M15 demo has to send an envelope, and a suite that runs on built images cannot inject the API's own fake signing provider: the container resolves its driver for itself from the stored connector (CTR-013). Two rules follow, and they are the rule the dev overlay already applies to mail.
+
+1. **The overlay pins the outbound side.** `compose.dev.yml` sets `DOCUSIGN_BASE_URL` on the **app and the worker both** — both resolve a provider, one to send and verify, the other to fetch an executed copy — and points them at a server the suite runs on the host (`host.docker.internal`, the same door the mock OIDC issuer uses). SMTP goes to Mailpit for this reason; signing goes to a stand-in for it too. A test run must not be able to post paper to somebody's DocuSign account.
+2. **The switch is the overlay's alone, and only names a host.** The connector's credentials stay org data read live from the row; the variable answers where they are presented, nothing else. It is unset on every real install, malformed values stop the boot rather than falling back to DocuSign, and both processes warn at boot when it is set — the `AUTH_RATE_LIMIT=off` shape.
+
+What this buys is that the **production path runs in the demo**: the real DocuSign driver, its JWT grant, its Connect HMAC check, the real webhook route, and the real worker fetch. What the stand-in supplies is the counterpart's shapes and the one thing no real provider would give a test — a signer who signs on demand.
+
+The E2E demo's stand-in is deliberately the same server shape the DocuSign driver's own contract suite runs against, so one description of the counterpart is not maintained in two divergent forms.
+
+**What it costs.** Three things, named because they are real. The demo's counterpart is **our** description of DocuSign, so its fidelity is only as good as the driver's contract suite and the payload fixtures — nothing in CI ever talks to DocuSign, and nothing here claims otherwise. The boot-time read is **duplicated in both entrypoints**, as the storage root and the doc engine already are, because both processes resolve a provider and a variable set on one and forgotten on the other is a send that works and a signed PDF that never lands. And the switch is a code path no deployment exercises, which is why it is one function with tests of its own rather than a condition sprinkled through the driver.
+
+**Alternatives considered.**
+
+- **Ship the deterministic fake provider in the image, behind a flag** — a build-time double is not the DocuSign driver, so the demo would prove the record's half of the milestone and skip the driver, the JWT grant, and the Connect HMAC entirely. The point of the fidelity gate is that the production path runs.
+- **A recorded-fixture proxy replaying real DocuSign traffic** — closer to DocuSign, and unable to do the one thing the demo needs: sign an envelope on demand, mid-journey, in an order the recording never took.
+- **Let the E2E stack reach DocuSign's demo estate** — a shared credential in CI, a network dependency in a gate that must be deterministic, and a suite that can post paper to a real account.
+
 ## TECH-019: Code documentation — module-granular doc comments, no coverage percentage
 
 - **Status:** Accepted

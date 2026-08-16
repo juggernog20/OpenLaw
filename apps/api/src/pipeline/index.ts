@@ -19,10 +19,17 @@
 // The three dependencies a handler needs and the pipeline does not
 // build for itself. Storage and the doc engine are chosen from the
 // environment at startup, exactly as the API chooses them (DOC-009,
-// TECH-010). The signing connector is not: it is org data read live per
-// call (CTR-013), so its builder takes the database rather than the
-// environment.
+// TECH-010). The signing connector's credentials are not: they are org
+// data read live per call (CTR-013), so its builder takes the database
+// rather than the environment. Only the host those credentials are
+// presented to is read from the environment, and only the dev/E2E
+// overlay ever sets it (TECH-018).
 export { createDocEngineFromEnv } from "../lib/doc-engine/config.js";
+export {
+  createDocuSignDriverFactory,
+  readDocuSignBaseUrl,
+  SigningHostConfigError,
+} from "../lib/signing/config.js";
 export { createSigningResolver, type SigningResolver } from "../lib/signing/resolver.js";
 export { createStorageFromEnv } from "../lib/storage/config.js";
 export {

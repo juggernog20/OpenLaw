@@ -36,7 +36,7 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arc 3, milestone 15** — e-signature. Arc 1 is done: the monorepo and CI, the
+**Arc 3, milestone 16** — term, renewal, and key dates. Arc 1 is done: the monorepo and CI, the
 authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
 `/settings` destination with its Personal and Organization rails. Arc 2 is done too: the
 configurable types and statuses, the Entities registry, the contract record, the conversation on a
@@ -45,9 +45,13 @@ walled-off contract out of the reach of everyone outside its team. Arc 3 is unde
 paper on the record — the version chain, the storage adapter, and the two drivers behind it — M12
 makes that paper readable, with the doc panel over five families, the doc-engine sidecar, and the
 background pipeline that extracts every version's text, M13 organizes it, with folders inside
-the record and a folder drop that recreates the structure it arrived with, and M14 puts the
+the record and a folder drop that recreates the structure it arrived with, M14 puts the
 six-stage backbone and its sign-off on the record — the stage pipeline, parallel approvals with
-reusable approver groups, and the soft gate that warns before a contract goes past open sign-off.
+reusable approver groups, and the soft gate that warns before a contract goes past open sign-off —
+and M15 sends the paper out and takes it back: the signing adapter with DocuSign behind it, the
+envelope on the record, the webhook and the sweep that both report what happened, and the executed
+PDF that files and pins itself when everybody has signed. The manual hand-off still needs no
+configuration at all.
 
 ---
 
@@ -259,13 +263,26 @@ makes OpenLaw a CLM rather than a database with a form on it.
     gives and raises its confirmation dialog on the type rather than on the sentence
   - _Decisions:_ CTR-001, CTR-012, DES-034, DES-035, TECH-020
 
-- [ ] **M15 — E-signature**
+- [x] **M15 — E-signature**
       _Demo:_ Send a contract for signature through DocuSign, sign it, and watch the executed PDF land back
       as a pinned version.
-  - The signing provider adapter with DocuSign as the first connector, JWT grant auth
-  - Envelope tracking; the executed-copy pin on the version chain
-  - The manual fallback path for teams without a connector
-  - _Decisions:_ CTR-013, CTR-014, TECH-013
+  - The `SigningProvider` seam with DocuSign as the first connector and JWT grant auth, a deterministic
+    fake beside it, and one contract suite both are held to
+  - The connector is org data, not deployment environment: an Administrator saves it in the new
+    Settings → Organization → Integrations section, both secrets write-only, and every use reads the row
+    live
+  - `contract_envelopes` and its signers, at most one live envelope per contract; the send picks a version
+    of the primary document and names the signers, who are all asked at once
+  - The record answers where the paper is: the envelope row in the "Approvals & signing" card, the status
+    chip beside the pipeline, and the void on the row
+  - Status comes back two ways and both funnel into one idempotent transition — the Connect webhook, this
+    install's first unauthenticated inbound write path, and the reconciliation sweep that converges an
+    install DocuSign cannot reach
+  - Completion files itself: the executed PDF is fetched, appended to the chain as an `executed` version,
+    pinned explicitly, and the status advances from the signature stage to active, narrated as the
+    integration's own act
+  - The manual hand-off is untouched and needs no configuration — upload, pin, mark active
+  - _Decisions:_ CTR-013, CTR-014, TECH-013, SET-007, DES-036, DES-037, DES-038 · _Issues:_ #244–#251
 
 - [ ] **M16 — Term, renewal, and key dates**
       _Demo:_ Set a contract's term and notice period; the notice deadline derives itself, and choosing to

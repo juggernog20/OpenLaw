@@ -29,8 +29,10 @@ import { createDb } from "@openlaw/db";
 import {
   createConsoleLogger,
   createDocEngineFromEnv,
+  createDocuSignDriverFactory,
   createSigningResolver,
   createStorageFromEnv,
+  readDocuSignBaseUrl,
   runBackfillSweep,
   runExecutedCopySweep,
   startPipeline,
@@ -70,10 +72,23 @@ const db = createDb(databaseUrl);
 const storage = orExit(() => createStorageFromEnv(process.env));
 const docEngine = orExit(() => createDocEngineFromEnv(process.env));
 // The signing connector is org data, not deployment environment
-// (CTR-013), so there is nothing to read from `process.env` and nothing
-// to fail at boot over: an install with no connector row resolves to
-// nothing, and an executed-copy job records that plainly.
-const resolveSigningProvider = createSigningResolver(db);
+// (CTR-013), so there are no credentials to read from `process.env`: an
+// install with no connector row resolves to nothing, and an
+// executed-copy job records that plainly. Where those credentials are
+// presented is read from the environment, exactly as the API reads it —
+// unset on every real install, and pointed at a stand-in by the dev/E2E
+// overlay so a test send can never reach a real account (TECH-018).
+const docusignBaseUrl = orExit(() => readDocuSignBaseUrl(process.env));
+if (docusignBaseUrl) {
+  log.warn(
+    { baseUrl: docusignBaseUrl },
+    "signing is pointed at a stand-in instead of DocuSign (DOCUSIGN_BASE_URL) — the dev/E2E overlay only",
+  );
+}
+const resolveSigningProvider = createSigningResolver(
+  db,
+  createDocuSignDriverFactory(docusignBaseUrl),
+);
 
 // A database that cannot be reached is fatal here, as it is in the API.
 // Caught rather than left to the runtime so the operator reads one line
