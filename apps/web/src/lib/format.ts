@@ -309,7 +309,8 @@ export function formatDeadline(value: Date | string, options?: FormatOptions): s
  *
  * The unit steps up as the distance grows, so a date most of a year out
  * does not read as "in 291 days": days inside a week, weeks inside two
- * months, months inside two years, years beyond. `numeric: "auto"` is
+ * months, months inside a year and a half, years beyond. `numeric:
+ * "auto"` is
  * what turns the small offsets into "today", "tomorrow", and
  * "yesterday". Negative counts read backwards — "8 weeks ago" — and a
  * surface that would rather flatten the past into one word says so in
