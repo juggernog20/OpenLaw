@@ -5554,6 +5554,29 @@ export interface operations {
           };
         };
       };
+      /** @description The status change crosses CTR-012's approval gate with approvals still unresolved. Re-send with `overrideSoftGate` to record it as an override. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type: "urn:openlaw:problem:approval-soft-gate" | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+          };
+        };
+      };
       /** @description Problem details (RFC 9457) */
       default: {
         headers: {
@@ -6501,6 +6524,32 @@ export interface operations {
           };
         };
       };
+      /** @description The send was refused: this install has no e-signature connector, or the contract already has an envelope out. An archived contract is refused here too, without naming a type. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type:
+              | "urn:openlaw:problem:signing-not-configured"
+              | "urn:openlaw:problem:envelope-live"
+              | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+          };
+        };
+      };
       /** @description Problem details (RFC 9457) */
       default: {
         headers: {
@@ -6578,6 +6627,29 @@ export interface operations {
                 createdAt: string;
               }[];
             } | null;
+          };
+        };
+      };
+      /** @description The void was refused: this install has no e-signature connector. An envelope that has already ended, and an archived contract, are refused here too, without naming a type. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type: "urn:openlaw:problem:signing-not-configured" | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
           };
         };
       };
