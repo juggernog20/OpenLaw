@@ -16,6 +16,7 @@ import * as authSchema from "./schema/auth.js";
 import * as commentsSchema from "./schema/comments.js";
 import * as contractApprovalsSchema from "./schema/contract-approvals.js";
 import * as contractCounterpartiesSchema from "./schema/contract-counterparties.js";
+import * as contractEnvelopesSchema from "./schema/contract-envelopes.js";
 import * as contractStatusesSchema from "./schema/contract-statuses.js";
 import * as contractTeamSchema from "./schema/contract-team.js";
 import * as contractTypeFieldsSchema from "./schema/contract-type-fields.js";
@@ -40,6 +41,7 @@ export * from "./schema/auth.js";
 export * from "./schema/comments.js";
 export * from "./schema/contract-approvals.js";
 export * from "./schema/contract-counterparties.js";
+export * from "./schema/contract-envelopes.js";
 export * from "./schema/contract-statuses.js";
 export * from "./schema/contract-team.js";
 export * from "./schema/contract-type-fields.js";
@@ -64,6 +66,7 @@ export const schema = {
   ...commentsSchema,
   ...contractApprovalsSchema,
   ...contractCounterpartiesSchema,
+  ...contractEnvelopesSchema,
   ...contractStatusesSchema,
   ...contractTeamSchema,
   ...contractTypeFieldsSchema,

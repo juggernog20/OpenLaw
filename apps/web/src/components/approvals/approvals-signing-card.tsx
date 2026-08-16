@@ -1,9 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The Approvals section of the contract record (M14/3), drawn from the
- * C5 mock's roster: who was asked, where the ask came from, what they
- * decided, what they said about it, and when.
+ * The "Approvals & signing" section of the contract record (M14/3,
+ * M15/2), drawn from the C5 and C12 mocks: who was asked to sign the
+ * record off, what they decided — and the paper this record has sent
+ * out for signature.
+ *
+ * **The card takes its two-part name now that it holds both kinds of
+ * row** (DES-035 clause 3, DES-036). Until M15 it held approval rows
+ * alone and was called "Approvals", because a heading naming two things
+ * while showing one reads as broken. Envelope rows are the second kind;
+ * confirmed-renewal rows are the third and arrive with M16.
  *
  * **The roster is a set, not a queue** (CTR-012). Every request runs in
  * parallel, so nothing here draws an order of play — the rows are the
@@ -12,11 +19,23 @@
  * beside it.
  *
  * **Rows are auto-derived and nothing here authors an event**
- * (grill-plan H.H4). The section shows `contract_approvals` and nothing
- * else. Envelope rows arrive with M15 and renewal rows with M16, which
- * is why the heading is "Approvals" today rather than the mock's
- * "Approvals & signing": a card named for two things that only holds
- * one of them is a card that reads as broken.
+ * (grill-plan H.H4). The section shows `contract_approvals` and
+ * `contract_envelopes`, and nothing else.
+ *
+ * **The signing block is drawn only when there is an envelope** (grill
+ * row E.5's conditional, applied to the row as well as to the chip). A
+ * record signed by hand holds no envelope, and the card then reads
+ * exactly as it did before M15: one table, no sub-headings. The
+ * sub-headings appear only when both blocks are on screen, for the
+ * reason the card's own name waited for its second row family.
+ *
+ * **Sending is absent, never disabled** (DES-035's absence rule). The
+ * control is drawn when this install has a connector, the record has a
+ * primary document, and no envelope is out. Any of those missing and
+ * there is no control at all: a greyed-out send on an install that
+ * cannot sign advertises a feature the deployment does not have, and
+ * the manual hand-off is not a lesser path that needs explaining
+ * (CTR-013).
  *
  * **Deciding is a form; cancelling is one click** (DES-017). An
  * approver answers with a decision **and** an optional note, and those
@@ -50,12 +69,21 @@
  * itself: whether a group has anybody left to ask is the seam's
  * decision, and printing its sentence is what keeps the rule in one
  * place (DES-035).
+ *
+ * **A signer is a name and an email, typed** (CTR-013). The people who
+ * sign a contract are on the other side of a deal: they have no account
+ * here, so there is no picker to offer them from. Every one of them is
+ * asked at once — the send dialog collects a list, not an order.
  */
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { FormattedMessage, useIntl, defineMessage, type IntlShape } from "react-intl";
-import { Check, MoreHorizontal, Plus, Users, X } from "lucide-react";
-import { MAX_APPROVAL_NOTE_LENGTH } from "@openlaw/shared";
+import { Check, MoreHorizontal, Plus, Send, Users, X } from "lucide-react";
+import {
+  MAX_APPROVAL_NOTE_LENGTH,
+  MAX_ENVELOPE_SIGNERS,
+  MAX_ENVELOPE_SUBJECT_LENGTH,
+} from "@openlaw/shared";
 import {
   APPROVAL_PILL,
   applyApproverGroup,
@@ -66,6 +94,17 @@ import {
   type ApprovalStatus,
   type ContractApproval,
 } from "../../lib/approvals";
+import {
+  ENVELOPE_PILL,
+  liveEnvelope,
+  sendContractEnvelope,
+  type ContractEnvelope,
+  type EnvelopeSigner,
+  type EnvelopeStatus,
+  type SendableDocument,
+  type SigningOutcome,
+  type SigningState,
+} from "../../lib/envelopes";
 import type { ApproverGroupOption, ContractTeamMember, UserOption } from "../../lib/contracts";
 import type { Role } from "../../lib/roles";
 import { formatShortDate } from "../../lib/format";
@@ -97,6 +136,14 @@ const STATUS_LABEL = {
   rejected: defineMessage({ id: "approvals.status.rejected", defaultMessage: "Rejected" }),
 } as const satisfies Record<ApprovalStatus, { id: string; defaultMessage: string }>;
 
+/** The envelope's status, as the row's pill says it (DES-036). */
+const ENVELOPE_STATUS_LABEL = {
+  sent: defineMessage({ id: "signing.status.sent", defaultMessage: "Out for signature" }),
+  signed: defineMessage({ id: "signing.status.signed", defaultMessage: "Signed" }),
+  declined: defineMessage({ id: "signing.status.declined", defaultMessage: "Declined" }),
+  voided: defineMessage({ id: "signing.status.voided", defaultMessage: "Voided" }),
+} as const satisfies Record<EnvelopeStatus, { id: string; defaultMessage: string }>;
+
 /** The header's tally, one message per state so a zero is left out
  * rather than printed. */
 const COUNT_LABEL = {
@@ -112,9 +159,10 @@ interface Candidate {
   image: string | null;
 }
 
-export function ApprovalsCard({
+export function ApprovalsSigningCard({
   contractNumber,
   approvals,
+  signing,
   users,
   approverGroups,
   team,
@@ -124,9 +172,14 @@ export function ApprovalsCard({
   isConfidential,
   frozen,
   onApprovals,
+  onSigning,
 }: Readonly<{
   contractNumber: number;
   approvals: readonly ContractApproval[];
+  /** The record's signing state (CTR-013): its envelopes, whether this
+   * install has a connector at all, and the primary document a send
+   * would offer. All three decide whether the send control is drawn. */
+  signing: SigningState;
   /** The people the record's pickers read, Member+ and otherwise. */
   users: readonly UserOption[];
   /** The live approver-group templates (CTR-012). Empty when an
@@ -143,11 +196,13 @@ export function ApprovalsCard({
   /** An archived record, or a read-only viewer: no control is drawn. */
   frozen: boolean;
   onApprovals: (approvals: ContractApproval[]) => void;
+  onSigning: (signing: SigningState) => void;
 }>) {
   const intl = useIntl();
   const [status, setStatus] = useState<FieldStatus>("idle");
   const [detail, setDetail] = useState<string | null>(null);
   const [asking, setAsking] = useState(false);
+  const [sending, setSending] = useState(false);
   const [applying, setApplying] = useState(false);
   const [deciding, setDeciding] = useState<{
     approval: ContractApproval;
@@ -207,6 +262,21 @@ export function ApprovalsCard({
   const peopleById = new Map(users.map((person) => [person.id, person]));
 
   /**
+   * Whether a send is offered at all (DES-035's absence rule, DES-036).
+   *
+   * Three facts, all of them the seam's: an install with no connector
+   * cannot send, a record with no primary document has nothing to send,
+   * and a record with an envelope already out is refused a second one.
+   * Each of them makes the control **absent** rather than disabled, so
+   * the card never advertises an act the seam would refuse — and never
+   * has to explain the manual hand-off, which is the whole path on an
+   * install that has no connector (CTR-013).
+   */
+  const live = liveEnvelope(signing.envelopes);
+  const canSend =
+    !frozen && signing.signingConfigured && signing.primaryDocument !== null && live === null;
+
+  /**
    * Every write says saving, then saved or why not, and replaces the
    * roster it is given — because a write moves more rows than the one
    * it was addressed at (DES-017).
@@ -244,6 +314,49 @@ export function ApprovalsCard({
     return null;
   }
 
+  /**
+   * The same shape for the signing half (CTR-013).
+   *
+   * It is its own function rather than a generic one over both, because
+   * what a write answers with is what tells them apart: an approval
+   * write answers the roster, and a send answers the record's whole
+   * signing state — the envelopes, whether a connector is configured,
+   * and the chain a next send would offer. Collapsing the two would
+   * mean a caller unpacking a union at every call site.
+   */
+  async function runSend(write: () => Promise<SigningOutcome>): Promise<string | null> {
+    setStatus("saving");
+    setDetail(null);
+    const outcome = await write();
+    if (!outcome.ok) {
+      // Reported in the dialog, where the reader's attention already is
+      // (DES-035 clause 12). The header keeps the same sentence off
+      // screen rather than printing it a second time behind a modal.
+      setStatus("idle");
+      setDetail(null);
+      return (
+        outcome.detail ??
+        intl.formatMessage({
+          id: "signing.sendFailed",
+          defaultMessage: "The envelope could not be sent. Try again.",
+        })
+      );
+    }
+    onSigning({
+      envelopes: outcome.envelopes,
+      signingConfigured: outcome.signingConfigured,
+      primaryDocument: outcome.primaryDocument,
+    });
+    setStatus("saved");
+    setDetail(null);
+    return null;
+  }
+
+  /** Whether both blocks are on screen. The sub-headings appear only
+   * then: a card drawing one kind of row needs no label saying which
+   * kind it is. */
+  const bothBlocks = signing.envelopes.length > 0;
+
   return (
     <section
       id="contract-approvals"
@@ -253,12 +366,18 @@ export function ApprovalsCard({
       <header className="flex h-section-header items-center justify-between gap-2 rounded-t-card border-b border-border-default bg-section-header px-4">
         <div className="flex min-w-0 items-center gap-2">
           <h2 id="contract-approvals-heading" className="text-base font-semibold">
-            <FormattedMessage id="approvals.section" defaultMessage="Approvals" />
+            <FormattedMessage id="approvals.sectionSigning" defaultMessage="Approvals & signing" />
           </h2>
           {/* The neutral counter badge (grill-plan H.H3), drawn the way
               the Documents section draws its own: a bare number on
               screen, and a whole phrase for a screen reader, because a
-              lone "3" after a heading says nothing. */}
+              lone "3" after a heading says nothing.
+
+              It counts the asks, not the sends. The badge sits beside
+              the tally, and the tally answers "where does sign-off
+              stand" — one question, one number. Where the signature
+              stands is answered by the envelope row itself and by the
+              chip in the record's sub-bar. */}
           <span
             role="img"
             aria-label={intl.formatMessage(
@@ -290,6 +409,17 @@ export function ApprovalsCard({
         {!frozen && (
           <div className="flex shrink-0 items-center gap-2">
             <StatusNote status={status} detail={detail} />
+            {/* Sending comes first, because it is the act the card's
+                second half exists for. Absent — never disabled — on an
+                install with no connector, on a record with no primary
+                document, and while an envelope is already out
+                (DES-035's absence rule). */}
+            {canSend && (
+              <Button variant="secondary" disabled={busy} onClick={() => setSending(true)}>
+                <Send size={16} aria-hidden="true" />
+                <FormattedMessage id="signing.send" defaultMessage="Send for signature" />
+              </Button>
+            )}
             {/* The C5 mock's pair, in its order. Absent rather than
                 disabled when no Administrator has set a template up:
                 a control whose dialog could only say "there are none"
@@ -307,6 +437,51 @@ export function ApprovalsCard({
           </div>
         )}
       </header>
+      {/* The signing block, drawn only when this record has sent paper
+          out (grill row E.5's conditional). A contract signed by hand
+          holds no envelope, and the card then reads exactly as it did
+          before M15. */}
+      {bothBlocks && (
+        <>
+          <h3
+            id="contract-signing-heading"
+            className="border-b border-border-muted px-4 py-2 text-sm font-medium text-muted"
+          >
+            <FormattedMessage id="signing.block" defaultMessage="Signing" />
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full" aria-labelledby="contract-signing-heading">
+              <thead>
+                <tr className="text-start text-sm font-medium text-muted">
+                  <th scope="col" className="px-4 py-2 text-start font-medium">
+                    <FormattedMessage id="signing.column.signers" defaultMessage="Signers" />
+                  </th>
+                  <th scope="col" className="w-64 px-4 py-2 text-start font-medium">
+                    <FormattedMessage id="signing.column.document" defaultMessage="Document" />
+                  </th>
+                  <th scope="col" className="w-40 px-4 py-2 text-start font-medium">
+                    <FormattedMessage id="signing.column.status" defaultMessage="Status" />
+                  </th>
+                  <th scope="col" className="w-32 px-4 py-2 text-start font-medium">
+                    <FormattedMessage id="signing.column.sent" defaultMessage="Sent" />
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {signing.envelopes.map((envelope) => (
+                  <EnvelopeRow key={envelope.id} envelope={envelope} intl={intl} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <h3
+            id="contract-approvals-block-heading"
+            className="border-y border-border-muted px-4 py-2 text-sm font-medium text-muted"
+          >
+            <FormattedMessage id="approvals.block" defaultMessage="Approvals" />
+          </h3>
+        </>
+      )}
       {approvals.length === 0 ? (
         <p className="px-4 py-3 text-base text-muted">
           <FormattedMessage
@@ -316,7 +491,13 @@ export function ApprovalsCard({
         </p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full">
+          {/* Named only when the signing block is above it, because
+              that is when the card holds two tables and a reader has
+              to be told which one they are in. */}
+          <table
+            className="w-full"
+            aria-labelledby={bothBlocks ? "contract-approvals-block-heading" : undefined}
+          >
             <thead>
               <tr className="text-start text-sm font-medium text-muted">
                 <th scope="col" className="px-4 py-2 text-start font-medium">
@@ -366,6 +547,18 @@ export function ApprovalsCard({
           </table>
         </div>
       )}
+      {sending && signing.primaryDocument !== null && (
+        <SendEnvelopeDialog
+          document={signing.primaryDocument}
+          busy={busy}
+          onClose={() => setSending(false)}
+          onConfirm={async (input) => {
+            const refusal = await runSend(() => sendContractEnvelope(contractNumber, input));
+            if (refusal === null) setSending(false);
+            return refusal;
+          }}
+        />
+      )}
       {asking && (
         <AddApproverDialog
           candidates={candidates}
@@ -411,6 +604,85 @@ export function ApprovalsCard({
         />
       )}
     </section>
+  );
+}
+
+/**
+ * One round of signature, as the C20 mock's envelope row draws it —
+ * moved into this card, where the spec puts the signers' home (DES-036).
+ *
+ * Four cells, and each one a fact the seam answers. The signers come
+ * first because "who was asked to sign this" is the question the row
+ * exists for, and each of them takes the two-line anatomy the Approver
+ * cell already uses: the name, and under it the address the invitation
+ * went to.
+ *
+ * There are no per-signer statuses and no reminder, which the mock
+ * draws: the envelope carries one status, and who has signed so far is
+ * provider-side detail v1 does not surface (CTR-013).
+ */
+function EnvelopeRow({
+  envelope,
+  intl,
+}: Readonly<{ envelope: ContractEnvelope; intl: IntlShape }>) {
+  const dash = intl.formatMessage(NOT_YET);
+  return (
+    <tr className="border-t border-border-muted">
+      <td className="px-4 py-2.5">
+        <ul className="flex flex-col gap-1.5">
+          {envelope.signers.map((signer, index) => (
+            // Keyed by position: the list is read-only, nothing
+            // reorders it, and two signers may share one address —
+            // the seam refuses that on a new send, but a row written
+            // before that rule, or by another adapter, may hold it.
+            <li key={index} className="flex min-w-0 flex-col">
+              <span className="truncate text-base font-medium text-primary">{signer.name}</span>
+              <span className="truncate text-xs text-muted">{signer.email}</span>
+            </li>
+          ))}
+        </ul>
+      </td>
+      <td className="px-4 py-2.5">
+        {/* What went out. Both halves go to an em dash together once
+            that version has been erased (DOC-010) — the row still says
+            an envelope was sent, which is the fact it is here for. */}
+        {envelope.documentTitle === null ? (
+          <span className="text-sm text-muted">{dash}</span>
+        ) : (
+          <div className="flex min-w-0 flex-col">
+            <span className="truncate text-sm text-primary">{envelope.documentTitle}</span>
+            {envelope.documentVersionNumber !== null && (
+              <span className="truncate text-xs text-muted">
+                <FormattedMessage
+                  id="signing.version"
+                  defaultMessage="Version {number}"
+                  values={{ number: envelope.documentVersionNumber }}
+                />
+              </span>
+            )}
+          </div>
+        )}
+      </td>
+      <td className="px-4 py-2.5">
+        <span
+          className={`inline-flex rounded-pill px-2 py-0.5 text-xs font-medium ${ENVELOPE_PILL[envelope.status]}`}
+        >
+          <FormattedMessage {...ENVELOPE_STATUS_LABEL[envelope.status]} />
+        </span>
+      </td>
+      <td className="px-4 py-2.5">
+        <div className="flex min-w-0 flex-col">
+          <span className="text-sm text-muted">{formatShortDate(envelope.sentAt)}</span>
+          <span className="truncate text-xs text-muted">
+            <FormattedMessage
+              id="signing.sentBy"
+              defaultMessage="by {name}"
+              values={{ name: envelope.sentBy.displayName }}
+            />
+          </span>
+        </div>
+      </td>
+    </tr>
   );
 }
 
@@ -917,6 +1189,276 @@ function DecisionDialog({
               ) : (
                 <FormattedMessage id="approvals.reject" defaultMessage="Reject" />
               )}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** One signer row in the send dialog, with the key React needs to keep
+ * two half-typed rows apart. */
+interface DraftSigner extends EnvelopeSigner {
+  key: string;
+}
+
+/** A fresh, empty signer row. */
+function blankSigner(): DraftSigner {
+  return { key: crypto.randomUUID(), name: "", email: "" };
+}
+
+/**
+ * What goes out, and who signs it (CTR-013, DES-036) — the C12 mock's
+ * "Send for signature" modal.
+ *
+ * **The version is picked, and it defaults to the current round.** The
+ * chain arrives newest first, so the top option is the draft the team
+ * is on and the older rounds are under it. A send is consequential
+ * enough to name what it is sending rather than to imply it.
+ *
+ * **A signer is two text boxes.** The mock draws a list of people with
+ * avatars and ordinals, which is a picker over an install's own users
+ * — and the people who sign a contract are on the other side of a deal.
+ * They have no account here, so there is nothing to pick them from, and
+ * the ordinals go with the routing order v1 does not have (CTR-013).
+ *
+ * **The mock's "Message" block is a Subject field.** The signing seam
+ * carries a subject and no body in v1, so a box labelled "Message"
+ * would promise a letter the envelope cannot carry. The field collects
+ * the one line a signer actually sees. Left blank, the record names
+ * itself.
+ *
+ * The refusal is printed here rather than in the card head, because
+ * this is where the reader's attention already is (DES-035 clause 12).
+ */
+function SendEnvelopeDialog({
+  document,
+  busy,
+  onClose,
+  onConfirm,
+}: Readonly<{
+  document: SendableDocument;
+  busy: boolean;
+  onClose: () => void;
+  /** Answers with the refusal to show, or `null` when the send
+   * landed. */
+  onConfirm: (input: {
+    documentVersionId: string;
+    signers: EnvelopeSigner[];
+    subject?: string;
+  }) => Promise<string | null>;
+}>) {
+  const intl = useIntl();
+  // The current round is the first one the seam answers, and it is the
+  // default for the reason the mock's own dialog implies: the version
+  // being negotiated is the version being sent, nearly every time.
+  const [versionId, setVersionId] = useState(document.versions[0]?.id ?? "");
+  // Each row carries a key of its own. A signer being typed into has
+  // no identity yet — two empty rows are indistinguishable — so keying
+  // on the array index would make React reuse the wrong input when a
+  // middle row is removed.
+  const [signers, setSigners] = useState<DraftSigner[]>([blankSigner()]);
+  /** Where focus goes when a signer row is removed. The control that
+   * was pressed goes with the row, and focus would otherwise fall to
+   * the document body (DES-010's restore rule, wired by hand because
+   * the row is not a dialog). */
+  const addSigner = useRef<HTMLButtonElement>(null);
+  const [subject, setSubject] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  function editSigner(key: string, patch: Partial<EnvelopeSigner>) {
+    setSigners((held) =>
+      held.map((signer) => (signer.key === key ? { ...signer, ...patch } : signer)),
+    );
+    setError(null);
+  }
+
+  async function submit() {
+    if (busy) return;
+    const named = signers
+      .map((signer) => ({ name: signer.name.trim(), email: signer.email.trim() }))
+      .filter((signer) => signer.name !== "" || signer.email !== "");
+    if (named.length === 0 || named.some((signer) => signer.name === "" || signer.email === "")) {
+      // One sentence for both, because they are one mistake: a signer
+      // the envelope could not reach is not a signer.
+      setError(
+        intl.formatMessage({
+          id: "signing.needSigners",
+          defaultMessage: "Give every signer a name and an email address.",
+        }),
+      );
+      return;
+    }
+    setError(
+      await onConfirm({
+        documentVersionId: versionId,
+        signers: named,
+        ...(subject.trim() ? { subject: subject.trim() } : {}),
+      }),
+    );
+  }
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent aria-describedby={undefined}>
+        <DialogTitle>
+          <FormattedMessage id="signing.sendTitle" defaultMessage="Send for signature" />
+        </DialogTitle>
+        <form
+          className="mt-4 flex flex-col gap-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submit();
+          }}
+        >
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="envelope-version">
+              <FormattedMessage id="signing.versionLabel" defaultMessage="Version" />
+            </Label>
+            <select
+              id="envelope-version"
+              value={versionId}
+              autoFocus
+              className={CONTROL_CLASS}
+              onChange={(event) => {
+                setVersionId(event.target.value);
+                setError(null);
+              }}
+            >
+              {document.versions.map((version, index) => (
+                <option key={version.id} value={version.id}>
+                  {index === 0
+                    ? intl.formatMessage(
+                        {
+                          id: "signing.versionCurrent",
+                          defaultMessage: "Version {number} — {filename} (current)",
+                        },
+                        { number: version.versionNumber, filename: version.originalFilename },
+                      )
+                    : intl.formatMessage(
+                        {
+                          id: "signing.versionOption",
+                          defaultMessage: "Version {number} — {filename}",
+                        },
+                        { number: version.versionNumber, filename: version.originalFilename },
+                      )}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-muted">
+              <FormattedMessage
+                id="signing.versionHelp"
+                defaultMessage="Only the primary document goes out. Attachments are not sent."
+              />
+            </p>
+          </div>
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1 text-base font-medium">
+              <FormattedMessage id="signing.signers" defaultMessage="Signers" />
+            </legend>
+            {signers.map((signer, index) => (
+              <div key={signer.key} className="flex items-center gap-2">
+                <input
+                  className={CONTROL_CLASS}
+                  value={signer.name}
+                  aria-label={intl.formatMessage(
+                    { id: "signing.signerName", defaultMessage: "Signer {number} name" },
+                    { number: index + 1 },
+                  )}
+                  onChange={(event) => editSigner(signer.key, { name: event.target.value })}
+                />
+                <input
+                  type="email"
+                  className={CONTROL_CLASS}
+                  value={signer.email}
+                  aria-label={intl.formatMessage(
+                    { id: "signing.signerEmail", defaultMessage: "Signer {number} email" },
+                    { number: index + 1 },
+                  )}
+                  onChange={(event) => editSigner(signer.key, { email: event.target.value })}
+                />
+                {/* Absent on the only row, the convention the rest of
+                    the record follows: removing the last signer would
+                    leave an envelope nobody signs. */}
+                {signers.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={intl.formatMessage(
+                      { id: "signing.removeSigner", defaultMessage: "Remove signer {number}" },
+                      { number: index + 1 },
+                    )}
+                    onClick={() => {
+                      setSigners((held) => held.filter((row) => row.key !== signer.key));
+                      setError(null);
+                      // After the re-render, not before it: on a full
+                      // list the "Add signer" button is not mounted
+                      // until this removal brings the count back under
+                      // the cap, and focusing synchronously would find
+                      // nothing and drop focus on the document body.
+                      requestAnimationFrame(() => addSigner.current?.focus());
+                    }}
+                  >
+                    <X size={16} aria-hidden="true" />
+                  </Button>
+                )}
+              </div>
+            ))}
+            {signers.length < MAX_ENVELOPE_SIGNERS && (
+              <div>
+                <Button
+                  ref={addSigner}
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setSigners((held) => [...held, blankSigner()])}
+                >
+                  <Plus size={16} aria-hidden="true" />
+                  <FormattedMessage id="signing.addSigner" defaultMessage="Add signer" />
+                </Button>
+              </div>
+            )}
+            <p className="text-xs text-muted">
+              <FormattedMessage
+                id="signing.signersHelp"
+                defaultMessage="Everyone you name is asked at once. They sign in any order."
+              />
+            </p>
+          </fieldset>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="envelope-subject">
+              <FormattedMessage id="signing.subject" defaultMessage="Subject (optional)" />
+            </Label>
+            <input
+              id="envelope-subject"
+              className={CONTROL_CLASS}
+              value={subject}
+              maxLength={MAX_ENVELOPE_SUBJECT_LENGTH}
+              onChange={(event) => {
+                setSubject(event.target.value);
+                setError(null);
+              }}
+            />
+            <p className="text-xs text-muted">
+              <FormattedMessage
+                id="signing.subjectHelp"
+                defaultMessage="Signers see this on the invitation. Left blank, it names this contract."
+              />
+            </p>
+          </div>
+          {error && (
+            <p role="alert" className="text-xs text-status-danger-fg">
+              {error}
+            </p>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={onClose}>
+              <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+            </Button>
+            <Button type="submit" disabled={busy || document.versions.length === 0}>
+              <Send size={16} aria-hidden="true" />
+              <FormattedMessage id="signing.sendEnvelope" defaultMessage="Send envelope" />
             </Button>
           </div>
         </form>

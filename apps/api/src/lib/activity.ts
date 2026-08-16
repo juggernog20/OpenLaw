@@ -213,6 +213,22 @@ export type ActivityAction =
   // record forever.
   | "signing_connector.configured"
   | "signing_connector.updated"
+  // One round of signature on one contract (M15/2, CTR-013). These hang
+  // off the contract, not off the envelope, for the reason the approval
+  // verbs give: a send is a thing that happened to the record, and its
+  // story belongs in that record's feed at the standing record tier — so
+  // a Contributor on the team reads it exactly as a Member does, and a
+  // confidential contract's audience is the only audience it has.
+  //
+  // A verb per act, not one generic envelope edit. The later M15 slices
+  // add the ones that answer back — signed, declined, voided — because
+  // a reader of the feed has to be able to tell a completed signature
+  // from a withdrawn one without opening a payload.
+  //
+  // The payload names the signers rather than only counting them: the
+  // envelope's signer rows go when the record does, and the feed is
+  // what still says who was asked to sign.
+  | "envelope.sent"
   // Data leaving the system (M9/7, DD-017). An export is a security
   // event in its own right, so taking one appends an entry at
   // `admin_only` naming the filters it was taken under. It hangs off

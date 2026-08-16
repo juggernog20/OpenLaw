@@ -302,6 +302,13 @@
       "when": 1786859988192,
       "tag": "0042_signing_connectors",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1786863752148,
+      "tag": "0043_contract_envelopes",
+      "breakpoints": true
     }
   ]
 }

@@ -650,17 +650,42 @@ Compound primary key on (`from_contract_id`, `to_contract_id`, `relation_type`).
 
 Source: **CTR-013**
 
-Signing envelopes sent via the e-signature adapter (DocuSign first connector). Manual hand-off (upload executed PDF) creates no envelope row.
+Signing envelopes sent via the e-signature adapter (DocuSign first connector). Manual hand-off (upload executed PDF) creates no envelope row. Landed in M15/2 with the columns the send writes and the later slices move.
 
-| Column                     | Type        | Notes                                        |
-| -------------------------- | ----------- | -------------------------------------------- |
-| `id`                       | UUID        | PK                                           |
-| `contract_id`              | UUID        | FK → `contracts.id`, not null                |
-| `provider`                 | text        | `docusign` in v1; adapter-keyed              |
-| `provider_envelope_id`     | text        | not null                                     |
-| `status`                   | text (enum) | `sent` \| `signed` \| `declined` \| `voided` |
-| `sent_at`, `completed_at`  | timestamptz | completed_at nullable                        |
-| `created_at`, `updated_at` | timestamptz |                                              |
+| Column                     | Type        | Notes                                                                                  |
+| -------------------------- | ----------- | -------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                     |
+| `contract_id`              | UUID        | FK → `contracts.id`, not null, cascade                                                 |
+| `provider`                 | text        | `docusign` in v1; adapter-keyed                                                        |
+| `provider_envelope_id`     | text        | not null; unique with `provider` — the webhook's correlation key                       |
+| `status`                   | text (enum) | `sent` \| `signed` \| `declined` \| `voided`, default `sent`                           |
+| `document_version_id`      | UUID        | FK → `document_versions.id`, nullable, SET NULL — which round went out (CTR-014)       |
+| `sent_by`                  | UUID        | FK → `users.id`, not null                                                              |
+| `reason`                   | text        | nullable; the decline or void reason, and only on those two statuses                   |
+| `executed_fetch`           | text (enum) | `pending` \| `ready` \| `failed`, default `pending` — the M12 derived-artifact pattern |
+| `sent_at`, `completed_at`  | timestamptz | completed_at nullable, and null exactly while the status is `sent`                     |
+| `created_at`, `updated_at` | timestamptz |                                                                                        |
+
+Indexes: `(contract_id)`; unique `(provider, provider_envelope_id)`; **partial unique `(contract_id) WHERE status = 'sent'`** — at most one live envelope per contract (CTR-013), the shape M14 used for the one-pending-ask rule.
+
+---
+
+### `contract_envelope_signers`
+
+Source: **CTR-013**
+
+The people one envelope was sent to. Their own table because the record renders them: the envelope row answers "who was asked to sign this". A signer is a name and an email typed into the send dialog, never a user of this install and never a counterparty contact.
+
+| Column          | Type        | Notes                                                                         |
+| --------------- | ----------- | ----------------------------------------------------------------------------- |
+| `id`            | UUID        | PK                                                                            |
+| `envelope_id`   | UUID        | FK → `contract_envelopes.id`, not null, cascade                               |
+| `name`          | text        | not null                                                                      |
+| `email`         | text        | not null                                                                      |
+| `signing_order` | integer     | not null, ≥ 1, unique per envelope — a display order, **not** a routing order |
+| `created_at`    | timestamptz |                                                                               |
+
+Every signer is asked in parallel in v1 (CTR-013); `signing_order` records the order they were entered so the row draws them back as they were typed.
 
 ---
 

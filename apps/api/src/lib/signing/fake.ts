@@ -252,6 +252,12 @@ export class FakeSigningProvider implements SigningProvider {
     return this.require(providerEnvelopeId).source;
   }
 
+  /** The subject line one envelope's invitation carried, so a suite can
+   * prove what the signers were shown — the defaulted subject included. */
+  subjectOf(providerEnvelopeId: string): string {
+    return this.require(providerEnvelopeId).subject;
+  }
+
   /** A delivery body plus the header that signs it, as the provider
    * would push it. This is how a suite drives the webhook route. */
   signedDelivery(delivery: WebhookDelivery): { body: string; headers: Record<string, string> } {
