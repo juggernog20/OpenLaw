@@ -32,6 +32,7 @@ import {
   EnvelopeNotFoundError,
   SigningConfigError,
   SigningRefusedError,
+  SigningUnavailableError,
   WebhookSignatureError,
   type ConnectionCheck,
   type EnvelopeSigner,
@@ -112,6 +113,8 @@ export class FakeSigningProvider implements SigningProvider {
   private readonly webhookSecret: string;
   private readonly envelopes = new Map<string, FakeEnvelope>();
   private counter = 0;
+  /** Whether the provider can be reached at all — see {@link outage}. */
+  private reachable = true;
 
   constructor(options: FakeSigningOptions = {}) {
     this.environment = options.environment ?? "demo";
@@ -121,6 +124,7 @@ export class FakeSigningProvider implements SigningProvider {
 
   async testConnection(): Promise<ConnectionCheck> {
     await Promise.resolve();
+    this.requireReachable();
     if (this.integrationKey !== FAKE_VALID_INTEGRATION_KEY) {
       throw new SigningConfigError(
         "The provider refused the connector's credentials. Check the integration key, " +
@@ -131,6 +135,7 @@ export class FakeSigningProvider implements SigningProvider {
   }
 
   async sendEnvelope(input: SendEnvelopeInput): Promise<SentEnvelope> {
+    this.requireReachable();
     if (input.signers.length === 0) {
       throw new SigningRefusedError("An envelope needs at least one signer.");
     }
@@ -155,6 +160,7 @@ export class FakeSigningProvider implements SigningProvider {
   // caller awaits. The interface promises a rejection, and a caller
   // that only catches one would otherwise miss it.
   async voidEnvelope(providerEnvelopeId: string, reason: string): Promise<void> {
+    this.requireReachable();
     const envelope = this.require(providerEnvelopeId);
     if (envelope.status !== "sent") {
       throw new SigningRefusedError("That envelope is no longer live and cannot be voided.");
@@ -166,6 +172,7 @@ export class FakeSigningProvider implements SigningProvider {
   }
 
   async readEnvelope(providerEnvelopeId: string): Promise<EnvelopeState> {
+    this.requireReachable();
     const envelope = await Promise.resolve(this.require(providerEnvelopeId));
     return {
       status: envelope.status,
@@ -175,6 +182,7 @@ export class FakeSigningProvider implements SigningProvider {
   }
 
   async fetchExecutedDocument(providerEnvelopeId: string): Promise<Readable> {
+    this.requireReachable();
     const envelope = await Promise.resolve(this.require(providerEnvelopeId));
     if (envelope.status !== "signed") {
       throw new SigningRefusedError("That envelope has no executed copy — it is not signed.");
@@ -236,6 +244,28 @@ export class FakeSigningProvider implements SigningProvider {
     envelope.completedAt = new Date();
   }
 
+  /**
+   * Takes the provider off the air, as an outage would.
+   *
+   * Every call that would cross a network then rejects with the seam's
+   * **transient** failure, which is what a suite needs to state that a
+   * caller retries rather than gives up — the reconciliation sweep's
+   * whole rule about an outage. `verifyWebhook` is untouched, because it
+   * is arithmetic over bytes already in hand and reaches nothing.
+   *
+   * The envelopes are kept, so the same instance answers for them again
+   * once {@link online} is called: an outage is the moment, not the
+   * account.
+   */
+  outage(): void {
+    this.reachable = false;
+  }
+
+  /** Puts the provider back on the air. */
+  online(): void {
+    this.reachable = true;
+  }
+
   /** The envelope ids the fake has been sent, oldest first. */
   sentEnvelopeIds(): string[] {
     return [...this.envelopes.keys()];
@@ -270,6 +300,12 @@ export class FakeSigningProvider implements SigningProvider {
           .digest("base64"),
       },
     };
+  }
+
+  private requireReachable(): void {
+    if (!this.reachable) {
+      throw new SigningUnavailableError("The signing provider could not be reached.");
+    }
   }
 
   private require(providerEnvelopeId: string): FakeEnvelope {

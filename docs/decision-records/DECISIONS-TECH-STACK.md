@@ -233,6 +233,14 @@ The sweep this milestone promised (M12 story 23) runs in the worker, at boot, af
 
 **The sweep reads the version table in pages.** Which family a file belongs to is decided from its declared type and its filename (DOC-004), and no database can answer that, so every version is looked at. Keyset paging on the version id — a uuidv7, and so already in the order it was minted — keeps one boot from holding a result set over a large back catalogue.
 
+### Addendum (2026-08-16) — settled in M15/6: the one sweep that repeats
+
+The reconciliation sweep (CTR-013) is the third sweep on the worker, and the first one that does not run once. The other two **recover work the rows already say is owed**, so one walk at boot is the whole job. This one is a **feed**: it is waiting for somebody to sign, which no single walk can see. So it keeps the M12/6 shape — keyset paging on the envelope id, a refusal bound, a signal that stops it between rows, and no cursor kept anywhere — and repeats it on an interval.
+
+**Five minutes between rounds, and the rounds do not overlap.** The wait starts when a round ends, so a slow provider stretches the gap instead of stacking rounds on top of each other. The interval is measured against what the sweep is for — "somebody signed and nobody has told us" — and not against the webhook's seconds; an install that has Connect never notices the sweep at all, because every round finds the record already converged and asks nobody anything.
+
+**A provider outage is the round's, not the envelope's.** Nothing is marked failed, no envelope is given up on, and the next round asks again — the executed-copy sweep's `failed` state has no counterpart here, because a status that could not be read is not a status this install may invent. The refusal bound then stops a round after a few unreachable answers in a row, for the backfill sweep's reason: a provider that is down is down for all of them, and asking once per live envelope costs a round trip each to learn the same thing. Credentials the provider refuses end the round at once, because they are install-wide.
+
 ## TECH-008: Authentication — onboarding-selectable: built-in basic or bring-your-own IdP (OIDC)
 
 - **Status:** Accepted

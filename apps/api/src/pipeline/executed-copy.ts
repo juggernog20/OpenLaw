@@ -76,12 +76,7 @@ import {
   requestDerivations,
   versionStorageKey,
 } from "../lib/document-versions.js";
-import {
-  EnvelopeNotFoundError,
-  SigningConfigError,
-  SigningRefusedError,
-  WebhookSignatureError,
-} from "../lib/signing/provider.js";
+import { isTerminalSigningError, SigningConfigError } from "../lib/signing/provider.js";
 import type { SigningResolver } from "../lib/signing/resolver.js";
 import type { StorageAdapter } from "../lib/storage/adapter.js";
 import { isTerminalFailure, reasonOf } from "./derivations.js";
@@ -147,10 +142,7 @@ export class ExecutedCopyUnfilableError extends Error {
  */
 export function isTerminalFetchFailure(error: unknown): boolean {
   if (error instanceof ExecutedCopyUnfilableError) return true;
-  if (error instanceof SigningConfigError) return true;
-  if (error instanceof SigningRefusedError) return true;
-  if (error instanceof EnvelopeNotFoundError) return true;
-  if (error instanceof WebhookSignatureError) return true;
+  if (isTerminalSigningError(error)) return true;
   // The storage failures M12 already calls settled — a blob reference
   // that will not parse, bytes that are not there — plus the doc
   // engine's, which cannot arise here and cost nothing to name once.

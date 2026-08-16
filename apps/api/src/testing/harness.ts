@@ -24,7 +24,7 @@ import { createLocalStorage } from "../lib/storage/local.js";
 import type { DocEngine } from "../lib/doc-engine/engine.js";
 import { createFakeDocEngine } from "../lib/doc-engine/fake.js";
 import { createFakeSigningProvider, type FakeSigningProvider } from "../lib/signing/fake.js";
-import { createSigningResolver } from "../lib/signing/resolver.js";
+import { createSigningResolver, type SigningResolver } from "../lib/signing/resolver.js";
 import { startPipeline, type Pipeline } from "../pipeline/pg-boss.js";
 import type { PipelineLogger } from "../pipeline/logger.js";
 
@@ -216,6 +216,17 @@ export interface TestHarness {
    * scripts the envelopes it sent.
    */
   readonly signing: FakeSigningProvider | null;
+  /**
+   * The production signing resolver over that fake — the same value the
+   * app and the pipeline are built with.
+   *
+   * A suite needs it to run the reconciliation sweep (M15/6), which the
+   * worker starts with exactly this dependency. Handing over the
+   * resolver rather than the provider is the point: the sweep reads the
+   * stored row live, so a suite that saves or clears a connector row
+   * changes what the next round resolves.
+   */
+  resolveSigningProvider: SigningResolver;
   stop: () => Promise<void>;
 }
 
@@ -346,6 +357,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       docEngine,
       pipeline: runningPipeline,
       jobLog,
+      resolveSigningProvider,
       get signing() {
         return signing;
       },

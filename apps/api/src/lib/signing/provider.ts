@@ -110,6 +110,28 @@ export class SigningTimeoutError extends SigningError {
   }
 }
 
+/**
+ * Whether this failure is settled or worth another try.
+ *
+ * The split the module note describes, said once where a caller can ask
+ * it: refused credentials, a refused request, an envelope the provider
+ * does not hold, and a delivery that does not verify are **terminal** —
+ * a retry sends the same credentials and asks the same question.
+ *
+ * Everything else answers false, including errors nobody has classified.
+ * That is deliberate and it is M12's reasoning: retrying something
+ * permanent wastes a few attempts and then settles anyway, while giving
+ * up on something temporary loses the answer until somebody notices.
+ */
+export function isTerminalSigningError(error: unknown): boolean {
+  return (
+    error instanceof SigningConfigError ||
+    error instanceof SigningRefusedError ||
+    error instanceof EnvelopeNotFoundError ||
+    error instanceof WebhookSignatureError
+  );
+}
+
 /** One person asked to sign. All signers are asked in parallel in v1 —
  * there is no routing order. */
 export interface EnvelopeSigner {
