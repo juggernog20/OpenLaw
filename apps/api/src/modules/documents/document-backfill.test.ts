@@ -52,6 +52,7 @@ import {
   type BackfillSummary,
 } from "../../pipeline/backfill.js";
 import { createUnconfiguredJobQueue, type JobQueue } from "../../pipeline/jobs.js";
+import { createUnconfiguredSigningResolver } from "../../lib/signing/resolver.js";
 import { DOCX_MIME_TYPE, officePackage } from "../../testing/fixtures/office.js";
 import {
   CapturingMailer,
@@ -133,6 +134,7 @@ beforeAll(async () => {
     storage: harness.storage,
     docEngine: harness.docEngine,
     jobs: createUnconfiguredJobQueue(),
+    resolveSigningProvider: createUnconfiguredSigningResolver(),
   });
   await m11.ready();
 }, 120_000);

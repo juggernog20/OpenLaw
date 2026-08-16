@@ -46,6 +46,7 @@ import { createHash } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { documents, documentVersions, eq, sql, users } from "@openlaw/db";
 import { buildApp } from "../../app.js";
+import { createUnconfiguredSigningResolver } from "../../lib/signing/resolver.js";
 import { provisionUser } from "../../auth/instance.js";
 import {
   CapturingMailer,
@@ -2048,6 +2049,7 @@ describe("the upload ceiling", () => {
       resolveMailer: fixedMailerResolver(new CapturingMailer()),
       storage: harness.storage,
       docEngine: harness.docEngine,
+      resolveSigningProvider: createUnconfiguredSigningResolver(),
       jobs: harness.pipeline,
       maxUploadBytes: LIMIT,
     });

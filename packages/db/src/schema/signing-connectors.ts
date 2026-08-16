@@ -1,0 +1,84 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * The signing connector (CTR-013, TECH-013): the credentials one
+ * e-signature provider is reached with.
+ *
+ * The row is org data, not deployment environment. An Administrator
+ * configures it at runtime in Settings → Organization → Integrations,
+ * and every use reads it live (the mailer-resolver pattern), so a
+ * rotation applies to the next call with no restart.
+ *
+ * **Adapter-keyed.** `provider` is the adapter behind the row, unique,
+ * `docusign` in v1. A second provider is a second row, not a second
+ * table — which is what keeps CTR-013's provider-agnostic promise a
+ * configuration fact rather than a migration.
+ *
+ * **The two secrets are stored plaintext at rest.** That is the
+ * accepted v1 posture the OIDC client secret and the SMTP relay URL
+ * already have (TECH-008), and this table is the second named entry on
+ * the future secrets-encryption pass. Both columns are write-only
+ * through the API: they are pasted to rotate and never read back.
+ */
+
+import { sql } from "drizzle-orm";
+import { check, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { uuidPk } from "./helpers.js";
+
+/** The adapters a connector row may key on. DocuSign ships first (CTR-013). */
+export const SIGNING_PROVIDERS = ["docusign"] as const;
+export type SigningProviderKey = (typeof SIGNING_PROVIDERS)[number];
+
+/**
+ * Which DocuSign estate the connector talks to. The two differ by host
+ * and by account, so it is configuration rather than a build flag: a
+ * team rehearses on the demo estate and moves the same install to
+ * production by changing this field (TECH-013).
+ */
+export const SIGNING_ENVIRONMENTS = ["demo", "production"] as const;
+export type SigningEnvironment = (typeof SIGNING_ENVIRONMENTS)[number];
+
+export const signingConnectors = pgTable(
+  "signing_connectors",
+  {
+    id: uuidPk(),
+    /** The adapter this row configures; one row per adapter. */
+    provider: text("provider", { enum: SIGNING_PROVIDERS }).notNull(),
+    environment: text("environment", { enum: SIGNING_ENVIRONMENTS }).notNull(),
+    /** DocuSign's integration key — the OAuth client id of the app. */
+    integrationKey: text("integration_key").notNull(),
+    /**
+     * The provider-side user the integration signs as (TECH-013's
+     * integration user). Named `api_user_id` rather than `user_id`
+     * because it is a GUID in DocuSign's directory, never a row in
+     * ours.
+     */
+    apiUserId: text("api_user_id").notNull(),
+    /** The RSA private key, PEM, that signs the JWT assertions. Write-only. */
+    privateKey: text("private_key").notNull(),
+    /**
+     * The DocuSign Connect HMAC secret. Write-only, and **not
+     * nullable**: the webhook is the install's first unauthenticated
+     * inbound write path, so a connector without this secret is refused
+     * at save time and no install ever answers unsigned deliveries.
+     */
+    webhookSecret: text("webhook_secret").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    // Application code owns every write here, so $onUpdate keeps the
+    // audit trail honest for writers that forget to set it (org.ts note).
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    uniqueIndex("signing_connectors_provider_idx").on(table.provider),
+    check("signing_connectors_provider_check", sql`${table.provider} in ('docusign')`),
+    check(
+      "signing_connectors_environment_check",
+      sql`${table.environment} in ('demo', 'production')`,
+    ),
+  ],
+);
+
+export type SigningConnector = typeof signingConnectors.$inferSelect;

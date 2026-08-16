@@ -32,6 +32,7 @@ import * as fieldsSchema from "./schema/fields.js";
 import * as matterTypeFieldsSchema from "./schema/matter-type-fields.js";
 import * as matterTypesSchema from "./schema/matter-types.js";
 import * as orgSchema from "./schema/org.js";
+import * as signingConnectorsSchema from "./schema/signing-connectors.js";
 
 export * from "./schema/activity.js";
 export * from "./schema/approver-groups.js";
@@ -55,6 +56,7 @@ export * from "./schema/fields.js";
 export * from "./schema/matter-type-fields.js";
 export * from "./schema/matter-types.js";
 export * from "./schema/org.js";
+export * from "./schema/signing-connectors.js";
 export const schema = {
   ...activitySchema,
   ...approverGroupsSchema,
@@ -78,6 +80,7 @@ export const schema = {
   ...matterTypeFieldsSchema,
   ...matterTypesSchema,
   ...orgSchema,
+  ...signingConnectorsSchema,
 };
 
 // Query operators re-exported so consumers use this package's drizzle-orm

@@ -23,6 +23,8 @@ import type { StorageAdapter } from "../lib/storage/adapter.js";
 import { createLocalStorage } from "../lib/storage/local.js";
 import type { DocEngine } from "../lib/doc-engine/engine.js";
 import { createFakeDocEngine } from "../lib/doc-engine/fake.js";
+import { createFakeSigningProvider, type FakeSigningProvider } from "../lib/signing/fake.js";
+import { createSigningResolver } from "../lib/signing/resolver.js";
 import { startPipeline, type Pipeline } from "../pipeline/pg-boss.js";
 import type { PipelineLogger } from "../pipeline/logger.js";
 
@@ -200,6 +202,20 @@ export interface TestHarness {
   /** Lines the pipeline wrote, oldest first. A failed derivation says
    * so in its own row; why it failed is here. */
   jobLog: JobLogLine[];
+  /**
+   * The deterministic signing provider (CTR-013) the app resolves to
+   * once a connector row exists — the fake, not DocuSign, for the
+   * reason the doc engine is faked: no API test can assert anything
+   * about a real provider that a deterministic one does not already
+   * say, and no test may call DocuSign.
+   *
+   * It is null until an Administrator saves a connector through the
+   * settings routes, because the production resolver reads the stored
+   * row live and an install with no row resolves to nothing. Once one
+   * exists, this is the instance every request resolves, so a suite
+   * scripts the envelopes it sent.
+   */
+  readonly signing: FakeSigningProvider | null;
   stop: () => Promise<void>;
 }
 
@@ -272,6 +288,33 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       handlers: { db, storage, docEngine, log: capturingLogger(jobLog) },
       log: capturingLogger(jobLog),
     });
+    // The production resolver over the fake driver: the stored row and
+    // the "is anything configured" decision are production code, and
+    // only the driver behind them is the deterministic stand-in. One
+    // instance per connector, held so a suite can script its envelopes
+    // — a second resolution of the same row answers the same provider.
+    let signing: FakeSigningProvider | null = null;
+    // One fake per set of stored credentials. The same connector always
+    // resolves the same instance, so a suite that sent an envelope can
+    // still script it on the next request; a rotated credential builds
+    // a new one, which is honest — a different connector is a different
+    // account, and it holds none of the old one's envelopes.
+    let signingKey: string | null = null;
+    const resolveSigningProvider = createSigningResolver(db, (config) => {
+      // Only the fields the fake is built from. A rotated RSA key
+      // changes nothing this provider can observe, so it must not
+      // throw away the envelopes a suite already sent.
+      const key = JSON.stringify([config.environment, config.integrationKey, config.webhookSecret]);
+      if (!signing || signingKey !== key) {
+        signing = createFakeSigningProvider({
+          environment: config.environment,
+          integrationKey: config.integrationKey,
+          webhookSecret: config.webhookSecret,
+        });
+        signingKey = key;
+      }
+      return signing;
+    });
     const app = await buildApp({
       db,
       config: TEST_AUTH_CONFIG,
@@ -279,6 +322,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       storage,
       docEngine,
       jobs: pipeline,
+      resolveSigningProvider,
       maxUploadBytes: options.maxUploadBytes,
     });
     await app.ready();
@@ -292,6 +336,9 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       docEngine,
       pipeline: runningPipeline,
       jobLog,
+      get signing() {
+        return signing;
+      },
       get smtpEnv() {
         return smtpEnv;
       },

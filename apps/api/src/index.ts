@@ -14,6 +14,7 @@ import { buildApp } from "./app.js";
 import { createMailerResolver } from "./lib/mailer.js";
 import { createDocEngineFromEnv } from "./lib/doc-engine/config.js";
 import { createStorageFromEnv } from "./lib/storage/config.js";
+import { createSigningResolver } from "./lib/signing/resolver.js";
 import { maxUploadBytes } from "./lib/uploads.js";
 import { startPipeline } from "./pipeline/pg-boss.js";
 
@@ -72,6 +73,13 @@ const docEngine = (function readDocEngine() {
   }
 })();
 
+// CTR-013: the signing connector is org data, not environment, so the
+// app is injected with a resolver that reads the stored row live rather
+// than with a provider built at boot. An install with no connector
+// resolves to nothing, the send affordance is absent, and the manual
+// hand-off keeps working with zero configuration.
+const resolveSigningProvider = createSigningResolver(db);
+
 // The upload ceiling, in whole mebibytes, read here for the storage
 // root's reason: startup reads the environment, and no module does. An
 // unreadable value falls back to the default rather than refusing to
@@ -124,6 +132,7 @@ const app = await buildApp(
     storage,
     docEngine,
     jobs,
+    resolveSigningProvider,
     maxUploadBytes: uploadCeiling,
     webDist: webDistPresent ? webDist : undefined,
   },

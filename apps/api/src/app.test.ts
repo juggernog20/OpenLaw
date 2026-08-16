@@ -7,6 +7,7 @@ import { createDb } from "@openlaw/db";
 import { buildApp } from "./app.js";
 import { createFakeDocEngine } from "./lib/doc-engine/fake.js";
 import { createUnconfiguredJobQueue } from "./pipeline/jobs.js";
+import { createUnconfiguredSigningResolver } from "./lib/signing/resolver.js";
 import {
   CapturingMailer,
   createTestStorage,
@@ -31,6 +32,7 @@ beforeAll(async () => {
     storage: storage.storage,
     docEngine: createFakeDocEngine(),
     jobs: createUnconfiguredJobQueue(),
+    resolveSigningProvider: createUnconfiguredSigningResolver(),
   });
   // Test-only route exercising the validation → problem+json path.
   app.get(

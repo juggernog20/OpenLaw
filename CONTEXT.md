@@ -157,6 +157,14 @@ What a requester supplies on a Request. It maps 1:1 to **priority** at conversio
 An Administrator-managed template naming a reusable set of approvers — "Commercial sign-off" = GC plus CFO. Members must be Member+ users. Applying a group copies its members onto the Contract at apply time, so a later edit or archive never changes an approval already requested [CTR-012].
 _Avoid_: approval group, approver team, sign-off rule
 
+**Signing connector**:
+The Administrator-configured credentials one e-signature provider is reached with — DocuSign in v1, adapter-keyed so a second provider is a second connector. It is org configuration, not deployment environment: it is saved in Settings → Organization → Integrations → E-signature and read live on every use, so a rotated key applies to the next call. An install with no connector loses nothing it has today — the manual hand-off (upload the executed PDF, pin it, mark active) is always available and needs no configuration [CTR-013, TECH-013, SET-007].
+_Avoid_: DocuSign integration, e-sign settings, signing provider (that is the code seam behind the connector, not the configuration)
+
+**Manual hand-off**:
+Signing a Contract outside OpenLaw and filing the result by hand: set the status, sign anywhere, upload the executed PDF, pin it, mark active. It is the zero-config path CTR-013 promises stays sufficient, and no part of it is coupled to a signing connector [CTR-013, CTR-014].
+_Avoid_: manual signing, offline signing, the fallback
+
 **Approval request**:
 One named person's sign-off on one Contract. A Member+ user asks; the named approver alone answers, with an approval or a rejection and an optional note; and the answer is final. Requests run in parallel — there are no chains and no order — and at most one is pending per approver per Contract. Asking again after a rejection makes a new request rather than reopening the old one. The requester, the Contract's Owner, or an Administrator cancels a pending one, which deletes it and leaves the activity entry as the record that it was made [CTR-012].
 _Avoid_: approval task, sign-off item, approval step, reviewer

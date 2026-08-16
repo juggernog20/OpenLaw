@@ -2,6 +2,7 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { buildApp } from "../../app.js";
+import { createUnconfiguredSigningResolver } from "../../lib/signing/resolver.js";
 import { requireRole } from "../../auth/guards.js";
 import {
   CapturingMailer,
@@ -93,6 +94,7 @@ describe("requireRole", () => {
       resolveMailer: fixedMailerResolver(new CapturingMailer()),
       storage: harness.storage,
       docEngine: harness.docEngine,
+      resolveSigningProvider: createUnconfiguredSigningResolver(),
       jobs: harness.pipeline,
     });
     guarded.get(

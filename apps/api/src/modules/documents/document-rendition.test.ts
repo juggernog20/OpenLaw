@@ -49,6 +49,7 @@ import {
 } from "../../testing/harness.js";
 import { buildApp } from "../../app.js";
 import { createUnconfiguredJobQueue } from "../../pipeline/jobs.js";
+import { createUnconfiguredSigningResolver } from "../../lib/signing/resolver.js";
 
 /** A Legal Team Member on the contract's team, who uploads everything
  * here and reads it back. */
@@ -563,6 +564,7 @@ describe("when the queue cannot be reached", () => {
       storage: harness.storage,
       docEngine: harness.docEngine,
       jobs: createUnconfiguredJobQueue(),
+      resolveSigningProvider: createUnconfiguredSigningResolver(),
     });
     await detached.ready();
     try {

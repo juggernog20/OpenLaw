@@ -65,6 +65,7 @@ import {
   Palette,
   PencilLine,
   Pin,
+  Plug,
   Settings,
   ShieldCheck,
   ShieldOff,
@@ -267,6 +268,9 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "smtpUrl {SMTP server} smtpFrom {From address} " +
         "issuer {Issuer} domain {Email domain} clientId {Client ID} " +
         "clientSecret {Client secret} " +
+        "environment {Environment} integrationKey {Integration key} " +
+        "apiUserId {User ID} privateKey {RSA private key} " +
+        "webhookSecret {Connect HMAC secret} " +
         "legalName {Legal name} entityType {Entity type} " +
         "jurisdiction {Jurisdiction} formedOn {Formed on} " +
         "registrationNumber {Registration number} taxId {Tax ID} " +
@@ -1372,6 +1376,29 @@ const ARMS: Readonly<Record<string, Arm>> = {
     values: (intl, payload) => ({ provider: named(intl, payload, "providerId") }),
     // The secret's two sides are both `[secret]`: the writer records
     // that it was rotated and never what it was.
+    changes: fieldChange,
+  },
+
+  // ---- The e-signature connector (CTR-013) ----
+  // Two verbs, so the audit log tells connecting an install to a
+  // provider apart from rotating a key on the one it already has. Both
+  // secrets read as `[secret]` on each side, for the identity
+  // provider's reason.
+  "signing_connector.configured": {
+    icon: Plug,
+    message: defineMessage({
+      id: "activity.signingConnector.configured",
+      defaultMessage: "{actor} connected the e-signature provider {provider}",
+    }),
+    values: (intl, payload) => ({ provider: named(intl, payload, "provider") }),
+  },
+  "signing_connector.updated": {
+    icon: Plug,
+    message: defineMessage({
+      id: "activity.signingConnector.updated",
+      defaultMessage: "{actor} changed the e-signature connector {provider}",
+    }),
+    values: (intl, payload) => ({ provider: named(intl, payload, "provider") }),
     changes: fieldChange,
   },
 

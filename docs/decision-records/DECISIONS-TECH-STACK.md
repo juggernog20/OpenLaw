@@ -266,7 +266,7 @@ Recorded at feature close (auth spec, issues #4–#10). The decision stands as w
 - **Ecosystem shift.** The Context above name-drops Auth.js as the "basic" option; that landscape moved. Auth.js joined the better-auth org in September 2025 and its own guidance now directs new projects to better-auth; better-auth itself joined Vercel but remains MIT. Governance risk is mitigated by the license and by our guard-interface wrapping — the "implementation detail, swappable" stance stands unchanged.
 - **Settled integration pattern** (from official docs, production OSS, and context7 research): better-auth's handler is mounted **natively on a catch-all auth prefix** (Fetch-Request rebuild inside a scoped Fastify plugin that bypasses content-type parsing for that prefix) and owns every browser-facing auth flow; a composable **guard chain** (`requireAuth` + role variants) resolves the session via `auth.api.getSession` and attaches `{ user, session }` to each request; **our own zod-typed routes exist only where OpenLaw's authorization model diverges** (first-run setup, invites, SSO provider registration, magic-link issuance, auth-mode switching, method discovery); the OpenAPI contract and better-auth's routes remain **parallel surfaces** — no spec merging, and auth flows are consumed by better-auth's React client, not the generated api-client.
 - **Schema channel.** Table/column naming is achieved through Drizzle property keys plus better-auth's model/field mapping. better-auth's CLI and auto-migration are never used; drizzle-kit generated SQL migrations are the only schema channel (TECH-006/TECH-014).
-- **SSO client secret at rest.** The sso plugin stores the OIDC client secret inside the provider row's config JSON. v1 accepts DB-at-rest storage (single-tenant, self-hosted, the DB already holds privileged material); **flagged for a future secrets-encryption pass** — deliberate, not accidental.
+- **SSO client secret at rest.** The sso plugin stores the OIDC client secret inside the provider row's config JSON. v1 accepts DB-at-rest storage (single-tenant, self-hosted, the DB already holds privileged material); **flagged for a future secrets-encryption pass** — deliberate, not accidental. _(2026-08-16, M15/1: the DocuSign RSA private key and the Connect HMAC secret in `signing_connectors` are the **second entry** on that same pass, under the same accepted posture — see CTR-013's M15 addendum.)_
 - **Version pin.** better-auth pinned to **1.6.x** (≥ 1.6.22 for the two-factor lockout columns; currently 1.6.26). 1.7 renames/changes some plugin options (two-factor enable signature, SSO option names) — treat its upgrade guide as a known, small chore, not a drop-in bump.
 
 ### Addendum (2026-08-10) — settings home and cross-user session revocation (M5 grill)
@@ -380,6 +380,10 @@ A "Test connection" affordance in settings. Extraction prompt/schema behavior mu
 ### Decision
 
 DocuSign **JWT grant**: org admin creates the DocuSign app, one-time consent; OpenLaw signs JWT assertions with the configured RSA key and mints tokens server-to-server. Envelopes send under the org's integration user; **DocuSign Connect** webhook delivers envelope status (CTR-013). Settings surface: integration key, user ID, RSA key, environment, test button.
+
+### Addendum (2026-08-16, M15/1)
+
+The surface shipped in **Settings → Organization → Integrations → E-signature** (SET-007), and it asks for one field more than this decision listed: the **DocuSign Connect HMAC secret**, without which a connector cannot be saved. The account is **discovered, not configured** — `/oauth/userinfo` answers the integration user's default account — so the pane asks for three plain values — environment, integration key, and user ID — plus two secrets, rather than for an account id. The assertion is RS256, scoped `signature impersonation`, and lives ten minutes.
 
 ### Alternatives considered
 

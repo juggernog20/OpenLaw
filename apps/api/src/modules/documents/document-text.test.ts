@@ -40,6 +40,7 @@ import { provisionUser } from "../../auth/instance.js";
 import { buildApp } from "../../app.js";
 import { fakeExtractedText, fakeImageOnlyPdf, fakeOcrText } from "../../lib/doc-engine/fake.js";
 import { createUnconfiguredJobQueue } from "../../pipeline/jobs.js";
+import { createUnconfiguredSigningResolver } from "../../lib/signing/resolver.js";
 import {
   CapturingMailer,
   fixedMailerResolver,
@@ -505,6 +506,7 @@ describe("when the queue cannot be reached", () => {
       storage: harness.storage,
       docEngine: harness.docEngine,
       jobs: createUnconfiguredJobQueue(),
+      resolveSigningProvider: createUnconfiguredSigningResolver(),
     });
     await detached.ready();
     try {
