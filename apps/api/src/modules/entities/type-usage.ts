@@ -13,12 +13,12 @@
  * serializes against concurrent registrations and re-types.
  */
 
-import { count, entities, eq, inArray } from "@openlaw/db";
-import { recordActivity, type ActivityWriter } from "../../lib/activity.js";
+import { count, entities, eq, inArray, type Executor } from "@openlaw/db";
+import { recordActivity } from "../../lib/activity.js";
 import type { TaxonomyUsage } from "../../lib/taxonomy-routes.js";
 
 export const entityTypeUsage: TaxonomyUsage = {
-  async counts(db: ActivityWriter, ids: string[]) {
+  async counts(db: Executor, ids: string[]) {
     const rows = await db
       .select({ typeId: entities.entityTypeId, inUse: count() })
       .from(entities)

@@ -114,8 +114,8 @@ import {
   EXECUTED_FETCH_STATES,
   inArray,
   users,
-  type Db,
   type EnvelopeStatus,
+  type Executor,
   type SigningProviderKey,
 } from "@openlaw/db";
 import {
@@ -130,7 +130,8 @@ import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import {
   contractTeamScope,
   documentAudienceScope,
-  type ContractAccessReader,
+  NO_CONTRACT,
+  reachedContract,
 } from "../../lib/contract-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import {
@@ -152,10 +153,6 @@ const requireEnvelopeReader = requireRole("administrator", "legal_team_member", 
 /** Sending is Member+, the same audience approvals use (CTR-013). A
  * Contributor reads; their write grid arrives with M23 (DD-015). */
 const requireMember = requireRole("administrator", "legal_team_member");
-
-/** A contract a viewer cannot reach reads exactly as one that does not
- * exist — on the envelope routes as on every document route (DD-014). */
-const NO_CONTRACT = "No contract exists with this number.";
 
 /** The sentence every write on a frozen record answers with (CTR-021):
  * an archived contract reads as facts until it is restored, and sending
@@ -286,54 +283,6 @@ const NumberParams = z.object({ number: z.coerce.number().int().positive() });
 const EnvelopeParams = z.object({ envelopeId: RecordIdSchema });
 
 export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
-  type Tx = Parameters<Parameters<typeof app.db.transaction>[0]>[0];
-  type Executor = Db | Tx;
-
-  /** One contract this viewer reaches, as the routes here need it. */
-  interface ReachedContract {
-    id: string;
-    number: number;
-    title: string;
-    /** SET-003's soft delete: a time freezes the record (CTR-021). */
-    archivedAt: Date | null;
-    /** CTR-014's instrument, or NULL on a record with no paper yet. */
-    primaryDocumentId: string | null;
-  }
-
-  /**
-   * One contract this viewer reaches, by its CTR-003 number, or `null`.
-   *
-   * The scope rides beside the number rather than being asked after it,
-   * so a contract the viewer cannot reach is not distinguishable from
-   * one that was never created. It is read live on every request, so
-   * taking somebody's last team row off ends their reach on the next
-   * one.
-   *
-   * `lock` holds the row for the write that follows. That lock is what
-   * makes the live-envelope check a decision rather than a guess: every
-   * write on one contract serializes behind it.
-   */
-  async function reachedContract(
-    db: ContractAccessReader,
-    user: AuthenticatedUser,
-    number: number,
-    lock = false,
-  ): Promise<ReachedContract | null> {
-    const query = db
-      .select({
-        id: contracts.id,
-        number: contracts.number,
-        title: contracts.title,
-        archivedAt: contracts.archivedAt,
-        primaryDocumentId: contracts.primaryDocumentId,
-      })
-      .from(contracts)
-      .where(and(eq(contracts.number, number), contractTeamScope(db, user)))
-      .limit(1);
-    const [row] = await (lock ? query.for("update", { of: contracts }) : query);
-    return row ?? null;
-  }
-
   /**
    * The contract's primary document, if this viewer may see it, with its
    * chain newest round first (CTR-014).
@@ -346,7 +295,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
    * and the send there is nothing to make are the same answer to them.
    */
   async function sendableDocument(
-    db: ContractAccessReader & Executor,
+    db: Executor,
     user: AuthenticatedUser,
     primaryDocumentId: string | null,
   ): Promise<z.infer<typeof SendableDocumentSchema> | null> {
@@ -529,7 +478,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
    * therefore inherits here exactly as it does on the read.
    */
   async function reachedEnvelope(
-    db: ContractAccessReader,
+    db: Executor,
     user: AuthenticatedUser,
     envelopeId: string,
   ): Promise<ReachedEnvelope | null> {
@@ -901,7 +850,9 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
           // The lock, and the two questions asked again under it: a
           // send that raced this one may have archived the record or
           // put an envelope out since the checks above.
-          const locked = await reachedContract(tx, request.user, request.params.number, true);
+          const locked = await reachedContract(tx, request.user, request.params.number, {
+            lock: true,
+          });
           if (!locked) throw httpError(404, NO_CONTRACT);
           if (locked.archivedAt) throw httpError(409, FROZEN);
           if (await hasLiveEnvelope(tx, locked.id)) throw liveEnvelopeRefusal();

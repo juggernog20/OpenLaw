@@ -18,9 +18,18 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { asc, contractTypes, entityTypes, eq, isNull, matterTypes } from "@openlaw/db";
+import {
+  asc,
+  contractTypes,
+  entityTypes,
+  eq,
+  isNull,
+  matterTypes,
+  type Executor,
+  type Transaction,
+} from "@openlaw/db";
 import { requireRole } from "../auth/guards.js";
-import { recordActivity, type ActivityWriter, type TaxonomyActionPrefix } from "./activity.js";
+import { recordActivity, type TaxonomyActionPrefix } from "./activity.js";
 import { HttpError, httpError, problemResponse } from "./problem.js";
 import { freeSlug } from "./slug.js";
 
@@ -41,9 +50,9 @@ export type TaxonomyRow = TaxonomyTable["$inferSelect"];
  * routes also take before writing.
  */
 export interface TaxonomyUsage {
-  counts(db: ActivityWriter, ids: string[]): Promise<Map<string, number>>;
+  counts(db: Executor, ids: string[]): Promise<Map<string, number>>;
   reassign(
-    tx: ActivityWriter,
+    tx: Executor,
     move: { from: TaxonomyRow; to: TaxonomyRow; actorId: string },
   ): Promise<number>;
 }
@@ -130,17 +139,15 @@ export function taxonomyRoutes(config: TaxonomyRoutesConfig): FastifyPluginAsync
   const ListEnvelope = z.object({ [config.keyPlural]: z.array(TaxonomyRowSchema) });
 
   return async (app) => {
-    type Tx = Parameters<Parameters<typeof app.db.transaction>[0]>[0];
-
     /** Locks and returns one row, or 404s — every :id mutation starts here. */
-    async function lockedType(tx: Tx, id: string): Promise<TaxonomyRow> {
+    async function lockedType(tx: Transaction, id: string): Promise<TaxonomyRow> {
       const [row] = await tx.select().from(table).where(eq(table.id, id)).limit(1).for("update");
       if (!row) throw httpError(404, `No ${noun} exists with this id.`);
       return row;
     }
 
     /** The SET-003 guard numbers — zero for every id until `usage` arms. */
-    async function usageCounts(db: ActivityWriter, ids: string[]): Promise<Map<string, number>> {
+    async function usageCounts(db: Executor, ids: string[]): Promise<Map<string, number>> {
       if (!config.usage || ids.length === 0) return new Map();
       return config.usage.counts(db, ids);
     }

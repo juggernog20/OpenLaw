@@ -117,6 +117,35 @@ export { alias } from "drizzle-orm/pg-core";
 
 export type Db = NodePgDatabase<typeof schema> & { $client: pg.Pool };
 
+/**
+ * A transaction inside one database handle — the executor
+ * `db.transaction(...)` hands its callback.
+ *
+ * It is named here rather than restated at each use because the shape
+ * is Drizzle's, not ours: every caller that wanted it was writing the
+ * same `Parameters<Parameters<Db["transaction"]>[0]>[0]` incantation,
+ * and one of them getting it subtly wrong would be an error the
+ * compiler could not tell from a deliberate narrowing.
+ */
+export type Transaction = Parameters<Parameters<Db["transaction"]>[0]>[0];
+
+/**
+ * A database handle **or** a transaction inside one — what a helper
+ * takes when it does not care which, and the API's one name for it.
+ *
+ * Most reads and writes below the route layer are written against this:
+ * a caller that checks and then writes passes its transaction, so the
+ * check and the write share one snapshot — and so that a caller holding
+ * a row lock does not take a second pooled connection to ask about the
+ * row it is holding.
+ *
+ * Ask for {@link Transaction} instead where being inside a transaction
+ * is the point: a `FOR UPDATE` taken on a pooled handle is released by
+ * the statement's own commit, so a helper that locks must not accept
+ * one.
+ */
+export type Executor = Db | Transaction;
+
 export function createDb(databaseUrl: string): Db {
   // pg's default connect wait is unbounded; a cap keeps failed attempts
   // (e.g. readiness probes against a down database) from dangling.

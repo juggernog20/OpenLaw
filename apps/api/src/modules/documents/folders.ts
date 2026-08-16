@@ -109,14 +109,17 @@ import {
   isNull,
   MAX_FOLDER_NAME_LENGTH,
   sql,
-  type Db,
+  type Executor,
 } from "@openlaw/db";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import {
   contractTeamScope,
   documentAudienceScope,
-  type ContractAccessReader,
+  NO_CONTRACT,
+  reachedContract,
+  type LockedContract,
+  type ReachedContract,
 } from "../../lib/contract-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
@@ -131,14 +134,11 @@ const requireFolderReader = requireRole("administrator", "legal_team_member", "c
  * M23 (DD-015). */
 const requireMember = requireRole("administrator", "legal_team_member");
 
-/** A contract a viewer cannot reach reads exactly as one that does not
- * exist — on the folder routes as on every document route (DD-014). */
-const NO_CONTRACT = "No contract exists with this number.";
-
 /**
- * And a folder on such a contract answers the same way. Its own id says
- * nothing about which record it belongs to, so a refusal here would be
- * the leak the 404 exists to prevent.
+ * A folder on a contract this viewer cannot reach answers exactly as
+ * `NO_CONTRACT` has the record itself answer. Its own id says nothing
+ * about which record it belongs to, so a refusal here would be the leak
+ * the 404 exists to prevent.
  *
  * Exported because the document routes refuse a folder too — a filing
  * into another record's folder, and a folder-filtered read of one
@@ -179,17 +179,6 @@ const PATH_SEPARATOR = "/";
  */
 export const MAX_FOLDER_PATH_LENGTH = MAX_FOLDER_DEPTH * (MAX_FOLDER_NAME_LENGTH + 1);
 
-/**
- * A database handle or a transaction inside one, as the rest of the API
- * types it.
- *
- * The helpers below take it because they are shared by this module's
- * routes and by the upload route (M13/5): one set of folder rules, read
- * and written through whichever executor the caller is already holding
- * the contract row lock on.
- */
-type FolderExecutor = Db | Parameters<Parameters<Db["transaction"]>[0]>[0];
-
 /** One folder as the tree is drawn from it. */
 interface FolderRow {
   id: string;
@@ -211,7 +200,7 @@ interface FolderRow {
  * The whole set, never one level: the section draws the tree from one
  * read, and every invariant below is asked of the same set.
  */
-async function foldersOf(db: FolderExecutor, contractId: string): Promise<FolderRow[]> {
+async function foldersOf(db: Executor, contractId: string): Promise<FolderRow[]> {
   return db
     .select({
       id: documentFolders.id,
@@ -350,20 +339,59 @@ function addToTree(tree: Tree, row: FolderRow): void {
 }
 
 /**
- * The parent a write named, as a row of this contract's own tree.
+ * **The one answer to "is this folder on this record"** (DOC-008), as a
+ * row of the contract's own tree.
  *
- * Invariant 1 (DOC-008): a folder and its parent share one owning
- * record. It holds because the tree was read for **this** contract — so
- * a parent on another record is simply not in it, and is answered
- * exactly as a parent that was never created. A folder's id says nothing
- * about which record it belongs to, so any other refusal would say that
- * the folder is there.
+ * Invariant 1: a folder and its parent share one owning record. It holds
+ * because the tree was read for **this** contract — so a folder on
+ * another record is simply not in it, and is answered exactly as one
+ * that was never created. A folder's id says nothing about which record
+ * it belongs to, so any other refusal would say that the folder is
+ * there.
+ *
+ * Every question of that shape is asked here: the parent a folder write
+ * names, the base a drop's path hangs from, the folder a document is
+ * filed into, and the folder a listing is narrowed to. They were two
+ * implementations until #254 — this one over the tree the caller read
+ * under the contract's row lock, and a second one that went straight to
+ * the table — and two implementations of one refusal are two chances for
+ * the answers to differ.
+ *
+ * `null` in is the record root, which is not a folder and is answered as
+ * itself rather than refused.
  */
-function parentIn(tree: Tree, parentId: string | null): FolderRow | null {
-  if (parentId === null) return null;
-  const parent = tree.byId.get(parentId);
-  if (!parent) throw httpError(404, NO_FOLDER);
-  return parent;
+function folderIn(tree: Tree, folderId: string | null): FolderRow | null {
+  if (folderId === null) return null;
+  const folder = tree.byId.get(folderId);
+  if (!folder) throw httpError(404, NO_FOLDER);
+  return folder;
+}
+
+/**
+ * {@link folderIn} for a caller that holds no tree — the document
+ * routes, which reach a folder by id and never draw the whole thing.
+ *
+ * It reads the record's folders and asks the same question of them, so
+ * the filing path and the folder routes refuse an outsider's folder in
+ * one place and one sentence. The read is the whole set because that is
+ * what the tree is built from; a record's tree is bounded by
+ * {@link MAX_FOLDER_DEPTH} and by what a person will make by hand, so
+ * the cost is one small query on a path that is already inside a
+ * transaction.
+ *
+ * Answers the folder's name as well as its id, because every activity
+ * payload that mentions a folder carries the name rather than the id:
+ * the entry has to still say what happened after a rename or a delete.
+ */
+export async function folderOnRecord(
+  db: Executor,
+  contractId: string,
+  folderId: string,
+): Promise<{ id: string; name: string }> {
+  // Never `null`: `folderId` is a real id, so `folderIn` either answers
+  // a row of this record's tree or refuses.
+  const folder = folderIn(treeOf(await foldersOf(db, contractId)), folderId)!;
+  return { id: folder.id, name: folder.name };
 }
 
 /** How deep a folder sits, counting the record root's own folders as
@@ -487,13 +515,20 @@ export interface FolderDestination {
  * Find-or-creates a folder chain under one record, and answers the
  * folder the file lands in (M13/5, DOC-011).
  *
- * **The caller must already hold the owning contract's row lock.** That
- * lock is the whole mechanism: every folder write on one record
- * serializes behind it, so N uploads racing on one path converge on one
- * folder — the second reads the tree the first has committed and finds
- * the segment already there. Without it two of them would both find
- * nothing and both insert, and a legacy book would arrive filed into two
- * folders of one name.
+ * **The caller must already hold the owning contract's row lock**, and
+ * the {@link LockedContract} it asks for is the proof. That lock is the
+ * whole mechanism: every folder write on one record serializes behind
+ * it, so N uploads racing on one path converge on one folder — the
+ * second reads the tree the first has committed and finds the segment
+ * already there. Without it two of them would both find nothing and both
+ * insert, and a legacy book would arrive filed into two folders of one
+ * name.
+ *
+ * That was a sentence in this comment until #254, and a contract id is
+ * indistinguishable from an unlocked one — so a third caller could
+ * forget the lock and still compile. The brand is minted only by
+ * `reachedContract(..., { lock: true })`, which is the call that takes
+ * the lock, so the obligation is now the compiler's to enforce.
  *
  * **It writes no activity** (DD-017). A folder a drop creates on its way
  * past is traversal, not an act somebody performed; the drop's story is
@@ -508,12 +543,13 @@ export interface FolderDestination {
  * case-insensitive comparison that refuses a duplicate.
  */
 export async function findOrCreateFolderPath(
-  tx: FolderExecutor,
-  contractId: string,
+  tx: Executor,
+  contract: LockedContract,
   destination: FolderDestination,
 ): Promise<ResolvedFolder | null> {
+  const contractId = contract.id;
   const tree = treeOf(await foldersOf(tx, contractId));
-  let at = parentIn(tree, destination.folderId);
+  let at = folderIn(tree, destination.folderId);
   // Asked once, of the whole chain, before anything is written: a path
   // that would end up too deep creates none of its shallower folders
   // either. Half a chain is worse than no chain.
@@ -654,45 +690,6 @@ const UpdateFolderBody = z.object({
 });
 
 export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
-  type Tx = Parameters<Parameters<typeof app.db.transaction>[0]>[0];
-  type Executor = typeof app.db | Tx;
-
-  /** One contract this viewer reaches, as the routes here need it. */
-  interface ReachedContract {
-    id: string;
-    /** SET-003's soft delete: a time freezes the record (CTR-021). */
-    archivedAt: Date | null;
-  }
-
-  /**
-   * One contract this viewer reaches, by its CTR-003 number, or `null`.
-   *
-   * The scope rides beside the number rather than being asked after it,
-   * so a contract the viewer cannot reach is not distinguishable from
-   * one that was never created — the M10 rule, applied to folders as it
-   * is to paper. It is read live on every request, so taking somebody's
-   * last team row off ends their reach on the next one.
-   *
-   * `lock` holds the row for the write that follows. That lock is what
-   * makes the whole-set read below a decision rather than a guess: every
-   * folder write on one contract serializes behind it, so the tree
-   * cannot change between the checks and the insert.
-   */
-  async function reachedContract(
-    db: ContractAccessReader,
-    user: AuthenticatedUser,
-    number: number,
-    lock = false,
-  ): Promise<ReachedContract | null> {
-    const query = db
-      .select({ id: contracts.id, archivedAt: contracts.archivedAt })
-      .from(contracts)
-      .where(and(eq(contracts.number, number), contractTeamScope(db, user)))
-      .limit(1);
-    const [row] = await (lock ? query.for("update", { of: contracts }) : query);
-    return row ?? null;
-  }
-
   /** One folder this viewer reaches, with the freeze state of the record
    * that owns it. */
   interface ReachedFolder {
@@ -719,7 +716,7 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
    * just the row itself.
    */
   async function reachedFolder(
-    db: ContractAccessReader & Executor,
+    db: Executor,
     user: AuthenticatedUser,
     folderId: string,
     lock = false,
@@ -760,7 +757,7 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
    * the caller reads that as zero.
    */
   async function countsOf(
-    db: ContractAccessReader & Executor,
+    db: Executor,
     user: AuthenticatedUser,
     contractId: string,
   ): Promise<Map<string, number>> {
@@ -793,11 +790,7 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
   /** The record's folders as the routes answer them, read back through
    * the same projection the list uses — so what a write returns is what
    * the next load will draw. */
-  async function foldersEnvelope(
-    db: ContractAccessReader & Executor,
-    user: AuthenticatedUser,
-    contractId: string,
-  ) {
+  async function foldersEnvelope(db: Executor, user: AuthenticatedUser, contractId: string) {
     // One after the other, never in parallel: this runs inside a
     // transaction as often as not, and a transaction is one connection —
     // two statements racing down it is not a speed-up.
@@ -815,7 +808,7 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
    * facts until it is restored (CTR-021), and how its paper is filed is
    * part of the record rather than a conversation about it.
    */
-  function assertOpen(contract: ReachedContract | null): asserts contract is ReachedContract {
+  function assertOpen<T extends ReachedContract>(contract: T | null): asserts contract is T {
     if (!contract) throw httpError(404, NO_CONTRACT);
     if (contract.archivedAt) {
       throw httpError(409, "This contract is archived. Restore it before changing its folders.");
@@ -933,9 +926,11 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
         const path = folderPathSegments(rawPath);
         if (path.length === 0) throw httpError(400, "Give the folder a path to recreate.");
         const recreated = await app.db.transaction(async (tx) => {
-          const contract = await reachedContract(tx, request.user, request.params.number, true);
+          const contract = await reachedContract(tx, request.user, request.params.number, {
+            lock: true,
+          });
           assertOpen(contract);
-          await findOrCreateFolderPath(tx, contract.id, {
+          await findOrCreateFolderPath(tx, contract, {
             folderId: parentId ?? null,
             path,
           });
@@ -945,7 +940,9 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
       }
 
       const folders = await app.db.transaction(async (tx) => {
-        const contract = await reachedContract(tx, request.user, request.params.number, true);
+        const contract = await reachedContract(tx, request.user, request.params.number, {
+          lock: true,
+        });
         assertOpen(contract);
 
         const name = folderName(rawName!);
@@ -954,7 +951,7 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
         // names, and the depth. Nothing can change underneath between
         // the checks and the insert.
         const tree = treeOf(await foldersOf(tx, contract.id));
-        const parent = parentIn(tree, parentId ?? null);
+        const parent = folderIn(tree, parentId ?? null);
         assertNameFree(tree, parent?.id ?? null, name);
         // A new folder brings nothing with it, so the ceiling is asked
         // about where it lands and nothing else.
@@ -1035,8 +1032,8 @@ export const documentFoldersRoutes: FastifyPluginAsyncZod = async (app) => {
         // named none leaves the folder where it is.
         const moving = body.parentId !== undefined;
         const parent = moving
-          ? parentIn(tree, body.parentId ?? null)
-          : parentIn(tree, target.parentId);
+          ? folderIn(tree, body.parentId ?? null)
+          : folderIn(tree, target.parentId);
 
         if (moving) {
           assertNoCycle(tree, target.id, parent);

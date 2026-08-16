@@ -10,7 +10,17 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { accounts, and, asc, eq, isNull, sessions, users, USER_ROLES } from "@openlaw/db";
+import {
+  accounts,
+  and,
+  asc,
+  eq,
+  isNull,
+  sessions,
+  users,
+  USER_ROLES,
+  type Transaction,
+} from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -95,8 +105,7 @@ export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
    * by aborting one, which at a 2–10 person scale is a rarity worth less
    * than the extra machinery of a two-phase read.
    */
-  type Tx = Parameters<Parameters<typeof app.db.transaction>[0]>[0];
-  function lockedAdmins(tx: Tx) {
+  function lockedAdmins(tx: Transaction) {
     return tx
       .select({ id: users.id })
       .from(users)

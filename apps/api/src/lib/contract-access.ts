@@ -66,20 +66,12 @@ import {
   sql,
   users,
   type CommentVisibility,
-  type Db,
+  type Executor,
   type SQL,
+  type Transaction,
   type UserRole,
 } from "@openlaw/db";
 import type { AuthenticatedUser } from "../auth/guards.js";
-
-/**
- * A database handle or a transaction inside one, as `ActivityWriter`
- * already is. A caller that checks and then writes passes its
- * transaction, so the check and the write share one snapshot — and so
- * that a caller holding a row lock does not take a second pool
- * connection to ask who may touch it.
- */
-export type ContractAccessReader = Db | Parameters<Parameters<Db["transaction"]>[0]>[0];
 
 /**
  * The `contract_team` role that records who made the contract (CTR-004).
@@ -103,7 +95,7 @@ const WORKING_TIERS: readonly CommentVisibility[] = ["working_team", "full_threa
  * role that row carries. Both halves of the reach rule ask this — the
  * CTR-021 Contributor grant, and DD-014's named team — so they ask it
  * once. */
-function contractsTheyAreOn(db: ContractAccessReader, user: AuthenticatedUser): SQL {
+function contractsTheyAreOn(db: Executor, user: AuthenticatedUser): SQL {
   return inArray(
     contracts.id,
     db
@@ -151,10 +143,7 @@ function contractsTheyAreOn(db: ContractAccessReader, user: AuthenticatedUser): 
  * every request, so taking somebody's last team row off ends their reach
  * on the next one.
  */
-export function contractTeamScope(
-  db: ContractAccessReader,
-  user: AuthenticatedUser,
-): SQL | undefined {
+export function contractTeamScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
   switch (user.role) {
     case "administrator":
       return undefined;
@@ -180,6 +169,121 @@ export function contractTeamScope(
 }
 
 /**
+ * **The one sentence a contract out of reach is refused in** (DD-014).
+ *
+ * It is defined once, here beside the rule that decides reach, because
+ * it is part of the security interface rather than copy: a contract this
+ * viewer may not see has to read exactly as one that was never created,
+ * so every surface that refuses one — the record, its paper, its
+ * folders, its approvals, its envelopes — must answer in the same words
+ * as well as with the same status. A second copy anywhere is a second
+ * sentence somebody can reword, and the reword is the leak.
+ */
+export const NO_CONTRACT = "No contract exists with this number.";
+
+/**
+ * One contract this viewer reaches, in the columns the routes ask it
+ * for.
+ *
+ * It is the union of what the modules each used to select for
+ * themselves. They are all columns of `contracts` and no join carries
+ * them, so answering the whole set costs one row either way — and one
+ * shape is what lets the reach read be written once.
+ */
+export interface ReachedContract {
+  id: string;
+  /** CTR-003's reference, the number the caller asked by. */
+  number: number;
+  title: string;
+  /** SET-003's soft delete: a time freezes the record (CTR-021). */
+  archivedAt: Date | null;
+  /** CTR-004's Owner. */
+  managerId: string | null;
+  /** CTR-014's instrument, or NULL on a record with no paper yet. */
+  primaryDocumentId: string | null;
+  /** DD-014's flag, as it stands on this row. */
+  isConfidential: boolean;
+}
+
+/** The witness a {@link LockedContract} carries. It is `declare`d and
+ * never assigned, so nothing outside this module can write the property
+ * and no value can claim the lock without having taken it. */
+declare const contractRowLockHeld: unique symbol;
+
+/**
+ * A contract this viewer reaches **and** whose row this caller holds the
+ * `FOR UPDATE` lock on.
+ *
+ * The brand carries no data. It exists so that "the caller must already
+ * hold the owning contract's row lock" can be a parameter type instead
+ * of a comment: {@link findOrCreateFolderPath} asks for one, and a
+ * caller that skipped the lock has nothing to hand it. Only
+ * {@link reachedContract} with `lock: true` mints one, and that is the
+ * call that takes the lock — so the type cannot be true and the lock
+ * absent.
+ */
+export type LockedContract = ReachedContract & { readonly [contractRowLockHeld]: true };
+
+/**
+ * One contract this viewer reaches, by its CTR-003 number, or `null` —
+ * **the one read every contract-shaped route starts from**.
+ *
+ * The scope rides beside the number rather than being asked after it, so
+ * a contract the viewer cannot reach is not distinguishable from one
+ * that was never created: the same row count, the same query, and — when
+ * the caller turns `null` into a refusal — the same {@link NO_CONTRACT}
+ * sentence. It is read live on every request, so taking somebody's last
+ * team row off ends their reach on the next one.
+ *
+ * `lock` holds the row for the write that follows, and that lock is the
+ * convergence mechanism every mutation on a record's paper, folders,
+ * approvals, and envelopes serializes behind: the checks and the write
+ * cannot be split by another writer. It is only offered on a
+ * {@link Transaction}, because `FOR UPDATE` taken on a pooled handle is
+ * released by its own statement's commit — a lock in name only. What
+ * comes back is branded {@link LockedContract}, so a helper that needs
+ * the lock can ask for the proof rather than trust a comment.
+ *
+ * Whether an archived record is refused is the caller's to say and not
+ * asked here (CTR-021): a frozen contract still reads, and each write
+ * that refuses one names the act it is refusing in its own words.
+ */
+export async function reachedContract(
+  db: Transaction,
+  user: AuthenticatedUser,
+  number: number,
+  options: { lock: true },
+): Promise<LockedContract | null>;
+export async function reachedContract(
+  db: Executor,
+  user: AuthenticatedUser,
+  number: number,
+  options?: { lock?: false },
+): Promise<ReachedContract | null>;
+export async function reachedContract(
+  db: Executor,
+  user: AuthenticatedUser,
+  number: number,
+  options: { lock?: boolean } = {},
+): Promise<ReachedContract | null> {
+  const query = db
+    .select({
+      id: contracts.id,
+      number: contracts.number,
+      title: contracts.title,
+      archivedAt: contracts.archivedAt,
+      managerId: contracts.managerId,
+      primaryDocumentId: contracts.primaryDocumentId,
+      isConfidential: contracts.isConfidential,
+    })
+    .from(contracts)
+    .where(and(eq(contracts.number, number), contractTeamScope(db, user)))
+    .limit(1);
+  const [row] = await (options.lock ? query.for("update", { of: contracts }) : query);
+  return row ?? null;
+}
+
+/**
  * The documents whose owning contract names this person — either by a
  * `contract_team` row or as its Owner (CTR-004).
  *
@@ -189,7 +293,7 @@ export function contractTeamScope(
  * record's list joins the uploader, the download joins the version
  * chain, and neither has to take the contract table along to ask this.
  */
-function namedOnTheOwningContract(db: ContractAccessReader, user: AuthenticatedUser): SQL {
+function namedOnTheOwningContract(db: Executor, user: AuthenticatedUser): SQL {
   return inArray(
     documents.contractId,
     db
@@ -243,10 +347,7 @@ function namedOnTheOwningContract(db: ContractAccessReader, user: AuthenticatedU
  * intended: a document this viewer may not see never leaves the
  * database, so no list, count, or refusal can say it is there.
  */
-export function documentAudienceScope(
-  db: ContractAccessReader,
-  user: AuthenticatedUser,
-): SQL | undefined {
+export function documentAudienceScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
   switch (user.role) {
     case "administrator":
       return undefined;
@@ -367,7 +468,7 @@ export interface ContractAudience {
  * never created.
  */
 export async function contractAudience(
-  db: ContractAccessReader,
+  db: Executor,
   user: AuthenticatedUser,
   contractId: string,
 ): Promise<ContractAudience | null> {
@@ -485,8 +586,11 @@ export function confidentialDocumentEntryScope(
 export type ConfidentialityWrite = "allowed" | "refused" | "unreachable";
 
 /** The three facts about a contract the questions below turn on, as
- * every mutation already holds them on the row it locked. */
-export interface LockedContract {
+ * every mutation already holds them on the row it locked. A
+ * {@link LockedContract} carries all three, so a caller that took the
+ * lock through {@link reachedContract} can pass it straight in; a caller
+ * that locked the row its own way passes whatever it read. */
+export interface LockedContractFacts {
   id: string;
   /** CTR-004's Owner. */
   managerId: string | null;
@@ -499,7 +603,7 @@ export interface LockedContract {
  * of them is `creator`. The document questions ask it of the **owning**
  * contract, because that is where a document's team is (DOC-008). */
 async function standingOn(
-  db: ContractAccessReader,
+  db: Executor,
   user: AuthenticatedUser,
   contractId: string,
   managerId: string | null,
@@ -543,9 +647,9 @@ async function standingOn(
  * statements under a lock the caller already holds are not.
  */
 export async function reachesLockedContract(
-  db: ContractAccessReader,
+  db: Executor,
   user: AuthenticatedUser,
-  contract: LockedContract,
+  contract: LockedContractFacts,
 ): Promise<boolean> {
   const { standing } = await standingOn(db, user, contract.id, contract.managerId);
   return inNamedAudience(standing, contract.isConfidential);
@@ -571,9 +675,9 @@ export async function reachesLockedContract(
  * to admit was there.
  */
 export async function confidentialityWrite(
-  db: ContractAccessReader,
+  db: Executor,
   user: AuthenticatedUser,
-  contract: LockedContract,
+  contract: LockedContractFacts,
 ): Promise<ConfidentialityWrite> {
   const { standing, held } = await standingOn(db, user, contract.id, contract.managerId);
   if (!inNamedAudience(standing, contract.isConfidential)) return "unreachable";
@@ -618,7 +722,7 @@ export interface LockedDocument {
  * here is only the document's own flag.
  */
 export async function documentConfidentialityWrite(
-  db: ContractAccessReader,
+  db: Executor,
   user: AuthenticatedUser,
   document: LockedDocument,
 ): Promise<ConfidentialityWrite> {
@@ -672,7 +776,7 @@ export interface MentionCandidate {
  * decides who the list offers and who a post may name.
  */
 export async function contractMentionCandidates(
-  db: ContractAccessReader,
+  db: Executor,
   contractId: string,
   only?: readonly string[],
 ): Promise<MentionCandidate[]> {

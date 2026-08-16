@@ -28,7 +28,9 @@ import {
   isNotNull,
   isNull,
   matterTypeFields,
+  type Executor,
   type Field,
+  type Transaction,
 } from "@openlaw/db";
 import { requireRole } from "../auth/guards.js";
 import { recordActivity, type TypeFieldActionPrefix } from "./activity.js";
@@ -101,10 +103,8 @@ export function typeFieldRoutes(config: TypeFieldRoutesConfig): FastifyPluginAsy
   }
 
   return async (app) => {
-    type Tx = Parameters<Parameters<typeof app.db.transaction>[0]>[0];
-
     /** Locks and returns the type, or 404s — every mutation starts here. */
-    async function lockedType(tx: Tx, id: string): Promise<TaxonomyRow> {
+    async function lockedType(tx: Transaction, id: string): Promise<TaxonomyRow> {
       const [row] = await tx
         .select()
         .from(typesTable)
@@ -120,7 +120,7 @@ export function typeFieldRoutes(config: TypeFieldRoutesConfig): FastifyPluginAsy
      * order. Attachments to archived fields persist (restore brings them
      * back) but never render — archived means hidden everywhere.
      */
-    function liveAttachments(dbOrTx: Tx | typeof app.db, typeId: string) {
+    function liveAttachments(dbOrTx: Executor, typeId: string) {
       return dbOrTx
         .select({ join: joinTable, field: fields })
         .from(joinTable)

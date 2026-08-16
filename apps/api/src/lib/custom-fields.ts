@@ -43,13 +43,10 @@ import {
   FIELD_TYPES,
   isNull,
   type CustomFieldValue,
-  type Db,
+  type Executor,
 } from "@openlaw/db";
 import { httpError } from "./problem.js";
 import type { TypeFieldsTable } from "./type-field-routes.js";
-
-/** A database handle or a transaction inside one. */
-type Executor = Db | Parameters<Parameters<Db["transaction"]>[0]>[0];
 
 /**
  * One stored value, in the four shapes the nine field types reduce to.
