@@ -288,6 +288,112 @@ export function daysRemainingLabel(intl: IntlShape, days: number | null): string
       );
 }
 
+/**
+ * One stretch of the term, as the timeline draws it (CTR-006).
+ *
+ * `renewal` is the period's place in the run: 0 is the initial term,
+ * and 1 upwards are the rolls the record's own dates imply. `end` is
+ * null for the one period an evergreen contract has, which is the open
+ * end the card draws rather than an end it invents.
+ */
+export interface TermPeriod {
+  /** The day the period starts, as the stored civil date `YYYY-MM-DD`. */
+  start: string;
+  /** The day it ends, or null for an evergreen term's open period. */
+  end: string | null;
+  /** 0 for the initial term; 1 upwards for each implied roll. */
+  renewal: number;
+}
+
+/**
+ * How many rolls the timeline will draw before it stops counting.
+ *
+ * This is a render guard and not a renewal cap: CTR-006 keeps no
+ * cap column, grill rows G.R6 and I.B7 removed the marker, and nothing
+ * here draws one. It exists because a one-month roll across a
+ * mistyped century implies thousands of bars, and a card that tries to
+ * draw them all stops being readable long before it stops being slow.
+ * Past the guard the initial term simply absorbs what is left, which
+ * is the same shape a record with no renewal period draws.
+ */
+const MAX_DRAWN_ROLLS = 60;
+
+/**
+ * A civil date shifted by whole months, clamped to the target month's
+ * last day — `2026-03-31` back one month is February's 28th, not
+ * March's 3rd. Month arithmetic is done in UTC so no timezone can move
+ * the calendar date it answers.
+ */
+function shiftMonths(civil: string, months: number): string {
+  // A stored civil date is fixed-width `YYYY-MM-DD`, so its three parts
+  // are slices rather than a split whose length nothing guarantees.
+  const year = Number(civil.slice(0, 4));
+  const month = Number(civil.slice(5, 7));
+  const day = Number(civil.slice(8, 10));
+  const target = new Date(Date.UTC(year, month - 1 + months, 1));
+  const lastDay = new Date(
+    Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+  target.setUTCDate(Math.min(day, lastDay));
+  return target.toISOString().slice(0, 10);
+}
+
+/**
+ * The term's periods, derived from the record's own dates and nothing
+ * else (CTR-006).
+ *
+ * A fixed term is one period. An evergreen term is one open period. An
+ * auto-renewing term is the periods its dates and renewal period imply:
+ * the run is walked back from the expiry a renewal period at a time
+ * until the step would land on or before the effective date, and what
+ * is left is the initial term. Backwards rather than forwards because
+ * the expiry is the date a roll advances (CTR-006) — the record holds
+ * where the term stands now, and where it started, and the boundaries
+ * between are what those two and the period length say they are.
+ *
+ * The answer is empty when there is nothing honest to draw: a period
+ * needs a start, and every period but an evergreen one needs an end.
+ *
+ * Rolls confirmed by a person are a different datum — the log entries
+ * the confirmed roll writes (grill rows I.B3–I.B5) — and they are not
+ * in the record read yet.
+ */
+export function termPeriods(contract: {
+  termType: TermType;
+  effectiveDate: string | null;
+  expiryDate: string | null;
+  renewalPeriodMonths: number | null;
+}): TermPeriod[] {
+  const { termType, effectiveDate, expiryDate, renewalPeriodMonths } = contract;
+  if (effectiveDate === null) return [];
+  if (termType === "evergreen") return [{ start: effectiveDate, end: null, renewal: 0 }];
+  if (expiryDate === null || expiryDate <= effectiveDate) {
+    return expiryDate === null ? [] : [{ start: effectiveDate, end: expiryDate, renewal: 0 }];
+  }
+  const months = termType === "auto_renew" ? (renewalPeriodMonths ?? 0) : 0;
+  // Civil dates are zero-padded ISO, so a string compare is a date
+  // compare — no parsing, and no timezone to get it wrong.
+  const boundaries: string[] = [];
+  if (months > 0) {
+    // Every boundary is measured from the expiry itself, never from the
+    // one before it: a month-end date clamps on the way back (March's
+    // 31st is February's 28th), and stepping from a clamped date would
+    // carry that clamp into every earlier boundary.
+    for (let roll = 1; roll <= MAX_DRAWN_ROLLS; roll += 1) {
+      const previous = shiftMonths(expiryDate, -months * roll);
+      if (previous <= effectiveDate) break;
+      boundaries.unshift(previous);
+    }
+  }
+  const starts = [effectiveDate, ...boundaries];
+  const ends = [...boundaries, expiryDate];
+  return starts.map((start, index) => ({
+    start,
+    end: ends[index] ?? expiryDate,
+    renewal: index,
+  }));
+}
+
 /** CTR-004's role enum, in the order the roster and the picker read. */
 export const CONTRACT_TEAM_ROLES = exhaustiveList<ContractTeamRole>()([
   "member",

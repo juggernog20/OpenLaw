@@ -1223,6 +1223,45 @@
   "contracts.teamRole": {
     "defaultMessage": "{role, select, member {Member} watcher {Watcher} creator {Creator} contributor {Contributor} other {Unknown}}"
   },
+  "contracts.termTimeline.empty": {
+    "defaultMessage": "{missing, select, start {No effective date on this contract yet.} end {No expiry date on this contract yet.} other {No term dates on this contract yet.}}"
+  },
+  "contracts.termTimeline.heading": {
+    "defaultMessage": "Term timeline"
+  },
+  "contracts.termTimeline.key": {
+    "defaultMessage": "Timeline key"
+  },
+  "contracts.termTimeline.keyInitial": {
+    "defaultMessage": "Initial term"
+  },
+  "contracts.termTimeline.keyNotice": {
+    "defaultMessage": "Notice deadline"
+  },
+  "contracts.termTimeline.keyRolls": {
+    "defaultMessage": "Renewals"
+  },
+  "contracts.termTimeline.noEnd": {
+    "defaultMessage": "No end date"
+  },
+  "contracts.termTimeline.noticeDeadlineOn": {
+    "defaultMessage": "Notice deadline {date}"
+  },
+  "contracts.termTimeline.openPeriodDates": {
+    "defaultMessage": "From {start}"
+  },
+  "contracts.termTimeline.period": {
+    "defaultMessage": "{renewal, plural, =0 {Initial term} other {Renewal #}}"
+  },
+  "contracts.termTimeline.periodDates": {
+    "defaultMessage": "{start} – {end}"
+  },
+  "contracts.termTimeline.periods": {
+    "defaultMessage": "Term periods"
+  },
+  "contracts.termTimeline.today": {
+    "defaultMessage": "Today"
+  },
   "contracts.termTypeLabel": {
     "defaultMessage": "{termType, select, fixed {Fixed term} auto_renew {Auto-renewing} evergreen {Evergreen} other {Unknown}}"
   },

@@ -11,8 +11,9 @@
  * selects.
  *
  * Four sections, four addresses. **Overview** (`/contracts/42`) is
- * the record's own columns: the Contract card and the Description card
- * under it. **Fields** (`/contracts/42/fields`) is what this contract's
+ * the record's own columns: the Contract card, the Description card
+ * under it, and the Term timeline card that closes the section.
+ * **Fields** (`/contracts/42/fields`) is what this contract's
  * type asks for on top of them. **Documents**
  * (`/contracts/42/documents`) is the paper. **Approvals**
  * (`/contracts/42/approvals`) is who has been asked to sign it off
@@ -53,6 +54,11 @@
  * kind of term. Days remaining closes the group: it is derived from the
  * expiry and stored nowhere, so it is a fact of the record rather than
  * a field of it, and it is blank for a contract with no end.
+ *
+ * The Term timeline card closes the Overview with the same term drawn
+ * as a picture (DES-041): the periods the record's dates imply, the
+ * today line, and the derived notice-deadline mark. It holds nothing of
+ * its own — every mark on it is one of the dates the card above edits.
  *
  * The people are CTR-004's: one Owner (`manager_id`, labelled "Owner",
  * name only) who may be left unassigned, and the working group in the
@@ -199,6 +205,7 @@ import { ApprovalsSigningCard } from "../components/approvals/approvals-signing-
 import { Avatar } from "../components/avatar";
 import { ConfidentialBanner } from "../components/confidential-banner";
 import { ConfidentialToggle } from "../components/confidential-toggle";
+import { TermTimelineCard } from "../components/contracts/term-timeline-card";
 import { CounterpartyPicker, type CounterpartyPick } from "../components/counterparty-picker";
 import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
 import { DocPanel } from "../components/documents/doc-panel";
@@ -1692,6 +1699,13 @@ function ContractRecord() {
                       />
                     </div>
                   </section>
+                  {/* CTR-006's term as a picture (M16/2). It closes the
+                      Overview because it draws facts the two cards
+                      above already state — the mock's own order, where
+                      the Timeframe card is the section's last — and it
+                      holds nothing of its own: every mark on it is one
+                      of the record's dates. */}
+                  <TermTimelineCard contract={saved} />
                 </>
               )}
               {/* CTR-016's fields, in the card the C2 mock draws for

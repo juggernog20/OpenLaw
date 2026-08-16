@@ -144,6 +144,22 @@ function civilDate(date: Date, timeZone: string): { year: number; month: number;
 }
 
 /**
+ * Today, as the reader's own calendar says it: a bare `YYYY-MM-DD`.
+ *
+ * A surface that has to place today *among* stored civil dates — a
+ * timeline's today line, say — needs the same kind of value they are,
+ * not an instant. The day is the reader's, resolved through the same
+ * stored-override → browser-detected → UTC seam every other helper
+ * reads (DES-014), so a card and the reader's calendar cannot disagree
+ * about which day it is.
+ */
+export function civilToday(options?: FormatOptions): string {
+  const { year, month, day } = civilDate(options?.now ?? new Date(), resolveTimeZone(options));
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${year}-${pad(month)}-${pad(day)}`;
+}
+
+/**
  * The two instants a civil date covers, in the reader's own timezone.
  *
  * A date picker answers `2026-08-01`, which is a calendar date and not

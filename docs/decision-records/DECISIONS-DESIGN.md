@@ -2557,6 +2557,73 @@ The activity narrator gains five changed-key labels and renders the term type th
 
 Grill rows **G.R3**, **G.R4**, and **G.R7** are discharged. **G.R5** (last renewal) and **G.R6** stay as they were: the first waits for the confirmed roll that writes it, the second is removed for good. No new tokens.
 
+## DES-041: The Term timeline card — the gutter, the two marks, and the open end (extends DES-040, DES-032, DES-012)
+
+- **Status:** Accepted
+- **Date:** 2026-08-17
+
+### Context
+
+M16/2 draws the term the record already holds (DES-040) as a picture: the V12/V13 "Timeframe" card the contracts grill kept in section I. The grill stripped it before the build reached it — no section icon (I.H1), no zoom switcher (I.H3), no renewal cap (I.B7), no risk threshold (I.B8) — and it added one mark the mock never had: the derived notice deadline, beside the today line (I.X2).
+
+What the mock cannot answer is where the bars come from. It draws three named term bars and a last-renewal marker, and the grill's own rows I.B3–I.B5 say those are one bar per **confirmed** renewal, read from the activity log. The confirmed roll is a later slice of this milestone; nothing in the record read answers it yet. So this card has to decide what a term with rolls in it looks like when the only rolls the record can prove are the ones its dates imply.
+
+The rest is the same question every chart asks and this one has to answer at the WCAG 2.2 AA floor (DES-011): what does a reader who cannot see the picture get.
+
+### Decision
+
+**1. The card's own name is "Term timeline", not the mock's "Timeframe" and not grill row I.H2's "Term".** DES-040 put the five term fields on the Contract card, so a second heading reading "Term" would name two surfaces on one page. "Timeframe" is not the word the record uses anywhere else; **term** is the word CTR-006 and `CONTEXT.md` use, and the card is that term drawn along time.
+
+**2. The periods are the ones the record's dates imply, walked back from the expiry.** A fixed term is one period. An auto-renewing term steps back from `expiry_date` by `renewal_period_months` until the step would land on or before `effective_date`; each step is a boundary, and what is left at the front is the initial term. Backwards rather than forwards because the expiry is the date a roll advances (CTR-006): the record holds where the term stands **now** and where it started, and the boundaries between are what those two dates and the roll length say they are. Forwards from the effective date would draw a run the record has not reached and stop short of the expiry it does hold.
+
+**3. Confirmed rolls are a different datum, and they are not drawn here.** Grill rows **I.B3**, **I.B4**, and **I.B5** read the activity log, and the log entry they read is written by the confirmed roll this milestone has not built yet. Drawing an implied period and a confirmed one in the same fill would say the record can prove something it cannot. They join the card with the slice that writes them, along with the last-renewal marker **G.R5** already waits for.
+
+**4. Labels sit in the gutter and the bars carry none** (grill row I.X1). Each gutter row names its period — "Initial term", "Renewal 1" — and gives the two dates its bar spans, formatted through the DES-014 helpers. This is the card's readable half: the plot is a picture of text that is already on the page, so a reader who cannot see it loses the shape and keeps every fact. The bar list is `aria-hidden` for exactly that reason — announcing it would read the same term twice.
+
+**5. Two marks cross the plot, and each says what it is where it stands.** The today line takes the mock's green rule and its pill at the plot's foot (I.X2). The derived notice deadline takes an orange rule and a pill at the plot's head carrying the date it falls on, so the two pills can never collide however close their dates are. The deadline's pill shows the date alone, because the key's swatch is what names the color; a reader who cannot see the swatch is told in place, by text only a screen reader reads.
+
+**6. The key names the fills the plot is using, and nothing else** (grill row I.X3, three swatches). "Initial term" always; "Renewals" only when a roll is drawn; "Notice deadline" only when the record derives one. A swatch for a family the card is not drawing would describe a rule it is not applying — DES-035 clause 13's rule, applied to a legend. Today keeps no key entry: its pill already carries its own name, and a second copy would be the only duplicated string on the card.
+
+**7. An evergreen term draws one open period that runs off the end of the plot.** The bar reaches the plot's trailing edge and ends in a chevron rather than a cap, its gutter row reads "From {date}" rather than a range, and the scale's trailing caption reads "No end date". The plot's scale is widened past the last date the record holds so the open bar has somewhere to run; that room is scale and never a date, and the card prints it nowhere.
+
+**8. A term the record cannot draw gets the section's own empty line, and the line names the date that is missing.** "No effective date on this contract yet.", "No expiry date on this contract yet.", or "No term dates on this contract yet." — the `documents.empty` and `approvals.empty` anatomy, one `<p>` in the card's body. A period needs a start, and every period but an evergreen one needs an end; with either missing there is no honest shape, and a chart of one date is a broken chart with a scale.
+
+**9. Nothing draws a renewal cap** (grill rows **G.R6** and **I.B7**). The card walks at most sixty rolls before it stops counting, and that guard is a render limit and not a cap: it exists because a one-month roll across a mistyped century implies thousands of bars, and past it the initial term simply absorbs what is left — the same shape a record with no renewal period draws. No column backs it, nothing marks it, and no reader is told a term has a limit.
+
+**10. Today is placed by the reader's own calendar; the count beside it stays the seam's.** DES-040 clause 4 keeps days remaining at the seam because it is one number two places could disagree about. A line's position is not that number — it is a place on a scale this card owns — and the day it is placed on is the reader's, resolved through the same stored-override → browser-detected → UTC seam every date on the page reads (DES-014). The accepted tension: a reader whose calendar day differs from the server's sees a line one day off the count above it. One day, on a mark whose whole job is "roughly here", against a picture that would otherwise need a clock shipped down the wire.
+
+**11. The scale is fit-to-term and widened to hold every mark** (grill row I.H3 removed the zoom switcher). A contract whose term ran out last year still shows where today is, rather than clipping it off the end. The scale's two ends are captioned with their dates under the plot.
+
+**12. The two columns hold at every width** (DES-012). The gutter narrows on a small container and the plot takes the rest; neither stacks, because the marks are positioned across the plot and a stacked layout would cut them from the rows they cross. The bars are geometry, so their offsets are inline percentages — the only numbers on this card that are not a spacing token.
+
+### Rationale
+
+The card exists to answer one question — where in the term do we stand — and the two marks are that answer. Everything else on it is context for reading them.
+
+Deriving the periods rather than storing them is the same call DES-040 made for days remaining, one level up: a shape held anywhere would be a second copy of the term, and the first edit to the expiry would put the two out of step. Nothing here is seeded, so nothing here can go stale.
+
+The gutter is what makes the card pass its accessibility floor without a parallel description of itself. A chart whose only readable content is a caption saying "chart" has to be described twice and drifts between the two. This one has its content in the DOM as text, and the picture is a second reading of it.
+
+### Alternatives considered
+
+- **Bars stepped forward from the effective date.** Rejected with clause 2: it ends where the roll length says rather than where the record's expiry says, so the drawn term contradicts the field above it.
+- **One segmented track instead of a row per period.** Rejected: the gutter is where the labels live (I.X1), and a single track has one gutter row for N periods.
+- **A generic "Markers" swatch, as the mock's third swatch is generic.** Rejected: two marks, two colors, two facts. One swatch standing for both would be the only place on the card where a color means more than one thing.
+- **A quarter-tick axis, as both mocks draw.** Rejected: the ticks are fabricated dates, and every date the card holds is already printed in the gutter. The scale's two ends are captioned instead.
+- **A "renewal pending confirmation" treatment on a term that has run out.** Rejected here: that is a derived state with a banner and a call to action of its own, and it belongs to the slice that builds it. This card draws the same past-expiry term it draws any other.
+- **Deriving today from the expiry minus days remaining**, which would put the line on the seam's clock exactly. Rejected: it works only where an expiry exists, so an evergreen contract would need a second rule, and two rules for one mark is worse than the one-day tension clause 10 accepts.
+- **A disclosure that collapses the card.** Rejected: the mock's caret is the V12 card chrome grill row X.1 already stripped from the record's cards.
+
+### Consequences
+
+`ContractRecord` grows one `TermTimelineCard`, mounted last on the Overview — the mock's own order, where the Timeframe card closes the section. It takes the saved row and holds no state.
+
+`termPeriods()` joins the contracts vocabulary in `apps/web/src/lib/contracts.ts`, and `civilToday()` joins the DES-014 helper layer, which is where any surface placing today among stored civil dates now reads it from.
+
+Thirteen ICU messages, all new. No new tokens: the bars and marks are fills from four existing status families — info for the initial term, assigned for the rolls, success for today, severe for the notice deadline — used as fills on `bg-control` rather than as paired text, each clearing the 3:1 non-text floor in all three themes. Color is never the sole carrier: every fill is named in the gutter or the key.
+
+Grill rows **I.H1**, **I.H2**, **I.H3**, **I.X1**, **I.X2**, **I.X3**, **I.B1**, **I.B2**, **I.B6**, **I.B7**, and **I.B8** are discharged. **I.B3**, **I.B4**, and **I.B5** stay open, waiting on the confirmed roll — the same wait **G.R5** is in.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -2601,3 +2668,4 @@ Grill rows **G.R3**, **G.R4**, and **G.R7** are discharged. **G.R5** (last renew
 | DES-038 | The envelope row's action cell and the void dialog (extends DES-037, DES-036, DES-035)                                                                               | Accepted |
 | DES-039 | The executed copy on the row, and the last two withheld notes (extends DES-038, DES-037, DES-036, DES-035)                                                           | Accepted |
 | DES-040 | The term on the Contract card — five fields, and the blanks the type forces (extends DES-017, DES-032)                                                               | Accepted |
+| DES-041 | The Term timeline card — the gutter, the two marks, and the open end (extends DES-040, DES-032, DES-012)                                                             | Accepted |
