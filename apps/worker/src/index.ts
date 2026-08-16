@@ -35,6 +35,7 @@ import {
   maxUploadBytes,
   readDocuSignBaseUrl,
   runBackfillSweep,
+  SIGNING_STANDIN_VARIABLE,
   runExecutedCopySweep,
   startPipeline,
   startReconciliationSweeps,
@@ -85,10 +86,15 @@ const uploadCeiling = maxUploadBytes(process.env.MAX_UPLOAD_MB);
 // presented is read from the environment, exactly as the API reads it —
 // unset on every real install, and pointed at a stand-in by the dev/E2E
 // overlay so a test send can never reach a real account (TECH-018).
+//
+// The same call the API makes, which is what makes the two agree: it
+// enforces the pairing of the address with SIGNING_STANDIN, so a stack
+// that moved one process off DocuSign and not the other refuses to boot
+// rather than sending to the stand-in and fetching from DocuSign.
 const docusignBaseUrl = orExit(() => readDocuSignBaseUrl(process.env));
 if (docusignBaseUrl) {
   log.warn(
-    { baseUrl: docusignBaseUrl },
+    { baseUrl: docusignBaseUrl, declaredBy: SIGNING_STANDIN_VARIABLE },
     "signing is pointed at a stand-in instead of DocuSign (DOCUSIGN_BASE_URL) — the dev/E2E overlay only",
   );
 }

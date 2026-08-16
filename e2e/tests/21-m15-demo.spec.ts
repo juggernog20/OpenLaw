@@ -47,7 +47,8 @@
  * own deterministic fake: the container resolves its signing driver for
  * itself from the stored connector. The dev/E2E overlay instead points
  * that driver at a stand-in this suite runs on the host —
- * `DOCUSIGN_BASE_URL` on the app and the worker both — so the whole
+ * `DOCUSIGN_BASE_URL` plus `SIGNING_STANDIN` on the app and the worker
+ * both, and either one alone stops the boot — so the whole
  * production path runs, the real DocuSign driver included, and no test
  * send can reach a real DocuSign account. That is the Mailpit rule
  * applied to signing. See `docusign.ts`.

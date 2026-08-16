@@ -14,7 +14,11 @@ import { buildApp } from "./app.js";
 import { createMailerResolver } from "./lib/mailer.js";
 import { createDocEngineFromEnv } from "./lib/doc-engine/config.js";
 import { createStorageFromEnv } from "./lib/storage/config.js";
-import { createDocuSignDriverFactory, readDocuSignBaseUrl } from "./lib/signing/config.js";
+import {
+  createDocuSignDriverFactory,
+  readDocuSignBaseUrl,
+  SIGNING_STANDIN_VARIABLE,
+} from "./lib/signing/config.js";
 import { createSigningResolver } from "./lib/signing/resolver.js";
 import { maxUploadBytes } from "./lib/uploads.js";
 import { startPipeline } from "./pipeline/pg-boss.js";
@@ -96,7 +100,7 @@ const docusignBaseUrl = (function readSigningHost() {
 })();
 if (docusignBaseUrl) {
   console.warn(
-    `Signing is pointed at ${docusignBaseUrl} instead of DocuSign (DOCUSIGN_BASE_URL). This belongs to the dev/E2E overlay only — never run a real deployment this way.`,
+    `Signing is pointed at ${docusignBaseUrl} instead of DocuSign (DOCUSIGN_BASE_URL + ${SIGNING_STANDIN_VARIABLE}). This belongs to the dev/E2E overlay only — never run a real deployment this way.`,
   );
 }
 const resolveSigningProvider = createSigningResolver(
