@@ -33,14 +33,10 @@
  * no DELETE anywhere beside it (DOC-001).
  */
 
-import { desc, documentVersions, eq, type Db, type DocumentVersionKind } from "@openlaw/db";
+import { desc, documentVersions, eq, type DocumentVersionKind, type Executor } from "@openlaw/db";
 import { needsDisplayRendition, recordRenditionOwed } from "../pipeline/display-conversion.js";
 import { boundedQueueAsk, type JobQueue } from "../pipeline/jobs.js";
 import { extractsText, recordTextOwed } from "../pipeline/text-extraction.js";
-
-/** The database, or a transaction on it — every append here runs inside
- * one. */
-export type VersionWriter = Db | Parameters<Parameters<Db["transaction"]>[0]>[0];
 
 /** Somewhere to say that a queue could not be reached. The pipeline's
  * own logger shape, so a route's Fastify log and the worker's console
@@ -65,7 +61,7 @@ export function versionStorageKey(documentId: string, versionId: string): string
  * failure the lock makes impossible rather than one worth recovering
  * from.
  */
-export async function nextVersionNumber(tx: VersionWriter, documentId: string): Promise<number> {
+export async function nextVersionNumber(tx: Executor, documentId: string): Promise<number> {
   const [high] = await tx
     .select({ versionNumber: documentVersions.versionNumber })
     .from(documentVersions)
@@ -103,7 +99,7 @@ export interface AppendedVersion {
  * lock — see the module note for why both.
  */
 export async function insertDocumentVersion(
-  tx: VersionWriter,
+  tx: Executor,
   row: Readonly<AppendedVersion>,
 ): Promise<void> {
   await tx.insert(documentVersions).values({
