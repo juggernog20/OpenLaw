@@ -567,6 +567,18 @@ The E2E demo's stand-in is deliberately the same server shape the DocuSign drive
 - **A recorded-fixture proxy replaying real DocuSign traffic** — closer to DocuSign, and unable to do the one thing the demo needs: sign an envelope on demand, mid-journey, in an order the recording never took.
 - **Let the E2E stack reach DocuSign's demo estate** — a shared credential in CI, a network dependency in a gate that must be deterministic, and a suite that can post paper to a real account.
 
+### Addendum (2026-08-16, [#279](https://github.com/juggernog20/OpenLaw/issues/279)) — the stand-in takes two variables, and they have to agree
+
+The addendum above guards `DOCUSIGN_BASE_URL` three ways: it must name a bare origin with no credentials, it is warned about at boot, and only the dev/E2E overlay sets it. What it did not have is a second fact saying **this install is deliberately not talking to DocuSign**. `compose.yml` passes `.env` to both processes, so one line in the wrong `.env` sent a real install's paper to whatever host it named, with a warning in the boot log as the only sign.
+
+**A second variable earns its place here, where it would not for the other overrides.** `SIGNING_STANDIN=true` carries no address and says only that. Set the address without it and the boot stops; set it without the address and the boot stops too. The asymmetry with `SMTP_URL`, `DOC_ENGINE_URL`, and the rest is deliberate and rests on the consequence, not on the shape: a mis-set mail relay sends an invitation to the wrong catcher, and a mis-set signing host puts a contract in front of a third party who is not DocuSign and takes back a document the record then treats as executed. That is a different kind of wrong, and it is the only override in the file with it.
+
+**Refusing the flag without an address is the half worth arguing for.** The flag alone changes nothing on its own, so ignoring it would be defensible. It is refused because the honest reading of "declared a stand-in, named no stand-in" is that the address was meant to be there and was lost — a typo in the name, a line dropped from the overlay — and this install would then dial DocuSign while its operator believed it could not.
+
+**The pairing is enforced in `readDocuSignBaseUrl`, not at the entrypoints.** The API and the worker both call it, so there is no way to guard one and not the other — which the addendum above names as the worse-than-neither outcome: a send that goes to the stand-in and an executed copy fetched from DocuSign. `compose.dev.yml` sets both in the shared anchor for the same reason.
+
+Neither variable appears in `.env.example`. That file is what a self-hoster reads and copies, and the address has no business being one line away from a real install.
+
 ## TECH-019: Code documentation — module-granular doc comments, no coverage percentage
 
 - **Status:** Accepted

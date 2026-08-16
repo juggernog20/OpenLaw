@@ -7,7 +7,8 @@
  * inject the API's own deterministic fake provider: the container
  * resolves its driver for itself from the stored connector. What the
  * dev/E2E overlay does instead is point that driver at this server —
- * `DOCUSIGN_BASE_URL` on both the app and the worker — so the whole
+ * `DOCUSIGN_BASE_URL` plus `SIGNING_STANDIN` on both the app and the
+ * worker, and either one alone stops the boot — so the whole
  * production path runs, the real DocuSign driver included, and no test
  * send can reach a real DocuSign account.
  *

@@ -23,6 +23,13 @@ x-openlaw-dev-signing: &openlaw-dev-signing
   # shapes (21-m15-demo.spec.ts); SIGNING_STUB_PORT moves it so a second
   # stack can run beside the default one.
   DOCUSIGN_BASE_URL: http://host.docker.internal:${SIGNING_STUB_PORT:-8129}
+  # The second fact, and the reason the address alone is refused. It
+  # carries no host and says one thing: this deployment is deliberately
+  # not talking to DocuSign. compose.yml passes .env to both processes,
+  # so a single stray DOCUSIGN_BASE_URL line would otherwise be enough
+  # to send a real install's paper elsewhere. Both processes refuse to
+  # boot on either variable without the other.
+  SIGNING_STANDIN: "true"
 
 # host-gateway gives Linux engines the name Docker Desktop defines out
 # of the box, which is how both processes reach the suite's own servers

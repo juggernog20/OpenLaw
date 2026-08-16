@@ -20,6 +20,20 @@
  * deployment setting. Unset — which is every real install — the driver
  * uses the hosts the stored connector's environment names, and nothing
  * in this file is reachable from a production stack.
+ *
+ * **It takes two variables to move an install off DocuSign, and they
+ * have to agree.** `compose.yml` passes `.env` to both processes, so one
+ * line in the wrong `.env` would otherwise send a real install's paper
+ * to whatever host it named, with a warning in the boot log as the only
+ * sign. `SIGNING_STANDIN` is the second fact: it carries no address and
+ * says only "this install is deliberately not talking to DocuSign".
+ * Either one without the other stops the boot.
+ *
+ * The pairing is checked **here** rather than at each entrypoint, and
+ * that is the point. The API and the worker each read this, and one
+ * guarded without the other would be worse than neither — a send that
+ * goes to the stand-in and an executed copy fetched from DocuSign, or
+ * the reverse. One function, two callers, nothing to forget.
  */
 
 import { createDocuSignProvider } from "./docusign.js";
@@ -43,6 +57,38 @@ export class SigningHostConfigError extends Error {
 }
 
 /**
+ * The one value {@link SIGNING_STANDIN_VARIABLE} accepts.
+ *
+ * Exactly this, case-insensitively, and nothing else — not `1`, not
+ * `yes`, not `on`. A declaration that this install is deliberately not
+ * talking to DocuSign should be written out, and a near miss is an
+ * operator who meant something we should not guess at.
+ */
+export const SIGNING_STANDIN_VALUE = "true";
+
+/** The second fact, so that one mistyped line cannot move an install. */
+export const SIGNING_STANDIN_VARIABLE = "SIGNING_STANDIN";
+
+/**
+ * Whether this deployment has declared itself a stand-in deployment.
+ *
+ * Empty is unset, as it is for every other Compose variable. Anything
+ * else that is not {@link SIGNING_STANDIN_VALUE} stops the boot: the
+ * variable's whole job is to be unambiguous, and a value we shrugged at
+ * would be one an operator believed had taken effect.
+ */
+function readStandInFlag(env: SigningHostEnvironment): boolean {
+  const value = env[SIGNING_STANDIN_VARIABLE]?.trim();
+  if (!value) return false;
+  if (value.toLowerCase() !== SIGNING_STANDIN_VALUE) {
+    throw new SigningHostConfigError(
+      `${SIGNING_STANDIN_VARIABLE} must be "${SIGNING_STANDIN_VALUE}" or unset.`,
+    );
+  }
+  return true;
+}
+
+/**
  * The stand-in's origin, or undefined on every install that has none.
  *
  * Empty is unset, as it is for every other Compose variable: the
@@ -50,11 +96,35 @@ export class SigningHostConfigError extends Error {
  * deployment said nothing about it.
  *
  * Throws {@link SigningHostConfigError} when the value is not an
- * absolute http or https origin.
+ * absolute http or https origin, and when the two variables disagree.
  */
 export function readDocuSignBaseUrl(env: SigningHostEnvironment): string | undefined {
+  const standIn = readStandInFlag(env);
   const value = env.DOCUSIGN_BASE_URL?.trim();
-  if (!value) return undefined;
+  if (!value) {
+    // The flag alone. Refused rather than ignored, because the honest
+    // reading is that the address was meant to be there and was lost —
+    // a typo in the name, a line dropped from the overlay — and this
+    // install would then dial DocuSign while its operator believed it
+    // could not.
+    if (standIn) {
+      throw new SigningHostConfigError(
+        `${SIGNING_STANDIN_VARIABLE} is set but DOCUSIGN_BASE_URL names no stand-in. ` +
+          "Set both, or neither.",
+      );
+    }
+    return undefined;
+  }
+  // The address alone. This is the mistake the second variable exists
+  // for: one line in the wrong .env would otherwise send this install's
+  // paper to whatever host it names.
+  if (!standIn) {
+    throw new SigningHostConfigError(
+      `DOCUSIGN_BASE_URL moves every signing call off DocuSign, so it is refused without ` +
+        `${SIGNING_STANDIN_VARIABLE}=${SIGNING_STANDIN_VALUE}. Set both on a dev or E2E ` +
+        "stack; a real install sets neither.",
+    );
+  }
   let parsed: URL;
   try {
     parsed = new URL(value);

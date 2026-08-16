@@ -29,6 +29,7 @@ export {
   createDocuSignDriverFactory,
   readDocuSignBaseUrl,
   SigningHostConfigError,
+  SIGNING_STANDIN_VARIABLE,
 } from "../lib/signing/config.js";
 export { createSigningResolver, type SigningResolver } from "../lib/signing/resolver.js";
 export { createStorageFromEnv } from "../lib/storage/config.js";

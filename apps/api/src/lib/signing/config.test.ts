@@ -9,12 +9,19 @@
  * stored connector's environment. The override exists for the dev/E2E
  * overlay alone, and an operator who mistypes it is stopped rather than
  * quietly connected to DocuSign.
+ *
+ * The second rule is that it takes **two** variables to move an install
+ * off DocuSign, and that either one alone stops the boot. Every case
+ * below that names a host names the flag beside it, because a case that
+ * did not would now be testing the refusal rather than the parse.
  */
 
 import { generateKeyPairSync } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import {
   SigningHostConfigError,
+  SIGNING_STANDIN_VALUE,
+  SIGNING_STANDIN_VARIABLE,
   createDocuSignDriverFactory,
   readDocuSignBaseUrl,
 } from "./config.js";
@@ -28,6 +35,9 @@ const RSA_KEY = generateKeyPairSync("rsa", {
   privateKeyEncoding: { type: "pkcs8", format: "pem" },
 }).privateKey;
 
+/** What the dev/E2E overlay declares beside the address. */
+const DECLARED = { [SIGNING_STANDIN_VARIABLE]: SIGNING_STANDIN_VALUE };
+
 describe("signing host configuration", () => {
   it("names no stand-in when nothing is set", () => {
     expect(readDocuSignBaseUrl({})).toBeUndefined();
@@ -35,19 +45,22 @@ describe("signing host configuration", () => {
 
   it("treats an empty variable as unset", () => {
     // Under Compose every declared variable exists and is empty when
-    // .env leaves it out.
-    expect(readDocuSignBaseUrl({ DOCUSIGN_BASE_URL: "  " })).toBeUndefined();
+    // .env leaves it out. Both of them, so a stack that declares the
+    // names and fills in neither is an ordinary install.
+    expect(
+      readDocuSignBaseUrl({ DOCUSIGN_BASE_URL: "  ", [SIGNING_STANDIN_VARIABLE]: " " }),
+    ).toBeUndefined();
   });
 
   it("takes the origin the overlay points signing at", () => {
-    expect(readDocuSignBaseUrl({ DOCUSIGN_BASE_URL: "http://host.docker.internal:8129" })).toBe(
-      "http://host.docker.internal:8129",
-    );
+    expect(
+      readDocuSignBaseUrl({ ...DECLARED, DOCUSIGN_BASE_URL: "http://host.docker.internal:8129" }),
+    ).toBe("http://host.docker.internal:8129");
   });
 
   it("refuses a value that is not an absolute http origin", () => {
     for (const value of ["localhost:8129", "ftp://stub.invalid", "/signing"]) {
-      expect(() => readDocuSignBaseUrl({ DOCUSIGN_BASE_URL: value })).toThrow(
+      expect(() => readDocuSignBaseUrl({ ...DECLARED, DOCUSIGN_BASE_URL: value })).toThrow(
         SigningHostConfigError,
       );
     }
@@ -62,14 +75,14 @@ describe("signing host configuration", () => {
       "http://stand-in.invalid:8129/?tenant=2",
       "http://stand-in.invalid:8129/#demo",
     ]) {
-      expect(() => readDocuSignBaseUrl({ DOCUSIGN_BASE_URL: value })).toThrow(
+      expect(() => readDocuSignBaseUrl({ ...DECLARED, DOCUSIGN_BASE_URL: value })).toThrow(
         SigningHostConfigError,
       );
     }
     // A bare trailing slash is the same origin written out, and is kept.
-    expect(readDocuSignBaseUrl({ DOCUSIGN_BASE_URL: "http://stand-in.invalid:8129/" })).toBe(
-      "http://stand-in.invalid:8129",
-    );
+    expect(
+      readDocuSignBaseUrl({ ...DECLARED, DOCUSIGN_BASE_URL: "http://stand-in.invalid:8129/" }),
+    ).toBe("http://stand-in.invalid:8129");
   });
 
   it("refuses credentials in the URL", () => {
@@ -79,10 +92,48 @@ describe("signing host configuration", () => {
       "http://operator:hunter2@stand-in.invalid:8129",
       "http://operator@stand-in.invalid:8129",
     ]) {
-      expect(() => readDocuSignBaseUrl({ DOCUSIGN_BASE_URL: value })).toThrow(
+      expect(() => readDocuSignBaseUrl({ ...DECLARED, DOCUSIGN_BASE_URL: value })).toThrow(
         SigningHostConfigError,
       );
     }
+  });
+
+  describe("the two variables have to agree", () => {
+    it("refuses an address with no declaration", () => {
+      // The mistake the second variable exists for: one line in the
+      // wrong .env, and a real install's paper goes to whatever host it
+      // names with a boot warning as the only sign.
+      expect(() =>
+        readDocuSignBaseUrl({ DOCUSIGN_BASE_URL: "http://stand-in.invalid:8129" }),
+      ).toThrow(SigningHostConfigError);
+    });
+
+    it("refuses a declaration with no address", () => {
+      // The honest reading is that the address was meant to be there
+      // and was lost. Ignoring the flag would leave this install
+      // dialling DocuSign while its operator believed it could not.
+      expect(() => readDocuSignBaseUrl({ ...DECLARED })).toThrow(SigningHostConfigError);
+    });
+
+    it("refuses a declaration that says anything else", () => {
+      for (const value of ["1", "yes", "on", "false", "standin"]) {
+        expect(() =>
+          readDocuSignBaseUrl({
+            [SIGNING_STANDIN_VARIABLE]: value,
+            DOCUSIGN_BASE_URL: "http://stand-in.invalid:8129",
+          }),
+        ).toThrow(SigningHostConfigError);
+      }
+    });
+
+    it("reads the declaration whatever case it is written in", () => {
+      expect(
+        readDocuSignBaseUrl({
+          [SIGNING_STANDIN_VARIABLE]: "TRUE",
+          DOCUSIGN_BASE_URL: "http://stand-in.invalid:8129",
+        }),
+      ).toBe("http://stand-in.invalid:8129");
+    });
   });
 
   it("builds the plain driver when no stand-in is named", () => {
