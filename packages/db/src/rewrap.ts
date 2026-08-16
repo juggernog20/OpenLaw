@@ -133,8 +133,3 @@ export async function resealStoredSecrets(db: Db): Promise<SecretsRewrap> {
   }
   return report;
 }
-
-/** Whether a pass changed or refused anything worth a boot log line. */
-export function rewrapIsNoteworthy(report: SecretsRewrap): boolean {
-  return Object.keys(report.resealed).length > 0 || Object.keys(report.unreadable).length > 0;
-}

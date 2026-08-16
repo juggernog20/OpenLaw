@@ -223,6 +223,10 @@ docker compose up -d
 
 Migrations run automatically when the app container boots (TECH-005); replicas booting together serialize on an advisory lock. Data lives in two named volumes — `openlaw-pgdata` (the database) and `openlaw-files` (uploads, see [Files](#files)) — and both survive `docker compose down`, image upgrades, and rebuilds. The doc engine holds nothing, so it upgrades by being replaced. (`docker compose down -v` deletes them — don't.)
 
+**Take a backup first anyway.** See [Backups](#backups); a migration is the one moment a restore is worth having ready.
+
+This path is exercised on every commit rather than assumed. CI fills a baseline install with Contracts across the lifecycle, Documents, users in several roles and a signing connector, then brings the new version up against that same database and checks every record still reads back (TECH-018). It is not a promise that no upgrade ever needs care — it is a promise that the ordinary one is tested with rows in the tables, not only against an empty install.
+
 ## The activity log leaves this process, and those copies are yours
 
 Every row OpenLaw appends to its activity log is also written to stdout as one line of JSON (DD-017), so you can ship it to Datadog, Loki, Splunk, or whatever else you already run. Nothing is redacted on the way out: the line is a faithful copy of the stored row, because a shipped copy that disagreed with the record would be worse than no copy at all.

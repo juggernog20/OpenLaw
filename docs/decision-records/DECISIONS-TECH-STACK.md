@@ -591,6 +591,24 @@ The addendum above guards `DOCUSIGN_BASE_URL` three ways: it must name a bare or
 
 Neither variable appears in `.env.example`. That file is what a self-hoster reads and copies, and the address has no business being one line away from a real install.
 
+### Addendum (2026-08-16, [#260](https://github.com/juggernog20/OpenLaw/issues/260)) — fidelity also means the second install
+
+This decision made the gate run against **built images** rather than a dev server, because "works with Vite / breaks in the container" is the drift that reaches a self-hoster. There is a second drift with the same shape and it was not covered: every job in CI started from an **empty database**, so the _first_ install was tested on every commit and the _second_ was never tested at all.
+
+**Self-hosting is not a one-time act.** The install runs, fills with real Contracts and Documents, and then a new version arrives. That path is the one thing shipped and never exercised — and a migration that passes against an empty table can still fail against one with rows: a NOT NULL column with no default, a unique index over data that already holds duplicates, a backfill that assumes a shape the old rows do not have. None of those appear against an empty database, so the install that finds them belongs to somebody else, at their 2am, on their contracts.
+
+**The gate is a third job in `ci.yml`.** It fills a baseline install through the public API, stops it **keeping the volumes**, brings this commit up against the same database and files, and checks every seeded record still reads back. The volumes are the install: `down -v` there would test nothing.
+
+**The seed writes through the API and never through SQL.** A seed that inserted rows the application would never insert proves nothing about the application, and it would drift from the real write paths the first time a route changed what it stores.
+
+**What is compared is named facts, not whole responses.** A release is allowed to add a field to a response — that is not an upgrade failure, and a deep equality check would report it as one. The fingerprint records what must survive: contract numbers, titles, stages and custom field values; a document version's SHA-256 and byte count, checked against the bytes the store hands back; a user's role; whether the signing connector still holds credentials.
+
+**The baseline is the newest release tag, and `dev` until one exists.** The project has no releases yet, so the job upgrades from trunk and says so in its own output. `main` is never the baseline — it is vestigial here.
+
+**One constraint the seed carries forever:** it is the current commit's script talking to the _previous_ release's server, so it may only use API surface the baseline already has. Anything added in the change under test is verified after the upgrade, never during the seed.
+
+**Matters are absent from the seed because they do not exist.** The install has matter types and no matter records. The seed grows one the day the product does — which is the maintenance cost this job takes on deliberately: the seed has to keep pace with what an install can hold, and it gets more expensive with every milestone that adds a table.
+
 ## TECH-019: Code documentation — module-granular doc comments, no coverage percentage
 
 - **Status:** Accepted
