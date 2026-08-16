@@ -18,6 +18,7 @@ import {
   orgSettings,
   sql,
   ssoProviders,
+  SECRET_ENVELOPE_PREFIX,
   users,
 } from "@openlaw/db";
 import {
@@ -171,7 +172,7 @@ describe("runtime BYO-OIDC (POST /api/v1/auth/sso-providers + sso sign-in)", () 
     const stored = await harness.db.execute<{ value: string | null }>(
       sql`SELECT oidc_config AS value FROM sso_providers LIMIT 1`,
     );
-    expect(stored.rows[0]?.value).toMatch("openlaw:v1:");
+    expect(stored.rows[0]?.value?.startsWith(SECRET_ENVELOPE_PREFIX)).toBe(true);
     expect(stored.rows[0]?.value).not.toContain(PROVIDER.clientSecret);
 
     // The login screen's public discovery now carries the provider slug,

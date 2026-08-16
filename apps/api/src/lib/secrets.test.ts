@@ -94,10 +94,19 @@ afterAll(async () => {
 
 /** The column as Postgres holds it, past the ORM — the dump reader's view. */
 async function storedText(table: string, column: string): Promise<string | null> {
+  // `sql.identifier`, not interpolation into `sql.raw`: every caller
+  // here passes a literal, but a helper shaped like this attracts one
+  // that does not, and quoting the identifier removes the question.
   const read = await db.execute<{ value: string | null }>(
-    sql.raw(`SELECT ${column} AS value FROM ${table} LIMIT 1`),
+    sql`SELECT ${sql.identifier(column)} AS value FROM ${sql.identifier(table)} LIMIT 1`,
   );
   return read.rows[0]?.value ?? null;
+}
+
+/** A sealed value *starts* with the envelope prefix. `toMatch` would
+ * accept one that merely contains it, which is not the claim. */
+function expectSealed(value: string | null): void {
+  expect(value?.startsWith(SECRET_ENVELOPE_PREFIX)).toBe(true);
 }
 
 async function saveConnector(privateKey: string, webhookSecret: string): Promise<void> {
@@ -119,9 +128,9 @@ describe("what a database dump holds", () => {
     const storedKey = await storedText("signing_connectors", "private_key");
     const storedSecret = await storedText("signing_connectors", "webhook_secret");
 
-    expect(storedKey).toMatch(SECRET_ENVELOPE_PREFIX);
+    expectSealed(storedKey);
     expect(storedKey).not.toContain("BEGIN RSA PRIVATE KEY");
-    expect(storedSecret).toMatch(SECRET_ENVELOPE_PREFIX);
+    expectSealed(storedSecret);
     expect(storedSecret).not.toContain(CONNECT_SECRET);
   });
 
@@ -129,7 +138,7 @@ describe("what a database dump holds", () => {
     await db.update(orgSettings).set({ smtpUrl: RELAY_URL, smtpFrom: "OpenLaw <o@example.com>" });
 
     const stored = await storedText("org_settings", "smtp_url");
-    expect(stored).toMatch(SECRET_ENVELOPE_PREFIX);
+    expectSealed(stored);
     expect(stored).not.toContain("fixture-password");
   });
 
@@ -180,7 +189,7 @@ describe("upgrading an install that stored credentials in the clear", () => {
 
     expect(report.resealed).toEqual({ private_key: 1, webhook_secret: 1, smtp_url: 1 });
     expect(report.unreadable).toEqual({});
-    expect(await storedText("signing_connectors", "private_key")).toMatch(SECRET_ENVELOPE_PREFIX);
+    expectSealed(await storedText("signing_connectors", "private_key"));
     const [row] = await db.select().from(signingConnectors).limit(1);
     expect(row?.privateKey).toBe(RSA_KEY);
     expect(row?.webhookSecret).toBe(CONNECT_SECRET);

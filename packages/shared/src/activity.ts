@@ -570,20 +570,25 @@ type EnvelopePayloads = {
   "envelope.signed": EnvelopeEndingPayload;
   "envelope.declined": EnvelopeEndingPayload;
   "envelope.voided": EnvelopeEndingPayload;
-  /**
-   * An external signer exercised a right to erasure (M15/7, #280).
-   *
-   * **It names nobody**, which is the whole point: an entry carrying
-   * the address of the person who asked to be forgotten would put it
-   * straight back into the table the erasure just took it out of. The
-   * counts are what make the act accountable — an Administrator did
-   * this, at this moment, and it reached this much — without undoing
-   * it.
-   *
-   * It hangs off `system` rather than off a contract. An erasure is
-   * about a person and not about one record, and it usually reaches
-   * several.
-   */
+};
+
+/**
+ * An external signer exercised a right to erasure (M15/7, #280).
+ *
+ * **Its own group, not an envelope one.** It hangs off `system` rather
+ * than off a contract: an erasure is about a person and not about one
+ * record, and it usually reaches several. Sitting in the envelope group
+ * would put the code one line away from contradicting that sentence,
+ * and leave whoever adds the next system-scoped action with no rule to
+ * follow.
+ *
+ * **It names nobody**, which is the whole point: an entry carrying the
+ * address of the person who asked to be forgotten would put it straight
+ * back into the table the erasure just took it out of. The counts are
+ * what make the act accountable — an Administrator did this, at this
+ * moment, and it reached this much — without undoing it.
+ */
+type SignerErasurePayloads = {
   "signer.erased": { entriesRedacted: number; signerRowsDeleted: number };
 };
 
@@ -629,6 +634,7 @@ export type ActivityPayloadMap = UserPayloads &
   SsoProviderPayloads &
   SigningConnectorPayloads &
   EnvelopePayloads &
+  SignerErasurePayloads &
   ExportPayloads;
 
 /** Every slug this build writes. */

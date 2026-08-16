@@ -18,6 +18,7 @@ import {
   orgSettings,
   readSecretKeys,
   runMigrations,
+  SECRET_KEY_VARIABLE,
   useSecretKeys,
   type Db,
 } from "@openlaw/db";
@@ -301,7 +302,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
     // What the API's entry point does at boot (TECH-022), so a suite
     // exercises the sealed columns rather than a plaintext variant of
     // them. Installed before the first query for the same reason.
-    useSecretKeys(readSecretKeys({ OPENLAW_SECRET_KEY: TEST_SECRET_KEY }));
+    useSecretKeys(readSecretKeys({ [SECRET_KEY_VARIABLE]: TEST_SECRET_KEY }));
     const db = createDb(container.getConnectionUri());
     await runMigrations(db);
     const mailer = new CapturingMailer();

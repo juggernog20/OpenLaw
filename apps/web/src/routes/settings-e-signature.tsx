@@ -242,6 +242,12 @@ export function SettingsESignaturePage() {
    * so the pane reports that refusal rather than pre-empting it: the
    * count it would have to draw is a fact only the seam holds, and one
    * it can hold correctly under a lock.
+   *
+   * **The dialog closes either way**, which is the whole reason the
+   * refusal is worth anything. The refusal is drawn by the pane's own
+   * status note, and that note sits behind the dialog overlay — so a
+   * dialog left open on a refusal shows the Administrator nothing at
+   * all, on the one path this control exists to handle.
    */
   async function removeConnector(): Promise<void> {
     if (changingLifecycle.current) return;
@@ -268,11 +274,13 @@ export function SettingsESignaturePage() {
       setWebhookSecret("");
       note("connector", "idle");
       note("lifecycle", "saved");
-      setConfirmingRemove(false);
     } catch {
       note("lifecycle", "error");
     } finally {
       changingLifecycle.current = false;
+      // In `finally`, so the refusal path and the thrown path close it
+      // too. See the note above: the reason is drawn behind the overlay.
+      setConfirmingRemove(false);
     }
   }
 

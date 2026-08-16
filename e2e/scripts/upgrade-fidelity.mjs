@@ -159,7 +159,23 @@ function check(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+/**
+ * Compares one recorded fact against what the upgraded install answers.
+ *
+ * `undefined` on either side is refused rather than compared.
+ * `JSON.stringify(undefined)` is `undefined`, so two of them would be
+ * equal and the check would assert nothing — and the fingerprint is
+ * written through `JSON.stringify`, which drops every `undefined`
+ * property. A field the seed failed to record, or one the upgrade
+ * renamed, would read as absent on both sides and pass silently. That
+ * is precisely the case this gate exists to catch.
+ */
 function same(actual, expected, what) {
+  check(expected !== undefined, `${what}: the seed recorded nothing, so there is nothing to check`);
+  check(
+    actual !== undefined,
+    `${what}: the upgraded install answered nothing; seeded ${JSON.stringify(expected)}`,
+  );
   const a = JSON.stringify(actual);
   const b = JSON.stringify(expected);
   check(a === b, `${what}: read ${a}, seeded ${b}`);

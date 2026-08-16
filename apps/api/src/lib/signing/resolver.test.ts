@@ -18,7 +18,7 @@
  */
 
 import { afterAll, beforeAll, expect, it, describe } from "vitest";
-import { eq, signingConnectors, type Db } from "@openlaw/db";
+import { eq, signingConnectors, type Db, type SigningEnvironment } from "@openlaw/db";
 import { startHarness, type TestHarness } from "../../testing/harness.js";
 import type { SigningProvider } from "./provider.js";
 import { createSigningResolver, type SigningConnectorConfig } from "./resolver.js";
@@ -50,17 +50,40 @@ const ROTATED_RSA_KEY = [
 ].join("\n"); // NOSONAR — inert fixture, not a credential
 
 /**
- * A factory that builds nothing but a label, and remembers what it was
- * asked to build from.
+ * A driver that answers the interface and does nothing.
  *
- * The driver it answers is inert on purpose: a resolver test that
- * reached a provider would be testing the provider.
+ * Written out in full rather than cast into place: a cast would let
+ * `SigningProvider` grow a member without this file noticing, and the
+ * compiler catching that is the point of having the interface. Every
+ * method rejects, because a resolver test that reached a provider would
+ * be testing the provider.
+ */
+function inertDriver(environment: SigningEnvironment): SigningProvider {
+  const unreached = () => Promise.reject(new Error("the resolver suite never calls a driver"));
+  return {
+    provider: "docusign",
+    environment,
+    testConnection: unreached,
+    sendEnvelope: unreached,
+    voidEnvelope: unreached,
+    readEnvelope: unreached,
+    fetchExecutedDocument: unreached,
+    verifyWebhook: () => {
+      throw new Error("the resolver suite never calls a driver");
+    },
+  };
+}
+
+/**
+ * A factory that builds an inert driver and remembers what it was asked
+ * to build from. Each call answers a distinct object, so the assertions
+ * below can compare identity.
  */
 function countingFactory() {
   const built: SigningConnectorConfig[] = [];
   const factory = (config: SigningConnectorConfig): SigningProvider => {
     built.push(config);
-    return { provider: "docusign" } as unknown as SigningProvider;
+    return inertDriver(config.environment);
   };
   return { built, factory };
 }
@@ -131,5 +154,33 @@ describe("the signing resolver", () => {
     await storeConnector(RSA_KEY);
     await resolve();
     expect(built).toHaveLength(2);
+  });
+
+  it("answers nothing while the connector is turned off, and again once it is back on", async () => {
+    // The switch is the reversible half of #273, and this filter is the
+    // whole mechanism behind it: a disabled row has to resolve exactly
+    // as a missing one does, or every surface that reads "unconfigured"
+    // from a null resolution would keep offering to send.
+    await storeConnector(RSA_KEY);
+    const { built, factory } = countingFactory();
+    const resolve = createSigningResolver(db, factory);
+
+    expect(await resolve()).not.toBeNull();
+
+    await db
+      .update(signingConnectors)
+      .set({ disabledAt: new Date() })
+      .where(eq(signingConnectors.provider, "docusign"));
+    expect(await resolve()).toBeNull();
+
+    // Turning it back on builds from the credentials the row kept —
+    // which is the difference from deleting it.
+    await db
+      .update(signingConnectors)
+      .set({ disabledAt: null })
+      .where(eq(signingConnectors.provider, "docusign"));
+    expect(await resolve()).not.toBeNull();
+    expect(built).toHaveLength(2);
+    expect(built[1]?.privateKey).toBe(RSA_KEY);
   });
 });

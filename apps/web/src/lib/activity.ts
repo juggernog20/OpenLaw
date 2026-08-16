@@ -84,6 +84,7 @@ import {
   TriangleAlert,
   Undo2,
   Unlink,
+  Unplug,
   Upload,
   UserCog,
   UserMinus,
@@ -1526,9 +1527,12 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   },
   // Turned off, and taken out. Two sentences rather than one, because
   // they are two different facts about where the credentials are —
-  // which is the question a reader of this log is asking.
+  // which is the question a reader of this log is asking. Three icons
+  // for the same reason: a scanned feed that drew "turned off" and
+  // "removed, credentials and all" with one glyph would hide exactly
+  // the distinction the sentences exist to draw.
   "signing_connector.disabled": {
-    icon: Plug,
+    icon: Unplug,
     message: defineMessage({
       id: "activity.signingConnector.disabled",
       defaultMessage:
@@ -1548,7 +1552,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     values: (intl, payload) => ({ provider: named(intl, payload, "provider") }),
   },
   "signing_connector.removed": {
-    icon: Plug,
+    icon: Trash2,
     message: defineMessage({
       id: "activity.signingConnector.removed",
       defaultMessage: "{actor} removed the e-signature connector {provider} and its credentials",
