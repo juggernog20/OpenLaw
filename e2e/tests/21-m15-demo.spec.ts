@@ -55,17 +55,14 @@
  *
  * **Why the manual half runs first.** It is the half that needs an
  * install with **no connector at all**, and this spec is the thing that
- * gives the instance one. The connector row has no removal in M15, so
- * on the never-reset instance (TECH-018) a second run of this file
- * starts with the connector an earlier run saved. The two halves are
- * therefore two tests rather than one journey, and the file is
- * deliberately not `serial`: on such a re-run the manual half **skips
- * itself** with the reason, and the half the milestone sentence is
- * about still runs. CI brings up fresh volumes, so the manual half
- * always runs there. Reset the suite's instance to get it back
- * locally:
- *
- *   docker compose -p openlaw-e2e -f compose.yml -f compose.dev.yml down -v
+ * gives the instance one. On the never-reset instance (TECH-018) a
+ * second run of this file therefore starts with the connector an
+ * earlier run saved, and it **puts the instance back** rather than
+ * standing down: the half removes the connector before it begins
+ * (#273). It used to skip itself instead, which was honest and meant
+ * the zero-config promise was only ever proved on CI's fresh volumes.
+ * The two halves are still two tests rather than one journey, and the
+ * file is still deliberately not `serial`.
  *
  * The instance is otherwise left as the run found it, on the earlier
  * demo specs' convention: per-run rows carry this spec's own prefixes
@@ -250,6 +247,7 @@ const ConnectorState = z.object({
   connector: z.object({
     provider: z.string(),
     configured: z.boolean(),
+    enabled: z.boolean(),
     environment: z.string().nullable(),
     integrationKey: z.string().nullable(),
     apiUserId: z.string().nullable(),
@@ -393,6 +391,44 @@ async function readConnector(request: APIRequestContext) {
   const read = await request.get(`/api/v1/signing-connectors/${PROVIDER}`);
   expect(read.status(), await read.text()).toBe(200);
   return ConnectorState.parse(await read.json()).connector;
+}
+
+/**
+ * Puts the instance back to resolving no signing provider (#273).
+ *
+ * **Removal first, because that is the true starting state**: no row,
+ * no credentials, exactly what a team that has never configured
+ * anything has. It is refused while a round is still out — deleting the
+ * credentials would strand it — and the honest fallback there is the
+ * switch, which reaches the same answer from every surface that asks
+ * "is signing configured" and leaves the stranded round recoverable.
+ *
+ * A leftover live round is the only way the fallback is reached, and it
+ * means a previous run of the connector half died between a send and
+ * its ending. Said out loud rather than swallowed, because it is also
+ * the one case where this run's starting state is not quite a virgin
+ * install's.
+ */
+async function ensureNoSigningConnector(request: APIRequestContext): Promise<void> {
+  const connector = await readConnector(request);
+  if (!connector.configured) return;
+
+  const removed = await request.delete(`/api/v1/signing-connectors/${PROVIDER}`);
+  if (removed.status() === 200) {
+    expect((await readConnector(request)).configured).toBe(false);
+    return;
+  }
+  expect(removed.status(), await removed.text()).toBe(409);
+  console.warn(
+    "[m15-demo] a round is still out from an earlier run, so the connector was turned off " +
+      "rather than removed — the zero-config half still runs, on an install that holds " +
+      "credentials it cannot use",
+  );
+  if (connector.enabled) {
+    const off = await request.post(`/api/v1/signing-connectors/${PROVIDER}/disable`);
+    expect(off.status(), await off.text()).toBe(200);
+  }
+  expect((await readConnector(request)).enabled).toBe(false);
 }
 
 /** One record's own feed (DD-017). */
@@ -659,17 +695,15 @@ test.describe("M15 demo path", () => {
 
     // The precondition this half exists for: CTR-013 promises the
     // manual hand-off is **zero-config**, so it is proved on an install
-    // that has configured nothing.
+    // that resolves no signing provider at all.
     //
-    // Skipped rather than failed when an earlier run already gave this
-    // instance a connector — M15 ships no way to take one away. A skip
-    // is honest about what was not proved and names the way back; a
-    // failure would report a dirty instance as a broken product. CI
-    // starts on fresh volumes, so the gate always runs there.
-    test.skip(
-      (await readConnector(page.request)).configured,
-      "this half proves the zero-config path, so it needs an instance with no e-signature connector — reset the suite's stack with `docker compose -p openlaw-e2e -f compose.yml -f compose.dev.yml down -v`",
-    );
+    // This used to be a skip. An earlier run left the instance a
+    // connector and M15 shipped no way to take one away, so on the
+    // never-reset instance (TECH-018) the half that proves the
+    // zero-config promise simply did not run, and the coverage was real
+    // only on CI's fresh volumes. #273 gave the connector a removal, so
+    // the half now puts the instance back rather than standing down.
+    await ensureNoSigningConnector(page.request);
 
     const stamp = Date.now();
     const title = `${MANUAL_PREFIX} ${stamp}`;
@@ -877,6 +911,16 @@ test.describe("M15 demo path", () => {
       await page.getByRole("button", { name: "Save connector" }).click();
       expect((await saved).status(), await (await saved).text()).toBe(200);
       await expect(page.getByText("Saved")).toBeVisible();
+
+      // A save rotates credentials; it does not throw the switch. The
+      // manual half above turns the connector off rather than removing
+      // it when a round from an earlier run is still out, so this run
+      // may have saved onto a connector that is switched off — and
+      // everything below needs it on.
+      if (!(await readConnector(page.request)).enabled) {
+        await page.getByRole("switch", { name: "Send for signature from records" }).click();
+        await expect.poll(async () => (await readConnector(page.request)).enabled).toBe(true);
+      }
 
       // Story 4: the address this install answers deliveries on, shown
       // rather than looked up in source.

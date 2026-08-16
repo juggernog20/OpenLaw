@@ -256,6 +256,19 @@ function versionCount(payload: Payload): number {
   return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : 0;
 }
 
+/**
+ * A count a payload carries, or zero.
+ *
+ * Zero for anything that is not a whole number at or above it, because
+ * the log is append-only: a payload written by an older build may not
+ * hold the key at all, and a sentence that pluralized on `undefined`
+ * would render an ICU argument error where a fact should be.
+ */
+function wholeCount(payload: Payload, key: string): number {
+  const value = payload[key];
+  return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : 0;
+}
+
 /** What an unrecorded value reads as, on either side of a change. */
 function notSet(intl: IntlShape): string {
   return intl.formatMessage({ id: "activity.notSet", defaultMessage: "Not set" });
@@ -1491,6 +1504,37 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     values: (intl, payload) => ({ provider: named(intl, payload, "provider") }),
     changes: fieldChange,
+  },
+  // Turned off, and taken out. Two sentences rather than one, because
+  // they are two different facts about where the credentials are —
+  // which is the question a reader of this log is asking.
+  "signing_connector.disabled": {
+    icon: Plug,
+    message: defineMessage({
+      id: "activity.signingConnector.disabled",
+      defaultMessage:
+        "{actor} turned off the e-signature connector {provider}, with {liveEnvelopes, plural, =0 {nothing out for signature} one {# round still out for signature} other {# rounds still out for signature}}",
+    }),
+    values: (intl, payload) => ({
+      provider: named(intl, payload, "provider"),
+      liveEnvelopes: wholeCount(payload, "liveEnvelopes"),
+    }),
+  },
+  "signing_connector.enabled": {
+    icon: Plug,
+    message: defineMessage({
+      id: "activity.signingConnector.enabled",
+      defaultMessage: "{actor} turned on the e-signature connector {provider}",
+    }),
+    values: (intl, payload) => ({ provider: named(intl, payload, "provider") }),
+  },
+  "signing_connector.removed": {
+    icon: Plug,
+    message: defineMessage({
+      id: "activity.signingConnector.removed",
+      defaultMessage: "{actor} removed the e-signature connector {provider} and its credentials",
+    }),
+    values: (intl, payload) => ({ provider: named(intl, payload, "provider") }),
   },
 
   // ---- The settings taxonomies and the field catalog ----

@@ -7,13 +7,32 @@
  * without the Connect HMAC secret, the webhook URL the pane shows, and
  * the connection test answering both ways.
  *
- * Everything is asserted through responses and by reading `activity_log`
- * directly, as the approvals suites do. Nothing here opens the resolver
- * or the provider — the shared contract suite is what holds those.
+ * It also holds the connector's own lifecycle (#273): the switch that
+ * turns it off without losing the credentials, and the delete that
+ * takes it out. Those two suites do read the resolver, and deliberately
+ * — "a connector that is off answers what no connector answers" is the
+ * whole of what the switch means, and it is not observable from this
+ * module's own responses.
+ *
+ * Everything else is asserted through responses and by reading
+ * `activity_log` directly, as the approvals suites do. Nothing here
+ * opens the provider — the shared contract suite is what holds that.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, asc, inArray, signingConnectors, type Db } from "@openlaw/db";
+import {
+  activityLog,
+  asc,
+  contractEnvelopes,
+  contracts,
+  contractStatuses,
+  contractTypes,
+  eq,
+  inArray,
+  signingConnectors,
+  users,
+  type Db,
+} from "@openlaw/db";
 import {
   signInCookies,
   startHarness,
@@ -61,8 +80,14 @@ const CONNECTOR = {
   webhookSecret: HMAC_SECRET,
 } as const;
 
-/** The two connector actions, which is the whole namespace. */
-const CONNECTOR_ACTIONS = ["signing_connector.configured", "signing_connector.updated"] as const;
+/** The five connector actions, which is the whole namespace. */
+const CONNECTOR_ACTIONS = [
+  "signing_connector.configured",
+  "signing_connector.updated",
+  "signing_connector.disabled",
+  "signing_connector.enabled",
+  "signing_connector.removed",
+] as const;
 
 /** The connector's own audit rows, oldest first. */
 function connectorAuditRows(db: Db) {
@@ -415,3 +440,215 @@ describe("the connection test", () => {
     expect(res.body).not.toContain(HMAC_SECRET);
   });
 });
+
+/**
+ * The connector's own lifecycle (#273): turn it off, turn it back on,
+ * take it out.
+ *
+ * The property that matters most is asserted through the **resolver**
+ * rather than through the pane: a connector that is off has to answer
+ * what an install with no connector answers, or the manual hand-off
+ * CTR-013 promises is not actually back within reach.
+ */
+describe("turning the connector off and on", () => {
+  beforeAll(clearConnector);
+
+  it("resolves to nothing while it is off, and to a driver again after", async () => {
+    expect((await save(CONNECTOR)).statusCode).toBe(200);
+    expect(await harness.resolveSigningProvider()).not.toBeNull();
+
+    const off = await harness.app.inject({
+      method: "POST",
+      url: `${URL_BASE}/disable`,
+      cookies: adminCookies,
+    });
+    expect(off.statusCode, off.body).toBe(200);
+    expect(off.json().connector).toMatchObject({
+      configured: true,
+      enabled: false,
+      hasPrivateKey: true,
+      hasWebhookSecret: true,
+    });
+    expect(typeof off.json().connector.disabledAt).toBe("string");
+    // The whole of what the switch does: every surface that asks
+    // "is signing configured" now hears no.
+    expect(await harness.resolveSigningProvider()).toBeNull();
+
+    const on = await harness.app.inject({
+      method: "POST",
+      url: `${URL_BASE}/enable`,
+      cookies: adminCookies,
+    });
+    expect(on.statusCode, on.body).toBe(200);
+    expect(on.json().connector).toMatchObject({ enabled: true, disabledAt: null });
+    // The credentials it comes back with are the ones that were there —
+    // nothing was re-pasted between the two calls.
+    expect(await harness.resolveSigningProvider()).not.toBeNull();
+  });
+
+  it("refuses a second off and a second on", async () => {
+    const offAgain = await harness.app.inject({
+      method: "POST",
+      url: `${URL_BASE}/enable`,
+      cookies: adminCookies,
+    });
+    expect(offAgain.statusCode).toBe(409);
+    await harness.app.inject({ method: "POST", url: `${URL_BASE}/disable`, cookies: adminCookies });
+    const twice = await harness.app.inject({
+      method: "POST",
+      url: `${URL_BASE}/disable`,
+      cookies: adminCookies,
+    });
+    expect(twice.statusCode).toBe(409);
+    await harness.app.inject({ method: "POST", url: `${URL_BASE}/enable`, cookies: adminCookies });
+  });
+
+  it("writes one admin-only entry per act, naming what was still out", async () => {
+    const rows = await connectorAuditRows(harness.db);
+    const lifecycle = rows.filter((row) =>
+      ["signing_connector.disabled", "signing_connector.enabled"].includes(row.action),
+    );
+    expect(lifecycle.length).toBeGreaterThanOrEqual(2);
+    expect(lifecycle.every((row) => row.visibility === "admin_only")).toBe(true);
+    const disabled = lifecycle.find((row) => row.action === "signing_connector.disabled");
+    expect(disabled?.payload).toMatchObject({ provider: "docusign", liveEnvelopes: 0 });
+    // No secret ever reaches a payload: the table is append-only.
+    expect(JSON.stringify(rows)).not.toContain(RSA_KEY);
+    expect(JSON.stringify(rows)).not.toContain(HMAC_SECRET);
+  });
+
+  it("refuses both to a Legal Team Member and to an anonymous caller", async () => {
+    for (const url of [`${URL_BASE}/disable`, `${URL_BASE}/enable`]) {
+      expect((await harness.app.inject({ method: "POST", url })).statusCode).toBe(401);
+      expect(
+        (await harness.app.inject({ method: "POST", url, cookies: staffCookies })).statusCode,
+      ).toBe(403);
+    }
+  });
+});
+
+describe("taking the connector out", () => {
+  beforeAll(clearConnector);
+
+  it("has nothing to change on an install that never configured one", async () => {
+    for (const request of [
+      { method: "DELETE" as const, url: URL_BASE },
+      { method: "POST" as const, url: `${URL_BASE}/disable` },
+    ]) {
+      const res = await harness.app.inject({ ...request, cookies: adminCookies });
+      expect(res.statusCode, `${request.method} unconfigured`).toBe(404);
+    }
+  });
+
+  it("refuses while an envelope is still out, and says how many", async () => {
+    expect((await save(CONNECTOR)).statusCode).toBe(200);
+    const envelopeId = await putEnvelopeOut();
+    try {
+      const res = await harness.app.inject({
+        method: "DELETE",
+        url: URL_BASE,
+        cookies: adminCookies,
+      });
+      expect(res.statusCode, res.body).toBe(409);
+      expect(res.json().detail).toContain("1 envelope is");
+      // The refusal is the delete's alone. Stopping the sending must
+      // never be blocked by paper somebody else has out, because the
+      // switch strands nothing — it is reversible.
+      const off = await harness.app.inject({
+        method: "POST",
+        url: `${URL_BASE}/disable`,
+        cookies: adminCookies,
+      });
+      expect(off.statusCode, off.body).toBe(200);
+      expect(off.json().connector.enabled).toBe(false);
+      expect((await connectorAuditRows(harness.db)).at(-1)?.payload).toMatchObject({
+        liveEnvelopes: 1,
+      });
+    } finally {
+      await harness.db.delete(contractEnvelopes).where(eq(contractEnvelopes.id, envelopeId));
+    }
+    await harness.app.inject({ method: "POST", url: `${URL_BASE}/enable`, cookies: adminCookies });
+  });
+
+  it("removes the row, the secrets, and the send affordance with it", async () => {
+    expect(await harness.resolveSigningProvider()).not.toBeNull();
+    const res = await harness.app.inject({
+      method: "DELETE",
+      url: URL_BASE,
+      cookies: adminCookies,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    // The answer is the unconfigured one, because that is what this
+    // install now is.
+    expect(res.json().connector).toMatchObject({
+      configured: false,
+      enabled: false,
+      integrationKey: null,
+      hasPrivateKey: false,
+      hasWebhookSecret: false,
+      updatedAt: null,
+    });
+    expect(await harness.db.select().from(signingConnectors)).toHaveLength(0);
+    expect(await harness.resolveSigningProvider()).toBeNull();
+
+    // The entry outlives the row, and it is the only thing left that
+    // says which account this install was talking to.
+    const removed = (await connectorAuditRows(harness.db)).filter(
+      (row) => row.action === "signing_connector.removed",
+    );
+    expect(removed).toHaveLength(1);
+    expect(removed[0]?.visibility).toBe("admin_only");
+    expect(removed[0]?.payload).toMatchObject({
+      provider: "docusign",
+      environment: "demo",
+      integrationKey: FAKE_VALID_INTEGRATION_KEY,
+    });
+    expect(JSON.stringify(removed)).not.toContain(RSA_KEY);
+    expect(JSON.stringify(removed)).not.toContain(HMAC_SECRET);
+  });
+
+  it("refuses the delete to a Legal Team Member and to an anonymous caller", async () => {
+    expect((await harness.app.inject({ method: "DELETE", url: URL_BASE })).statusCode).toBe(401);
+    expect(
+      (await harness.app.inject({ method: "DELETE", url: URL_BASE, cookies: staffCookies }))
+        .statusCode,
+    ).toBe(403);
+  });
+});
+
+/**
+ * Puts one round out, as a row rather than through the send route.
+ *
+ * The count the delete refuses on is a count of `sent` envelopes, and
+ * nothing about how they got there. Driving a real send here would drag
+ * a contract's whole document chain into a suite about a settings pane,
+ * for a fact this expresses directly.
+ */
+async function putEnvelopeOut(): Promise<string> {
+  const [type] = await harness.db.select().from(contractTypes).limit(1);
+  const [status] = await harness.db.select().from(contractStatuses).limit(1);
+  const [admin] = await harness.db
+    .select()
+    .from(users)
+    .where(eq(users.email, TEST_ADMIN.email))
+    .limit(1);
+  const [contract] = await harness.db
+    .insert(contracts)
+    .values({
+      title: "Connector-removal fixture",
+      contractTypeId: type!.id,
+      statusId: status!.id,
+    })
+    .returning();
+  const [envelope] = await harness.db
+    .insert(contractEnvelopes)
+    .values({
+      contractId: contract!.id,
+      provider: "docusign",
+      providerEnvelopeId: "connector-removal-fixture",
+      status: "sent",
+      sentBy: admin!.id,
+    })
+    .returning();
+  return envelope!.id;
+}

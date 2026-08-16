@@ -14,6 +14,14 @@
  * table — which is what keeps CTR-013's provider-agnostic promise a
  * configuration fact rather than a migration.
  *
+ * **A configured connector can be turned off, and it can be taken
+ * out.** `disabled_at` is the reversible half: the row stays, the
+ * credentials stay, and every surface answers as an unconfigured
+ * install does. Deleting the row is the other half, and it is refused
+ * while any envelope is still out — that one is not reversible, and an
+ * envelope with no credentials left to reach it can never be voided or
+ * converged.
+ *
  * **The two secrets are stored plaintext at rest.** That is the
  * accepted v1 posture the OIDC client secret and the SMTP relay URL
  * already have (TECH-008), and this table is the second named entry on
@@ -63,6 +71,22 @@ export const signingConnectors = pgTable(
      * at save time and no install ever answers unsigned deliveries.
      */
     webhookSecret: text("webhook_secret").notNull(),
+    /**
+     * When an Administrator turned the connector off, or NULL while it
+     * is on (CTR-013, [#273](https://github.com/juggernog20/OpenLaw/issues/273)).
+     *
+     * A nullable timestamp rather than a boolean, the `archived_at`
+     * shape every taxonomy table already uses: "off since Tuesday" is
+     * a fact worth keeping, and "off" alone is not.
+     *
+     * **A disabled row resolves to nothing**, exactly as a missing one
+     * does. That is what puts the manual hand-off back within reach: an
+     * install that configured a connector and wants the zero-config
+     * path again turns it off, and every surface answers as it did
+     * before the connector existed. The credentials stay for the
+     * re-enable, which is the difference from deleting the row.
+     */
+    disabledAt: timestamp("disabled_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     // Application code owns every write here, so $onUpdate keeps the
     // audit trail honest for writers that forget to set it (org.ts note).
