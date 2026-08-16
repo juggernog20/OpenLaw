@@ -23,6 +23,7 @@
  */
 
 import { PgBoss, type JobWithMetadata } from "pg-boss";
+import { runBackfillSweep } from "./backfill.js";
 import type { DerivationDeps } from "./derivations.js";
 import { handleDisplayConversion } from "./display-conversion.js";
 import {
@@ -105,6 +106,37 @@ export const DISPLAY_CONVERSION_QUEUE_OPTIONS = {
   retryBackoff: true,
 } as const;
 
+/**
+ * When the backfill sweep runs on its own, and how long it may take.
+ *
+ * Daily, in the small hours: the sweep exists so that an upgrade reaches
+ * the paper uploaded before it, and a day is soon enough for work
+ * nobody is waiting on. It also asks for nothing that is already done,
+ * so on a swept install the run is one keyset walk and no jobs at all.
+ * The cron is read in UTC, which is pg-boss's default and the only
+ * timezone this install agrees on.
+ */
+export const BACKFILL_SWEEP_CRON = "0 4 * * *";
+
+/** Bounds on one scheduled sweep. */
+export const BACKFILL_SWEEP_QUEUE_OPTIONS = {
+  /**
+   * An hour, because the sweep's cost is the size of the library rather
+   * than the size of one file, and the first run on a large install
+   * walks every version there has ever been. It reads a page at a time
+   * and holds nothing open between pages, so a long run is slow rather
+   * than heavy.
+   */
+  expireInSeconds: 3600,
+  /**
+   * Never retried. A sweep that failed part way through asked for some
+   * of what was owed and not the rest, and the derivation rows still
+   * say what the rest is — so the next run picks it up, and a retry
+   * would only bring the same failure forward.
+   */
+  retryLimit: 0,
+} as const;
+
 /** What a process needs to bring the pipeline up. */
 export interface PipelineOptions {
   /**
@@ -159,9 +191,12 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
     // correctness floor — a dropped listener slows the pipeline down and
     // never stops it.
     useListenNotify: working,
-    // Nothing here runs on a clock yet. Reminders and digests (NOT-003,
-    // ENT-006) turn this on with the milestone that needs it.
-    schedule: false,
+    // The clock runs where the work does, for the reason `supervise`
+    // does: pg-boss elects one cron worker per queue, and a send-only
+    // API replica has no business standing for election. The backfill
+    // sweep is the first thing on it; reminders and digests (NOT-003,
+    // ENT-006) join it with the milestone that needs them.
+    schedule: working,
   });
   // pg-boss reports what it cannot fix rather than throwing: a slow
   // query, a queue that is filling up. With no listener these are lost,
@@ -177,6 +212,32 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
   });
 
   const handlers = options.handlers;
+
+  // What this process can ask the pipeline for. Built before the
+  // handlers are registered rather than only on the way out, because the
+  // scheduled sweep is a handler that sends: it walks the versions and
+  // asks for what each one is owed, through the very same two methods an
+  // upload uses.
+  const queue: JobQueue = {
+    async requestTextExtraction(versionId: string): Promise<void> {
+      const job: TextExtractionJob = { versionId };
+      // The version is the key the `short` policy collapses on, so
+      // asking twice for a version nobody has started yet costs one job.
+      await boss.send(JOB_QUEUES.textExtraction, job, { singletonKey: versionId });
+    },
+    async requestDisplayConversion(versionId: string): Promise<void> {
+      const job: DisplayConversionJob = { versionId };
+      await boss.send(JOB_QUEUES.displayConversion, job, { singletonKey: versionId });
+    },
+  };
+
+  // Cut short when the process is stopping. The sweep notices between
+  // versions, so this is what stops a run that began at 04:00 from
+  // holding a container's shutdown open while it walks the rest of the
+  // library. What it did not reach is still owed, and the next run
+  // reaches it.
+  const sweeping = new AbortController();
+
   // Everything from here holds a connection pool, so a failure part way
   // through has to put it back. A boot that raised past this and left
   // pg-boss connected would leak the pool into a process that is about
@@ -212,6 +273,17 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       notify: true,
       ...DISPLAY_CONVERSION_QUEUE_OPTIONS,
     });
+    // `singleton` allows one sweep to be running at a time. Two at once
+    // would be correct — the sweep only asks, and the `short` policy
+    // above collapses whatever they both asked for — but it would be two
+    // walks of the same table for one walk's worth of answer. A tick
+    // that lands while a sweep is still going waits for it rather than
+    // joining it.
+    await boss.createQueue(JOB_QUEUES.backfillSweep, {
+      policy: "singleton",
+      ...BACKFILL_SWEEP_QUEUE_OPTIONS,
+    });
+    await boss.updateQueue(JOB_QUEUES.backfillSweep, BACKFILL_SWEEP_QUEUE_OPTIONS);
 
     if (handlers) {
       // One at a time, with the job's own counters. The counters are
@@ -272,8 +344,30 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
           }
         },
       );
+      // The sweep gets its own worker rather than sharing the derivation
+      // ones, so an hour-long walk of a large library cannot sit in front
+      // of the OCR somebody is waiting on. It takes no metadata and no
+      // burst: there is only ever one of it.
+      await boss.work(JOB_QUEUES.backfillSweep, { batchSize: 1 }, async () => {
+        const summary = await runBackfillSweep({ db: handlers.db, log }, queue, {
+          signal: sweeping.signal,
+        });
+        log.info({ ...summary }, "the scheduled backfill sweep finished");
+      });
+      // Registering the schedule is an upsert keyed on the queue name, so
+      // every worker that boots declares the same one and an install
+      // running two of them still sweeps once — pg-boss elects a single
+      // cron worker and creates one job per tick.
+      await boss.schedule(JOB_QUEUES.backfillSweep, BACKFILL_SWEEP_CRON);
       log.info(
-        { queues: [JOB_QUEUES.textExtraction, JOB_QUEUES.displayConversion] },
+        {
+          queues: [
+            JOB_QUEUES.textExtraction,
+            JOB_QUEUES.displayConversion,
+            JOB_QUEUES.backfillSweep,
+          ],
+          backfillSweepCron: BACKFILL_SWEEP_CRON,
+        },
         "working the job queue",
       );
     }
@@ -285,17 +379,12 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
   }
 
   return {
-    async requestTextExtraction(versionId: string): Promise<void> {
-      const job: TextExtractionJob = { versionId };
-      // The version is the key the `short` policy collapses on, so
-      // asking twice for a version nobody has started yet costs one job.
-      await boss.send(JOB_QUEUES.textExtraction, job, { singletonKey: versionId });
-    },
-    async requestDisplayConversion(versionId: string): Promise<void> {
-      const job: DisplayConversionJob = { versionId };
-      await boss.send(JOB_QUEUES.displayConversion, job, { singletonKey: versionId });
-    },
+    ...queue,
     stop: async () => {
+      // The sweep first, so that a graceful stop is not held open by a
+      // walk of the library. It is only asking, so there is nothing to
+      // lose by cutting it short.
+      sweeping.abort();
       // Graceful by default: it stops taking work, waits for the jobs
       // already in hand, and then closes its connections. A job that
       // never started is still in the queue for the next process.

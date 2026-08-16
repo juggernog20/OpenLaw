@@ -69,11 +69,26 @@ function image(): Promise<GenericContainer> {
   return built;
 }
 
-/** Boots one sidecar and answers the container running it. */
+/**
+ * Boots one sidecar and answers the container running it.
+ *
+ * The container is started under the same confinement `compose.yml`
+ * gives it, so that a change which needs a capability, or writes
+ * somewhere other than /tmp, fails here rather than in a deployer's
+ * stack. LibreOffice's per-conversion user profile, OCRmyPDF's
+ * intermediates, and fontconfig's cache all live under the tmpfs.
+ *
+ * One thing compose does that this cannot: `read_only: true` on the root
+ * filesystem. Testcontainers 12 exposes no option for it, so that half
+ * is verified against the real Compose stack rather than here.
+ */
 async function bootSidecar(): Promise<StartedTestContainer> {
   return (
     (await image())
       .withExposedPorts(SIDECAR_PORT)
+      .withTmpFs({ "/tmp": "mode=1777,size=2g" })
+      .withDroppedCapabilities("ALL")
+      .withSecurityOpt("no-new-privileges:true")
       .withWaitStrategy(Wait.forHttp("/healthz", SIDECAR_PORT))
       // Testcontainers has its own sixty-second default and does not
       // read the hook's budget. A cold LibreOffice on a loaded machine
