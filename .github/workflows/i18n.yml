@@ -1,0 +1,142 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+name: i18n
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: i18n-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  catalog-drift:
+    name: Message catalog is current
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # The report is a comment on the pull request, so the job needs to
+      # write one. GitHub grants this only for pull requests raised from a
+      # branch in this repository. A fork pull request gets a read-only
+      # token, so the comment step is skipped there and the job summary
+      # plus the warning annotation carry the report instead.
+      pull-requests: write
+    defaults:
+      run:
+        # Naming the shell is what turns pipefail on. Left unset, a step
+        # runs under `bash -e`, where a command that fails partway through
+        # a pipeline is silently forgiven.
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # DES-013 point 5: extraction walks the code, harvests every message
+      # id and its default English text, and writes messages/en-US.json —
+      # the artifact a translator receives.
+      #
+      # Nothing loads that file today. en-US is the only v1 locale and the
+      # defaultMessage at each call site is the catalog at runtime, so a
+      # stale file breaks no build and must never fail one. This job runs
+      # the extract and reports the difference, and that is all it does.
+      # The day a second locale ships the file becomes the thing
+      # translators work from, and the check is already running and quiet.
+      #
+      # A crash in the extractor still fails this job. That is a broken
+      # tool, not a stale catalog, and the two deserve different answers.
+      - name: Extract the message catalog
+        run: pnpm --filter @openlaw/web i18n:extract
+
+      - name: Compare against the committed catalog
+        id: compare
+        run: |
+          if git diff --quiet -- messages/en-US.json; then
+            echo "drifted=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "drifted=true" >> "$GITHUB_OUTPUT"
+          git diff -- messages/en-US.json > i18n-drift.diff
+
+      # The report is written once and then used twice: appended to the job
+      # summary, which every run has, and posted as the pull request
+      # comment below. The marker on the first line is how the next run
+      # finds this comment again.
+      - name: Write the drift report
+        if: steps.compare.outputs.drifted == 'true'
+        env:
+          MARKER: "<!-- i18n-drift -->"
+          LIMIT: "40000"
+        run: |
+          {
+            echo "$MARKER"
+            echo "## The message catalog is stale"
+            echo
+            echo "\`pnpm --filter @openlaw/web i18n:extract\` on this branch writes a \`messages/en-US.json\` that differs from the committed one. Run it and commit the result."
+            echo
+            echo "This is a report, not a failure. Nothing loads the catalog yet — en-US is the only v1 locale and the \`defaultMessage\` at each call site is the catalog at runtime (DES-013) — so a stale file breaks nothing. It becomes the file translators work from the day a second locale ships."
+            echo
+            echo "<details><summary>Diff against the committed catalog</summary>"
+            echo
+            echo '````diff'
+            head -c "$LIMIT" i18n-drift.diff
+            echo
+            echo '````'
+            if [ "$(wc -c < i18n-drift.diff)" -gt "$LIMIT" ]; then
+              echo
+              echo "_Diff truncated at $LIMIT characters. Run the extract locally to see all of it._"
+            fi
+            echo
+            echo "</details>"
+          } > i18n-drift-report.md
+          cat i18n-drift-report.md >> "$GITHUB_STEP_SUMMARY"
+          echo "::warning file=messages/en-US.json::The message catalog is stale. Run 'pnpm --filter @openlaw/web i18n:extract' and commit messages/en-US.json."
+
+      # One comment, created, rewritten, or deleted in place. A pull
+      # request never collects a stack of these, and a catalog that has
+      # been brought back into line leaves no comment behind saying
+      # otherwise. Deleting is the quiet half of the check: when there is
+      # no drift this step writes nothing and says nothing.
+      #
+      # Only the drift is non-blocking. If the API call itself fails, the
+      # step fails, because a report nobody can see is worse than a red
+      # mark on the job that reports it.
+      - name: Post, update, or clear the pull request comment
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          MARKER: "<!-- i18n-drift -->"
+          DRIFTED: ${{ steps.compare.outputs.drifted }}
+        run: |
+          # --paginate runs the jq filter once per page, so this can return
+          # several ids. Take the first without a pipe: pipefail is on, and
+          # `head` closing the pipe early would fail the step.
+          found=$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
+            --jq '.[] | select(.body | startswith(env.MARKER)) | .id')
+          existing=${found%%$'\n'*}
+
+          if [ "$DRIFTED" = "true" ]; then
+            if [ -n "$existing" ]; then
+              gh api --method PATCH "repos/$REPO/issues/comments/$existing" \
+                -F body=@i18n-drift-report.md --silent
+            else
+              gh api --method POST "repos/$REPO/issues/$PR/comments" \
+                -F body=@i18n-drift-report.md --silent
+            fi
+          elif [ -n "$existing" ]; then
+            gh api --method DELETE "repos/$REPO/issues/comments/$existing" --silent
+          fi
