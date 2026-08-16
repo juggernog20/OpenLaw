@@ -49,6 +49,16 @@ export const JOB_QUEUES = {
    */
   displayConversion: "document.display-conversion",
   /**
+   * The backfill sweep (M12/6), on a schedule rather than at boot alone.
+   *
+   * It carries no payload: the sweep asks the derivation rows what is
+   * owed, and those rows are the only input it has ever had. It is a
+   * queue rather than a timer in the worker because pg-boss already
+   * holds the clock, and because an install running two workers should
+   * sweep once rather than twice.
+   */
+  backfillSweep: "document.backfill-sweep",
+  /**
    * One signed envelope's executed copy (CTR-013, CTR-014, M15/5): the
    * provider holds the signed PDF, and this is the job that brings it
    * back onto the record's own chain.

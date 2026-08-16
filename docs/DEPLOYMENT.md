@@ -40,6 +40,7 @@ All configuration is environment variables in `.env`; [`.env.example`](../.env.e
 | `MAX_UPLOAD_MB`          | no       | Caps each upload, in whole MB. Defaults to 100. Raise your reverse proxy's body limit to match when you raise this — see [Files](#files).                                                                                         |
 | `DOC_ENGINE_URL`         | no       | Where the doc engine answers (TECH-010). Unset = the bundled `doc-engine` service on the compose network. Set it only to point at an engine you run yourself — see [The doc engine](#the-doc-engine).                             |
 | `DOC_ENGINE_TIMEOUT_MS`  | no       | How long one call to the doc engine may take before it is abandoned. Defaults to 300000 (five minutes).                                                                                                                           |
+| `DOC_ENGINE_TMPFS_SIZE`  | no       | Compose only. Scratch space for the doc engine's read-only container, as a RAM-backed tmpfs. Defaults to `2g` — see [The doc engine](#the-doc-engine).                                                                            |
 | `PORT`                   | no       | The published host port (the container always listens on 3000 internally).                                                                                                                                                        |
 
 ## Reverse proxy contract
@@ -157,12 +158,17 @@ Reading a Word draft in the app, previewing a deck, and getting text out of a sc
 
 There is nothing to configure. `docker compose up` starts it, and the app finds it by its service name.
 
-Two properties are worth knowing about, because both are deliberate:
+Three properties are worth knowing about, because all three are deliberate:
 
 - **It is never published to the host.** The service declares no `ports`, exactly as Postgres declares none, so it is reachable only from the other containers on the compose network. Do not add a port mapping. It carries no authentication and has nothing to authorise — the app decides who may read a file long before it sends the bytes — so a published port would be an open document-conversion service on your network.
 - **It holds nothing.** Every call streams a file in, runs one tool, streams the answer back, and removes what it wrote. There is no volume and nothing to back up. Restarting it loses no data; a conversion that was in flight is retried by the job that asked for it.
+- **It is the one container that is fenced in.** This is where files a counterparty sent you get opened, by LibreOffice and OCRmyPDF, so the stack assumes one day one of them is made to run code it should not and limits what that code can reach. It sits on its own compose network, which Postgres is not on and which has no route off the host, so it cannot open a socket to your database or call out to the internet — there is no route, not merely no password. Its root filesystem is read-only, it holds no Linux capabilities at all, and it cannot gain privilege it did not start with. The only thing it can write is `/tmp`, which is memory rather than disk and is emptied when the container restarts.
 
-Set `DOC_ENGINE_URL` only if you run the engine somewhere else — a shared host, or outside Compose. `DOC_ENGINE_TIMEOUT_MS` bounds one call, and defaults to five minutes.
+Set `DOC_ENGINE_URL` only if you run the engine somewhere else — a shared host, or outside Compose. `DOC_ENGINE_TIMEOUT_MS` bounds one call, and defaults to five minutes. `DOC_ENGINE_TMPFS_SIZE` sizes that `/tmp`, and defaults to `2g`; raise it if OCR of very long scans runs out of space, and remember it is RAM.
+
+### Do not put the doc engine on your database's network
+
+If you edit `compose.yml`, keep the two networks apart. Every service names its networks explicitly, and the moment a service declares `networks` it stops joining Compose's default network implicitly — so adding a service without a `networks` list gives it no way to reach the rest of the stack, and adding `openlaw-backend` to `doc-engine` quietly undoes the isolation above.
 
 ## The background worker
 
