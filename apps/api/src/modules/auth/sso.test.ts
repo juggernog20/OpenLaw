@@ -9,7 +9,17 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { OAuth2Server } from "oauth2-mock-server";
-import { accounts, activityLog, and, asc, eq, orgSettings, ssoProviders, users } from "@openlaw/db";
+import {
+  accounts,
+  activityLog,
+  and,
+  asc,
+  eq,
+  orgSettings,
+  sql,
+  ssoProviders,
+  users,
+} from "@openlaw/db";
 import {
   signInCookies,
   startHarness,
@@ -152,6 +162,17 @@ describe("runtime BYO-OIDC (POST /api/v1/auth/sso-providers + sso sign-in)", () 
     const oidc = JSON.parse(row!.oidcConfig!) as Record<string, unknown>;
     expect(oidc.tokenEndpoint).toContain(issuerUrl);
     expect(oidc.authorizationEndpoint).toContain(issuerUrl);
+
+    // And the row Postgres holds carries no readable client secret
+    // (TECH-022). Read past the ORM on purpose: asking Drizzle would
+    // only return what it had already opened. The plugin writes this
+    // column through our own tables, which is what puts its config
+    // inside the seal along with everything else.
+    const stored = await harness.db.execute<{ value: string | null }>(
+      sql`SELECT oidc_config AS value FROM sso_providers LIMIT 1`,
+    );
+    expect(stored.rows[0]?.value).toMatch("openlaw:v1:");
+    expect(stored.rows[0]?.value).not.toContain(PROVIDER.clientSecret);
 
     // The login screen's public discovery now carries the provider slug,
     // so the SSO button knows which provider to start.

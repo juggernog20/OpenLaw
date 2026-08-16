@@ -10,7 +10,17 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
-import { activityLog, asc, createDb, eq, orgSettings, runMigrations, type Db } from "@openlaw/db";
+import {
+  activityLog,
+  asc,
+  createDb,
+  eq,
+  orgSettings,
+  readSecretKeys,
+  runMigrations,
+  useSecretKeys,
+  type Db,
+} from "@openlaw/db";
 import { buildApp } from "../app.js";
 import type { AuthConfig } from "../auth/instance.js";
 import {
@@ -33,6 +43,14 @@ export const TEST_AUTH_CONFIG: AuthConfig = {
   secret: "openlaw-test-secret-with-enough-entropy-000",
   baseUrl: "http://localhost",
 };
+
+/**
+ * The credential-sealing key every suite runs with (TECH-022). Fixed
+ * rather than random so two harnesses in one process — a suite that
+ * starts a second pipeline against the same database — read each
+ * other's rows.
+ */
+export const TEST_SECRET_KEY = "openlaw-test-secret-key-with-enough-entropy-0"; // NOSONAR — inert fixture, not a credential
 
 /** The initial Administrator most suites create via first-run setup. */
 export const TEST_ADMIN = {
@@ -280,6 +298,10 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
   let cleanupStorage: (() => Promise<void>) | undefined;
   let pipeline: Pipeline | undefined;
   try {
+    // What the API's entry point does at boot (TECH-022), so a suite
+    // exercises the sealed columns rather than a plaintext variant of
+    // them. Installed before the first query for the same reason.
+    useSecretKeys(readSecretKeys({ OPENLAW_SECRET_KEY: TEST_SECRET_KEY }));
     const db = createDb(container.getConnectionUri());
     await runMigrations(db);
     const mailer = new CapturingMailer();

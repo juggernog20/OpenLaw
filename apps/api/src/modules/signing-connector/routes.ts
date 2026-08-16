@@ -283,10 +283,15 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
             environment: body.environment,
             integrationKey: body.integrationKey,
             apiUserId: body.apiUserId,
-            // Blank keeps: the stored value is written back unchanged
-            // rather than being left out, so one UPDATE covers both.
-            privateKey: privateKey ?? current.privateKey,
-            webhookSecret: webhookSecret ?? current.webhookSecret,
+            // Blank keeps, and keeping means leaving the column out of
+            // the UPDATE rather than writing the stored value back. The
+            // two secrets are sealed at rest (TECH-022), so a rewrite
+            // would open and reseal them on every save — and an
+            // Administrator saving the estate while the sealing key is
+            // wrong would write back what the row read as, which is
+            // nothing.
+            ...(privateKey ? { privateKey } : {}),
+            ...(webhookSecret ? { webhookSecret } : {}),
             updatedAt: new Date(),
           })
           .where(eq(signingConnectors.id, current.id))

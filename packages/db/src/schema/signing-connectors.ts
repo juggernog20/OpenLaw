@@ -22,15 +22,17 @@
  * envelope with no credentials left to reach it can never be voided or
  * converged.
  *
- * **The two secrets are stored plaintext at rest.** That is the
- * accepted v1 posture the OIDC client secret and the SMTP relay URL
- * already have (TECH-008), and this table is the second named entry on
- * the future secrets-encryption pass. Both columns are write-only
- * through the API: they are pasted to rotate and never read back.
+ * **The two secrets are encrypted at rest** (TECH-022). They are
+ * declared with `encryptedText`, so the value is sealed on the way to
+ * Postgres and opened on the way back with a key that lives outside
+ * the database — a `pg_dump` of this table mints no JWTs and forges no
+ * webhook deliveries. Both columns are also write-only through the
+ * API: they are pasted to rotate and never read back.
  */
 
 import { sql } from "drizzle-orm";
 import { check, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { encryptedText } from "../secrets.js";
 import { uuidPk } from "./helpers.js";
 
 /** The adapters a connector row may key on. DocuSign ships first (CTR-013). */
@@ -62,15 +64,19 @@ export const signingConnectors = pgTable(
      * ours.
      */
     apiUserId: text("api_user_id").notNull(),
-    /** The RSA private key, PEM, that signs the JWT assertions. Write-only. */
-    privateKey: text("private_key").notNull(),
     /**
-     * The DocuSign Connect HMAC secret. Write-only, and **not
-     * nullable**: the webhook is the install's first unauthenticated
-     * inbound write path, so a connector without this secret is refused
-     * at save time and no install ever answers unsigned deliveries.
+     * The RSA private key, PEM, that signs the JWT assertions.
+     * Write-only through the API and encrypted at rest (TECH-022).
      */
-    webhookSecret: text("webhook_secret").notNull(),
+    privateKey: encryptedText("private_key").notNull(),
+    /**
+     * The DocuSign Connect HMAC secret. Encrypted at rest (TECH-022),
+     * write-only, and **not nullable**: the webhook is the install's
+     * first unauthenticated inbound write path, so a connector without
+     * this secret is refused at save time and no install ever answers
+     * unsigned deliveries.
+     */
+    webhookSecret: encryptedText("webhook_secret").notNull(),
     /**
      * When an Administrator turned the connector off, or NULL while it
      * is on (CTR-013, [#273](https://github.com/juggernog20/OpenLaw/issues/273)).

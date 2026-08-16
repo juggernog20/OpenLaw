@@ -10,7 +10,10 @@
 # Reset the suite's instance with:
 #   docker compose -p openlaw-e2e -f compose.yml -f compose.dev.yml down -v
 #
-# AUTH_SECRET comes from .env, like every compose invocation.
+# AUTH_SECRET and OPENLAW_SECRET_KEY come from .env, like every compose
+# invocation. Both have to stay put between runs: the volumes persist,
+# and a changed OPENLAW_SECRET_KEY would leave the suite's saved signing
+# connector unreadable (TECH-022).
 
 set -euo pipefail
 cd "$(dirname "$0")/../.."

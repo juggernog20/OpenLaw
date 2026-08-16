@@ -36,7 +36,7 @@
  * yet finds no work and waits, which is the right answer.
  */
 
-import { createDb } from "@openlaw/db";
+import { createDb, readSecretKeys, useSecretKeys } from "@openlaw/db";
 import {
   createConsoleLogger,
   createDocEngineFromEnv,
@@ -80,6 +80,14 @@ function orExit<T>(read: () => T): T {
 }
 
 const databaseUrl = requireEnv("DATABASE_URL");
+
+// TECH-022: the worker reads the same sealed credential columns the API
+// does — the signing connector on every reconciliation round, the SMTP
+// relay on every mail a job sends — so it needs the same key, and it
+// refuses to boot without it for the same reason. It does not reseal:
+// the API owns the boot pass, exactly as it owns the migrations.
+useSecretKeys(orExit(() => readSecretKeys(process.env)));
+
 const db = createDb(databaseUrl);
 const storage = orExit(() => createStorageFromEnv(process.env));
 const docEngine = orExit(() => createDocEngineFromEnv(process.env));
