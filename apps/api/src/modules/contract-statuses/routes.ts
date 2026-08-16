@@ -31,9 +31,11 @@ import {
   inArray,
   isNull,
   type ContractStatus,
+  type Executor,
+  type Transaction,
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
-import { recordActivity, type ActivityWriter } from "../../lib/activity.js";
+import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { recordNounPhrase } from "../../lib/taxonomy-routes.js";
 
@@ -88,8 +90,6 @@ function slugBaseOf(displayName: string): string {
 }
 
 export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
-  type Tx = Parameters<Parameters<typeof app.db.transaction>[0]>[0];
-
   /**
    * The SET-003 guard numbers: how many contracts hold each status
    * (#113). Archived contracts count, the same rule the type guard
@@ -97,7 +97,7 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
    * `contracts.status_id` FK protects on hard delete are one set, and a
    * restored contract must never come back holding an archived status.
    */
-  async function usageCounts(db: ActivityWriter, ids: string[]): Promise<Map<string, number>> {
+  async function usageCounts(db: Executor, ids: string[]): Promise<Map<string, number>> {
     if (ids.length === 0) return new Map();
     const rows = await db
       .select({ statusId: contracts.statusId, inUse: count() })
@@ -113,7 +113,7 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
   }
 
   /** Locks and returns one row, or 404s — every :id mutation starts here. */
-  async function lockedStatus(tx: Tx, id: string): Promise<ContractStatus> {
+  async function lockedStatus(tx: Transaction, id: string): Promise<ContractStatus> {
     const [row] = await tx
       .select()
       .from(contractStatuses)
@@ -130,7 +130,7 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
    * stage, so two concurrent removals of a stage's last two statuses
    * serialize instead of both passing the check.
    */
-  async function breaksStageFloor(tx: Tx, target: ContractStatus): Promise<boolean> {
+  async function breaksStageFloor(tx: Transaction, target: ContractStatus): Promise<boolean> {
     const liveInStage = await tx
       .select({ id: contractStatuses.id })
       .from(contractStatuses)

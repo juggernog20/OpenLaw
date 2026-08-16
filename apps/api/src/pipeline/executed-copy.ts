@@ -66,6 +66,7 @@ import {
   gt,
   isNull,
   type Db,
+  type Transaction,
 } from "@openlaw/db";
 import { uuidv7 } from "uuidv7";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../lib/activity.js";
@@ -430,9 +431,6 @@ async function discardStoredCopy(
   });
 }
 
-/** The database, or a transaction on it. */
-type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
-
 /**
  * CTR-013's status advance, taken only from the signature stage.
  *
@@ -449,7 +447,7 @@ type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
  * signature is a better answer than a status id nobody could pick.
  */
 async function advanceFromSignature(
-  tx: Tx,
+  tx: Transaction,
   contract: Readonly<{ id: string; number: number; title: string; statusId: string }>,
 ): Promise<void> {
   const [current] = await tx

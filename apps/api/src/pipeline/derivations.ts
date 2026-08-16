@@ -44,10 +44,6 @@ export interface DerivationDeps {
   log: PipelineLogger;
 }
 
-/** The database, or a transaction on it — an upload writes its pending
- * rows inside one. */
-export type Executor = Db | Parameters<Parameters<Db["transaction"]>[0]>[0];
-
 /** One job, as the retry policy needs it described. pg-boss's own
  * counters, which is why a handler asks for job metadata. */
 export interface JobAttempt {

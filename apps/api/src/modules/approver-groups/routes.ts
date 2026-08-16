@@ -34,9 +34,11 @@ import {
   isNull,
   users,
   type ApproverGroup,
+  type Executor,
+  type Transaction,
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
-import { recordActivity, type ActivityWriter } from "../../lib/activity.js";
+import { recordActivity } from "../../lib/activity.js";
 import { eligibleApprovers } from "../../lib/approvers.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
@@ -83,14 +85,12 @@ function toRow(row: ApproverGroup, members: MemberRow[]) {
 }
 
 export const approverGroupsRoutes: FastifyPluginAsyncZod = async (app) => {
-  type Tx = Parameters<Parameters<typeof app.db.transaction>[0]>[0];
-
   /**
    * The members of every named group, keyed by group id and ordered the
    * way the pane renders them. One query for the whole list, so the pane
    * costs two round trips rather than one per row.
    */
-  async function membersOf(db: ActivityWriter, ids: string[]): Promise<Map<string, MemberRow[]>> {
+  async function membersOf(db: Executor, ids: string[]): Promise<Map<string, MemberRow[]>> {
     const byGroup = new Map<string, MemberRow[]>();
     if (ids.length === 0) return byGroup;
     const rows = await db
@@ -118,7 +118,7 @@ export const approverGroupsRoutes: FastifyPluginAsyncZod = async (app) => {
   }
 
   /** Locks and returns one group, or 404s — every :id route starts here. */
-  async function lockedGroup(tx: Tx, id: string): Promise<ApproverGroup> {
+  async function lockedGroup(tx: Transaction, id: string): Promise<ApproverGroup> {
     const [row] = await tx
       .select()
       .from(approverGroups)
@@ -137,7 +137,7 @@ export const approverGroupsRoutes: FastifyPluginAsyncZod = async (app) => {
    * sentence differs, because a template holds members and a record
    * asks people.
    */
-  async function eligibleMembers(tx: Tx, ids: string[]): Promise<MemberRow[]> {
+  async function eligibleMembers(tx: Transaction, ids: string[]): Promise<MemberRow[]> {
     return eligibleApprovers(
       tx,
       ids,

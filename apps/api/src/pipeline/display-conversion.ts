@@ -42,7 +42,7 @@
 
 import { Readable } from "node:stream";
 import { uuidv7 } from "uuidv7";
-import { documentVersionRenditions, documentVersions, eq } from "@openlaw/db";
+import { documentVersionRenditions, documentVersions, eq, type Executor } from "@openlaw/db";
 import { conversionFormatOf } from "../lib/render-family.js";
 import {
   errorCode,
@@ -50,7 +50,6 @@ import {
   isTerminalFailure,
   reasonOf,
   type DerivationDeps,
-  type Executor,
   type JobAttempt,
 } from "./derivations.js";
 import {

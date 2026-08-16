@@ -32,7 +32,9 @@ import {
   isNull,
   matterTypeFields,
   sql,
+  type Executor,
   type Field,
+  type Transaction,
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
@@ -114,16 +116,12 @@ function checkOptions(fieldType: string, options: string[] | undefined): string[
 }
 
 export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
-  type Tx = Parameters<Parameters<typeof app.db.transaction>[0]>[0];
-
   /** Locks and returns one row, or 404s — every :id mutation starts here. */
-  async function lockedField(tx: Tx, id: string): Promise<Field> {
+  async function lockedField(tx: Transaction, id: string): Promise<Field> {
     const [row] = await tx.select().from(fields).where(eq(fields.id, id)).limit(1).for("update");
     if (!row) throw httpError(404, "No field exists with this id.");
     return row;
   }
-
-  type Reader = Tx | typeof app.db;
 
   /** The per-module attachment joins, each owned by its scope: the
    * contract join counts since #84, the matter join since #85; the
@@ -144,7 +142,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
    * number the Administrator already saw go up. Matters join with M22.
    */
   async function attachmentCounts(
-    db: Reader,
+    db: Executor,
     catalog: readonly { id: string; slug: string }[],
   ): Promise<Map<string, number>> {
     const tally = new Map<string, number>();
@@ -185,7 +183,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
     return tally;
   }
 
-  async function inUseCountOf(db: Reader, field: { id: string; slug: string }): Promise<number> {
+  async function inUseCountOf(db: Executor, field: { id: string; slug: string }): Promise<number> {
     return (await attachmentCounts(db, [field])).get(field.id) ?? 0;
   }
 
@@ -196,7 +194,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
    * types refuses to narrow to `contract` (and vice versa).
    */
   async function attachmentsOutsideModule(
-    db: Reader,
+    db: Executor,
     fieldId: string,
     targetScope: string,
   ): Promise<number> {

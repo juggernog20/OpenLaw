@@ -92,7 +92,7 @@ import {
   isNull,
   users,
   type ApprovalStatus,
-  type Db,
+  type Executor,
 } from "@openlaw/db";
 import { MAX_APPROVAL_NOTE_LENGTH } from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
@@ -101,7 +101,9 @@ import { eligibleApprovers, type ApproverRow } from "../../lib/approvers.js";
 import {
   contractMentionCandidates,
   contractTeamScope,
-  type ContractAccessReader,
+  NO_CONTRACT,
+  reachedContract,
+  type ReachedContract,
 } from "../../lib/contract-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
@@ -117,14 +119,11 @@ const requireApprovalReader = requireRole("administrator", "legal_team_member", 
  * route itself — only the approver named on a request decides it. */
 const requireMember = requireRole("administrator", "legal_team_member");
 
-/** A contract a viewer cannot reach reads exactly as one that does not
- * exist — on the approval routes as on every document route (DD-014). */
-const NO_CONTRACT = "No contract exists with this number.";
-
 /**
- * And an approval on such a contract answers the same way. Its own id
- * says nothing about which record it belongs to, so refusing it any
- * other way would be the leak the 404 exists to prevent.
+ * An approval on a contract this viewer cannot reach answers exactly as
+ * `NO_CONTRACT` has the record itself answer. Its own id says nothing
+ * about which record it belongs to, so refusing it any other way would
+ * be the leak the 404 exists to prevent.
  */
 const NO_APPROVAL = "No approval request exists with this id.";
 
@@ -172,50 +171,6 @@ const NumberParams = z.object({ number: z.coerce.number().int().positive() });
 const ApprovalParams = z.object({ approvalId: RecordIdSchema });
 
 export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
-  type Tx = Parameters<Parameters<typeof app.db.transaction>[0]>[0];
-  type Executor = Db | Tx;
-
-  /** One contract this viewer reaches, as the routes here need it. */
-  interface ReachedContract {
-    id: string;
-    /** SET-003's soft delete: a time freezes the record (CTR-021). */
-    archivedAt: Date | null;
-    /** CTR-004's Owner — one of cancellation's three actors. */
-    managerId: string | null;
-  }
-
-  /**
-   * One contract this viewer reaches, by its CTR-003 number, or `null`.
-   *
-   * The scope rides beside the number rather than being asked after it,
-   * so a contract the viewer cannot reach is not distinguishable from
-   * one that was never created. It is read live on every request, so
-   * taking somebody's last team row off ends their reach on the next
-   * one.
-   *
-   * `lock` holds the row for the write that follows. That lock is what
-   * makes the duplicate-pending check a decision rather than a guess:
-   * every approval write on one contract serializes behind it.
-   */
-  async function reachedContract(
-    db: ContractAccessReader,
-    user: AuthenticatedUser,
-    number: number,
-    lock = false,
-  ): Promise<ReachedContract | null> {
-    const query = db
-      .select({
-        id: contracts.id,
-        archivedAt: contracts.archivedAt,
-        managerId: contracts.managerId,
-      })
-      .from(contracts)
-      .where(and(eq(contracts.number, number), contractTeamScope(db, user)))
-      .limit(1);
-    const [row] = await (lock ? query.for("update", { of: contracts }) : query);
-    return row ?? null;
-  }
-
   /** One approval this viewer reaches, with the state of the record
    * that owns it. */
   interface ReachedApproval {
@@ -241,7 +196,7 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
    * lock every approval write on a record serializes behind.
    */
   async function reachedApproval(
-    db: ContractAccessReader & Executor,
+    db: Executor,
     user: AuthenticatedUser,
     approvalId: string,
     lock = false,
@@ -343,8 +298,12 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
    *
    * Reach first: a 409 on a record the writer cannot reach would tell
    * them it is there. Then the freeze.
+   *
+   * Generic so that a locked read keeps its `LockedContract` brand
+   * across the assertion: narrowing to the base type here would throw
+   * away the proof the caller just paid for.
    */
-  function assertOpen(contract: ReachedContract | null): asserts contract is ReachedContract {
+  function assertOpen<T extends ReachedContract>(contract: T | null): asserts contract is T {
     if (!contract) throw httpError(404, NO_CONTRACT);
     if (contract.archivedAt) throw httpError(409, FROZEN);
   }
@@ -360,7 +319,7 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
    * outsider whichever door the ask came through.
    */
   async function assertInAudience(
-    tx: ContractAccessReader & Executor,
+    tx: Executor,
     contractId: string,
     approvers: readonly ApproverRow[],
   ): Promise<void> {
@@ -530,7 +489,9 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
       const approverIds = [...new Set(request.body.approverIds)];
 
       const roster = await app.db.transaction(async (tx) => {
-        const contract = await reachedContract(tx, request.user, request.params.number, true);
+        const contract = await reachedContract(tx, request.user, request.params.number, {
+          lock: true,
+        });
         assertOpen(contract);
 
         // The standing rule first — live Member+ — so somebody who
@@ -606,7 +567,9 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request, reply) => {
       const roster = await app.db.transaction(async (tx) => {
-        const contract = await reachedContract(tx, request.user, request.params.number, true);
+        const contract = await reachedContract(tx, request.user, request.params.number, {
+          lock: true,
+        });
         assertOpen(contract);
 
         const [group] = await tx

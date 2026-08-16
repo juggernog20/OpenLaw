@@ -41,13 +41,12 @@
  */
 
 import { and, contractApprovals, eq, inArray, users, CONTRACT_STAGES } from "@openlaw/db";
-import type { ContractStage } from "@openlaw/db";
+import type { ContractStage, Executor } from "@openlaw/db";
 import {
   SOFT_GATE_PROBLEM_TYPE,
   UNRESOLVED_APPROVAL_STATUSES,
   type UnresolvedApprovalStatus,
 } from "@openlaw/shared";
-import type { ContractAccessReader } from "./contract-access.js";
 import { httpError } from "./problem.js";
 
 /** The line the gate is drawn at (CTR-001). */
@@ -87,7 +86,7 @@ export function crossesApprovalGate(from: ContractStage, to: ContractStage): boo
  * the status was written, not a set that moved underneath it.
  */
 export async function unresolvedApprovals(
-  tx: ContractAccessReader,
+  tx: Executor,
   contractId: string,
 ): Promise<UnresolvedApproval[]> {
   const rows = await tx
@@ -137,7 +136,7 @@ function nameThem(rows: readonly UnresolvedApproval[]): string {
  * ordinary edit never reads the approvals table at all.
  */
 export async function assertApprovalGate(
-  tx: ContractAccessReader,
+  tx: Executor,
   contractId: string,
   from: ContractStage,
   to: ContractStage,

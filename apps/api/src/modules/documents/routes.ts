@@ -151,7 +151,9 @@ import {
   TEXT_SOURCES,
   users,
   type DocumentVersionKind,
+  type Executor,
   type SQL,
+  type Transaction,
 } from "@openlaw/db";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
@@ -159,7 +161,9 @@ import {
   contractTeamScope,
   documentAudienceScope,
   documentConfidentialityWrite,
-  type ContractAccessReader,
+  NO_CONTRACT,
+  reachedContract,
+  type ReachedContract,
 } from "../../lib/contract-access.js";
 import {
   EmailUnreadableError,
@@ -177,10 +181,12 @@ import {
   RENDITION_CONTENT_TYPE,
 } from "../../lib/render-family.js";
 import { attachmentDisposition, inlineDisposition, MEGABYTE } from "../../lib/uploads.js";
-// A folder named by a filing, or by a folder-filtered read (M13/3). The
-// refusal is imported rather than copied: a folder on another contract
-// answers exactly as one that was never created (DOC-006), and two
-// copies of that sentence are two things that can drift apart.
+// A folder named by a filing, or by a folder-filtered read (M13/3).
+// Both the check and its refusal are imported rather than restated: a
+// folder on another contract answers exactly as one that was never
+// created (DOC-006), and this module asked that question its own way
+// until #254 — a second implementation is a second chance for the two
+// answers to differ.
 // And the folder rules a dropped path is held to (M13/5, DOC-011). The
 // find-or-create is imported for the same reason: it decides a segment
 // against its siblings by the very comparison that refuses a duplicate,
@@ -189,6 +195,7 @@ import { attachmentDisposition, inlineDisposition, MEGABYTE } from "../../lib/up
 // refused.
 import {
   findOrCreateFolderPath,
+  folderOnRecord,
   folderPathSegments,
   MAX_FOLDER_PATH_LENGTH,
   NO_FOLDER,
@@ -219,13 +226,10 @@ const requireMember = requireRole("administrator", "legal_team_member");
  * knows the document is there, so a 404 would read as a bug. */
 const requireAdministrator = requireRole("administrator");
 
-/** A contract a viewer cannot reach reads exactly as one that does not
- * exist — for the list, the upload, and the download alike (DD-014). */
-const NO_CONTRACT = "No contract exists with this number.";
-
-/** And a document on such a contract answers the same way. Its own id
- * says nothing about which record it belongs to, so a refusal here
- * would be the leak the 404 exists to prevent. */
+/** A document on a contract this viewer cannot reach answers exactly as
+ * `NO_CONTRACT` has the record itself answer. Its own id says nothing
+ * about which record it belongs to, so a refusal here would be the leak
+ * the 404 exists to prevent. */
 const NO_DOCUMENT = "No document exists with this reference.";
 
 /** CTR-003's reference, as every contract route takes it. */
@@ -785,49 +789,6 @@ function errorCode(error: unknown): string | undefined {
 }
 
 export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
-  type Tx = Parameters<Parameters<typeof app.db.transaction>[0]>[0];
-  type Executor = typeof app.db | Tx;
-
-  /** One contract this viewer reaches, as the routes here need it. */
-  interface ReachedContract {
-    id: string;
-    /** SET-003's soft delete: a time freezes the record (CTR-021). */
-    archivedAt: Date | null;
-    /** CTR-014's instrument, or NULL on a record with no paper yet. */
-    primaryDocumentId: string | null;
-  }
-
-  /**
-   * One contract this viewer reaches, by its CTR-003 number, or `null`.
-   *
-   * The scope rides beside the number rather than being asked after it,
-   * so a contract the viewer cannot reach is not distinguishable from
-   * one that was never created — the M10 rule, extended to files. It is
-   * read live on every request, so taking somebody's last team row off
-   * ends their reach on the next one.
-   *
-   * `lock` holds the row for the write that follows, so the reach answer
-   * cannot go stale between the check and the insert.
-   */
-  async function reachedContract(
-    db: ContractAccessReader,
-    user: AuthenticatedUser,
-    number: number,
-    lock = false,
-  ): Promise<ReachedContract | null> {
-    const query = db
-      .select({
-        id: contracts.id,
-        archivedAt: contracts.archivedAt,
-        primaryDocumentId: contracts.primaryDocumentId,
-      })
-      .from(contracts)
-      .where(and(eq(contracts.number, number), contractTeamScope(db, user)))
-      .limit(1);
-    const [row] = await (lock ? query.for("update", { of: contracts }) : query);
-    return row ?? null;
-  }
-
   /** One document this viewer reaches, as the routes here need it. */
   interface ReachedDocument {
     id: string;
@@ -878,7 +839,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
    * version number assigned under it cannot be assigned twice.
    */
   async function reachedDocument(
-    db: ContractAccessReader & Executor,
+    db: Executor,
     user: AuthenticatedUser,
     documentId: string,
     lock = false,
@@ -914,40 +875,6 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       .limit(1);
     const [row] = await (lock ? query.for("update", { of: contracts }) : query);
     return row ?? null;
-  }
-
-  /**
-   * One folder of one contract, by its own id, or a 404 (DOC-006,
-   * M13/3).
-   *
-   * **This is the shared-owner invariant, at the seam.** A folder id is
-   * opaque and says nothing about which record it belongs to, so the
-   * contract is part of the question rather than something checked
-   * afterwards: a folder on another contract is simply not found, and is
-   * answered exactly as one that was never created. Any other refusal
-   * would tell the caller that the folder is there.
-   *
-   * The caller has already proved they reach the contract, so nothing
-   * here re-asks it. A folder carries no audience of its own — what
-   * DD-014 narrows is the documents in it — so there is nothing else to
-   * narrow.
-   *
-   * Answers the folder's name, because every activity payload that
-   * mentions a folder carries the name rather than the id: the entry has
-   * to still say what happened after a rename or a delete.
-   */
-  async function reachedFolderOn(
-    db: Executor,
-    contractId: string,
-    folderId: string,
-  ): Promise<{ id: string; name: string }> {
-    const [row] = await db
-      .select({ id: documentFolders.id, name: documentFolders.name })
-      .from(documentFolders)
-      .where(and(eq(documentFolders.id, folderId), eq(documentFolders.contractId, contractId)))
-      .limit(1);
-    if (!row) throw httpError(404, NO_FOLDER);
-    return row;
   }
 
   /** The one document projection, joined to its creator. The chain is
@@ -1154,9 +1081,11 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
    * as a placeholder" means for a number.
    */
   async function paperOf(
-    db: ContractAccessReader & Executor,
+    db: Executor,
     user: AuthenticatedUser,
-    contract: ReachedContract,
+    // The two facts a listing turns on, and no more: a caller that has
+    // just written a document holds them without re-reading the record.
+    contract: Pick<ReachedContract, "id" | "primaryDocumentId">,
     includeArchived = false,
     cursor?: string,
     folder?: string,
@@ -1278,7 +1207,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       // before it is filtered on. Skipping the check would make the
       // list route a way to ask whether a folder id exists somewhere.
       if (folder !== undefined && folder !== ROOT_FOLDER) {
-        await reachedFolderOn(app.db, contract.id, folder);
+        await folderOnRecord(app.db, contract.id, folder);
       }
       // An archived record still reads: archiving is a soft delete for
       // mistakes and imports, and restore has to be reachable.
@@ -1368,7 +1297,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           // again on the same snapshot: a team row dropped between the
           // first check and the insert must not leave a file on a record
           // the uploader no longer reaches.
-          const locked = await reachedContract(tx, request.user, request.params.number, true);
+          const locked = await reachedContract(tx, request.user, request.params.number, {
+            lock: true,
+          });
           assertOpen(locked);
 
           // Under that same lock, which is what makes a folder drop
@@ -1376,7 +1307,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           // segment by segment, and a second upload racing on the same
           // path waits here and then finds what the first one wrote.
           const folder = file.destination
-            ? await findOrCreateFolderPath(tx, locked.id, file.destination)
+            ? await findOrCreateFolderPath(tx, locked, file.destination)
             : null;
 
           await tx.insert(documents).values({
@@ -1649,7 +1580,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             const destination =
               body.folderId === null
                 ? null
-                : await reachedFolderOn(tx, target.contractId, body.folderId);
+                : await folderOnRecord(tx, target.contractId, body.folderId);
             patch.folderId = destination?.id ?? null;
             filing = {
               to: destination?.name ?? null,
@@ -1810,7 +1741,6 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
 
         return paperOf(tx, request.user, {
           id: target.contractId,
-          archivedAt: target.contractArchivedAt,
           primaryDocumentId: documentId,
         });
       });
@@ -2213,7 +2143,6 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
 
         return paperOf(tx, request.user, {
           id: target.contractId,
-          archivedAt: target.contractArchivedAt,
           // Derived rather than re-read: `contracts.primary_document_id`
           // is SET NULL, so the record has no instrument exactly when
           // the erased document held the designation.
@@ -3104,7 +3033,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
    * by a person and a round filed by the integration are the same row
    * (DOC-001). This is only the upload's half of the translation. */
   function insertVersion(
-    tx: Tx,
+    tx: Transaction,
     row: Readonly<{
       documentId: string;
       versionId: string;
@@ -3164,7 +3093,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
    * facts until it is restored (CTR-021), and putting new paper on it is
    * a change to the record, not a conversation about it.
    */
-  function assertOpen(contract: ReachedContract | null): asserts contract is ReachedContract {
+  function assertOpen<T extends ReachedContract>(contract: T | null): asserts contract is T {
     if (!contract) throw httpError(404, NO_CONTRACT);
     if (contract.archivedAt) {
       throw httpError(409, "This contract is archived. Restore it before uploading.");
@@ -3211,7 +3140,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
    * the answer would be one refactor away from a leak.
    */
   async function assertMayFlagConfidential(
-    tx: Tx,
+    tx: Transaction,
     document: ReachedDocument,
     user: AuthenticatedUser,
   ): Promise<void> {

@@ -11,16 +11,9 @@ import {
   activityLog,
   type ActivityEntityType,
   type ActivityVisibility,
-  type Db,
+  type Executor,
 } from "@openlaw/db";
 import { emitActivityEvent } from "./activity-emitter.js";
-
-/**
- * A database handle or a transaction inside one — callers that mutate
- * and log atomically pass their transaction, so a failed log write rolls
- * the mutation back rather than leaving an unrecorded change.
- */
-export type ActivityWriter = Db | Parameters<Parameters<Db["transaction"]>[0]>[0];
 
 /**
  * The closed audit vocabulary (DD-017). Rows are append-only, so a
@@ -293,16 +286,16 @@ export type RecordedActivity = typeof activityLog.$inferSelect;
 /** Appends one entry. Append-only: nothing in application code ever
  * updates or deletes activity_log rows (corrections are new entries). */
 export async function recordActivity(
-  db: ActivityWriter,
+  db: Executor,
   entry: ActivityEntry,
 ): Promise<RecordedActivity[]>;
 /** Appends multiple entries in one write. */
 export async function recordActivity(
-  db: ActivityWriter,
+  db: Executor,
   entries: ActivityEntry[],
 ): Promise<RecordedActivity[]>;
 export async function recordActivity(
-  db: ActivityWriter,
+  db: Executor,
   entryOrEntries: ActivityEntry | ActivityEntry[],
 ): Promise<RecordedActivity[]> {
   const entries = Array.isArray(entryOrEntries) ? entryOrEntries : [entryOrEntries];

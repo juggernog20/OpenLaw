@@ -27,8 +27,7 @@
  * row went stale is the thing they can act on.
  */
 
-import { inArray, users } from "@openlaw/db";
-import type { ContractAccessReader } from "./contract-access.js";
+import { inArray, users, type Executor } from "@openlaw/db";
 import { httpError } from "./problem.js";
 
 /** Only a Member+ user can be an approver (CTR-012, DD-013). */
@@ -51,7 +50,7 @@ export interface ApproverRow {
  * shared, because everything else is the same refusal.
  */
 export async function eligibleApprovers(
-  db: ContractAccessReader,
+  db: Executor,
   ids: readonly string[],
   whenArchived: (displayName: string) => string,
 ): Promise<ApproverRow[]> {

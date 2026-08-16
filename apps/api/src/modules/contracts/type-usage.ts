@@ -32,12 +32,12 @@
  * which lock the same row before they write.
  */
 
-import { contracts, count, eq, inArray } from "@openlaw/db";
-import { recordActivity, RECORD_ACTIVITY_TIER, type ActivityWriter } from "../../lib/activity.js";
+import { contracts, count, eq, inArray, type Executor } from "@openlaw/db";
+import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import type { TaxonomyUsage } from "../../lib/taxonomy-routes.js";
 
 export const contractTypeUsage: TaxonomyUsage = {
-  async counts(db: ActivityWriter, ids: string[]) {
+  async counts(db: Executor, ids: string[]) {
     const rows = await db
       .select({ typeId: contracts.contractTypeId, inUse: count() })
       .from(contracts)

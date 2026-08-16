@@ -43,7 +43,13 @@
  * the same bytes again.
  */
 
-import { documentVersions, documentVersionText, eq, type TextSource } from "@openlaw/db";
+import {
+  documentVersions,
+  documentVersionText,
+  eq,
+  type Executor,
+  type TextSource,
+} from "@openlaw/db";
 import { emailBodyText, isEmail, parseStoredEmail } from "../lib/email/parse.js";
 import { conversionFormatOf, renderFamilyOf } from "../lib/render-family.js";
 import {
@@ -53,7 +59,6 @@ import {
   reasonOf,
   withBlob,
   type DerivationDeps,
-  type Executor,
   type JobAttempt,
 } from "./derivations.js";
 
