@@ -11,10 +11,13 @@
  *
  * What it does today is text extraction (DOC-005, M12/3), display
  * conversion (M12/4), the executed-copy fetch that files a signed
- * envelope's PDF back onto the record (M15/5, CTR-014), and the two
- * boot sweeps that recover work whose queue send was lost (M12/6). AI
- * analysis, search indexing, notification digests, and reminders each
- * arrive with their own milestone and register beside them.
+ * envelope's PDF back onto the record (M15/5, CTR-014), the two boot
+ * sweeps that recover work whose queue send was lost (M12/6), and the
+ * reconciliation sweep that asks the signing provider where every live
+ * envelope stands (M15/6, CTR-013) — the fallback feed that makes an
+ * install DocuSign cannot reach converge anyway. AI analysis, search
+ * indexing, notification digests, and reminders each arrive with their
+ * own milestone and register beside them.
  *
  * It runs no migrations. The API is the one process that migrates
  * (TECH-005), and a worker that migrated too would race it on every
@@ -31,6 +34,7 @@ import {
   runBackfillSweep,
   runExecutedCopySweep,
   startPipeline,
+  startReconciliationSweeps,
 } from "@openlaw/api/pipeline";
 
 const log = createConsoleLogger();
@@ -93,15 +97,15 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms).unref());
 }
 
-// The two boot sweeps. They run after the handlers are registered, so
-// the worker is already taking jobs while they walk their tables — an
-// install with a large back catalogue must not wait for a sweep before
-// its next upload is derived.
+// The sweeps. They run after the handlers are registered, so the worker
+// is already taking jobs while they walk their tables — an install with
+// a large back catalogue must not wait for a sweep before its next
+// upload is derived.
 //
-// They are started rather than awaited, and neither raises: a sweep is
-// best effort, and a worker that refused to run because it could not
-// finish one would be a worse answer than a boot that tries again. What
-// they missed is still owed, because the rows are the record.
+// They are started rather than awaited, and none raises: a sweep is best
+// effort, and a worker that refused to run because it could not finish
+// one would be a worse answer than a boot that tries again. What they
+// missed is still owed, because the rows are the record.
 const sweeping = new AbortController();
 const swept = Promise.all([
   runBackfillSweep({ db, log }, pipeline, { signal: sweeping.signal }).then(
@@ -126,6 +130,20 @@ const swept = Promise.all([
       log.error({ reason: reasonOf(error) }, "the executed-copy sweep did not finish");
     },
   ),
+  // The fallback status feed (M15/6). This one repeats rather than
+  // running once: the other two recover work the rows already say is
+  // owed, while this one is waiting for somebody to sign, which one
+  // walk at boot cannot see. It logs each round itself and never
+  // raises, and it resolves when the shutdown below aborts it.
+  startReconciliationSweeps({ db, log, resolveSigningProvider }, pipeline, {
+    signal: sweeping.signal,
+  }).catch((error: unknown) => {
+    // It answers rather than throws, so this is unreachable. It is
+    // caught anyway, for its neighbours' reason: the shutdown waits on
+    // this promise, and a rejection nobody handled would be an
+    // unhandled rejection rather than a line in the log.
+    log.error({ reason: reasonOf(error) }, "the reconciliation sweep stopped unexpectedly");
+  }),
 ]);
 
 // A container is stopped by a signal, and a job in hand must not be

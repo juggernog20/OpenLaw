@@ -14,7 +14,7 @@ import { Readable } from "node:stream";
 import { describe, expect, it } from "vitest";
 import { describeSigningContract } from "../../testing/signing-contract.js";
 import { createFakeSigningProvider, FAKE_ACCOUNT } from "./fake.js";
-import { WebhookSignatureError } from "./provider.js";
+import { SigningUnavailableError, WebhookSignatureError } from "./provider.js";
 
 describeSigningContract("the deterministic fake", () => {
   const provider = createFakeSigningProvider();
@@ -72,6 +72,27 @@ describe("the deterministic fake's own facts", () => {
     provider.complete(providerEnvelopeId);
     await expect(provider.readEnvelope(providerEnvelopeId)).resolves.toMatchObject({
       status: "signed",
+    });
+  });
+
+  it("answers an outage with the seam's transient failure, and keeps its envelopes", async () => {
+    const { provider, providerEnvelopeId } = await sendOne();
+    provider.outage();
+    await expect(provider.readEnvelope(providerEnvelopeId)).rejects.toBeInstanceOf(
+      SigningUnavailableError,
+    );
+    // Verification reaches nothing, so an outage cannot stop it: it is
+    // arithmetic over bytes already in hand.
+    const signed = provider.signedDelivery({ providerEnvelopeId, status: "signed" });
+    expect(provider.verifyWebhook(Buffer.from(signed.body, "utf8"), signed.headers)).toMatchObject({
+      providerEnvelopeId,
+      status: "signed",
+    });
+    // Transient means the moment, not the account: the same instance
+    // answers for the same envelope once it is reachable again.
+    provider.online();
+    await expect(provider.readEnvelope(providerEnvelopeId)).resolves.toMatchObject({
+      status: "sent",
     });
   });
 

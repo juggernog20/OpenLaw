@@ -173,6 +173,10 @@ _Avoid_: DocuSign integration, e-sign settings, signing provider (that is the co
 Signing a Contract outside OpenLaw and filing the result by hand: set the status, sign anywhere, upload the executed PDF, pin it, mark active. It is the zero-config path CTR-013 promises stays sufficient, and no part of it is coupled to a signing connector [CTR-013, CTR-014].
 _Avoid_: manual signing, offline signing, the fallback
 
+**Reconciliation sweep**:
+The background round that asks the signing connector where every live Envelope stands and moves the record to match. It is the **fallback** status feed: the provider's webhook is the primary one, and the sweep is what makes an install the provider cannot reach converge anyway. The two never disagree, because both apply their answer through one transition and a transition already applied does nothing [CTR-013, TECH-007].
+_Avoid_: polling, status poller, sync job, the backfill sweep (that is M12's, and it recovers lost jobs rather than reading a provider)
+
 **Executed pin**:
 Which version of a Document the team calls the signed copy — the one previews, exports, and AI analysis target by default. It is **explicit and never inferred from a version's kind**: a round tagged `executed` is what its uploader called it, a chain can hold two rounds both called that, and the pin names one of them. A person sets and clears it by hand; the signing integration sets it automatically when an Envelope completes, and never corrects a team that moves it afterwards [CTR-014, CTR-013].
 _Avoid_: executed flag, signed version, final document, the executed document

@@ -52,6 +52,17 @@ export {
 } from "./jobs.js";
 export { createConsoleLogger, type PipelineLogger } from "./logger.js";
 export {
+  runReconciliationSweep,
+  startReconciliationSweeps,
+  RECONCILIATION_PAGE_SIZE,
+  RECONCILIATION_REFUSAL_LIMIT,
+  RECONCILIATION_SWEEP_INTERVAL_MS,
+  type ReconciliationDeps,
+  type ReconciliationOptions,
+  type ReconciliationScheduleOptions,
+  type ReconciliationSummary,
+} from "./reconciliation.js";
+export {
   startPipeline,
   DISPLAY_CONVERSION_QUEUE_OPTIONS,
   EXECUTED_COPY_QUEUE_OPTIONS,
