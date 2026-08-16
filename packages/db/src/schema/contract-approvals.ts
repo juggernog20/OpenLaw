@@ -104,6 +104,18 @@ export const contractApprovals = pgTable(
     uniqueIndex("contract_approvals_pending_idx")
       .on(table.contractId, table.approverId)
       .where(sql`status = 'pending'`),
+    /**
+     * `source` and `status` hold only the values CTR-012 defines.
+     *
+     * Drizzle's `{ enum }` is a TypeScript narrowing and emits no
+     * constraint, so without these the database accepts any text — and
+     * the paired checks below do not catch it: an unknown `source` with
+     * a NULL `group_id` satisfies the group-source pair, and an unknown
+     * `status` with a `decided_at` satisfies the decided-at pair. Every
+     * other closed union in this schema is guarded the same way.
+     */
+    check("contract_approvals_source_check", sql`source in ('manual', 'group')`),
+    check("contract_approvals_status_check", sql`status in ('pending', 'approved', 'rejected')`),
     /** `group_id` is set exactly when the request came from a group.
      * The pair is one datum, and a half-set pair would draw a source
      * cell nobody could read. */

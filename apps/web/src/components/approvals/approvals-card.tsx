@@ -55,6 +55,7 @@
 import { useState } from "react";
 import { FormattedMessage, useIntl, defineMessage, type IntlShape } from "react-intl";
 import { Check, MoreHorizontal, Plus, Users, X } from "lucide-react";
+import { MAX_APPROVAL_NOTE_LENGTH } from "@openlaw/shared";
 import {
   APPROVAL_PILL,
   applyApproverGroup,
@@ -81,10 +82,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-
-/** The seam's own ceiling on a decision note, so the box refuses a
- * longer one rather than the request doing it after the fact. */
-const MAX_NOTE_LENGTH = 1000;
 
 /** The roles that may approve a contract (CTR-012, DD-013). Said here
  * so the picker offers nobody the seam would refuse by name. */
@@ -893,7 +890,7 @@ function DecisionDialog({
               value={note}
               rows={3}
               autoFocus
-              maxLength={MAX_NOTE_LENGTH}
+              maxLength={MAX_APPROVAL_NOTE_LENGTH}
               className={TEXTAREA_CLASS}
               onChange={(event) => {
                 setNote(event.target.value);

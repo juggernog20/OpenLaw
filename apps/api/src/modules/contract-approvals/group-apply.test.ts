@@ -375,17 +375,20 @@ describe("applying an approver group", () => {
       .set({ archivedAt: new Date() })
       .where(eq(users.id, idOf(DEPARTED)));
 
-    const rows = await apply(contract.number, group);
+    try {
+      const rows = await apply(contract.number, group);
 
-    expect(rows).toHaveLength(1);
-    expect(rows[0]!.approver.id).toBe(idOf(FIRST));
-
-    // Put them back, so the fixture is not left half-gone for the
-    // tests that follow.
-    await harness.db
-      .update(users)
-      .set({ archivedAt: null })
-      .where(eq(users.id, idOf(DEPARTED)));
+      expect(rows).toHaveLength(1);
+      expect(rows[0]!.approver.id).toBe(idOf(FIRST));
+    } finally {
+      // Put them back, so the fixture is not left half-gone for the
+      // tests that follow — including when an assertion above throws,
+      // which would otherwise turn one real failure into a cascade.
+      await harness.db
+        .update(users)
+        .set({ archivedAt: null })
+        .where(eq(users.id, idOf(DEPARTED)));
+    }
   });
 });
 
@@ -437,17 +440,19 @@ describe("what an apply refuses", () => {
       .set({ role: "contributor" })
       .where(eq(users.id, idOf(DEMOTED)));
 
-    const res = await applyGroup(as(MEMBER), contract.number, group);
-    expect(res.statusCode, res.body).toBe(422);
-    expect(res.json().detail).toContain(DEMOTED.displayName);
-    // The eligible half of the template must not land while the other
-    // half is refused.
-    expect(await roster(contract.number)).toEqual([]);
-
-    await harness.db
-      .update(users)
-      .set({ role: "legal_team_member" })
-      .where(eq(users.id, idOf(DEMOTED)));
+    try {
+      const res = await applyGroup(as(MEMBER), contract.number, group);
+      expect(res.statusCode, res.body).toBe(422);
+      expect(res.json().detail).toContain(DEMOTED.displayName);
+      // The eligible half of the template must not land while the other
+      // half is refused.
+      expect(await roster(contract.number)).toEqual([]);
+    } finally {
+      await harness.db
+        .update(users)
+        .set({ role: "legal_team_member" })
+        .where(eq(users.id, idOf(DEMOTED)));
+    }
   });
 
   it("refuses a member who cannot see a confidential contract, by name", async () => {

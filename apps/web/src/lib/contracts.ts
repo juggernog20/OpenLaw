@@ -16,6 +16,7 @@
 
 import type { IntlShape } from "react-intl";
 import type { paths } from "@openlaw/api-client";
+import { CONTRACT_STAGES as SHARED_CONTRACT_STAGES } from "@openlaw/shared";
 import { formatCurrency } from "./format";
 
 /** One contract as the API answers it, aliased to the generated client
@@ -98,18 +99,16 @@ function exhaustiveList<T extends string>() {
 /**
  * CTR-001's fixed six-stage backbone, in canonical forward order.
  *
- * The order is a sequence, not a ratchet: a contract may move to any
- * status, so a stage may go backwards. The pipeline renders where the
- * contract sits in this list, never how far it has travelled.
+ * The list itself lives in `@openlaw/shared`, because the soft gate and
+ * this pipeline both read the *order* and only one of them would notice
+ * a change: membership is checked against each end's own union, but a
+ * reordering compiles clean on both sides.
+ *
+ * Re-exported through this module so callers keep one import for the
+ * contract vocabulary, and guarded below against the generated API union
+ * so the shared list can still never drift from what the seam answers.
  */
-export const CONTRACT_STAGES = exhaustiveList<ContractStage>()([
-  "draft",
-  "review",
-  "approval",
-  "signature",
-  "active",
-  "ended",
-] as const);
+export const CONTRACT_STAGES = exhaustiveList<ContractStage>()(SHARED_CONTRACT_STAGES);
 
 /** The fixed stage's own name. It is not the status label: the label is
  * renameable and the stage is not (CTR-001), so the two are written

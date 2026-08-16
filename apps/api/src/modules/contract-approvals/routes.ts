@@ -94,6 +94,7 @@ import {
   type ApprovalStatus,
   type Db,
 } from "@openlaw/db";
+import { MAX_APPROVAL_NOTE_LENGTH } from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { eligibleApprovers, type ApproverRow } from "../../lib/approvers.js";
@@ -140,12 +141,6 @@ const FROZEN = "This contract is archived. Restore it before changing its approv
  * to apply a group an Administrator was allowed to configure would be a
  * dead end the person applying it cannot clear. */
 const MAX_APPROVERS_PER_REQUEST = 50;
-
-/** The approver's own words on their decision (CTR-012, optional). The
- * ceiling is a sentence or two, not an essay: the record's long-form
- * conversation is its comments (CMT-004), and the roster draws this in
- * one table cell. */
-const MAX_NOTE_LENGTH = 1000;
 
 const RecordIdSchema = z.string().min(1).max(64);
 
@@ -704,7 +699,7 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
         params: ApprovalParams,
         body: z.object({
           decision: z.enum(["approved", "rejected"]),
-          note: z.string().trim().max(MAX_NOTE_LENGTH).optional(),
+          note: z.string().trim().max(MAX_APPROVAL_NOTE_LENGTH).optional(),
         }),
         response: { 200: ApprovalsEnvelope, default: problemResponse },
       },

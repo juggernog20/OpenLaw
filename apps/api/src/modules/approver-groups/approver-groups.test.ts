@@ -148,7 +148,11 @@ const auditRows = () =>
     .select()
     .from(activityLog)
     .where(inArray(activityLog.action, [...GROUP_ACTIONS]))
-    .orderBy(asc(activityLog.createdAt));
+    // Tiebreak on the id: Postgres evaluates now() once per
+    // transaction, so entries written inside one mutation share a
+    // created_at and their relative order would fall to the heap. The
+    // key is UUIDv7, so it is time-ordered and pins insertion order.
+    .orderBy(asc(activityLog.createdAt), asc(activityLog.id));
 
 /** The entries appended while `body` ran, in order. */
 async function entriesDuring<T>(body: () => Promise<T>): Promise<{

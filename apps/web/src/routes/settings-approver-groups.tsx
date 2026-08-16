@@ -29,6 +29,7 @@ import { useMemo, useRef, useState } from "react";
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { History, Pencil, TriangleAlert } from "lucide-react";
+import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { problemDetail } from "../lib/messages";
 import { MEMBER_PLUS_ROLES } from "../lib/roles";
@@ -56,27 +57,19 @@ export async function settingsApproverGroupsLoader() {
   return { approverGroups: groups.data.approverGroups, users: people.data.users };
 }
 
-/** One member of a group, as the API answers it. */
-interface GroupMember {
-  id: string;
-  displayName: string;
-  email: string;
-}
+/** One group exactly as the seam answers it, and one of its members.
+ * Aliased to the generated client schema rather than restated, so a
+ * change to the API response surfaces as a compile error here instead
+ * of a runtime surprise in the pane (TECH-015). */
+type ApiGroup =
+  paths["/api/v1/approver-groups"]["get"]["responses"]["200"]["content"]["application/json"]["approverGroups"][number];
+type GroupMember = ApiGroup["members"][number];
 
 /** One row of GET /approver-groups, adapted to the ListEditor's shape:
  * the anatomy names a row by `displayName`, the table's column is
  * `name` (SCHEMA.md), and this is the one place the two meet. */
 interface GroupRow extends ListEditorRow {
   description: string | null;
-  members: GroupMember[];
-  memberCount: number;
-}
-
-interface ApiGroup {
-  id: string;
-  name: string;
-  description: string | null;
-  archivedAt: string | null;
   members: GroupMember[];
   memberCount: number;
 }
@@ -111,13 +104,9 @@ interface Candidate {
   eligible: boolean;
 }
 
-interface UserRow {
-  id: string;
-  displayName: string;
-  email: string;
-  role: string;
-  status: string;
-}
+/** One person as GET /users answers them, aliased for the same reason. */
+type UserRow =
+  paths["/api/v1/users"]["get"]["responses"]["200"]["content"]["application/json"]["users"][number];
 
 /** Live Member+ users, in display-name order — who a group may hold. */
 function eligiblePeople(users: readonly UserRow[]): Candidate[] {
@@ -200,7 +189,7 @@ function GroupEditorDialog({
       );
       return false;
     }
-    onCreated(toRow(data.approverGroup as ApiGroup));
+    onCreated(toRow(data.approverGroup));
     return true;
   }
 
@@ -231,7 +220,7 @@ function GroupEditorDialog({
         );
         return false;
       }
-      latest = toRow(data.approverGroup as ApiGroup);
+      latest = toRow(data.approverGroup);
       onRowChanged(latest);
     }
 
@@ -255,7 +244,7 @@ function GroupEditorDialog({
       );
       return false;
     }
-    onRowChanged(toRow(data.approverGroup as ApiGroup));
+    onRowChanged(toRow(data.approverGroup));
     return true;
   }
 
@@ -436,7 +425,7 @@ function ArchiveGroupDialog({
       });
       if (data) {
         archived.current = true;
-        onArchived(toRow(data.approverGroup as ApiGroup));
+        onArchived(toRow(data.approverGroup));
         onOpenChange(false);
       } else {
         // The API's own refusal (already archived, a stale list) is more
@@ -532,9 +521,7 @@ export function SettingsApproverGroupsPage() {
   const { approverGroups, users } = useLoaderData<typeof settingsApproverGroupsLoader>();
   const intl = useIntl();
 
-  const [rows, setRows] = useState<GroupRow[]>(() =>
-    (approverGroups as ApiGroup[]).map((group) => toRow(group)),
-  );
+  const [rows, setRows] = useState<GroupRow[]>(() => approverGroups.map((group) => toRow(group)));
   const [rowStatus, setRowStatus] = useState<Record<string, FieldStatus>>({});
   const [rowError, setRowError] = useState<Record<string, string | undefined>>({});
   /** The editor dialog: closed, create mode, or an edit target. */
@@ -542,7 +529,7 @@ export function SettingsApproverGroupsPage() {
   const [archiveTarget, setArchiveTarget] = useState<GroupRow | null>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
-  const people = useMemo(() => eligiblePeople(users as UserRow[]), [users]);
+  const people = useMemo(() => eligiblePeople(users), [users]);
 
   // The list is unordered (DES-021): the API answers in name order and
   // the pane keeps it.
@@ -567,7 +554,7 @@ export function SettingsApproverGroupsPage() {
       })
       .catch(() => ({ data: null, error: undefined }));
     if (data) {
-      replaceRow(toRow(data.approverGroup as ApiGroup));
+      replaceRow(toRow(data.approverGroup));
       noteRow(row.id, "saved");
     } else {
       noteRow(row.id, "error", problemDetail(error));
@@ -580,7 +567,7 @@ export function SettingsApproverGroupsPage() {
       .POST("/api/v1/approver-groups/{id}/restore", { params: { path: { id: row.id } } })
       .catch(() => ({ data: null, error: undefined }));
     if (data) {
-      replaceRow(toRow(data.approverGroup as ApiGroup));
+      replaceRow(toRow(data.approverGroup));
       noteRow(row.id, "saved");
     } else {
       noteRow(row.id, "error", problemDetail(error));

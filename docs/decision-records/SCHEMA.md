@@ -567,7 +567,7 @@ One row per approval request. Parallel — all pending must approve. Soft gate: 
 | `decided_at`               | timestamptz | nullable                                                      |
 | `created_at`, `updated_at` | timestamptz |                                                               |
 
-Three invariants ride the table itself (M14/3). A **partial** unique index on (`contract_id`, `approver_id`) `where status = 'pending'` enforces CTR-012's one-pending-request-per-approver rule while leaving a decided row free, so a re-request after a rejection writes a new row. A check constraint pairs `group_id` with `source = 'group'`, and a second one pairs `decided_at` with a status other than `pending` — a half-set pair on either would draw a cell nobody could read. Index on `contract_id` for the roster read.
+Five invariants ride the table itself (M14/3). A **partial** unique index on (`contract_id`, `approver_id`) `where status = 'pending'` enforces CTR-012's one-pending-request-per-approver rule while leaving a decided row free, so a re-request after a rejection writes a new row. A check constraint pairs `group_id` with `source = 'group'`, and a second one pairs `decided_at` with a status other than `pending` — a half-set pair on either would draw a cell nobody could read. Two more hold `source` and `status` to the values CTR-012 defines: the paired checks above do not imply them, because an unknown `source` with a NULL `group_id` satisfies the first pair and an unknown `status` carrying a `decided_at` satisfies the second. Index on `contract_id` for the roster read.
 
 ---
 

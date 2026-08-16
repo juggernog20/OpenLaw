@@ -2111,7 +2111,7 @@ Every contract-record frame in `designs/contracts.pen` already draws it, as `S2 
 
 **4. Under a 1024px shell the sub-bar row wraps; it never becomes a strip.** Six stages, a breadcrumb, a title, and a pill do not fit one 64px line under about 1024px — the title truncates to nothing and the pill goes under the pipeline. So the sub-bar section drops its fixed height and wraps: the breadcrumb group takes the first line, and the pipeline and the record actions share the second. The gate is the shell container (`@5xl/shell`), not the viewport — DES-012's rule, because the sub-bar reflows against its own slot, and 1024 is where this bar runs out of room rather than where the shell changes shape.
 
-This is not a fifth strip under DES-032: it is the same strip, reflowed, and only where the alternative is an unreadable one. On a phone it costs nothing against DES-032's accepted stack — the 48px top nav is hidden below 768px, so header 62 + a two-line sub-bar + the 36px section strip still comes in under the 214px desktop chrome.
+This is not a fifth strip under DES-032: it is the same strip, reflowed, and only where the alternative is an unreadable one. On a phone it costs nothing against DES-032's accepted stack — the 48px top nav is hidden below 768px, so header 62 + a two-line sub-bar + the 36px section strip still comes in under the 210px desktop chrome DES-032 clause 6 computes.
 
 **5. The pipeline claims no width of its own on a narrow slot, and its full width on a wide one.** Narrow, it is `grow basis-0`, so it shares its line with the record actions instead of pushing them onto a third row, and scrolls inside whatever is left. Wide, it is `shrink-0`, so a long title truncates before six stages start sliding out of view.
 
