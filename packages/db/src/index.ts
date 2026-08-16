@@ -110,6 +110,10 @@ export {
  * same reason the operators are: a second drizzle-orm copy makes the
  * SQL types incompatible. */
 export type { SQL } from "drizzle-orm";
+/** Joining one table twice in one query — the envelope row reads the
+ * round that went out and the round that came back (M15/5), and both
+ * are `document_versions`. Re-exported for the operators' reason. */
+export { alias } from "drizzle-orm/pg-core";
 
 export type Db = NodePgDatabase<typeof schema> & { $client: pg.Pool };
 

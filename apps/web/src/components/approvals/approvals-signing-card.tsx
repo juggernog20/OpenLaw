@@ -86,7 +86,7 @@
 
 import { useRef, useState } from "react";
 import { FormattedMessage, useIntl, defineMessage, type IntlShape } from "react-intl";
-import { Check, MoreHorizontal, Plus, Send, Undo2, Users, X } from "lucide-react";
+import { Check, Download, MoreHorizontal, Plus, Send, Undo2, Users, X } from "lucide-react";
 import {
   MAX_APPROVAL_NOTE_LENGTH,
   MAX_ENVELOPE_REASON_LENGTH,
@@ -117,6 +117,7 @@ import {
 } from "../../lib/envelopes";
 import type { ApproverGroupOption, ContractTeamMember, UserOption } from "../../lib/contracts";
 import type { Role } from "../../lib/roles";
+import { documentDownloadHref } from "../../lib/documents";
 import { formatShortDate } from "../../lib/format";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
 import { Avatar } from "../avatar";
@@ -527,7 +528,7 @@ export function ApprovalsSigningCard({
             <p className="px-4 pb-3 text-xs text-muted">
               <FormattedMessage
                 id="signing.statusArrives"
-                defaultMessage="Signed, declined, and voided status arrives by webhook."
+                defaultMessage="Signed, declined, and voided status arrives by webhook. The executed file auto-files and the stage advances to Active."
               />
             </p>
           )}
@@ -688,6 +689,58 @@ export function ApprovalsSigningCard({
 }
 
 /**
+ * The executed copy on a signed row, or the honest reason it is not
+ * there (M15/5, CTR-014, grill row H.C6).
+ *
+ * Three states, and each one is drawn only where it means something. A
+ * copy that landed is a **download**, because "shows the executed file"
+ * means a reader can open it. A signed round whose fetch is still
+ * running says so, so a reader who refreshes twice knows the record is
+ * working rather than broken. A fetch that gave up says that too, and
+ * points at the path that still works — CTR-013's manual hand-off,
+ * which needs no connector at all.
+ *
+ * A live, declined, or voided round draws nothing: no executed copy was
+ * ever owed, and a line about one would be an answer to a question
+ * nobody asked. Nor does a round whose copy landed and was later erased
+ * (DOC-010) — the fetch is settled, so "filing" would be a lie, and the
+ * lawful erasure of a file is not a failure to report.
+ */
+function ExecutedFile({ envelope }: Readonly<{ envelope: ContractEnvelope }>) {
+  if (envelope.status !== "signed") return null;
+  if (envelope.executedCopy !== null) {
+    return (
+      <a
+        href={documentDownloadHref(
+          envelope.executedCopy.documentId,
+          envelope.executedCopy.versionId,
+        )}
+        download={envelope.executedCopy.originalFilename}
+        className="flex min-w-0 items-center gap-1 rounded-button text-xs text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+      >
+        <Download size={16} aria-hidden="true" className="shrink-0" />
+        <span className="truncate">
+          <FormattedMessage id="signing.executedFile" defaultMessage="Executed copy" />
+        </span>
+      </a>
+    );
+  }
+  if (envelope.executedFetch === "ready") return null;
+  return (
+    <span className="text-xs break-words text-muted">
+      {envelope.executedFetch === "failed" ? (
+        <FormattedMessage
+          id="signing.executedFailed"
+          defaultMessage="The executed copy could not be filed. Upload it to the record instead."
+        />
+      ) : (
+        <FormattedMessage id="signing.executedFiling" defaultMessage="Filing the executed copy…" />
+      )}
+    </span>
+  );
+}
+
+/**
  * One round of signature, as the C20 mock's envelope row draws it —
  * moved into this card, where the spec puts the signers' home (DES-036).
  *
@@ -789,9 +842,18 @@ function EnvelopeRow({
         </div>
       </td>
       <td className="px-4 py-2.5">
-        <span className="text-sm text-muted">
-          {envelope.completedAt === null ? dash : formatShortDate(envelope.completedAt)}
-        </span>
+        <div className="flex min-w-0 flex-col items-start gap-1">
+          <span className="text-sm text-muted">
+            {envelope.completedAt === null ? dash : formatShortDate(envelope.completedAt)}
+          </span>
+          {/* What the ending produced (grill row H.C6). The signed copy
+              is the one file every downstream feature cares about, so
+              the row that says the round ended is the row that hands it
+              over — and the two states where it is not there yet, or
+              never will be, say so rather than leaving a reader waiting
+              for a link that is not coming. */}
+          <ExecutedFile envelope={envelope} />
+        </div>
       </td>
       {!frozen && (
         <td className="px-4 py-2.5 text-end">
@@ -1361,6 +1423,10 @@ function DecisionDialog({
  * the way to a better one, which is the same reading DES-036 clause 5
  * gives the `voided` pill its neutral family for.
  *
+ * **The dialog says what the send leads to.** C12's own note —
+ * the executed file filing itself and the stage advancing — is drawn
+ * now that both are true (M15/5), where the act is taken.
+ *
  * The refusal is printed here rather than in the card head, because
  * this is where the reader's attention already is (DES-035 clause 12).
  */
@@ -1492,6 +1558,10 @@ function blankSigner(): DraftSigner {
  * the one line a signer actually sees. Left blank, the record names
  * itself.
  *
+ * **The dialog says what the send leads to.** C12's own note —
+ * the executed file filing itself and the stage advancing — is drawn
+ * now that both are true (M15/5), where the act is taken.
+ *
  * The refusal is printed here rather than in the card head, because
  * this is where the reader's attention already is (DES-035 clause 12).
  */
@@ -1568,6 +1638,18 @@ function SendEnvelopeDialog({
         <DialogTitle>
           <FormattedMessage id="signing.sendTitle" defaultMessage="Send for signature" />
         </DialogTitle>
+        {/* The C12 mock's note, drawn now that the behaviour it
+            describes exists (DES-036 clause 9). It says what the act
+            does before it is taken, where it is taken — the shape
+            DES-038 clause 6 gave the void dialog. The stage is named
+            rather than a status label, because a team renames its
+            statuses and the stage behind them is fixed (CTR-001). */}
+        <p className="mt-2 text-sm text-muted">
+          <FormattedMessage
+            id="signing.sendNote"
+            defaultMessage="When everyone signs, the executed file lands on this contract and the status moves to the active stage."
+          />
+        </p>
         <form
           className="mt-4 flex flex-col gap-4"
           onSubmit={(event) => {

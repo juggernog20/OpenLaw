@@ -48,6 +48,21 @@ export const JOB_QUEUES = {
    * system knows the rendition exists at that moment.
    */
   displayConversion: "document.display-conversion",
+  /**
+   * One signed envelope's executed copy (CTR-013, CTR-014, M15/5): the
+   * provider holds the signed PDF, and this is the job that brings it
+   * back onto the record's own chain.
+   *
+   * It is a derivation in every way that matters here — a background
+   * job that produces an artifact from bytes somebody else holds, with
+   * a `pending | ready | failed` state on the row that asked for it —
+   * so it follows M12's pattern rather than inventing a second one. It
+   * is a queue of its own because it is different work with a different
+   * product, and because it fails for different reasons: a provider
+   * that will not answer is not a document engine that will not
+   * convert.
+   */
+  executedCopyFetch: "envelope.executed-copy-fetch",
 } as const;
 
 /** What the text-extraction queue carries. */
@@ -62,6 +77,14 @@ export interface TextExtractionJob {
  * the same reason. */
 export interface DisplayConversionJob {
   versionId: string;
+}
+
+/** What the executed-copy queue carries: the envelope, and nothing
+ * else. Which contract it is on, which document it files against, and
+ * whether it is still owed are all read live when the job runs — so a
+ * job that waited in the queue acts on what is true now. */
+export interface ExecutedCopyFetchJob {
+  envelopeId: string;
 }
 
 /**
@@ -90,6 +113,18 @@ export interface JobQueue {
    * could not be reached.
    */
   requestDisplayConversion(versionId: string): Promise<void>;
+
+  /**
+   * Asks for one signed envelope's executed copy to be fetched and
+   * filed (CTR-014, M15/5).
+   *
+   * Asked **after** the `signed` transition has committed, because the
+   * transition owns its own transaction and there is no hook inside it.
+   * The envelope's `executed_fetch` state is what makes the work
+   * durable, so a request the queue refuses is not lost — the boot
+   * sweep reads that state and asks again.
+   */
+  requestExecutedCopyFetch(envelopeId: string): Promise<void>;
 }
 
 /**
@@ -114,5 +149,6 @@ export function createUnconfiguredJobQueue(): JobQueue {
   return {
     requestTextExtraction: refuse,
     requestDisplayConversion: refuse,
+    requestExecutedCopyFetch: refuse,
   };
 }

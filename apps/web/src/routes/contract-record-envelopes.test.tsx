@@ -146,9 +146,27 @@ function envelopeRow(overrides: Record<string, unknown> = {}) {
     sentBy: { id: "u2", displayName: "Nadia Counsel", image: null },
     sentAt: "2026-08-10T00:00:00.000Z",
     completedAt: null,
+    // Where this round's executed copy has got to (CTR-014). Every
+    // live envelope is `pending`: nothing is owed until one completes.
+    executedFetch: "pending",
+    executedCopy: null,
     ...overrides,
   };
 }
+
+/** The C20 mock's note, whole now that every behaviour it names
+ * exists (DES-039). */
+const WEBHOOK_NOTE =
+  "Signed, declined, and voided status arrives by webhook. " +
+  "The executed file auto-files and the stage advances to Active.";
+
+/** The executed copy one signed round filed back onto the chain. */
+const EXECUTED_COPY = {
+  documentId: "d1",
+  versionId: "v3",
+  versionNumber: 3,
+  originalFilename: "acme-msa-draft (executed).pdf",
+};
 
 /**
  * The record loader's reads plus the envelope routes under test. The
@@ -288,14 +306,12 @@ describe("the record's signing block", () => {
     expect(within(rows[0]!).getByText("—")).toBeInTheDocument();
   });
 
-  it("says a delivery is coming while an envelope is out", async () => {
+  it("says a delivery is coming, and what it brings, while an envelope is out", async () => {
     const api = recordApi({ envelopes: [envelopeRow()] });
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42/approvals");
 
-    expect(
-      await screen.findByText("Signed, declined, and voided status arrives by webhook."),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(WEBHOOK_NOTE)).toBeInTheDocument();
   });
 
   it("says nothing about deliveries once the envelope has ended", async () => {
@@ -306,9 +322,7 @@ describe("the record's signing block", () => {
     renderAt("/contracts/42/approvals");
 
     await envelopeRows();
-    expect(
-      screen.queryByText("Signed, declined, and voided status arrives by webhook."),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(WEBHOOK_NOTE)).not.toBeInTheDocument();
   });
 
   it("shows a signed envelope with the date it ended, on the row and the chip", async () => {
@@ -322,6 +336,98 @@ describe("the record's signing block", () => {
     expect(within(rows[0]!).getByText("Signed")).toBeInTheDocument();
     expect(within(rows[0]!).getByText("Aug 12")).toBeInTheDocument();
     expect(await screen.findByText("Envelope signed")).toBeInTheDocument();
+  });
+
+  it("hands over the executed copy on a signed row", async () => {
+    const api = recordApi({
+      envelopes: [
+        envelopeRow({
+          status: "signed",
+          completedAt: "2026-08-12T00:00:00.000Z",
+          executedFetch: "ready",
+          executedCopy: EXECUTED_COPY,
+        }),
+      ],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    const rows = await envelopeRows();
+    const link = within(rows[0]!).getByRole("link", { name: "Executed copy" });
+    expect(link).toHaveAttribute("href", "/api/v1/documents/d1/versions/v3/download");
+    expect(link).toHaveAttribute("download", EXECUTED_COPY.originalFilename);
+  });
+
+  it("says the executed copy is still coming while the fetch runs", async () => {
+    const api = recordApi({
+      envelopes: [envelopeRow({ status: "signed", completedAt: "2026-08-12T00:00:00.000Z" })],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    const rows = await envelopeRows();
+    expect(within(rows[0]!).getByText("Filing the executed copy…")).toBeInTheDocument();
+  });
+
+  it("says plainly when the executed copy could not be filed", async () => {
+    const api = recordApi({
+      envelopes: [
+        envelopeRow({
+          status: "signed",
+          completedAt: "2026-08-12T00:00:00.000Z",
+          executedFetch: "failed",
+        }),
+      ],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    const rows = await envelopeRows();
+    expect(
+      within(rows[0]!).getByText(
+        "The executed copy could not be filed. Upload it to the record instead.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("says nothing once a filed copy has been erased from the record", async () => {
+    // DOC-010's lawful erasure takes the version, and the row's link
+    // with it. The fetch is settled, so "filing" would be a lie and a
+    // failure line would call an Administrator's act a fault.
+    const api = recordApi({
+      envelopes: [
+        envelopeRow({
+          status: "signed",
+          completedAt: "2026-08-12T00:00:00.000Z",
+          executedFetch: "ready",
+          executedCopy: null,
+        }),
+      ],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    const rows = await envelopeRows();
+    expect(within(rows[0]!).queryByText("Filing the executed copy…")).not.toBeInTheDocument();
+    expect(within(rows[0]!).queryByRole("link", { name: "Executed copy" })).not.toBeInTheDocument();
+  });
+
+  it("says nothing about an executed copy on a round that ended without one", async () => {
+    const api = recordApi({
+      envelopes: [
+        envelopeRow({
+          status: "voided",
+          reason: "We sent the wrong redline.",
+          completedAt: "2026-08-11T00:00:00.000Z",
+        }),
+      ],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    const rows = await envelopeRows();
+    expect(within(rows[0]!).queryByText("Filing the executed copy…")).not.toBeInTheDocument();
+    expect(within(rows[0]!).queryByRole("link", { name: "Executed copy" })).not.toBeInTheDocument();
   });
 
   it("shows a declined envelope's reason under its pill", async () => {
@@ -356,6 +462,22 @@ describe("the record's signing block", () => {
 });
 
 describe("sending for signature", () => {
+  it("says what the send leads to, where the send is taken", async () => {
+    const user = userEvent.setup();
+    const api = recordApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    await user.click(await screen.findByRole("button", { name: "Send for signature" }));
+    const dialog = await screen.findByRole("dialog");
+    expect(
+      within(dialog).getByText(
+        "When everyone signs, the executed file lands on this contract and " +
+          "the status moves to the active stage.",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("sends the current round and every signer in one request", async () => {
     const user = userEvent.setup();
     const api = recordApi();

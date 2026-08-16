@@ -1,0 +1,2 @@
+ALTER TABLE "contract_envelopes" ADD COLUMN "executed_version_id" text;--> statement-breakpoint
+ALTER TABLE "contract_envelopes" ADD CONSTRAINT "contract_envelopes_executed_version_id_document_versions_id_fk" FOREIGN KEY ("executed_version_id") REFERENCES "public"."document_versions"("id") ON DELETE set null ON UPDATE no action;

@@ -85,14 +85,22 @@
  * declined round blocks nothing: the next send is a new row and the
  * earlier one stays on the record.
  *
- * The reconciliation sweep and the executed-copy fetch are the later
- * slices, and nothing here moves a contract's status.
+ * **The executed copy comes back on its own** (M15/5). A signed
+ * envelope's PDF is fetched by the pipeline, appended to the primary
+ * document's chain as a round of kind `executed`, and pinned — so the
+ * row here answers `executedFetch` and, once it lands, the file itself.
+ * That copy is **this round's**, not the document's pin: a chain can
+ * hold two rounds both called `executed`, and the row draws the one it
+ * produced. None of that work is done here; the row only reports it.
+ *
+ * The reconciliation sweep is the later slice.
  */
 
 import type { Readable } from "node:stream";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
+  alias,
   and,
   asc,
   contractEnvelopes,
@@ -103,6 +111,7 @@ import {
   documentVersions,
   eq,
   ENVELOPE_STATUSES,
+  EXECUTED_FETCH_STATES,
   inArray,
   users,
   type Db,
@@ -176,6 +185,19 @@ const SignerSchema = z.object({
   email: z.string(),
 });
 
+/** The executed copy one round filed back onto the chain (CTR-014,
+ * M15/5). NULL until the fetch lands — and NULL again once that version
+ * has been erased (DOC-010), which is the one thing that takes it
+ * away. */
+const ExecutedCopySchema = z.object({
+  /** The document whose chain it landed on, so a reader can open it
+   * from the row. */
+  documentId: z.string(),
+  versionId: z.string(),
+  versionNumber: z.int(),
+  originalFilename: z.string(),
+});
+
 const EnvelopeSchema = z.object({
   id: z.string(),
   /** The adapter that carried it. Recorded on the row, so a record sent
@@ -198,6 +220,23 @@ const EnvelopeSchema = z.object({
   sentAt: z.iso.datetime(),
   /** When it reached a terminal status; NULL while it is out. */
   completedAt: z.iso.datetime().nullable(),
+  /**
+   * Where this round's executed copy has got to (CTR-014, M15/5) — the
+   * M12 derived-artifact states.
+   *
+   * `pending` on every live envelope, because nothing is owed until one
+   * completes; `ready` once the signed PDF is on the chain; `failed`
+   * when the fetch gave up, which is what tells the record to say so
+   * rather than leave a reader waiting. A declined or voided round
+   * stays `pending` for good, and that is the honest answer: no
+   * executed copy was ever owed.
+   */
+  executedFetch: z.enum(EXECUTED_FETCH_STATES),
+  /** The file this round filed back, or NULL when none has. It is
+   * **this** envelope's copy, not the document's pin: a chain can hold
+   * two rounds both of kind `executed`, and the row draws the one it
+   * produced. */
+  executedCopy: ExecutedCopySchema.nullable(),
 });
 
 /** One version the send dialog may offer. */
@@ -357,6 +396,11 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
    * between two rows written in the same second, so the order is total.
    */
   async function envelopesOf(db: Executor, contractId: string) {
+    // The round that came back, joined beside the round that went out.
+    // Both are `document_versions`, so the second join needs a name of
+    // its own — and the two are different facts: what was sent, and
+    // what was signed (CTR-014).
+    const executedVersions = alias(documentVersions, "executed_versions");
     const rows = await db
       .select({
         id: contractEnvelopes.id,
@@ -370,14 +414,20 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
         sentByImage: users.image,
         sentAt: contractEnvelopes.sentAt,
         completedAt: contractEnvelopes.completedAt,
+        executedFetch: contractEnvelopes.executedFetch,
+        executedDocumentId: executedVersions.documentId,
+        executedVersionId: executedVersions.id,
+        executedVersionNumber: executedVersions.versionNumber,
+        executedFilename: executedVersions.originalFilename,
       })
       .from(contractEnvelopes)
       .innerJoin(users, eq(contractEnvelopes.sentBy, users.id))
-      // Left on both: the version an envelope names is set to NULL when
-      // it is erased (DOC-010), and an inner join would then take the
-      // envelope off the record along with it.
+      // Left on all three: the versions an envelope names are set to
+      // NULL when they are erased (DOC-010), and an inner join would
+      // then take the envelope off the record along with them.
       .leftJoin(documentVersions, eq(contractEnvelopes.documentVersionId, documentVersions.id))
       .leftJoin(documents, eq(documentVersions.documentId, documents.id))
+      .leftJoin(executedVersions, eq(contractEnvelopes.executedVersionId, executedVersions.id))
       .where(eq(contractEnvelopes.contractId, contractId))
       .orderBy(desc(contractEnvelopes.sentAt), desc(contractEnvelopes.id));
 
@@ -418,6 +468,21 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       sentBy: { id: row.sentById, displayName: row.sentByName, image: row.sentByImage },
       sentAt: row.sentAt.toISOString(),
       completedAt: row.completedAt?.toISOString() ?? null,
+      executedFetch: row.executedFetch,
+      // All four halves arrive together or not at all: the join is on
+      // one nullable column, so a row with an id has the rest of it.
+      executedCopy:
+        row.executedVersionId === null ||
+        row.executedDocumentId === null ||
+        row.executedVersionNumber === null ||
+        row.executedFilename === null
+          ? null
+          : {
+              documentId: row.executedDocumentId,
+              versionId: row.executedVersionId,
+              versionNumber: row.executedVersionNumber,
+              originalFilename: row.executedFilename,
+            },
     }));
   }
 

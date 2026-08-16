@@ -10993,6 +10993,43 @@
                                 "type": "null"
                               }
                             ]
+                          },
+                          "executedFetch": {
+                            "type": "string",
+                            "enum": ["pending", "ready", "failed"]
+                          },
+                          "executedCopy": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "documentId": {
+                                    "type": "string"
+                                  },
+                                  "versionId": {
+                                    "type": "string"
+                                  },
+                                  "versionNumber": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "originalFilename": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "documentId",
+                                  "versionId",
+                                  "versionNumber",
+                                  "originalFilename"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
@@ -11005,7 +11042,9 @@
                           "reason",
                           "sentBy",
                           "sentAt",
-                          "completedAt"
+                          "completedAt",
+                          "executedFetch",
+                          "executedCopy"
                         ],
                         "additionalProperties": false
                       }
@@ -11257,6 +11296,43 @@
                                 "type": "null"
                               }
                             ]
+                          },
+                          "executedFetch": {
+                            "type": "string",
+                            "enum": ["pending", "ready", "failed"]
+                          },
+                          "executedCopy": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "documentId": {
+                                    "type": "string"
+                                  },
+                                  "versionId": {
+                                    "type": "string"
+                                  },
+                                  "versionNumber": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "originalFilename": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "documentId",
+                                  "versionId",
+                                  "versionNumber",
+                                  "originalFilename"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
@@ -11269,7 +11345,9 @@
                           "reason",
                           "sentBy",
                           "sentAt",
-                          "completedAt"
+                          "completedAt",
+                          "executedFetch",
+                          "executedCopy"
                         ],
                         "additionalProperties": false
                       }
@@ -11497,6 +11575,43 @@
                                 "type": "null"
                               }
                             ]
+                          },
+                          "executedFetch": {
+                            "type": "string",
+                            "enum": ["pending", "ready", "failed"]
+                          },
+                          "executedCopy": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "documentId": {
+                                    "type": "string"
+                                  },
+                                  "versionId": {
+                                    "type": "string"
+                                  },
+                                  "versionNumber": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "originalFilename": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "documentId",
+                                  "versionId",
+                                  "versionNumber",
+                                  "originalFilename"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
@@ -11509,7 +11624,9 @@
                           "reason",
                           "sentBy",
                           "sentAt",
-                          "completedAt"
+                          "completedAt",
+                          "executedFetch",
+                          "executedCopy"
                         ],
                         "additionalProperties": false
                       }

@@ -194,8 +194,14 @@ import {
   NO_FOLDER,
   type FolderDestination,
 } from "./folders.js";
-import { needsDisplayRendition, recordRenditionOwed } from "../../pipeline/display-conversion.js";
-import { extractsText, recordTextOwed } from "../../pipeline/text-extraction.js";
+import {
+  insertDocumentVersion,
+  nextVersionNumber,
+  requestDerivations,
+  versionStorageKey,
+} from "../../lib/document-versions.js";
+import { needsDisplayRendition } from "../../pipeline/display-conversion.js";
+import { extractsText } from "../../pipeline/text-extraction.js";
 
 /** The contract read floor (CTR-021), which is the document floor too:
  * a Contributor reads and downloads the paper on a contract they are
@@ -1344,7 +1350,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       // them and the blob is written before the rows exist (DOC-012).
       const documentId = uuidv7();
       const versionId = uuidv7();
-      const file = await receiveUpload(request, storageKey(documentId, versionId), true);
+      const file = await receiveUpload(request, versionStorageKey(documentId, versionId), true);
 
       // The blob is written before the rows (DOC-012), so a transaction
       // that refuses leaves it behind. **A folder destination made that
@@ -1490,7 +1496,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       assertOpenDocument(await reachedDocument(app.db, request.user, documentId));
 
       const versionId = uuidv7();
-      const file = await receiveUpload(request, storageKey(documentId, versionId));
+      const file = await receiveUpload(request, versionStorageKey(documentId, versionId));
 
       const updated = await app.db.transaction(async (tx) => {
         // The owning contract's row is held here, and this is the lock
@@ -1501,15 +1507,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         const locked = await reachedDocument(tx, request.user, documentId, true);
         assertOpenDocument(locked);
 
-        const [high] = await tx
-          .select({ versionNumber: documentVersions.versionNumber })
-          .from(documentVersions)
-          .where(eq(documentVersions.documentId, documentId))
-          .orderBy(desc(documentVersions.versionNumber))
-          .limit(1);
-        // A document always has version 1, so this is a step up from a
-        // number that is really there rather than a count of rows.
-        const versionNumber = (high?.versionNumber ?? 0) + 1;
+        const versionNumber = await nextVersionNumber(tx, documentId);
 
         await insertVersion(tx, { documentId, versionId, versionNumber, file, by: request.user });
         // The document's own row is touched so that "when did this
@@ -2881,13 +2879,6 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     return row;
   }
 
-  /** Where one version's blob lives (DOC-012): minted from the two ids,
-   * never from the uploaded filename, so no name a person chose can
-   * shape a storage key. */
-  function storageKey(documentId: string, versionId: string): string {
-    return `documents/${documentId}/${versionId}`;
-  }
-
   /** One uploaded file, once its bytes are stored and described. */
   interface StoredUpload {
     filename: string;
@@ -3107,10 +3098,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     return { folderId: rawFolderId.length === 0 ? null : rawFolderId, path };
   }
 
-  /** One row in the chain, written from what arrived. The only INSERT
-   * into `document_versions` there is, and there is no UPDATE and no
-   * DELETE anywhere beside it (DOC-001). */
-  async function insertVersion(
+  /** One row in the chain, written from what arrived. The write itself
+   * is `lib/document-versions.ts` — shared with the signing
+   * integration's executed-copy append (M15/5), because a round filed
+   * by a person and a round filed by the integration are the same row
+   * (DOC-001). This is only the upload's half of the translation. */
+  function insertVersion(
     tx: Tx,
     row: Readonly<{
       documentId: string;
@@ -3120,9 +3113,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       by: AuthenticatedUser;
     }>,
   ) {
-    await tx.insert(documentVersions).values({
-      id: row.versionId,
+    return insertDocumentVersion(tx, {
       documentId: row.documentId,
+      versionId: row.versionId,
       versionNumber: row.versionNumber,
       fileRef: row.file.fileRef,
       kind: row.file.kind,
@@ -3133,83 +3126,27 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       checksumSha256: row.file.checksumSha256,
       createdBy: row.by.id,
     });
-    // What the pipeline owes this version (DOC-005), written here so it
-    // is written in the upload's own transaction. A rolled-back upload
-    // asks for nothing, and a committed one always leaves the request on
-    // the record — the queue send that follows the commit only wakes a
-    // worker, and a lost send leaves a pending row for the M12/6
-    // backfill sweep rather than a version nobody will ever read.
-    //
-    // Only a file that has text to read gets a row. An image or a
-    // spreadsheet gets none, and the text read says so plainly rather
-    // than leaving a caller polling for an answer that is not coming.
-    if (extractsText(row.file.mimeType, row.file.filename)) {
-      await recordTextOwed(tx, row.versionId);
-    }
-    // And a display rendition for a file a browser cannot draw
-    // (DOC-004). Written here for the same reason and in the same
-    // transaction: a rolled-back upload owes no conversion, and a
-    // committed one always does.
-    if (needsDisplayRendition(row.file.mimeType, row.file.filename)) {
-      await recordRenditionOwed(tx, row.versionId);
-    }
   }
 
   /**
    * Wakes the pipeline for whatever a freshly uploaded version is owed —
    * its text (DOC-005), or its display rendition (DOC-004).
    *
-   * **One job per version, chosen by family.** A PDF's text is read
-   * straight off the file, so it asks for extraction. A Word document
-   * and a PowerPoint deck have to be converted before anything can read
-   * them, so they ask for conversion — and the conversion job reads the
-   * rendition's text at the end of its own work, which is why nothing
-   * asks for both. Everything else asks for nothing.
-   *
-   * Called after the transaction has committed, and never inside it. Two
-   * things follow from that, and both are the decision:
-   *
-   * A rolled-back upload asks for nothing, because there was no commit
-   * to ask after.
-   *
-   * A queue that cannot be reached never fails the upload, and never
-   * holds it up. The file is stored, the chain is written, and the
-   * person who uploaded it is owed a 201 — a pipeline that is down is
-   * not their problem (story 11). A refusal is logged, and so is a
-   * wake-up that takes too long: the pending rows are already committed,
-   * so the request survives either, and M12/6's sweep is what picks it
-   * up.
+   * The ask itself is `lib/document-versions.ts`, shared with the
+   * signing integration's executed-copy append (M15/5). This is only
+   * the upload's half of the translation, and the rule it carries is
+   * the upload's: called **after** the transaction has committed, so a
+   * rolled-back upload asks for nothing and a queue that cannot be
+   * reached never fails the upload and never holds it up. The person
+   * who uploaded is owed a 201 — a pipeline that is down is not their
+   * problem (story 11).
    */
-  async function askForDerivations(versionId: string, file: StoredUpload): Promise<void> {
-    const converts = needsDisplayRendition(file.mimeType, file.filename);
-    if (!converts && !extractsText(file.mimeType, file.filename)) return;
-    // The bound is the point. The queue is an interface, so what is
-    // behind it might one day be something that hangs rather than
-    // refuses, and "an upload is never delayed by its pipeline" has to
-    // hold whichever it is.
-    let timer: NodeJS.Timeout | undefined;
-    const asked = converts
-      ? app.jobs.requestDisplayConversion(versionId)
-      : app.jobs.requestTextExtraction(versionId);
-    // Whichever side loses settles later, unobserved — both get a
-    // handler up front so neither becomes an unhandled rejection. Same
-    // shape as the readiness probe in app.ts.
-    asked.catch(() => {});
-    const bound = new Promise<never>((_resolve, reject) => {
-      timer = setTimeout(() => reject(new Error("the queue did not answer in time")), 2000);
-      timer.unref();
+  function askForDerivations(versionId: string, file: StoredUpload): Promise<void> {
+    return requestDerivations(app.jobs, app.log, {
+      versionId,
+      mimeType: file.mimeType,
+      originalFilename: file.filename,
     });
-    bound.catch(() => {});
-    try {
-      await Promise.race([asked, bound]);
-    } catch (error) {
-      app.log.error(
-        { err: error, versionId },
-        "could not ask the pipeline for a version's derivations",
-      );
-    } finally {
-      clearTimeout(timer);
-    }
   }
 
   /** The one refusal a bad `kind` earns, thrown rather than returned so
