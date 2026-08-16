@@ -1444,9 +1444,17 @@ function VoidEnvelopeDialog({
   const intl = useIntl();
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
+  /** `busy` alone is not a gate: it is state, and state has not
+   * re-rendered while the click that set it is still on the stack, so
+   * two submits in one tick both find it false. The two dialogs that
+   * write to the provider hold the ref `TeamCard` and
+   * `CounterpartiesField` hold on the record page. Here the second act
+   * would be a second withdrawal of one envelope; in the send dialog it
+   * would be a second envelope out for signature. */
+  const inFlight = useRef(false);
 
   async function submit() {
-    if (busy) return;
+    if (busy || inFlight.current) return;
     const words = reason.trim();
     if (words === "") {
       setError(
@@ -1457,7 +1465,12 @@ function VoidEnvelopeDialog({
       );
       return;
     }
-    setError(await onConfirm(words));
+    inFlight.current = true;
+    setError(
+      await onConfirm(words).finally(() => {
+        inFlight.current = false;
+      }),
+    );
   }
 
   return (
@@ -1599,6 +1612,11 @@ function SendEnvelopeDialog({
   const addSigner = useRef<HTMLButtonElement>(null);
   const [subject, setSubject] = useState("");
   const [error, setError] = useState<string | null>(null);
+  /** The send's own gate, for the reason the void dialog gives: `busy`
+   * is state and two submits in one tick both find it false. A send is
+   * the worse of the two to lose — the second envelope is a real one,
+   * out for signature, that somebody has to go and void by hand. */
+  const inFlight = useRef(false);
 
   function editSigner(key: string, patch: Partial<EnvelopeSigner>) {
     setSigners((held) =>
@@ -1608,7 +1626,7 @@ function SendEnvelopeDialog({
   }
 
   async function submit() {
-    if (busy) return;
+    if (busy || inFlight.current) return;
     const named = signers
       .map((signer) => ({ name: signer.name.trim(), email: signer.email.trim() }))
       .filter((signer) => signer.name !== "" || signer.email !== "");
@@ -1623,11 +1641,14 @@ function SendEnvelopeDialog({
       );
       return;
     }
+    inFlight.current = true;
     setError(
       await onConfirm({
         documentVersionId: versionId,
         signers: named,
         ...(subject.trim() ? { subject: subject.trim() } : {}),
+      }).finally(() => {
+        inFlight.current = false;
       }),
     );
   }
@@ -1647,7 +1668,7 @@ function SendEnvelopeDialog({
         <p className="mt-2 text-sm text-muted">
           <FormattedMessage
             id="signing.sendNote"
-            defaultMessage="When everyone signs, the executed file lands on this contract and the status moves to the active stage."
+            defaultMessage="When everyone signs, the executed file lands on this contract and the stage advances to Active."
           />
         </p>
         <form

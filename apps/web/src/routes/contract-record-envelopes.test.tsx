@@ -473,7 +473,7 @@ describe("sending for signature", () => {
     expect(
       within(dialog).getByText(
         "When everyone signs, the executed file lands on this contract and " +
-          "the status moves to the active stage.",
+          "the stage advances to Active.",
       ),
     ).toBeInTheDocument();
   });

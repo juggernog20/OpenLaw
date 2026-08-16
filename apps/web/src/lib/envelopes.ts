@@ -49,9 +49,17 @@ export type SigningState = {
   primaryDocument: SendableDocument | null;
 };
 
-/** What a read or a write over the record's signing state answers: the
- * state as it now stands, or why not — with the refusal's own RFC 9457
- * type, for the two the card acts on rather than prints. */
+/**
+ * What a read or a write over the record's signing state answers: the
+ * state as it now stands, or why not.
+ *
+ * `type` is the refusal's own RFC 9457 URN, carried but not yet read.
+ * Nothing on the card branches on a signing refusal today — every one
+ * of them is printed in the dialog the act was taken from. It is here
+ * so that the day one of them needs different handling, the caller
+ * branches on the type as TECH-020 requires rather than reaching for
+ * the sentence, which is copy and changes.
+ */
 export type SigningOutcome =
   ({ ok: true } & SigningState) | { ok: false; detail?: string; type?: string };
 

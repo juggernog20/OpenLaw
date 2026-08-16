@@ -315,9 +315,34 @@ class DocuSignProvider implements SigningProvider {
     init: Omit<RequestInit, "headers" | "signal"> & {
       headers?: Record<string, string>;
       token?: string;
+      /**
+       * The caller reads this answer's body as a stream rather than in
+       * one go, so the timeout covers the wait for headers and stops
+       * there.
+       *
+       * Left running, the request clock keeps counting while the caller
+       * downloads, and an executed copy that takes longer than the
+       * timeout is aborted part way through a transfer that is behaving
+       * perfectly. A clock cannot tell a large file from a stuck
+       * socket. What bounds that read is the size ceiling the
+       * executed-copy job meters the bytes against.
+       */
+      stream?: boolean;
     },
   ): Promise<Response> {
-    const { token, ...rest } = init;
+    const { token, stream, ...rest } = init;
+    // A controller of our own rather than `AbortSignal.timeout`, only
+    // so the streaming case can stop the clock once the headers land —
+    // a timeout signal cannot be called off. `unref` keeps it out of
+    // the event loop's reasons to stay open, which is what
+    // `AbortSignal.timeout` does too: a worker shutting down must not
+    // wait on a timer for a request that already answered.
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      // The name is what `relayFetchError` reads to put this on the
+      // transient side of the split, and it must keep meaning that.
+      controller.abort(new DOMException("DocuSign did not answer in time.", "TimeoutError"));
+    }, this.timeoutMs).unref();
     let response: Response;
     try {
       response = await fetch(url, {
@@ -326,11 +351,16 @@ class DocuSignProvider implements SigningProvider {
           ...rest.headers,
           ...(token ? { authorization: `Bearer ${token}` } : {}),
         },
-        signal: AbortSignal.timeout(this.timeoutMs),
+        signal: controller.signal,
       });
     } catch (error) {
       relayFetchError(error);
     }
+    // Only an answer the caller is about to stream stops the clock, and
+    // only once it is known to be one. A refusal's body is read here in
+    // one go, a line or two of JSON, and that read keeps the bound it
+    // has always had.
+    if (stream && response.ok) clearTimeout(timer);
     if (response.ok) return response;
     // 401/403 is the credential answer, 404 is a missing envelope, and
     // every other 4xx is DocuSign saying no to this request — all
@@ -533,7 +563,7 @@ class DocuSignProvider implements SigningProvider {
     // the evidence the signatures happened.
     const response = await this.call(
       `${url}/${encodeURIComponent(providerEnvelopeId)}/documents/combined`,
-      { token },
+      { token, stream: true },
     );
     if (!response.body) {
       throw new SigningRefusedError("DocuSign returned no executed document for that envelope.");

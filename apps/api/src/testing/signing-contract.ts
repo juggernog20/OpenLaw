@@ -231,6 +231,24 @@ export function describeSigningContract(
       expect(delivery.reason).toBe("Not our paper.");
     });
 
+    it("finds its signature header whatever case the sender wrote it in", () => {
+      // HTTP header names are case-insensitive, and neither provider
+      // gets to choose how the sender spells them. A provider that read
+      // one spelling only would take a delivery its partner refused,
+      // and the whole point of this suite is that no caller can tell
+      // the two apart.
+      const signed = held().signDelivery({
+        providerEnvelopeId: "envelope-under-test",
+        status: "signed",
+      });
+      const shouted = Object.fromEntries(
+        Object.entries(signed.headers).map(([name, value]) => [name.toUpperCase(), value]),
+      );
+      const delivery = held().provider.verifyWebhook(Buffer.from(signed.body, "utf8"), shouted);
+      expect(delivery.providerEnvelopeId).toBe("envelope-under-test");
+      expect(delivery.status).toBe("signed");
+    });
+
     it("refuses a delivery whose body was changed after signing", () => {
       const signed = held().signDelivery({
         providerEnvelopeId: "envelope-under-test",

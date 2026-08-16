@@ -32,6 +32,10 @@ export {
 } from "../lib/signing/config.js";
 export { createSigningResolver, type SigningResolver } from "../lib/signing/resolver.js";
 export { createStorageFromEnv } from "../lib/storage/config.js";
+// The upload ceiling, read here for the same reason the three builders
+// above are: the executed-copy fetch files a third party's answer, and
+// it must not accept what the API would have refused at the door.
+export { maxUploadBytes } from "../lib/uploads.js";
 export {
   runBackfillSweep,
   BACKFILL_PAGE_SIZE,

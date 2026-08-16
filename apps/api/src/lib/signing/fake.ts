@@ -192,7 +192,17 @@ export class FakeSigningProvider implements SigningProvider {
 
   verifyWebhook(body: Buffer, headers: Readonly<Record<string, string>>): WebhookDelivery {
     const expected = createHmac("sha256", this.webhookSecret).update(body).digest();
-    const offered = Buffer.from(headers[FAKE_SIGNATURE_HEADER] ?? "", "base64");
+    // Found without regard to case, as the driver finds DocuSign's own
+    // signature headers. HTTP header names are case-insensitive, so a
+    // fake that only answered one spelling would accept a delivery the
+    // driver accepts and refuse one the driver takes — and the whole
+    // point of the pair is that the contract suite cannot tell them
+    // apart.
+    const offered = Buffer.from(
+      Object.entries(headers).find(([name]) => name.toLowerCase() === FAKE_SIGNATURE_HEADER)?.[1] ??
+        "",
+      "base64",
+    );
     if (offered.length !== expected.length || !timingSafeEqual(offered, expected)) {
       throw new WebhookSignatureError("The delivery is not signed by this install's Connect key.");
     }

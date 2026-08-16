@@ -32,6 +32,7 @@ import {
   createDocuSignDriverFactory,
   createSigningResolver,
   createStorageFromEnv,
+  maxUploadBytes,
   readDocuSignBaseUrl,
   runBackfillSweep,
   runExecutedCopySweep,
@@ -71,6 +72,12 @@ const databaseUrl = requireEnv("DATABASE_URL");
 const db = createDb(databaseUrl);
 const storage = orExit(() => createStorageFromEnv(process.env));
 const docEngine = orExit(() => createDocEngineFromEnv(process.env));
+// The same ceiling the API enforces on an upload, read from the same
+// variable. The executed copy arrives from a third party rather than
+// from a person, and a file the API would have refused at the door must
+// not reach the store through the back one. An unreadable value falls
+// back to the default here exactly as it does there.
+const uploadCeiling = maxUploadBytes(process.env.MAX_UPLOAD_MB);
 // The signing connector is org data, not deployment environment
 // (CTR-013), so there are no credentials to read from `process.env`: an
 // install with no connector row resolves to nothing, and an
@@ -95,7 +102,7 @@ const resolveSigningProvider = createSigningResolver(
 // saying what failed, not a stack trace from inside pg-boss.
 const pipeline = await startPipeline({
   connectionString: databaseUrl,
-  handlers: { db, storage, docEngine, resolveSigningProvider, log },
+  handlers: { db, storage, docEngine, resolveSigningProvider, log, maxUploadBytes: uploadCeiling },
   log,
 }).catch((error: unknown) => {
   log.error({ reason: reasonOf(error) }, "the worker could not start the job queue");

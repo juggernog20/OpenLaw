@@ -558,11 +558,33 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
         { expose: true },
       );
     }
+    // The two ambiguous ones. A refusal means the provider said no and
+    // no envelope exists; these two mean we never heard back, and the
+    // send may have landed. The compensating void below cannot take it
+    // back — that runs on an envelope id, and an answer that never
+    // arrived carried none. Nothing reached the record either, so the
+    // one-live-envelope rule refuses nothing, and a second send would
+    // put a second envelope out for one contract.
+    //
+    // So the sentence says what is unknown instead of reading as a
+    // refusal. The reconciliation sweep is no help here: it walks the
+    // envelopes the record knows about, and this one is not among them.
+    // A person checking the provider is the only thing that can tell.
     if (error instanceof SigningTimeoutError) {
-      return httpError(502, "The provider did not answer in time. Try again.", { expose: true });
+      return httpError(
+        502,
+        "The provider did not answer in time. It may still have taken the envelope — " +
+          "check at the provider before you send again.",
+        { expose: true },
+      );
     }
     if (error instanceof SigningUnavailableError) {
-      return httpError(502, "The provider could not be reached. Try again.", { expose: true });
+      return httpError(
+        502,
+        "The provider could not be reached. It may still have taken the envelope — " +
+          "check at the provider before you send again.",
+        { expose: true },
+      );
     }
     return error;
   }
