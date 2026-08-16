@@ -60,9 +60,13 @@
  * transaction as the write — so a failed log write rolls the send's row
  * back rather than leaving an unrecorded envelope.
  *
- * The webhook, the reconciliation sweep, the executed-copy fetch, and
- * the void are the later slices. Nothing here reads a status the
- * provider pushed, and nothing here moves a contract's status.
+ * **The status comes back on its own** (M15/3). Nothing here moves an
+ * envelope: the provider's Connect webhook does, through the one status
+ * funnel in `lib/signing/transitions.ts`. These routes only read what
+ * that funnel wrote — the status, its reason, and its completion time.
+ *
+ * The reconciliation sweep, the executed-copy fetch, and the void are
+ * the later slices, and nothing here moves a contract's status.
  */
 
 import type { Readable } from "node:stream";
@@ -153,8 +157,13 @@ const EnvelopeSchema = z.object({
    * (DOC-010), which is the one thing that can take them away. */
   documentTitle: z.string().nullable(),
   documentVersionNumber: z.int().nullable(),
+  /** Why it was declined or voided, in the signer's or the voider's own
+   * words. NULL for every other status, and NULL for a decline whose
+   * reporter gave no words — the record does not invent one. */
+  reason: z.string().nullable(),
   sentBy: PersonSchema,
   sentAt: z.iso.datetime(),
+  /** When it reached a terminal status; NULL while it is out. */
   completedAt: z.iso.datetime().nullable(),
 });
 
@@ -318,6 +327,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
         status: contractEnvelopes.status,
         documentTitle: documents.title,
         documentVersionNumber: documentVersions.versionNumber,
+        reason: contractEnvelopes.reason,
         sentById: contractEnvelopes.sentBy,
         sentByName: users.displayName,
         sentByImage: users.image,
@@ -367,6 +377,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       signers: signersByEnvelope.get(row.id) ?? [],
       documentTitle: row.documentTitle,
       documentVersionNumber: row.documentVersionNumber,
+      reason: row.reason,
       sentBy: { id: row.sentById, displayName: row.sentByName, image: row.sentByImage },
       sentAt: row.sentAt.toISOString(),
       completedAt: row.completedAt?.toISOString() ?? null,
@@ -503,6 +514,10 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
           "One contract's signing envelopes, newest send first " +
           "(CTR-013) — the adapter that carried each one, where it " +
           "stands, who was asked to sign it, what went out, and when. " +
+          "A declined or voided envelope carries the reason it ended " +
+          "with, and a finished one carries the moment it ended. Both " +
+          "arrive from the provider's own feed, so the record answers " +
+          "them without anybody typing them in. " +
           "Answers two facts beside the rows: whether this install has " +
           "an e-signature connector at all, and the primary document " +
           "this viewer may send, with its version chain newest round " +

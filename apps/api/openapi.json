@@ -10869,7 +10869,7 @@
     "/api/v1/contracts/{number}/envelopes": {
       "get": {
         "operationId": "listContractEnvelopes",
-        "summary": "One contract's signing envelopes, newest send first (CTR-013) — the adapter that carried each one, where it stands, who was asked to sign it, what went out, and when. Answers two facts beside the rows: whether this install has an e-signature connector at all, and the primary document this viewer may send, with its version chain newest round first. Both are what decide whether the record draws a send control, so an install with no connector and a record with no paper each answer plainly rather than by omission. A contract that has only ever been signed by hand holds no envelopes, which is the zero-config manual hand-off and not an error. Access is inherited from the contract and nothing else: a Contributor on the team reads it, and anyone who cannot reach the contract is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it",
+        "summary": "One contract's signing envelopes, newest send first (CTR-013) — the adapter that carried each one, where it stands, who was asked to sign it, what went out, and when. A declined or voided envelope carries the reason it ended with, and a finished one carries the moment it ended. Both arrive from the provider's own feed, so the record answers them without anybody typing them in. Answers two facts beside the rows: whether this install has an e-signature connector at all, and the primary document this viewer may send, with its version chain newest round first. Both are what decide whether the record draws a send control, so an install with no connector and a record with no paper each answer plainly rather than by omission. A contract that has only ever been signed by hand holds no envelopes, which is the zero-config manual hand-off and not an error. Access is inherited from the contract and nothing else: a Contributor on the team reads it, and anyone who cannot reach the contract is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it",
         "tags": ["envelopes"],
         "parameters": [
           {
@@ -10944,6 +10944,16 @@
                               }
                             ]
                           },
+                          "reason": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "sentBy": {
                             "type": "object",
                             "properties": {
@@ -10992,6 +11002,7 @@
                           "signers",
                           "documentTitle",
                           "documentVersionNumber",
+                          "reason",
                           "sentBy",
                           "sentAt",
                           "completedAt"
@@ -11197,6 +11208,16 @@
                               }
                             ]
                           },
+                          "reason": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "sentBy": {
                             "type": "object",
                             "properties": {
@@ -11245,6 +11266,7 @@
                           "signers",
                           "documentTitle",
                           "documentVersionNumber",
+                          "reason",
                           "sentBy",
                           "sentAt",
                           "completedAt"

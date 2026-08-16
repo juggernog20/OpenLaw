@@ -63,9 +63,11 @@ import {
   LogOut,
   MessageSquare,
   Palette,
+  PenLine,
   PencilLine,
   Pin,
   Plug,
+  Send,
   Settings,
   ShieldCheck,
   ShieldOff,
@@ -189,6 +191,20 @@ function actorName(intl: IntlShape, entry: NarratableEntry): string {
     entry.actor?.displayName ??
     intl.formatMessage({ id: "activity.actor.system", defaultMessage: "OpenLaw" })
   );
+}
+
+/**
+ * The words a decline or a void ended with, as its sentence selects on
+ * them (CTR-013).
+ *
+ * Two values rather than one, because ICU `select` takes discrete arms
+ * and a reason is free text: the flag chooses the arm, the text fills
+ * it. A provider that reported no reason is the `no` arm, and the
+ * sentence still reads without inventing one.
+ */
+function reasonValues(payload: Payload): Record<string, string> {
+  const reason = text(payload, "reason");
+  return { hasReason: reason ? "yes" : "no", reason: reason ?? "" };
 }
 
 /** A payload value as a plain string, or null when the payload does not
@@ -930,6 +946,50 @@ const ARMS: Readonly<Record<string, Arm>> = {
       defaultMessage: "{actor} cancelled the approval request to {approver}",
     }),
     values: (intl, payload) => ({ approver: named(intl, payload, "approverName") }),
+  },
+  // One round of signature on the record (M15/2, M15/3, CTR-013). A
+  // verb per act, so a reader can tell a completed signature from a
+  // withdrawn one without opening a payload.
+  //
+  // The send names its actor, because a person made it. The three
+  // endings do not: the signers sign on the provider's own ceremony,
+  // and the status arrives from the provider's feed with no human here
+  // behind it. A sentence reading "{actor} signed this contract" would
+  // then name whoever the entry fell back to, which is nobody.
+  "envelope.sent": {
+    icon: Send,
+    message: defineMessage({
+      id: "activity.envelope.sent",
+      defaultMessage: "{actor} sent this contract for signature",
+    }),
+  },
+  "envelope.signed": {
+    icon: PenLine,
+    message: defineMessage({
+      id: "activity.envelope.signed",
+      defaultMessage: "This contract's envelope was signed",
+    }),
+  },
+  // The reason rides in the sentence rather than beside it: it is the
+  // one thing a reader needs before the next round goes out, and a
+  // decline that arrived without words still reads.
+  "envelope.declined": {
+    icon: X,
+    message: defineMessage({
+      id: "activity.envelope.declined",
+      defaultMessage:
+        "This contract's envelope was declined{hasReason, select, yes { — {reason}} other {}}",
+    }),
+    values: (_intl, payload) => reasonValues(payload),
+  },
+  "envelope.voided": {
+    icon: Undo2,
+    message: defineMessage({
+      id: "activity.envelope.voided",
+      defaultMessage:
+        "This contract's envelope was voided{hasReason, select, yes { — {reason}} other {}}",
+    }),
+    values: (_intl, payload) => reasonValues(payload),
   },
   "contract.archived": {
     icon: Archive,

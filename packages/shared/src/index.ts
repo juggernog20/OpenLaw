@@ -105,3 +105,14 @@ export const MAX_ENVELOPE_SIGNERS = 10;
  * seam carries a subject and no body.
  */
 export const MAX_ENVELOPE_SUBJECT_LENGTH = 200;
+
+/**
+ * The ceiling on a decline's or a void's reason (CTR-013).
+ *
+ * Longer than a subject line, because this one is a sentence somebody
+ * has to act on: "the indemnity cap is wrong" is what the record needs
+ * back before the next round goes out. Shared because two mouths reach
+ * it — a signer's words arrive over the provider's feed, and a voider
+ * types theirs on the record — and both end up in the same cell.
+ */
+export const MAX_ENVELOPE_REASON_LENGTH = 1000;
