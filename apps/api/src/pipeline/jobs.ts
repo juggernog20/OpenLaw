@@ -128,6 +128,44 @@ export interface JobQueue {
 }
 
 /**
+ * How long a request path waits for the queue to take an ask before it
+ * carries on without it. The bound is the point: the queue is an
+ * interface, so what is behind it might one day hang rather than
+ * refuse, and no write path may be delayed by its pipeline — an upload
+ * is owed its 201, and a webhook delivery is owed its 204, whatever the
+ * queue is doing.
+ */
+export const QUEUE_ASK_TIMEOUT_MS = 2000;
+
+/**
+ * Waits for one queue ask, but only this long.
+ *
+ * Throws the ask's own refusal, or a timeout after
+ * {@link QUEUE_ASK_TIMEOUT_MS} — the caller logs either and carries on,
+ * because the committed rows are the durable record of the work and a
+ * boot sweep re-asks from them. The ask itself keeps running
+ * unobserved; whichever side loses the race settles later with a
+ * handler already attached, so neither becomes an unhandled rejection.
+ */
+export async function boundedQueueAsk(asked: Promise<void>): Promise<void> {
+  asked.catch(() => {});
+  let timer: NodeJS.Timeout | undefined;
+  const bound = new Promise<never>((_resolve, reject) => {
+    timer = setTimeout(
+      () => reject(new Error("the queue did not answer in time")),
+      QUEUE_ASK_TIMEOUT_MS,
+    );
+    timer.unref();
+  });
+  bound.catch(() => {});
+  try {
+    await Promise.race([asked, bound]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
  * Stand-in for a process that builds the app but never runs it: any
  * request fails loudly instead of being dropped.
  *

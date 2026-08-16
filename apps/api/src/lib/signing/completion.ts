@@ -26,7 +26,7 @@
  * that arrives from somebody else's system.
  */
 
-import type { JobQueue } from "../../pipeline/jobs.js";
+import { boundedQueueAsk, type JobQueue } from "../../pipeline/jobs.js";
 import type { EnvelopeTransition } from "./transitions.js";
 
 /** Somewhere to say that a queue could not be reached. The Fastify log
@@ -53,7 +53,11 @@ export async function requestExecutedCopy(
   if (transition.envelope.status !== "signed") return;
   const envelopeId = transition.envelope.id;
   try {
-    await jobs.requestExecutedCopyFetch(envelopeId);
+    // Bounded, as every request-path queue ask is: a queue that hangs
+    // rather than refuses must not hold the webhook's answer open —
+    // that is precisely the delay that would put this install into the
+    // provider's retry queue.
+    await boundedQueueAsk(jobs.requestExecutedCopyFetch(envelopeId));
   } catch (error) {
     log.error(
       { err: error, envelopeId },

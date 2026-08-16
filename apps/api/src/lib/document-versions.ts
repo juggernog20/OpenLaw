@@ -35,7 +35,7 @@
 
 import { desc, documentVersions, eq, type Db, type DocumentVersionKind } from "@openlaw/db";
 import { needsDisplayRendition, recordRenditionOwed } from "../pipeline/display-conversion.js";
-import type { JobQueue } from "../pipeline/jobs.js";
+import { boundedQueueAsk, type JobQueue } from "../pipeline/jobs.js";
 import { extractsText, recordTextOwed } from "../pipeline/text-extraction.js";
 
 /** The database, or a transaction on it — every append here runs inside
@@ -131,12 +131,6 @@ export async function insertDocumentVersion(
   }
 }
 
-/** How long a caller waits for the queue to take a request before it
- * carries on without it. The bound is the point: the queue is an
- * interface, so what is behind it might one day hang rather than
- * refuse, and no write path may be delayed by its pipeline. */
-const QUEUE_ASK_TIMEOUT_MS = 2000;
-
 /**
  * Wakes the pipeline for whatever a freshly appended round is owed —
  * its text (DOC-005), or its display rendition (DOC-004).
@@ -150,9 +144,10 @@ const QUEUE_ASK_TIMEOUT_MS = 2000;
  *
  * **Call it after the transaction has committed, never inside it.** A
  * rolled-back append asks for nothing, because there was no commit to
- * ask after; and a queue that cannot be reached never fails the write
- * and never holds it up. The refusal is logged, the `pending` rows are
- * already committed, and M12/6's sweep is what picks it up.
+ * ask after; and a queue that cannot be reached — or one that hangs —
+ * never fails the write and never holds it up, which is what
+ * `boundedQueueAsk` is for. The refusal is logged, the `pending` rows
+ * are already committed, and M12/6's sweep is what picks it up.
  */
 export async function requestDerivations(
   jobs: JobQueue,
@@ -161,29 +156,16 @@ export async function requestDerivations(
 ): Promise<void> {
   const converts = needsDisplayRendition(version.mimeType, version.originalFilename);
   if (!converts && !extractsText(version.mimeType, version.originalFilename)) return;
-  let timer: NodeJS.Timeout | undefined;
-  const asked = converts
-    ? jobs.requestDisplayConversion(version.versionId)
-    : jobs.requestTextExtraction(version.versionId);
-  // Whichever side loses settles later, unobserved — both get a handler
-  // up front so neither becomes an unhandled rejection.
-  asked.catch(() => {});
-  const bound = new Promise<never>((_resolve, reject) => {
-    timer = setTimeout(
-      () => reject(new Error("the queue did not answer in time")),
-      QUEUE_ASK_TIMEOUT_MS,
-    );
-    timer.unref();
-  });
-  bound.catch(() => {});
   try {
-    await Promise.race([asked, bound]);
+    await boundedQueueAsk(
+      converts
+        ? jobs.requestDisplayConversion(version.versionId)
+        : jobs.requestTextExtraction(version.versionId),
+    );
   } catch (error) {
     log.error(
       { err: error, versionId: version.versionId },
       "could not ask the pipeline for a version's derivations",
     );
-  } finally {
-    clearTimeout(timer);
   }
 }
