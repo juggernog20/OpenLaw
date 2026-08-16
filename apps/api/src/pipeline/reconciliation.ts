@@ -102,9 +102,9 @@ export const RECONCILIATION_SWEEP_INTERVAL_MS = 5 * 60_000;
 export interface ReconciliationDeps {
   db: Db;
   log: PipelineLogger;
-  /** The connector, read live per envelope (CTR-013's mailer-resolver
+  /** The connector, read live per page (CTR-013's mailer-resolver
    * pattern), so a key an Administrator rotated during a round is the
-   * key the rest of that round uses. */
+   * key the round's next page uses. */
   resolveSigningProvider: SigningResolver;
 }
 
@@ -215,6 +215,31 @@ export async function runReconciliationSweep(
       .limit(pageSize);
     if (page.length === 0) return summary;
 
+    // Read live, per page: the connector is org data that changes while
+    // the process runs, and a round can take a while — a key an
+    // Administrator rotates mid-round applies from the next page. Not
+    // per envelope, because the driver caches its minted token and its
+    // account discovery on the instance, and a fresh driver per row
+    // would pay the provider's token grant once per envelope instead of
+    // once per page — against the token endpoint the provider rate
+    // limits. A resolver that raises is a stored row that cannot be
+    // built into a driver, which is install-wide — every envelope after
+    // it would fail the same way.
+    const signing = await deps.resolveSigningProvider().catch((error: unknown) => {
+      deps.log.error(
+        { reason: reasonOf(error) },
+        "the reconciliation sweep could not build the signing connector",
+      );
+      return null;
+    });
+    if (!signing) {
+      // No connector, or one that will not build. There is nobody to
+      // ask, and asking again for the next page would read the same
+      // row and answer the same nothing.
+      summary.stopped = true;
+      return summary;
+    }
+
     for (const envelope of page) {
       if (options.signal?.aborted) {
         summary.stopped = true;
@@ -222,25 +247,6 @@ export async function runReconciliationSweep(
       }
       summary.scanned += 1;
 
-      // Read live, per envelope: the connector is org data that changes
-      // while the process runs, and a round can take a while. A resolver
-      // that raises is a stored row that cannot be built into a driver,
-      // which is install-wide — every envelope after it would fail the
-      // same way.
-      const signing = await deps.resolveSigningProvider().catch((error: unknown) => {
-        deps.log.error(
-          { reason: reasonOf(error) },
-          "the reconciliation sweep could not build the signing connector",
-        );
-        return null;
-      });
-      if (!signing) {
-        // No connector, or one that will not build. There is nobody to
-        // ask, and asking again for the next envelope would read the
-        // same row and answer the same nothing.
-        summary.stopped = true;
-        return summary;
-      }
       // A record sent through one adapter is never asked about through
       // another: the row keeps the adapter that carried it precisely so
       // a connector swapped since the send cannot answer for somebody
