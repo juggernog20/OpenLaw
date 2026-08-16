@@ -166,6 +166,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      # This job runs no pnpm — the fidelity script is plain node and the
+      # stack is built by Compose. pnpm is here because setup-node reads
+      # `packageManager` from package.json and turns its cache on by
+      # itself, then fails when the manager it just chose is not on PATH.
+      - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v5
         with:
           node-version: 24
