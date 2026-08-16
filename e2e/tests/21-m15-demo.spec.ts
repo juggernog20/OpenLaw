@@ -1176,7 +1176,9 @@ test.describe("M15 demo path", () => {
         expect(entry.visibility).toBe("working_team");
       }
       expect(feed.find((entry) => entry.action === "envelope.signed")!.actor).toBeNull();
-      expect(feed.find((entry) => entry.action === "document.executed_set")!.actor).toBeNull();
+      const autoPinned = feed.find((entry) => entry.action === "document.executed_set");
+      expect(autoPinned, "the record does not narrate the automatic pin").toBeDefined();
+      expect(autoPinned!.actor).toBeNull();
       const moved = feed.find(
         (entry) =>
           entry.action === "contract.status_changed" && entry.payload.fromStage === "signature",

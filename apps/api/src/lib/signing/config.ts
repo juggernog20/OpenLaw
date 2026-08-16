@@ -76,6 +76,14 @@ export function readDocuSignBaseUrl(env: SigningHostEnvironment): string | undef
       "DOCUSIGN_BASE_URL must name an origin only — no path, query, or fragment.",
     );
   }
+  // Credentials in the URL would be dropped with the rest of the
+  // non-origin parts, and the driver carries its own — refused for the
+  // same reason as a path.
+  if (parsed.username !== "" || parsed.password !== "") {
+    throw new SigningHostConfigError(
+      "DOCUSIGN_BASE_URL must name an origin only — no credentials.",
+    );
+  }
   return parsed.origin;
 }
 
