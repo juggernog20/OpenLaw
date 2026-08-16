@@ -235,6 +235,17 @@ function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
     // No value is recorded, which is where every contract starts
     // (CTR-010).
     value: null,
+    // CTR-006's term: `fixed` is where every contract starts, and
+    // nothing else about the term is recorded yet.
+    termType: "fixed",
+    effectiveDate: null,
+    expiryDate: null,
+    renewalPeriodMonths: null,
+    noticePeriodDays: null,
+    // Derived at read and stored nowhere — both blank while there is no
+    // expiry to subtract from.
+    noticeDeadline: null,
+    daysRemaining: null,
     description: "Three-year platform engagement.",
     customFields: {},
     // Open by default; the flag is opt-in, per record (DD-014).

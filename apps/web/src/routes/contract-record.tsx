@@ -42,6 +42,18 @@
  * still governs it — the group is what blur and Escape act on, because
  * a value half-committed or half-reverted is a value nobody chose.
  *
+ * The term is CTR-006's, and it is five fields with one rule running
+ * between them. The type — fixed, auto-renewing, or evergreen — decides
+ * which of the other four the record may hold: an evergreen contract is
+ * offered no expiry, and nothing but an auto-renewing one is asked how
+ * far a roll goes. Those two are drawn as facts with an em dash rather
+ * than as boxes the seam would refuse everything typed into, which is
+ * the honest blank the grill's X.6 rule asks for. The notice period is
+ * drawn whatever the type says, because a notice obligation sits on any
+ * kind of term. Days remaining closes the group: it is derived from the
+ * expiry and stored nowhere, so it is a fact of the record rather than
+ * a field of it, and it is blank for a contract with no end.
+ *
  * The people are CTR-004's: one Owner (`manager_id`, labelled "Owner",
  * name only) who may be left unassigned, and the working group in the
  * Team card. Adding a person names two things at once — who and in
@@ -132,6 +144,7 @@ import {
   ADDABLE_TEAM_ROLES,
   cadenceLabel,
   contractReference,
+  daysRemainingLabel,
   type ContractCounterparty,
   type ContractValue,
   formatContractValue,
@@ -141,6 +154,8 @@ import {
   signingEntityOptions,
   STAGE_PILL,
   teamRoleLabel,
+  TERM_TYPES,
+  termTypeLabel,
   VALUE_CADENCES,
   type ContractRow,
   type ContractStatusOption,
@@ -148,6 +163,7 @@ import {
   type ContractTeamRole,
   type ContractTypeOption,
   type SeverityLevel,
+  type TermType,
   type ValueCadence,
   type UserOption,
 } from "../lib/contracts";
@@ -311,6 +327,13 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
  * signing entity, the type, the status, priority, and risk have their
  * own selects, and the counterparties have their own routes. */
 type TextFieldKey = "title" | "description";
+/**
+ * The four term fields that commit as typed text (CTR-006, DES-017):
+ * two calendar dates and two counts. The term type is the fifth, and it
+ * is a select, so it commits on its own change like every other select
+ * on this card.
+ */
+type TermDraftKey = "effectiveDate" | "expiryDate" | "renewalPeriodMonths" | "noticePeriodDays";
 /** One custom field's key, namespaced by slug so a catalog field named
  * "Title" and the record's own title are never one micro-state. */
 type CustomFieldKey = `field:${string}`;
@@ -321,7 +344,9 @@ type CustomFieldKey = `field:${string}`;
 type CommitOutcome = { ok: true } | { ok: false; detail?: string; type?: string };
 type FieldKey =
   | TextFieldKey
+  | TermDraftKey
   | CustomFieldKey
+  | "termType"
   | "managerId"
   | "entityId"
   | "counterparties"
@@ -331,6 +356,14 @@ type FieldKey =
   | "risk"
   | "value"
   | "isConfidential";
+
+/**
+ * The em dash the record prints where it holds nothing (grill row X.6):
+ * a term field the contract's type cannot hold, and a countdown with no
+ * expiry to count to. One string, so no two of those places can
+ * disagree about what an absence looks like.
+ */
+const NOT_RECORDED = defineMessage({ id: "contracts.record.notRecorded", defaultMessage: "—" });
 
 /** The Team card's anchor. Two places name it: the card itself, and
  * the confidentiality banner's "Manage team" link, which is a fragment
@@ -523,6 +556,12 @@ function ContractRecord() {
   /** The other side (CTR-011), primary first as the API orders it. */
   const [parties, setParties] = useState<ContractCounterparty[]>(counterparties);
   const [drafts, setDrafts] = useState<Record<TextFieldKey, string>>(() => textDrafts(contract));
+  /** The term's four typed fields, held as text while they are being
+   * edited: a half-typed date and an empty count are both states an
+   * input passes through, and neither is a value to commit (CTR-006). */
+  const [termFields, setTermFields] = useState<Record<TermDraftKey, string>>(() =>
+    termDrafts(contract),
+  );
   const [fieldStatus, setFieldStatus] = useState<Partial<Record<FieldKey, FieldStatus>>>({});
   const [fieldError, setFieldError] = useState<Partial<Record<FieldKey, string | undefined>>>({});
   const [archiveStatus, setArchiveStatus] = useState<FieldStatus>("idle");
@@ -630,6 +669,17 @@ function ContractRecord() {
     return { title: row.title, description: row.description ?? "" };
   }
 
+  /** The saved term, as the four inputs hold it: an unrecorded date and
+   * an unrecorded count are both an empty box. */
+  function termDrafts(row: ContractRow): Record<TermDraftKey, string> {
+    return {
+      effectiveDate: row.effectiveDate ?? "",
+      expiryDate: row.expiryDate ?? "",
+      renewalPeriodMonths: row.renewalPeriodMonths === null ? "" : String(row.renewalPeriodMonths),
+      noticePeriodDays: row.noticePeriodDays === null ? "" : String(row.noticePeriodDays),
+    };
+  }
+
   function note(key: FieldKey, status: FieldStatus, detail?: string) {
     setFieldStatus((current) => ({ ...current, [key]: status }));
     setFieldError((current) => ({ ...current, [key]: detail }));
@@ -666,8 +716,63 @@ function ContractRecord() {
     if (key === "title" || key === "description") {
       setDrafts((current) => ({ ...current, [key]: textDrafts(row)[key] }));
     }
+    // The term's inputs re-seed as a group, not one at a time: a term
+    // type commit clears the fields the new type cannot hold (CTR-006),
+    // so the answer to *that* commit carries two more empty boxes than
+    // the request did.
+    if (key === "termType" || key in termFields) setTermFields(termDrafts(row));
     note(key, "saved");
     return { ok: true };
+  }
+
+  /**
+   * One of the term's four typed fields, committed on blur or Enter
+   * (DES-017). An empty box is `null` — nothing recorded.
+   *
+   * A count that is not a whole number is not a commit and not a
+   * revert: it says so under the field and keeps what was typed, which
+   * is the answer a custom number field already gives, and the only one
+   * that leaves the person able to fix their own typo.
+   */
+  function commitTerm(key: TermDraftKey) {
+    // Enter already committed this draft and the PATCH is in flight —
+    // the blur that follows must not send a duplicate.
+    if (fieldStatus[key] === "saving") return;
+    const draft = termFields[key].trim();
+    if (draft === termDrafts(saved)[key]) {
+      revertTerm(key);
+      return;
+    }
+    const isCount = key === "renewalPeriodMonths" || key === "noticePeriodDays";
+    if (draft === "") {
+      void commit(key, { [key]: null });
+      return;
+    }
+    if (!isCount) {
+      void commit(key, { [key]: draft });
+      return;
+    }
+    const count = Number(draft);
+    if (!Number.isInteger(count)) {
+      note(
+        key,
+        "error",
+        intl.formatMessage({
+          id: "contracts.field.numberInvalid",
+          defaultMessage: "Enter this as a number.",
+        }),
+      );
+      return;
+    }
+    void commit(key, { [key]: count });
+  }
+
+  /** Puts the box back to what the record holds, and drops any refusal
+   * the abandoned draft left standing — the note was about text that is
+   * now gone, and under a saved value it would read as a lie. */
+  function revertTerm(key: TermDraftKey) {
+    setTermFields((current) => ({ ...current, [key]: termDrafts(saved)[key] }));
+    note(key, "idle");
   }
 
   /**
@@ -764,6 +869,7 @@ function ContractRecord() {
       const row = data.contract;
       setSaved(row);
       setDrafts(textDrafts(row));
+      setTermFields(termDrafts(row));
       setArchiveStatus("idle");
     } else {
       setArchiveStatus("error");
@@ -777,6 +883,7 @@ function ContractRecord() {
   }
 
   const reference = contractReference(intl, saved.number);
+  const notRecorded = intl.formatMessage(NOT_RECORDED);
   /** The Owner runs the contract, and contract surfaces are Member+
    * (DD-013) — so only Member+ people are offered. The API's refusal is
    * the real guard; this keeps the picker from offering a dead end. */
@@ -1332,6 +1439,175 @@ function ContractRecord() {
                         error={fieldError.value}
                         onStatus={(next, detail) => note("value", next, detail)}
                         onCommit={(next) => void commit("value", { value: next })}
+                      />
+                      {/* CTR-006's term: five fields, and one rule
+                          running between them. Each commits on its own
+                          (DES-017, no carve-out), and the type is what
+                          decides which of the other four this record
+                          may hold at all — so the two the type forbids
+                          are drawn as facts with an em dash rather than
+                          as boxes the seam would refuse everything
+                          typed into. The blank is honest either way: it
+                          says the record holds nothing there, which is
+                          exactly true. */}
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="contract-term-type">
+                          <FormattedMessage
+                            id="contracts.form.termType"
+                            defaultMessage="Term type"
+                          />
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <select
+                            id="contract-term-type"
+                            value={saved.termType}
+                            className={CONTROL_CLASS}
+                            disabled={frozen}
+                            onChange={(event) =>
+                              void commit("termType", {
+                                termType: event.target.value as TermType,
+                              })
+                            }
+                          >
+                            {TERM_TYPES.map((option) => (
+                              <option key={option} value={option}>
+                                {termTypeLabel(intl, option)}
+                              </option>
+                            ))}
+                          </select>
+                          <StatusNote
+                            status={fieldStatus.termType ?? "idle"}
+                            detail={fieldError.termType}
+                          />
+                        </div>
+                      </div>
+                      <TermField
+                        id="contract-effective-date"
+                        type="date"
+                        label={
+                          <FormattedMessage
+                            id="contracts.form.effectiveDate"
+                            defaultMessage="Effective date"
+                          />
+                        }
+                        draft={termFields.effectiveDate}
+                        frozen={frozen}
+                        status={fieldStatus.effectiveDate ?? "idle"}
+                        error={fieldError.effectiveDate}
+                        onDraft={(next) =>
+                          setTermFields((current) => ({ ...current, effectiveDate: next }))
+                        }
+                        onCommit={() => commitTerm("effectiveDate")}
+                        onRevert={() => revertTerm("effectiveDate")}
+                      />
+                      {/* An evergreen contract has no end, so the record
+                          does not offer to invent one for it. */}
+                      {saved.termType === "evergreen" ? (
+                        <ReadOnlyField
+                          label={
+                            <FormattedMessage
+                              id="contracts.form.expiryDate"
+                              defaultMessage="Expiry date"
+                            />
+                          }
+                          value={notRecorded}
+                        />
+                      ) : (
+                        <TermField
+                          id="contract-expiry-date"
+                          type="date"
+                          label={
+                            <FormattedMessage
+                              id="contracts.form.expiryDate"
+                              defaultMessage="Expiry date"
+                            />
+                          }
+                          draft={termFields.expiryDate}
+                          frozen={frozen}
+                          status={fieldStatus.expiryDate ?? "idle"}
+                          error={fieldError.expiryDate}
+                          onDraft={(next) =>
+                            setTermFields((current) => ({ ...current, expiryDate: next }))
+                          }
+                          onCommit={() => commitTerm("expiryDate")}
+                          onRevert={() => revertTerm("expiryDate")}
+                        />
+                      )}
+                      {/* Nothing rolls but an auto-renewing contract, so
+                          nothing else is asked how far a roll goes. */}
+                      {saved.termType === "auto_renew" ? (
+                        <TermField
+                          id="contract-renewal-period"
+                          type="number"
+                          // A roll of zero months would advance an
+                          // expiry to itself, so the stepper cannot
+                          // reach it — the same floor the seam holds.
+                          min={1}
+                          label={
+                            <FormattedMessage
+                              id="contracts.form.renewalPeriod"
+                              defaultMessage="Renewal period (months)"
+                            />
+                          }
+                          draft={termFields.renewalPeriodMonths}
+                          frozen={frozen}
+                          status={fieldStatus.renewalPeriodMonths ?? "idle"}
+                          error={fieldError.renewalPeriodMonths}
+                          onDraft={(next) =>
+                            setTermFields((current) => ({ ...current, renewalPeriodMonths: next }))
+                          }
+                          onCommit={() => commitTerm("renewalPeriodMonths")}
+                          onRevert={() => revertTerm("renewalPeriodMonths")}
+                        />
+                      ) : (
+                        <ReadOnlyField
+                          label={
+                            <FormattedMessage
+                              id="contracts.form.renewalPeriod"
+                              defaultMessage="Renewal period (months)"
+                            />
+                          }
+                          value={notRecorded}
+                        />
+                      )}
+                      {/* A notice obligation sits on any kind of term,
+                          so this box is drawn whatever the type says.
+                          The deadline it feeds derives only when there
+                          is an expiry to subtract it from. */}
+                      <TermField
+                        id="contract-notice-period"
+                        type="number"
+                        // Zero days' notice is a real term: some
+                        // contracts end on the date and no earlier.
+                        min={0}
+                        label={
+                          <FormattedMessage
+                            id="contracts.form.noticePeriod"
+                            defaultMessage="Notice period (days)"
+                          />
+                        }
+                        draft={termFields.noticePeriodDays}
+                        frozen={frozen}
+                        status={fieldStatus.noticePeriodDays ?? "idle"}
+                        error={fieldError.noticePeriodDays}
+                        onDraft={(next) =>
+                          setTermFields((current) => ({ ...current, noticePeriodDays: next }))
+                        }
+                        onCommit={() => commitTerm("noticePeriodDays")}
+                        onRevert={() => revertTerm("noticePeriodDays")}
+                      />
+                      {/* Derived from the expiry and never stored, so it
+                          is a fact of the record rather than a field of
+                          it — and blank for an evergreen contract,
+                          which has no end to count down to. */}
+                      <ReadOnlyField
+                        label={
+                          <FormattedMessage
+                            id="contracts.form.daysRemaining"
+                            defaultMessage="Days remaining"
+                          />
+                        }
+                        value={daysRemainingLabel(intl, saved.daysRemaining) ?? notRecorded}
                       />
                       {/* Who may see the record at all (DD-014). It closes
                       the card because it is the record's audience
@@ -2911,6 +3187,70 @@ function RetypeDialog({
 /** A stated fact rather than an editable field: the reference is
  * immutable (CTR-003), so it is the one thing on the record no control
  * answers for. */
+/**
+ * One of the term's four typed fields (CTR-006): a calendar date or a
+ * count of months or days.
+ *
+ * It is an ordinary inline field and nothing more — DES-017's rule with
+ * no carve-out. Blur and Enter commit, Escape reverts, and the field's
+ * own micro-state sits beside the box. The rule *between* the term
+ * fields is the card's to apply, not this one's: what this draws is
+ * whatever it was handed, and the card decides whether the contract's
+ * type lets it be drawn at all.
+ */
+function TermField({
+  id,
+  type,
+  min,
+  label,
+  draft,
+  frozen,
+  status,
+  error,
+  onDraft,
+  onCommit,
+  onRevert,
+}: Readonly<{
+  id: string;
+  type: "date" | "number";
+  /** The floor a count may not go under, as the seam bounds it: a roll
+   * is at least one month, a notice period at least zero days. Unused
+   * on a date. */
+  min?: number;
+  label: React.ReactNode;
+  draft: string;
+  frozen: boolean;
+  status: FieldStatus;
+  error: string | undefined;
+  onDraft: (next: string) => void;
+  onCommit: () => void;
+  onRevert: () => void;
+}>) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor={id}>{label}</Label>
+      <div className="flex items-center gap-2">
+        <Input
+          id={id}
+          type={type}
+          // A count of months or days is a whole number, and the
+          // keypad a phone offers should say so.
+          {...(type === "number" ? { inputMode: "numeric" as const, min, step: 1 } : {})}
+          value={draft}
+          disabled={frozen}
+          onChange={(event) => onDraft(event.target.value)}
+          onBlur={onCommit}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") onCommit();
+            if (event.key === "Escape") onRevert();
+          }}
+        />
+        <StatusNote status={status} detail={error} />
+      </div>
+    </div>
+  );
+}
+
 function ReadOnlyField({ label, value }: Readonly<{ label: React.ReactNode; value: string }>) {
   return (
     <div className="flex flex-col gap-1.5">

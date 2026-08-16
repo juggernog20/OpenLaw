@@ -155,15 +155,15 @@ All G field rows are contract-schema decisions — the `contracts` schema is TBD
 
 ### G.right
 
-| ID   | Field          | Where | Status | Decision                                                                                                                              | Notes                                                   |
-| ---- | -------------- | ----- | ------ | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| G.R1 | Our position   | Both  | done   | keep — seeded contract-scoped `single_select` catalog field `our_position` (customer \| provider \| other), AI-promptable per CTR-008 |                                                         |
-| G.R2 | Risk level     | Both  | done   | keep — first-class `contracts.risk` per CTR-005 (nullable = not yet assessed)                                                         | Visualization still X.2 (DES-005 pill family).          |
-| G.R3 | Auto-renew     | Both  | done   | keep — renders `term_type` per CTR-006 (auto-renew / fixed / evergreen)                                                               |                                                         |
-| G.R4 | Notice period  | Both  | done   | keep — `notice_period_days` per CTR-006; renders "90 days"                                                                            |                                                         |
-| G.R5 | Last renewal   | V12   | done   | keep — last _confirmed_ renewal event from activity_log per CTR-006/007                                                               | X.6 empty-state rule still applies when no renewal yet. |
-| G.R6 | Renewal cap    | Both  | done   | remove — no renewal-cap field in the CTR-006 model (term-ledger option rejected)                                                      |                                                         |
-| G.R7 | Days remaining | Both  | done   | keep — derived `expiry_date − today` per CTR-006; blank for evergreen                                                                 |                                                         |
+| ID   | Field          | Where | Status | Decision                                                                                                                              | Notes                                                                                                   |
+| ---- | -------------- | ----- | ------ | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| G.R1 | Our position   | Both  | done   | keep — seeded contract-scoped `single_select` catalog field `our_position` (customer \| provider \| other), AI-promptable per CTR-008 |                                                                                                         |
+| G.R2 | Risk level     | Both  | done   | keep — first-class `contracts.risk` per CTR-005 (nullable = not yet assessed)                                                         | Visualization still X.2 (DES-005 pill family).                                                          |
+| G.R3 | Auto-renew     | Both  | done   | keep — renders `term_type` per CTR-006 (auto-renew / fixed / evergreen)                                                               | Built in M16/1: a select on the Contract card, per **DES-040** clause 1.                                |
+| G.R4 | Notice period  | Both  | done   | keep — `notice_period_days` per CTR-006; renders "90 days"                                                                            | Built in M16/1: an inline field, drawn on every term type per **DES-040** clause 3.                     |
+| G.R5 | Last renewal   | V12   | done   | keep — last _confirmed_ renewal event from activity_log per CTR-006/007                                                               | X.6 empty-state rule still applies when no renewal yet.                                                 |
+| G.R6 | Renewal cap    | Both  | done   | remove — no renewal-cap field in the CTR-006 model (term-ledger option rejected)                                                      |                                                                                                         |
+| G.R7 | Days remaining | Both  | done   | keep — derived `expiry_date − today` per CTR-006; blank for evergreen                                                                 | Built in M16/1: derived at the seam, drawn as a fact per **DES-040** clause 4. Blank reads "—" per X.6. |
 
 ### G.header
 

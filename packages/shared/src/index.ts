@@ -101,6 +101,31 @@ export const SIGNING_NOT_CONFIGURED_PROBLEM_TYPE = "urn:openlaw:problem:signing-
 export const ENVELOPE_LIVE_PROBLEM_TYPE = "urn:openlaw:problem:envelope-live";
 
 /**
+ * The two refusals a term write branches on (CTR-006, TECH-020).
+ *
+ * CTR-006's term data cannot contradict its own type: an evergreen
+ * contract has no end, and only an auto-renewing one rolls. Both
+ * refusals name themselves for `SOFT_GATE_PROBLEM_TYPE`'s reason —
+ * both ends of the wire have to say the same string.
+ *
+ * A client reads them to know that the term *type* and the value
+ * disagree, which is a different repair from every other 400 the same
+ * PATCH can give: either the type changes or the value is dropped, and
+ * only the client knows which of the two the person meant. The record
+ * uses the same rule to decide which of the term controls it draws at
+ * all, so it meets these refusals only when the record moved under it.
+ *
+ * A client must never tell these apart by reading `detail`. That is
+ * copy, and copy is rewritten.
+ */
+/** An expiry date was sent for a contract whose term type is
+ * `evergreen`. */
+export const TERM_EXPIRY_ON_EVERGREEN_PROBLEM_TYPE = "urn:openlaw:problem:term-expiry-on-evergreen";
+/** A renewal period was sent for a contract whose term type is not
+ * `auto_renew`. */
+export const TERM_RENEWAL_PERIOD_PROBLEM_TYPE = "urn:openlaw:problem:term-renewal-period";
+
+/**
  * How many people one envelope may be sent to (CTR-013).
  *
  * A bound rather than a preference, and a generous one: naming a

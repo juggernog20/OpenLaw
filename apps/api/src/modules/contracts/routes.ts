@@ -53,6 +53,22 @@
  * integer count of the currency's smallest unit; no total is stored,
  * because every total (annual × term) is derivable from what is.
  *
+ * The term is CTR-006's, and it is five columns that are five fields
+ * (M16/1): the type, the effective date, the expiry, the renewal period
+ * in months, and the notice period in days. Each commits on its own
+ * through the same per-field PATCH, and the type is what decides which
+ * of the other four the record may hold — an expiry on an evergreen
+ * contract and a renewal period off an auto-renewing one are refused
+ * with their own problem types, and a type change clears what the new
+ * type cannot hold, each clear narrated as the edit it is.
+ *
+ * Two dates ride out of every answer that nothing stores: the notice
+ * deadline (expiry minus the notice period) and the days remaining
+ * (expiry minus today). They are computed where the answer is
+ * assembled, so no surface can disagree with another about a date none
+ * of them holds, and neither needs a job, a sweep, or a clock — both
+ * are functions of one column and the calendar.
+ *
  * The custom fields are CTR-016's, and they are the M6 catalog finally
  * doing work. The contract's type attaches fields through
  * `contract_type_fields`; that join decides which render and in what
@@ -124,6 +140,7 @@ import {
   ne,
   SEVERITY_LEVELS,
   sql,
+  TERM_TYPES,
   users,
   USER_ROLES,
   VALUE_CADENCES,
@@ -151,7 +168,11 @@ import {
   selectAttachedFields,
   type AttachedCustomField,
 } from "../../lib/custom-fields.js";
-import { SOFT_GATE_PROBLEM_TYPE } from "@openlaw/shared";
+import {
+  SOFT_GATE_PROBLEM_TYPE,
+  TERM_EXPIRY_ON_EVERGREEN_PROBLEM_TYPE,
+  TERM_RENEWAL_PERIOD_PROBLEM_TYPE,
+} from "@openlaw/shared";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import { assertApprovalGate, type UnresolvedApproval } from "../../lib/soft-gate.js";
 
@@ -232,6 +253,23 @@ const ContractValueInput = z.strictObject({
   cadence: z.enum(VALUE_CADENCES),
 });
 
+/** CTR-006's three kinds of commitment. Code branches on it, so it is a
+ * fixed enum rather than an admin-configurable list. */
+const TermTypeSchema = z.enum(TERM_TYPES);
+
+/**
+ * The two term periods, bounded exactly as the database bounds them.
+ *
+ * A roll of zero months would advance an expiry to itself and a
+ * negative notice period would put the deadline after the date it warns
+ * about; neither is a term. The ceilings are generous rather than
+ * meaningful — a century of months, a century of days — and they are
+ * here so a slip reads as a refusal at the seam rather than as a
+ * constraint violation out of Postgres.
+ */
+const RenewalPeriodSchema = z.int().min(1).max(1200);
+const NoticePeriodSchema = z.int().min(0).max(36_500);
+
 /** A person as every contract surface renders them: name and face, plus
  * the SET-005 archived flag the shared identity component greys on. */
 const PersonSchema = z.object({
@@ -307,6 +345,36 @@ const ContractRowSchema = z.object({
    * says nothing about money. The C1 mock draws it as a list column, so
    * it rides every row, not just the record's. */
   value: ContractValueSchema.nullable(),
+  /** CTR-006's term type. Not null: every contract is one of the three
+   * kinds whether or not anybody has said so, and `fixed` is what a
+   * record starts on. */
+  termType: TermTypeSchema,
+  /** When the term starts; NULL until known. */
+  effectiveDate: z.iso.date().nullable(),
+  /** When the term ends; NULL for an evergreen contract, which has no
+   * end, and NULL on the other two until somebody records one. */
+  expiryDate: z.iso.date().nullable(),
+  /** How far one confirmed roll advances the expiry. Auto-renewing
+   * contracts only, so NULL on the other two. */
+  renewalPeriodMonths: z.int().nullable(),
+  /** The action window before expiry, in days. Legal on any term
+   * type. */
+  noticePeriodDays: z.int().nullable(),
+  /**
+   * CTR-006's notice deadline: the expiry minus the notice period,
+   * **derived at read and never stored**. NULL while either half is
+   * missing — there is nothing to subtract from, or nothing to
+   * subtract — which is why an evergreen contract never has one.
+   */
+  noticeDeadline: z.iso.date().nullable(),
+  /**
+   * How many days are left of the term: the expiry minus today,
+   * **derived at read and never stored**. Negative once the expiry has
+   * passed, which is a fact the record has to be able to say. NULL when
+   * no expiry is recorded, and so always NULL for an evergreen
+   * contract.
+   */
+  daysRemaining: z.int().nullable(),
   description: z.string().nullable(),
   /** CTR-016's custom fields, keyed by the catalog field's slug. Which
    * of these the record draws is the type's attachment join to say, not
@@ -489,6 +557,55 @@ function toValue(row: Contract) {
     : { amount: row.valueAmount, currency: row.valueCurrency, cadence: row.valueCadence };
 }
 
+const DAY_MS = 86_400_000;
+
+/** A civil date as the instant of its own UTC midnight. The term
+ * columns are calendar dates rather than moments, so every subtraction
+ * below is done in one zone and stays whole days. */
+function civilInstant(date: string): number {
+  return Date.parse(`${date}T00:00:00Z`);
+}
+
+/** That instant back as the `YYYY-MM-DD` the wire and the column both
+ * carry. */
+function civilDate(instant: number): string {
+  return new Date(instant).toISOString().slice(0, 10);
+}
+
+/**
+ * CTR-006's notice deadline: the expiry minus the notice period.
+ *
+ * **Derived at read, stored nowhere.** It is null while either half is
+ * missing: with no expiry there is nothing to subtract from, and with
+ * no notice period there is nothing to subtract. An evergreen contract
+ * holds no expiry, so it never has one — the blank falls out of the
+ * model rather than being a case anybody writes.
+ */
+function toNoticeDeadline(row: Contract): string | null {
+  if (row.expiryDate === null || row.noticePeriodDays === null) return null;
+  return civilDate(civilInstant(row.expiryDate) - row.noticePeriodDays * DAY_MS);
+}
+
+/**
+ * How many days are left of the term: the expiry minus today.
+ *
+ * **Derived at read, stored nowhere** — and so it needs no job, no
+ * sweep, and no clock seam: it is a function of one column and the
+ * calendar, and a test controls it by writing a date on either side of
+ * now. Negative once the expiry has passed, because a record whose term
+ * ran out has to be able to say so.
+ *
+ * Today is taken in UTC. The seam has no viewer to take a timezone
+ * from, and this is an at-a-glance count rather than a deadline
+ * anybody's diary is set by — the deadline itself is the notice
+ * deadline above, which is a calendar date and carries no zone at all.
+ */
+function toDaysRemaining(row: Contract, now: Date = new Date()): number | null {
+  if (row.expiryDate === null) return null;
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  return Math.round((civilInstant(row.expiryDate) - today) / DAY_MS);
+}
+
 /** One value equals another when all three parts match, and no value
  * equals no value. A field that commits as a group compares as a group
  * — otherwise a re-sent identical value would write an audit row saying
@@ -536,6 +653,17 @@ function toRow(context: ContractContext) {
     priority: row.priority,
     risk: row.risk,
     value: toValue(row),
+    termType: row.termType,
+    effectiveDate: row.effectiveDate,
+    expiryDate: row.expiryDate,
+    renewalPeriodMonths: row.renewalPeriodMonths,
+    noticePeriodDays: row.noticePeriodDays,
+    // The two CTR-006 derivations, computed here because here is where
+    // every answer is assembled — one place, so the record read, the
+    // list, and every write's answer can never disagree about a date
+    // none of them stores.
+    noticeDeadline: toNoticeDeadline(row),
+    daysRemaining: toDaysRemaining(row),
     description: row.description,
     customFields: row.customFields,
     isConfidential: row.isConfidential,
@@ -1469,13 +1597,19 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "Commit one field of a contract in place (DES-017 per-field " +
           "commits): title, description, the Owner, the signing entity, " +
-          "priority, risk, the value, the type, a custom field, or the " +
+          "priority, risk, the value, the CTR-006 term fields, the type, " +
+          "a custom field, or the " +
           "status — any live status may follow any other (CTR-001). The " +
           "value is one field in three parts: amount, currency, and " +
           "cadence commit together and clear together. Re-typing " +
           "re-checks the new type's hard-required fields before it " +
           "commits (CTR-016/MTR-014), so the type and the values that " +
-          "satisfy it may be sent together. The Confidential flag " +
+          "satisfy it may be sent together. The term is five fields with " +
+          "one rule between them (CTR-006): an expiry on an evergreen " +
+          "contract and a renewal period on a contract that does not " +
+          "auto-renew are refused 400 with their own problem types, and " +
+          "a term-type change clears the fields the new type cannot " +
+          "hold, each clear narrated as the edit it is. The Confidential flag " +
           "(DD-014) commits here too, but only for an Administrator, the " +
           "contract's creator, or its Owner: anyone else who reaches the " +
           "record is refused 403, and anyone who does not reach it is " +
@@ -1504,6 +1638,23 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
            * whose value was taken off read the same, because both are
            * "no value is recorded". */
           value: ContractValueInput.nullable().optional(),
+          /** CTR-006's term type. Changing it clears the fields the new
+           * type cannot hold, and each clear is narrated as the edit it
+           * is. There is no `null`: every contract is one of the three
+           * kinds. */
+          termType: TermTypeSchema.optional(),
+          /** CTR-006's start of term. `null` clears it back to not
+           * known, which is where every contract starts. */
+          effectiveDate: z.iso.date().nullable().optional(),
+          /** CTR-006's end of term. Refused on an evergreen contract,
+           * which has no end; `null` clears it. */
+          expiryDate: z.iso.date().nullable().optional(),
+          /** CTR-006's roll length. Refused on anything but an
+           * auto-renewing contract; `null` clears it. */
+          renewalPeriodMonths: RenewalPeriodSchema.nullable().optional(),
+          /** CTR-006's action window before expiry. Legal on any term
+           * type; `null` clears it. */
+          noticePeriodDays: NoticePeriodSchema.nullable().optional(),
           /** CTR-002's type, re-picked. Re-typing is the second place
            * MTR-014's required rule holds, so this may travel with the
            * `customFields` that satisfy the new type — the one compound
@@ -1529,6 +1680,16 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         }),
         response: {
           200: ContractFieldsEnvelope,
+          // CTR-006's two shape rules. A client branches on these
+          // because the repair is a choice nothing else on this route
+          // asks for — change the term type, or drop the value — and
+          // because the record draws its term controls by the same rule.
+          400: problemTypeResponse(
+            "The term data would contradict its own type (CTR-006): an expiry on an " +
+              "evergreen contract, or a renewal period on a contract that does not " +
+              "auto-renew. Change the term type, or leave the value off.",
+            [TERM_EXPIRY_ON_EVERGREEN_PROBLEM_TYPE, TERM_RENEWAL_PERIOD_PROBLEM_TYPE],
+          ),
           // CTR-012's soft gate is the one refusal on this route a
           // caller has to act on rather than print: the same request
           // with `overrideSoftGate` succeeds, so a client that could
@@ -1641,6 +1802,91 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         if (body.risk !== undefined && body.risk !== target.risk) {
           patch.risk = body.risk;
           changed.risk = { from: target.risk, to: body.risk };
+        }
+
+        // CTR-006's term: five fields with one rule running between
+        // them. Each commits on its own like every other field
+        // (DES-017), and the type is what decides which of the other
+        // four the record may hold at all.
+        //
+        // The type this write lands on, whether it is being changed or
+        // merely being read: everything below is checked against it, so
+        // a term type and the dates that suit it may travel together.
+        const termType = body.termType ?? target.termType;
+        if (body.termType !== undefined && body.termType !== target.termType) {
+          patch.termType = body.termType;
+          changed.termType = { from: target.termType, to: body.termType };
+        }
+
+        // What the type will not hold, refused before anything is
+        // written. A value sent in the same breath as the type that
+        // forbids it is a contradiction rather than an oversight, so it
+        // is refused rather than quietly dropped — the clearing below
+        // is for what the record already held, which nobody re-sent.
+        if (body.expiryDate != null && termType === "evergreen") {
+          throw httpError(400, "An evergreen contract has no expiry date.", {
+            type: TERM_EXPIRY_ON_EVERGREEN_PROBLEM_TYPE,
+          });
+        }
+        if (body.renewalPeriodMonths != null && termType !== "auto_renew") {
+          throw httpError(400, "Only an auto-renewing contract has a renewal period.", {
+            type: TERM_RENEWAL_PERIOD_PROBLEM_TYPE,
+          });
+        }
+
+        if (body.effectiveDate !== undefined && body.effectiveDate !== target.effectiveDate) {
+          patch.effectiveDate = body.effectiveDate;
+          changed.effectiveDate = { from: target.effectiveDate, to: body.effectiveDate };
+        }
+        if (body.expiryDate !== undefined && body.expiryDate !== target.expiryDate) {
+          patch.expiryDate = body.expiryDate;
+          changed.expiryDate = { from: target.expiryDate, to: body.expiryDate };
+        }
+        if (
+          body.renewalPeriodMonths !== undefined &&
+          body.renewalPeriodMonths !== target.renewalPeriodMonths
+        ) {
+          patch.renewalPeriodMonths = body.renewalPeriodMonths;
+          changed.renewalPeriodMonths = {
+            from: target.renewalPeriodMonths,
+            to: body.renewalPeriodMonths,
+          };
+        }
+        if (
+          body.noticePeriodDays !== undefined &&
+          body.noticePeriodDays !== target.noticePeriodDays
+        ) {
+          patch.noticePeriodDays = body.noticePeriodDays;
+          changed.noticePeriodDays = {
+            from: target.noticePeriodDays,
+            to: body.noticePeriodDays,
+          };
+        }
+
+        // The clears a type change forces, narrated as the edits they
+        // are (CTR-006). Re-typing a contract to evergreen takes its
+        // expiry off, and re-typing it off auto-renew takes its renewal
+        // period off, because the record must not go on holding a fact
+        // its type says it cannot have. Each lands in the same changed
+        // map as an ordinary edit, so the feed says the expiry was
+        // cleared rather than leaving a reader to infer it from the
+        // type change beside it.
+        //
+        // The value read is the one this write will leave behind — a
+        // clear sent in the same request has already been recorded, and
+        // nothing here writes it twice.
+        const nextExpiry = patch.expiryDate === undefined ? target.expiryDate : patch.expiryDate;
+        if (termType === "evergreen" && nextExpiry !== null) {
+          patch.expiryDate = null;
+          changed.expiryDate = { from: nextExpiry, to: null };
+        }
+        const nextRenewalPeriod =
+          patch.renewalPeriodMonths === undefined
+            ? target.renewalPeriodMonths
+            : patch.renewalPeriodMonths;
+        if (termType !== "auto_renew" && nextRenewalPeriod !== null) {
+          patch.renewalPeriodMonths = null;
+          changed.renewalPeriodMonths = { from: nextRenewalPeriod, to: null };
         }
 
         // CTR-002's type, re-picked — and with it the whole CTR-016
