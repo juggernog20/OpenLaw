@@ -46,15 +46,12 @@ import { createHash } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { documents, documentVersions, eq, sql, users } from "@openlaw/db";
 import { buildApp } from "../../app.js";
-import { createUnconfiguredSigningResolver } from "../../lib/signing/resolver.js";
 import { provisionUser } from "../../auth/instance.js";
+import { testDeps } from "../../testing/deps.js";
 import {
-  CapturingMailer,
-  fixedMailerResolver,
   signInCookies,
   startHarness,
   TEST_ADMIN as ADMIN,
-  TEST_AUTH_CONFIG,
   type TestHarness,
 } from "../../testing/harness.js";
 
@@ -2044,12 +2041,10 @@ describe("the upload ceiling", () => {
 
   beforeAll(async () => {
     small = await buildApp({
+      ...testDeps(),
       db: harness.db,
-      config: TEST_AUTH_CONFIG,
-      resolveMailer: fixedMailerResolver(new CapturingMailer()),
       storage: harness.storage,
       docEngine: harness.docEngine,
-      resolveSigningProvider: createUnconfiguredSigningResolver(),
       jobs: harness.pipeline,
       maxUploadBytes: LIMIT,
     });

@@ -38,18 +38,15 @@ import { documentVersionRenditions, eq, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import { fakeConversionText } from "../../lib/doc-engine/fake.js";
 import { DOCX_MIME_TYPE, PPTX_MIME_TYPE, officePackage } from "../../testing/fixtures/office.js";
+import { testDeps } from "../../testing/deps.js";
 import {
-  CapturingMailer,
-  fixedMailerResolver,
   signInCookies,
   startHarness,
   TEST_ADMIN as ADMIN,
-  TEST_AUTH_CONFIG,
   type TestHarness,
 } from "../../testing/harness.js";
 import { buildApp } from "../../app.js";
 import { createUnconfiguredJobQueue } from "../../pipeline/jobs.js";
-import { createUnconfiguredSigningResolver } from "../../lib/signing/resolver.js";
 
 /** A Legal Team Member on the contract's team, who uploads everything
  * here and reads it back. */
@@ -558,13 +555,13 @@ describe("when the queue cannot be reached", () => {
     // row is written in the upload's own transaction, so it survives a
     // send that never happened and M12/6's sweep is what picks it up.
     const detached = await buildApp({
+      ...testDeps(),
       db: harness.db,
-      config: TEST_AUTH_CONFIG,
-      resolveMailer: fixedMailerResolver(new CapturingMailer()),
       storage: harness.storage,
       docEngine: harness.docEngine,
+      // Named rather than left to the default: the queue that rejects
+      // everything is what this test is about.
       jobs: createUnconfiguredJobQueue(),
-      resolveSigningProvider: createUnconfiguredSigningResolver(),
     });
     await detached.ready();
     try {
