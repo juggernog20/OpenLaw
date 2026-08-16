@@ -72,6 +72,19 @@ describe("signing host configuration", () => {
     );
   });
 
+  it("refuses credentials in the URL", () => {
+    // `URL#origin` would drop them silently, and the driver carries its
+    // own credentials — the same dropped-not-honoured rule as a path.
+    for (const value of [
+      "http://operator:hunter2@stand-in.invalid:8129",
+      "http://operator@stand-in.invalid:8129",
+    ]) {
+      expect(() => readDocuSignBaseUrl({ DOCUSIGN_BASE_URL: value })).toThrow(
+        SigningHostConfigError,
+      );
+    }
+  });
+
   it("builds the plain driver when no stand-in is named", () => {
     // Identity, not equivalence: an install with no override carries no
     // indirection at all, which is what keeps this switch out of every
