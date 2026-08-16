@@ -111,6 +111,10 @@ interface EnvelopeRow {
   reason: string | null;
   completedAt: string | null;
   sentAt: string;
+  /** Where this round's executed copy has got to (M15/5). Nothing here
+   * is about the copy, but it is on the row and it settles a moment
+   * after a `signed` delivery — see {@link settledFetch}. */
+  executedFetch: string;
 }
 
 beforeAll(async () => {
@@ -270,6 +274,28 @@ async function envelopeOn(number: number): Promise<EnvelopeRow> {
   const rows = res.json().envelopes as EnvelopeRow[];
   expect(rows, "one envelope on the record").toHaveLength(1);
   return rows[0]!;
+}
+
+/**
+ * Waits until the executed-copy fetch a `signed` delivery set going has
+ * settled (M15/5).
+ *
+ * The fetch runs on the pipeline, so it lands on the row a moment after
+ * the delivery is acknowledged. Nothing in this suite is about the
+ * copy — it is about the transition — but a snapshot of the row taken
+ * while the fetch is still running would not be the row a moment later.
+ * Waiting for it is what makes "nothing changed" a fact rather than a
+ * race.
+ */
+async function settledFetch(number: number): Promise<EnvelopeRow> {
+  const deadline = Date.now() + 20_000;
+  let last: EnvelopeRow | undefined;
+  while (Date.now() < deadline) {
+    last = await envelopeOn(number);
+    if (last.executedFetch !== "pending") return last;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  throw new Error(`the executed copy was still owed: ${JSON.stringify(last)}`);
 }
 
 /** Every envelope entry on one contract, oldest first. */
@@ -544,7 +570,7 @@ describe("a delivery about an envelope the record has finished with", () => {
   it("leaves an ending alone when a later delivery reports another one", async () => {
     const record = await recordWithEnvelopeOut("Contradicted ending");
     await deliver({ providerEnvelopeId: record.providerEnvelopeId, status: "signed" });
-    const ended = await envelopeOn(record.number);
+    const ended = await settledFetch(record.number);
 
     const res = await deliver({
       providerEnvelopeId: record.providerEnvelopeId,

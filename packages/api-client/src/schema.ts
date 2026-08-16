@@ -6390,6 +6390,14 @@ export interface operations {
               /** Format: date-time */
               sentAt: string;
               completedAt: string | null;
+              /** @enum {string} */
+              executedFetch: "pending" | "ready" | "failed";
+              executedCopy: {
+                documentId: string;
+                versionId: string;
+                versionNumber: number;
+                originalFilename: string;
+              } | null;
             }[];
             signingConfigured: boolean;
             primaryDocument: {
@@ -6468,6 +6476,14 @@ export interface operations {
               /** Format: date-time */
               sentAt: string;
               completedAt: string | null;
+              /** @enum {string} */
+              executedFetch: "pending" | "ready" | "failed";
+              executedCopy: {
+                documentId: string;
+                versionId: string;
+                versionNumber: number;
+                originalFilename: string;
+              } | null;
             }[];
             signingConfigured: boolean;
             primaryDocument: {
@@ -6540,6 +6556,14 @@ export interface operations {
               /** Format: date-time */
               sentAt: string;
               completedAt: string | null;
+              /** @enum {string} */
+              executedFetch: "pending" | "ready" | "failed";
+              executedCopy: {
+                documentId: string;
+                versionId: string;
+                versionNumber: number;
+                originalFilename: string;
+              } | null;
             }[];
             signingConfigured: boolean;
             primaryDocument: {

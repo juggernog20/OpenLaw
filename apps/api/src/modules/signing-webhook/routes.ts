@@ -39,6 +39,13 @@
  * sweep and the void route also go through. A replay changes nothing
  * the first delivery did not, because that function says so.
  *
+ * **The heavy half is deferred to the pipeline.** A delivery that
+ * signs an envelope asks for its executed copy to be fetched and filed
+ * (M15/5) and answers straight away. The ask hangs off the transition's
+ * commit, because the funnel owns its transaction and has no hook
+ * inside it, and a queue that cannot be reached never fails this route:
+ * the envelope's own fetch state is what the boot sweep reads.
+ *
  * The route is hidden from the OpenAPI document, exactly as the auth
  * handler is: it is DocuSign's address, not part of the API surface a
  * client integrates against, and its body is bytes rather than a
@@ -53,6 +60,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { SIGNING_PROVIDERS, type SigningProviderKey } from "@openlaw/db";
 import { httpError } from "../../lib/problem.js";
 import { WebhookSignatureError } from "../../lib/signing/provider.js";
+import { requestExecutedCopy } from "../../lib/signing/completion.js";
 import { applyEnvelopeStatus } from "../../lib/signing/transitions.js";
 import { webhookPath } from "../signing-connector/routes.js";
 
@@ -187,6 +195,15 @@ export const signingWebhookRoutes: FastifyPluginAsync = async (app) => {
           "signing: a delivery reported a status a finished envelope had already passed",
         );
       }
+
+      // The completion's follow-on work, hung off the commit rather
+      // than written inside it (M15/5): a signature this delivery
+      // applied asks for the executed copy to be fetched and filed. It
+      // is awaited only long enough to record the request — the fetch
+      // itself runs on the worker — and it never fails this answer,
+      // because the envelope's own fetch state is what makes the work
+      // recoverable.
+      await requestExecutedCopy(app.jobs, request.log, result);
 
       // Nothing to say back. The provider wants an acknowledgement, not
       // a document, and an empty one is the fastest honest answer.

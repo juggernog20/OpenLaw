@@ -23,11 +23,14 @@
  */
 
 import { PgBoss, type JobWithMetadata } from "pg-boss";
+import type { SigningResolver } from "../lib/signing/resolver.js";
 import type { DerivationDeps } from "./derivations.js";
 import { handleDisplayConversion } from "./display-conversion.js";
+import { handleExecutedCopyFetch } from "./executed-copy.js";
 import {
   JOB_QUEUES,
   type DisplayConversionJob,
+  type ExecutedCopyFetchJob,
   type JobQueue,
   type TextExtractionJob,
 } from "./jobs.js";
@@ -105,6 +108,40 @@ export const DISPLAY_CONVERSION_QUEUE_OPTIONS = {
   retryBackoff: true,
 } as const;
 
+/**
+ * The same bounds for the executed-copy fetch (M15/5), stated
+ * separately because they bound different work again.
+ *
+ * The job makes **one** call to somebody else's network — the provider
+ * hands back a finished PDF — and then stores it. There is no engine
+ * pass in it, so the ceiling is smaller than the two above: five
+ * minutes is generous for a download and still notices a wedged worker
+ * quickly. The retries are the same three attempts, because the failure
+ * a retry heals is the same one — a provider that was unreachable for a
+ * moment.
+ */
+export const EXECUTED_COPY_QUEUE_OPTIONS = {
+  expireInSeconds: 300,
+  retryLimit: 2,
+  retryDelay: 30,
+  retryBackoff: true,
+} as const;
+
+/**
+ * Everything a process that works the queue is built from.
+ *
+ * The derivation jobs need the database, storage, and the doc engine;
+ * the executed-copy fetch needs the signing connector instead of the
+ * engine. One type rather than one per queue, because a worker is one
+ * process and its dependencies are chosen once at boot.
+ */
+export interface PipelineHandlers extends DerivationDeps {
+  /** The connector, read live per call (CTR-013). An install with no
+   * connector resolves to nothing, and an executed-copy job then
+   * records a terminal failure rather than waiting for one. */
+  resolveSigningProvider: SigningResolver;
+}
+
 /** What a process needs to bring the pipeline up. */
 export interface PipelineOptions {
   /**
@@ -116,7 +153,7 @@ export interface PipelineOptions {
    * Passed by a process that works the queue, left out by one that only
    * sends to it. The API sends; the worker works.
    */
-  handlers?: DerivationDeps;
+  handlers?: PipelineHandlers;
   /** Where the pipeline's own lines go. Defaults to stdout as JSON. */
   log?: PipelineLogger;
 }
@@ -177,6 +214,34 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
   });
 
   const handlers = options.handlers;
+  /**
+   * The sending half, built before the working half needs it.
+   *
+   * The executed-copy handler asks for the appended round's own
+   * derivations once its transaction commits (M15/5), so a handler has
+   * to be able to reach the queue it is running on. Building the sender
+   * first and closing over it is what breaks that circle — there is
+   * still one object, and it is the one this call returns.
+   */
+  const queue: JobQueue = {
+    async requestTextExtraction(versionId: string): Promise<void> {
+      const job: TextExtractionJob = { versionId };
+      // The version is the key the `short` policy collapses on, so
+      // asking twice for a version nobody has started yet costs one job.
+      await boss.send(JOB_QUEUES.textExtraction, job, { singletonKey: versionId });
+    },
+    async requestDisplayConversion(versionId: string): Promise<void> {
+      const job: DisplayConversionJob = { versionId };
+      await boss.send(JOB_QUEUES.displayConversion, job, { singletonKey: versionId });
+    },
+    async requestExecutedCopyFetch(envelopeId: string): Promise<void> {
+      const job: ExecutedCopyFetchJob = { envelopeId };
+      // The envelope is the collapsing key here, for the version's
+      // reason: a webhook delivery and the boot sweep naming the same
+      // envelope leave one job rather than two.
+      await boss.send(JOB_QUEUES.executedCopyFetch, job, { singletonKey: envelopeId });
+    },
+  };
   // Everything from here holds a connection pool, so a failure part way
   // through has to put it back. A boot that raised past this and left
   // pg-boss connected would leak the pool into a process that is about
@@ -211,6 +276,15 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
     await boss.updateQueue(JOB_QUEUES.displayConversion, {
       notify: true,
       ...DISPLAY_CONVERSION_QUEUE_OPTIONS,
+    });
+    await boss.createQueue(JOB_QUEUES.executedCopyFetch, {
+      policy: "short",
+      notify: true,
+      ...EXECUTED_COPY_QUEUE_OPTIONS,
+    });
+    await boss.updateQueue(JOB_QUEUES.executedCopyFetch, {
+      notify: true,
+      ...EXECUTED_COPY_QUEUE_OPTIONS,
     });
 
     if (handlers) {
@@ -272,8 +346,30 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
           }
         },
       );
+      await boss.work(
+        JOB_QUEUES.executedCopyFetch,
+        oneAtATime,
+        async (jobs: JobWithMetadata<ExecutedCopyFetchJob>[]) => {
+          for (const job of jobs) {
+            await handleExecutedCopyFetch(
+              { ...handlers, jobs: queue },
+              {
+                envelopeId: job.data.envelopeId,
+                retryCount: job.retryCount,
+                retryLimit: job.retryLimit,
+              },
+            );
+          }
+        },
+      );
       log.info(
-        { queues: [JOB_QUEUES.textExtraction, JOB_QUEUES.displayConversion] },
+        {
+          queues: [
+            JOB_QUEUES.textExtraction,
+            JOB_QUEUES.displayConversion,
+            JOB_QUEUES.executedCopyFetch,
+          ],
+        },
         "working the job queue",
       );
     }
@@ -285,16 +381,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
   }
 
   return {
-    async requestTextExtraction(versionId: string): Promise<void> {
-      const job: TextExtractionJob = { versionId };
-      // The version is the key the `short` policy collapses on, so
-      // asking twice for a version nobody has started yet costs one job.
-      await boss.send(JOB_QUEUES.textExtraction, job, { singletonKey: versionId });
-    },
-    async requestDisplayConversion(versionId: string): Promise<void> {
-      const job: DisplayConversionJob = { versionId };
-      await boss.send(JOB_QUEUES.displayConversion, job, { singletonKey: versionId });
-    },
+    ...queue,
     stop: async () => {
       // Graceful by default: it stops taking work, waits for the jobs
       // already in hand, and then closes its connections. A job that

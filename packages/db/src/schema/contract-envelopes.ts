@@ -31,6 +31,11 @@
  * this table rather than after it, because the one-transaction send has
  * to write a row the transition function can then move without a
  * migration between them.
+ *
+ * M15/5 adds one column this table could not have held earlier:
+ * `executed_version_id`, the version this round filed. The fetch state
+ * says *whether* the executed copy landed; this says *which file it
+ * is*, and the two are different questions.
  */
 
 import { sql } from "drizzle-orm";
@@ -105,6 +110,25 @@ export const contractEnvelopes = pgTable(
     executedFetch: text("executed_fetch", { enum: EXECUTED_FETCH_STATES })
       .notNull()
       .default("pending"),
+    /**
+     * The version **this round** filed on the chain (M15/5, CTR-014).
+     *
+     * It is not the same fact as `documents.executed_version_id`, and
+     * that is why it is its own column. The pin names the one version
+     * the record calls the signed copy, and a team moves it by hand; a
+     * chain can hold two rounds both of kind `executed`, and this row
+     * has to keep saying which of them **it** produced. The envelope
+     * row draws that file, and it would draw the wrong one if it read
+     * the pin.
+     *
+     * NULL until the fetch lands, and NULL again if that version is
+     * erased — DOC-010's hard delete is an Administrator's lawful
+     * erasure, and a row recording a past round must not be what stops
+     * it. `document_version_id` beside it makes the same trade.
+     */
+    executedVersionId: text("executed_version_id").references(() => documentVersions.id, {
+      onDelete: "set null",
+    }),
     sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
     /** When it reached a terminal status; NULL while it is live. */
     completedAt: timestamp("completed_at", { withTimezone: true }),

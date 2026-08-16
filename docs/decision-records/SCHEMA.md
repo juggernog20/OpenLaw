@@ -650,7 +650,7 @@ Compound primary key on (`from_contract_id`, `to_contract_id`, `relation_type`).
 
 Source: **CTR-013**
 
-Signing envelopes sent via the e-signature adapter (DocuSign first connector). Manual hand-off (upload executed PDF) creates no envelope row. Landed in M15/2 with the columns the send writes and the later slices move.
+Signing envelopes sent via the e-signature adapter (DocuSign first connector). Manual hand-off (upload executed PDF) creates no envelope row. Landed in M15/2 with the columns the send writes and the later slices move; `executed_version_id` joined it in M15/5, the slice that files an executed copy.
 
 | Column                     | Type        | Notes                                                                                  |
 | -------------------------- | ----------- | -------------------------------------------------------------------------------------- |
@@ -663,10 +663,13 @@ Signing envelopes sent via the e-signature adapter (DocuSign first connector). M
 | `sent_by`                  | UUID        | FK → `users.id`, not null                                                              |
 | `reason`                   | text        | nullable; the decline or void reason, and only on those two statuses                   |
 | `executed_fetch`           | text (enum) | `pending` \| `ready` \| `failed`, default `pending` — the M12 derived-artifact pattern |
+| `executed_version_id`      | UUID        | FK → `document_versions.id`, nullable, SET NULL — the round **this envelope** filed    |
 | `sent_at`, `completed_at`  | timestamptz | completed_at nullable, and null exactly while the status is `sent`                     |
 | `created_at`, `updated_at` | timestamptz |                                                                                        |
 
 Indexes: `(contract_id)`; unique `(provider, provider_envelope_id)`; **partial unique `(contract_id) WHERE status = 'sent'`** — at most one live envelope per contract (CTR-013), the shape M14 used for the one-pending-ask rule.
+
+`executed_version_id` is **not** the same fact as `documents.executed_version_id`. The pin names the one version the record calls the signed copy and a team moves it by hand; this column says which version _this round_ produced, because a chain can hold two rounds both of kind `executed` and the row has to draw its own (CTR-014).
 
 ---
 

@@ -279,15 +279,6 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
     cleanupStorage = cleanup;
     const docEngine = createFakeDocEngine();
     const jobLog: JobLogLine[] = [];
-    // The real queue and the real handlers, on this container's
-    // Postgres. pg-boss installs its schema in about a tenth of a
-    // second, so every suite runs the production pipeline rather than a
-    // double it would have to be kept in step with.
-    pipeline = await startPipeline({
-      connectionString: container.getConnectionUri(),
-      handlers: { db, storage, docEngine, log: capturingLogger(jobLog) },
-      log: capturingLogger(jobLog),
-    });
     // The production resolver over the fake driver: the stored row and
     // the "is anything configured" decision are production code, and
     // only the driver behind them is the deterministic stand-in. One
@@ -314,6 +305,25 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
         signingKey = key;
       }
       return signing;
+    });
+    // The real queue and the real handlers, on this container's
+    // Postgres. pg-boss installs its schema in about a tenth of a
+    // second, so every suite runs the production pipeline rather than a
+    // double it would have to be kept in step with.
+    //
+    // The resolver is built first because the worker half needs it: the
+    // executed-copy job (M15/5) reaches the provider the same way every
+    // request does, through the stored connector row.
+    pipeline = await startPipeline({
+      connectionString: container.getConnectionUri(),
+      handlers: {
+        db,
+        storage,
+        docEngine,
+        resolveSigningProvider,
+        log: capturingLogger(jobLog),
+      },
+      log: capturingLogger(jobLog),
     });
     const app = await buildApp({
       db,

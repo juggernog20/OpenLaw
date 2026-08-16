@@ -2294,7 +2294,7 @@ What is not there to draw:
 
 **8. Sending opens a dialog, and the dialog is C12 with everything undrawable removed.** The version select comes first (`CONTROL_CLASS`, the record's own single-choice control), listing the primary document's chain **newest first** with the current round marked and selected — a send is consequential enough to name what it is sending rather than to imply it. Then the signers, as **two text boxes per row** with an "Add signer" button and a per-row remove that is absent on the only row; the mock's ordinals, avatars, and drag grip are not drawn, because there is no routing order and no picker (context 1 and 4). Then one optional line, labelled **Subject** where the mock says "Message": the seam carries a subject and no body in v1, so a box labelled "Message" would promise a letter the envelope cannot carry. Left blank, it names the contract. The confirm is the mock's own "Send envelope", the primary button.
 
-**9. The dialog's own note rows are not drawn in this slice.** C12's "The executed file auto-files on the contract; stage advances to Active when everyone signs" and C20's webhook note each describe behaviour that lands in a later M15 slice. DES-035 clause 13's rule holds: a surface that explains a rule it does not yet apply is a surface that is wrong. Each is drawn when its slice exists, in the place the act is taken, exactly as DES-035 clauses 17 and 18 drew theirs. _(Half discharged by **DES-037** clause 4 with M15/3: the true half of C20's webhook sentence is now drawn under the signing block. C12's dialog note and the rest of C20's sentence stay withheld.)_
+**9. The dialog's own note rows are not drawn in this slice.** _(Discharged in full by **DES-039** clauses 5 and 6 with M15/5.)_ C12's "The executed file auto-files on the contract; stage advances to Active when everyone signs" and C20's webhook note each describe behaviour that lands in a later M15 slice. DES-035 clause 13's rule holds: a surface that explains a rule it does not yet apply is a surface that is wrong. Each is drawn when its slice exists, in the place the act is taken, exactly as DES-035 clauses 17 and 18 drew theirs. _(Half discharged by **DES-037** clause 4 with M15/3: the true half of C20's webhook sentence is now drawn under the signing block. C12's dialog note and the rest of C20's sentence stay withheld.)_
 
 **10. A refusal is printed once, in the dialog.** DES-035 clause 12, unchanged: the send is raised from a dialog, so its refusal reports in that dialog's form and the card head's micro-state stays clear.
 
@@ -2333,7 +2333,7 @@ The record's sub-bar gains one conditional chip. No new tokens: the chip and the
 
 Grill rows **E.5** and **X.2** are discharged for signing: the chip is conditional as E.5 decided, and the envelope value-to-family mapping is clause 5.
 
-The later M15 slices extend this record rather than replace it: the void action joins the envelope row's action cell, the decline and void reason joins the row, the executed file joins a signed row (grill rows H.C5 and H.C6), and each of the two note rows clause 9 withheld is drawn where its act is taken. _(The reason, the ending's date, and the first half of C20's note landed with M15/3 — see **DES-037**. The action cell, the void dialog, and the note's third status landed with M15/4 — see **DES-038**.)_
+The later M15 slices extend this record rather than replace it: the void action joins the envelope row's action cell, the decline and void reason joins the row, the executed file joins a signed row (grill rows H.C5 and H.C6), and each of the two note rows clause 9 withheld is drawn where its act is taken. _(The reason, the ending's date, and the first half of C20's note landed with M15/3 — see **DES-037**. The action cell, the void dialog, and the note's third status landed with M15/4 — see **DES-038**. The executed file, the rest of C20's note, and C12's dialog note landed with M15/5 — see **DES-039**, which discharges this list.)_
 
 ## DES-037: The envelope's ending on the row, and the webhook note (extends DES-036, DES-035)
 
@@ -2444,7 +2444,64 @@ The mock's **Remind** is not built, for the reason DES-036's own context gives i
 
 The record's activity feed gains one sentence that selects on whether a person is behind the entry: an envelope voided on the record names the voider, and one voided in the provider's console reads passively, as signed and declined always have.
 
-`designs/contracts.pen` frame **C20** is the reference for the label and the note row, with clauses 1, 3, and 9 above recording where the build departs from it and why. DES-036 clause 4 is discharged: the row has its action cell. DES-036 clause 9 and DES-037 clause 4 are further discharged: the webhook note now names all three statuses that arrive by webhook, and only C12's dialog note and the executed-copy half of C20's sentence stay withheld.
+`designs/contracts.pen` frame **C20** is the reference for the label and the note row, with clauses 1, 3, and 9 above recording where the build departs from it and why. DES-036 clause 4 is discharged: the row has its action cell. DES-036 clause 9 and DES-037 clause 4 are further discharged: the webhook note now names all three statuses that arrive by webhook, and only C12's dialog note and the executed-copy half of C20's sentence stay withheld. _(Both landed with M15/5 — see **DES-039** clauses 5 and 6. Nothing of clause 9 stays withheld.)_
+
+No new tokens.
+
+## DES-039: The executed copy on the row, and the last two withheld notes (extends DES-038, DES-037, DES-036, DES-035)
+
+- **Status:** Accepted
+- **Date:** 2026-08-16
+
+### Context
+
+M15/5 is the slice in which the signed file comes back on its own: the executed PDF is fetched, filed on the primary chain, and pinned, without anybody downloading anything (CTR-013, CTR-014). Two surfaces have been waiting for it.
+
+DES-036's closing note scheduled the first: "the executed file joins a signed row (grill rows H.C5 and H.C6)". H.C5 landed with DES-037; H.C6 is this record.
+
+DES-036 clause 9 withheld two mock note rows until the behaviour each describes existed, and DES-037 clause 4 and DES-038 clause 9 discharged them a status at a time. What is left is the executed-copy half of the `designs/contracts.pen` **C20** sentence and the whole of the **C12** dialog note — and this is the slice that makes both true.
+
+### Decision
+
+**1. The executed copy is drawn in the Completed cell, under the date, as a download.** The cell already answers "this round ended"; the signed file is what the ending produced, so the two facts belong together. It takes the two-line anatomy every other cell on this card uses — the date on top, the file under it — rather than a sixth column, for DES-037 clause 2's reason: the table shares its page with the Team card and has no width to spend, and the cell would be an em dash on every row that is still out, declined, or voided.
+
+**2. It is a link, not a label.** "Shows the executed file" means a reader can open it, so the cell is an anchor to `documentDownloadHref` with the `download` attribute set to the file's own name — the anatomy the document panel's toolbar already uses. Lucide's `Download` at 16, `text-xs text-link`, and a truncating label: "Executed copy". The name of the file is not repeated in the label, because the chain already draws it and the row has no width for it.
+
+**3. A signed row whose copy has not landed says so, in one of two sentences.** The fetch is a background job with the M12 derived-artifact states, so there are two honest answers besides the link. While it runs: "Filing the executed copy…". When it gave up: "The executed copy could not be filed. Upload it to the record instead." Both are `text-xs text-muted`, the secondary line every two-line cell on this card uses. The second one points at the path that still works — CTR-013's manual hand-off — rather than apologising, because DES-015 forbids the apology and the reader's next act is the upload.
+
+**4. Nothing is drawn on a round that never owed a copy.** A live envelope, a decline, and a void draw the date cell alone. An executed copy was never coming for any of them, and a line about one would answer a question nobody asked — DES-037 clause 3's rule, said for the other cell.
+
+**5. The C20 note takes its last half: "Signed, declined, and voided status arrives by webhook. The executed file auto-files and the stage advances to Active."** DES-037 clause 4 drew the first sentence and scheduled the rest; every behaviour it names now exists. DES-037 clause 5 is unchanged — the note is drawn only while an envelope is out, because it answers "do I have to come back and update this by hand", and that is a question only a live row raises.
+
+**6. The C12 dialog note is drawn in the send dialog, above the form.** "When everyone signs, the executed file lands on this contract and the status moves to the active stage." at `text-sm text-muted`, under the title — the place and the shape DES-038 clause 6 gave the void dialog's own sentence, for its reason: a dialog says what its act does where the act is taken. DES-036 clause 9 is discharged in full.
+
+**7. The note names the stage, not a status label.** The mock says "Active", and a team renames its statuses freely — the stage behind them is the fixed one (CTR-001). Promising a label an install may not have is the drift DES-035 clause 13 exists to prevent, so the sentence says "the active stage" and stays true of every configuration.
+
+**8. Nothing changes in the pill families, the chip, or the row's other cells.** A signed envelope already draws `success` on the row and "Envelope signed" in the sub-bar (DES-036 clauses 5 and 11). The executed copy produces facts these surfaces were built to draw.
+
+### Rationale
+
+The whole record is one question — where does the file go — and the answer follows from what each cell is already about. The Document cell says what went out; the Completed cell says the round ended; the file is what the ending produced, so it goes under the ending. Putting it under the Document cell was the other candidate and it reads worse: that cell is about the round that was sent, and a third line under it would make one cell answer two rounds.
+
+The two non-link states are the part worth stating. A background fetch means "signed" and "the file is here" are not the same moment, and a row that drew nothing in between would look broken to somebody refreshing. Saying which of the three states the record is in costs one muted line and removes the only reason to go and look in DocuSign.
+
+### Alternatives considered
+
+- **A sixth "Files" column.** Rejected with clause 1: DES-037 already refused a sixth column for the reason this one would also fail — no width, and an em dash on most rows.
+- **A third line in the Document cell.** Rejected with the rationale: that cell is about the round that went out, and the executed copy is a different round.
+- **Drawing the file name as the link label.** Rejected: the chain draws it, and on a cell this narrow it would truncate to nothing useful. "Executed copy" says what the file is, which is what the reader is looking for.
+- **A `danger`-coloured failure line.** Rejected: a fetch that did not land is not an error on the record, and the manual hand-off is a first-class path (CTR-013). Colour would say something went wrong with the contract.
+- **Silence when the fetch failed.** Rejected: the record would then hold a signed envelope and no signed file with nothing saying why, which is exactly the state the milestone exists to end.
+- **A spinner while the fetch runs.** Rejected for DES-037's reason: chrome pretending to be progress, for work measured in seconds and hidden behind a refresh anyway. Live updates without a refresh are M30's.
+- **Drawing the executed copy from the document's pin.** Rejected: a chain can hold two rounds both called `executed`, and a team that moves the pin by hand would change what an older row says it filed. The row draws its own round.
+
+### Consequences
+
+`EnvelopeRow` grows one secondary line in the Completed cell, drawn by a small `ExecutedFile` component with three branches. The signing answer carries the two facts it needs — the round's fetch state and its own executed version — so no surface asks a new question to draw them.
+
+`SendEnvelopeDialog` grows one note under its title. The card's note row grows one sentence.
+
+`designs/contracts.pen` frames **C20** and **C12** are the reference for the two notes, and both are now drawn whole. DES-036 clause 9 is discharged in full, and DES-036's closing note is discharged: every later-slice extension it scheduled has landed. Grill row **H.C6** is discharged: the executed file is on the signed row.
 
 No new tokens.
 
@@ -2490,3 +2547,4 @@ No new tokens.
 | DES-036 | The signing half of the record — the envelope row, the send dialog, and the sub-bar chip (extends DES-035, DES-034, DES-005)                                         | Accepted |
 | DES-037 | The envelope's ending on the row, and the webhook note (extends DES-036, DES-035)                                                                                    | Accepted |
 | DES-038 | The envelope row's action cell and the void dialog (extends DES-037, DES-036, DES-035)                                                                               | Accepted |
+| DES-039 | The executed copy on the row, and the last two withheld notes (extends DES-038, DES-037, DES-036, DES-035)                                                           | Accepted |
