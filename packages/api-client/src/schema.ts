@@ -488,6 +488,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/signer-erasures": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Erase an external signer's name and address (CTR-013, DD-017). Every `envelope.sent` activity entry naming this address has that name and address rewritten to a tombstone, in place, and the envelope's signer rows for it are deleted. The entry keeps its shape: how many people were asked, and in what order, is about the contract rather than about the person. The erasure is itself appended to the log, carrying counts and no address. Refused for an address that belongs to a user of this install — their erasure is a different act. An address that was never a signer's answers with zeros. Copies already shipped to a SIEM are outside this install and are the operator's to purge */
+    post: operations["eraseSigner"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contract-types": {
     parameters: {
       query?: never;
@@ -3444,6 +3461,47 @@ export interface operations {
               hasWebhookSecret: boolean;
               webhookUrl: string;
               updatedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  eraseSigner: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: email */
+          email: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            erasure: {
+              entriesRedacted: number;
+              signerRowsDeleted: number;
             };
           };
         };

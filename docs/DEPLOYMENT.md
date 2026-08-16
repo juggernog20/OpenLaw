@@ -218,6 +218,27 @@ docker compose up -d
 
 Migrations run automatically when the app container boots (TECH-005); replicas booting together serialize on an advisory lock. Data lives in two named volumes — `openlaw-pgdata` (the database) and `openlaw-files` (uploads, see [Files](#files)) — and both survive `docker compose down`, image upgrades, and rebuilds. The doc engine holds nothing, so it upgrades by being replaced. (`docker compose down -v` deletes them — don't.)
 
+## The activity log leaves this process, and those copies are yours
+
+Every row OpenLaw appends to its activity log is also written to stdout as one line of JSON (DD-017), so you can ship it to Datadog, Loki, Splunk, or whatever else you already run. Nothing is redacted on the way out: the line is a faithful copy of the stored row, because a shipped copy that disagreed with the record would be worse than no copy at all.
+
+**Two consequences you own rather than we do.**
+
+**Container logs are as sensitive as the database.** They carry contract titles, the people on a record, and the name and email address of every external signer an envelope was sent to. Give them the retention and the access control you give a database backup.
+
+**An erasure inside OpenLaw cannot reach a copy that has already left.** An Administrator can erase an **external signer** — somebody with no account here, named in a send dialog by one of your people — and it rewrites that person's name and address out of the stored activity entries and deletes the envelope's signer rows (CTR-013). The entry keeps its shape: it still says how many people were asked, and when.
+
+```bash
+curl -X POST https://legal.example.com/api/v1/signer-erasures \
+  -H 'content-type: application/json' \
+  -b "$ADMIN_SESSION_COOKIE" \
+  -d '{"email":"someone@counterparty.example"}'
+```
+
+It has no settings pane yet — it is an Administrator-only API call, and the API document describes it. It also cannot touch the line your log shipper took months ago. If you have to answer an erasure request in full, purge your own log store as well, and set a retention on it short enough that this is a bounded job rather than an open-ended one.
+
+The same is true of the database backups in [Backups](#backups) below: a `pg_dump` taken before an erasure still holds what was erased.
+
 ## Health
 
 - `GET /healthz` — liveness: the process is up.

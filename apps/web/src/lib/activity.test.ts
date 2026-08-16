@@ -383,6 +383,7 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     old: "[secret]",
     new: "[secret]",
   },
+  "signer.erased": { entriesRedacted: 2, signerRowsDeleted: 3 },
   "signing_connector.disabled": { provider: "docusign", liveEnvelopes: 2 },
   "signing_connector.enabled": { provider: "docusign" },
   "signing_connector.removed": {
