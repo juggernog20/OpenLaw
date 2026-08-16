@@ -9,7 +9,14 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createDb, runMigrations } from "@openlaw/db";
+import {
+  createDb,
+  readSecretKeys,
+  rewrapIsNoteworthy,
+  rewrapSecrets,
+  runMigrations,
+  useSecretKeys,
+} from "@openlaw/db";
 import { buildApp } from "./app.js";
 import { createMailerResolver } from "./lib/mailer.js";
 import { createDocEngineFromEnv } from "./lib/doc-engine/config.js";
@@ -33,8 +40,40 @@ function requireEnv(name: string): string {
 }
 
 const databaseUrl = requireEnv("DATABASE_URL");
+
+// TECH-022: the credential columns are sealed with a key that lives
+// outside the database, so a database backup on its own opens nothing.
+// Read here, before the first query, for the storage root's reason —
+// startup reads the environment and no module below does — and the boot
+// stops without it: an install that started with no key would write
+// credentials nobody could read back.
+useSecretKeys(
+  (function readKeys() {
+    try {
+      return readSecretKeys(process.env);
+    } catch (error) {
+      console.error(error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
+  })(),
+);
+
 const db = createDb(databaseUrl);
 await runMigrations(db);
+
+// Beside the migrations, and for their reason (TECH-005: the API is the
+// one process that changes the database on a deploy). This is what makes
+// an upgrade from a plaintext-storing version, and a key rotation, take
+// no manual re-entry — see rewrap.ts in @openlaw/db.
+const rewrap = await rewrapSecrets(db);
+if (rewrapIsNoteworthy(rewrap)) {
+  console.warn(
+    `Stored credentials resealed under ${JSON.stringify(rewrap.resealed)}; ` +
+      `left unreadable: ${JSON.stringify(rewrap.unreadable)}. An unreadable credential was ` +
+      "sealed with a key this install no longer has — paste it again in Settings, or boot " +
+      "once with the old key in OPENLAW_SECRET_KEY_PREVIOUS.",
+  );
+}
 
 // TECH-011: SMTP is the universal default, carried by env vars or saved
 // through the SET-004 wizard's email step (#37). Environment wins: with
