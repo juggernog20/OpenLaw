@@ -2505,6 +2505,58 @@ The two non-link states are the part worth stating. A background fetch means "si
 
 No new tokens.
 
+## DES-040: The term on the Contract card — five fields, and the blanks the type forces (extends DES-017, DES-032)
+
+- **Status:** Accepted
+- **Date:** 2026-08-17
+
+### Context
+
+M16/1 puts CTR-006's term on the record: a term type, an effective date, an expiry, a renewal period in months, and a notice period in days. Grill rows **G.R3** (auto-renew), **G.R4** (notice period), and **G.R7** (days remaining) have been waiting for these columns since the contracts grill closed; **G.R6** (renewal cap) was removed there, and no such field exists to draw.
+
+The mock draws all three inside the V12/V13 "Description" card as read-only facts — "Yes — 12-month rolling", "60 days", "248 days until expiry". That card is the one the record splits in two: DES-017 removed the page-level Edit toggle its facts were edited through, so the record's own columns became the editable **Contract** card and the free-form prose kept the **Description** name. The term goes where the rest of the record's columns went.
+
+What the mock has no answer for is the rule between the fields. CTR-006 says an evergreen contract holds no expiry and only an auto-renewing one holds a renewal period, and the seam refuses both with named problem types (TECH-020). A surface has to decide what it draws where the record may not hold a value.
+
+### Decision
+
+**1. The five term fields are ordinary fields of the Contract card, in the order the term is read: type, effective date, expiry, renewal period, notice period.** They take the same anatomy every field on that card takes — a `Label`, the control, and the field's own micro-state beside it — and each commits on its own (DES-017, no carve-out). The type is a select and commits on its own change, exactly as status, priority, and risk do; the two dates and the two counts are `Input`s that commit on blur or Enter and revert on Escape, exactly as the title does. The card grows one group; it grows no new pattern.
+
+**2. A field the contract's type cannot hold is drawn as a fact with an em dash, not as a disabled control.** An evergreen contract draws no expiry box, and anything but an auto-renewing one draws no renewal-period box; in each place the label stays and the value is "—". This is DES-035 clause 9's rule read for a field rather than an act: a control whose every commit the seam would refuse is a dead end, and a disabled box invites somebody to work out why it is disabled. The label stays because grill row **X.6** already settled that schema-backed core fields render with an em dash rather than disappearing — the record's shape should not change under a reader when a select moves.
+
+**3. The notice period is drawn whatever the type says.** A notice obligation sits on a fixed term as readily as on a rolling one (CTR-006), so this is the one term field with no condition on it. That it derives no deadline while there is no expiry is not the field's problem, and the field does not apologise for it.
+
+**4. Days remaining closes the group as a fact, never a field.** It is `expiry_date − today`, derived at the seam and never stored, so the record draws the number it was given and counts nothing itself — a second copy of the rule on this page would drift the first time either half moved. It reads as an ICU plural sentence rather than a bare integer: "45 days left", "Expires today", and — for a term that has run out — "10 days past expiry". Past due counts the other way rather than clamping at zero, because a lapsed term is a fact the record has to be able to say, and it is exactly the fact the milestone's pending-confirmation banner is built on.
+
+**5. The blank is the same em dash in all three places.** One ICU message, so a term field the type forbids and a countdown with no expiry cannot come to look like two different kinds of absence.
+
+**6. Nothing draws a renewal cap.** Grill rows **G.R6** and **I.B7** removed it and CTR-006 kept no column for it. A surface that drew one would be drawing a field the model does not have.
+
+**7. The derived notice deadline is answered but not yet drawn.** The seam computes it (expiry minus the notice period) from this slice on, and the surfaces that show deadlines are M16's later slices. DES-035 clause 13's rule holds: a surface that explains a rule it does not yet apply is a surface that is wrong, and a deadline drawn in isolation, away from the expiry and the key dates it belongs beside, is the same mistake in a smaller frame.
+
+### Rationale
+
+The term is data on the record, and the record already has one editing model. Making it a set of ordinary fields costs no new pattern, gives each write its own activity entry for free, and keeps the audit granularity DES-017 exists for — which matters more here than anywhere else on the card, because "who moved the expiry, and when" is the question a missed renewal is investigated with.
+
+Absence is the design question this record actually answers. The three candidates were a disabled control, a hidden field, and a drawn blank. A disabled control makes the reader diagnose the product; a hidden field makes the card's shape jump when a select moves; a drawn blank says the true thing — the record holds nothing there — and holds the layout still.
+
+### Alternatives considered
+
+- **A Term card of its own.** Rejected for this slice: five fields do not earn a card, and the mock puts them among the record's other facts. The timeline card is a different surface with a different job, and it takes its own decision.
+- **A disabled expiry box on an evergreen contract.** Rejected with clause 2.
+- **Hiding the label as well as the control.** Rejected: grill row X.6 fixed the em-dash convention for core fields, and a card that reflows on a select is harder to read than one that does not.
+- **Drawing the type and the renewal period as one sentence, as the mock does** ("Yes — 12-month rolling"). Rejected: they are two columns and two commits, and a composed sentence cannot be edited in place.
+- **A bare integer for days remaining.** Rejected: "45" needs a unit and a direction, and a negative one would be unreadable. The plural sentence carries both, and it is locale copy rather than code (DES-013).
+- **Computing days remaining in the browser.** Rejected: the seam already answers it, and two derivations of one number is one of them drifting.
+
+### Consequences
+
+`ContractRecord` grows one `TermField` component — a label, a date or number input, and its micro-state — plus one select and two `ReadOnlyField`s. The term's four typed fields hold their own drafts. A term-type commit re-seeds all four, because a type change clears what the new type cannot hold and the answer carries more empty boxes than the request did; a typed field's own commit re-seeds only its own box, so a sibling box's in-progress edit survives the answer landing beside it.
+
+The activity narrator gains five changed-key labels and renders the term type through its own ICU message, so the feed says "Evergreen" where the column says `evergreen`.
+
+Grill rows **G.R3**, **G.R4**, and **G.R7** are discharged. **G.R5** (last renewal) and **G.R6** stay as they were: the first waits for the confirmed roll that writes it, the second is removed for good. No new tokens.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -2548,3 +2600,4 @@ No new tokens.
 | DES-037 | The envelope's ending on the row, and the webhook note (extends DES-036, DES-035)                                                                                    | Accepted |
 | DES-038 | The envelope row's action cell and the void dialog (extends DES-037, DES-036, DES-035)                                                                               | Accepted |
 | DES-039 | The executed copy on the row, and the last two withheld notes (extends DES-038, DES-037, DES-036, DES-035)                                                           | Accepted |
+| DES-040 | The term on the Contract card — five fields, and the blanks the type forces (extends DES-017, DES-032)                                                               | Accepted |

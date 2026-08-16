@@ -7,9 +7,10 @@
  * — `number`, `title`, the type and status FKs, `manager_id`,
  * `priority`, `risk`, the CTR-010 value trio, `description`,
  * `custom_fields`, timestamps, and the soft-delete stamp. M10 adds
- * `is_confidential`, the one column DD-014's gate needs. Term, parent,
- * and matter linking arrive with their own milestones. SCHEMA.md is the
- * naming reference, never a migration to transcribe.
+ * `is_confidential`, the one column DD-014's gate needs. M16 adds the
+ * five CTR-006 term columns. Parent and matter linking arrive with
+ * their own milestones. SCHEMA.md is the naming reference, never a
+ * migration to transcribe.
  *
  * `number` is CTR-003's global reference: a dedicated Postgres identity
  * sequence, independent of the future matters sequence, rendered C-###
@@ -28,6 +29,7 @@ import {
   boolean,
   char,
   check,
+  date,
   index,
   integer,
   jsonb,
@@ -70,6 +72,17 @@ export type SeverityLevel = (typeof SEVERITY_LEVELS)[number];
 export const VALUE_CADENCES = ["one_time", "monthly", "annually"] as const;
 export type ValueCadence = (typeof VALUE_CADENCES)[number];
 
+/**
+ * CTR-006's term type: what kind of commitment this contract is.
+ *
+ * Code branches on it — an evergreen contract holds no expiry, a
+ * renewal period belongs to an auto-renewing one alone, and the
+ * "renewal pending confirmation" predicate reads it — so it is a fixed
+ * enum, not an admin-configurable list.
+ */
+export const TERM_TYPES = ["fixed", "auto_renew", "evergreen"] as const;
+export type TermType = (typeof TERM_TYPES)[number];
+
 export const contracts = pgTable(
   "contracts",
   {
@@ -105,6 +118,34 @@ export const contracts = pgTable(
     priority: text("priority", { enum: SEVERITY_LEVELS }).notNull().default("medium"),
     /** CTR-005: NULL = not yet assessed, which is not the same as low. */
     risk: text("risk", { enum: SEVERITY_LEVELS }),
+    /**
+     * CTR-006's term, in five columns that are five fields (M16/1).
+     *
+     * The type is not null, because every contract is one of the three
+     * kinds whether or not anybody has said so. `fixed` is the default
+     * and the backfill for every row that existed before this column
+     * did: it is the least-asserting of the three — it claims no
+     * automatic roll and no perpetual life — and a team re-types its
+     * evergreens by edit.
+     */
+    termType: text("term_type", { enum: TERM_TYPES }).notNull().default("fixed"),
+    /** When the term starts. NULL until known — a contract is often
+     * recorded before the countersigned copy comes back. */
+    effectiveDate: date("effective_date"),
+    /** When the term ends. NULL for an evergreen contract, which has no
+     * end, and NULL on the other two until somebody records one. The
+     * derived notice deadline and days remaining are both subtractions
+     * from this, so both are blank while it is. */
+    expiryDate: date("expiry_date"),
+    /** How far one confirmed roll advances the expiry. Auto-renewing
+     * contracts only: nothing rolls on the other two, so a number there
+     * would be a fact about a thing that never happens. */
+    renewalPeriodMonths: integer("renewal_period_months"),
+    /** The action window before expiry, in days. Legal on any term
+     * type: a fixed-term contract can carry a notice obligation just as
+     * an auto-renewing one can. The notice deadline derives only when
+     * there is an expiry to subtract it from. */
+    noticePeriodDays: integer("notice_period_days"),
     /** CTR-010's value, in three columns that are one field. The amount
      * is an integer count of the currency's smallest unit — cents for
      * USD, yen for JPY — never a float, so no rounding can creep into a
@@ -217,6 +258,37 @@ export const contracts = pgTable(
     check(
       "contracts_value_cadence_check",
       sql`${table.valueCadence} in ('one_time', 'monthly', 'annually')`,
+    ),
+    check(
+      "contracts_term_type_check",
+      sql`${table.termType} in ('fixed', 'auto_renew', 'evergreen')`,
+    ),
+    // CTR-006's two shape rules, stated where no write path can get
+    // past them. The API refuses both with a named problem type, which
+    // is the answer a person reads; these are the answer the row obeys,
+    // so a term can never contradict its own type whichever code put it
+    // there. An evergreen contract has no end, and only an
+    // auto-renewing one rolls.
+    check(
+      "contracts_evergreen_expiry_check",
+      sql`${table.termType} <> 'evergreen' or ${table.expiryDate} is null`,
+    ),
+    check(
+      "contracts_renewal_period_term_check",
+      sql`${table.termType} = 'auto_renew' or ${table.renewalPeriodMonths} is null`,
+    ),
+    // Two periods, two bounds. A roll of zero months would advance an
+    // expiry to itself, and a negative notice period would put the
+    // deadline after the date it warns about — neither is a term, both
+    // are data-entry slips. The ceilings are generous rather than
+    // meaningful: a century of months and a century of days.
+    check(
+      "contracts_renewal_period_range_check",
+      sql`${table.renewalPeriodMonths} is null or ${table.renewalPeriodMonths} between 1 and 1200`,
+    ),
+    check(
+      "contracts_notice_period_range_check",
+      sql`${table.noticePeriodDays} is null or ${table.noticePeriodDays} between 0 and 36500`,
     ),
     // Two bounds on one column. A negative contract value is not a
     // value — it is a data-entry slip; rebates and credits are

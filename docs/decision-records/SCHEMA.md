@@ -520,11 +520,11 @@ Known columns so far:
 - `manager_id` FK → `users.id`, nullable (null = unassigned/triage), UI label "Owner" per **CTR-004**
 - `priority` — text enum `low|medium|high|critical` (levels renamed per **DES-018**), not null, default `medium` per **CTR-005**
 - `risk` — text enum `low|medium|high|critical`, nullable (null = not yet assessed) per **CTR-005**
-- `term_type` — text enum `fixed|auto_renew|evergreen`, not null per **CTR-006**; renewal engine and calendar branch on this
-- `effective_date` — date, nullable until known per **CTR-006**
-- `expiry_date` — date, nullable (null for evergreen) per **CTR-006**
-- `renewal_period_months` — integer, nullable (auto_renew only) per **CTR-006**
-- `notice_period_days` — integer, nullable per **CTR-006**. **Derived, never stored:** notice deadline = `expiry_date − notice_period_days` (renewal calendar / reminders)
+- `term_type` — text enum `fixed|auto_renew|evergreen`, not null per **CTR-006**, default `fixed`; renewal engine and calendar branch on this. Landed in M16/1
+- `effective_date` — date, nullable until known per **CTR-006**. Landed in M16/1
+- `expiry_date` — date, nullable (null for evergreen) per **CTR-006**. Landed in M16/1
+- `renewal_period_months` — integer, nullable (auto_renew only) per **CTR-006**. Landed in M16/1
+- `notice_period_days` — integer, nullable per **CTR-006**. **Derived, never stored:** notice deadline = `expiry_date − notice_period_days` (renewal calendar / reminders). Landed in M16/1
 - `value_amount` — bigint (integer cents per DES-014), nullable per **CTR-010**
 - `value_currency` — char(3) ISO 4217, nullable (required when amount set) per **CTR-010**
 - `value_cadence` — text enum `one_time|monthly|annually`, nullable per **CTR-010**; total value (annual × term) derived, never stored
@@ -541,6 +541,12 @@ Known columns so far:
 Ended behavior per **CTR-019**: signal not lock — record stays writable; drops from default lists, counts, and renewal-calendar surfaces; `archived_at` remains a separate soft-delete (mistakes/imports), not end-of-life.
 
 Engine behavior per **CTR-006**: notify-only — the system never advances `expiry_date` itself; a past-due auto-renew shows "renewal pending confirmation" until a human confirms (then the date advances, activity-logged).
+
+Term shape per **CTR-006**. The five columns landed in M16/1, migration `0046_contract_term`.
+
+- **Constraints.** Five checks, so no write path can get past them. `term_type` is one of the three kinds. An `evergreen` contract holds no `expiry_date`. Only an `auto_renew` contract holds a `renewal_period_months`. A roll is at least one month. A notice period is at least zero days.
+- **Backfill.** Existing rows took `fixed`. That is an assertion about them, not a discovery: `fixed` is the least-asserting of the three kinds. Re-type an evergreen contract by editing it.
+- **Derived.** Two dates the record answers sit in no column: the notice deadline above, and days remaining (`expiry_date − today`). Both are computed where the answer is assembled. Days remaining goes negative once the expiry has passed.
 
 ---
 

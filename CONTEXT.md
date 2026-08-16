@@ -148,6 +148,14 @@ The configurable taxonomy on a Matter, Contract, or Request, and the designated 
 An entry in the shared custom-field catalog, defined once with a module scope and attached to the types that should render it [MTR-011, CTR-016].
 _Avoid_: custom field (when referring to the catalog entry itself), attribute, property
 
+**Term type**:
+What kind of commitment a Contract is — **fixed**, **auto-renewing**, or **evergreen**. It is one of three fixed values, not a configurable label, because the rest of the term follows from it: an evergreen Contract holds no expiry date, and only an auto-renewing one holds a renewal period [CTR-006].
+_Avoid_: renewal type, contract term (that is the period, not its kind), auto-renew flag
+
+**Notice deadline**:
+The date by which somebody must act to stop a Contract renewing: its expiry date minus its notice period. It is **derived and never stored** — it moves the moment either half does — and it exists only where there is an expiry to subtract from, so an evergreen Contract has none [CTR-006].
+_Avoid_: notice date, notice period (that is the count of days this is derived from), cancellation deadline
+
 **Key date**:
 A named deadline on a Matter or Contract; key dates feed deadline surfaces [MTR-004, CTR-009].
 

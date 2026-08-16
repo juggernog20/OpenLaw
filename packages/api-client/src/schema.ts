@@ -1009,7 +1009,7 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
-    /** Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, the value, the type, a custom field, or the status — any live status may follow any other (CTR-001). The value is one field in three parts: amount, currency, and cadence commit together and clear together. Re-typing re-checks the new type's hard-required fields before it commits (CTR-016/MTR-014), so the type and the values that satisfy it may be sent together. The Confidential flag (DD-014) commits here too, but only for an Administrator, the contract's creator, or its Owner: anyone else who reaches the record is refused 403, and anyone who does not reach it is answered 404 like a contract that does not exist. A status change that moves the contract past the approval stage while approvals are pending or rejected meets CTR-012's soft gate: it is refused 409 with the unresolved approvals named, and the same commit with `overrideSoftGate` succeeds and is logged as an override. Never on an archived contract */
+    /** Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, the value, the CTR-006 term fields, the type, a custom field, or the status — any live status may follow any other (CTR-001). The value is one field in three parts: amount, currency, and cadence commit together and clear together. Re-typing re-checks the new type's hard-required fields before it commits (CTR-016/MTR-014), so the type and the values that satisfy it may be sent together. The term is five fields with one rule between them (CTR-006): an expiry on an evergreen contract and a renewal period on a contract that does not auto-renew are refused 400 with their own problem types, and a term-type change clears the fields the new type cannot hold, each clear narrated as the edit it is. The Confidential flag (DD-014) commits here too, but only for an Administrator, the contract's creator, or its Owner: anyone else who reaches the record is refused 403, and anyone who does not reach it is answered 404 like a contract that does not exist. A status change that moves the contract past the approval stage while approvals are pending or rejected meets CTR-012's soft gate: it is refused 409 with the unresolved approvals named, and the same commit with `overrideSoftGate` succeeds and is logged as an override. Never on an archived contract */
     patch: operations["updateContract"];
     trace?: never;
   };
@@ -5359,6 +5359,14 @@ export interface operations {
                 /** @enum {string} */
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -5445,6 +5453,14 @@ export interface operations {
                 /** @enum {string} */
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -5596,6 +5612,14 @@ export interface operations {
                 /** @enum {string} */
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -5692,6 +5716,12 @@ export interface operations {
             /** @enum {string} */
             cadence: "one_time" | "monthly" | "annually";
           } | null;
+          /** @enum {string} */
+          termType?: "fixed" | "auto_renew" | "evergreen";
+          effectiveDate?: string | null;
+          expiryDate?: string | null;
+          renewalPeriodMonths?: number | null;
+          noticePeriodDays?: number | null;
           contractTypeId?: string;
           customFields?: {
             [key: string]: (string | number | boolean | string[]) | null;
@@ -5743,6 +5773,14 @@ export interface operations {
                 /** @enum {string} */
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -5786,6 +5824,32 @@ export interface operations {
                 legalName: string;
               }[];
             };
+          };
+        };
+      };
+      /** @description The term data would contradict its own type (CTR-006): an expiry on an evergreen contract, or a renewal period on a contract that does not auto-renew. Change the term type, or leave the value off. */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type:
+              | "urn:openlaw:problem:term-expiry-on-evergreen"
+              | "urn:openlaw:problem:term-renewal-period"
+              | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
           };
         };
       };
@@ -5971,6 +6035,14 @@ export interface operations {
                 /** @enum {string} */
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -6054,6 +6126,14 @@ export interface operations {
                 /** @enum {string} */
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -6137,6 +6217,14 @@ export interface operations {
                 /** @enum {string} */
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -6219,6 +6307,14 @@ export interface operations {
                 /** @enum {string} */
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -6295,6 +6391,14 @@ export interface operations {
                 /** @enum {string} */
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];

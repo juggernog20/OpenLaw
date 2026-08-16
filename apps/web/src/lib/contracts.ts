@@ -6,8 +6,10 @@
  * C-### reference (CTR-003), the DES-018 severity ramp behind priority
  * and risk, the stage-keyed status pill, the CTR-004 people — the Owner
  * and the contract team's roles — CTR-011's two sides (our Entity that
- * signs, and their Counterparties), and CTR-010's value, which is three
- * parts that read and write as one field.
+ * signs, and their Counterparties), CTR-010's value, which is three
+ * parts that read and write as one field, and CTR-006's term — the
+ * three kinds of commitment, and the days-remaining count the record
+ * derives from the expiry rather than stores.
  *
  * The severity ramp's pill colors are not here yet: M8/1 edits priority
  * and risk as selects, and no surface renders them as pills. The ramp's
@@ -231,6 +233,59 @@ export function formatContractValue(intl: IntlShape, value: ContractValue): stri
     },
     { amount, cadence: value.cadence },
   );
+}
+
+/**
+ * CTR-006's term type: what kind of commitment the contract is. Fixed
+ * rather than configurable because code branches on it — an evergreen
+ * contract holds no expiry, and only an auto-renewing one holds a
+ * renewal period.
+ */
+export type TermType = ContractRow["termType"];
+
+/** The three kinds, in the order the picker reads: the plain one that
+ * ends, the one that rolls, and the one that never ends. */
+export const TERM_TYPES = exhaustiveList<TermType>()(["fixed", "auto_renew", "evergreen"] as const);
+
+export function termTypeLabel(intl: IntlShape, termType: TermType): string {
+  return intl.formatMessage(
+    {
+      id: "contracts.termTypeLabel",
+      defaultMessage:
+        "{termType, select, fixed {Fixed term} auto_renew {Auto-renewing} " +
+        "evergreen {Evergreen} other {Unknown}}",
+    },
+    { termType },
+  );
+}
+
+/**
+ * How much of the term is left, as the record says it (CTR-006).
+ *
+ * The count is derived from the expiry and never stored, so it is a
+ * number here rather than a date. Null is the honest blank: an
+ * evergreen contract has no end, and neither has a contract nobody has
+ * recorded an expiry for. Past due counts the other way rather than
+ * reading as none left — a term that ran out is a fact the record has
+ * to be able to say.
+ */
+export function daysRemainingLabel(intl: IntlShape, days: number | null): string | null {
+  if (days === null) return null;
+  return days < 0
+    ? intl.formatMessage(
+        {
+          id: "contracts.daysPastExpiry",
+          defaultMessage: "{days, plural, one {# day past expiry} other {# days past expiry}}",
+        },
+        { days: -days },
+      )
+    : intl.formatMessage(
+        {
+          id: "contracts.daysRemaining",
+          defaultMessage: "{days, plural, =0 {Expires today} one {# day left} other {# days left}}",
+        },
+        { days },
+      );
 }
 
 /** CTR-004's role enum, in the order the roster and the picker read. */

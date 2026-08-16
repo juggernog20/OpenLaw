@@ -102,8 +102,10 @@ import {
   formatContractValue,
   riskLabel,
   severityLabel,
+  termTypeLabel,
   type ContractValue,
   type SeverityLevel,
+  type TermType,
 } from "./contracts";
 
 type FeedResponse =
@@ -298,6 +300,9 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "{key, select, title {Title} description {Description} owner {Owner} " +
         "entity {Signing entity} priority {Priority} risk {Risk} " +
         "contractType {Contract type} value {Value} status {Status} " +
+        "termType {Term type} effectiveDate {Effective date} " +
+        "expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} " +
+        "noticePeriodDays {Notice period (days)} " +
         "primaryCounterparty {Primary counterparty} " +
         "primaryDocument {Primary document} " +
         "displayName {Name} display_name {Display name} name {Name} " +
@@ -363,6 +368,10 @@ function changeValue(
   // a level the ramp no longer has still renders rather than throwing.
   if (key === "priority") return severityLabel(intl, value as SeverityLevel);
   if (key === "risk") return riskLabel(intl, value as SeverityLevel);
+  // CTR-006's term type is a stored slug, so the feed says "Evergreen"
+  // where the column says `evergreen`. Its ICU message carries an
+  // `other` arm, so a kind this build no longer has still renders.
+  if (key === "termType") return termTypeLabel(intl, value as TermType);
   if (typeof value === "boolean") {
     return intl.formatMessage(
       {
