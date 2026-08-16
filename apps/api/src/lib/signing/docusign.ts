@@ -515,7 +515,10 @@ class DocuSignProvider implements SigningProvider {
       );
     }
     const reason = readString(body, "voidedReason") ?? readString(body, "declinedReason");
-    const completedAt = readDate(body.completedDateTime) ?? readDate(body.voidedDateTime);
+    const completedAt =
+      readDate(body.completedDateTime) ??
+      readDate(body.voidedDateTime) ??
+      readDate(body.declinedDateTime);
     return {
       status,
       ...(reason !== undefined ? { reason } : {}),
@@ -561,8 +564,9 @@ async function collect(stream: Readable): Promise<Buffer> {
  * Every signer is recipient `routingOrder: 1`, which is DocuSign's way
  * of saying "all at once" — v1 asks everyone in parallel. The anchor
  * string is DocuSign's own convention for placing a signature tab
- * where the paper says to sign, and it falls back to the last page
- * when the paper does not say.
+ * where the paper says to sign. When the paper does not say,
+ * `anchorIgnoreIfNotPresent` drops the tab and DocuSign falls back to
+ * free-form signing: the signer places their own signature.
  */
 /** The extension of a file name, or `pdf` when it carries none — a
  * name with no dot must not send its whole self as the extension. */

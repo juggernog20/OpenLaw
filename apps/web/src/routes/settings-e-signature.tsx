@@ -201,7 +201,7 @@ export function SettingsESignaturePage() {
               id="ds-environment"
               value={environment}
               onChange={(event) => setEnvironment(event.target.value as "demo" | "production")}
-              className="h-7 w-80 rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
+              className="h-8 w-80 max-w-full rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
             >
               <option value="demo">
                 {intl.formatMessage({
@@ -271,7 +271,7 @@ export function SettingsESignaturePage() {
                 id: "settings.eSignature.privateKey.placeholder",
                 defaultMessage: "-----BEGIN RSA PRIVATE KEY-----",
               })}
-              className="w-80 rounded-button border border-border-default bg-raised px-2 py-1.5 font-mono text-xs text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
+              className="w-80 rounded-button border border-border-default bg-raised px-2.5 py-1.5 text-sm text-primary placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
             />
             {connector.hasPrivateKey && (
               <p className="text-xs text-muted">
