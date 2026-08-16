@@ -104,6 +104,8 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
   and,
+  approverGroupMembers,
+  approverGroups,
   asc,
   contractCounterparties,
   contractStatuses,
@@ -147,6 +149,7 @@ import {
   type AttachedCustomField,
 } from "../../lib/custom-fields.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
+import { assertApprovalGate, type UnresolvedApproval } from "../../lib/soft-gate.js";
 
 /** Every mutation, and every picker read behind one, is Member+. */
 const requireMember = requireRole("administrator", "legal_team_member");
@@ -385,6 +388,27 @@ const StatusOptionSchema = TypeOptionSchema.extend({ stage: z.enum(CONTRACT_STAG
  * entry, plus the role the Owner filter reads. Archived people are left
  * out entirely — this list exists to be assigned from. */
 const UserOptionSchema = PersonSchema.extend({ role: z.enum(USER_ROLES) });
+
+/**
+ * The Member+ readable slice of an approver group (CTR-012): the name
+ * to offer in the record's apply picker, and the people applying it
+ * would ask.
+ *
+ * **Ids, not person rows.** The same answer already carries every live
+ * person in `users`, so a second copy of the same people could go stale
+ * against the first. The client joins them, and a member the `users`
+ * list does not hold is an archived person — exactly the member the
+ * apply itself leaves out, so the two agree without either saying so.
+ *
+ * Managing groups stays Administrator-only (SET-002): this is the list
+ * an apply reads, not the list an Administrator edits, and it carries
+ * the live groups alone.
+ */
+const ApproverGroupOptionSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  memberIds: z.array(z.string()),
+});
 
 const TitleSchema = z.string().trim().min(1).max(200);
 /** CTR-011's inline creation writes exactly this and nothing else. */
@@ -1113,21 +1137,25 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           "fields it attaches (CTR-016) so the create dialog can grow " +
           "the ones it requires; the live statuses; and the live people " +
           "the Owner and team pickers offer — the create dialog's and " +
-          "the record's Member+ picker source (the settings surfaces " +
-          "stay Administrator-only per SET-002)",
+          "the record's Member+ picker source; and the live approver " +
+          "groups the record's apply picker offers, each with the ids " +
+          "of the people applying it would ask (CTR-012) — the settings " +
+          "surfaces that manage all of these stay Administrator-only " +
+          "per SET-002",
         tags: ["contracts"],
         response: {
           200: z.object({
             contractTypes: z.array(TypeChoiceSchema),
             contractStatuses: z.array(StatusOptionSchema),
             users: z.array(UserOptionSchema),
+            approverGroups: z.array(ApproverGroupOptionSchema),
           }),
           default: problemResponse,
         },
       },
     },
     async () => {
-      const [types, statuses, people] = await Promise.all([
+      const [types, statuses, people, groups] = await Promise.all([
         app.db
           .select({
             id: contractTypes.id,
@@ -1160,7 +1188,48 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           .from(users)
           .where(isNull(users.archivedAt))
           .orderBy(asc(sql`lower(${users.displayName})`)),
+        // The live templates and their membership in one read (CTR-012).
+        // An archived group is absent, which is the whole of what
+        // archiving one does: it leaves the apply picker and disturbs
+        // nothing it already produced. The members ride in display-name
+        // order — the order the apply itself asks in — so the dialog's
+        // preview names people in the order the roster will then draw
+        // them, rather than in whatever order the join happened to give.
+        app.db
+          .select({
+            id: approverGroups.id,
+            name: approverGroups.name,
+            memberId: approverGroupMembers.userId,
+          })
+          .from(approverGroups)
+          .leftJoin(approverGroupMembers, eq(approverGroupMembers.groupId, approverGroups.id))
+          .leftJoin(users, eq(users.id, approverGroupMembers.userId))
+          .where(isNull(approverGroups.archivedAt))
+          .orderBy(
+            asc(approverGroups.name),
+            asc(approverGroups.createdAt),
+            asc(users.displayName),
+            asc(users.id),
+          ),
       ]);
+      // A left join, so a group with no members is still offered — the
+      // apply refuses it by name, which is a better answer than a
+      // template that has silently vanished from the picker.
+      //
+      // Gathered by id rather than by adjacency: nothing makes a group
+      // name unique, so two same-named templates can interleave their
+      // member rows under the sort. Map insertion order keeps the
+      // answer in the order the query gave.
+      const byGroupId = new Map<string, { id: string; name: string; memberIds: string[] }>();
+      for (const row of groups) {
+        let group = byGroupId.get(row.id);
+        if (!group) {
+          group = { id: row.id, name: row.name, memberIds: [] };
+          byGroupId.set(row.id, group);
+        }
+        if (row.memberId !== null) group.memberIds.push(row.memberId);
+      }
+      const groupOptions = [...byGroupId.values()];
       // Each type's own attachments, so the dialog knows what picking
       // that type will demand before it asks for it. One query per live
       // type: the taxonomy is a handful of rows, and the alternative —
@@ -1175,6 +1244,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         })),
         contractStatuses: statuses,
         users: people.map((person) => ({ ...toPerson(person), role: person.role })),
+        approverGroups: groupOptions,
       };
     },
   );
@@ -1388,8 +1458,12 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           "(DD-014) commits here too, but only for an Administrator, the " +
           "contract's creator, or its Owner: anyone else who reaches the " +
           "record is refused 403, and anyone who does not reach it is " +
-          "answered 404 like a contract that does not exist. Never on an " +
-          "archived contract",
+          "answered 404 like a contract that does not exist. A status " +
+          "change that moves the contract past the approval stage while " +
+          "approvals are pending or rejected meets CTR-012's soft gate: " +
+          "it is refused 409 with the unresolved approvals named, and " +
+          "the same commit with `overrideSoftGate` succeeds and is " +
+          "logged as an override. Never on an archived contract",
         tags: ["contracts"],
         params: NumberParams,
         // Strict: an unknown key is a client bug, not a silent strip.
@@ -1424,6 +1498,13 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
            * actor set narrower than the route's, and it keeps its own
            * audit verb rather than joining the changed map. */
           isConfidential: z.boolean().optional(),
+          /** CTR-012's soft gate, pressed through. It is not a field —
+           * nothing is stored for it — it is this one commit's
+           * confirmation that the unresolved approvals were seen and
+           * the move is deliberate. It only means anything beside a
+           * `statusId` that crosses past the approval stage; anywhere
+           * else it is ignored, because there is nothing to override. */
+          overrideSoftGate: z.boolean().optional(),
         }),
         response: { 200: ContractFieldsEnvelope, default: problemResponse },
       },
@@ -1628,6 +1709,10 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // stays out of the changed map.
         let statusChange:
           { from: string; to: string; fromStage: string; toStage: string } | undefined;
+        /** CTR-012's soft gate, pressed through: the asks that were
+         * still open when the move committed, so the override entry can
+         * name them. `null` whenever the gate had nothing to say. */
+        let overridden: UnresolvedApproval[] | null = null;
         let statusName = current.statusName;
         let stage = current.stage;
         if (body.statusId !== undefined && body.statusId !== target.statusId) {
@@ -1647,6 +1732,21 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           if (!status || status.archivedAt) {
             throw httpError(400, "The status must be a live contract status.");
           }
+          // CTR-012's soft gate, and the first server-side branch on
+          // stage (CTR-001). Both stages are already resolved here —
+          // the one being left and the one being moved to — so the gate
+          // costs a stage comparison on every status change and a read
+          // of the approvals only on a move that crosses the line. It
+          // refuses before anything is written; the contract row is
+          // locked, so the set it names cannot move underneath the
+          // UPDATE that follows.
+          overridden = await assertApprovalGate(
+            tx,
+            target.id,
+            current.stage,
+            status.stage,
+            body.overrideSoftGate ?? false,
+          );
           patch.statusId = status.id;
           statusChange = {
             from: current.statusName,
@@ -1685,6 +1785,35 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             action: "contract.status_changed",
             visibility: RECORD_ACTIVITY_TIER,
             payload: { number: row!.number, title: row!.title, ...statusChange },
+          });
+        }
+        if (overridden && statusChange) {
+          // Its own verb, beside the status change rather than inside
+          // it (DD-017). Pushing past sign-off is a second thing that
+          // happened, and CTR-012 requires it to be accountable in its
+          // own right — so an Administrator filters the audit log on
+          // this verb rather than hunting through status payloads for
+          // the ones that crossed the line. The payload names the
+          // people who were unresolved, because "who was skipped" is
+          // the question the entry exists to answer.
+          await recordActivity(tx, {
+            entityType: "contract",
+            entityId: target.id,
+            actorId: request.user.id,
+            action: "contract.stage_gate_overridden",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: {
+              number: row!.number,
+              title: row!.title,
+              fromStage: statusChange.fromStage,
+              toStage: statusChange.toStage,
+              approvers: overridden.map((approval) => ({
+                approvalId: approval.id,
+                approverId: approval.approverId,
+                approverName: approval.approverName,
+                status: approval.status,
+              })),
+            },
           });
         }
         if (confidentialityChange !== undefined) {

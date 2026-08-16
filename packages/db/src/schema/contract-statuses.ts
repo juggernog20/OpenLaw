@@ -21,22 +21,19 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import { CONTRACT_STAGES, type ContractStage } from "@openlaw/shared";
 import { uuidPk } from "./helpers.js";
 
 /**
  * The fixed six-stage backbone (CTR-001), in canonical forward order.
  * An immutable enum: approvals, e-sign, renewals, and surfaces branch
  * on these — never on status labels.
+ *
+ * Defined in `@openlaw/shared` and re-exported here, because the record's
+ * stage pipeline reads the same order in the browser and the web app
+ * cannot depend on this package. Import it from either name.
  */
-export const CONTRACT_STAGES = [
-  "draft",
-  "review",
-  "approval",
-  "signature",
-  "active",
-  "ended",
-] as const;
-export type ContractStage = (typeof CONTRACT_STAGES)[number];
+export { CONTRACT_STAGES, type ContractStage };
 
 export const contractStatuses = pgTable(
   "contract_statuses",

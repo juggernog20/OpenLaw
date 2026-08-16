@@ -27,8 +27,13 @@ export function json(status: number, body: unknown): Response {
   });
 }
 
-export function problem(status: number, detail: string): Response {
-  return new Response(JSON.stringify({ type: "about:blank", title: "Error", status, detail }), {
+/**
+ * An RFC 9457 refusal. `type` defaults to `about:blank`, which is what
+ * the API sends for every refusal a client prints; pass it only for the
+ * few a client is expected to branch on.
+ */
+export function problem(status: number, detail: string, type = "about:blank"): Response {
+  return new Response(JSON.stringify({ type, title: "Error", status, detail }), {
     status,
     headers: { "content-type": "application/problem+json" },
   });
@@ -187,6 +192,12 @@ export function stubApi(state: ApiState) {
     // case, and only the suites that are about the tree supply one.
     if (/^\/api\/v1\/contracts\/\d+\/folders$/.test(call.url.pathname) && call.method === "GET") {
       return json(200, { folders: [] });
+    }
+    // And who has been asked to sign it off (M14/3). Empty by default
+    // for the same reason: a record nobody has asked about yet is the
+    // ordinary case, and only the suites about the roster supply one.
+    if (/^\/api\/v1\/contracts\/\d+\/approvals$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { approvals: [] });
     }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
       return json(200, state.onboarding ?? { completed: true, emailConfigured: true });

@@ -46,6 +46,7 @@ import {
   Archive,
   ArchiveRestore,
   Building2,
+  Check,
   Clock,
   Download,
   FilePlus2,
@@ -69,15 +70,19 @@ import {
   ShieldOff,
   SquareCheck,
   Star,
+  Stamp,
   Tag,
   Tags,
   Trash2,
+  TriangleAlert,
+  Undo2,
   Unlink,
   Upload,
   UserCog,
   UserMinus,
   UserPlus,
   Users,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { defineMessage, type IntlShape, type MessageDescriptor } from "react-intl";
@@ -427,6 +432,23 @@ function named(intl: IntlShape, payload: Payload, key: string): string {
 }
 
 /**
+ * The people a soft-gate override went past (CTR-012), in the order the
+ * payload holds them — the roster's own order, oldest ask first.
+ *
+ * A row with no readable name is dropped rather than rendered as
+ * "someone": the sentence is a list, and "Sarah Chen and someone" reads
+ * as a second person nobody can look up. The count comes from what is
+ * left, so the plural and the list always agree.
+ */
+function approverNames(payload: Payload): string[] {
+  const rows = payload.approvers;
+  if (!Array.isArray(rows)) return [];
+  return rows
+    .map((row) => (row && typeof row === "object" ? text(row as Payload, "approverName") : null))
+    .filter((name): name is string => name !== null);
+}
+
+/**
  * A `contract_team` role (CTR-004) in the words the record's Team card
  * uses, so one fact does not read as "Contributor" on the card and
  * `contributor` in the feed.
@@ -557,49 +579,56 @@ const TAXONOMY = {
     defaultMessage:
       "{actor} added the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
-      "contract_status {contract status} field {field} other {type}} {name}",
+      "contract_status {contract status} field {field} " +
+      "approver_group {approver group} other {type}} {name}",
   }),
   renamed: defineMessage({
     id: "activity.taxonomy.renamed",
     defaultMessage:
       "{actor} renamed the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
-      "contract_status {contract status} field {field} other {type}} {name}",
+      "contract_status {contract status} field {field} " +
+      "approver_group {approver group} other {type}} {name}",
   }),
   updated: defineMessage({
     id: "activity.taxonomy.updated",
     defaultMessage:
       "{actor} changed the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
-      "contract_status {contract status} field {field} other {type}} {name}",
+      "contract_status {contract status} field {field} " +
+      "approver_group {approver group} other {type}} {name}",
   }),
   reordered: defineMessage({
     id: "activity.taxonomy.reordered",
     defaultMessage:
       "{actor} reordered the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
-      "contract_status {contract status} field {field} other {type}} list",
+      "contract_status {contract status} field {field} " +
+      "approver_group {approver group} other {type}} list",
   }),
   archived: defineMessage({
     id: "activity.taxonomy.archived",
     defaultMessage:
       "{actor} archived the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
-      "contract_status {contract status} field {field} other {type}} {name}",
+      "contract_status {contract status} field {field} " +
+      "approver_group {approver group} other {type}} {name}",
   }),
   restored: defineMessage({
     id: "activity.taxonomy.restored",
     defaultMessage:
       "{actor} restored the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
-      "contract_status {contract status} field {field} other {type}} {name}",
+      "contract_status {contract status} field {field} " +
+      "approver_group {approver group} other {type}} {name}",
   }),
   deleted: defineMessage({
     id: "activity.taxonomy.deleted",
     defaultMessage:
       "{actor} deleted the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} " +
-      "contract_status {contract status} field {field} other {type}} {name}",
+      "contract_status {contract status} field {field} " +
+      "approver_group {approver group} other {type}} {name}",
   }),
 } as const;
 
@@ -753,6 +782,29 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
     changes: (intl, payload, context) => directChange(intl, payload, "status", context),
   },
+  // CTR-012's soft gate, pushed past (M14/5). Its own entry beside the
+  // status change of the same commit: the contract moved, and somebody
+  // moved it past open sign-off, and only the first of those is a fact
+  // about the status. The warning glyph is the point — the entry says a
+  // warning was accepted, not that something failed.
+  //
+  // It names the people it went past, because "an override happened" is
+  // not something a reader can act on and "went past Sarah Chen and
+  // Marcus Webb" is. The `=0` arm is the append-only floor: an entry
+  // whose payload a later build cannot read still has to come out as a
+  // sentence.
+  "contract.stage_gate_overridden": {
+    icon: TriangleAlert,
+    message: defineMessage({
+      id: "activity.contract.stageGateOverridden",
+      defaultMessage:
+        "{count, plural, =0 {{actor} moved this contract past approval, overriding the soft gate} other {{actor} moved this contract past approval, overriding {approvers}}}",
+    }),
+    values: (intl, payload) => {
+      const names = approverNames(payload);
+      return { count: names.length, approvers: intl.formatList(names, { type: "conjunction" }) };
+    },
+  },
   "contract.type_reassigned": {
     icon: Tag,
     message: defineMessage({
@@ -825,6 +877,55 @@ const ARMS: Readonly<Record<string, Arm>> = {
       id: "activity.contract.confidentialityCleared",
       defaultMessage: "{actor} cleared this contract's confidential mark",
     }),
+  },
+  // The sign-off on the record (M14/3, CTR-012). A verb per act, so a
+  // reader can tell an approval from a rejection without opening a
+  // payload — and so an Administrator can filter the audit log on the
+  // one they are looking for.
+  //
+  // Each names the approver, not only the actor. On a request and a
+  // cancellation the two are different people, and on a cancellation
+  // the entry is the only record left that the ask was ever made: the
+  // row itself is deleted.
+  // The request says where it came from, because a group apply asks
+  // several people in one act and a feed that narrated each of them as
+  // a separate hand-picked ask would hide the act (CTR-012, M14/4). An
+  // entry with no source at all reads as the manual arm, which is what
+  // every entry written before the group apply landed is.
+  "approval.requested": {
+    icon: Stamp,
+    message: defineMessage({
+      id: "activity.approval.requested",
+      defaultMessage:
+        "{source, select, group {{actor} asked {approver} to approve this contract, from the {group} group} other {{actor} asked {approver} to approve this contract}}",
+    }),
+    values: (intl, payload) => ({
+      approver: named(intl, payload, "approverName"),
+      source: text(payload, "source") ?? "manual",
+      group: named(intl, payload, "groupName"),
+    }),
+  },
+  "approval.approved": {
+    icon: Check,
+    message: defineMessage({
+      id: "activity.approval.approved",
+      defaultMessage: "{actor} approved this contract",
+    }),
+  },
+  "approval.rejected": {
+    icon: X,
+    message: defineMessage({
+      id: "activity.approval.rejected",
+      defaultMessage: "{actor} rejected this contract",
+    }),
+  },
+  "approval.cancelled": {
+    icon: Undo2,
+    message: defineMessage({
+      id: "activity.approval.cancelled",
+      defaultMessage: "{actor} cancelled the approval request to {approver}",
+    }),
+    values: (intl, payload) => ({ approver: named(intl, payload, "approverName") }),
   },
   "contract.archived": {
     icon: Archive,
@@ -1291,6 +1392,41 @@ const ARMS: Readonly<Record<string, Arm>> = {
   // The catalog is unordered (DES-021), names through its editor dialog
   // rather than a rename verb, and is never hard-deleted.
   ...taxonomyArms("field", Tags, ["created", "updated", "archived", "restored"]),
+  // The CTR-012 approver-group templates (M14/1). Unordered like the
+  // catalog, and never hard-deleted; unlike the catalog it renames in
+  // place and carries a description, so it writes both `renamed` and
+  // `updated`.
+  ...taxonomyArms("approver_group", Users, [
+    "created",
+    "renamed",
+    "updated",
+    "archived",
+    "restored",
+  ]),
+  // Who is on a template is its own fact, not an edit of it — the rule
+  // the contract team's entries follow (CTR-004).
+  "approver_group.member_added": {
+    icon: Users,
+    message: defineMessage({
+      id: "activity.approverGroup.memberAdded",
+      defaultMessage: "{actor} added {member} to the approver group {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      member: named(intl, payload, "memberName"),
+    }),
+  },
+  "approver_group.member_removed": {
+    icon: Users,
+    message: defineMessage({
+      id: "activity.approverGroup.memberRemoved",
+      defaultMessage: "{actor} took {member} off the approver group {name}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      member: named(intl, payload, "memberName"),
+    }),
+  },
   // The catalog's two scope moves keep their own verbs, because the
   // scope is what decides which modules can attach the field.
   "field.promoted": {

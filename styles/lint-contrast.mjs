@@ -94,6 +94,11 @@ PAIRS.push(["text-primary", "legal-only-bg", BODY], ["text-muted", "legal-only-b
 // Avatar initials — graphical identifier per DES-018/DES-019; the name
 // always accompanies the avatar in accessible contexts.
 PAIRS.push(["avatar-fg", "avatar-bg", UI]);
+// The stage pipeline's check glyph (DES-034) — a meaningful graphical
+// object drawn straight on the strip's bg-control, outside the
+// success family's own bg/fg pairing. The chevron separators are
+// decorative (aria-hidden) and exempt under WCAG 1.4.11.
+PAIRS.push(["status-success-fg", "bg-control", UI]);
 
 /* Tokens whose value `transparent` means "the underlying surface shows
  * through" — resolved to that surface before checking. */

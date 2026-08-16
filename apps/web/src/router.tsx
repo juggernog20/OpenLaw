@@ -21,6 +21,10 @@ import { SetPasswordPage } from "./routes/set-password";
 import { SettingsLayout, settingsIndexLoader, settingsLoader } from "./routes/settings";
 import { SettingsAppearancePage } from "./routes/settings-appearance";
 import {
+  SettingsApproverGroupsPage,
+  settingsApproverGroupsLoader,
+} from "./routes/settings-approver-groups";
+import {
   SettingsContractFieldsPage,
   settingsContractFieldsLoader,
 } from "./routes/settings-contract-fields";
@@ -186,6 +190,12 @@ export const routes: RouteObject[] = [
         path: "contracts/fields",
         loader: settingsContractFieldsLoader,
         element: <SettingsContractFieldsPage />,
+      },
+      {
+        // #231: the CTR-012 approver-group templates.
+        path: "contracts/approver-groups",
+        loader: settingsApproverGroupsLoader,
+        element: <SettingsApproverGroupsPage />,
       },
       { path: "entities", loader: settingsEntitiesIndexLoader, element: <></> },
       {

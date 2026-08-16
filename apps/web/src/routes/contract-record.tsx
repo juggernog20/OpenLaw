@@ -10,13 +10,15 @@
  * chrome — with the Owner, the type, status, priority, and risk as
  * selects.
  *
- * Three sections, three addresses. **Overview** (`/contracts/42`) is
+ * Four sections, four addresses. **Overview** (`/contracts/42`) is
  * the record's own columns: the Contract card and the Description card
  * under it. **Fields** (`/contracts/42/fields`) is what this contract's
  * type asks for on top of them. **Documents**
- * (`/contracts/42/documents`) is the paper. The Team card is not one of
- * the three — it stands beside all of them, because who is on a
- * contract is context for reading any part of it.
+ * (`/contracts/42/documents`) is the paper. **Approvals**
+ * (`/contracts/42/approvals`) is who has been asked to sign it off
+ * (CTR-012, DES-035). The Team card is not one of the four — it stands
+ * beside all of them, because who is on a contract is context for
+ * reading any part of it.
  *
  * The custom fields are CTR-016's, and they earn the card the C2 mock
  * draws for them. The contract's type decides which of them appear and
@@ -63,6 +65,13 @@
  * deep-link (SET-001) sits below the divider. Matters (M22) and
  * documents (M11) mount the same two panels.
  *
+ * The sub-bar says where the contract sits twice, at two zooms
+ * (CTR-001). The pill takes the status label, which is renameable; the
+ * stage pipeline beside it takes the fixed stage that label maps to,
+ * and marks the contract's position in the six. Position, not
+ * progress: transitions are unrestricted, so a status change that lands
+ * on an earlier stage moves the marker back.
+ *
  * Archive (soft delete — for mistakes and imports, not for ending a
  * contract) and restore live in the sub-bar; an archived record reads
  * as facts until restored.
@@ -107,6 +116,7 @@ import {
 } from "react-router";
 import { FormattedMessage, defineMessage, useIntl, type IntlShape } from "react-intl";
 import { Archive, ArchiveRestore, ChevronRight, FileText, Plus, Settings, X } from "lucide-react";
+import { SOFT_GATE_PROBLEM_TYPE } from "@openlaw/shared";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import {
@@ -145,10 +155,11 @@ import {
   type CustomFieldValues,
 } from "../lib/custom-fields";
 import { currencyFractionDigits, currencyOptions, toMajorUnits, toMinorUnits } from "../lib/format";
+import { APPROVAL_PILL, isUnresolved, type ContractApproval } from "../lib/approvals";
 import { FOLDER_ROOT, type ContractDocument } from "../lib/documents";
 import type { ContractFolder } from "../lib/folders";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
-import { problemDetail } from "../lib/messages";
+import { problemDetail, problemType } from "../lib/messages";
 import { cn } from "../lib/utils";
 import { canReadContracts, isMemberPlus } from "../lib/roles";
 import { currentUser, needsSetup } from "../lib/session";
@@ -158,6 +169,7 @@ import { useCommentApplet } from "../components/comments/comment-applet";
 import { RecordApplets } from "../components/shell/record-applets";
 import { RecordTabs } from "../components/shell/record-tabs";
 import type { Applet } from "../components/shell/applets";
+import { ApprovalsCard } from "../components/approvals/approvals-card";
 import { Avatar } from "../components/avatar";
 import { ConfidentialBanner } from "../components/confidential-banner";
 import { ConfidentialToggle } from "../components/confidential-toggle";
@@ -166,6 +178,7 @@ import { CustomFieldControl, type FieldReference } from "../components/custom-fi
 import { DocPanel } from "../components/documents/doc-panel";
 import { DocumentsCard } from "../components/documents/documents-card";
 import { PageTitle } from "../components/page-title";
+import { StagePipeline } from "../components/stage-pipeline";
 import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
@@ -174,7 +187,7 @@ import { Label } from "../components/ui/label";
 
 /** The record's sections (DES-032), in the order the strip draws them.
  * The Overview is the bare address, so it has no segment of its own. */
-const RECORD_TABS = ["fields", "documents"] as const;
+const RECORD_TABS = ["fields", "documents", "approvals"] as const;
 type RecordTabName = "overview" | (typeof RECORD_TABS)[number];
 
 export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
@@ -196,7 +209,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
   // Contributor anyway; the record read alone carries every name the
   // page has to draw.
   const canEdit = isMemberPlus(user.role);
-  const [record, documents, folders, options, registry] = await Promise.all([
+  const [record, documents, folders, approvals, options, registry] = await Promise.all([
     api.GET("/api/v1/contracts/{number}", { params: { path: { number } } }),
     // The record's paper (M11/2). Read by every viewer who reaches the
     // page — a Contributor on the team reads and downloads it too
@@ -214,6 +227,12 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     // tree, because a record's folder set is small and drawing it a
     // level at a time would be a round trip per press.
     api.GET("/api/v1/contracts/{number}/folders", { params: { path: { number } } }),
+    // Who has been asked to sign the record off (M14/3, CTR-012). Read
+    // by every viewer who reaches the page — a Contributor on the team
+    // reads the roster too — and answered 404 for anyone the record
+    // itself is hidden from, which is the same refusal the record read
+    // gives.
+    api.GET("/api/v1/contracts/{number}/approvals", { params: { path: { number } } }),
     canEdit ? api.GET("/api/v1/contracts/options") : undefined,
     // The registry's own Member+ list is the signing-entity picker's
     // source (CTR-011): it is ordered by legal name and already leaves
@@ -230,6 +249,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     !record.data ||
     !documents.data ||
     !folders.data ||
+    !approvals.data ||
     (canEdit && !(options?.data && registry?.data))
   ) {
     throw new Error("The contract could not be read.");
@@ -243,6 +263,10 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
      * empty tree is a fact about the record, not a fallback for a read
      * that did not happen. */
     folders: folders.data.folders,
+    /** Who has been asked to approve the record (M14/3). Required like
+     * the paper: an empty roster is a fact about the record, not a
+     * fallback for a read that did not happen. */
+    approvals: approvals.data.approvals,
     /** Where the next page of paper starts, or null when the first page
      * is all of it (CTR-024). */
     documentsCursor: documents.data.nextCursor,
@@ -253,6 +277,10 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     contractTypes: options?.data?.contractTypes ?? [],
     contractStatuses: options?.data?.contractStatuses ?? [],
     users: options?.data?.users ?? [],
+    /** The live approver-group templates the Approvals section's apply
+     * picker offers (M14/4, CTR-012). Member+ only, like the rest of
+     * the options answer: a read-only viewer applies nothing. */
+    approverGroups: options?.data?.approverGroups ?? [],
     entities: registry?.data?.entities ?? [],
   };
 }
@@ -265,8 +293,10 @@ type TextFieldKey = "title" | "description";
  * "Title" and the record's own title are never one micro-state. */
 type CustomFieldKey = `field:${string}`;
 /** What one committed field answers with: nothing more when it landed,
- * and the seam's own refusal when it did not. */
-type CommitOutcome = { ok: true } | { ok: false; detail?: string };
+ * and the seam's own refusal when it did not — its sentence, and the
+ * RFC 9457 `type` that identifies it, for the one refusal the record
+ * acts on rather than prints (CTR-012's soft gate). */
+type CommitOutcome = { ok: true } | { ok: false; detail?: string; type?: string };
 type FieldKey =
   | TextFieldKey
   | CustomFieldKey
@@ -309,7 +339,7 @@ export function ContractRecordPage() {
 function ContractRecord() {
   // Which section is on screen (DES-032). The loader has already sent
   // an unknown segment to the Overview, so anything that survives to
-  // here is one of the three.
+  // here is one of the four.
   const tab = (useParams().tab ?? "overview") as RecordTabName;
   const {
     user,
@@ -317,6 +347,7 @@ function ContractRecord() {
     contract,
     documents: contractDocuments,
     folders: contractFolders,
+    approvals: contractApprovals,
     documentsCursor,
     fields,
     customFieldRefs,
@@ -325,6 +356,7 @@ function ContractRecord() {
     contractTypes,
     contractStatuses,
     users,
+    approverGroups,
     entities,
   } = useLoaderData<typeof contractRecordLoader>();
   const intl = useIntl();
@@ -357,6 +389,10 @@ function ContractRecord() {
    * pickers so an archived one still renders as itself. */
   const [refs, setRefs] = useState<CustomFieldRefs>(customFieldRefs);
   const [retypeTo, setRetypeTo] = useState<ContractTypeOption | null>(null);
+  /** The status the soft gate stopped on its way in, or none (CTR-012).
+   * Set by the seam's refusal and cleared by the confirm or the
+   * dismiss; while it is set, nothing has committed. */
+  const [gateTo, setGateTo] = useState<ContractStatusOption | null>(null);
   const [roster, setRoster] = useState<ContractTeamMember[]>(team);
   /** The record's paper (M11/2, M11/3). State rather than loader data
    * because an upload, an appended version, and a metadata edit each
@@ -379,6 +415,11 @@ function ContractRecord() {
    * data because every folder write answers the whole set, and the
    * section replaces what it holds without a page re-read. */
   const [tree, setTree] = useState<ContractFolder[]>(contractFolders);
+  /** Who has been asked to sign the record off (M14/3). State rather
+   * than loader data because every approval write answers the whole
+   * roster — an ask adds rows, a cancellation takes one away — and the
+   * section replaces what it holds without a page re-read. */
+  const [approvals, setApprovals] = useState<ContractApproval[]>(contractApprovals);
   /**
    * Which version the doc panel is reading, or none (M12/2).
    *
@@ -538,7 +579,7 @@ function ContractRecord() {
     if (!data) {
       const detail = problemDetail(error);
       note(key, "error", detail);
-      return { ok: false, detail };
+      return { ok: false, detail, type: problemType(error) };
     }
     const row = data.contract;
     setSaved(row);
@@ -549,6 +590,41 @@ function ContractRecord() {
     }
     note(key, "saved");
     return { ok: true };
+  }
+
+  /**
+   * The status, committed like any other select — until CTR-012's soft
+   * gate stops it.
+   *
+   * The gate is the seam's, and it stays the seam's: this does not
+   * work out whether the move crosses the approval stage, and it does
+   * not read the roster to decide whether to warn. It sends the commit,
+   * and a refusal carrying the gate's own problem type is what raises
+   * the dialog. One rule, in one place — a second copy here would drift
+   * the first time a stage moved.
+   *
+   * The refusal's micro-state under the select is cleared as the dialog
+   * opens: the dialog is the refusal, and printing it twice reads as
+   * two failures (DES-035 clause 12).
+   */
+  async function changeStatus(statusId: string, override = false) {
+    const outcome = await commit(
+      "statusId",
+      override ? { statusId, overrideSoftGate: true } : { statusId },
+    );
+    if (outcome.ok) {
+      setGateTo(null);
+      return undefined;
+    }
+    if (outcome.type === SOFT_GATE_PROBLEM_TYPE) {
+      const target = statusOptions.find((option) => option.id === statusId);
+      if (target) {
+        note("statusId", "idle");
+        setGateTo(target);
+        return undefined;
+      }
+    }
+    return outcome.detail ?? "";
   }
 
   /** One custom field, committed by slug (CTR-016). `null` clears it. */
@@ -701,9 +777,24 @@ function ContractRecord() {
         <>
           <section
             aria-labelledby="page-title"
-            className="flex h-(--height-subbar) shrink-0 items-center justify-between gap-4 bg-canvas px-page-x"
+            // Three groups on one 64px row, as the C2 mock draws them:
+            // the breadcrumb, the stage pipeline, and the record
+            // actions (DES-034). Under a 1024px shell they no longer
+            // fit — the title truncates to nothing and the pipeline
+            // slides over the status pill — so the row wraps and the
+            // bar grows by one line. The pipeline is not allowed a
+            // strip of its own (DES-032 closed that door), and it does
+            // not need one: it shares the second line with the record
+            // actions, and on a phone the top nav is hidden anyway, so
+            // the chrome stays shorter than the desktop stack DES-032
+            // already accepted.
+            className={cn(
+              "flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2",
+              "bg-canvas px-page-x py-2",
+              "@5xl/shell:h-(--height-subbar) @5xl/shell:flex-nowrap @5xl/shell:py-0",
+            )}
           >
-            <div className="flex min-w-0 items-center gap-2">
+            <div className="flex w-full min-w-0 items-center gap-2 @5xl/shell:w-auto">
               <Link
                 to="/contracts"
                 className="shrink-0 rounded-chip text-base text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
@@ -727,6 +818,12 @@ function ContractRecord() {
                 </span>
               )}
             </div>
+            {/* CTR-001's six-stage backbone, beside the pill that names
+                the status behind it (grill-plan D.8). It reads on an
+                archived record and for a Contributor exactly as it
+                reads for anyone else: where the contract sits is a fact
+                about it, not an affordance. */}
+            <StagePipeline stage={saved.stage} />
             {/* Archive and restore are mutations, so a read-only viewer
               is offered neither — absent, not disabled, the same
               convention the nav and the settings rail follow. */}
@@ -782,6 +879,15 @@ function ContractRecord() {
                   <FormattedMessage
                     id="contracts.record.tab.documents"
                     defaultMessage="Documents"
+                  />
+                ),
+              },
+              {
+                to: `/contracts/${saved.number}/approvals`,
+                label: (
+                  <FormattedMessage
+                    id="contracts.record.tab.approvals"
+                    defaultMessage="Approvals"
                   />
                 ),
               },
@@ -847,7 +953,7 @@ function ContractRecord() {
 
               The section tab decides what the main column holds; the
               Team column is not one of the sections and stands beside
-              all three. Who is on a contract is context for reading any
+              all four. Who is on a contract is context for reading any
               part of it, and the DES-028 banner's "Manage team" link is
               a fragment to that card — a link that only resolved on one
               tab would be a link that sometimes goes nowhere. */}
@@ -1040,14 +1146,17 @@ function ContractRecord() {
                           <FormattedMessage id="contracts.form.status" defaultMessage="Status" />
                         </Label>
                         <div className="flex items-center gap-2">
+                          {/* Inert while a status commit is in flight, the
+                          way the Confidential flag's own control is. The
+                          soft gate is why it matters here: a second pick
+                          landing behind the first would raise a dialog
+                          about a status nobody is moving to any more. */}
                           <select
                             id="contract-status"
                             value={saved.statusId}
                             className={CONTROL_CLASS}
-                            disabled={frozen}
-                            onChange={(event) =>
-                              void commit("statusId", { statusId: event.target.value })
-                            }
+                            disabled={frozen || fieldStatus.statusId === "saving"}
+                            onChange={(event) => void changeStatus(event.target.value)}
                           >
                             {statusOptions.map((option) => (
                               <option key={option.id} value={option.id}>
@@ -1283,6 +1392,30 @@ function ContractRecord() {
                   onFolders={setTree}
                 />
               )}
+              {/* Who has been asked to sign the record off (M14/3,
+                  CTR-012), in the section the C5 mock draws it in. The
+                  roster is auto-derived: nothing here authors an event,
+                  and the request affordances are the only writes. */}
+              {tab === "approvals" && (
+                <ApprovalsCard
+                  contractNumber={saved.number}
+                  approvals={approvals}
+                  users={users}
+                  approverGroups={approverGroups}
+                  // The live roster and the saved row, not the loader's
+                  // copies: putting somebody on the team widens a
+                  // confidential record's audience on the same page,
+                  // and taking the Owner off takes their cancel with
+                  // them.
+                  team={roster}
+                  viewerId={user.id}
+                  viewerRole={user.role}
+                  ownerId={saved.manager?.id ?? null}
+                  isConfidential={saved.isConfidential}
+                  frozen={frozen}
+                  onApprovals={setApprovals}
+                />
+              )}
             </div>
             <TeamCard
               contractNumber={saved.number}
@@ -1324,6 +1457,16 @@ function ContractRecord() {
             // covering the field it would read on.
             return outcome.detail ?? "";
           }}
+        />
+      )}
+      {gateTo && (
+        <SoftGateDialog
+          target={gateTo}
+          unresolved={approvals.filter(isUnresolved)}
+          onOpenChange={(open) => {
+            if (!open) setGateTo(null);
+          }}
+          onConfirm={() => changeStatus(gateTo.id, true)}
         />
       )}
     </AppShell>
@@ -2413,6 +2556,130 @@ function CustomFieldRow({
         <StatusNote status={status} detail={error} />
       </div>
     </div>
+  );
+}
+
+/**
+ * CTR-012's soft gate, raised by the seam's refusal (#235).
+ *
+ * The record is on its way past the approval stage while somebody's
+ * sign-off is still open. That is allowed — CTR-001 restricts no
+ * transition and CTR-012 chose a warning over a lock, because in a
+ * 2–10 person team the person holding the policy and the person
+ * overriding it are often the same human. So this costs one deliberate
+ * press, and the press is what the activity feed records.
+ *
+ * **It names the people, and says what each of them said.** "Approvals
+ * are open" is not something anybody can act on; "Sarah Chen is
+ * pending, Marcus Webb rejected" is. The state rides in the same
+ * DES-005 pill the Approvals roster draws it in, so the dialog and the
+ * section behind it say the same thing in the same colour.
+ *
+ * **It states nothing the seam did not say.** Whether the move crosses
+ * the line, and whether anything is unresolved, is the seam's decision
+ * and its refusal is what opened this — the same one-rule-one-place
+ * shape the apply dialog takes (DES-035 clause 16). What is drawn here
+ * is the record's own roster, filtered to the asks an approval has not
+ * answered.
+ */
+function SoftGateDialog({
+  target,
+  unresolved,
+  onOpenChange,
+  onConfirm,
+}: Readonly<{
+  target: ContractStatusOption;
+  unresolved: readonly ContractApproval[];
+  onOpenChange: (open: boolean) => void;
+  /** Answers `undefined` when the override landed, and the seam's own
+   * refusal — or an empty string when it gave none — when it did not. */
+  onConfirm: () => Promise<string | undefined>;
+}>) {
+  const intl = useIntl();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit() {
+    if (busy) return;
+    setError(null);
+    setBusy(true);
+    const refusal = await onConfirm().finally(() => setBusy(false));
+    if (refusal !== undefined) {
+      setError(
+        refusal ||
+          intl.formatMessage({
+            id: "contracts.softGate.error",
+            defaultMessage: "The status could not be changed.",
+          }),
+      );
+    }
+  }
+
+  /** A dismissal is ignored while the override is in flight: the
+   * commit either lands or is refused, and a dialog that vanished
+   * mid-write would leave the reader with neither answer. */
+  function close(open: boolean) {
+    if (!open && busy) return;
+    onOpenChange(open);
+  }
+
+  return (
+    <Dialog open onOpenChange={close}>
+      <DialogContent aria-describedby="contract-soft-gate-note">
+        <DialogTitle>
+          <FormattedMessage id="contracts.softGate.title" defaultMessage="Move past approval" />
+        </DialogTitle>
+        <p id="contract-soft-gate-note" className="mt-2 text-base text-muted">
+          <FormattedMessage
+            id="contracts.softGate.note"
+            defaultMessage="{count, plural, one {# approval on this contract is unresolved.} other {# approvals on this contract are unresolved.}} Moving to {status} goes past sign-off."
+            values={{ count: unresolved.length, status: target.displayName }}
+          />
+        </p>
+        <ul className="mt-4 flex flex-col gap-2">
+          {unresolved.map((approval) => (
+            <li key={approval.id} className="flex items-center gap-2">
+              <Avatar
+                name={approval.approver.displayName}
+                image={approval.approver.image}
+                className="size-6"
+              />
+              <span className="text-base text-primary">{approval.approver.displayName}</span>
+              <span
+                className={`inline-flex rounded-pill px-2 py-0.5 text-xs font-medium ${APPROVAL_PILL[approval.status]}`}
+              >
+                {approval.status === "rejected" ? (
+                  <FormattedMessage id="approvals.status.rejected" defaultMessage="Rejected" />
+                ) : (
+                  <FormattedMessage id="approvals.status.pending" defaultMessage="Pending" />
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+        {/* The C5 mock's soft-gate note row, said where the act is taken
+        rather than under the roster (DES-035 clauses 17 and 18). */}
+        <p className="mt-4 text-xs text-muted">
+          <FormattedMessage
+            id="contracts.softGate.override"
+            defaultMessage="This is allowed. It is recorded on the record's activity as an override."
+          />
+        </p>
+        {error && (
+          <p role="alert" className="mt-4 text-xs text-status-danger-fg">
+            {error}
+          </p>
+        )}
+        <div className="mt-4 flex justify-end gap-2">
+          <Button type="button" variant="secondary" disabled={busy} onClick={() => close(false)}>
+            <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+          </Button>
+          <Button type="button" disabled={busy} onClick={() => void submit()}>
+            <FormattedMessage id="contracts.softGate.submit" defaultMessage="Move anyway" />
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

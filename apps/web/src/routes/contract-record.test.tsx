@@ -525,16 +525,23 @@ describe("the /contracts/:number record page", () => {
     expect(
       await screen.findByRole("heading", { level: 1, name: "Acme master services agreement" }),
     ).toBeInTheDocument();
-    // The sub-bar carries the breadcrumb, the reference, and the status
-    // pill (the nav also links to Contracts, and the status select's
-    // options carry the same labels).
+    // The sub-bar carries the breadcrumb, the reference, the status
+    // pill, and the stage pipeline (the nav also links to Contracts, and
+    // the status select's options carry the same labels).
     const subbar = screen.getByRole("region", { name: "Acme master services agreement" });
     expect(within(subbar).getByRole("link", { name: "Contracts" })).toHaveAttribute(
       "href",
       "/contracts",
     );
     expect(within(subbar).getByText("C-42")).toBeInTheDocument();
-    expect(within(subbar).getByText("Draft")).toBeInTheDocument();
+    // The pipeline's own "Draft" step says the stage, so the pill is
+    // read as the one outside it (CTR-001: one datum, two zooms).
+    const pipeline = within(subbar).getByRole("list", { name: "Stage" });
+    expect(
+      within(subbar)
+        .getAllByText("Draft")
+        .filter((node) => !pipeline.contains(node)),
+    ).toHaveLength(1);
 
     expect(screen.getByLabelText("Title")).toHaveValue("Acme master services agreement");
     expect(screen.getByLabelText("Status")).toHaveValue("s-draft");
@@ -615,7 +622,14 @@ describe("the /contracts/:number record page", () => {
     await user.selectOptions(await screen.findByLabelText("Status"), "s-active");
     await waitFor(() => expect(api.patches).toEqual([{ statusId: "s-active" }]));
     const subbar = screen.getByRole("region", { name: "Acme master services agreement" });
-    expect(within(subbar).getByText("Active")).toBeInTheDocument();
+    // The pipeline beside the pill says "Active" too, so the pill is
+    // read as the one outside it (CTR-001: one datum, two zooms).
+    const pipeline = within(subbar).getByRole("list", { name: "Stage" });
+    expect(
+      within(subbar)
+        .getAllByText("Active")
+        .filter((node) => !pipeline.contains(node)),
+    ).toHaveLength(1);
 
     // Backwards too — deals collapse and reopen (CTR-001).
     await user.selectOptions(screen.getByLabelText("Status"), "s-redlining");
@@ -1580,8 +1594,130 @@ describe("the /contracts/:number record page", () => {
   });
 });
 
+/**
+ * The six-stage pipeline on the record (M14/2, CTR-001, grill-plan
+ * D.8): the fixed backbone in canonical order, with the marker on the
+ * stage the seam answers. The marker follows `stage` and never a
+ * label — a status may be renamed to anything, including another
+ * stage's name — and it moves backwards as readily as forwards,
+ * because transitions are unrestricted.
+ */
+describe("the contract record's stage pipeline (M14/2)", () => {
+  /** The six stages as the strip reads them: the name, whether the
+   * marker is on it, and whether it says the "done" word the check
+   * glyph says visually. */
+  function steps(pipeline: HTMLElement) {
+    return within(pipeline)
+      .getAllByRole("listitem")
+      .map((item) => {
+        const text = (item.textContent ?? "").trim();
+        return {
+          stage: text.replace(/\s*done$/, ""),
+          current: item.getAttribute("aria-current") === "step",
+          done: /\s*done$/.test(text),
+        };
+      });
+  }
+
+  async function pipelineOn(row: Record<string, unknown>) {
+    const api = recordApi(row);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const pipeline = await screen.findByRole("list", { name: "Stage" });
+    return { api, pipeline };
+  }
+
+  it("draws all six stages in canonical order with the current one marked", async () => {
+    const { pipeline } = await pipelineOn(contractRow());
+
+    expect(steps(pipeline)).toEqual([
+      { stage: "Draft", current: true, done: false },
+      { stage: "Review", current: false, done: false },
+      { stage: "Approval", current: false, done: false },
+      { stage: "Signature", current: false, done: false },
+      { stage: "Active", current: false, done: false },
+      { stage: "Ended", current: false, done: false },
+    ]);
+  });
+
+  it("marks the stage the seam answers, not the one the status label names", async () => {
+    // A status renamed "Ended" that maps to `review` is legal: the
+    // label is the team's, the stage is the system's (CTR-001).
+    const { pipeline } = await pipelineOn(
+      contractRow({ statusId: "s-x", statusName: "Ended", stage: "review" }),
+    );
+
+    expect(steps(pipeline).find((step) => step.current)?.stage).toBe("Review");
+    expect(
+      steps(pipeline)
+        .filter((step) => step.done)
+        .map((step) => step.stage),
+    ).toEqual(["Draft"]);
+  });
+
+  it("moves the marker when a status change lands on another stage", async () => {
+    const { pipeline } = await pipelineOn(contractRow());
+    const user = userEvent.setup();
+
+    await user.selectOptions(await screen.findByLabelText("Status"), "s-active");
+
+    await waitFor(() =>
+      expect(steps(pipeline)).toEqual([
+        { stage: "Draft", current: false, done: true },
+        { stage: "Review", current: false, done: true },
+        { stage: "Approval", current: false, done: true },
+        { stage: "Signature", current: false, done: true },
+        { stage: "Active", current: true, done: false },
+        { stage: "Ended", current: false, done: false },
+      ]),
+    );
+  });
+
+  it("moves the marker backwards too, because stage regression is legal", async () => {
+    const { pipeline } = await pipelineOn(contractRow({ statusId: "s-active", stage: "active" }));
+    const user = userEvent.setup();
+
+    // Redlining maps to `review` — two stages behind where it sits.
+    await user.selectOptions(await screen.findByLabelText("Status"), "s-redlining");
+
+    await waitFor(() =>
+      expect(steps(pipeline)).toEqual([
+        { stage: "Draft", current: false, done: true },
+        { stage: "Review", current: true, done: false },
+        { stage: "Approval", current: false, done: false },
+        { stage: "Signature", current: false, done: false },
+        { stage: "Active", current: false, done: false },
+        { stage: "Ended", current: false, done: false },
+      ]),
+    );
+  });
+
+  it("reads the same on an archived record, which is facts until restored", async () => {
+    const { pipeline } = await pipelineOn(
+      contractRow({
+        statusId: "s-active",
+        stage: "active",
+        archivedAt: "2026-08-01T00:00:00.000Z",
+      }),
+    );
+
+    expect(steps(pipeline).find((step) => step.current)?.stage).toBe("Active");
+  });
+
+  it("reads the same for a Contributor, who reads the record rather than edits it", async () => {
+    const api = recordApi(contractRow({ statusId: "s-active", stage: "active" }), [
+      person("u3", "contributor"),
+    ]);
+    stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
+    renderAt("/contracts/42");
+
+    const pipeline = await screen.findByRole("list", { name: "Stage" });
+    expect(steps(pipeline).find((step) => step.current)?.stage).toBe("Active");
+  });
+});
+
 describe("the contract record's section tabs (DES-032)", () => {
-  it("draws the three sections and lands the bare address on the Overview", async () => {
+  it("draws the four sections and lands the bare address on the Overview", async () => {
     const api = recordApi(contractRow());
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42");
@@ -1591,6 +1727,7 @@ describe("the contract record's section tabs (DES-032)", () => {
       "Overview",
       "Fields",
       "Documents",
+      "Approvals",
     ]);
     // The Overview is the bare address, so it must not read as active
     // on its siblings — that is what `end` on the link is for.
@@ -3395,6 +3532,58 @@ describe("the contract record's history applet (M9/6)", () => {
     // generic edit (CTR-001).
     expect(status).toHaveTextContent("Nadia Counsel changed the status");
     expect(status).toHaveTextContent("Draft → Internal review");
+  });
+
+  it("narrates a soft-gate override beside its status change, naming who it went past", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([
+      [
+        entry("a2", "contract.stage_gate_overridden", {
+          fromStage: "approval",
+          toStage: "signature",
+          approvers: [
+            { approverId: "u4", approverName: "Sarah Chen", status: "pending" },
+            { approverId: "u5", approverName: "Marcus Webb", status: "rejected" },
+          ],
+        }),
+        entry("a1", "contract.status_changed", {
+          from: "Awaiting approval",
+          to: "Out for signature",
+          fromStage: "approval",
+          toStage: "signature",
+        }),
+      ],
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    const feed = await screen.findByRole("list", { name: "History" });
+    const [override, status] = within(feed).getAllByRole("listitem");
+    // CTR-012: the whole reason the gate may be pushed past is that the
+    // push is recorded — and it names the people it went past, because
+    // "an override happened" is not something a reader can act on.
+    expect(override).toHaveTextContent(
+      "Nadia Counsel moved this contract past approval, overriding Sarah Chen and Marcus Webb",
+    );
+    // Two entries from one commit: the contract moved, and somebody
+    // moved it past open sign-off.
+    expect(status).toHaveTextContent("Nadia Counsel changed the status");
+  });
+
+  it("narrates an override whose payload names nobody as the override it was", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([[entry("a1", "contract.stage_gate_overridden", {})]]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+
+    // The log is append-only, so an entry a later build cannot fully
+    // read still has to come out as a sentence.
+    const feed = await screen.findByRole("list", { name: "History" });
+    expect(within(feed).getAllByRole("listitem")[0]).toHaveTextContent(
+      "Nadia Counsel moved this contract past approval, overriding the soft gate",
+    );
   });
 
   it("names the person and the Entity a reference field stores by id", async () => {

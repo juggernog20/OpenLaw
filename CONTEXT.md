@@ -86,6 +86,10 @@ _Avoid_: state, stage
 **Category**:
 The matter equivalent of Stage — `open` or `closed`, immutable once set on a status [MTR-002].
 
+**Soft gate**:
+The warning a Contract meets when it moves from a Stage at or before `approval` to a Stage after it while an Approval request is still unresolved — pending or rejected. It names the unresolved requests and asks for one deliberate confirmation. It never blocks: the confirmed move commits and is recorded on the Activity feed as an override [CTR-012, CTR-001].
+_Avoid_: approval gate, hard gate, block, approval lock
+
 **Inbox**:
 The single triage queue, containing exactly the Requests whose fate is undecided [INT-006, INT-007].
 _Avoid_: queue, triage list, backlog
@@ -149,6 +153,14 @@ _Avoid_: task, deadline, compliance item
 **Urgency**:
 What a requester supplies on a Request. It maps 1:1 to **priority** at conversion; **risk** is never requester-set [INT-002, MTR-012].
 
+**Approver group**:
+An Administrator-managed template naming a reusable set of approvers — "Commercial sign-off" = GC plus CFO. Members must be Member+ users. Applying a group copies its members onto the Contract at apply time, so a later edit or archive never changes an approval already requested [CTR-012].
+_Avoid_: approval group, approver team, sign-off rule
+
+**Approval request**:
+One named person's sign-off on one Contract. A Member+ user asks; the named approver alone answers, with an approval or a rejection and an optional note; and the answer is final. Requests run in parallel — there are no chains and no order — and at most one is pending per approver per Contract. Asking again after a rejection makes a new request rather than reopening the old one. The requester, the Contract's Owner, or an Administrator cancels a pending one, which deletes it and leaves the activity entry as the record that it was made [CTR-012].
+_Avoid_: approval task, sign-off item, approval step, reviewer
+
 ## Relationships
 
 - A **Matter** contains many **Contracts** and many **Documents**
@@ -159,6 +171,7 @@ What a requester supplies on a Request. It maps 1:1 to **priority** at conversio
 - A **Request** converts to exactly one **Matter** or one **Contract**, or is resolved or declined — never both [INT-007]
 - A **Status** maps to exactly one **Stage** (contracts) or **Category** (matters); the mapping is immutable once set
 - A **Matter** may have one parent **Matter**, arbitrarily deep, with no inheritance semantics [MTR-015]
+- A **Contract** holds many **Approval Requests**, each naming one approver; at most one of them is pending per approver [CTR-012]
 
 ## Example dialogue
 

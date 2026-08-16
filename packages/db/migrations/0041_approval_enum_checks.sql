@@ -1,0 +1,2 @@
+ALTER TABLE "contract_approvals" ADD CONSTRAINT "contract_approvals_source_check" CHECK (source in ('manual', 'group'));--> statement-breakpoint
+ALTER TABLE "contract_approvals" ADD CONSTRAINT "contract_approvals_status_check" CHECK (status in ('pending', 'approved', 'rejected'));

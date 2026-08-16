@@ -16,6 +16,7 @@
 
 import type { IntlShape } from "react-intl";
 import type { paths } from "@openlaw/api-client";
+import { CONTRACT_STAGES as SHARED_CONTRACT_STAGES } from "@openlaw/shared";
 import { formatCurrency } from "./format";
 
 /** One contract as the API answers it, aliased to the generated client
@@ -51,6 +52,11 @@ type OptionsResponse =
 export type ContractTypeOption = OptionsResponse["contractTypes"][number];
 export type ContractStatusOption = OptionsResponse["contractStatuses"][number];
 export type UserOption = OptionsResponse["users"][number];
+/** One live approver group the record's apply picker offers (CTR-012):
+ * the name, and the ids of the people applying it would ask. The names
+ * behind those ids are the `users` answer above — one copy of a person
+ * on this page, so the picker and the roster cannot disagree. */
+export type ApproverGroupOption = OptionsResponse["approverGroups"][number];
 
 /**
  * One choice in the signing-entity picker (CTR-011): the id it commits
@@ -88,6 +94,35 @@ export function signingEntityOptions(
 function exhaustiveList<T extends string>() {
   return <U extends readonly T[]>(values: Exclude<T, U[number]> extends never ? U : never): U =>
     values;
+}
+
+/**
+ * CTR-001's fixed six-stage backbone, in canonical forward order.
+ *
+ * The list itself lives in `@openlaw/shared`, because the soft gate and
+ * this pipeline both read the *order* and only one of them would notice
+ * a change: membership is checked against each end's own union, but a
+ * reordering compiles clean on both sides.
+ *
+ * Re-exported through this module so callers keep one import for the
+ * contract vocabulary, and guarded below against the generated API union
+ * so the shared list can still never drift from what the seam answers.
+ */
+export const CONTRACT_STAGES = exhaustiveList<ContractStage>()(SHARED_CONTRACT_STAGES);
+
+/** The fixed stage's own name. It is not the status label: the label is
+ * renameable and the stage is not (CTR-001), so the two are written
+ * separately and read side by side on the record. */
+export function stageLabel(intl: IntlShape, stage: ContractStage): string {
+  return intl.formatMessage(
+    {
+      id: "contracts.stageLabel",
+      defaultMessage:
+        "{stage, select, draft {Draft} review {Review} approval {Approval} " +
+        "signature {Signature} active {Active} ended {Ended} other {Unknown}}",
+    },
+    { stage },
+  );
 }
 
 /** DES-018's one ordinal severity ramp, low → critical. */

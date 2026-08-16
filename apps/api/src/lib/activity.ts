@@ -51,6 +51,31 @@ export type ActivityAction =
   | `${TypeFieldActionPrefix}.${"attached" | "detached" | "reordered" | "required_changed"}`
   | `contract_status.${"created" | "renamed" | "reordered" | "archived" | "restored" | "deleted"}`
   | `field.${"created" | "updated" | "promoted" | "narrowed" | "archived" | "restored"}`
+  // The CTR-012 approver-group templates (M14/1). The five list verbs
+  // are the taxonomy set minus reorder and delete: a group has no
+  // display order, and nothing hard-deletes one. The two member verbs
+  // are their own, for the reason the contract team's are (CTR-004) —
+  // putting a person on a template is not an edit of a field, and an
+  // Administrator asking "who was on Commercial sign-off in March" has
+  // to be able to filter the audit log on it.
+  | `approver_group.${"created" | "renamed" | "updated" | "archived" | "restored" | "member_added" | "member_removed"}`
+  // The sign-off on one contract (M14/3, CTR-012). These hang off the
+  // contract, not off the request: an approval is a thing that happened
+  // to the record, and its story belongs in that record's feed at the
+  // standing record tier — so a Contributor on the team reads it
+  // exactly as a Member does, and a confidential contract's audience is
+  // the only audience it has.
+  //
+  // A verb per act, not one generic edit. Asking somebody, their answer
+  // either way, and a withdrawal are four different things that
+  // happened, and a reader of the feed has to be able to tell an
+  // approval from a rejection without opening a payload.
+  //
+  // Cancellation deletes the pending row (CTR-012), so `approval.
+  // cancelled` is the **only** remaining record that the request was
+  // ever made — which is why its payload carries the approver's name
+  // rather than only their id.
+  | `approval.${"requested" | "approved" | "rejected" | "cancelled"}`
   // The registry record's own feed (M7): create and archive from #98,
   // the record surface's verbs from #99. A status change keeps its own
   // verb — status is the fixed code-branching enum (ENT-001), so the M9
@@ -77,7 +102,15 @@ export type ActivityAction =
   // actor and timestamp, and a verb an Administrator can filter the
   // audit log on is what makes that a query rather than a hunt through
   // `contract.updated` payloads.
-  | `contract.${"created" | "updated" | "status_changed" | "type_reassigned" | "team_added" | "team_removed" | "counterparty_added" | "counterparty_removed" | "counterparty_primary_changed" | "confidentiality_set" | "confidentiality_cleared" | "archived" | "restored"}`
+  //
+  // `stage_gate_overridden` (M14/5, CTR-012) keeps its own verb for
+  // that third reason again: the soft gate is allowed to be pushed
+  // past, and the whole reason it is allowed is that the push is
+  // recorded. It rides beside the `status_changed` entry of the same
+  // commit rather than inside it, because two things happened — the
+  // contract moved, and somebody moved it past open sign-off — and only
+  // one of them is a fact about the status.
+  | `contract.${"created" | "updated" | "status_changed" | "stage_gate_overridden" | "type_reassigned" | "team_added" | "team_removed" | "counterparty_added" | "counterparty_removed" | "counterparty_primary_changed" | "confidentiality_set" | "confidentiality_cleared" | "archived" | "restored"}`
   // The conversation on a record (M9/2, M9/4). Every entry carries the
   // comment's own tier, so a Legal Only comment leaves no trace for
   // anyone who could not read it. They carry ids and metadata only —

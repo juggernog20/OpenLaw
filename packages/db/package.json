@@ -17,6 +17,7 @@
     "generate": "drizzle-kit generate"
   },
   "dependencies": {
+    "@openlaw/shared": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "pg": "^8.23.0",
     "uuidv7": "^1.2.1"

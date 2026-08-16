@@ -294,6 +294,9 @@ importers:
 
   packages/db:
     dependencies:
+      '@openlaw/shared':
+        specifier: workspace:*
+        version: link:../shared
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@types/pg@8.21.0)(kysely@0.29.5)(pg@8.23.0)

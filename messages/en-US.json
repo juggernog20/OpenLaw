@@ -35,6 +35,24 @@
   "activity.applet": {
     "defaultMessage": "History"
   },
+  "activity.approval.approved": {
+    "defaultMessage": "{actor} approved this contract"
+  },
+  "activity.approval.cancelled": {
+    "defaultMessage": "{actor} cancelled the approval request to {approver}"
+  },
+  "activity.approval.rejected": {
+    "defaultMessage": "{actor} rejected this contract"
+  },
+  "activity.approval.requested": {
+    "defaultMessage": "{source, select, group {{actor} asked {approver} to approve this contract, from the {group} group} other {{actor} asked {approver} to approve this contract}}"
+  },
+  "activity.approverGroup.memberAdded": {
+    "defaultMessage": "{actor} added {member} to the approver group {name}"
+  },
+  "activity.approverGroup.memberRemoved": {
+    "defaultMessage": "{actor} took {member} off the approver group {name}"
+  },
   "activity.boolean": {
     "defaultMessage": "{value, select, true {Yes} other {No}}"
   },
@@ -79,6 +97,9 @@
   },
   "activity.contract.restored": {
     "defaultMessage": "{actor} restored this contract"
+  },
+  "activity.contract.stageGateOverridden": {
+    "defaultMessage": "{count, plural, =0 {{actor} moved this contract past approval, overriding the soft gate} other {{actor} moved this contract past approval, overriding {approvers}}}"
   },
   "activity.contract.statusChanged": {
     "defaultMessage": "{actor} changed the status"
@@ -204,25 +225,25 @@
     "defaultMessage": "{actor} changed the identity provider {provider}"
   },
   "activity.taxonomy.archived": {
-    "defaultMessage": "{actor} archived the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+    "defaultMessage": "{actor} archived the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
   },
   "activity.taxonomy.created": {
-    "defaultMessage": "{actor} added the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+    "defaultMessage": "{actor} added the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
   },
   "activity.taxonomy.deleted": {
-    "defaultMessage": "{actor} deleted the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+    "defaultMessage": "{actor} deleted the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
   },
   "activity.taxonomy.renamed": {
-    "defaultMessage": "{actor} renamed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+    "defaultMessage": "{actor} renamed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
   },
   "activity.taxonomy.reordered": {
-    "defaultMessage": "{actor} reordered the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} list"
+    "defaultMessage": "{actor} reordered the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} list"
   },
   "activity.taxonomy.restored": {
-    "defaultMessage": "{actor} restored the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+    "defaultMessage": "{actor} restored the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
   },
   "activity.taxonomy.updated": {
-    "defaultMessage": "{actor} changed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} other {type}} {name}"
+    "defaultMessage": "{actor} changed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
   },
   "activity.teamRole": {
     "defaultMessage": "{role, select, member {Member} watcher {Watcher} creator {Creator} contributor {Contributor} other {{role}}}"
@@ -301,6 +322,138 @@
   },
   "applets.labelWithBadge": {
     "defaultMessage": "{label} ({count})"
+  },
+  "approvals.actionsFor": {
+    "defaultMessage": "Actions for {name}"
+  },
+  "approvals.add": {
+    "defaultMessage": "Add approver"
+  },
+  "approvals.addTitle": {
+    "defaultMessage": "Add approver"
+  },
+  "approvals.applyGroup": {
+    "defaultMessage": "Apply group"
+  },
+  "approvals.applyGroupTitle": {
+    "defaultMessage": "Apply approver group"
+  },
+  "approvals.approve": {
+    "defaultMessage": "Approve"
+  },
+  "approvals.approveTitle": {
+    "defaultMessage": "Approve this contract"
+  },
+  "approvals.approvers": {
+    "defaultMessage": "Approvers"
+  },
+  "approvals.approversHelp": {
+    "defaultMessage": "Everyone you pick is asked at once. They answer in any order."
+  },
+  "approvals.cancel": {
+    "defaultMessage": "Cancel request"
+  },
+  "approvals.column.actions": {
+    "defaultMessage": "Actions"
+  },
+  "approvals.column.approver": {
+    "defaultMessage": "Approver"
+  },
+  "approvals.column.decided": {
+    "defaultMessage": "Decided"
+  },
+  "approvals.column.decision": {
+    "defaultMessage": "Decision"
+  },
+  "approvals.column.note": {
+    "defaultMessage": "Note"
+  },
+  "approvals.column.source": {
+    "defaultMessage": "Source"
+  },
+  "approvals.count.approved": {
+    "defaultMessage": "{count} approved"
+  },
+  "approvals.count.pending": {
+    "defaultMessage": "{count} pending"
+  },
+  "approvals.count.rejected": {
+    "defaultMessage": "{count} rejected"
+  },
+  "approvals.countLabel": {
+    "defaultMessage": "{count, plural, one {# approval} other {# approvals}}"
+  },
+  "approvals.decisionFinal": {
+    "defaultMessage": "A decision is final. To change it, ask for a new approval."
+  },
+  "approvals.empty": {
+    "defaultMessage": "No approvals requested on this contract yet."
+  },
+  "approvals.group": {
+    "defaultMessage": "Approver group"
+  },
+  "approvals.groupAllAsked": {
+    "defaultMessage": "Everybody in this group already has a request open."
+  },
+  "approvals.groupAsks": {
+    "defaultMessage": "Asks {names}."
+  },
+  "approvals.groupEmpty": {
+    "defaultMessage": "This group has nobody to ask."
+  },
+  "approvals.groupSkips": {
+    "defaultMessage": "{count, plural, one {Skips # person who already has a request open.} other {Skips # people who already have a request open.}}"
+  },
+  "approvals.groupSnapshot": {
+    "defaultMessage": "Applying a group asks the people it names now. A later edit to the group leaves these requests as they are."
+  },
+  "approvals.noCandidates": {
+    "defaultMessage": "Everybody who can approve this contract already has a request open."
+  },
+  "approvals.notYet": {
+    "defaultMessage": "—"
+  },
+  "approvals.note": {
+    "defaultMessage": "Note (optional)"
+  },
+  "approvals.pickGroup": {
+    "defaultMessage": "Pick an approver group."
+  },
+  "approvals.pickGroupOption": {
+    "defaultMessage": "Pick a group"
+  },
+  "approvals.pickSomebody": {
+    "defaultMessage": "Pick at least one approver."
+  },
+  "approvals.reject": {
+    "defaultMessage": "Reject"
+  },
+  "approvals.rejectTitle": {
+    "defaultMessage": "Reject this contract"
+  },
+  "approvals.request": {
+    "defaultMessage": "Request approvals"
+  },
+  "approvals.requestedBy": {
+    "defaultMessage": "Requested by {name}"
+  },
+  "approvals.section": {
+    "defaultMessage": "Approvals"
+  },
+  "approvals.source.manual": {
+    "defaultMessage": "Added manually"
+  },
+  "approvals.status.approved": {
+    "defaultMessage": "Approved"
+  },
+  "approvals.status.pending": {
+    "defaultMessage": "Pending"
+  },
+  "approvals.status.rejected": {
+    "defaultMessage": "Rejected"
+  },
+  "approvals.writeFailed": {
+    "defaultMessage": "The change could not be saved. Try again."
   },
   "audit.col.audience": {
     "defaultMessage": "Audience"
@@ -893,6 +1046,9 @@
   "contracts.record.sections": {
     "defaultMessage": "Contract sections"
   },
+  "contracts.record.tab.approvals": {
+    "defaultMessage": "Approvals"
+  },
   "contracts.record.tab.documents": {
     "defaultMessage": "Documents"
   },
@@ -934,6 +1090,30 @@
   },
   "contracts.showArchived": {
     "defaultMessage": "Show archived"
+  },
+  "contracts.softGate.error": {
+    "defaultMessage": "The status could not be changed."
+  },
+  "contracts.softGate.note": {
+    "defaultMessage": "{count, plural, one {# approval on this contract is unresolved.} other {# approvals on this contract are unresolved.}} Moving to {status} goes past sign-off."
+  },
+  "contracts.softGate.override": {
+    "defaultMessage": "This is allowed. It is recorded on the record's activity as an override."
+  },
+  "contracts.softGate.submit": {
+    "defaultMessage": "Move anyway"
+  },
+  "contracts.softGate.title": {
+    "defaultMessage": "Move past approval"
+  },
+  "contracts.stage.done": {
+    "defaultMessage": "done"
+  },
+  "contracts.stage.pipeline": {
+    "defaultMessage": "Stage"
+  },
+  "contracts.stageLabel": {
+    "defaultMessage": "{stage, select, draft {Draft} review {Review} approval {Approval} signature {Signature} active {Active} ended {Ended} other {Unknown}}"
   },
   "contracts.team.add": {
     "defaultMessage": "Add team member"
@@ -1679,6 +1859,96 @@
   "settings.appearance.theme": {
     "defaultMessage": "Theme"
   },
+  "settings.approverGroups.add": {
+    "defaultMessage": "Add group"
+  },
+  "settings.approverGroups.addTitle": {
+    "defaultMessage": "Add approver group"
+  },
+  "settings.approverGroups.archive": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.approverGroups.archiveError": {
+    "defaultMessage": "The group could not be archived."
+  },
+  "settings.approverGroups.archiveSubmit": {
+    "defaultMessage": "Archive group"
+  },
+  "settings.approverGroups.archiveTitle": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.approverGroups.archiveWarning": {
+    "defaultMessage": "{count, plural, =0 {{name} leaves the apply picker. It has no members, and it can be restored.} one {{name} leaves the apply picker. Its # member is kept, and approvals already requested from the group are untouched.} other {{name} leaves the apply picker. Its # members are kept, and approvals already requested from the group are untouched.}}"
+  },
+  "settings.approverGroups.auditNote": {
+    "defaultMessage": "The change applies immediately and is recorded in the audit log."
+  },
+  "settings.approverGroups.count": {
+    "defaultMessage": "{count, plural, one {# group} other {# groups}}"
+  },
+  "settings.approverGroups.createError": {
+    "defaultMessage": "The group could not be created."
+  },
+  "settings.approverGroups.createSubmit": {
+    "defaultMessage": "Add group"
+  },
+  "settings.approverGroups.descriptionHelp": {
+    "defaultMessage": "Shown beside the group wherever it is applied."
+  },
+  "settings.approverGroups.descriptionLabel": {
+    "defaultMessage": "Description"
+  },
+  "settings.approverGroups.edit": {
+    "defaultMessage": "Edit {name}"
+  },
+  "settings.approverGroups.editError": {
+    "defaultMessage": "The group could not be saved."
+  },
+  "settings.approverGroups.editSubmit": {
+    "defaultMessage": "Save"
+  },
+  "settings.approverGroups.editTitle": {
+    "defaultMessage": "Edit {name}"
+  },
+  "settings.approverGroups.help": {
+    "defaultMessage": "Only Administrators and Legal team members can be group members. Applying a group copies its members onto the contract, so editing or archiving a group never changes an approval already requested."
+  },
+  "settings.approverGroups.ineligible": {
+    "defaultMessage": "Can no longer approve"
+  },
+  "settings.approverGroups.memberCount": {
+    "defaultMessage": "{count, plural, one {# member} other {# members}}"
+  },
+  "settings.approverGroups.membersError": {
+    "defaultMessage": "The member list could not be saved."
+  },
+  "settings.approverGroups.membersHelp": {
+    "defaultMessage": "Only Administrators and Legal team members can approve a contract."
+  },
+  "settings.approverGroups.membersLabel": {
+    "defaultMessage": "Members"
+  },
+  "settings.approverGroups.nameLabel": {
+    "defaultMessage": "Name"
+  },
+  "settings.approverGroups.nameMissing": {
+    "defaultMessage": "Name the group."
+  },
+  "settings.approverGroups.noCandidates": {
+    "defaultMessage": "No Administrator or Legal team member is available yet."
+  },
+  "settings.approverGroups.pageTitle": {
+    "defaultMessage": "Approver groups"
+  },
+  "settings.approverGroups.renameLabel": {
+    "defaultMessage": "Rename {name}"
+  },
+  "settings.approverGroups.restore": {
+    "defaultMessage": "Restore {name}"
+  },
+  "settings.approverGroups.title": {
+    "defaultMessage": "Approver groups"
+  },
   "settings.auth.addDomain": {
     "defaultMessage": "Add"
   },
@@ -2104,6 +2374,9 @@
   },
   "settings.contractTypes.title": {
     "defaultMessage": "Contract types"
+  },
+  "settings.contracts.tab.approverGroups": {
+    "defaultMessage": "Approver groups"
   },
   "settings.contracts.tab.fields": {
     "defaultMessage": "Fields"

@@ -2,9 +2,9 @@
 
 /**
  * The Contracts settings section head (ST10) on the shared
- * SettingsSectionTabs anatomy (#85). Fields and Approver groups join
- * the strip as their tickets land, the same way Statuses joined with
- * #82.
+ * SettingsSectionTabs anatomy (#85). The strip is complete: Types,
+ * Statuses, Fields, and — from #231 — Approver groups, each joining as
+ * its ticket landed.
  */
 
 import { FormattedMessage, useIntl } from "react-intl";
@@ -22,6 +22,15 @@ const TABS = [
   {
     path: "/settings/contracts/fields",
     label: <FormattedMessage id="settings.contracts.tab.fields" defaultMessage="Fields" />,
+  },
+  {
+    path: "/settings/contracts/approver-groups",
+    label: (
+      <FormattedMessage
+        id="settings.contracts.tab.approverGroups"
+        defaultMessage="Approver groups"
+      />
+    ),
   },
 ] as const;
 
