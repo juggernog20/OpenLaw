@@ -1656,9 +1656,17 @@ const UNKNOWN = defineMessage({ id: "activity.unknown", defaultMessage: "{actor}
  * The lookup takes a plain string, and it has to: `ARMS` is keyed by
  * this build's vocabulary, and the row is as old as the build that
  * wrote it. Answering `undefined` for the rest is the fallback's cue.
+ *
+ * **By own key only.** `ARMS` is an object literal, so a bare index
+ * would answer for keys nobody wrote: a row whose action is
+ * `constructor` would read a function, and `__proto__` would read
+ * `Object.prototype`. Neither is an arm, and both would take the panel
+ * down on the one thing the fallback exists to survive — a slug this
+ * build has never heard of. Nothing constrains the `action` column
+ * (DD-017), so the row can say anything.
  */
 function armFor(action: string): Arm | undefined {
-  return (ARMS as Readonly<Record<string, Arm | undefined>>)[action];
+  return Object.hasOwn(ARMS, action) ? (ARMS as Readonly<Record<string, Arm>>)[action] : undefined;
 }
 
 /** One entry, narrated. Every arm reads its payload defensively; none of

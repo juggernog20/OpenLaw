@@ -431,9 +431,13 @@ describe("the vocabulary, slug by slug", () => {
     // Not the fallback: this slug has a sentence of its own.
     expect(narration.sentence).not.toBe(`${ACTOR.displayName} — ${action}`);
     expect(narration.sentence.length).toBeGreaterThan(0);
-    // No ICU placeholder survived, and no value resolved to nothing.
+    // No ICU placeholder survived, and no value resolved to nothing —
+    // including the nullable ones (a folder at the record root, a
+    // primary document moving from nobody), which have to reach the
+    // reader as a sentence rather than as the word "null".
     expect(narration.sentence).not.toMatch(/[{}]/);
     expect(narration.sentence).not.toContain("undefined");
+    expect(narration.sentence).not.toContain("null");
     expect(narration.icon).toBeDefined();
     for (const change of narration.changes) {
       expect(change.label.length).toBeGreaterThan(0);
@@ -544,6 +548,16 @@ describe("the fallback arm (DD-017: the log outlives the code)", () => {
 
   it("renders an unknown slug with no actor as OpenLaw", () => {
     expect(narrate("matter.filed", {}, null).sentence).toBe("OpenLaw — matter.filed");
+  });
+
+  it("renders a slug that names something on Object.prototype", () => {
+    // Nothing constrains the `action` column, so a row can say
+    // `constructor`. A bare index into the arms table would answer a
+    // function for it and take the panel down on the one case the
+    // fallback exists to survive.
+    for (const slug of ["constructor", "toString", "__proto__", "hasOwnProperty"]) {
+      expect(narrate(slug, {}).sentence).toBe(`Nadia Counsel — ${slug}`);
+    }
   });
 
   it("renders a known slug whose payload has lost its keys", () => {
