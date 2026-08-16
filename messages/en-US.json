@@ -2978,6 +2978,15 @@
   "signing.column.status": {
     "defaultMessage": "Status"
   },
+  "signing.executedFailed": {
+    "defaultMessage": "The executed copy could not be filed. Upload it to the record instead."
+  },
+  "signing.executedFile": {
+    "defaultMessage": "Executed copy"
+  },
+  "signing.executedFiling": {
+    "defaultMessage": "Filing the executed copy…"
+  },
   "signing.needReason": {
     "defaultMessage": "Say why this envelope is being voided."
   },
@@ -3001,6 +3010,9 @@
   },
   "signing.sendFailed": {
     "defaultMessage": "The envelope could not be sent. Try again."
+  },
+  "signing.sendNote": {
+    "defaultMessage": "When everyone signs, the executed file lands on this contract and the status moves to the active stage."
   },
   "signing.sendTitle": {
     "defaultMessage": "Send for signature"
@@ -3033,7 +3045,7 @@
     "defaultMessage": "Voided"
   },
   "signing.statusArrives": {
-    "defaultMessage": "Signed, declined, and voided status arrives by webhook."
+    "defaultMessage": "Signed, declined, and voided status arrives by webhook. The executed file auto-files and the stage advances to Active."
   },
   "signing.subject": {
     "defaultMessage": "Subject (optional)"
