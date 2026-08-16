@@ -60,6 +60,8 @@ Four workflows in [`.github/workflows/`](.github/workflows/). A fork gets the pr
 | `codeql.yml`   | Static analysis of the JavaScript and TypeScript                                                                                                           | Yes                                 |
 | `security.yml` | Dependency review and secret scanning                                                                                                                      | Yes                                 |
 
+Both stack gates have a local command: `pnpm e2e:local` for the browser suite, `pnpm upgrade-fidelity` for the upgrade job. Each runs in its own compose project, so neither touches the instance you develop against.
+
 The i18n job is deliberately non-blocking. en-US is the only v1 locale and the `defaultMessage` at each call site is the runtime catalog, so a stale file breaks nothing today. It becomes the file translators work from the day a second locale ships, and the check is already running and quiet by then.
 
 ## Deployment

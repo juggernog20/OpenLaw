@@ -227,15 +227,15 @@ Migrations run automatically when the app container boots (TECH-005); replicas b
 
 This path is exercised on every commit rather than assumed. CI fills a baseline install with Contracts across the lifecycle, Documents, users in several roles and a signing connector, then brings the new version up against that same database and checks every record still reads back (TECH-018). It is not a promise that no upgrade ever needs care — it is a promise that the ordinary one is tested with rows in the tables, not only against an empty install.
 
-## The activity log leaves this process, and those copies are yours
+## The Audit log leaves this process, and those copies are yours
 
-Every row OpenLaw appends to its activity log is also written to stdout as one line of JSON (DD-017), so you can ship it to Datadog, Loki, Splunk, or whatever else you already run. Nothing is redacted on the way out: the line is a faithful copy of the stored row, because a shipped copy that disagreed with the record would be worse than no copy at all.
+Every row OpenLaw appends to `activity_log` — the one table behind both the per-record **Activity feed** and the Administrator-only **Audit log** — is also written to stdout as one line of JSON (DD-017), so you can ship it to Datadog, Loki, Splunk, or whatever else you already run. Nothing is redacted on the way out: the line is a faithful copy of the stored row, because a shipped copy that disagreed with the record would be worse than no copy at all.
 
 **Two consequences you own rather than we do.**
 
 **Container logs are as sensitive as the database.** They carry contract titles, the people on a record, and the name and email address of every external signer an envelope was sent to. Give them the retention and the access control you give a database backup.
 
-**An erasure inside OpenLaw cannot reach a copy that has already left.** An Administrator can erase an **external signer** — somebody with no account here, named in a send dialog by one of your people — and it rewrites that person's name and address out of the stored activity entries and deletes the envelope's signer rows (CTR-013). The entry keeps its shape: it still says how many people were asked, and when.
+**An erasure inside OpenLaw cannot reach a copy that has already left.** An Administrator can erase an **external signer** — somebody with no account here, named in a send dialog by one of your people — and it rewrites that person's name and address out of the stored `activity_log` rows and deletes the envelope's signer rows (CTR-013). The entry keeps its shape: it still says how many people were asked, and when.
 
 ```bash
 curl -X POST https://legal.example.com/api/v1/signer-erasures \
@@ -269,13 +269,13 @@ Use a different value from `AUTH_SECRET`, so rotating one never touches the othe
 
 ### Where it must not live
 
-**Not in the same archive as the database dump.** The key is what makes a stolen `pg_dump` useless. A backup job that tars `.env` alongside `openlaw-2026-08-16.sql` puts the locked box and its key in one file and gives the whole thing back.
+**Not in the same archive as the database dump.** The key is what keeps the four sealed credentials unreadable in a stolen `pg_dump` — the rest of the dump is your data in the clear, so it still needs the care any database backup needs. A backup job that tars `.env` alongside `openlaw-2026-08-16.sql` puts the locked box and its key in one file and gives the whole thing back.
 
 Put the key in a password manager or a secret manager. Back it up somewhere your database backups are not, and check that whatever backs up `/opt/openlaw` (or wherever your `.env` lives) is not also the thing that writes your dumps.
 
 ### Rotate it
 
-No credential is retyped, and the rotation is one restart:
+No credential is retyped. It takes two restarts — one to re-encrypt under the new key, one to retire the old variable:
 
 ```bash
 # 1. Move the current key across and generate a new one.
@@ -301,7 +301,14 @@ Set a new `OPENLAW_SECRET_KEY`, start the stack, and the four credentials read a
 
 ### Upgrading from a version before this
 
-Nothing to do. An install whose credentials were stored in the clear encrypts them on the first boot of the new version and logs what it did.
+**Set `OPENLAW_SECRET_KEY` before you start the new version**, not after. The app and the worker refuse to boot without it, so an upgrade that skips this step stops at a startup error rather than starting and asking later.
+
+```bash
+echo "OPENLAW_SECRET_KEY=$(openssl rand -base64 32)" >> .env
+docker compose up -d
+```
+
+That is the whole migration. The first boot encrypts the credentials the old version stored in the clear, logs which columns it sealed, and asks nobody to retype anything.
 
 ## Backups
 

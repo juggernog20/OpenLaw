@@ -8,7 +8,8 @@
     "e2e": "playwright test",
     "e2e:local": "scripts/local-stack.sh",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint tests playwright.config.ts"
+    "lint": "eslint tests playwright.config.ts",
+    "upgrade-fidelity": "scripts/upgrade-fidelity.sh"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

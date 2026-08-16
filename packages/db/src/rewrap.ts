@@ -108,11 +108,26 @@ async function rewrapColumn(
       continue;
     }
 
-    // `sql.identifier`, not the column object: Postgres refuses a
-    // table-qualified name on the left of a SET.
-    await db.execute(
-      sql`UPDATE ${spec.table} SET ${sql.identifier(name)} = ${sealSecret(opened, name)} WHERE ${spec.id} = ${row.id}`,
+    // Two things about this statement.
+    //
+    // `sql.identifier`, not the column object, because Postgres refuses
+    // a table-qualified name on the left of a SET.
+    //
+    // And the WHERE names the exact value that was read, not only the
+    // row. The advisory lock serializes the replicas running this pass;
+    // it says nothing about the *old* replica still serving traffic
+    // through a rolling upgrade. If an Administrator saves a new
+    // credential between the SELECT above and this UPDATE, the
+    // unqualified form would write the resealed old value over it and
+    // lose a credential silently. Qualified, that row simply does not
+    // match, and the next boot reseals whatever is there by then.
+    const written = await db.execute(
+      sql`UPDATE ${spec.table}
+             SET ${sql.identifier(name)} = ${sealSecret(opened, name)}
+           WHERE ${spec.id} = ${row.id}
+             AND ${spec.column}::text = ${row.value}`,
     );
+    if (written.rowCount === 0) continue;
     resealed += 1;
   }
   return { resealed, unreadable };
