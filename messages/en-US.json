@@ -227,6 +227,9 @@
   "activity.orgSettings.updated": {
     "defaultMessage": "{actor} changed the organization settings"
   },
+  "activity.signer.erased": {
+    "defaultMessage": "{actor} erased an external signer's name and address from {entriesRedacted, plural, =0 {no entries} one {# entry} other {# entries}}"
+  },
   "activity.signingConnector.configured": {
     "defaultMessage": "{actor} connected the e-signature provider {provider}"
   },

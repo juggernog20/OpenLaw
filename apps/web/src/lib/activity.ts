@@ -52,6 +52,7 @@ import {
   Check,
   Clock,
   Download,
+  Eraser as EraserIcon,
   FilePlus2,
   FolderInput,
   FolderPlus,
@@ -1034,6 +1035,24 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
         "{hasReason, select, yes { — {reason}} other {}}",
     }),
     values: (_intl, payload) => reasonValues(payload),
+  },
+  /**
+   * A lawful erasure for somebody who only ever appears as a signer
+   * (#280). The sentence names nobody, because the payload names
+   * nobody — an entry carrying the erased address would put it back
+   * into the log the erasure just took it out of.
+   */
+  "signer.erased": {
+    icon: EraserIcon,
+    message: defineMessage({
+      id: "activity.signer.erased",
+      defaultMessage:
+        "{actor} erased an external signer's name and address from " +
+        "{entriesRedacted, plural, =0 {no entries} one {# entry} other {# entries}}",
+    }),
+    values: (_intl, payload) => ({
+      entriesRedacted: wholeCount(payload, "entriesRedacted"),
+    }),
   },
   "contract.archived": {
     icon: Archive,
