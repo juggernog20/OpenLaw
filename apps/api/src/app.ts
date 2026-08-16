@@ -64,6 +64,7 @@ import { orgRoutes } from "./modules/org/routes.js";
 import { usersRoutes } from "./modules/users/routes.js";
 import { emailSettingsRoutes } from "./modules/email-settings/routes.js";
 import { signingConnectorRoutes } from "./modules/signing-connector/routes.js";
+import { signingWebhookRoutes } from "./modules/signing-webhook/routes.js";
 import { authHandler } from "./auth/handler.js";
 import { createAuth, type Auth, type AuthConfig } from "./auth/instance.js";
 import type { AuthenticatedSession, AuthenticatedUser } from "./auth/guards.js";
@@ -350,6 +351,11 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   });
 
   await app.register(authHandler);
+  // Registered beside the auth handler rather than with the /api/v1
+  // module plugins, and for its reason: it declares its own full path
+  // and installs a raw-buffer content-type parser that must not reach
+  // the zod-validated routes (M15/3).
+  await app.register(signingWebhookRoutes);
   await app.register(metaRoutes, { prefix: "/api/v1" });
   await app.register(authRoutes, { prefix: "/api/v1" });
   await app.register(onboardingRoutes, { prefix: "/api/v1" });

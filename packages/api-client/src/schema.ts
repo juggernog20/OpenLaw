@@ -1156,7 +1156,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** One contract's signing envelopes, newest send first (CTR-013) — the adapter that carried each one, where it stands, who was asked to sign it, what went out, and when. Answers two facts beside the rows: whether this install has an e-signature connector at all, and the primary document this viewer may send, with its version chain newest round first. Both are what decide whether the record draws a send control, so an install with no connector and a record with no paper each answer plainly rather than by omission. A contract that has only ever been signed by hand holds no envelopes, which is the zero-config manual hand-off and not an error. Access is inherited from the contract and nothing else: a Contributor on the team reads it, and anyone who cannot reach the contract is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it */
+    /** One contract's signing envelopes, newest send first (CTR-013) — the adapter that carried each one, where it stands, who was asked to sign it, what went out, and when. A declined or voided envelope carries the reason it ended with, and a finished one carries the moment it ended. Both arrive from the provider's own feed, so the record answers them without anybody typing them in. Answers two facts beside the rows: whether this install has an e-signature connector at all, and the primary document this viewer may send, with its version chain newest round first. Both are what decide whether the record draws a send control, so an install with no connector and a record with no paper each answer plainly rather than by omission. A contract that has only ever been signed by hand holds no envelopes, which is the zero-config manual hand-off and not an error. Access is inherited from the contract and nothing else: a Contributor on the team reads it, and anyone who cannot reach the contract is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it */
     get: operations["listContractEnvelopes"];
     put?: never;
     /** Send a version of the contract's primary document out for signature (CTR-013). The version must be a round of that document's own chain — loose attachments are not sendable in v1, because the executed copy comes back to the chain the send left from. Signers are name-and-email pairs and every one of them is asked at once: there is no routing order. Sending is legal at any stage; CTR-001's transitions stay unrestricted. Refused with a typed problem when this install has no e-signature connector, and with another when the contract already has an envelope out — two envelopes must never race for one signature. The provider is called first and the row commits once it accepts; an envelope the provider took but the record could not keep is voided again before the refusal is raised, so the two systems do not drift apart silently. Appends one envelope.sent entry on the contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract sends nothing until it is restored */
@@ -6364,6 +6364,7 @@ export interface operations {
               }[];
               documentTitle: string | null;
               documentVersionNumber: number | null;
+              reason: string | null;
               sentBy: {
                 id: string;
                 displayName: string;
@@ -6441,6 +6442,7 @@ export interface operations {
               }[];
               documentTitle: string | null;
               documentVersionNumber: number | null;
+              reason: string | null;
               sentBy: {
                 id: string;
                 displayName: string;

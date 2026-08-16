@@ -109,6 +109,26 @@ const ENTRIES = [
     createdAt: "2026-08-12T07:00:00.000Z",
     payload: {},
   },
+  // A decline the provider's own feed reported (#247, CTR-013). It
+  // carries no actor, because nobody here declined anything: the entry
+  // is the integration speaking, and its sentence says so by naming no
+  // person at all.
+  {
+    id: "a4",
+    action: "envelope.declined",
+    entityType: "contract",
+    entityId: "c1",
+    visibility: "working_team",
+    actor: null,
+    createdAt: "2026-08-12T06:00:00.000Z",
+    payload: {
+      envelopeId: "e1",
+      provider: "docusign",
+      providerEnvelopeId: "fake-envelope-0001",
+      status: "declined",
+      reason: "The indemnity cap is wrong.",
+    },
+  },
 ];
 
 interface LogCalls {
@@ -152,7 +172,9 @@ function auditApi(
         const term = query.get("q");
         if (action && entry.action !== action) return false;
         if (entityType && entry.entityType !== entityType) return false;
-        if (actorId && entry.actor.id !== actorId) return false;
+        // An entry with no actor matches no actor filter: an integration
+        // event is nobody's, so narrowing to a person leaves it out.
+        if (actorId && entry.actor?.id !== actorId) return false;
         if (term && !JSON.stringify(entry).toLowerCase().includes(term.toLowerCase())) return false;
         return true;
       });
@@ -226,6 +248,13 @@ describe("what the pane shows", () => {
     // And the record's own, which the history applet narrates the same
     // way — one answer for both surfaces.
     expect(screen.getByText("Blair Wentworth created this contract")).toBeVisible();
+
+    // The envelope's ending, with the words it ended on and no person
+    // named: the signers sign on the provider's own ceremony, and the
+    // status arrives from its feed.
+    expect(
+      screen.getByText("This contract's envelope was declined — The indemnity cap is wrong."),
+    ).toBeVisible();
   });
 
   it("says so when nothing matches the filters", async () => {

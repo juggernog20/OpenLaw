@@ -465,6 +465,12 @@ export function ApprovalsSigningCard({
                   <th scope="col" className="w-32 px-4 py-2 text-start font-medium">
                     <FormattedMessage id="signing.column.sent" defaultMessage="Sent" />
                   </th>
+                  {/* The ending's own date, the Decided column's shape.
+                      A live envelope prints the em dash here, exactly
+                      as an undecided approval does. */}
+                  <th scope="col" className="w-28 px-4 py-2 text-start font-medium">
+                    <FormattedMessage id="signing.column.completed" defaultMessage="Completed" />
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -474,6 +480,19 @@ export function ApprovalsSigningCard({
               </tbody>
             </table>
           </div>
+          {/* The C20 mock's webhook note, drawn now that the behaviour
+              it describes exists (DES-036 clause 9, DES-037). Only
+              while an envelope is out: it answers "do I have to come
+              back and update this by hand", which is a question only a
+              live row raises. */}
+          {live !== null && (
+            <p className="px-4 pb-3 text-xs text-muted">
+              <FormattedMessage
+                id="signing.statusArrives"
+                defaultMessage="Signed and declined status arrives by webhook."
+              />
+            </p>
+          )}
           <h3
             id="contract-approvals-block-heading"
             className="border-y border-border-muted px-4 py-2 text-sm font-medium text-muted"
@@ -611,11 +630,16 @@ export function ApprovalsSigningCard({
  * One round of signature, as the C20 mock's envelope row draws it —
  * moved into this card, where the spec puts the signers' home (DES-036).
  *
- * Four cells, and each one a fact the seam answers. The signers come
+ * Five cells, and each one a fact the seam answers. The signers come
  * first because "who was asked to sign this" is the question the row
  * exists for, and each of them takes the two-line anatomy the Approver
  * cell already uses: the name, and under it the address the invitation
  * went to.
+ *
+ * The Status cell carries the reason under its pill, and the Completed
+ * cell carries the date the envelope ended on (DES-037): both arrive
+ * from the provider's own feed, and a live envelope prints the em dash
+ * for the second exactly as an undecided approval does.
  *
  * There are no per-signer statuses and no reminder, which the mock
  * draws: the envelope carries one status, and who has signed so far is
@@ -664,11 +688,21 @@ function EnvelopeRow({
         )}
       </td>
       <td className="px-4 py-2.5">
-        <span
-          className={`inline-flex rounded-pill px-2 py-0.5 text-xs font-medium ${ENVELOPE_PILL[envelope.status]}`}
-        >
-          <FormattedMessage {...ENVELOPE_STATUS_LABEL[envelope.status]} />
-        </span>
+        <div className="flex min-w-0 flex-col items-start gap-1">
+          <span
+            className={`inline-flex rounded-pill px-2 py-0.5 text-xs font-medium ${ENVELOPE_PILL[envelope.status]}`}
+          >
+            <FormattedMessage {...ENVELOPE_STATUS_LABEL[envelope.status]} />
+          </span>
+          {/* Why it ended, under the pill that says it did. The seam
+              keeps a reason only for a decline or a void, so nothing
+              here has to ask which status it belongs to — a reason is
+              there or it is not, and the row is silent when it is not
+              rather than printing an apology for the provider. */}
+          {envelope.reason !== null && (
+            <span className="text-xs text-muted">{envelope.reason}</span>
+          )}
+        </div>
       </td>
       <td className="px-4 py-2.5">
         <div className="flex min-w-0 flex-col">
@@ -681,6 +715,11 @@ function EnvelopeRow({
             />
           </span>
         </div>
+      </td>
+      <td className="px-4 py-2.5">
+        <span className="text-sm text-muted">
+          {envelope.completedAt === null ? dash : formatShortDate(envelope.completedAt)}
+        </span>
       </td>
     </tr>
   );

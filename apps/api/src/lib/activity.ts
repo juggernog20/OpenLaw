@@ -220,15 +220,23 @@ export type ActivityAction =
   // a Contributor on the team reads it exactly as a Member does, and a
   // confidential contract's audience is the only audience it has.
   //
-  // A verb per act, not one generic envelope edit. The later M15 slices
-  // add the ones that answer back — signed, declined, voided — because
-  // a reader of the feed has to be able to tell a completed signature
-  // from a withdrawn one without opening a payload.
+  // A verb per act, not one generic envelope edit. A reader of the feed
+  // has to be able to tell a completed signature from a withdrawn one
+  // without opening a payload.
   //
-  // The payload names the signers rather than only counting them: the
-  // envelope's signer rows go when the record does, and the feed is
-  // what still says who was asked to sign.
+  // The `envelope.sent` payload names the signers rather than only
+  // counting them: the envelope's signer rows go when the record does,
+  // and the feed is what still says who was asked to sign.
+  //
+  // The three endings (M15/3) are written by one place — the status
+  // transition in `lib/signing/transitions.ts` — whichever feed reports
+  // them. Each carries an actor only when a person caused it: a status
+  // the provider pushed or the sweep read has no human behind it, and
+  // an entry with no actor is how the feed says the integration spoke.
   | "envelope.sent"
+  | "envelope.signed"
+  | "envelope.declined"
+  | "envelope.voided"
   // Data leaving the system (M9/7, DD-017). An export is a security
   // event in its own right, so taking one appends an entry at
   // `admin_only` naming the filters it was taken under. It hangs off

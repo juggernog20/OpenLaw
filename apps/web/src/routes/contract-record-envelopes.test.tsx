@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The signing half of the record (#246, CTR-013, DES-036) at
- * `/contracts/42/approvals`, through the real route table with the
- * standard fetch stub.
+ * The signing half of the record (#246, #247, CTR-013, DES-036,
+ * DES-037) at `/contracts/42/approvals`, through the real route table
+ * with the standard fetch stub.
  *
  * What it draws: the envelope row with its status pill, its signers,
- * the version that went out, and when — plus the chip in the record's
- * sub-bar that says where the signature stands.
+ * the version that went out, and when — plus the ending the provider's
+ * feed reported (its date, and its reason on a decline) and the chip in
+ * the record's sub-bar that says where the signature stands.
  *
  * What it offers: the send dialog, which defaults to the current round
  * of the primary document, collects signers as name-and-email pairs,
@@ -118,6 +119,7 @@ function envelopeRow(overrides: Record<string, unknown> = {}) {
     signers: SIGNERS,
     documentTitle: "Acme MSA",
     documentVersionNumber: 2,
+    reason: null,
     sentBy: { id: "u2", displayName: "Nadia Counsel", image: null },
     sentAt: "2026-08-10T00:00:00.000Z",
     completedAt: null,
@@ -230,6 +232,71 @@ describe("the record's signing block", () => {
     renderAt("/contracts/42/approvals");
 
     expect(await screen.findByText("Envelope sent")).toBeInTheDocument();
+  });
+
+  it("prints the em dash for an envelope that has not ended", async () => {
+    const api = recordApi({ envelopes: [envelopeRow()] });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    const rows = await envelopeRows();
+    expect(within(rows[0]!).getByText("—")).toBeInTheDocument();
+  });
+
+  it("says a delivery is coming while an envelope is out", async () => {
+    const api = recordApi({ envelopes: [envelopeRow()] });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    expect(
+      await screen.findByText("Signed and declined status arrives by webhook."),
+    ).toBeInTheDocument();
+  });
+
+  it("says nothing about deliveries once the envelope has ended", async () => {
+    const api = recordApi({
+      envelopes: [envelopeRow({ status: "signed", completedAt: "2026-08-12T00:00:00.000Z" })],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    await envelopeRows();
+    expect(
+      screen.queryByText("Signed and declined status arrives by webhook."),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows a signed envelope with the date it ended, on the row and the chip", async () => {
+    const api = recordApi({
+      envelopes: [envelopeRow({ status: "signed", completedAt: "2026-08-12T00:00:00.000Z" })],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    const rows = await envelopeRows();
+    expect(within(rows[0]!).getByText("Signed")).toBeInTheDocument();
+    expect(within(rows[0]!).getByText("Aug 12")).toBeInTheDocument();
+    expect(await screen.findByText("Envelope signed")).toBeInTheDocument();
+  });
+
+  it("shows a declined envelope's reason under its pill", async () => {
+    const api = recordApi({
+      envelopes: [
+        envelopeRow({
+          status: "declined",
+          reason: "The indemnity cap is wrong.",
+          completedAt: "2026-08-11T00:00:00.000Z",
+        }),
+      ],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    const rows = await envelopeRows();
+    expect(within(rows[0]!).getByText("Declined")).toBeInTheDocument();
+    expect(within(rows[0]!).getByText("The indemnity cap is wrong.")).toBeInTheDocument();
+    expect(within(rows[0]!).getByText("Aug 11")).toBeInTheDocument();
+    expect(await screen.findByText("Envelope declined")).toBeInTheDocument();
   });
 
   it("draws no chip and no signing block on a record signed by hand", async () => {
