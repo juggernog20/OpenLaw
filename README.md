@@ -25,14 +25,29 @@ Requires Node ≥ 24 and pnpm.
 
 ```sh
 pnpm install
-pnpm dev        # run all apps in watch mode
+pnpm dev:hot    # the hot-reload loop: backing services in Docker, apps in watch mode
 pnpm build
 pnpm typecheck
 pnpm lint
 pnpm test
 ```
 
-Day-to-day iteration runs the apps as local watch processes; everything E2E and every milestone acceptance runs against the built Compose stack (TECH-018):
+### The hot-reload loop
+
+`pnpm dev:hot` is the day-to-day loop (TECH-018): Postgres, the doc engine, and Mailpit run as containers with their ports published to the host, and the three apps run as watch processes beside them. Browse it on **<http://localhost:5173>** — the Vite dev server. It proxies `/api` to the API on 3000, so the session cookie stays same-origin (TECH-008), and a saved `.tsx` reaches the browser without a reload.
+
+| What                              | Where                                              |
+| --------------------------------- | -------------------------------------------------- |
+| Web (Vite, hot module reload)     | <http://localhost:5173> — **browse here**          |
+| API (tsx watch, restarts on save) | <http://localhost:3000>                            |
+| Mail — every link the app sends   | <http://localhost:8025> (Mailpit)                  |
+| Postgres                          | `127.0.0.1:55432` — the built stack's own database |
+
+Two things to know about it. Emailed links point at `http://localhost:3000`, because that is the origin the API is configured for; open one on 5173 by changing the port by hand. And uploaded files go to `.storage/` in the repo rather than to the stack's volume, which the container's user owns — so a file uploaded here is not visible to `pnpm stack`, or the other way round. The database _is_ the same one, so accounts and every record are shared.
+
+`pnpm dev:infra` brings up only the containers, for when you start the watch processes yourself; `pnpm dev:infra:down` stops them. Ports move with `POSTGRES_PORT`, `DOC_ENGINE_PORT`, `MAILPIT_SMTP_PORT`. All of it is [`compose.hostdev.yml`](compose.hostdev.yml) plus [`scripts/dev-hot.sh`](scripts/dev-hot.sh), and none of it touches what a deployment runs.
+
+Everything E2E and every milestone acceptance runs against the built Compose stack instead (TECH-018):
 
 ```sh
 pnpm stack        # build, start, then follow the logs

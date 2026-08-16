@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+#
+# Host-development overlay (TECH-018): the stack's backing services with
+# their ports published to the host, so the app, the worker, and the web
+# client can run as watch processes outside Docker and still reach them.
+#
+#   pnpm dev:hot          # this overlay's services, then the watch processes
+#   pnpm dev:infra        # only the services, if you start the processes yourself
+#
+# It publishes and does nothing else. compose.yml decides what the
+# services are; compose.dev.yml decides what a dev/E2E run points at.
+# Bring it up with the service list — never bare `up` — or the built app
+# and worker containers start beside the watch processes and both fight
+# for the same port and the same queue.
+#
+# Every port binds to 127.0.0.1. These are unauthenticated services
+# holding real local data: Postgres takes a password every reader of
+# this file knows, and Mailpit shows every delivered token.
+
+services:
+  postgres:
+    ports:
+      # The database the watch processes migrate and query. Published
+      # only here: compose.yml deliberately keeps it off the host, and a
+      # deployment must never gain this line.
+      #
+      # 55432, not 5432, because a developer machine often already runs
+      # a Postgres of its own on the standard port — and the failure a
+      # clash produces is the confusing kind: the container refuses to
+      # start, or worse, the watch processes migrate the wrong database.
+      - "127.0.0.1:${POSTGRES_PORT:-55432}:5432"
+
+  doc-engine:
+    ports:
+      # DOC_ENGINE_URL for a host process. Without it the app still
+      # runs — a conversion it cannot reach falls back to download-only
+      # (TECH-010) — so a doc engine that will not start is a degraded
+      # doc panel, not a dead dev loop.
+      - "127.0.0.1:${DOC_ENGINE_PORT:-8080}:8080"
+    networks:
+      # `openlaw-doc-engine` is internal, which is what keeps the
+      # container that opens counterparty files off the internet and
+      # away from Postgres. An internal network has no route to the host
+      # either, so the published port above needs a second, non-internal
+      # network to arrive on. It is added here and only here: the
+      # sidecar still resolves nothing else on it, and compose.yml —
+      # what a deployment runs — is untouched.
+      - openlaw-doc-engine
+      - openlaw-hostdev
+
+  mailpit:
+    ports:
+      # The SMTP port itself, for a host process that delivers into the
+      # catcher. compose.dev.yml already publishes the 8025 UI, which is
+      # where you read what was sent.
+      - "127.0.0.1:${MAILPIT_SMTP_PORT:-1025}:1025"
+
+networks:
+  # Publishing-only, and joined by the doc engine alone. Not `internal`,
+  # for the reason above; nothing that holds data is on it.
+  openlaw-hostdev:

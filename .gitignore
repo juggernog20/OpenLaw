@@ -17,3 +17,6 @@ coverage/
 # Playwright (e2e/)
 test-results/
 playwright-report/
+
+# Host-development blob store (scripts/dev-hot.sh)
+.storage/

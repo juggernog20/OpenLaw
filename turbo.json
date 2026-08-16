@@ -22,7 +22,15 @@
     "dev": {
       "dependsOn": ["^build"],
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      // Turbo runs tasks in a filtered environment: a variable the task
+      // did not declare is simply absent, which for a watch process
+      // reads as "Missing required environment variable DATABASE_URL"
+      // with the variable plainly exported in the shell. `dev` is never
+      // cached, so nothing here can poison a cache key — and the app
+      // reads far more of the environment than a list here would keep
+      // up with (storage drivers, signing, SMTP, the secret keys).
+      "passThroughEnv": ["*"]
     }
   }
 }
