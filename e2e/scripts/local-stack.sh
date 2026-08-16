@@ -17,10 +17,15 @@ cd "$(dirname "$0")/../.."
 
 APP_PORT="${APP_PORT:-3100}"
 MAILPIT_HOST_PORT="${MAILPIT_HOST_PORT:-8125}"
+# Where the M15 demo's signing stand-in listens on the host, and where
+# the overlay tells both containers to dial. One value, so the stack and
+# the suite cannot disagree about it.
+SIGNING_STUB_PORT="${SIGNING_STUB_PORT:-8129}"
 
 # Rebuild every run — the gate is only honest if the images carry the
 # code being tested, not whatever was built last time.
 PORT="$APP_PORT" BASE_URL="http://localhost:$APP_PORT" MAILPIT_PORT="$MAILPIT_HOST_PORT" \
+  SIGNING_STUB_PORT="$SIGNING_STUB_PORT" \
   docker compose -p openlaw-e2e -f compose.yml -f compose.dev.yml up -d --build
 
 # Timeouts on the probe itself: a connection that opens but never
@@ -37,6 +42,7 @@ curl --connect-timeout 2 --max-time 5 -fsS "http://localhost:$APP_PORT/readyz" >
 }
 
 E2E_BASE_URL="http://localhost:$APP_PORT" E2E_MAILPIT_URL="http://localhost:$MAILPIT_HOST_PORT" \
+  E2E_SIGNING_STUB_PORT="$SIGNING_STUB_PORT" \
   pnpm --filter @openlaw/e2e e2e
 
 echo "suite's stack left running on http://localhost:$APP_PORT (project openlaw-e2e)"
