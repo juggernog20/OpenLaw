@@ -108,13 +108,24 @@ const TERMINAL_STATUSES: ReadonlySet<EnvelopeStatus> = new Set(["signed", "decli
 const REASONED_STATUSES: ReadonlySet<EnvelopeStatus> = new Set(["declined", "voided"]);
 
 /**
+ * The three verbs an ending is narrated with. Named, rather than left as
+ * the whole vocabulary, so the entry below is one of three shapes rather
+ * than one of a hundred — and so `envelope.sent`, which the send route
+ * writes with a payload of its own, cannot be reached from here.
+ */
+type EnvelopeEndingAction = Extract<
+  ActivityAction,
+  "envelope.signed" | "envelope.declined" | "envelope.voided"
+>;
+
+/**
  * The verb each ending is narrated with (DD-017).
  *
  * `sent` has none on purpose: a row is born `sent` by the send route,
  * which narrates `envelope.sent` itself. Nothing here can ever move an
  * envelope *into* `sent`, so there is no entry to write for it.
  */
-const TRANSITION_ACTION: Partial<Record<EnvelopeStatus, ActivityAction>> = {
+const TRANSITION_ACTION: Partial<Record<EnvelopeStatus, EnvelopeEndingAction>> = {
   signed: "envelope.signed",
   declined: "envelope.declined",
   voided: "envelope.voided",
