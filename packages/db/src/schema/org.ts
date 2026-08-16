@@ -9,6 +9,7 @@
 
 import { sql } from "drizzle-orm";
 import { boolean, check, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { encryptedText } from "../secrets.js";
 import { uuidPk } from "./helpers.js";
 
 export const AUTH_MODES = ["built_in", "oidc"] as const;
@@ -47,10 +48,11 @@ export const orgSettings = pgTable(
      * model across both carriers. Write-only through the API: it embeds
      * the credential and is never echoed back. Ignored entirely while the
      * environment pins SMTP — env always wins over app configuration.
-     * Stored plaintext for v1 (the recorded TECH-008 posture; at-rest
-     * encryption is a flagged follow-up shared with the SSO secret).
+     * Encrypted at rest (TECH-022): the password is inline in the URL,
+     * so a database backup would otherwise hand over the ability to
+     * send mail as the organisation.
      */
-    smtpUrl: text("smtp_url"),
+    smtpUrl: encryptedText("smtp_url"),
     /** From-address paired with smtpUrl — the SMTP_FROM shape. */
     smtpFrom: text("smtp_from"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

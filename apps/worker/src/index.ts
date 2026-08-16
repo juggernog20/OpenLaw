@@ -12,12 +12,23 @@
  * What it does today is text extraction (DOC-005, M12/3), display
  * conversion (M12/4), the executed-copy fetch that files a signed
  * envelope's PDF back onto the record (M15/5, CTR-014), the two boot
- * sweeps that recover work whose queue send was lost (M12/6), and the
- * reconciliation sweep that asks the signing provider where every live
- * envelope stands (M15/6, CTR-013) — the fallback feed that makes an
- * install DocuSign cannot reach converge anyway. AI analysis, search
- * indexing, notification digests, and reminders each arrive with their
- * own milestone and register beside them.
+ * sweeps that recover work whose queue send was lost (M12/6), and two
+ * scheduled sweeps that pg-boss holds the clock for — the nightly
+ * backfill (M12/6) and the reconciliation round that asks the signing
+ * provider where every live envelope stands (M15/6, CTR-013), the
+ * fallback feed that makes an install DocuSign cannot reach converge
+ * anyway. AI analysis, search indexing, notification digests, and
+ * reminders each arrive with their own milestone and register beside
+ * them.
+ *
+ * **What is at boot and what is on the schedule is not a style choice.**
+ * A boot sweep recovers work the rows already say is owed, so a second
+ * replica runs it, finds nothing, and costs one walk of a table we own.
+ * A scheduled sweep repeats, and the reconciliation one asks a third
+ * party every round — so a second replica would double the requests
+ * against the endpoint DocuSign rate-limits hardest. Anything that
+ * repeats belongs on pg-boss's clock, where the election gives an
+ * install one round however many workers it runs (#277).
  *
  * It runs no migrations. The API is the one process that migrates
  * (TECH-005), and a worker that migrated too would race it on every
@@ -25,7 +36,7 @@
  * yet finds no work and waits, which is the right answer.
  */
 
-import { createDb } from "@openlaw/db";
+import { createDb, readSecretKeys, useSecretKeys } from "@openlaw/db";
 import {
   createConsoleLogger,
   createDocEngineFromEnv,
@@ -36,8 +47,8 @@ import {
   readDocuSignBaseUrl,
   runBackfillSweep,
   runExecutedCopySweep,
+  SIGNING_STANDIN_VARIABLE,
   startPipeline,
-  startReconciliationSweeps,
 } from "@openlaw/api/pipeline";
 
 const log = createConsoleLogger();
@@ -69,6 +80,14 @@ function orExit<T>(read: () => T): T {
 }
 
 const databaseUrl = requireEnv("DATABASE_URL");
+
+// TECH-022: the worker reads the same sealed credential columns the API
+// does — the signing connector on every reconciliation round, the SMTP
+// relay on every mail a job sends — so it needs the same key, and it
+// refuses to boot without it for the same reason. It does not reseal:
+// the API owns the boot pass, exactly as it owns the migrations.
+useSecretKeys(orExit(() => readSecretKeys(process.env)));
+
 const db = createDb(databaseUrl);
 const storage = orExit(() => createStorageFromEnv(process.env));
 const docEngine = orExit(() => createDocEngineFromEnv(process.env));
@@ -85,10 +104,15 @@ const uploadCeiling = maxUploadBytes(process.env.MAX_UPLOAD_MB);
 // presented is read from the environment, exactly as the API reads it —
 // unset on every real install, and pointed at a stand-in by the dev/E2E
 // overlay so a test send can never reach a real account (TECH-018).
+//
+// The same call the API makes, which is what makes the two agree: it
+// enforces the pairing of the address with SIGNING_STANDIN, so a stack
+// that moved one process off DocuSign and not the other refuses to boot
+// rather than sending to the stand-in and fetching from DocuSign.
 const docusignBaseUrl = orExit(() => readDocuSignBaseUrl(process.env));
 if (docusignBaseUrl) {
   log.warn(
-    { baseUrl: docusignBaseUrl },
+    { baseUrl: docusignBaseUrl, declaredBy: SIGNING_STANDIN_VARIABLE },
     "signing is pointed at a stand-in instead of DocuSign (DOCUSIGN_BASE_URL) — the dev/E2E overlay only",
   );
 }
@@ -152,21 +176,15 @@ const swept = Promise.all([
       log.error({ reason: reasonOf(error) }, "the executed-copy sweep did not finish");
     },
   ),
-  // The fallback status feed (M15/6). This one repeats rather than
-  // running once: the other two recover work the rows already say is
-  // owed, while this one is waiting for somebody to sign, which one
-  // walk at boot cannot see. It logs each round itself and never
-  // raises, and it resolves when the shutdown below aborts it.
-  startReconciliationSweeps({ db, log, resolveSigningProvider }, pipeline, {
-    signal: sweeping.signal,
-  }).catch((error: unknown) => {
-    // It answers rather than throws, so this is unreachable. It is
-    // caught anyway, for its neighbours' reason: the shutdown waits on
-    // this promise, and a rejection nobody handled would be an
-    // unhandled rejection rather than a line in the log.
-    log.error({ reason: reasonOf(error) }, "the reconciliation sweep stopped unexpectedly");
-  }),
 ]);
+// The fallback status feed (M15/6) is not started here. It repeats
+// rather than running once — the two sweeps above recover work the rows
+// already say is owed, while that one waits for somebody to sign — and
+// a repeating in-process timer ran a full round per replica, against
+// the endpoint the provider rate-limits hardest. It is a scheduled
+// pg-boss job instead (#277), declared by `startPipeline` above, so
+// pg-boss's cron election gives an install one round however many
+// workers it runs.
 
 // A container is stopped by a signal, and a job in hand must not be
 // lost to it. Stopping waits for what is running and leaves what has

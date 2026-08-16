@@ -151,7 +151,8 @@ import {
   selectAttachedFields,
   type AttachedCustomField,
 } from "../../lib/custom-fields.js";
-import { httpError, problemResponse } from "../../lib/problem.js";
+import { SOFT_GATE_PROBLEM_TYPE } from "@openlaw/shared";
+import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import { assertApprovalGate, type UnresolvedApproval } from "../../lib/soft-gate.js";
 
 /** Every mutation, and every picker read behind one, is Member+. */
@@ -1526,7 +1527,20 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
            * else it is ignored, because there is nothing to override. */
           overrideSoftGate: z.boolean().optional(),
         }),
-        response: { 200: ContractFieldsEnvelope, default: problemResponse },
+        response: {
+          200: ContractFieldsEnvelope,
+          // CTR-012's soft gate is the one refusal on this route a
+          // caller has to act on rather than print: the same request
+          // with `overrideSoftGate` succeeds, so a client that could
+          // not tell this 409 from an ordinary one would have no way
+          // to offer the confirmation.
+          409: problemTypeResponse(
+            "The status change crosses CTR-012's approval gate with approvals still " +
+              "unresolved. Re-send with `overrideSoftGate` to record it as an override.",
+            [SOFT_GATE_PROBLEM_TYPE],
+          ),
+          default: problemResponse,
+        },
       },
     },
     async (request) => {

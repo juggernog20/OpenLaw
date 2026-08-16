@@ -87,11 +87,15 @@ jobs:
       - name: Install the Playwright browser
         run: pnpm --filter @openlaw/e2e exec playwright install --with-deps chromium
 
-      # compose.yml refuses to start without AUTH_SECRET (env_file: .env).
-      # A throwaway per-run secret is exactly right for a stack whose
-      # volumes never outlive the job.
+      # compose.yml refuses to start without AUTH_SECRET or
+      # OPENLAW_SECRET_KEY (env_file: .env). Throwaway per-run values are
+      # exactly right for a stack whose volumes never outlive the job.
       - name: Write the CI .env
-        run: echo "AUTH_SECRET=$(openssl rand -base64 32)" > .env
+        run: |
+          {
+            echo "AUTH_SECRET=$(openssl rand -base64 32)"
+            echo "OPENLAW_SECRET_KEY=$(openssl rand -base64 32)"
+          } > .env
 
       - name: Build the stack from the real Dockerfiles
         run: docker compose -f compose.yml -f compose.dev.yml build
@@ -134,6 +138,140 @@ jobs:
             e2e/playwright-report/
           if-no-files-found: ignore
           retention-days: 7
+
+      - name: Tear down the stack
+        if: always()
+        run: docker compose -f compose.yml -f compose.dev.yml down -v
+
+  # The upgrade-fidelity gate (#260). Every other job starts from an
+  # empty database, so the *first* install is tested on every commit and
+  # the *second* never was. This one fills a baseline install through the
+  # public API, swaps the images for this commit against the same
+  # volumes, and checks the records still read back — the failure mode it
+  # exists for is a migration that is fine against an empty table and
+  # wrong against one with rows in it.
+  #
+  # The baseline is the newest release tag, or `dev` until one exists.
+  # `main` is deliberately never used: it is vestigial here.
+  #
+  # `pnpm upgrade-fidelity` runs the same rehearsal locally, on its own
+  # compose project and ports. Keep the two in step.
+  upgrade:
+    name: An existing install survives an upgrade
+    runs-on: ubuntu-latest
+    # Two image builds, not one. The second reuses most of the first's
+    # layers, but the bound has to clear both.
+    timeout-minutes: 45
+    steps:
+      # Full history: the job checks out the baseline in place, in the
+      # same working copy, and needs the tags to find it.
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      # This job runs no pnpm — the fidelity script is plain node and the
+      # stack is built by Compose. pnpm is here because setup-node reads
+      # `packageManager` from package.json and turns its cache on by
+      # itself, then fails when the manager it just chose is not on PATH.
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      # Throwaway per-run secrets, as in the E2E job. Written once and
+      # kept across both halves: OPENLAW_SECRET_KEY has to be the same
+      # value after the upgrade as before it, or the credentials the
+      # baseline stored would be unreadable by design rather than by
+      # fault (TECH-022).
+      - name: Write the CI .env
+        run: |
+          {
+            echo "AUTH_SECRET=$(openssl rand -base64 32)"
+            echo "OPENLAW_SECRET_KEY=$(openssl rand -base64 32)"
+            echo "BASE_URL=http://localhost:3000"
+          } > .env
+
+      # Out of the working copy before the baseline checkout replaces it.
+      # One copy of the script drives both versions — see its own note on
+      # why the seed may only use API surface the baseline already has.
+      - name: Keep the fidelity script across the checkout
+        run: cp e2e/scripts/upgrade-fidelity.mjs "$RUNNER_TEMP/upgrade-fidelity.mjs"
+
+      - name: Pick the baseline and check it out
+        id: baseline
+        run: |
+          # Explicit, so the job does not depend on what the checkout
+          # action happened to fetch for this event type.
+          git fetch --force origin --tags "+refs/heads/dev:refs/remotes/origin/dev"
+          # Release tags only, and no pre-releases. An unfiltered list
+          # would let a tooling tag or an `-rc` become the baseline, and
+          # the job would quietly test the wrong upgrade path.
+          ref=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | grep -v -- '-' | head -n 1)
+          if [ -z "$ref" ]; then
+            ref=origin/dev
+            echo "::notice::No release tag yet — upgrading from $ref instead."
+          fi
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          git checkout --detach "$ref"
+
+      - name: Build and start the baseline stack
+        run: |
+          docker compose -f compose.yml -f compose.dev.yml build
+          docker compose -f compose.yml -f compose.dev.yml up -d
+
+      - name: Wait for the baseline to answer /readyz
+        run: |
+          for _ in $(seq 1 60); do
+            if curl --connect-timeout 2 --max-time 5 -fsS http://localhost:3000/readyz >/dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::the baseline stack never answered /readyz"
+          exit 1
+
+      - name: Fill the baseline install
+        run: node "$RUNNER_TEMP/upgrade-fidelity.mjs" seed --out "$RUNNER_TEMP/fingerprint.json"
+
+      # `down` without `-v`: the volumes are the install, and reusing
+      # them is the whole point. `down -v` here would test nothing.
+      - name: Stop the baseline, keeping its data
+        run: docker compose -f compose.yml -f compose.dev.yml down
+
+      # Through `env:`, not interpolated into the shell. The value is a
+      # commit SHA today, so this is not exploitable — but expanding a
+      # `${{ }}` into a `run:` body is the pattern that becomes an
+      # injection the moment somebody edits it to use a ref or a title.
+      - name: Bring the working copy back to this commit
+        env:
+          HEAD_SHA: ${{ github.sha }}
+        run: git checkout --force "$HEAD_SHA"
+
+      - name: Build and start this commit against the baseline's data
+        run: |
+          docker compose -f compose.yml -f compose.dev.yml build
+          docker compose -f compose.yml -f compose.dev.yml up -d
+
+      - name: Wait for the upgraded stack to answer /readyz
+        run: |
+          for _ in $(seq 1 60); do
+            if curl --connect-timeout 2 --max-time 5 -fsS http://localhost:3000/readyz >/dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::the upgraded stack never answered /readyz — check the migration log below"
+          exit 1
+
+      - name: Check every seeded record still reads back
+        run: node "$RUNNER_TEMP/upgrade-fidelity.mjs" verify --in "$RUNNER_TEMP/fingerprint.json"
+
+      # The migration output is in here, and it is the first thing to
+      # read when this job fails.
+      - name: Show compose logs
+        if: failure()
+        run: docker compose -f compose.yml -f compose.dev.yml logs
 
       - name: Tear down the stack
         if: always()

@@ -38,12 +38,14 @@ import {
   asc,
   contractEnvelopes,
   contracts,
+  desc,
   eq,
   signingConnectors,
   users,
 } from "@openlaw/db";
 import { ENVELOPE_LIVE_PROBLEM_TYPE, SIGNING_NOT_CONFIGURED_PROBLEM_TYPE } from "@openlaw/shared";
 import { provisionUser } from "../../auth/instance.js";
+import { ERASED, signerAppearances } from "../../lib/signer-erasure.js";
 import { FAKE_VALID_INTEGRATION_KEY } from "../../lib/signing/fake.js";
 import {
   signInCookies,
@@ -623,5 +625,130 @@ describe("two sends racing for one record", () => {
       if (id === rows[0]!.providerEnvelopeId) continue;
       expect((await provider().readEnvelope(id)).status).toBe("voided");
     }
+  });
+});
+
+/**
+ * The erasure a person who is only ever a signer can ask for (#280).
+ *
+ * It lives in this file because this is where a real send happens: the
+ * property is that the address the send wrote into the payload is not
+ * readable afterwards, and asserting that needs the payload a real send
+ * produced.
+ */
+describe("erasing an external signer", () => {
+  const ERASE_URL = "/api/v1/signer-erasures";
+
+  /** The person who asks to be forgotten. Their own address, so the
+   * assertions cannot pass on somebody else's row. */
+  const LEAVING = { name: "Iris Bakker", email: "iris.bakker@vantagepartners.example" } as const;
+  const STAYING = { name: "Owen Reid", email: "owen.reid@vantagepartners.example" } as const;
+
+  const erase = (jar: Record<string, string>, email: string) =>
+    harness.app.inject({ method: "POST", url: ERASE_URL, cookies: jar, payload: { email } });
+
+  let contract: ContractRow;
+
+  beforeAll(async () => {
+    await configureConnector();
+    contract = await newContract("Vantage master services agreement");
+    await paperOn(contract.number, Buffer.from("v1"), Buffer.from("v2"));
+    const paper = (await signingState(as(MEMBER), contract.number)).primaryDocument!;
+    const sent = await send(as(MEMBER), contract.number, paper.versions[0]!.id, [LEAVING, STAYING]);
+    expect(sent.statusCode, sent.body).toBe(201);
+  });
+
+  it("is the Administrator's alone", async () => {
+    // A valid body on the anonymous call too: Fastify validates before
+    // it reaches a preHandler, so a malformed one would answer 400 and
+    // prove nothing about who may ask.
+    const anonymous = await harness.app.inject({
+      method: "POST",
+      url: ERASE_URL,
+      payload: { email: LEAVING.email },
+    });
+    expect(anonymous.statusCode, anonymous.body).toBe(401);
+    expect((await erase(as(MEMBER), LEAVING.email)).statusCode).toBe(403);
+  });
+
+  it("refuses an address that belongs to a user of this install", async () => {
+    // Their address is in payloads that are about them as a colleague,
+    // and those have a different answer.
+    const res = await erase(as(ADMIN), MEMBER.email);
+    expect(res.statusCode, res.body).toBe(409);
+    expect(res.json().detail).toContain("belongs to a user of this install");
+  });
+
+  it("answers zeros for an address that was never a signer's", async () => {
+    // A satisfied request, not a missing one: there was nothing to
+    // erase, and refusing would make this a way to ask whether an
+    // address is in the record.
+    const res = await erase(as(ADMIN), "nobody.here@vantagepartners.example");
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().erasure).toEqual({ entriesRedacted: 0, signerRowsDeleted: 0 });
+  });
+
+  it("takes the name and the address out and leaves the shape behind", async () => {
+    const before = await entriesOn(contract.id);
+    expect(before).toHaveLength(1);
+    expect(before[0]!.payload).toMatchObject({ signers: [LEAVING, STAYING] });
+
+    const res = await erase(as(ADMIN), LEAVING.email.toUpperCase());
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().erasure).toEqual({ entriesRedacted: 1, signerRowsDeleted: 1 });
+
+    const after = await entriesOn(contract.id);
+    expect(after).toHaveLength(1);
+    // The array keeps its length and its order: how many were asked,
+    // and in what position, is about the contract rather than about
+    // the person. Only the two keys about the person are gone.
+    expect(after[0]!.payload).toMatchObject({
+      signers: [{ name: ERASED, email: ERASED }, STAYING],
+    });
+    // Nothing else on the entry moved — this is a rewrite of two keys,
+    // not a new entry standing in for the old one.
+    expect(after[0]!.id).toBe(before[0]!.id);
+    expect(after[0]!.createdAt).toEqual(before[0]!.createdAt);
+    expect(after[0]!.payload).toMatchObject({
+      envelopeId: (before[0]!.payload as { envelopeId: string }).envelopeId,
+    });
+
+    expect(await signerAppearances(harness.db, LEAVING.email)).toBe(0);
+    // The other signer on the same envelope is untouched, in both
+    // places the record holds them.
+    expect(await signerAppearances(harness.db, STAYING.email)).toBe(2);
+  });
+
+  it("appends its own entry, carrying counts and no address", async () => {
+    // The most recent one: the request that found nothing above is
+    // also on the log, and an erasure that reached nothing is still an
+    // erasure somebody performed. Ordered by id, a uuidv7, so the
+    // sort is the order they were minted rather than a timestamp that
+    // can tie.
+    const [entry] = await harness.db
+      .select()
+      .from(activityLog)
+      .where(eq(activityLog.action, "signer.erased"))
+      .orderBy(desc(activityLog.id))
+      .limit(1);
+    expect(entry).toBeDefined();
+    expect(entry!.visibility).toBe("admin_only");
+    expect(entry!.entityType).toBe("system");
+    expect(entry!.actorId).toBe(idOf(ADMIN));
+    expect(entry!.payload).toEqual({ entriesRedacted: 1, signerRowsDeleted: 1 });
+    // The one thing this entry must never do: an entry naming the
+    // person who asked to be forgotten would put the address straight
+    // back into the table the erasure just took it out of.
+    expect(JSON.stringify(entry!.payload)).not.toContain(LEAVING.email);
+    expect(JSON.stringify(entry!.payload)).not.toContain(LEAVING.name);
+  });
+
+  it("leaves the record's own answer readable, with the signer erased", async () => {
+    // The envelope is still there and still says a round went out. The
+    // signer rows for the erased person are gone, so the row draws the
+    // people it still holds.
+    const state = await signingState(as(MEMBER), contract.number);
+    expect(state.envelopes).toHaveLength(1);
+    expect(state.envelopes[0]!.signers).toEqual([STAYING]);
   });
 });

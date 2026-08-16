@@ -118,17 +118,19 @@ Source: **TECH-008**, **DD-010**/**INT-001** (revised per INT-001: magic-link po
 
 Organization-wide settings. Exactly one row, seeded by the migration that creates the table; a unique index on a constant expression makes a second row unrepresentable. Columns arrive incrementally with the features that read them (**TECH-014**) — auth policy landed first; later Settings panes append here.
 
-| Column                     | Type        | Notes                                                                                                 |
-| -------------------------- | ----------- | ----------------------------------------------------------------------------------------------------- |
-| `id`                       | UUID        | PK                                                                                                    |
-| `auth_mode`                | text (enum) | `built_in` \| `oidc` per **TECH-008**; seeded `built_in`                                              |
-| `magic_link_enabled`       | boolean     | DD-010's portal floor; host-closable where SSO-only is policy. Seeded `true`                          |
-| `allowed_email_domains`    | jsonb       | lower-cased domain strings gating magic-link issuance + JIT provisioning. Empty = nobody; seeded `[]` |
-| `name`                     | text        | org identity per **SET-001** (General pane); seeded `''` until an Administrator names the org         |
-| `logo`                     | text        | org logo as a `data:` URI; NULL until one is uploaded                                                 |
-| `default_locale`           | text        | BCP 47 tag; the display locale until per-user locales exist (**DES-013**); seeded `en-US`             |
-| `default_timezone`         | text        | IANA zone name; the display timezone until a user sets their own (**DES-014**); seeded `UTC`          |
-| `created_at`, `updated_at` | timestamptz |                                                                                                       |
+| Column                     | Type        | Notes                                                                                                                                                                                        |
+| -------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                                                                                                           |
+| `auth_mode`                | text (enum) | `built_in` \| `oidc` per **TECH-008**; seeded `built_in`                                                                                                                                     |
+| `magic_link_enabled`       | boolean     | DD-010's portal floor; host-closable where SSO-only is policy. Seeded `true`                                                                                                                 |
+| `allowed_email_domains`    | jsonb       | lower-cased domain strings gating magic-link issuance + JIT provisioning. Empty = nobody; seeded `[]`                                                                                        |
+| `name`                     | text        | org identity per **SET-001** (General pane); seeded `''` until an Administrator names the org                                                                                                |
+| `logo`                     | text        | org logo as a `data:` URI; NULL until one is uploaded                                                                                                                                        |
+| `default_locale`           | text        | BCP 47 tag; the display locale until per-user locales exist (**DES-013**); seeded `en-US`                                                                                                    |
+| `default_timezone`         | text        | IANA zone name; the display timezone until a user sets their own (**DES-014**); seeded `UTC`                                                                                                 |
+| `smtp_url`                 | text        | app-saved SMTP relay URL, credentials inline (**TECH-011**). **Write-only** through the API and **encrypted at rest** (**TECH-022**); ignored entirely while `SMTP_URL` pins the environment |
+| `smtp_from`                | text        | the from-address paired with `smtp_url`                                                                                                                                                      |
+| `created_at`, `updated_at` | timestamptz |                                                                                                                                                                                              |
 
 No `archived_at`: the row is neither creatable nor deletable, only edited.
 
@@ -140,18 +142,18 @@ Source: **TECH-008** (bring-your-own IdP, configured at runtime)
 
 Runtime-registered OIDC identity providers, one row per IdP, created only through the admin-guarded registration endpoint. Mapped onto by better-auth's sso plugin.
 
-| Column                     | Type        | Notes                                                                                                               |
-| -------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------- |
-| `id`                       | UUID        | PK                                                                                                                  |
-| `provider_id`              | text        | unique slug; identifies the provider in sign-in and callback flows                                                  |
-| `issuer`                   | text        | OIDC issuer URL; endpoint discovery runs from it at registration                                                    |
-| `domain`                   | text        | email domain(s) served by the IdP, comma-separated for multi-domain                                                 |
-| `oidc_config`              | text (JSON) | discovered + supplied OIDC config, **including the client secret** — at-rest encryption is a flagged future pass    |
-| `saml_config`              | text (JSON) | demanded by the plugin's model; SAML is out of scope, always NULL                                                   |
-| `organization_id`          | text        | demanded by the plugin's model; organization plugin unused, always NULL                                             |
-| `domain_verified`          | boolean     | plugin trust flag gating email-linking to existing users; set at registration (admin registration = trust decision) |
-| `user_id`                  | UUID FK     | the registering Administrator; no cascade — the provider outlives the registrant                                    |
-| `created_at`, `updated_at` | timestamptz |                                                                                                                     |
+| Column                     | Type        | Notes                                                                                                                   |
+| -------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                                      |
+| `provider_id`              | text        | unique slug; identifies the provider in sign-in and callback flows                                                      |
+| `issuer`                   | text        | OIDC issuer URL; endpoint discovery runs from it at registration                                                        |
+| `domain`                   | text        | email domain(s) served by the IdP, comma-separated for multi-domain                                                     |
+| `oidc_config`              | text (JSON) | discovered + supplied OIDC config, **including the client secret** — sealed whole, **encrypted at rest** (**TECH-022**) |
+| `saml_config`              | text (JSON) | demanded by the plugin's model; SAML is out of scope, always NULL                                                       |
+| `organization_id`          | text        | demanded by the plugin's model; organization plugin unused, always NULL                                                 |
+| `domain_verified`          | boolean     | plugin trust flag gating email-linking to existing users; set at registration (admin registration = trust decision)     |
+| `user_id`                  | UUID FK     | the registering Administrator; no cascade — the provider outlives the registrant                                        |
+| `created_at`, `updated_at` | timestamptz |                                                                                                                         |
 
 No `archived_at`: providers are deleted (future management surface), not archived.
 
@@ -163,18 +165,19 @@ Source: **CTR-013** (provider-agnostic signing adapter), **TECH-013** (DocuSign 
 
 The credentials one e-signature provider is reached with. **Adapter-keyed**: one row per adapter, `provider` unique, `docusign` in v1 — a second provider is a second row, not a second table. The row is **org data, not deployment environment**: an Administrator configures it at runtime in Settings → Organization → Integrations → E-signature, and every use reads it live (the mailer-resolver pattern), so a rotation applies to the next call with no restart. An install with no row resolves to no provider, which is what keeps CTR-013's zero-config manual hand-off working.
 
-| Column                     | Type        | Notes                                                                                                                           |
-| -------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                       | UUID        | PK                                                                                                                              |
-| `provider`                 | text (enum) | the adapter behind the row; `docusign` in v1. Unique — one connector per adapter                                                |
-| `environment`              | text (enum) | `demo` \| `production`; the two estates differ by host and account (**TECH-013**)                                               |
-| `integration_key`          | text        | DocuSign's integration key — the OAuth client id of the app                                                                     |
-| `api_user_id`              | text        | the provider-side user the integration signs as; a GUID in DocuSign's directory, never a row in ours                            |
-| `private_key`              | text        | RSA private key (PEM) that signs the JWT assertions. **Write-only** through the API; plaintext at rest, the accepted v1 posture |
-| `webhook_secret`           | text        | the Connect HMAC secret. **Write-only**, and **not nullable** — a connector without one would answer unsigned deliveries        |
-| `created_at`, `updated_at` | timestamptz |                                                                                                                                 |
+| Column                     | Type        | Notes                                                                                                                                              |
+| -------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                                                                 |
+| `provider`                 | text (enum) | the adapter behind the row; `docusign` in v1. Unique — one connector per adapter                                                                   |
+| `environment`              | text (enum) | `demo` \| `production`; the two estates differ by host and account (**TECH-013**)                                                                  |
+| `integration_key`          | text        | DocuSign's integration key — the OAuth client id of the app                                                                                        |
+| `api_user_id`              | text        | the provider-side user the integration signs as; a GUID in DocuSign's directory, never a row in ours                                               |
+| `private_key`              | text        | RSA private key (PEM) that signs the JWT assertions. **Write-only** through the API; **encrypted at rest** (**TECH-022**)                          |
+| `webhook_secret`           | text        | the Connect HMAC secret. **Write-only** and **encrypted at rest**, and **not nullable** — a connector without one would answer unsigned deliveries |
+| `disabled_at`              | timestamptz | when an Administrator turned the connector off; NULL while it is on. A disabled row resolves to nothing, exactly as a missing one does             |
+| `created_at`, `updated_at` | timestamptz |                                                                                                                                                    |
 
-No `archived_at`: a connector is edited or deleted, never archived. The two secret columns are the **second named entry** on the future secrets-encryption pass (the first is `sso_providers.oidc_config`).
+No `archived_at`: a connector is turned off with `disabled_at`, or deleted. The two secret columns are sealed by `encryptedText` with a key held outside the database (**TECH-022**), as `org_settings.smtp_url` and `sso_providers.oidc_config` are.
 
 ---
 

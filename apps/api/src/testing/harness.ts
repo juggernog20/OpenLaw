@@ -10,7 +10,18 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
-import { activityLog, asc, createDb, eq, orgSettings, runMigrations, type Db } from "@openlaw/db";
+import {
+  activityLog,
+  asc,
+  createDb,
+  eq,
+  orgSettings,
+  readSecretKeys,
+  runMigrations,
+  SECRET_KEY_VARIABLE,
+  useSecretKeys,
+  type Db,
+} from "@openlaw/db";
 import { buildApp } from "../app.js";
 import type { AuthConfig } from "../auth/instance.js";
 import {
@@ -33,6 +44,14 @@ export const TEST_AUTH_CONFIG: AuthConfig = {
   secret: "openlaw-test-secret-with-enough-entropy-000",
   baseUrl: "http://localhost",
 };
+
+/**
+ * The credential-sealing key every suite runs with (TECH-022). Fixed
+ * rather than random so two harnesses in one process — a suite that
+ * starts a second pipeline against the same database — read each
+ * other's rows.
+ */
+export const TEST_SECRET_KEY = "openlaw-test-secret-key-with-enough-entropy-0"; // NOSONAR — inert fixture, not a credential
 
 /** The initial Administrator most suites create via first-run setup. */
 export const TEST_ADMIN = {
@@ -228,6 +247,17 @@ export interface TestHarness {
    * changes what the next round resolves.
    */
   resolveSigningProvider: SigningResolver;
+  /**
+   * This container's Postgres, as a connection string.
+   *
+   * Exposed for the one thing a suite cannot do through `pipeline`: act
+   * out a **second** process against the same database. The pipeline is
+   * a seam over pg-boss and deliberately says nothing about queues or
+   * schedules, so a suite asserting that two workers produce one
+   * scheduled round starts a second pipeline here rather than reaching
+   * inside this one.
+   */
+  databaseUrl: string;
   stop: () => Promise<void>;
 }
 
@@ -269,6 +299,10 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
   let cleanupStorage: (() => Promise<void>) | undefined;
   let pipeline: Pipeline | undefined;
   try {
+    // What the API's entry point does at boot (TECH-022), so a suite
+    // exercises the sealed columns rather than a plaintext variant of
+    // them. Installed before the first query for the same reason.
+    useSecretKeys(readSecretKeys({ [SECRET_KEY_VARIABLE]: TEST_SECRET_KEY }));
     const db = createDb(container.getConnectionUri());
     await runMigrations(db);
     const mailer = new CapturingMailer();
@@ -302,6 +336,15 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
     // still script it on the next request; a rotated credential builds
     // a new one, which is honest — a different connector is a different
     // account, and it holds none of the old one's envelopes.
+    //
+    // The resolver has a cache of its own now (#278) and this one stays,
+    // because the two key on different things for a stated reason. The
+    // resolver keys on the row's `updatedAt`, so **any** save builds a
+    // new driver; this keys on the three fields the fake can observe, so
+    // a rotated RSA key — which changes nothing a fake provider does —
+    // keeps the envelopes a suite already sent. A suite that asserts the
+    // resolver's own caching builds its own resolver rather than reading
+    // this one (see `signing/resolver.test.ts`).
     let signingKey: string | null = null;
     const resolveSigningProvider = createSigningResolver(db, (config) => {
       // Only the fields the fake is built from. A rotated RSA key
@@ -359,6 +402,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       pipeline: runningPipeline,
       jobLog,
       resolveSigningProvider,
+      databaseUrl: container.getConnectionUri(),
       get signing() {
         return signing;
       },

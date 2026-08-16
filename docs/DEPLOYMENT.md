@@ -14,12 +14,15 @@ The blessed path is Docker Compose (TECH-005): one documented `docker compose up
 git clone https://github.com/juggernog20/OpenLaw.git
 cd OpenLaw
 cp .env.example .env
-# set the one required secret:
+# set the two required secrets — a different value for each:
 sed -i "s|^AUTH_SECRET=$|AUTH_SECRET=$(openssl rand -base64 32)|" .env
+sed -i "s|^OPENLAW_SECRET_KEY=$|OPENLAW_SECRET_KEY=$(openssl rand -base64 32)|" .env
 docker compose up -d
 ```
 
 Then open `http://<host>:3000` — a fresh install lands on first-run setup, where you create the initial Administrator.
+
+`OPENLAW_SECRET_KEY` encrypts the credentials your Administrators later save in Settings. Before you set up a backup job, read [The credential encryption key](#the-credential-encryption-key) — the one mistake that undoes it is storing the key in the same archive as the database dump.
 
 `compose.yml` references the release image and carries a `build:` context, so the same file works before any release exists: Compose builds the image locally when it isn't present.
 
@@ -27,21 +30,23 @@ Then open `http://<host>:3000` — a fresh install lands on first-run setup, whe
 
 All configuration is environment variables in `.env`; [`.env.example`](../.env.example) documents every one. The short version:
 
-| Variable                 | Required | Meaning                                                                                                                                                                                                                           |
-| ------------------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `AUTH_SECRET`            | yes      | Session signing + at-rest crypto for 2FA material. Changing it signs everyone out and breaks enrolled 2FA.                                                                                                                        |
-| `DATABASE_URL`           | no       | Unset = the bundled Postgres. Set for external/managed Postgres (TECH-004 — equally supported).                                                                                                                                   |
-| `BASE_URL`               | in prod  | The public origin (e.g. `https://legal.example.com`). Emailed links and OIDC callbacks point here, and the auth layer checks request origins against it.                                                                          |
-| `SMTP_URL` / `SMTP_FROM` | no       | Outbound email; setting `SMTP_URL` pins SMTP to the environment, overriding anything saved in the app (see [Email](#email)). Unset = configurable in the app; with neither, email flows report "unconfigured" instead of sending. |
-| `STORAGE_DRIVER`         | no       | Where uploaded files go (DOC-009): `local` (the default — a directory, no extra service), `s3` (an S3-compatible object store), or `azure-blob` (Azure Blob Storage). See [Files](#files).                                        |
-| `STORAGE_PATH`           | no       | The `local` driver's root. Defaults to `/var/lib/openlaw/files`, the mount point of the `openlaw-files` named volume. Keep the default under Compose — see [Files](#files).                                                       |
-| `S3_*`                   | no       | The `s3` driver's bucket, endpoint, region, addressing, and credentials. Required when `STORAGE_DRIVER=s3` — see [Files](#files).                                                                                                 |
-| `AZURE_BLOB_*`           | no       | The `azure-blob` driver's container, account, key, and endpoint. Required when `STORAGE_DRIVER=azure-blob` — see [Files](#files).                                                                                                 |
-| `MAX_UPLOAD_MB`          | no       | Caps each upload, in whole MB. Defaults to 100. Raise your reverse proxy's body limit to match when you raise this — see [Files](#files).                                                                                         |
-| `DOC_ENGINE_URL`         | no       | Where the doc engine answers (TECH-010). Unset = the bundled `doc-engine` service on the compose network. Set it only to point at an engine you run yourself — see [The doc engine](#the-doc-engine).                             |
-| `DOC_ENGINE_TIMEOUT_MS`  | no       | How long one call to the doc engine may take before it is abandoned. Defaults to 300000 (five minutes).                                                                                                                           |
-| `DOC_ENGINE_TMPFS_SIZE`  | no       | Compose only. Scratch space for the doc engine's read-only container, as a RAM-backed tmpfs. Defaults to `2g` — see [The doc engine](#the-doc-engine).                                                                            |
-| `PORT`                   | no       | The published host port (the container always listens on 3000 internally).                                                                                                                                                        |
+| Variable                      | Required | Meaning                                                                                                                                                                                                                                 |
+| ----------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AUTH_SECRET`                 | yes      | Session signing + at-rest crypto for 2FA material. Changing it signs everyone out and breaks enrolled 2FA.                                                                                                                              |
+| `OPENLAW_SECRET_KEY`          | yes      | Encrypts the credentials saved in Settings — the DocuSign key, the Connect secret, the SMTP relay URL, the SSO client secret. Keep it out of the database backup — see [The credential encryption key](#the-credential-encryption-key). |
+| `OPENLAW_SECRET_KEY_PREVIOUS` | no       | The retiring key while `OPENLAW_SECRET_KEY` is being rotated. Set it for one boot, then remove it — see [The credential encryption key](#the-credential-encryption-key).                                                                |
+| `DATABASE_URL`                | no       | Unset = the bundled Postgres. Set for external/managed Postgres (TECH-004 — equally supported).                                                                                                                                         |
+| `BASE_URL`                    | in prod  | The public origin (e.g. `https://legal.example.com`). Emailed links and OIDC callbacks point here, and the auth layer checks request origins against it.                                                                                |
+| `SMTP_URL` / `SMTP_FROM`      | no       | Outbound email; setting `SMTP_URL` pins SMTP to the environment, overriding anything saved in the app (see [Email](#email)). Unset = configurable in the app; with neither, email flows report "unconfigured" instead of sending.       |
+| `STORAGE_DRIVER`              | no       | Where uploaded files go (DOC-009): `local` (the default — a directory, no extra service), `s3` (an S3-compatible object store), or `azure-blob` (Azure Blob Storage). See [Files](#files).                                              |
+| `STORAGE_PATH`                | no       | The `local` driver's root. Defaults to `/var/lib/openlaw/files`, the mount point of the `openlaw-files` named volume. Keep the default under Compose — see [Files](#files).                                                             |
+| `S3_*`                        | no       | The `s3` driver's bucket, endpoint, region, addressing, and credentials. Required when `STORAGE_DRIVER=s3` — see [Files](#files).                                                                                                       |
+| `AZURE_BLOB_*`                | no       | The `azure-blob` driver's container, account, key, and endpoint. Required when `STORAGE_DRIVER=azure-blob` — see [Files](#files).                                                                                                       |
+| `MAX_UPLOAD_MB`               | no       | Caps each upload, in whole MB. Defaults to 100. Raise your reverse proxy's body limit to match when you raise this — see [Files](#files).                                                                                               |
+| `DOC_ENGINE_URL`              | no       | Where the doc engine answers (TECH-010). Unset = the bundled `doc-engine` service on the compose network. Set it only to point at an engine you run yourself — see [The doc engine](#the-doc-engine).                                   |
+| `DOC_ENGINE_TIMEOUT_MS`       | no       | How long one call to the doc engine may take before it is abandoned. Defaults to 300000 (five minutes).                                                                                                                                 |
+| `DOC_ENGINE_TMPFS_SIZE`       | no       | Compose only. Scratch space for the doc engine's read-only container, as a RAM-backed tmpfs. Defaults to `2g` — see [The doc engine](#the-doc-engine).                                                                                  |
+| `PORT`                        | no       | The published host port (the container always listens on 3000 internally).                                                                                                                                                              |
 
 ## Reverse proxy contract
 
@@ -218,14 +223,98 @@ docker compose up -d
 
 Migrations run automatically when the app container boots (TECH-005); replicas booting together serialize on an advisory lock. Data lives in two named volumes — `openlaw-pgdata` (the database) and `openlaw-files` (uploads, see [Files](#files)) — and both survive `docker compose down`, image upgrades, and rebuilds. The doc engine holds nothing, so it upgrades by being replaced. (`docker compose down -v` deletes them — don't.)
 
+**Take a backup first anyway.** See [Backups](#backups); a migration is the one moment a restore is worth having ready.
+
+This path is exercised on every commit rather than assumed. CI fills a baseline install with Contracts across the lifecycle, Documents, users in several roles and a signing connector, then brings the new version up against that same database and checks every record still reads back (TECH-018). It is not a promise that no upgrade ever needs care — it is a promise that the ordinary one is tested with rows in the tables, not only against an empty install.
+
+## The Audit log leaves this process, and those copies are yours
+
+Every row OpenLaw appends to `activity_log` — the one table behind both the per-record **Activity feed** and the Administrator-only **Audit log** — is also written to stdout as one line of JSON (DD-017), so you can ship it to Datadog, Loki, Splunk, or whatever else you already run. Nothing is redacted on the way out: the line is a faithful copy of the stored row, because a shipped copy that disagreed with the record would be worse than no copy at all.
+
+**Two consequences you own rather than we do.**
+
+**Container logs are as sensitive as the database.** They carry contract titles, the people on a record, and the name and email address of every external signer an envelope was sent to. Give them the retention and the access control you give a database backup.
+
+**An erasure inside OpenLaw cannot reach a copy that has already left.** An Administrator can erase an **external signer** — somebody with no account here, named in a send dialog by one of your people — and it rewrites that person's name and address out of the stored `activity_log` rows and deletes the envelope's signer rows (CTR-013). The entry keeps its shape: it still says how many people were asked, and when.
+
+```bash
+curl -X POST https://legal.example.com/api/v1/signer-erasures \
+  -H 'content-type: application/json' \
+  -b "$ADMIN_SESSION_COOKIE" \
+  -d '{"email":"someone@counterparty.example"}'
+```
+
+It has no settings pane yet — it is an Administrator-only API call, and the API document describes it. It also cannot touch the line your log shipper took months ago. If you have to answer an erasure request in full, purge your own log store as well, and set a retention on it short enough that this is a bounded job rather than an open-ended one.
+
+The same is true of the database backups in [Backups](#backups) below: a `pg_dump` taken before an erasure still holds what was erased.
+
 ## Health
 
 - `GET /healthz` — liveness: the process is up.
 - `GET /readyz` — readiness: the database answers. The compose healthcheck and any orchestrator should watch this one.
 
+## The credential encryption key
+
+Your Administrators paste four credentials into Settings: the DocuSign RSA private key, the DocuSign Connect secret, the SMTP relay URL with its password inline, and the SSO client secret. OpenLaw encrypts all four before they reach Postgres, with `OPENLAW_SECRET_KEY` (TECH-022). The app and the worker both read it at boot and refuse to start without it.
+
+The exposure this closes is not "somebody reads a password". Whoever holds the DocuSign key can mint JWTs as your integration user — send, void, and read envelopes as you — and whoever holds the Connect secret can forge a delivery telling OpenLaw a contract was signed when it was not.
+
+### Generate it
+
+```bash
+openssl rand -base64 32
+```
+
+Use a different value from `AUTH_SECRET`, so rotating one never touches the other.
+
+### Where it must not live
+
+**Not in the same archive as the database dump.** The key is what keeps the four sealed credentials unreadable in a stolen `pg_dump` — the rest of the dump is your data in the clear, so it still needs the care any database backup needs. A backup job that tars `.env` alongside `openlaw-2026-08-16.sql` puts the locked box and its key in one file and gives the whole thing back.
+
+Put the key in a password manager or a secret manager. Back it up somewhere your database backups are not, and check that whatever backs up `/opt/openlaw` (or wherever your `.env` lives) is not also the thing that writes your dumps.
+
+### Rotate it
+
+No credential is retyped. It takes two restarts — one to re-encrypt under the new key, one to retire the old variable:
+
+```bash
+# 1. Move the current key across and generate a new one.
+OLD=$(grep '^OPENLAW_SECRET_KEY=' .env | cut -d= -f2-)
+sed -i "s|^#\?OPENLAW_SECRET_KEY_PREVIOUS=.*|OPENLAW_SECRET_KEY_PREVIOUS=$OLD|" .env
+sed -i "s|^OPENLAW_SECRET_KEY=.*|OPENLAW_SECRET_KEY=$(openssl rand -base64 32)|" .env
+
+# 2. Restart. The app re-encrypts every stored credential under the new key at boot.
+docker compose up -d
+
+# 3. Remove the old key.
+sed -i "s|^OPENLAW_SECRET_KEY_PREVIOUS=.*|#OPENLAW_SECRET_KEY_PREVIOUS=|" .env
+docker compose up -d
+```
+
+The retiring key is accepted for reads only. Step 2 logs how many values it re-encrypted; step 3 is what actually retires the old key, so don't stop after step 2.
+
+### If you lose it
+
+You lose those four credentials and nothing else. No Contract, Matter, Document, or activity record depends on this key — they are not encrypted with it and are unaffected.
+
+Set a new `OPENLAW_SECRET_KEY`, start the stack, and the four credentials read as unset: Settings shows the signing connector and the SMTP relay as unconfigured, and your Administrators paste them in again. OpenLaw leaves the unreadable values in place rather than overwriting them, and says so in the boot log — so if the old key turns up later, putting it back in `OPENLAW_SECRET_KEY_PREVIOUS` and restarting still recovers them.
+
+### Upgrading from a version before this
+
+**Set `OPENLAW_SECRET_KEY` before you start the new version**, not after. The app and the worker refuse to boot without it, so an upgrade that skips this step stops at a startup error rather than starting and asking later.
+
+```bash
+echo "OPENLAW_SECRET_KEY=$(openssl rand -base64 32)" >> .env
+docker compose up -d
+```
+
+That is the whole migration. The first boot encrypts the credentials the old version stored in the clear, logs which columns it sealed, and asks nobody to retype anything.
+
 ## Backups
 
 Two things hold state: the database, and wherever your storage driver keeps its files. Back both up together: a database row points at a file, and a file with no row is unreachable.
+
+Back up `OPENLAW_SECRET_KEY` too — and, as [that section](#the-credential-encryption-key) says, somewhere these archives are not.
 
 The database, on the bundled Postgres:
 

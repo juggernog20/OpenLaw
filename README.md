@@ -49,6 +49,21 @@ pnpm --filter @openlaw/e2e exec playwright install chromium   # once
 pnpm e2e
 ```
 
+## Continuous integration
+
+Four workflows in [`.github/workflows/`](.github/workflows/). A fork gets the process along with the code — nothing here depends on a check that lives outside this repository.
+
+| Workflow       | What it guards                                                                                                                                             | Blocking                            |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| `ci.yml`       | Format, lint, typecheck, unit tests, the built-image E2E gate (TECH-018), and the upgrade-fidelity job that proves a populated install survives an upgrade | Yes                                 |
+| `i18n.yml`     | `messages/en-US.json` still matches what the extractor writes (DES-013)                                                                                    | No — it reports on the pull request |
+| `codeql.yml`   | Static analysis of the JavaScript and TypeScript                                                                                                           | Yes                                 |
+| `security.yml` | Dependency review and secret scanning                                                                                                                      | Yes                                 |
+
+Both stack gates have a local command: `pnpm e2e:local` for the browser suite, `pnpm upgrade-fidelity` for the upgrade job. Each runs in its own compose project, so neither touches the instance you develop against.
+
+The i18n job is deliberately non-blocking. en-US is the only v1 locale and the `defaultMessage` at each call site is the runtime catalog, so a stale file breaks nothing today. It becomes the file translators work from the day a second locale ships, and the check is already running and quiet by then.
+
 ## Deployment
 
 `docker compose up` from a clean Linux VM is the whole story — see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the quickstart, the reverse-proxy contract, upgrades, and backups.

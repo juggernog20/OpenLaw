@@ -22,6 +22,7 @@
     "stack:reset": "docker compose -f compose.yml -f compose.dev.yml down -v && pnpm stack",
     "e2e": "pnpm --filter @openlaw/e2e e2e",
     "e2e:local": "pnpm --filter @openlaw/e2e e2e:local",
+    "upgrade-fidelity": "pnpm --filter @openlaw/e2e upgrade-fidelity",
     "secretlint": "secretlint \"**/*\"",
     "lint:contrast": "node styles/lint-contrast.mjs",
     "openapi": "turbo run build --filter=@openlaw/api... && pnpm --filter @openlaw/api openapi:emit && pnpm --filter @openlaw/api-client generate && prettier --write apps/api/openapi.json packages/api-client/src/schema.ts",

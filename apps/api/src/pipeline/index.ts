@@ -29,6 +29,7 @@ export {
   createDocuSignDriverFactory,
   readDocuSignBaseUrl,
   SigningHostConfigError,
+  SIGNING_STANDIN_VARIABLE,
 } from "../lib/signing/config.js";
 export { createSigningResolver, type SigningResolver } from "../lib/signing/resolver.js";
 export { createStorageFromEnv } from "../lib/storage/config.js";
@@ -64,19 +65,18 @@ export {
 export { createConsoleLogger, type PipelineLogger } from "./logger.js";
 export {
   runReconciliationSweep,
-  startReconciliationSweeps,
   RECONCILIATION_PAGE_SIZE,
   RECONCILIATION_REFUSAL_LIMIT,
-  RECONCILIATION_SWEEP_INTERVAL_MS,
+  RECONCILIATION_SWEEP_CRON,
   type ReconciliationDeps,
   type ReconciliationOptions,
-  type ReconciliationScheduleOptions,
   type ReconciliationSummary,
 } from "./reconciliation.js";
 export {
   startPipeline,
   DISPLAY_CONVERSION_QUEUE_OPTIONS,
   EXECUTED_COPY_QUEUE_OPTIONS,
+  RECONCILIATION_SWEEP_QUEUE_OPTIONS,
   TEXT_EXTRACTION_QUEUE_OPTIONS,
   type Pipeline,
   type PipelineHandlers,

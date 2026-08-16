@@ -63,6 +63,7 @@ import { onboardingRoutes } from "./modules/onboarding/routes.js";
 import { orgRoutes } from "./modules/org/routes.js";
 import { usersRoutes } from "./modules/users/routes.js";
 import { emailSettingsRoutes } from "./modules/email-settings/routes.js";
+import { signerErasureRoutes } from "./modules/signer-erasure/routes.js";
 import { signingConnectorRoutes } from "./modules/signing-connector/routes.js";
 import { signingWebhookRoutes } from "./modules/signing-webhook/routes.js";
 import { authHandler } from "./auth/handler.js";
@@ -363,6 +364,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(usersRoutes, { prefix: "/api/v1" });
   await app.register(emailSettingsRoutes, { prefix: "/api/v1" });
   await app.register(signingConnectorRoutes, { prefix: "/api/v1" });
+  await app.register(signerErasureRoutes, { prefix: "/api/v1" });
   await app.register(contractTypesRoutes, { prefix: "/api/v1" });
   await app.register(attachedFieldsRoutes, { prefix: "/api/v1" });
   await app.register(matterTypesRoutes, { prefix: "/api/v1" });

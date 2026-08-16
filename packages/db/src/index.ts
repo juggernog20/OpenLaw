@@ -34,6 +34,7 @@ import * as matterTypeFieldsSchema from "./schema/matter-type-fields.js";
 import * as matterTypesSchema from "./schema/matter-types.js";
 import * as orgSchema from "./schema/org.js";
 import * as signingConnectorsSchema from "./schema/signing-connectors.js";
+import { resealStoredSecrets, type SecretsRewrap } from "./rewrap.js";
 
 export * from "./schema/activity.js";
 export * from "./schema/approver-groups.js";
@@ -59,6 +60,8 @@ export * from "./schema/matter-type-fields.js";
 export * from "./schema/matter-types.js";
 export * from "./schema/org.js";
 export * from "./schema/signing-connectors.js";
+export * from "./rewrap.js";
+export * from "./secrets.js";
 export const schema = {
   ...activitySchema,
   ...approverGroupsSchema,
@@ -172,6 +175,8 @@ export const ADVISORY_LOCK = {
   firstRunSetup: 4101002,
   /** Held across an SSO provider update's delete + re-register (TECH-008). */
   ssoProviderUpdate: 4101003,
+  /** Held while stored credentials are resealed at boot (TECH-022). */
+  secretsRewrap: 4101004,
 } as const;
 
 /**
@@ -267,4 +272,21 @@ export async function runMigrations(db: Db): Promise<void> {
       migrationsFolder: fileURLToPath(new URL("../migrations", import.meta.url)),
     }),
   );
+}
+
+/**
+ * Seals every stored credential under the key in use (TECH-022).
+ *
+ * Called on API boot, right after the migrations and for the same
+ * reason they run there: the API is the one process that changes what
+ * is in the database on a deploy, and a worker doing it too would race
+ * it. What the pass covers — an upgrade from plaintext, and a key
+ * rotation — is in `rewrap.ts`.
+ *
+ * The lock is the migrations' lock pattern, not theirs: replicas
+ * booting together serialize, so the counts in the boot log say what
+ * one process did rather than what several did to the same rows.
+ */
+export async function rewrapSecrets(db: Db): Promise<SecretsRewrap> {
+  return withAdvisoryLock(db, ADVISORY_LOCK.secretsRewrap, () => resealStoredSecrets(db));
 }

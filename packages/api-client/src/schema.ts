@@ -430,7 +430,8 @@ export interface paths {
     /** Save the e-signature connector (CTR-013, TECH-013). The RSA key and the Connect secret are write-only: blank keeps the stored value, a value rotates it. A first save without the Connect secret is refused — the webhook must never answer unsigned deliveries */
     put: operations["saveSigningConnector"];
     post?: never;
-    delete?: never;
+    /** Take the e-signature connector out (CTR-013). The row and both secrets go, and the install is back to the zero-config manual hand-off. Refused while any envelope is still out: deleting the credentials strands that round for good — nothing left to void it with, and nothing for the reconciliation sweep to ask. Turn the connector off instead if the sending has to stop before the paper comes back */
+    delete: operations["deleteSigningConnector"];
     options?: never;
     head?: never;
     patch?: never;
@@ -447,6 +448,57 @@ export interface paths {
     put?: never;
     /** Authenticate against the provider with the stored credentials (TECH-013's test button) and name the account they reach. Answers in place; changes nothing */
     post: operations["testSigningConnector"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/signing-connectors/{provider}/disable": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Turn the e-signature connector off (CTR-013) without losing its credentials. Every surface then answers as an unconfigured install does — the send control leaves the record and the manual hand-off is the path again. A live envelope does not refuse this: turning the connector back on picks the round up where the sweep left it */
+    post: operations["disableSigningConnector"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/signing-connectors/{provider}/enable": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Turn the e-signature connector back on with the credentials it already holds (CTR-013). The send control returns to the record and the reconciliation sweep reaches every round that was out while it was off */
+    post: operations["enableSigningConnector"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/signer-erasures": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Erase an external signer's name and address (CTR-013, DD-017). Every `envelope.sent` activity entry naming this address has that name and address rewritten to a tombstone, in place, and the envelope's signer rows for it are deleted. The entry keeps its shape: how many people were asked, and in what order, is about the contract rather than about the person. The erasure is itself appended to the log, carrying counts and no address. Refused for an address that belongs to a user of this install — their erasure is a different act. An address that was never a signer's answers with zeros. Copies already shipped to a SIEM are outside this install and are the operator's to purge */
+    post: operations["eraseSigner"];
     delete?: never;
     options?: never;
     head?: never;
@@ -3168,6 +3220,8 @@ export interface operations {
               /** @enum {string} */
               provider: "docusign";
               configured: boolean;
+              enabled: boolean;
+              disabledAt: string | null;
               environment: ("demo" | "production") | null;
               integrationKey: string | null;
               apiUserId: string | null;
@@ -3223,6 +3277,54 @@ export interface operations {
               /** @enum {string} */
               provider: "docusign";
               configured: boolean;
+              enabled: boolean;
+              disabledAt: string | null;
+              environment: ("demo" | "production") | null;
+              integrationKey: string | null;
+              apiUserId: string | null;
+              hasPrivateKey: boolean;
+              hasWebhookSecret: boolean;
+              webhookUrl: string;
+              updatedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteSigningConnector: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        provider: "docusign";
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            connector: {
+              /** @enum {string} */
+              provider: "docusign";
+              configured: boolean;
+              enabled: boolean;
+              disabledAt: string | null;
               environment: ("demo" | "production") | null;
               integrationKey: string | null;
               apiUserId: string | null;
@@ -3268,6 +3370,139 @@ export interface operations {
             accountName: string;
             accountId: string;
             userEmail: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  disableSigningConnector: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        provider: "docusign";
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            connector: {
+              /** @enum {string} */
+              provider: "docusign";
+              configured: boolean;
+              enabled: boolean;
+              disabledAt: string | null;
+              environment: ("demo" | "production") | null;
+              integrationKey: string | null;
+              apiUserId: string | null;
+              hasPrivateKey: boolean;
+              hasWebhookSecret: boolean;
+              webhookUrl: string;
+              updatedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  enableSigningConnector: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        provider: "docusign";
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            connector: {
+              /** @enum {string} */
+              provider: "docusign";
+              configured: boolean;
+              enabled: boolean;
+              disabledAt: string | null;
+              environment: ("demo" | "production") | null;
+              integrationKey: string | null;
+              apiUserId: string | null;
+              hasPrivateKey: boolean;
+              hasWebhookSecret: boolean;
+              webhookUrl: string;
+              updatedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  eraseSigner: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: email */
+          email: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            erasure: {
+              entriesRedacted: number;
+              signerRowsDeleted: number;
+            };
           };
         };
       };
@@ -5554,6 +5789,29 @@ export interface operations {
           };
         };
       };
+      /** @description The status change crosses CTR-012's approval gate with approvals still unresolved. Re-send with `overrideSoftGate` to record it as an override. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type: "urn:openlaw:problem:approval-soft-gate" | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+          };
+        };
+      };
       /** @description Problem details (RFC 9457) */
       default: {
         headers: {
@@ -6501,6 +6759,32 @@ export interface operations {
           };
         };
       };
+      /** @description The send was refused: this install has no e-signature connector, or the contract already has an envelope out. An archived contract is refused here too, without naming a type. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type:
+              | "urn:openlaw:problem:signing-not-configured"
+              | "urn:openlaw:problem:envelope-live"
+              | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+          };
+        };
+      };
       /** @description Problem details (RFC 9457) */
       default: {
         headers: {
@@ -6578,6 +6862,29 @@ export interface operations {
                 createdAt: string;
               }[];
             } | null;
+          };
+        };
+      };
+      /** @description The void was refused: this install has no e-signature connector. An envelope that has already ended, and an archived contract, are refused here too, without naming a type. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type: "urn:openlaw:problem:signing-not-configured" | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
           };
         };
       };

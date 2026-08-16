@@ -383,6 +383,14 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     old: "[secret]",
     new: "[secret]",
   },
+  "signer.erased": { entriesRedacted: 2, signerRowsDeleted: 3 },
+  "signing_connector.disabled": { provider: "docusign", liveEnvelopes: 2 },
+  "signing_connector.enabled": { provider: "docusign" },
+  "signing_connector.removed": {
+    provider: "docusign",
+    environment: "demo",
+    integrationKey: "ik_1",
+  },
 
   // ---- One round of signature ----
   "envelope.sent": {
@@ -444,6 +452,48 @@ describe("the vocabulary, slug by slug", () => {
       expect(change.from.length).toBeGreaterThan(0);
       expect(change.to.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("the counted branches of the connector and erasure sentences", () => {
+  // `wholeCount` maps a missing or malformed count to 0, which is
+  // exactly what an entry written by an older build produces. The
+  // fixtures above all count above one, so without these the `=0` and
+  // `one` branches never render.
+  it("says what an erasure that matched nothing did", () => {
+    expect(narrate("signer.erased", { entriesRedacted: 0, signerRowsDeleted: 0 }).sentence).toBe(
+      "Nadia Counsel erased an external signer's name and address from no entries",
+    );
+  });
+
+  it("counts one redacted entry in the singular", () => {
+    expect(narrate("signer.erased", { entriesRedacted: 1, signerRowsDeleted: 1 }).sentence).toBe(
+      "Nadia Counsel erased an external signer's name and address from 1 entry",
+    );
+  });
+
+  it("says plainly when a connector was turned off with nothing out", () => {
+    expect(
+      narrate("signing_connector.disabled", { provider: "docusign", liveEnvelopes: 0 }).sentence,
+    ).toBe(
+      "Nadia Counsel turned off the e-signature connector docusign, with nothing out for signature",
+    );
+  });
+
+  it("counts one round still out in the singular", () => {
+    expect(
+      narrate("signing_connector.disabled", { provider: "docusign", liveEnvelopes: 1 }).sentence,
+    ).toBe(
+      "Nadia Counsel turned off the e-signature connector docusign, with 1 round still out for signature",
+    );
+  });
+
+  it("reads an entry from an older build, whose count is not there at all", () => {
+    // Not a hypothetical: these payload keys arrived with #273 and #280,
+    // so every entry appended before them has none of them.
+    expect(narrate("signing_connector.disabled", { provider: "docusign" }).sentence).toBe(
+      "Nadia Counsel turned off the e-signature connector docusign, with nothing out for signature",
+    );
   });
 });
 

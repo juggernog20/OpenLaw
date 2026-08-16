@@ -241,6 +241,18 @@ The reconciliation sweep (CTR-013) is the third sweep on the worker, and the fir
 
 **A provider outage is the round's, not the envelope's.** Nothing is marked failed, no envelope is given up on, and the next round asks again — the executed-copy sweep's `failed` state has no counterpart here, because a status that could not be read is not a status this install may invent. The refusal bound then stops a round after a few unreachable answers in a row, for the backfill sweep's reason: a provider that is down is down for all of them, and asking once per live envelope costs a round trip each to learn the same thing. Credentials the provider refuses end the round at once, because they are install-wide.
 
+### Addendum (2026-08-16, [#277](https://github.com/juggernog20/OpenLaw/issues/277)) — a repeating sweep is a scheduled job, not a timer
+
+The addendum above gave the reconciliation sweep an in-process interval loop on the worker. **That makes replica count multiply the provider requests.** Two worker replicas each walked every live envelope and each asked the provider about it, every round — against the endpoint DocuSign rate-limits hardest. Nothing was corrupted by it: the sweep is a reader and `applyEnvelopeStatus` makes a second application a no-op. The cost was requests, not correctness.
+
+**It is now a scheduled pg-boss job on `*/5 * * * *`, the shape the backfill sweep already had.** pg-boss elects one cron worker per queue, so an install running N workers gets one round. The queue is `singleton`, so a tick landing while a round is still walking waits for it rather than joining it — which is the loop's non-overlap property, kept. The interval and the refusal bound moved with it unchanged.
+
+**The rule this settles is wider than one sweep, and it is the boot-versus-schedule line.** A sweep that runs **once** recovers work the rows already say is owed, so a second replica walks the same table, finds nothing left to ask for, and costs one query. A sweep that **repeats** is asking somebody the same question over and over, and a second replica doubles that. So: anything that runs once may live in the worker's boot; anything that repeats belongs on pg-boss's clock. The two boot sweeps stay where they are.
+
+**What it costs is a round at boot.** The loop swept immediately on start; the schedule waits for the next tick, so a worker that has just restarted can be up to five minutes behind. That is the right trade for a fallback feed measured in minutes, and the alternative — a boot round per replica beside the schedule — puts the duplication straight back on every rolling deploy, which is the one moment replica count is guaranteed to be greater than one.
+
+**Alternatives considered.** _Document a single worker replica and pin it in `compose.yml`_ — cheaper, and it makes correct scaling a thing an operator can silently break with no error and no sign. _A leader-election flag of our own_ — a second source of the truth pg-boss already holds, and TECH-007's own M12/6 note declines exactly that reasoning for the backfill sweep.
+
 ## TECH-008: Authentication — onboarding-selectable: built-in basic or bring-your-own IdP (OIDC)
 
 - **Status:** Accepted
@@ -274,7 +286,7 @@ Recorded at feature close (auth spec, issues #4–#10). The decision stands as w
 - **Ecosystem shift.** The Context above name-drops Auth.js as the "basic" option; that landscape moved. Auth.js joined the better-auth org in September 2025 and its own guidance now directs new projects to better-auth; better-auth itself joined Vercel but remains MIT. Governance risk is mitigated by the license and by our guard-interface wrapping — the "implementation detail, swappable" stance stands unchanged.
 - **Settled integration pattern** (from official docs, production OSS, and context7 research): better-auth's handler is mounted **natively on a catch-all auth prefix** (Fetch-Request rebuild inside a scoped Fastify plugin that bypasses content-type parsing for that prefix) and owns every browser-facing auth flow; a composable **guard chain** (`requireAuth` + role variants) resolves the session via `auth.api.getSession` and attaches `{ user, session }` to each request; **our own zod-typed routes exist only where OpenLaw's authorization model diverges** (first-run setup, invites, SSO provider registration, magic-link issuance, auth-mode switching, method discovery); the OpenAPI contract and better-auth's routes remain **parallel surfaces** — no spec merging, and auth flows are consumed by better-auth's React client, not the generated api-client.
 - **Schema channel.** Table/column naming is achieved through Drizzle property keys plus better-auth's model/field mapping. better-auth's CLI and auto-migration are never used; drizzle-kit generated SQL migrations are the only schema channel (TECH-006/TECH-014).
-- **SSO client secret at rest.** The sso plugin stores the OIDC client secret inside the provider row's config JSON. v1 accepts DB-at-rest storage (single-tenant, self-hosted, the DB already holds privileged material); **flagged for a future secrets-encryption pass** — deliberate, not accidental. _(2026-08-16, M15/1: the DocuSign RSA private key and the Connect HMAC secret in `signing_connectors` are the **second entry** on that same pass, under the same accepted posture — see CTR-013's M15 addendum.)_
+- **SSO client secret at rest.** The sso plugin stores the OIDC client secret inside the provider row's config JSON. v1 accepts DB-at-rest storage (single-tenant, self-hosted, the DB already holds privileged material); **flagged for a future secrets-encryption pass** — deliberate, not accidental. _(2026-08-16, M15/1: the DocuSign RSA private key and the Connect HMAC secret in `signing_connectors` are the **second entry** on that same pass, under the same accepted posture — see CTR-013's M15 addendum.)_ _(2026-08-16, #259: **superseded by TECH-022** — the pass happened. `sso_providers.oidc_config` is sealed whole with `encryptedText`, so the sso plugin's own Drizzle queries seal and open it too.)_
 - **Version pin.** better-auth pinned to **1.6.x** (≥ 1.6.22 for the two-factor lockout columns; currently 1.6.26). 1.7 renames/changes some plugin options (two-factor enable signature, SSO option names) — treat its upgrade guide as a known, small chore, not a drop-in bump.
 
 ### Addendum (2026-08-10) — settings home and cross-user session revocation (M5 grill)
@@ -351,7 +363,7 @@ API providers only: forces a SaaS mail account on regulated self-hosters.
 
 ### Addendum (2026-08-10) — database-configurable SMTP; environment wins (#37)
 
-The SET-004 wizard surface this decision named (deferred at M2, where env vars carried SMTP alone) shipped: the wizard's email step saves a relay URL + from-address to the `org_settings` singleton, mirroring the `SMTP_URL`/`SMTP_FROM` shape — one mental model, two carriers. The mailer is resolved at send time, env-else-database (the TECH-014 read-on-every-decision pattern), so a save applies to the very next send with no restart. **Precedence: environment wins.** A set `SMTP_URL` pins the instance — database values are ignored entirely and saves are refused. This is a safety property, not a convenience: the dev/E2E overlay pins Mailpit via env, and a database-saved real relay must never beat it, or test mail leaks to real inboxes. The relay URL is write-only through the API (it embeds the credential) and stored plaintext for v1 — at-rest encryption is a flagged follow-up shared with the TECH-008 SSO client secret.
+The SET-004 wizard surface this decision named (deferred at M2, where env vars carried SMTP alone) shipped: the wizard's email step saves a relay URL + from-address to the `org_settings` singleton, mirroring the `SMTP_URL`/`SMTP_FROM` shape — one mental model, two carriers. The mailer is resolved at send time, env-else-database (the TECH-014 read-on-every-decision pattern), so a save applies to the very next send with no restart. **Precedence: environment wins.** A set `SMTP_URL` pins the instance — database values are ignored entirely and saves are refused. This is a safety property, not a convenience: the dev/E2E overlay pins Mailpit via env, and a database-saved real relay must never beat it, or test mail leaks to real inboxes. The relay URL is write-only through the API (it embeds the credential) and stored plaintext for v1 — at-rest encryption is a flagged follow-up shared with the TECH-008 SSO client secret. _(2026-08-16, #259: **superseded by TECH-022** — `org_settings.smtp_url` is now sealed at rest with the rest of them. Nothing else about the resolution changes: the environment still wins, and a save still applies to the next send.)_
 
 ## TECH-012: AI providers — three protocol adapters, provider presets, custom option
 
@@ -567,6 +579,36 @@ The E2E demo's stand-in is deliberately the same server shape the DocuSign drive
 - **A recorded-fixture proxy replaying real DocuSign traffic** — closer to DocuSign, and unable to do the one thing the demo needs: sign an envelope on demand, mid-journey, in an order the recording never took.
 - **Let the E2E stack reach DocuSign's demo estate** — a shared credential in CI, a network dependency in a gate that must be deterministic, and a suite that can post paper to a real account.
 
+### Addendum (2026-08-16, [#279](https://github.com/juggernog20/OpenLaw/issues/279)) — the stand-in takes two variables, and they have to agree
+
+The addendum above guards `DOCUSIGN_BASE_URL` three ways: it must name a bare origin with no credentials, it is warned about at boot, and only the dev/E2E overlay sets it. What it did not have is a second fact saying **this install is deliberately not talking to DocuSign**. `compose.yml` passes `.env` to both processes, so one line in the wrong `.env` sent a real install's paper to whatever host it named, with a warning in the boot log as the only sign.
+
+**A second variable earns its place here, where it would not for the other overrides.** `SIGNING_STANDIN=true` carries no address and says only that. Set the address without it and the boot stops; set it without the address and the boot stops too. The asymmetry with `SMTP_URL`, `DOC_ENGINE_URL`, and the rest is deliberate and rests on the consequence, not on the shape: a mis-set mail relay sends an invitation to the wrong catcher, and a mis-set signing host puts a contract in front of a third party who is not DocuSign and takes back a document the record then treats as executed. That is a different kind of wrong, and it is the only override in the file with it.
+
+**Refusing the flag without an address is the half worth arguing for.** The flag alone changes nothing on its own, so ignoring it would be defensible. It is refused because the honest reading of "declared a stand-in, named no stand-in" is that the address was meant to be there and was lost — a typo in the name, a line dropped from the overlay — and this install would then dial DocuSign while its operator believed it could not.
+
+**The pairing is enforced in `readDocuSignBaseUrl`, not at the entrypoints.** The API and the worker both call it, so there is no way to guard one and not the other — which the addendum above names as the worse-than-neither outcome: a send that goes to the stand-in and an executed copy fetched from DocuSign. `compose.dev.yml` sets both in the shared anchor for the same reason.
+
+Neither variable appears in `.env.example`. That file is what a self-hoster reads and copies, and the address has no business being one line away from a real install.
+
+### Addendum (2026-08-16, [#260](https://github.com/juggernog20/OpenLaw/issues/260)) — fidelity also means the second install
+
+This decision made the gate run against **built images** rather than a dev server, because "works with Vite / breaks in the container" is the drift that reaches a self-hoster. There is a second drift with the same shape and it was not covered: every job in CI started from an **empty database**, so the _first_ install was tested on every commit and the _second_ was never tested at all.
+
+**Self-hosting is not a one-time act.** The install runs, fills with real Contracts and Documents, and then a new version arrives. That path is the one thing shipped and never exercised — and a migration that passes against an empty table can still fail against one with rows: a NOT NULL column with no default, a unique index over data that already holds duplicates, a backfill that assumes a shape the old rows do not have. None of those appear against an empty database, so the install that finds them belongs to somebody else, at their 2am, on their contracts.
+
+**The gate is a third job in `ci.yml`.** It fills a baseline install through the public API, stops it **keeping the volumes**, brings this commit up against the same database and files, and checks every seeded record still reads back. The volumes are the install: `down -v` there would test nothing.
+
+**The seed writes through the API and never through SQL.** A seed that inserted rows the application would never insert proves nothing about the application, and it would drift from the real write paths the first time a route changed what it stores.
+
+**What is compared is named facts, not whole responses.** A release is allowed to add a field to a response — that is not an upgrade failure, and a deep equality check would report it as one. The fingerprint records what must survive: contract numbers, titles, stages and custom field values; a document version's SHA-256 and byte count, checked against the bytes the store hands back; a user's role; whether the signing connector still holds credentials.
+
+**The baseline is the newest release tag, and `dev` until one exists.** The project has no releases yet, so the job upgrades from trunk and says so in its own output. `main` is never the baseline — it is vestigial here.
+
+**One constraint the seed carries forever:** it is the current commit's script talking to the _previous_ release's server, so it may only use API surface the baseline already has. Anything added in the change under test is verified after the upgrade, never during the seed.
+
+**Matters are absent from the seed because they do not exist.** The install has matter types and no matter records. The seed grows one the day the product does — which is the maintenance cost this job takes on deliberately: the seed has to keep pace with what an install can hold, and it gets more expensive with every milestone that adds a table.
+
 ## TECH-019: Code documentation — module-granular doc comments, no coverage percentage
 
 - **Status:** Accepted
@@ -644,7 +686,7 @@ CTR-012's soft gate (#235) is the first refusal a client has to **act on**. `PAT
 
 ## TECH-021: Secrets at rest — plaintext for v1, with one owner and one trigger
 
-- **Status:** Accepted
+- **Status:** Superseded by TECH-022
 - **Date:** 2026-08-16
 
 ### Context
@@ -689,28 +731,80 @@ Three schema comments already defer encryption to "a future pass" — TECH-008's
 - A fifth credential column added before #259 closes joins this record's table rather than growing a fourth "future pass" comment.
 - Whoever closes #259 supersedes this record rather than deleting it, and the deploy docs gain a key-handling section in the same change.
 
+## TECH-022: Credentials at rest — sealed columns, one required key, outside the database
+
+- **Status:** Accepted
+- **Date:** 2026-08-16
+- **Supersedes:** TECH-021
+
+### Context
+
+TECH-021 recorded that four credential columns were stored in the clear, named the exposure, and put the open question in issue #259: **where does the encryption key come from**, given that a key sitting in the same database backup as the data protects nothing. It also refused the cheap answer in advance — "encrypt now, key in the environment" — as theatre unless a key-handling story shipped with it.
+
+The four are `signing_connectors.private_key`, `signing_connectors.webhook_secret`, `org_settings.smtp_url`, and the OIDC client secret inside better-auth's `sso_providers.oidc_config`. All four are runtime organisation configuration an Administrator pastes into Settings, so the application has to be able to read them on its own.
+
+Three key sources were on the table: a required environment variable, a key derived from an existing secret, and a key file on disk beside the compose stack.
+
+### Decision
+
+1. **A new required setting, `OPENLAW_SECRET_KEY`**, read at boot by the app and the worker. Both refuse to start without it, and the refusal names `openssl rand -base64 32`.
+2. **The columns are sealed by the schema, not by callers.** Each is declared with `encryptedText` — a Drizzle custom type that seals on the way to Postgres and opens on the way back. The DDL is unchanged (`text`), so this is not a migration, and no route, job, or resolver below the schema can forget to do it. better-auth reads `sso_providers` through our Drizzle tables, so its own queries are sealed too.
+3. **AES-256-GCM, with the column name as additional authenticated data.** A sealed value reads `openlaw:v1:<base64>`. The prefix is what lets the same code read a plaintext value written by an older version, and gives a later cipher change somewhere to live.
+4. **A boot pass brings stored values under the key in use.** It runs in the API, beside the migrations and under an advisory lock, because a SQL migration is run by Postgres and Postgres has neither the key nor the cipher. It covers both the upgrade (plaintext in, sealed out) and the rotation.
+5. **A rotation is `OPENLAW_SECRET_KEY_PREVIOUS` and one restart.** The retiring key is accepted for reads only; the boot pass rewrites everything under the new key; the deployer then removes the variable. Nothing is retyped.
+6. **A value no configured key opens reads as "not set", and is left in place.** It does not throw.
+7. **`docs/DEPLOYMENT.md` carries the key-handling section**, and it is part of this decision rather than a note about it: how to generate the key, that it must not share an archive with the database dump, how to rotate it, and what losing it costs.
+
+### Rationale
+
+- **The key has to be outside the thing it protects, and the environment is the only place that is by default.** A key file beside the compose stack is a second artefact to back up, and the natural mistake is to back it up _into_ the same archive as the dump — which is the exact failure this exists to prevent, with an extra file to lose. Deriving the key from `AUTH_SECRET` welds two rotations together: rotating the session secret, which self-hosters do, would silently destroy every stored credential.
+- **The theatre objection is answered by the deploy docs, not by the code.** TECH-021 is right that an environment variable moves the secret from one file the deployer backs up to another. What makes it real is telling the deployer, in the place they are already reading, that the backup job must not capture both — and giving them a rotation they will actually run. That section is the feature; the cipher is the easy half.
+- **Sealing at the schema is the only place a caller cannot forget.** Encrypt-here-decrypt-there scattered across routes is how a fifth call site ends up writing a plaintext value that reads back fine and shows up in the next dump. A custom type has one behaviour and no opt-out.
+- **An unreadable value must read as absent, not throw.** The recovery from a lost key is "open Settings and paste it again", and a read that threw would fail the pane that recovery happens in. Every reader of these four columns already has an unconfigured path — the Settings pane shows the credential as absent, the mailer reports email unconfigured, the SSO update handler asks for the credentials to repair the row — so "not set" is a state the product already knows how to be in.
+- **Not overwriting an unreadable value keeps a mistake recoverable.** A deployer who boots with the wrong key has made a fixable error; a boot pass that resealed the empty string they read as would make it permanent.
+- **A rotation nobody can perform is not a rotation.** The two-variable, one-restart shape is the smallest thing that lets a self-hoster change this key without re-entering a DocuSign private key by hand, which is the step that would make them not do it.
+
+### Alternatives considered
+
+- **A key file on disk beside the compose stack.** Rejected: see the rationale. It needs no new variable, and it is the option most likely to end up inside the dump's archive.
+- **Derive the key from `AUTH_SECRET`.** Rejected: it couples two rotations with very different cadences, and the coupling is silent and destructive.
+- **`pgcrypto` column encryption.** Rejected, as in TECH-021: the passphrase still has to reach the query, so it lands in the environment or in the database, with more moving parts and SQL that cannot be read without it.
+- **A SQL migration that encrypts the existing values.** Not possible — Postgres has no key. Hence the boot pass.
+- **Encrypt only the two DocuSign secrets.** Rejected: the SMTP relay URL carries a password inline and the OIDC config carries a client secret. Three of four sealed is a table anyone reading the schema would assume is fully sealed.
+- **Throw when a value cannot be opened.** Rejected: it breaks the pane the operator has to use to recover, and it turns a wrong key into an install that cannot serve Settings at all.
+
+### Consequences
+
+- `.env.example`, `compose.yml`, and the CI E2E job all set `OPENLAW_SECRET_KEY`; compose refuses to start without it, as it already does for `AUTH_SECRET`.
+- The install gains one required step. `docs/DEPLOYMENT.md`'s quickstart sets both secrets in two lines.
+- The E2E stack's persistent volumes need a stable key between runs, so it comes from `.env` like every other compose variable.
+- A fifth credential column joins `SEALED_COLUMNS` in `packages/db/src/rewrap.ts` in the change that adds it — the list is what the boot pass walks, so an omission is a column that never gets resealed.
+- The three schema comments deferring encryption are gone, because it happened.
+- TECH-021 stays in this document, marked superseded. Its statement of the exposure is still the clearest one we have.
+
 ## Index of decisions
 
-| #        | Decision                                                                      | Status               |
-| -------- | ----------------------------------------------------------------------------- | -------------------- |
-| TECH-001 | Frontend stack — React + Tailwind CSS + shadcn/ui (copied) + Radix primitives | Accepted             |
-| TECH-002 | Backend — TypeScript on Node LTS                                              | Accepted             |
-| TECH-003 | Application shape — Fastify API + Vite React SPA (REST/OpenAPI)               | Accepted             |
-| TECH-004 | Database — PostgreSQL only                                                    | Accepted             |
-| TECH-005 | Deployment — Docker Compose as the blessed path                               | Accepted             |
-| TECH-006 | ORM — Drizzle (+ drizzle-kit migrations)                                      | Accepted             |
-| TECH-007 | Background jobs — pg-boss on Postgres                                         | Accepted             |
-| TECH-008 | Authentication — onboarding-selectable: built-in basic or BYO IdP (OIDC)      | Accepted             |
-| TECH-009 | Real-time — SSE on live surfaces                                              | Accepted             |
-| TECH-010 | Document engines — one LibreOffice + OCR sidecar                              | Accepted             |
-| TECH-011 | Email sending — SMTP first + provider adapter                                 | Accepted             |
-| TECH-012 | AI providers — three protocol adapters, presets, custom option                | Accepted             |
-| TECH-013 | DocuSign auth — JWT grant (service integration)                               | Accepted             |
-| TECH-014 | DX housekeeping — repo, CI, testing, observability, telemetry, storage/search | Accepted             |
-| TECH-015 | TypeScript 7 native compiler + TS 6 API shim for typescript-eslint            | Accepted (temporary) |
-| TECH-016 | API validation vocabulary — Zod as the single schema source                   | Accepted             |
-| TECH-017 | Compose topology — single app container, BYO proxy, incremental growth        | Accepted             |
-| TECH-018 | Deployment fidelity — hybrid dev loop, E2E gate on built images, `e2e/` pkg   | Accepted             |
-| TECH-019 | Code documentation — module-granular doc comments, no coverage percentage     | Accepted             |
-| TECH-020 | Problem `type` URIs — a refusal names itself only when a client acts on it    | Accepted             |
-| TECH-021 | Secrets at rest — plaintext for v1, with one owner and one trigger            | Accepted             |
+| #        | Decision                                                                      | Status                 |
+| -------- | ----------------------------------------------------------------------------- | ---------------------- |
+| TECH-001 | Frontend stack — React + Tailwind CSS + shadcn/ui (copied) + Radix primitives | Accepted               |
+| TECH-002 | Backend — TypeScript on Node LTS                                              | Accepted               |
+| TECH-003 | Application shape — Fastify API + Vite React SPA (REST/OpenAPI)               | Accepted               |
+| TECH-004 | Database — PostgreSQL only                                                    | Accepted               |
+| TECH-005 | Deployment — Docker Compose as the blessed path                               | Accepted               |
+| TECH-006 | ORM — Drizzle (+ drizzle-kit migrations)                                      | Accepted               |
+| TECH-007 | Background jobs — pg-boss on Postgres                                         | Accepted               |
+| TECH-008 | Authentication — onboarding-selectable: built-in basic or BYO IdP (OIDC)      | Accepted               |
+| TECH-009 | Real-time — SSE on live surfaces                                              | Accepted               |
+| TECH-010 | Document engines — one LibreOffice + OCR sidecar                              | Accepted               |
+| TECH-011 | Email sending — SMTP first + provider adapter                                 | Accepted               |
+| TECH-012 | AI providers — three protocol adapters, presets, custom option                | Accepted               |
+| TECH-013 | DocuSign auth — JWT grant (service integration)                               | Accepted               |
+| TECH-014 | DX housekeeping — repo, CI, testing, observability, telemetry, storage/search | Accepted               |
+| TECH-015 | TypeScript 7 native compiler + TS 6 API shim for typescript-eslint            | Accepted (temporary)   |
+| TECH-016 | API validation vocabulary — Zod as the single schema source                   | Accepted               |
+| TECH-017 | Compose topology — single app container, BYO proxy, incremental growth        | Accepted               |
+| TECH-018 | Deployment fidelity — hybrid dev loop, E2E gate on built images, `e2e/` pkg   | Accepted               |
+| TECH-019 | Code documentation — module-granular doc comments, no coverage percentage     | Accepted               |
+| TECH-020 | Problem `type` URIs — a refusal names itself only when a client acts on it    | Accepted               |
+| TECH-021 | Secrets at rest — plaintext for v1, with one owner and one trigger            | Superseded by TECH-022 |
+| TECH-022 | Credentials at rest — sealed columns, one required key, outside the database  | Accepted               |

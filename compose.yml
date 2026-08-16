@@ -2,7 +2,8 @@
 #
 # The blessed OpenLaw deployment (TECH-005, TECH-017):
 #
-#   cp .env.example .env   # set AUTH_SECRET (openssl rand -base64 32)
+#   cp .env.example .env   # set AUTH_SECRET and OPENLAW_SECRET_KEY
+#                          # (openssl rand -base64 32, one each)
 #   docker compose up
 #
 # then reach http://<host>:3000 for first-run setup. TLS and the public
@@ -23,6 +24,16 @@ x-openlaw-environment: &openlaw-environment
   # Unset in .env = the bundled Postgres below; set it there for
   # external/managed Postgres (TECH-004 — both equally supported).
   DATABASE_URL: ${DATABASE_URL:-postgres://openlaw:openlaw@postgres:5432/openlaw}
+  # The key the stored credentials are encrypted with (TECH-022): the
+  # DocuSign private key, the Connect secret, the SMTP relay URL and the
+  # SSO client secret. It is here rather than beside AUTH_SECRET because
+  # the worker reads those columns too, and a worker without the key
+  # could not reach the signing provider. Keep it out of the same backup
+  # as the database — see docs/DEPLOYMENT.md.
+  OPENLAW_SECRET_KEY: ${OPENLAW_SECRET_KEY:?OPENLAW_SECRET_KEY is required — generate one with `openssl rand -base64 32` and set it in .env}
+  # The retiring key during a rotation, accepted for reads only. Empty
+  # means unset, which is the normal state.
+  OPENLAW_SECRET_KEY_PREVIOUS: ${OPENLAW_SECRET_KEY_PREVIOUS:-}
   # Uploaded files (DOC-009, TECH-014). The default driver is the
   # local filesystem one — no extra service to run. STORAGE_PATH is
   # its root and the mount point of the named volume below; the two

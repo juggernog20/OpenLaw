@@ -9,15 +9,33 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createDb, runMigrations } from "@openlaw/db";
+import {
+  createDb,
+  readSecretKeys,
+  rewrapSecrets,
+  runMigrations,
+  useSecretKeys,
+  PREVIOUS_SECRET_KEY_VARIABLE,
+} from "@openlaw/db";
 import { buildApp } from "./app.js";
 import { createMailerResolver } from "./lib/mailer.js";
 import { createDocEngineFromEnv } from "./lib/doc-engine/config.js";
 import { createStorageFromEnv } from "./lib/storage/config.js";
-import { createDocuSignDriverFactory, readDocuSignBaseUrl } from "./lib/signing/config.js";
+import {
+  createDocuSignDriverFactory,
+  readDocuSignBaseUrl,
+  SIGNING_STANDIN_VARIABLE,
+} from "./lib/signing/config.js";
 import { createSigningResolver } from "./lib/signing/resolver.js";
 import { maxUploadBytes } from "./lib/uploads.js";
 import { startPipeline } from "./pipeline/pg-boss.js";
+
+/** A per-column count, as one readable clause. */
+function summarize(counts: Record<string, number>): string {
+  return Object.entries(counts)
+    .map(([column, rows]) => `${column} (${rows})`)
+    .join(", ");
+}
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -29,8 +47,47 @@ function requireEnv(name: string): string {
 }
 
 const databaseUrl = requireEnv("DATABASE_URL");
+
+// TECH-022: the credential columns are sealed with a key that lives
+// outside the database, so a database backup on its own opens nothing.
+// Read here, before the first query, for the storage root's reason —
+// startup reads the environment and no module below does — and the boot
+// stops without it: an install that started with no key would write
+// credentials nobody could read back.
+useSecretKeys(
+  (function readKeys() {
+    try {
+      return readSecretKeys(process.env);
+    } catch (error) {
+      console.error(error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
+  })(),
+);
+
 const db = createDb(databaseUrl);
 await runMigrations(db);
+
+// Beside the migrations, and for their reason (TECH-005: the API is the
+// one process that changes the database on a deploy). This is what makes
+// an upgrade from a plaintext-storing version, and a key rotation, take
+// no manual re-entry — see rewrap.ts in @openlaw/db.
+//
+// Two lines rather than one, because they are two different pieces of
+// news: resealing is routine, and an unreadable credential is something
+// the operator has to act on. Reporting both in one sentence would put
+// the instruction in front of every operator it does not apply to.
+const rewrap = await rewrapSecrets(db);
+if (Object.keys(rewrap.resealed).length > 0) {
+  console.log(`Stored credentials resealed under the key in use: ${summarize(rewrap.resealed)}.`);
+}
+if (Object.keys(rewrap.unreadable).length > 0) {
+  console.warn(
+    `No configured key opens these stored credentials: ${summarize(rewrap.unreadable)}. ` +
+      "They are left as they are, so they are still recoverable: boot once with the old key " +
+      `in ${PREVIOUS_SECRET_KEY_VARIABLE}, or paste the credentials again in Settings.`,
+  );
+}
 
 // TECH-011: SMTP is the universal default, carried by env vars or saved
 // through the SET-004 wizard's email step (#37). Environment wins: with
@@ -96,7 +153,7 @@ const docusignBaseUrl = (function readSigningHost() {
 })();
 if (docusignBaseUrl) {
   console.warn(
-    `Signing is pointed at ${docusignBaseUrl} instead of DocuSign (DOCUSIGN_BASE_URL). This belongs to the dev/E2E overlay only — never run a real deployment this way.`,
+    `Signing is pointed at ${docusignBaseUrl} instead of DocuSign (DOCUSIGN_BASE_URL + ${SIGNING_STANDIN_VARIABLE}). This belongs to the dev/E2E overlay only — never run a real deployment this way.`,
   );
 }
 const resolveSigningProvider = createSigningResolver(

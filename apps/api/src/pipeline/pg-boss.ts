@@ -36,6 +36,7 @@ import {
   type TextExtractionJob,
 } from "./jobs.js";
 import { createConsoleLogger, type PipelineLogger } from "./logger.js";
+import { RECONCILIATION_SWEEP_CRON, runReconciliationSweep } from "./reconciliation.js";
 import { handleTextExtraction } from "./text-extraction.js";
 
 /**
@@ -178,6 +179,28 @@ export const BACKFILL_SWEEP_QUEUE_OPTIONS = {
   retryLimit: 0,
 } as const;
 
+/** Bounds on one scheduled reconciliation round. */
+export const RECONCILIATION_SWEEP_QUEUE_OPTIONS = {
+  /**
+   * Ten minutes. The round's cost is the number of envelopes still out
+   * — a much smaller set than the whole library, because an ending is
+   * an ending — but each one is a call to somebody else's network, and
+   * the refusal bound only cuts a round short once the provider stops
+   * answering altogether. Ten minutes is generous for the set and still
+   * notices a wedged worker inside two intervals.
+   */
+  expireInSeconds: 600,
+  /**
+   * Never retried, for the backfill sweep's reason and one of its own.
+   * A round that failed part way through learned some of what was owed
+   * and not the rest, and the envelope rows still say what the rest is
+   * — so the next tick picks it up. A retry would only bring the same
+   * failure forward, and this sweep's usual failure is a provider that
+   * is down, which a retry cannot heal.
+   */
+  retryLimit: 0,
+} as const;
+
 /** What a process needs to bring the pipeline up. */
 export interface PipelineOptions {
   /**
@@ -234,9 +257,12 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
     useListenNotify: working,
     // The clock runs where the work does, for the reason `supervise`
     // does: pg-boss elects one cron worker per queue, and a send-only
-    // API replica has no business standing for election. The backfill
-    // sweep is the first thing on it; reminders and digests (NOT-003,
-    // ENT-006) join it with the milestone that needs them.
+    // API replica has no business standing for election. The election is
+    // also what makes a scheduled sweep run **once** on an install with
+    // several workers, which is why the reconciliation sweep is on this
+    // clock rather than on a timer of its own (#277). The backfill sweep
+    // was the first thing here; reminders and digests (NOT-003,
+    // ENT-006) join them with the milestone that needs them.
     schedule: working,
   });
   // pg-boss reports what it cannot fix rather than throwing: a slow
@@ -285,10 +311,12 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
     },
   };
 
-  // Cut short when the process is stopping. The sweep notices between
-  // versions, so this is what stops a run that began at 04:00 from
-  // holding a container's shutdown open while it walks the rest of the
-  // library. What it did not reach is still owed, and the next run
+  // Cut short when the process is stopping. Both scheduled sweeps
+  // notice between rows, so this is what stops a run that began at
+  // 04:00 from holding a container's shutdown open while it walks the
+  // rest of the library — and what stops a reconciliation round from
+  // holding it open on somebody else's network. What neither reached is
+  // still owed, because the rows are the record, and the next tick
   // reaches it.
   const sweeping = new AbortController();
 
@@ -347,6 +375,16 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       ...BACKFILL_SWEEP_QUEUE_OPTIONS,
     });
     await boss.updateQueue(JOB_QUEUES.backfillSweep, BACKFILL_SWEEP_QUEUE_OPTIONS);
+    // The same singleton, for a stronger reason. The backfill sweep
+    // reads its own rows, so two at once would be correct and merely
+    // wasteful; this one asks a third party about every live envelope,
+    // so two at once would be two sets of provider requests for one
+    // set of answers.
+    await boss.createQueue(JOB_QUEUES.reconciliationSweep, {
+      policy: "singleton",
+      ...RECONCILIATION_SWEEP_QUEUE_OPTIONS,
+    });
+    await boss.updateQueue(JOB_QUEUES.reconciliationSweep, RECONCILIATION_SWEEP_QUEUE_OPTIONS);
 
     if (handlers) {
       // One at a time, with the job's own counters. The counters are
@@ -433,11 +471,29 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
         });
         log.info({ ...summary }, "the scheduled backfill sweep finished");
       });
+      // The reconciliation sweep gets its own worker for the backfill
+      // sweep's reason and one of its own: a round spends its time
+      // waiting on somebody else's network, and a provider that is slow
+      // must not sit in front of the executed copy a person is waiting
+      // on. It takes the signing resolver, which is what makes it a
+      // handler here rather than a timer in the worker entrypoint.
+      await boss.work(JOB_QUEUES.reconciliationSweep, { batchSize: 1 }, async () => {
+        const summary = await runReconciliationSweep(
+          { db: handlers.db, log, resolveSigningProvider: handlers.resolveSigningProvider },
+          queue,
+          { signal: sweeping.signal },
+        );
+        log.info({ ...summary }, "the scheduled reconciliation sweep finished");
+      });
       // Registering the schedule is an upsert keyed on the queue name, so
       // every worker that boots declares the same one and an install
       // running two of them still sweeps once — pg-boss elects a single
       // cron worker and creates one job per tick.
       await boss.schedule(JOB_QUEUES.backfillSweep, BACKFILL_SWEEP_CRON);
+      // The same upsert, and the reason #277 moved this sweep here: an
+      // in-process timer ran a full round per replica, and this round
+      // asks a third party about every live envelope.
+      await boss.schedule(JOB_QUEUES.reconciliationSweep, RECONCILIATION_SWEEP_CRON);
       log.info(
         {
           queues: [
@@ -445,8 +501,10 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
             JOB_QUEUES.displayConversion,
             JOB_QUEUES.executedCopyFetch,
             JOB_QUEUES.backfillSweep,
+            JOB_QUEUES.reconciliationSweep,
           ],
           backfillSweepCron: BACKFILL_SWEEP_CRON,
+          reconciliationSweepCron: RECONCILIATION_SWEEP_CRON,
         },
         "working the job queue",
       );

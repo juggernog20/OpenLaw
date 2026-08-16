@@ -52,6 +52,7 @@ import {
   Check,
   Clock,
   Download,
+  Eraser as EraserIcon,
   FilePlus2,
   FolderInput,
   FolderPlus,
@@ -83,6 +84,7 @@ import {
   TriangleAlert,
   Undo2,
   Unlink,
+  Unplug,
   Upload,
   UserCog,
   UserMinus,
@@ -253,6 +255,19 @@ function versionNumber(payload: Payload): string {
  */
 function versionCount(payload: Payload): number {
   const value = payload.versionCount;
+  return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : 0;
+}
+
+/**
+ * A count a payload carries, or zero.
+ *
+ * Zero for anything that is not a whole number at or above it, because
+ * the log is append-only: a payload written by an older build may not
+ * hold the key at all, and a sentence that pluralized on `undefined`
+ * would render an ICU argument error where a fact should be.
+ */
+function wholeCount(payload: Payload, key: string): number {
+  const value = payload[key];
   return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : 0;
 }
 
@@ -1022,6 +1037,24 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     values: (_intl, payload) => reasonValues(payload),
   },
+  /**
+   * A lawful erasure for somebody who only ever appears as a signer
+   * (#280). The sentence names nobody, because the payload names
+   * nobody — an entry carrying the erased address would put it back
+   * into the log the erasure just took it out of.
+   */
+  "signer.erased": {
+    icon: EraserIcon,
+    message: defineMessage({
+      id: "activity.signer.erased",
+      defaultMessage:
+        "{actor} erased an external signer's name and address from " +
+        "{entriesRedacted, plural, =0 {no entries} one {# entry} other {# entries}}",
+    }),
+    values: (_intl, payload) => ({
+      entriesRedacted: wholeCount(payload, "entriesRedacted"),
+    }),
+  },
   "contract.archived": {
     icon: Archive,
     message: defineMessage({
@@ -1491,6 +1524,40 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     values: (intl, payload) => ({ provider: named(intl, payload, "provider") }),
     changes: fieldChange,
+  },
+  // Turned off, and taken out. Two sentences rather than one, because
+  // they are two different facts about where the credentials are —
+  // which is the question a reader of this log is asking. Three icons
+  // for the same reason: a scanned feed that drew "turned off" and
+  // "removed, credentials and all" with one glyph would hide exactly
+  // the distinction the sentences exist to draw.
+  "signing_connector.disabled": {
+    icon: Unplug,
+    message: defineMessage({
+      id: "activity.signingConnector.disabled",
+      defaultMessage:
+        "{actor} turned off the e-signature connector {provider}, with {liveEnvelopes, plural, =0 {nothing out for signature} one {# round still out for signature} other {# rounds still out for signature}}",
+    }),
+    values: (intl, payload) => ({
+      provider: named(intl, payload, "provider"),
+      liveEnvelopes: wholeCount(payload, "liveEnvelopes"),
+    }),
+  },
+  "signing_connector.enabled": {
+    icon: Plug,
+    message: defineMessage({
+      id: "activity.signingConnector.enabled",
+      defaultMessage: "{actor} turned on the e-signature connector {provider}",
+    }),
+    values: (intl, payload) => ({ provider: named(intl, payload, "provider") }),
+  },
+  "signing_connector.removed": {
+    icon: Trash2,
+    message: defineMessage({
+      id: "activity.signingConnector.removed",
+      defaultMessage: "{actor} removed the e-signature connector {provider} and its credentials",
+    }),
+    values: (intl, payload) => ({ provider: named(intl, payload, "provider") }),
   },
 
   // ---- The settings taxonomies and the field catalog ----

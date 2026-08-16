@@ -133,7 +133,7 @@ import {
   NO_CONTRACT,
   reachedContract,
 } from "../../lib/contract-access.js";
-import { httpError, problemResponse } from "../../lib/problem.js";
+import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import {
   EnvelopeNotFoundError,
   SigningConfigError,
@@ -787,7 +787,20 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
            * record names itself. */
           subject: z.string().trim().max(MAX_ENVELOPE_SUBJECT_LENGTH).optional(),
         }),
-        response: { 201: EnvelopesEnvelope, default: problemResponse },
+        response: {
+          201: EnvelopesEnvelope,
+          // The two refusals the record branches on. It draws the send
+          // control from the first and offers a void from the second,
+          // so a client that could not tell them apart would have to
+          // read `detail` — and `detail` is copy.
+          409: problemTypeResponse(
+            "The send was refused: this install has no e-signature connector, or the " +
+              "contract already has an envelope out. An archived contract is refused " +
+              "here too, without naming a type.",
+            [SIGNING_NOT_CONFIGURED_PROBLEM_TYPE, ENVELOPE_LIVE_PROBLEM_TYPE],
+          ),
+          default: problemResponse,
+        },
       },
     },
     async (request, reply) => {
@@ -984,7 +997,20 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
            * for the record, bounded exactly as a decline's reason is. */
           reason: z.string().trim().min(1).max(MAX_ENVELOPE_REASON_LENGTH),
         }),
-        response: { 200: EnvelopesEnvelope, default: problemResponse },
+        response: {
+          200: EnvelopesEnvelope,
+          // A void needs the connector the send used, so an install
+          // that removed it is refused with the same named type the
+          // send gives — the record then says the same thing about
+          // both controls rather than guessing from two sentences.
+          409: problemTypeResponse(
+            "The void was refused: this install has no e-signature connector. An " +
+              "envelope that has already ended, and an archived contract, are refused " +
+              "here too, without naming a type.",
+            [SIGNING_NOT_CONFIGURED_PROBLEM_TYPE],
+          ),
+          default: problemResponse,
+        },
       },
     },
     async (request) => {

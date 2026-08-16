@@ -17,6 +17,7 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { encryptedText } from "../secrets.js";
 import { uuidPk } from "./helpers.js";
 
 export const USER_ROLES = [
@@ -133,8 +134,9 @@ export const accounts = pgTable(
 /**
  * Runtime-registered BYO IdPs (TECH-008). One row per identity provider,
  * created through the admin-only registration route; the OIDC config JSON
- * carries the client secret (DB-at-rest storage accepted for v1 — flagged
- * for a future secrets-encryption pass in the auth spec).
+ * carries the client secret, so the whole column is encrypted at rest
+ * (TECH-022) — the plugin reads and writes it through our Drizzle
+ * tables, so the seal applies to better-auth's own queries too.
  *
  * `domain_verified` is the sso plugin's provider-trust flag: only a
  * trusted provider may link a sign-in to a pre-existing user by email.
@@ -153,7 +155,8 @@ export const ssoProviders = pgTable(
     issuer: text("issuer").notNull(),
     /** Email domain(s) served by this IdP; comma-separated for multi-domain. */
     domain: text("domain").notNull(),
-    oidcConfig: text("oidc_config"),
+    /** The plugin's OIDC config JSON, client secret included. Sealed whole (TECH-022). */
+    oidcConfig: encryptedText("oidc_config"),
     samlConfig: text("saml_config"),
     organizationId: text("organization_id"),
     domainVerified: boolean("domain_verified").notNull().default(false),

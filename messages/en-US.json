@@ -227,8 +227,20 @@
   "activity.orgSettings.updated": {
     "defaultMessage": "{actor} changed the organization settings"
   },
+  "activity.signer.erased": {
+    "defaultMessage": "{actor} erased an external signer's name and address from {entriesRedacted, plural, =0 {no entries} one {# entry} other {# entries}}"
+  },
   "activity.signingConnector.configured": {
     "defaultMessage": "{actor} connected the e-signature provider {provider}"
+  },
+  "activity.signingConnector.disabled": {
+    "defaultMessage": "{actor} turned off the e-signature connector {provider}, with {liveEnvelopes, plural, =0 {nothing out for signature} one {# round still out for signature} other {# rounds still out for signature}}"
+  },
+  "activity.signingConnector.enabled": {
+    "defaultMessage": "{actor} turned on the e-signature connector {provider}"
+  },
+  "activity.signingConnector.removed": {
+    "defaultMessage": "{actor} removed the e-signature connector {provider} and its credentials"
   },
   "activity.signingConnector.updated": {
     "defaultMessage": "{actor} changed the e-signature connector {provider}"
@@ -2432,6 +2444,15 @@
   "settings.eSignature.docusign": {
     "defaultMessage": "DocuSign"
   },
+  "settings.eSignature.enabled": {
+    "defaultMessage": "Send for signature from records"
+  },
+  "settings.eSignature.enabled.off": {
+    "defaultMessage": "Off since {when}. Records show the manual path, and rounds already out stand still until you turn this back on."
+  },
+  "settings.eSignature.enabled.on": {
+    "defaultMessage": "Turn this off to go back to the manual path without losing the credentials. Records stop offering the send, and rounds already out stand still until you turn it back on."
+  },
   "settings.eSignature.environment": {
     "defaultMessage": "Environment"
   },
@@ -2452,6 +2473,18 @@
   },
   "settings.eSignature.privateKey.placeholder": {
     "defaultMessage": "-----BEGIN RSA PRIVATE KEY-----"
+  },
+  "settings.eSignature.remove": {
+    "defaultMessage": "Remove connector"
+  },
+  "settings.eSignature.removeAlternative": {
+    "defaultMessage": "To stop sending and keep the credentials, turn the connector off instead."
+  },
+  "settings.eSignature.removeBody": {
+    "defaultMessage": "The RSA key and the Connect secret are deleted with the connector. Reconnecting means pasting both again. Records go back to the manual path."
+  },
+  "settings.eSignature.removeTitle": {
+    "defaultMessage": "Remove the DocuSign connector"
   },
   "settings.eSignature.save": {
     "defaultMessage": "Save connector"

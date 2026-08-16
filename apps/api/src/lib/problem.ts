@@ -25,6 +25,13 @@ z.globalRegistry.add(ProblemSchema, { id: "Problem" });
 export const PROBLEM_CONTENT_TYPE = "application/problem+json; charset=utf-8";
 
 /**
+ * What `type` carries when a refusal did not name itself (RFC 9457
+ * §4.2.1). Almost every refusal is one a client prints rather than one
+ * it acts on, so this is the default rather than the exception.
+ */
+export const UNNAMED_PROBLEM_TYPE = "about:blank";
+
+/**
  * Throwable that the app error handler renders as a Problem response.
  * A 4xx message is always exposed as the Problem's title and detail. A
  * 5xx message is scrubbed unless `expose` opts it in — set that only on
@@ -47,7 +54,7 @@ export class HttpError extends Error {
     super(message);
     this.statusCode = statusCode;
     this.expose = options?.expose ?? false;
-    this.type = options?.type ?? "about:blank";
+    this.type = options?.type ?? UNNAMED_PROBLEM_TYPE;
   }
 }
 
@@ -70,3 +77,56 @@ export const problemResponse = {
     "application/problem+json": { schema: ProblemSchema },
   },
 } as const;
+
+/**
+ * A response entry that **names** the problem types one status code on
+ * one route can answer with.
+ *
+ * `problemResponse` above describes the envelope, which is the same on
+ * every operation. This describes the vocabulary, which is not. A URN
+ * exists so a caller can branch on *which* refusal happened rather than
+ * on the wording of `detail`, and a caller cannot branch on a string it
+ * has no way of learning. Until this existed the only way to learn a URN
+ * was to read our source — fine for us, useless for the self-hoster and
+ * the integrator the generated document is for (TECH-003).
+ *
+ * The strings come from `@openlaw/shared`, never retyped here: one
+ * source for the wire contract, and the document then cannot drift from
+ * what the route actually throws.
+ *
+ * `type` is narrowed to the named URNs **plus `about:blank`**, and the
+ * rest of the Problem shape is unchanged. `about:blank` is in the list
+ * rather than left out because it is reachable: every status code that
+ * carries a named refusal on one branch carries an ordinary unnamed one
+ * on another — an archived record, a reach that was refused — and a
+ * document that promised otherwise would be a document that lies. What
+ * the entry says is "this is the vocabulary at this status", which is
+ * what a caller writing a switch needs.
+ *
+ * This is documentation and never serialization: the error handler sends
+ * an already-stringified body, which Fastify passes through untouched.
+ */
+export function problemTypeResponse(
+  description: string,
+  types: readonly [string, ...string[]],
+): {
+  description: string;
+  content: { "application/problem+json": { schema: z.ZodType } };
+} {
+  return {
+    description,
+    content: {
+      "application/problem+json": {
+        schema: ProblemSchema.extend({
+          type: z
+            .literal([...types, UNNAMED_PROBLEM_TYPE])
+            .describe(
+              "Which refusal this is. A client branches on this, never on `detail` — " +
+                "`detail` is copy, and copy is rewritten. `about:blank` is a refusal at " +
+                "this status that names no type; print it rather than branching on it.",
+            ),
+        }).describe(description),
+      },
+    },
+  };
+}
