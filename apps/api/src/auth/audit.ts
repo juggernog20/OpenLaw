@@ -25,18 +25,49 @@ interface SessionUser {
   twoFactorEnabled?: boolean | null;
 }
 
+/**
+ * The six verbs this hook writes, and nothing else.
+ *
+ * Named rather than left as the whole vocabulary so that a reader of
+ * this module sees its scope in one place — and so the compiler carries
+ * six shapes here rather than the hundred the log holds.
+ */
+type ProfileAuditAction =
+  | "user.display_name_changed"
+  | "user.avatar_changed"
+  | "user.password_changed"
+  | "user.other_sessions_revoked"
+  | "user.two_factor_disabled"
+  | "user.two_factor_enrolled";
+
+/** One whole entry, ready to append. Whole rather than half, because
+ * each slug's payload is the slug's own: an entry finished off after the
+ * fact would have to pair the two by hand, and pairing them is what the
+ * vocabulary's union is for. */
+type ProfileAuditEntry = Extract<ActivityEntry, { action: ProfileAuditAction }>;
+
 function entriesFor(ctx: {
   path: string;
   body?: unknown;
   sessionUser: SessionUser;
-}): Array<Pick<ActivityEntry, "action" | "payload">> {
+}): ProfileAuditEntry[] {
   const user = ctx.sessionUser;
+  /** Who every entry here is about, and at which tier. The subject and
+   * the actor are the same person: these are the mutations somebody
+   * makes to their own profile (SET-006). */
+  const about = {
+    entityType: "user",
+    entityId: user.id,
+    actorId: user.id,
+    visibility: "admin_only",
+  } as const;
   switch (ctx.path) {
     case "/update-user": {
       const body = (ctx.body ?? {}) as { name?: unknown; image?: unknown };
-      const entries: Array<Pick<ActivityEntry, "action" | "payload">> = [];
+      const entries: ProfileAuditEntry[] = [];
       if (typeof body.name === "string" && body.name !== user.name) {
         entries.push({
+          ...about,
           action: "user.display_name_changed",
           payload: { field: "display_name", old: user.name, new: body.name },
         });
@@ -48,6 +79,7 @@ function entriesFor(ctx: {
       const oldImage = user.image ?? null;
       if ((typeof body.image === "string" || body.image === null) && body.image !== oldImage) {
         entries.push({
+          ...about,
           action: "user.avatar_changed",
           payload: {
             field: "avatar",
@@ -59,18 +91,18 @@ function entriesFor(ctx: {
       return entries;
     }
     case "/change-password":
-      return [{ action: "user.password_changed" }];
+      return [{ ...about, action: "user.password_changed" }];
     case "/revoke-other-sessions":
-      return [{ action: "user.other_sessions_revoked" }];
+      return [{ ...about, action: "user.other_sessions_revoked" }];
     case "/two-factor/disable":
       // The endpoint updates the flag unconditionally; only a true→false
       // transition is an event worth recording.
-      return user.twoFactorEnabled ? [{ action: "user.two_factor_disabled" }] : [];
+      return user.twoFactorEnabled ? [{ ...about, action: "user.two_factor_disabled" }] : [];
     case "/two-factor/verify-totp":
       // Reached only with a session (see the hook below), i.e. the
       // enrolment-completion verify — a sign-in challenge carries no
       // session cookie. Covers first enrolment and re-enrolment alike.
-      return [{ action: "user.two_factor_enrolled" }];
+      return [{ ...about, action: "user.two_factor_enrolled" }];
     default:
       return [];
   }
@@ -100,13 +132,7 @@ export function createProfileAuditHook(db: Db) {
 
     for (const entry of entriesFor({ path: ctx.path, body: ctx.body, sessionUser })) {
       try {
-        await recordActivity(db, {
-          entityType: "user",
-          entityId: sessionUser.id,
-          actorId: sessionUser.id,
-          visibility: "admin_only",
-          ...entry,
-        });
+        await recordActivity(db, entry);
       } catch (error) {
         ctx.context.logger.error("Failed to append a profile audit entry", {
           action: entry.action,

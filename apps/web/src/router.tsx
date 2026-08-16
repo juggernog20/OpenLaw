@@ -62,6 +62,11 @@ import {
   settingsAuthenticationLoader,
 } from "./routes/settings-authentication";
 import { SettingsAuditLogPage, settingsAuditLogLoader } from "./routes/settings-audit-log";
+import {
+  SettingsESignaturePage,
+  settingsESignatureLoader,
+  settingsIntegrationsIndexLoader,
+} from "./routes/settings-e-signature";
 import { SettingsProfilePage, settingsProfileLoader } from "./routes/settings-profile";
 import { SetupPage, setupLoader } from "./routes/setup";
 import { TwoFactorPage } from "./routes/two-factor";
@@ -204,6 +209,14 @@ export const routes: RouteObject[] = [
         path: "entities/types",
         loader: settingsEntityTypesLoader,
         element: <SettingsEntityTypesPage />,
+      },
+      // #245: the Integrations section, E-signature its first pane
+      // (SET-007, superseding CTR-013's Contracts-tab placement).
+      { path: "integrations", loader: settingsIntegrationsIndexLoader, element: <></> },
+      {
+        path: "integrations/e-signature",
+        loader: settingsESignatureLoader,
+        element: <SettingsESignaturePage />,
       },
     ],
   },

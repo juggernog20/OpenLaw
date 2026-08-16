@@ -233,6 +233,14 @@ The sweep this milestone promised (M12 story 23) runs in the worker, at boot, af
 
 **The sweep reads the version table in pages.** Which family a file belongs to is decided from its declared type and its filename (DOC-004), and no database can answer that, so every version is looked at. Keyset paging on the version id — a uuidv7, and so already in the order it was minted — keeps one boot from holding a result set over a large back catalogue.
 
+### Addendum (2026-08-16) — settled in M15/6: the one sweep that repeats
+
+The reconciliation sweep (CTR-013) is the third sweep on the worker, and the first one that does not run once. The other two **recover work the rows already say is owed**, so one walk at boot is the whole job. This one is a **feed**: it is waiting for somebody to sign, which no single walk can see. So it keeps the M12/6 shape — keyset paging on the envelope id, a refusal bound, a signal that stops it between rows, and no cursor kept anywhere — and repeats it on an interval.
+
+**Five minutes between rounds, and the rounds do not overlap.** The wait starts when a round ends, so a slow provider stretches the gap instead of stacking rounds on top of each other. The interval is measured against what the sweep is for — "somebody signed and nobody has told us" — and not against the webhook's seconds; an install that has Connect never notices the sweep at all, because every round finds the record already converged and asks nobody anything.
+
+**A provider outage is the round's, not the envelope's.** Nothing is marked failed, no envelope is given up on, and the next round asks again — the executed-copy sweep's `failed` state has no counterpart here, because a status that could not be read is not a status this install may invent. The refusal bound then stops a round after a few unreachable answers in a row, for the backfill sweep's reason: a provider that is down is down for all of them, and asking once per live envelope costs a round trip each to learn the same thing. Credentials the provider refuses end the round at once, because they are install-wide.
+
 ## TECH-008: Authentication — onboarding-selectable: built-in basic or bring-your-own IdP (OIDC)
 
 - **Status:** Accepted
@@ -266,7 +274,7 @@ Recorded at feature close (auth spec, issues #4–#10). The decision stands as w
 - **Ecosystem shift.** The Context above name-drops Auth.js as the "basic" option; that landscape moved. Auth.js joined the better-auth org in September 2025 and its own guidance now directs new projects to better-auth; better-auth itself joined Vercel but remains MIT. Governance risk is mitigated by the license and by our guard-interface wrapping — the "implementation detail, swappable" stance stands unchanged.
 - **Settled integration pattern** (from official docs, production OSS, and context7 research): better-auth's handler is mounted **natively on a catch-all auth prefix** (Fetch-Request rebuild inside a scoped Fastify plugin that bypasses content-type parsing for that prefix) and owns every browser-facing auth flow; a composable **guard chain** (`requireAuth` + role variants) resolves the session via `auth.api.getSession` and attaches `{ user, session }` to each request; **our own zod-typed routes exist only where OpenLaw's authorization model diverges** (first-run setup, invites, SSO provider registration, magic-link issuance, auth-mode switching, method discovery); the OpenAPI contract and better-auth's routes remain **parallel surfaces** — no spec merging, and auth flows are consumed by better-auth's React client, not the generated api-client.
 - **Schema channel.** Table/column naming is achieved through Drizzle property keys plus better-auth's model/field mapping. better-auth's CLI and auto-migration are never used; drizzle-kit generated SQL migrations are the only schema channel (TECH-006/TECH-014).
-- **SSO client secret at rest.** The sso plugin stores the OIDC client secret inside the provider row's config JSON. v1 accepts DB-at-rest storage (single-tenant, self-hosted, the DB already holds privileged material); **flagged for a future secrets-encryption pass** — deliberate, not accidental.
+- **SSO client secret at rest.** The sso plugin stores the OIDC client secret inside the provider row's config JSON. v1 accepts DB-at-rest storage (single-tenant, self-hosted, the DB already holds privileged material); **flagged for a future secrets-encryption pass** — deliberate, not accidental. _(2026-08-16, M15/1: the DocuSign RSA private key and the Connect HMAC secret in `signing_connectors` are the **second entry** on that same pass, under the same accepted posture — see CTR-013's M15 addendum.)_
 - **Version pin.** better-auth pinned to **1.6.x** (≥ 1.6.22 for the two-factor lockout columns; currently 1.6.26). 1.7 renames/changes some plugin options (two-factor enable signature, SSO option names) — treat its upgrade guide as a known, small chore, not a drop-in bump.
 
 ### Addendum (2026-08-10) — settings home and cross-user session revocation (M5 grill)
@@ -380,6 +388,10 @@ A "Test connection" affordance in settings. Extraction prompt/schema behavior mu
 ### Decision
 
 DocuSign **JWT grant**: org admin creates the DocuSign app, one-time consent; OpenLaw signs JWT assertions with the configured RSA key and mints tokens server-to-server. Envelopes send under the org's integration user; **DocuSign Connect** webhook delivers envelope status (CTR-013). Settings surface: integration key, user ID, RSA key, environment, test button.
+
+### Addendum (2026-08-16, M15/1)
+
+The surface shipped in **Settings → Organization → Integrations → E-signature** (SET-007), and it asks for one field more than this decision listed: the **DocuSign Connect HMAC secret**, without which a connector cannot be saved. The account is **discovered, not configured** — `/oauth/userinfo` answers the integration user's default account — so the pane asks for three plain values — environment, integration key, and user ID — plus two secrets, rather than for an account id. The assertion is RS256, scoped `signature impersonation`, and lives ten minutes.
 
 ### Alternatives considered
 
@@ -535,6 +547,25 @@ The works-on-my-machine failures this guards against — dev-server masking buil
 - A first-run-vs-existing bootstrap probe is a structural requirement of the E2E suite (fresh CI volumes vs persistent local state).
 - The magic-link E2E needs the domain allowlist reachable through the front door: an Administrator-only `GET`/`PUT /api/v1/auth/allowed-domains` (read + replace-whole-list) lands with this workstream — the surface a future SET-004 settings pane consumes.
 - Playwright joins the dependency set (TECH-014's E2E confirmation becomes concrete).
+
+### Addendum (2026-08-16, M15/7) — the outbound side of a test stack goes to a stand-in
+
+The M15 demo has to send an envelope, and a suite that runs on built images cannot inject the API's own fake signing provider: the container resolves its driver for itself from the stored connector (CTR-013). Two rules follow, and they are the rule the dev overlay already applies to mail.
+
+1. **The overlay pins the outbound side.** `compose.dev.yml` sets `DOCUSIGN_BASE_URL` on the **app and the worker both** — both resolve a provider, one to send and verify, the other to fetch an executed copy — and points them at a server the suite runs on the host (`host.docker.internal`, the same door the mock OIDC issuer uses). SMTP goes to Mailpit for this reason; signing goes to a stand-in for it too. A test run must not be able to post paper to somebody's DocuSign account.
+2. **The switch is the overlay's alone, and only names a host.** The connector's credentials stay org data read live from the row; the variable answers where they are presented, nothing else. It is unset on every real install, malformed values stop the boot rather than falling back to DocuSign, and both processes warn at boot when it is set — the `AUTH_RATE_LIMIT=off` shape.
+
+What this buys is that the **production path runs in the demo**: the real DocuSign driver, its JWT grant, its Connect HMAC check, the real webhook route, and the real worker fetch. What the stand-in supplies is the counterpart's shapes and the one thing no real provider would give a test — a signer who signs on demand.
+
+The E2E demo's stand-in is deliberately the same server shape the DocuSign driver's own contract suite runs against, so one description of the counterpart is not maintained in two divergent forms.
+
+**What it costs.** Three things, named because they are real. The demo's counterpart is **our** description of DocuSign, so its fidelity is only as good as the driver's contract suite and the payload fixtures — nothing in CI ever talks to DocuSign, and nothing here claims otherwise. The boot-time read is **duplicated in both entrypoints**, as the storage root and the doc engine already are, because both processes resolve a provider and a variable set on one and forgotten on the other is a send that works and a signed PDF that never lands. And the switch is a code path no deployment exercises, which is why it is one function with tests of its own rather than a condition sprinkled through the driver.
+
+**Alternatives considered.**
+
+- **Ship the deterministic fake provider in the image, behind a flag** — a build-time double is not the DocuSign driver, so the demo would prove the record's half of the milestone and skip the driver, the JWT grant, and the Connect HMAC entirely. The point of the fidelity gate is that the production path runs.
+- **A recorded-fixture proxy replaying real DocuSign traffic** — closer to DocuSign, and unable to do the one thing the demo needs: sign an envelope on demand, mid-journey, in an order the recording never took.
+- **Let the E2E stack reach DocuSign's demo estate** — a shared credential in CI, a network dependency in a gate that must be deterministic, and a suite that can post paper to a real account.
 
 ## TECH-019: Code documentation — module-granular doc comments, no coverage percentage
 

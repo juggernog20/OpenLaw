@@ -14,4 +14,14 @@ useDefault = true
 description = "Fixture values that look like credentials and are not"
 # "not-a-real-key" in base64 — the Azure account-key fixture in
 # apps/api/src/lib/storage/config.test.ts.
-regexes = ['''bm90LWEtcmVhbC1rZXk=''']
+#
+# The two RSA-key-shaped fixtures in
+# apps/api/src/modules/signing-connector/signing-connector.test.ts. They
+# carry a PEM header so the suite proves what a pasted key does, and the
+# body says in words that it is neither a key nor real. The DocuSign
+# driver's own suite generates a genuine key pair at run time and stores
+# none.
+regexes = [
+  '''bm90LWEtcmVhbC1rZXk=''',
+  '''openlawfixturekeyneverused''',
+]

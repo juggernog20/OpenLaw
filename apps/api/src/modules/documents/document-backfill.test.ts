@@ -55,13 +55,11 @@ import {
 import { JOB_QUEUES, createUnconfiguredJobQueue, type JobQueue } from "../../pipeline/jobs.js";
 import { BACKFILL_SWEEP_CRON } from "../../pipeline/pg-boss.js";
 import { DOCX_MIME_TYPE, officePackage } from "../../testing/fixtures/office.js";
+import { testDeps } from "../../testing/deps.js";
 import {
-  CapturingMailer,
-  fixedMailerResolver,
   signInCookies,
   startHarness,
   TEST_ADMIN as ADMIN,
-  TEST_AUTH_CONFIG,
   type JobLogLine,
   type TestHarness,
 } from "../../testing/harness.js";
@@ -129,11 +127,12 @@ beforeAll(async () => {
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
 
   m11 = await buildApp({
+    ...testDeps(),
     db: harness.db,
-    config: TEST_AUTH_CONFIG,
-    resolveMailer: fixedMailerResolver(new CapturingMailer()),
     storage: harness.storage,
     docEngine: harness.docEngine,
+    // Named rather than left to the default: a queue that refuses
+    // everything is the point of this app, not an incidental stand-in.
     jobs: createUnconfiguredJobQueue(),
   });
   await m11.ready();

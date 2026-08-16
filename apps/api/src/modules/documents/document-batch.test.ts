@@ -30,13 +30,11 @@ import { eq, users } from "@openlaw/db";
 import { buildApp } from "../../app.js";
 import { fakeExtractedText } from "../../lib/doc-engine/fake.js";
 import { provisionUser } from "../../auth/instance.js";
+import { testDeps } from "../../testing/deps.js";
 import {
-  CapturingMailer,
-  fixedMailerResolver,
   signInCookies,
   startHarness,
   TEST_ADMIN as ADMIN,
-  TEST_AUTH_CONFIG,
   type TestHarness,
 } from "../../testing/harness.js";
 
@@ -352,9 +350,8 @@ describe("the per-file ceiling inside a batch", () => {
 
   beforeAll(async () => {
     small = await buildApp({
+      ...testDeps(),
       db: harness.db,
-      config: TEST_AUTH_CONFIG,
-      resolveMailer: fixedMailerResolver(new CapturingMailer()),
       storage: harness.storage,
       docEngine: harness.docEngine,
       jobs: harness.pipeline,

@@ -6,8 +6,8 @@
  * URL per pane. The Organization group renders for Administrators only
  * (SET-002) and carries General (#63) and Users (#65, #66) plus the
  * collapsible Security group with Authentication (#64) and the audit
- * log (#133) — rail entries for unshipped panes are omitted, not
- * disabled.
+ * log (#133), and the Integrations section (#245, SET-007) — rail
+ * entries for unshipped panes are omitted, not disabled.
  * Visual spec: designs/settings.pen per SETTINGS-INVENTORY.md.
  */
 
@@ -21,6 +21,7 @@ import {
   KeyRound,
   Landmark,
   Palette,
+  Plug,
   ScrollText,
   Shield,
   User,
@@ -167,6 +168,16 @@ const ORGANIZATION_GROUP: SettingsGroup = {
       path: "/settings/entities/types",
       icon: Landmark,
       label: defineMessage({ id: "settings.section.entities", defaultMessage: "Entities" }),
+    },
+    // The Integrations section (SET-007), born with the E-signature
+    // pane in M15. It sits last in the Organization group, as the ST7
+    // mock and the SET-001 rail order both draw it, and grows the AI
+    // pane in M31.
+    {
+      id: "integrations",
+      path: "/settings/integrations/e-signature",
+      icon: Plug,
+      label: defineMessage({ id: "settings.section.integrations", defaultMessage: "Integrations" }),
     },
   ],
 };

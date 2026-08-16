@@ -3,14 +3,12 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { buildApp } from "../../app.js";
 import { requireRole } from "../../auth/guards.js";
+import { testDeps } from "../../testing/deps.js";
 import {
-  CapturingMailer,
-  fixedMailerResolver,
   signIn as harnessSignIn,
   signInCookies as harnessSignInCookies,
   startHarness,
   TEST_ADMIN as ADMIN,
-  TEST_AUTH_CONFIG,
   type TestHarness,
 } from "../../testing/harness.js";
 
@@ -87,14 +85,9 @@ describe("requireRole", () => {
   let guarded: Awaited<ReturnType<typeof buildApp>>;
 
   beforeAll(async () => {
-    guarded = await buildApp({
-      db: harness.db,
-      config: TEST_AUTH_CONFIG,
-      resolveMailer: fixedMailerResolver(new CapturingMailer()),
-      storage: harness.storage,
-      docEngine: harness.docEngine,
-      jobs: harness.pipeline,
-    });
+    // The harness's database, so a session minted there verifies here.
+    // Nothing else about this app matters: it serves two test routes.
+    guarded = await buildApp({ ...testDeps(), db: harness.db });
     guarded.get(
       "/api/v1/admin-only",
       { schema: { hide: true }, preHandler: requireRole("administrator") },

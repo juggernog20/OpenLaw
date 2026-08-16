@@ -5,33 +5,16 @@ import { z } from "zod";
 import { OPENLAW_VERSION } from "@openlaw/shared";
 import { createDb } from "@openlaw/db";
 import { buildApp } from "./app.js";
-import { createFakeDocEngine } from "./lib/doc-engine/fake.js";
-import { createUnconfiguredJobQueue } from "./pipeline/jobs.js";
-import {
-  CapturingMailer,
-  createTestStorage,
-  fixedMailerResolver,
-  TEST_AUTH_CONFIG,
-  type TestStorage,
-} from "./testing/harness.js";
+import { testDeps, UNUSED_DATABASE_URL } from "./testing/deps.js";
 
 let app: Awaited<ReturnType<typeof buildApp>>;
 let db: ReturnType<typeof createDb>;
-let storage: TestStorage;
 
 beforeAll(async () => {
   // These suites never touch the database; pg pools connect lazily, so a
   // placeholder URL keeps them container-free.
-  db = createDb("postgresql://unused:unused@localhost:5432/unused");
-  storage = await createTestStorage();
-  app = await buildApp({
-    db,
-    config: TEST_AUTH_CONFIG,
-    resolveMailer: fixedMailerResolver(new CapturingMailer()),
-    storage: storage.storage,
-    docEngine: createFakeDocEngine(),
-    jobs: createUnconfiguredJobQueue(),
-  });
+  db = createDb(UNUSED_DATABASE_URL);
+  app = await buildApp({ ...testDeps(), db });
   // Test-only route exercising the validation → problem+json path.
   app.get(
     "/api/v1/echo",
@@ -44,7 +27,6 @@ beforeAll(async () => {
 afterAll(async () => {
   await app.close();
   await db.$client.end();
-  await storage.cleanup();
 });
 
 describe("meta", () => {

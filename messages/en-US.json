@@ -173,11 +173,23 @@
   "activity.entity.updated": {
     "defaultMessage": "{actor} changed {name}"
   },
+  "activity.envelope.declined": {
+    "defaultMessage": "This contract's envelope was declined{hasReason, select, yes { — {reason}} other {}}"
+  },
+  "activity.envelope.sent": {
+    "defaultMessage": "{actor} sent this contract for signature"
+  },
+  "activity.envelope.signed": {
+    "defaultMessage": "This contract's envelope was signed"
+  },
+  "activity.envelope.voided": {
+    "defaultMessage": "{hasActor, select, yes {{actor} voided this contract's envelope} other {This contract's envelope was voided}}{hasReason, select, yes { — {reason}} other {}}"
+  },
   "activity.export.performed": {
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -214,6 +226,12 @@
   },
   "activity.orgSettings.updated": {
     "defaultMessage": "{actor} changed the organization settings"
+  },
+  "activity.signingConnector.configured": {
+    "defaultMessage": "{actor} connected the e-signature provider {provider}"
+  },
+  "activity.signingConnector.updated": {
+    "defaultMessage": "{actor} changed the e-signature connector {provider}"
   },
   "activity.someone": {
     "defaultMessage": "someone"
@@ -350,6 +368,9 @@
   "approvals.approversHelp": {
     "defaultMessage": "Everyone you pick is asked at once. They answer in any order."
   },
+  "approvals.block": {
+    "defaultMessage": "Approvals"
+  },
   "approvals.cancel": {
     "defaultMessage": "Cancel request"
   },
@@ -437,8 +458,8 @@
   "approvals.requestedBy": {
     "defaultMessage": "Requested by {name}"
   },
-  "approvals.section": {
-    "defaultMessage": "Approvals"
+  "approvals.sectionSigning": {
+    "defaultMessage": "Approvals & signing"
   },
   "approvals.source.manual": {
     "defaultMessage": "Added manually"
@@ -1033,6 +1054,18 @@
   },
   "contracts.record.documentTitle": {
     "defaultMessage": "{reference} {title}"
+  },
+  "contracts.record.envelope.declined": {
+    "defaultMessage": "Envelope declined"
+  },
+  "contracts.record.envelope.sent": {
+    "defaultMessage": "Envelope sent"
+  },
+  "contracts.record.envelope.signed": {
+    "defaultMessage": "Envelope signed"
+  },
+  "contracts.record.envelope.voided": {
+    "defaultMessage": "Envelope voided"
   },
   "contracts.record.readOnlyNote": {
     "defaultMessage": "This record is read-only. Ask a Legal Team Member to make a change."
@@ -2393,6 +2426,72 @@
   "settings.contracts.title": {
     "defaultMessage": "Contracts"
   },
+  "settings.eSignature.connected": {
+    "defaultMessage": "Connected to {account}."
+  },
+  "settings.eSignature.docusign": {
+    "defaultMessage": "DocuSign"
+  },
+  "settings.eSignature.environment": {
+    "defaultMessage": "Environment"
+  },
+  "settings.eSignature.environment.demo": {
+    "defaultMessage": "Demo"
+  },
+  "settings.eSignature.environment.production": {
+    "defaultMessage": "Production"
+  },
+  "settings.eSignature.integrationKey": {
+    "defaultMessage": "Integration key"
+  },
+  "settings.eSignature.intro": {
+    "defaultMessage": "Connect your DocuSign account so contracts are sent for signature from their records. Without a connector, the manual path still works: upload the executed PDF and pin it by hand."
+  },
+  "settings.eSignature.privateKey": {
+    "defaultMessage": "RSA private key"
+  },
+  "settings.eSignature.privateKey.placeholder": {
+    "defaultMessage": "-----BEGIN RSA PRIVATE KEY-----"
+  },
+  "settings.eSignature.save": {
+    "defaultMessage": "Save connector"
+  },
+  "settings.eSignature.secret.hint": {
+    "defaultMessage": "Leave blank to keep the current value. Paste a new one to rotate."
+  },
+  "settings.eSignature.secretPlaceholder": {
+    "defaultMessage": "••••••••••••••••"
+  },
+  "settings.eSignature.test": {
+    "defaultMessage": "Test connection"
+  },
+  "settings.eSignature.testFailed": {
+    "defaultMessage": "The connection test failed. Check the credentials and try again."
+  },
+  "settings.eSignature.testing": {
+    "defaultMessage": "Testing the connection…"
+  },
+  "settings.eSignature.title": {
+    "defaultMessage": "E-signature"
+  },
+  "settings.eSignature.userId": {
+    "defaultMessage": "User ID"
+  },
+  "settings.eSignature.userId.hint": {
+    "defaultMessage": "The DocuSign user envelopes are sent as. Grant that user consent to the integration once, from the DocuSign console."
+  },
+  "settings.eSignature.webhookSecret": {
+    "defaultMessage": "Connect HMAC secret"
+  },
+  "settings.eSignature.webhookSecret.hint": {
+    "defaultMessage": "Required. OpenLaw checks it on every delivery, so nothing unsigned can change a record."
+  },
+  "settings.eSignature.webhookUrl": {
+    "defaultMessage": "Webhook URL"
+  },
+  "settings.eSignature.webhookUrl.hint": {
+    "defaultMessage": "Paste this into a DocuSign Connect configuration so envelope status reaches this install."
+  },
   "settings.entities.tab.types": {
     "defaultMessage": "Types"
   },
@@ -2744,6 +2843,9 @@
   "settings.section.general": {
     "defaultMessage": "General"
   },
+  "settings.section.integrations": {
+    "defaultMessage": "Integrations"
+  },
   "settings.section.matters": {
     "defaultMessage": "Matters"
   },
@@ -2848,6 +2950,135 @@
   },
   "shell.workspace": {
     "defaultMessage": "workspace"
+  },
+  "signing.actionsFor": {
+    "defaultMessage": "Actions for the envelope sent on {date}"
+  },
+  "signing.addSigner": {
+    "defaultMessage": "Add signer"
+  },
+  "signing.block": {
+    "defaultMessage": "Signing"
+  },
+  "signing.column.actions": {
+    "defaultMessage": "Actions"
+  },
+  "signing.column.completed": {
+    "defaultMessage": "Completed"
+  },
+  "signing.column.document": {
+    "defaultMessage": "Document"
+  },
+  "signing.column.sent": {
+    "defaultMessage": "Sent"
+  },
+  "signing.column.signers": {
+    "defaultMessage": "Signers"
+  },
+  "signing.column.status": {
+    "defaultMessage": "Status"
+  },
+  "signing.executedFailed": {
+    "defaultMessage": "The executed copy could not be filed. Upload it to the record instead."
+  },
+  "signing.executedFile": {
+    "defaultMessage": "Executed copy"
+  },
+  "signing.executedFiling": {
+    "defaultMessage": "Filing the executed copy…"
+  },
+  "signing.needReason": {
+    "defaultMessage": "Say why this envelope is being voided."
+  },
+  "signing.needSigners": {
+    "defaultMessage": "Give every signer a name and an email address."
+  },
+  "signing.reason": {
+    "defaultMessage": "Reason"
+  },
+  "signing.reasonHelp": {
+    "defaultMessage": "The provider records this with the withdrawal, and the record keeps it on the row."
+  },
+  "signing.removeSigner": {
+    "defaultMessage": "Remove signer {number}"
+  },
+  "signing.send": {
+    "defaultMessage": "Send for signature"
+  },
+  "signing.sendEnvelope": {
+    "defaultMessage": "Send envelope"
+  },
+  "signing.sendFailed": {
+    "defaultMessage": "The envelope could not be sent. Try again."
+  },
+  "signing.sendNote": {
+    "defaultMessage": "When everyone signs, the executed file lands on this contract and the stage advances to Active."
+  },
+  "signing.sendTitle": {
+    "defaultMessage": "Send for signature"
+  },
+  "signing.sentBy": {
+    "defaultMessage": "by {name}"
+  },
+  "signing.signerEmail": {
+    "defaultMessage": "Signer {number} email"
+  },
+  "signing.signerName": {
+    "defaultMessage": "Signer {number} name"
+  },
+  "signing.signers": {
+    "defaultMessage": "Signers"
+  },
+  "signing.signersHelp": {
+    "defaultMessage": "Everyone you name is asked at once. They sign in any order."
+  },
+  "signing.status.declined": {
+    "defaultMessage": "Declined"
+  },
+  "signing.status.sent": {
+    "defaultMessage": "Out for signature"
+  },
+  "signing.status.signed": {
+    "defaultMessage": "Signed"
+  },
+  "signing.status.voided": {
+    "defaultMessage": "Voided"
+  },
+  "signing.statusArrives": {
+    "defaultMessage": "Signed, declined, and voided status arrives by webhook. The executed file auto-files and the stage advances to Active."
+  },
+  "signing.subject": {
+    "defaultMessage": "Subject (optional)"
+  },
+  "signing.subjectHelp": {
+    "defaultMessage": "Signers see this on the invitation. Left blank, it names this contract."
+  },
+  "signing.version": {
+    "defaultMessage": "Version {number}"
+  },
+  "signing.versionCurrent": {
+    "defaultMessage": "Version {number} — {filename} (current)"
+  },
+  "signing.versionHelp": {
+    "defaultMessage": "Only the primary document goes out. Attachments are not sent."
+  },
+  "signing.versionLabel": {
+    "defaultMessage": "Version"
+  },
+  "signing.versionOption": {
+    "defaultMessage": "Version {number} — {filename}"
+  },
+  "signing.void": {
+    "defaultMessage": "Void envelope"
+  },
+  "signing.voidExplains": {
+    "defaultMessage": "The signers can no longer sign this round. The contract can be sent again straight after."
+  },
+  "signing.voidFailed": {
+    "defaultMessage": "The envelope could not be voided. Try again."
+  },
+  "signing.voidTitle": {
+    "defaultMessage": "Void envelope"
   },
   "theme.dark": {
     "defaultMessage": "Dark"

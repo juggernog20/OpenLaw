@@ -86,6 +86,14 @@ _Avoid_: state, stage
 **Category**:
 The matter equivalent of Stage — `open` or `closed`, immutable once set on a status [MTR-002].
 
+**Envelope**:
+One round of signature on one version of a Contract's primary document, sent through the signing connector and held by the provider. It carries one status — `sent`, `signed`, `declined`, or `voided` — and the Signers it was sent to. A Contract has at most one **live** envelope at a time; a declined or voided one blocks nothing, and the next round is a new envelope [CTR-013].
+_Avoid_: signature request, signing packet, DocuSign envelope (the term is provider-neutral), request (that is the intake term)
+
+**Signer**:
+One person an Envelope is sent to, as a name and an email address. A Signer is not a user of this install and not a Counterparty contact — the other side of a deal has no account here. Every Signer on an Envelope is asked in parallel; there is no routing order [CTR-013].
+_Avoid_: signatory, recipient, approver (an Approval is a different act, by a colleague, inside the product)
+
 **Soft gate**:
 The warning a Contract meets when it moves from a Stage at or before `approval` to a Stage after it while an Approval request is still unresolved — pending or rejected. It names the unresolved requests and asks for one deliberate confirmation. It never blocks: the confirmed move commits and is recorded on the Activity feed as an override [CTR-012, CTR-001].
 _Avoid_: approval gate, hard gate, block, approval lock
@@ -156,6 +164,22 @@ What a requester supplies on a Request. It maps 1:1 to **priority** at conversio
 **Approver group**:
 An Administrator-managed template naming a reusable set of approvers — "Commercial sign-off" = GC plus CFO. Members must be Member+ users. Applying a group copies its members onto the Contract at apply time, so a later edit or archive never changes an approval already requested [CTR-012].
 _Avoid_: approval group, approver team, sign-off rule
+
+**Signing connector**:
+The Administrator-configured credentials one e-signature provider is reached with — DocuSign in v1, adapter-keyed so a second provider is a second connector. It is org configuration, not deployment environment: it is saved in Settings → Organization → Integrations → E-signature and read live on every use, so a rotated key applies to the next call. An install with no connector loses nothing it has today — the manual hand-off (upload the executed PDF, pin it, mark active) is always available and needs no configuration [CTR-013, TECH-013, SET-007].
+_Avoid_: DocuSign integration, e-sign settings, signing provider (that is the code seam behind the connector, not the configuration)
+
+**Manual hand-off**:
+Signing a Contract outside OpenLaw and filing the result by hand: set the status, sign anywhere, upload the executed PDF, pin it, mark active. It is the zero-config path CTR-013 promises stays sufficient, and no part of it is coupled to a signing connector [CTR-013, CTR-014].
+_Avoid_: manual signing, offline signing, the fallback
+
+**Reconciliation sweep**:
+The background round that asks the signing connector where every live Envelope stands and moves the record to match. It is the **fallback** status feed: the provider's webhook is the primary one, and the sweep is what makes an install the provider cannot reach converge anyway. The two never disagree, because both apply their answer through one transition and a transition already applied does nothing [CTR-013, TECH-007].
+_Avoid_: polling, status poller, sync job, the backfill sweep (that is M12's, and it recovers lost jobs rather than reading a provider)
+
+**Executed pin**:
+Which version of a Document the team calls the signed copy — the one previews, exports, and AI analysis target by default. It is **explicit and never inferred from a version's kind**: a round tagged `executed` is what its uploader called it, a chain can hold two rounds both called that, and the pin names one of them. A person sets and clears it by hand; the signing integration sets it automatically when an Envelope completes, and never corrects a team that moves it afterwards [CTR-014, CTR-013].
+_Avoid_: executed flag, signed version, final document, the executed document
 
 **Approval request**:
 One named person's sign-off on one Contract. A Member+ user asks; the named approver alone answers, with an approval or a rejection and an optional note; and the answer is final. Requests run in parallel — there are no chains and no order — and at most one is pending per approver per Contract. Asking again after a rejection makes a new request rather than reopening the old one. The requester, the Contract's Owner, or an Administrator cancels a pending one, which deletes it and leaves the activity entry as the record that it was made [CTR-012].

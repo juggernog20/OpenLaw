@@ -579,7 +579,7 @@ describe("the CSV export", () => {
       actorId: userIds.get(ADMIN.email),
       action: "contract.updated",
       visibility: "working_team",
-      payload: { changed: {} },
+      payload: { number: 1, title: "Formula", changed: {} },
     });
     const res = await exportCsv({ q: "=1+1" });
     expect(res.statusCode, res.body).toBe(200);

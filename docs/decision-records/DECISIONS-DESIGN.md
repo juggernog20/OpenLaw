@@ -2177,7 +2177,7 @@ DES-032 also enumerated the record's sections as three — Overview, Fields, Doc
 
 **2. The section is one self-contained card, drawn as the Documents section is.** The `bg-raised` card with a `bg-section-header` head; the heading, the DES-020 count badge, the write micro-state, and the section's own control in that head; the table under it; and a plain empty line when there is nothing to draw. One section anatomy on the record, so a reader who has learnt the Documents section has learnt this one.
 
-**3. The heading is "Approvals", not the mock's "Approvals & signing".** The card holds approval rows alone until M15 puts envelopes in it. A heading naming two things while showing one reads as a surface that is broken rather than as one that is early. The name changes when the rows do.
+**3. The heading is "Approvals", not the mock's "Approvals & signing".** The card holds approval rows alone until M15 puts envelopes in it. A heading naming two things while showing one reads as a surface that is broken rather than as one that is early. The name changes when the rows do. _(The rows changed with M15/2: the card holds envelope rows, and the heading takes the two-part name — see **DES-036** clause 1.)_
 
 **4. The mock's toolbar tally moves into the card head, and a state nobody is in is left out.** "2 approved · 1 pending" is drawn beside the count badge at `text-sm text-muted`, one message per state, with the separator drawn rather than written into a message. A zero is omitted rather than printed: three counts of which two are zero is noise on a line that has to stay readable beside a heading.
 
@@ -2237,7 +2237,7 @@ Pending being `assigned` rather than `warning` is the one colour choice worth st
 
 ### Consequences
 
-`ApprovalsCard` is the component; the contract record's `approvals` section is the reference mount. It takes the roster, the people the record's pickers already hold, and the viewer's standing, and it answers the whole roster back on every write.
+`ApprovalsCard` is the component; the contract record's `approvals` section is the reference mount. _(Renamed `ApprovalsSigningCard` with M15/2, when the card took its second row family — DES-036.)_ It takes the roster, the people the record's pickers already hold, and the viewer's standing, and it answers the whole roster back on every write.
 
 The record now has four sections. `RECORD_TABS` grows by one, and the loader reads the roster beside the record, its paper, and its folders.
 
@@ -2248,6 +2248,262 @@ No new tokens. The pills reuse the DES-005 families already shipped, the card re
 `SoftGateDialog` lives on the contract record beside `RetypeDialog`, because the status select it guards is on the record's Overview section rather than inside `ApprovalsCard`. It reads the roster the record already holds.
 
 The apply picker needs the live approver groups on the record, so the Member+ contract-options answer carries them — the names alone, with the ids of the people each would ask, in the display-name order the apply asks in, so the clause 16 preview names people in the order the roster will then draw them. Managing them stays Administrator-only (SET-002); this is the list an apply reads.
+
+## DES-036: The signing half of the record — the envelope row, the send dialog, and the sub-bar chip (extends DES-035, DES-034, DES-005)
+
+- **Status:** Accepted
+- **Date:** 2026-08-16
+
+### Context
+
+CTR-013 gives a contract an **envelope**: one round of signature on one version of its primary document, sent from the record through a configured connector. M15/2 is the send. Grill row X.2 scheduled the value-to-family pill mapping as a DES addendum at build, and this is that addendum plus the three surfaces the send needs.
+
+DES-035 clause 3 reserved the card's second name for exactly this moment: the heading reads "Approvals" while the card holds approval rows alone, and takes the two-part name when M15's envelope rows join it. They join it here.
+
+Three mocks are the drawn reference, and each of them draws something the product being built does not have.
+
+`designs/contracts.pen` frame **C12 — Send for signature** draws the send modal: a provider row naming DocuSign with a **Connected** chip and a "Use manual hand-off instead" link; a **Signers — in signing order** block, each signer an ordinal, an avatar, a name, an email, and a drag grip; a **Message** box; a note reading "The executed file auto-files on the contract; stage advances to Active when everyone signs."; and a footer of Cancel and **Send envelope**.
+
+Frames **C20 — Contract detail · Signatures** and **C21 — · Manual hand-off** draw the envelope itself as an **applet panel** on the record's right side: an envelope line with a provider chip, one row per signer with a per-signer pill (**Signed**, **Viewed**), a **Remind** action beside **Void envelope**, and a note about the webhook.
+
+What is not there to draw:
+
+1. **There is no routing order.** CTR-013 v1 asks every signer in parallel. The ordinals and the drag grip order something that does not exist.
+2. **There is no per-signer status.** The envelope carries one status; who has signed so far is provider-side detail v1 does not surface (CTR-013's own scope). **Viewed** is not a state this product holds at all.
+3. **There is no reminder.** Not in the `SigningProvider` seam, and not in M15's scope.
+4. **A signer is not a user of this install.** The mock's avatars imply a picker over people the product knows. The people who sign a contract are on the other side of a deal: CTR-013 collects a name and an email.
+5. **The seam carries a subject and no body.** The mock's "Message" has no field behind it.
+6. **The mock draws no version picker**, and CTR-013 requires one: the sender picks which round of the primary document goes out, defaulting to the current one.
+7. **The Signatures applet does not exist.** The spec for M15 is explicit that there is no new Signatories section and that the signers' home is the envelope row in the record's card, with a status chip beside the sub-bar (grill row E.5). DES-016's applet bar is a closed set of page-scoped panels, and DES-032's section strip is where a record's jobs get addresses.
+
+### Decision
+
+**1. The card takes its two-part name: "Approvals & signing".** DES-035 clause 3 said the name changes when the rows do, and envelope rows exist from this slice on. The heading is unconditional from here: it names what the card is for, not what one record happens to hold.
+
+**2. The card holds two blocks, each its own table, and the sub-headings appear only when both are on screen.** An approval row and an envelope row share no column — one is about a person's decision, the other about a document's journey — so merging them into DES-035's five columns would give every row cells that mean nothing on it. The signing block is drawn **first**, above the roster, and only when the record has an envelope (grill row E.5's conditional, applied to the row as well as to the chip). A record with no envelope reads exactly as it did before M15: one table, no sub-headings. Sub-headings on a card drawing one kind of row would label an absence.
+
+**3. The envelope row is four cells: Signers | Document | Status | Sent.** Each is a fact the seam answers. **Signers** comes first, because "who was asked to sign this" is the question the row exists for, and each signer takes the two-line anatomy the Approver cell already uses — the name, and under it the address the invitation went to. **Document** names what went out with "Version {n}" beneath it, and both halves go to the DES-035 clause 8 em dash together once that version has been erased (DOC-010): the row still says an envelope was sent, which is the fact it is there for. **Sent** is the short date with "by {name}" beneath it, the Decided column's shape.
+
+**4. There is no action cell on the envelope row in this slice.** Voiding is the next slice's act, and DES-035 clause 9's rule stands: a control is absent rather than disabled, and a control for an act that does not exist yet is neither. _(Discharged by **DES-038** clause 1 with M15/4: the void exists, so the cell is drawn.)_
+
+**5. The envelope pill takes the DES-005 paired families** (grill row X.2): `sent` is **warning**, `signed` is **success**, `declined` is **danger**, `voided` is **neutral**. `sent` is `warning` on purpose — it is the family `STAGE_PILL` already gives the **signature** stage, so the pipeline in the sub-bar and the row below it say the same thing about the same contract in the same colour, exactly as DES-035 clause 7 pairs a pending approval with the approval stage. `voided` is `neutral` rather than `danger`: withdrawing a send is a normal act on the way to a better one, and red would read as a failure where there was only a decision. The pill is drawn as every other status pill is: `rounded-pill px-2 py-0.5 text-xs font-medium`.
+
+**6. The card head's badge and tally stay about the approvals.** The DES-020 count badge sits beside the tally, and the tally answers "where does sign-off stand" — one question, one number. Counting envelopes into it would put two questions in one figure. Where the signature stands is answered by the envelope row and by the chip in clause 11.
+
+**7. "Send for signature" is the card head's first control, and it is absent in three cases.** It is a `secondary` Button with Lucide's `Send` glyph at 16, before "Apply group" and "Add approver", because sending is the act the card's new half exists for. It is not drawn at all when this install has no connector, when the record has no primary document, or when an envelope is already out. All three are DES-035 clause 14's rule again — a control whose dialog could only report that there is nothing to do is not a control — and the first one is also CTR-013's promise: an install with no connector must not advertise a feature it does not have, and the manual hand-off is not a lesser path that needs explaining.
+
+**8. Sending opens a dialog, and the dialog is C12 with everything undrawable removed.** The version select comes first (`CONTROL_CLASS`, the record's own single-choice control), listing the primary document's chain **newest first** with the current round marked and selected — a send is consequential enough to name what it is sending rather than to imply it. Then the signers, as **two text boxes per row** with an "Add signer" button and a per-row remove that is absent on the only row; the mock's ordinals, avatars, and drag grip are not drawn, because there is no routing order and no picker (context 1 and 4). Then one optional line, labelled **Subject** where the mock says "Message": the seam carries a subject and no body in v1, so a box labelled "Message" would promise a letter the envelope cannot carry. Left blank, it names the contract. The confirm is the mock's own "Send envelope", the primary button.
+
+**9. The dialog's own note rows are not drawn in this slice.** _(Discharged in full by **DES-039** clauses 5 and 6 with M15/5.)_ C12's "The executed file auto-files on the contract; stage advances to Active when everyone signs" and C20's webhook note each describe behaviour that lands in a later M15 slice. DES-035 clause 13's rule holds: a surface that explains a rule it does not yet apply is a surface that is wrong. Each is drawn when its slice exists, in the place the act is taken, exactly as DES-035 clauses 17 and 18 drew theirs. _(Half discharged by **DES-037** clause 4 with M15/3: the true half of C20's webhook sentence is now drawn under the signing block. C12's dialog note and the rest of C20's sentence stay withheld.)_
+
+**10. A refusal is printed once, in the dialog.** DES-035 clause 12, unchanged: the send is raised from a dialog, so its refusal reports in that dialog's form and the card head's micro-state stays clear.
+
+**11. The envelope status chip renders in the record's sub-bar, after the status pill and the archived pill, and only when an envelope exists** (grill row E.5). It carries Lucide's `PenLine` at **12px** — DES-034's carve-out from DES-008's 16/20/24, because the glyph is interior to a pill set in 12px text and a 16px glyph would read as the larger of the two — and the clause 5 family of the newest envelope, and it says a whole sentence — "Envelope sent", "Envelope signed", "Envelope declined", "Envelope voided". The glyph and the noun are what keep two pills side by side from reading as one: the left one names the contract's **status**, this one names its **envelope**. A contract signed by hand draws nothing here, which is grill row E.5's own "hidden for manual hand-off contracts".
+
+**12. The C20 and C21 Signatures applet panels are not built.** The signers' home is the envelope row (clause 3), the envelope's state is the chip (clause 11), and the record's paper is the Documents section. An applet panel would be a fourth place to look for facts that are already on the page, and DES-016's bar is a closed set. C21's manual hand-off panel has nothing to draw at all: the manual path is an upload, a pin, and a status change, each of which already has its own surface.
+
+### Rationale
+
+The mocks were drawn for a signing product with routing order, per-signer telemetry, and reminders. CTR-013 chose a narrower thing on purpose — one envelope, one status, parallel signers, the executed copy back on the chain — and every departure above is that choice, drawn.
+
+The two-block card is the smallest honest answer to "one card, two kinds of row". Merging them would give an envelope an Approver cell; splitting them into two cards would put two answers to "where does this contract stand with people" in two places on the same page. Two tables under one heading keeps the reading in one place and the columns meaningful.
+
+`sent` being `warning` is the one colour choice worth stating twice. It is not a warning about a problem; it is the family the signature stage already wears, and the record must not say "signature" in one colour at the top of the page and another colour six inches down.
+
+### Alternatives considered
+
+- **One merged table over both row families.** Rejected: an envelope has no approver and an approval has no signers, so most cells on most rows would be an em dash.
+- **A separate "Signing" card beside the Approvals card.** Rejected: DES-035 already spent the card's name on holding both, and two cards would make the reader decide which one answers "is this contract signed off and out".
+- **Building the C20 Signatures applet.** Rejected with clause 12: it draws per-signer states and a reminder the product does not have, and the two facts it does hold are already on the page.
+- **A disabled send control with a tooltip explaining the missing connector.** Rejected: it advertises a feature the deployment does not have and turns the zero-config manual path into something that needs apologising for (CTR-013).
+- **Defaulting the version silently and offering no picker.** Rejected: CTR-013 requires the choice, and the version that goes out is what comes back executed and pinned.
+- **A signer picker over the install's users.** Rejected: the people who sign are on the other side of the deal and have no account here. A picker would offer exactly the wrong set.
+- **Keeping the mock's "Message" label.** Rejected with clause 8: the field is the invitation's subject line, and a label promising a message body would be a promise the seam cannot keep.
+- **Counting envelopes into the card head's badge.** Rejected with clause 6: the badge and the tally answer one question together, and a number that means "asks plus sends" answers neither.
+- **`sent` as `info` rather than `warning`.** Rejected: the stage pipeline six inches above already draws the signature stage `warning`, and two colours for one fact is the drift DES-034 exists to prevent.
+- **`voided` as `danger`.** Rejected with clause 5: a void is a decision, and the next round goes out as easily as the first.
+
+### Consequences
+
+`ApprovalsSigningCard` is the component — DES-035's `ApprovalsCard` renamed, because the card now holds two row families and its name should say so. The contract record's `approvals` section stays the reference mount, and the loader reads the record's signing state beside the roster.
+
+The record's sub-bar gains one conditional chip. No new tokens: the chip and the pill reuse the DES-005 families already shipped, and the dialog reuses the record's own `CONTROL_CLASS` field and `Dialog`.
+
+`designs/contracts.pen` frames **C12**, **C20**, and **C21** are the reference, with clauses 3, 8, 9, 11, and 12 above recording where the build departs from them and why.
+
+Grill rows **E.5** and **X.2** are discharged for signing: the chip is conditional as E.5 decided, and the envelope value-to-family mapping is clause 5.
+
+The later M15 slices extend this record rather than replace it: the void action joins the envelope row's action cell, the decline and void reason joins the row, the executed file joins a signed row (grill rows H.C5 and H.C6), and each of the two note rows clause 9 withheld is drawn where its act is taken. _(The reason, the ending's date, and the first half of C20's note landed with M15/3 — see **DES-037**. The action cell, the void dialog, and the note's third status landed with M15/4 — see **DES-038**. The executed file, the rest of C20's note, and C12's dialog note landed with M15/5 — see **DES-039**, which discharges this list.)_
+
+## DES-037: The envelope's ending on the row, and the webhook note (extends DES-036, DES-035)
+
+- **Status:** Accepted
+- **Date:** 2026-08-16
+
+### Context
+
+DES-036 drew the envelope row for a slice in which an envelope only ever went out. M15/3 is the slice in which one comes back, so two facts the row had nothing to say about become facts it has to draw — **when** the envelope ended, and, on a decline or a void, **why**. How the ending reaches the record is CTR-013's M15/3 addendum; this record is only what the record then draws.
+
+DES-036 clause 3 named four cells: Signers | Document | Status | Sent. Its own closing note scheduled this: "the decline and void reason joins the row", and clause 9 withheld two mock note rows until the behaviour each describes exists. The `designs/contracts.pen` frame **C20** note — "Signed, declined, and voided status arrives by webhook. The executed file auto-files and the stage advances to Active." — is one of the two, and its first half is now true.
+
+### Decision
+
+**1. The row takes a fifth cell, "Completed", and it prints the em dash while the envelope is out.** It is the Decided column's shape, in the Decided column's place, for the Decided column's reason: an ending has a date, and a row that has not ended says so the way DES-035 clause 8 already says it — one message, one em dash, no guessing. The date is the short date, `formatShortDate`, like every other date on the card.
+
+**2. The reason is drawn under the status pill, not in a column of its own.** It is the **why** of the status, and the status is what the cell is already about: reading "Declined" and then hunting two cells to the right for the sentence that explains it is a worse reading than one cell that says both. It is `text-xs text-muted`, the secondary line every other two-line cell on this card uses. A sixth column was rejected for DES-035 clause 5's reason — the table shares its page with the Team card and has no width to spend — and because five of six rows would carry an em dash in it: only a decline and a void have a reason at all.
+
+**3. Nothing is drawn where there is no reason.** The seam answers a reason only for a decline or a void, so the row does not have to ask which status it is looking at, and it does not print an apology for an ending that arrived with no words. The pill alone is the whole answer then.
+
+**4. The C20 webhook note is drawn under the signing block, and only its true half.** "Signed and declined status arrives by webhook." at `text-xs text-muted`, beneath the signing table. The mock's sentence also promises a void, an auto-filed executed copy, and a stage advance; each of those lands in a later slice, and DES-035 clause 13's rule holds until it does — a surface that explains a rule it does not yet apply is a surface that is wrong. Each later slice extends the sentence when its own behaviour arrives. _(Extended by **DES-038** clause 9 with M15/4: the sentence now reads "Signed, declined, and voided status arrives by webhook." The executed copy and the stage advance stay withheld.)_
+
+**5. The note is drawn only while an envelope is out.** It answers "do I have to come back and update this by hand", which is a question only a live row raises. Under a table of endings it would be an explanation of something that has already finished, which is DES-035 clause 17's objection to a permanent note under a roster, applied to the one place the note does belong.
+
+**6. Nothing changes in the chip.** DES-036 clause 11 already gives the sub-bar a sentence per status, and a signed envelope already draws "Envelope signed" in the `success` family. The ending needed no new chrome there — which is the point of having spent the mapping once.
+
+### Rationale
+
+The row was drawn for an envelope in flight and had to learn to draw one that has landed. The two new facts split cleanly along the question each answers: **when** is a date, and dates on this card live in dated columns; **why** is a gloss on a status, and it belongs against the status it glosses.
+
+The note is the smaller decision and the more easily got wrong. Drawing the mock's whole sentence would promise three behaviours this slice does not have; drawing none of it would leave a reader of a live envelope wondering whether the record updates itself. Half the sentence, under the live row only, is the honest amount.
+
+### Alternatives considered
+
+- **A sixth "Reason" column.** Rejected with clause 2: the table has no width to spend, and the column would be an em dash on every row that was signed or is still out.
+- **The reason as a tooltip on the pill.** Rejected: it is the datum grill row H.C5 exists for, and a fact a reader has to hover to find is a fact the row did not carry.
+- **The completed date as a third line in the Sent cell.** Rejected: three lines in one cell reads as a paragraph, and the two dates answer different questions — one is an act somebody took, the other is an ending that happened.
+- **Drawing the mock's whole webhook sentence now.** Rejected with clause 4: it names the void, the auto-filed executed copy, and the stage advance, none of which this slice does.
+- **The note permanently under the signing block.** Rejected with clause 5: after the ending it explains nothing about the rows above it.
+- **A "waiting on the provider" spinner or live badge.** Rejected: live updates without a refresh are M30's (SSE), and a spinner for a thing that may take three days is chrome pretending to be progress.
+
+### Consequences
+
+`EnvelopeRow` grows one cell and one secondary line, and the signing table's header grows one column. Both facts are already on the record's signing answer, so no surface asks a new question to draw them.
+
+`designs/contracts.pen` frame **C20** is the reference for the note row, with clause 4 recording which half of it is drawn and why. DES-036 clause 9 is half discharged: the C12 dialog note and the rest of the C20 sentence stay withheld until the executed-copy and void slices land.
+
+Grill row **H.C5** is discharged: the decline's reason is on the row.
+
+## DES-038: The envelope row's action cell and the void dialog (extends DES-037, DES-036, DES-035)
+
+- **Status:** Accepted
+- **Date:** 2026-08-16
+
+### Context
+
+CTR-013 lets a live envelope be withdrawn: a mistaken or superseded send is voided where it was made, and the contract sends again. M15/4 is that slice.
+
+DES-036 clause 4 left the envelope row with no action cell and said why: "Voiding is the next slice's act, and DES-035 clause 9's rule stands." This is the next slice, so the cell arrives.
+
+`designs/contracts.pen` frame **C20** draws the act as **Void envelope**, beside a **Remind** action, on an applet panel DES-036 clause 12 did not build. The label is the mock's; the placement is not, because the signers' home is the row in the "Approvals & signing" card.
+
+C20's own note row is the other thing this slice touches. DES-037 clause 4 drew half of the mock's sentence — "Signed and declined status arrives by webhook." — and scheduled the rest: "Each later slice extends the sentence when its own behaviour arrives."
+
+### Decision
+
+**1. The envelope row takes a trailing action cell, and it holds one overflow menu.** The shipped `DropdownMenu` on a `ghost` `icon` Button, exactly as the approval row's actions are drawn (DES-035 clause 9, DES-025's trigger). One item today — **Void envelope**, with Lucide's `Undo2` at 16 — is still a menu rather than an inline button, because the two row families sit under one heading and a reader who has learnt where one row keeps its acts has learnt where the other keeps its own. The cell is drawn only when the card is not frozen, as the roster's is.
+
+**2. The menu's label names the round, not the record.** "Actions for the envelope sent on {date}" — the sent date, `formatShortDate`, which is the fact already in the row's Sent cell. A record can hold several rounds, so "Actions for this envelope" would give a screen-reader user the same label several times over on the same table.
+
+**3. The trigger is absent for a viewer who may not void, and absent on a round that has ended.** DES-035 clause 9's rule twice. The three actors are CTR-013's: the person who sent it, the contract's Owner, and an Administrator — the approvals-cancellation audience, mirrored here over the facts the page already holds. Everybody else gets no trigger at all, because a greyed-out "Void envelope" on somebody else's send is an invitation to ask why and the answer is not a permissions lesson. An ended round draws none either: there is nothing to withdraw.
+
+**4. Voiding opens a dialog, where cancelling an approval does not.** DES-035 clause 10 refused a confirmation on cancel because the ask goes, the activity entry keeps it, and asking again is one dialog away. A void is not that act: it ends a round that is already out with people who have no account here, and it collects a datum. Both reasons point the same way, and the second is decisive — the dialog exists to ask for the reason, not to ask "are you sure".
+
+**5. The reason is required, and it is a labelled textarea.** "Reason", the `TEXTAREA_CLASS` the decision dialog's note already uses, bounded at `MAX_ENVELOPE_REASON_LENGTH`. Under it, one help line: "The provider records this with the withdrawal, and the record keeps it on the row." — which is the whole justification for making it required, said where it is asked for. An empty submit prints "Say why this envelope is being voided." in the form, the shape "Pick at least one approver." already takes.
+
+**6. The dialog says what the act does before it does it.** "The signers can no longer sign this round. The contract can be sent again straight after." at `text-sm text-muted`, above the field. Two facts, and both of them what somebody hesitating actually wants: the round is lost, and nothing is lost for good. It is said where the act is taken, as DES-035 clauses 17 and 18 say theirs.
+
+**7. The confirm is the mock's own verb, "Void envelope", and it is the primary button rather than the `danger` one.** DES-036 clause 5 gave the `voided` pill the `neutral` family because withdrawing a send is a normal act on the way to a better one; a red button on the act that produces that pill would say the opposite six inches above it. The verb rather than "Save", for DES-035 clause 10's reason.
+
+**8. A refusal is printed once, in the dialog.** DES-035 clause 12 again: the void is raised from a dialog, so its refusal reports in that dialog's form and the card head's micro-state stays clear. The form keeps what was typed, so a refused void can be reworded rather than retyped.
+
+**9. The C20 note row takes its third status: "Signed, declined, and voided status arrives by webhook."** DES-037 clause 4 withheld `voided` until the void's own slice, and this is it. The sentence stays true of the provider's feed rather than of the record's control: a void taken in the provider's own console arrives here exactly as a decline does, and that is the question the note answers. The rest of the mock's sentence — the auto-filed executed copy and the stage advance — stays withheld until its slice. Clause 5 of DES-037 is unchanged: the note is drawn only while an envelope is out.
+
+**10. Nothing changes in the row's five cells or in the sub-bar chip.** The ending's date and the void's reason are already drawn by DES-037 clauses 1 and 2, and DES-036 clause 11 already gives the chip a sentence per status. A void produces facts these surfaces were built to draw, which is the point of having spent the mapping once.
+
+### Rationale
+
+The whole slice is two decisions: where the act lives, and what the act asks for. The first is settled by the card already having a row-action convention — a second convention on the same card, for the same kind of reader, would be a difference that means nothing.
+
+The second is the one worth stating. A dialog for a void reads at first like a confirmation, and this record deliberately refuses confirmations on recoverable acts. It is not one: the field is the reason, the provider will not take a withdrawal without words, and the row draws them afterwards. That the dialog also slows the press down is a side effect, not the argument.
+
+The mock's **Remind** is not built, for the reason DES-036's own context gives in item 3: there is no reminder in the `SigningProvider` seam and none in M15's scope. A one-item menu today is a menu that grows, not a menu that apologises.
+
+### Alternatives considered
+
+- **An inline "Void" button on the row.** Rejected: the roster's rows put their acts in a menu, and two row families on one card should not disagree about where a reader looks.
+- **A `danger` confirm.** Rejected with clause 7: the record draws a void `neutral` and calls the next round easy, and a red button would contradict both.
+- **An optional reason, defaulted to something generic.** Rejected: the provider records what it is given, and a record full of "Voided in OpenLaw" answers nothing the status pill did not already say.
+- **A plain confirmation dialog with no field, and the reason typed nowhere.** Rejected: CTR-013 requires the reason and the row draws it. A void with no words is a round that ended for reasons nobody wrote down.
+- **A disabled menu with a tooltip explaining who may void.** Rejected: DES-035 clause 9's rule, and the same objection it was written for.
+- **Drawing the whole C20 sentence now.** Rejected with clause 9: the executed copy and the stage advance are still later slices, and DES-035 clause 13 holds until they land.
+- **Building the C20 applet's Remind beside the void.** Rejected: there is no reminder behind the seam, and a control for an act the product cannot take is worse than an absent one.
+
+### Consequences
+
+`EnvelopeRow` grows a conditional action cell, and the signing table's header grows a screen-reader-only Actions column — both under the same `frozen` test the roster's already uses. `VoidEnvelopeDialog` joins the card's four dialogs.
+
+The record's activity feed gains one sentence that selects on whether a person is behind the entry: an envelope voided on the record names the voider, and one voided in the provider's console reads passively, as signed and declined always have.
+
+`designs/contracts.pen` frame **C20** is the reference for the label and the note row, with clauses 1, 3, and 9 above recording where the build departs from it and why. DES-036 clause 4 is discharged: the row has its action cell. DES-036 clause 9 and DES-037 clause 4 are further discharged: the webhook note now names all three statuses that arrive by webhook, and only C12's dialog note and the executed-copy half of C20's sentence stay withheld. _(Both landed with M15/5 — see **DES-039** clauses 5 and 6. Nothing of clause 9 stays withheld.)_
+
+No new tokens.
+
+## DES-039: The executed copy on the row, and the last two withheld notes (extends DES-038, DES-037, DES-036, DES-035)
+
+- **Status:** Accepted
+- **Date:** 2026-08-16
+
+### Context
+
+M15/5 is the slice in which the signed file comes back on its own: the executed PDF is fetched, filed on the primary chain, and pinned, without anybody downloading anything (CTR-013, CTR-014). Two surfaces have been waiting for it.
+
+DES-036's closing note scheduled the first: "the executed file joins a signed row (grill rows H.C5 and H.C6)". H.C5 landed with DES-037; H.C6 is this record.
+
+DES-036 clause 9 withheld two mock note rows until the behaviour each describes existed, and DES-037 clause 4 and DES-038 clause 9 discharged them a status at a time. What is left is the executed-copy half of the `designs/contracts.pen` **C20** sentence and the whole of the **C12** dialog note — and this is the slice that makes both true.
+
+### Decision
+
+**1. The executed copy is drawn in the Completed cell, under the date, as a download.** The cell already answers "this round ended"; the signed file is what the ending produced, so the two facts belong together. It takes the two-line anatomy every other cell on this card uses — the date on top, the file under it — rather than a sixth column, for DES-037 clause 2's reason: the table shares its page with the Team card and has no width to spend, and the cell would be an em dash on every row that is still out, declined, or voided.
+
+**2. It is a link, not a label.** "Shows the executed file" means a reader can open it, so the cell is an anchor to `documentDownloadHref` with the `download` attribute set to the file's own name — the anatomy the document panel's toolbar already uses. Lucide's `Download` at 16, `text-xs text-link`, and a truncating label: "Executed copy". The name of the file is not repeated in the label, because the chain already draws it and the row has no width for it.
+
+**3. A signed row whose copy has not landed says so, in one of two sentences.** The fetch is a background job with the M12 derived-artifact states, so there are two honest answers besides the link. While it runs: "Filing the executed copy…". When it gave up: "The executed copy could not be filed. Upload it to the record instead." Both are `text-xs text-muted`, the secondary line every two-line cell on this card uses. The second one points at the path that still works — CTR-013's manual hand-off — rather than apologising, because DES-015 forbids the apology and the reader's next act is the upload.
+
+**4. Nothing is drawn on a round that never owed a copy.** A live envelope, a decline, and a void draw the date cell alone. An executed copy was never coming for any of them, and a line about one would answer a question nobody asked — DES-037 clause 3's rule, said for the other cell.
+
+**5. The C20 note takes its last half: "Signed, declined, and voided status arrives by webhook. The executed file auto-files and the stage advances to Active."** DES-037 clause 4 drew the first sentence and scheduled the rest; every behaviour it names now exists. DES-037 clause 5 is unchanged — the note is drawn only while an envelope is out, because it answers "do I have to come back and update this by hand", and that is a question only a live row raises.
+
+**6. The C12 dialog note is drawn in the send dialog, above the form.** "When everyone signs, the executed file lands on this contract and the status moves to the active stage." at `text-sm text-muted`, under the title — the place and the shape DES-038 clause 6 gave the void dialog's own sentence, for its reason: a dialog says what its act does where the act is taken. DES-036 clause 9 is discharged in full.
+
+**7. The note names the stage, not a status label.** The mock says "Active", and a team renames its statuses freely — the stage behind them is the fixed one (CTR-001). Promising a label an install may not have is the drift DES-035 clause 13 exists to prevent, so the sentence says "the active stage" and stays true of every configuration.
+
+**8. Nothing changes in the pill families, the chip, or the row's other cells.** A signed envelope already draws `success` on the row and "Envelope signed" in the sub-bar (DES-036 clauses 5 and 11). The executed copy produces facts these surfaces were built to draw.
+
+### Rationale
+
+The whole record is one question — where does the file go — and the answer follows from what each cell is already about. The Document cell says what went out; the Completed cell says the round ended; the file is what the ending produced, so it goes under the ending. Putting it under the Document cell was the other candidate and it reads worse: that cell is about the round that was sent, and a third line under it would make one cell answer two rounds.
+
+The two non-link states are the part worth stating. A background fetch means "signed" and "the file is here" are not the same moment, and a row that drew nothing in between would look broken to somebody refreshing. Saying which of the three states the record is in costs one muted line and removes the only reason to go and look in DocuSign.
+
+### Alternatives considered
+
+- **A sixth "Files" column.** Rejected with clause 1: DES-037 already refused a sixth column for the reason this one would also fail — no width, and an em dash on most rows.
+- **A third line in the Document cell.** Rejected with the rationale: that cell is about the round that went out, and the executed copy is a different round.
+- **Drawing the file name as the link label.** Rejected: the chain draws it, and on a cell this narrow it would truncate to nothing useful. "Executed copy" says what the file is, which is what the reader is looking for.
+- **A `danger`-coloured failure line.** Rejected: a fetch that did not land is not an error on the record, and the manual hand-off is a first-class path (CTR-013). Colour would say something went wrong with the contract.
+- **Silence when the fetch failed.** Rejected: the record would then hold a signed envelope and no signed file with nothing saying why, which is exactly the state the milestone exists to end.
+- **A spinner while the fetch runs.** Rejected for DES-037's reason: chrome pretending to be progress, for work measured in seconds and hidden behind a refresh anyway. Live updates without a refresh are M30's.
+- **Drawing the executed copy from the document's pin.** Rejected: a chain can hold two rounds both called `executed`, and a team that moves the pin by hand would change what an older row says it filed. The row draws its own round.
+
+### Consequences
+
+`EnvelopeRow` grows one secondary line in the Completed cell, drawn by a small `ExecutedFile` component with three branches. The signing answer carries the two facts it needs — the round's fetch state and its own executed version — so no surface asks a new question to draw them.
+
+`SendEnvelopeDialog` grows one note under its title. The card's note row grows one sentence.
+
+`designs/contracts.pen` frames **C20** and **C12** are the reference for the two notes, and both are now drawn whole. DES-036 clause 9 is discharged in full, and DES-036's closing note is discharged: every later-slice extension it scheduled has landed. Grill row **H.C6** is discharged: the executed file is on the signed row.
+
+No new tokens.
 
 ## Index of decisions
 
@@ -2288,3 +2544,7 @@ The apply picker needs the live approver groups on the record, so the Member+ co
 | DES-033 | The folder tree and the record-scoped batch drop (extends DES-032, DES-025)                                                                                          | Accepted |
 | DES-034 | The stage pipeline — six fixed steps beside the status pill (extends DES-005, DES-032)                                                                               | Accepted |
 | DES-035 | The record's Approvals section — the roster table and its row actions (extends DES-032, DES-020, DES-005)                                                            | Accepted |
+| DES-036 | The signing half of the record — the envelope row, the send dialog, and the sub-bar chip (extends DES-035, DES-034, DES-005)                                         | Accepted |
+| DES-037 | The envelope's ending on the row, and the webhook note (extends DES-036, DES-035)                                                                                    | Accepted |
+| DES-038 | The envelope row's action cell and the void dialog (extends DES-037, DES-036, DES-035)                                                                               | Accepted |
+| DES-039 | The executed copy on the row, and the last two withheld notes (extends DES-038, DES-037, DES-036, DES-035)                                                           | Accepted |

@@ -8,6 +8,21 @@
 export const OPENLAW_VERSION = "0.0.1";
 
 /**
+ * The Activity vocabulary (DD-017) — the action slugs and the payload
+ * each one writes. It is a module of its own because it is long, and it
+ * is re-exported here because `@openlaw/shared` has one entry point.
+ */
+export type {
+  ActivityAction,
+  ActivityPayloadMap,
+  ChangedFields,
+  EmptyActivityPayload,
+  FieldChangePayload,
+  TaxonomyActionPrefix,
+  TypeFieldActionPrefix,
+} from "./activity.js";
+
+/**
  * The RFC 9457 problem type CTR-012's soft gate refuses with (TECH-020).
  *
  * It is a wire contract, and it is here because both ends of the wire
@@ -66,3 +81,53 @@ export type ContractStage = (typeof CONTRACT_STAGES)[number];
  * let the box keep truncating at a bound the seam no longer holds.
  */
 export const MAX_APPROVAL_NOTE_LENGTH = 1000;
+
+/**
+ * The two refusals a send branches on (CTR-013, TECH-020's pattern).
+ *
+ * They are here for `SOFT_GATE_PROBLEM_TYPE`'s reason: both ends of the
+ * wire have to say the same string. The API throws them, and the record
+ * uses them to decide whether the send control belongs on the card at
+ * all — so a drifted copy would not fail loudly, it would simply draw a
+ * control the seam then refuses.
+ *
+ * A client must never tell these apart by reading `detail`. That is
+ * copy, and copy is rewritten.
+ */
+/** This install has no e-signature connector, so nothing can be sent. */
+export const SIGNING_NOT_CONFIGURED_PROBLEM_TYPE = "urn:openlaw:problem:signing-not-configured";
+/** The contract already has an envelope out, and two envelopes must
+ * never race for one signature. */
+export const ENVELOPE_LIVE_PROBLEM_TYPE = "urn:openlaw:problem:envelope-live";
+
+/**
+ * How many people one envelope may be sent to (CTR-013).
+ *
+ * A bound rather than a preference, and a generous one: naming a
+ * handful of signers by hand is a real ask, and a deal with more than
+ * ten of them is not what this product is for. Shared because the
+ * dialog stops adding rows at it and the send request refuses past it —
+ * two literals for one wire contract would let the dialog offer a
+ * signer the seam then rejects.
+ */
+export const MAX_ENVELOPE_SIGNERS = 10;
+
+/**
+ * The ceiling on the invitation's subject line (CTR-013).
+ *
+ * It is one line in somebody else's inbox, not a message: the record's
+ * long-form conversation is its comments (CMT-004), and v1's signing
+ * seam carries a subject and no body.
+ */
+export const MAX_ENVELOPE_SUBJECT_LENGTH = 200;
+
+/**
+ * The ceiling on a decline's or a void's reason (CTR-013).
+ *
+ * Longer than a subject line, because this one is a sentence somebody
+ * has to act on: "the indemnity cap is wrong" is what the record needs
+ * back before the next round goes out. Shared because two mouths reach
+ * it — a signer's words arrive over the provider's feed, and a voider
+ * types theirs on the record — and both end up in the same cell.
+ */
+export const MAX_ENVELOPE_REASON_LENGTH = 1000;

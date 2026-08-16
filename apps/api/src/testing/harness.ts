@@ -23,6 +23,8 @@ import type { StorageAdapter } from "../lib/storage/adapter.js";
 import { createLocalStorage } from "../lib/storage/local.js";
 import type { DocEngine } from "../lib/doc-engine/engine.js";
 import { createFakeDocEngine } from "../lib/doc-engine/fake.js";
+import { createFakeSigningProvider, type FakeSigningProvider } from "../lib/signing/fake.js";
+import { createSigningResolver, type SigningResolver } from "../lib/signing/resolver.js";
 import { startPipeline, type Pipeline } from "../pipeline/pg-boss.js";
 import type { PipelineLogger } from "../pipeline/logger.js";
 
@@ -200,6 +202,32 @@ export interface TestHarness {
   /** Lines the pipeline wrote, oldest first. A failed derivation says
    * so in its own row; why it failed is here. */
   jobLog: JobLogLine[];
+  /**
+   * The deterministic signing provider (CTR-013) the app resolves to
+   * once a connector row exists — the fake, not DocuSign, for the
+   * reason the doc engine is faked: no API test can assert anything
+   * about a real provider that a deterministic one does not already
+   * say, and no test may call DocuSign.
+   *
+   * It is null until the resolver has run at least once over a stored
+   * connector row. The production resolver reads that row live and
+   * builds the driver only when something asks for one, so saving the
+   * connector is not on its own enough: the first request that resolves
+   * the provider is what fills this in. From then on it is the instance
+   * every request resolves, so a suite scripts the envelopes it sent.
+   */
+  readonly signing: FakeSigningProvider | null;
+  /**
+   * The production signing resolver over that fake — the same value the
+   * app and the pipeline are built with.
+   *
+   * A suite needs it to run the reconciliation sweep (M15/6), which the
+   * worker starts with exactly this dependency. Handing over the
+   * resolver rather than the provider is the point: the sweep reads the
+   * stored row live, so a suite that saves or clears a connector row
+   * changes what the next round resolves.
+   */
+  resolveSigningProvider: SigningResolver;
   stop: () => Promise<void>;
 }
 
@@ -263,13 +291,50 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
     cleanupStorage = cleanup;
     const docEngine = createFakeDocEngine();
     const jobLog: JobLogLine[] = [];
+    // The production resolver over the fake driver: the stored row and
+    // the "is anything configured" decision are production code, and
+    // only the driver behind them is the deterministic stand-in. One
+    // instance per connector, held so a suite can script its envelopes
+    // — a second resolution of the same row answers the same provider.
+    let signing: FakeSigningProvider | null = null;
+    // One fake per set of stored credentials. The same connector always
+    // resolves the same instance, so a suite that sent an envelope can
+    // still script it on the next request; a rotated credential builds
+    // a new one, which is honest — a different connector is a different
+    // account, and it holds none of the old one's envelopes.
+    let signingKey: string | null = null;
+    const resolveSigningProvider = createSigningResolver(db, (config) => {
+      // Only the fields the fake is built from. A rotated RSA key
+      // changes nothing this provider can observe, so it must not
+      // throw away the envelopes a suite already sent.
+      const key = JSON.stringify([config.environment, config.integrationKey, config.webhookSecret]);
+      if (!signing || signingKey !== key) {
+        signing = createFakeSigningProvider({
+          environment: config.environment,
+          integrationKey: config.integrationKey,
+          webhookSecret: config.webhookSecret,
+        });
+        signingKey = key;
+      }
+      return signing;
+    });
     // The real queue and the real handlers, on this container's
     // Postgres. pg-boss installs its schema in about a tenth of a
     // second, so every suite runs the production pipeline rather than a
     // double it would have to be kept in step with.
+    //
+    // The resolver is built first because the worker half needs it: the
+    // executed-copy job (M15/5) reaches the provider the same way every
+    // request does, through the stored connector row.
     pipeline = await startPipeline({
       connectionString: container.getConnectionUri(),
-      handlers: { db, storage, docEngine, log: capturingLogger(jobLog) },
+      handlers: {
+        db,
+        storage,
+        docEngine,
+        resolveSigningProvider,
+        log: capturingLogger(jobLog),
+      },
       log: capturingLogger(jobLog),
     });
     const app = await buildApp({
@@ -279,6 +344,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       storage,
       docEngine,
       jobs: pipeline,
+      resolveSigningProvider,
       maxUploadBytes: options.maxUploadBytes,
     });
     await app.ready();
@@ -292,6 +358,10 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       docEngine,
       pipeline: runningPipeline,
       jobLog,
+      resolveSigningProvider,
+      get signing() {
+        return signing;
+      },
       get smtpEnv() {
         return smtpEnv;
       },

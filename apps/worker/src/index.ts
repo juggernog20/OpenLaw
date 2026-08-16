@@ -10,10 +10,14 @@
  * deployment choice. The API sends; this works.
  *
  * What it does today is text extraction (DOC-005, M12/3), display
- * conversion (M12/4), and the upgrade backfill sweep it runs at boot
- * (M12/6). AI analysis, search indexing, notification digests, and
- * reminders each arrive with their own milestone and register beside
- * them.
+ * conversion (M12/4), the executed-copy fetch that files a signed
+ * envelope's PDF back onto the record (M15/5, CTR-014), the two boot
+ * sweeps that recover work whose queue send was lost (M12/6), and the
+ * reconciliation sweep that asks the signing provider where every live
+ * envelope stands (M15/6, CTR-013) — the fallback feed that makes an
+ * install DocuSign cannot reach converge anyway. AI analysis, search
+ * indexing, notification digests, and reminders each arrive with their
+ * own milestone and register beside them.
  *
  * It runs no migrations. The API is the one process that migrates
  * (TECH-005), and a worker that migrated too would race it on every
@@ -25,9 +29,15 @@ import { createDb } from "@openlaw/db";
 import {
   createConsoleLogger,
   createDocEngineFromEnv,
+  createDocuSignDriverFactory,
+  createSigningResolver,
   createStorageFromEnv,
+  maxUploadBytes,
+  readDocuSignBaseUrl,
   runBackfillSweep,
+  runExecutedCopySweep,
   startPipeline,
+  startReconciliationSweeps,
 } from "@openlaw/api/pipeline";
 
 const log = createConsoleLogger();
@@ -62,13 +72,37 @@ const databaseUrl = requireEnv("DATABASE_URL");
 const db = createDb(databaseUrl);
 const storage = orExit(() => createStorageFromEnv(process.env));
 const docEngine = orExit(() => createDocEngineFromEnv(process.env));
+// The same ceiling the API enforces on an upload, read from the same
+// variable. The executed copy arrives from a third party rather than
+// from a person, and a file the API would have refused at the door must
+// not reach the store through the back one. An unreadable value falls
+// back to the default here exactly as it does there.
+const uploadCeiling = maxUploadBytes(process.env.MAX_UPLOAD_MB);
+// The signing connector is org data, not deployment environment
+// (CTR-013), so there are no credentials to read from `process.env`: an
+// install with no connector row resolves to nothing, and an
+// executed-copy job records that plainly. Where those credentials are
+// presented is read from the environment, exactly as the API reads it —
+// unset on every real install, and pointed at a stand-in by the dev/E2E
+// overlay so a test send can never reach a real account (TECH-018).
+const docusignBaseUrl = orExit(() => readDocuSignBaseUrl(process.env));
+if (docusignBaseUrl) {
+  log.warn(
+    { baseUrl: docusignBaseUrl },
+    "signing is pointed at a stand-in instead of DocuSign (DOCUSIGN_BASE_URL) — the dev/E2E overlay only",
+  );
+}
+const resolveSigningProvider = createSigningResolver(
+  db,
+  createDocuSignDriverFactory(docusignBaseUrl),
+);
 
 // A database that cannot be reached is fatal here, as it is in the API.
 // Caught rather than left to the runtime so the operator reads one line
 // saying what failed, not a stack trace from inside pg-boss.
 const pipeline = await startPipeline({
   connectionString: databaseUrl,
-  handlers: { db, storage, docEngine, log },
+  handlers: { db, storage, docEngine, resolveSigningProvider, log, maxUploadBytes: uploadCeiling },
   log,
 }).catch((error: unknown) => {
   log.error({ reason: reasonOf(error) }, "the worker could not start the job queue");
@@ -85,24 +119,54 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms).unref());
 }
 
-// The upgrade backfill sweep (M12/6). It runs after the handlers are
-// registered, so the worker is already taking jobs while it walks the
-// versions — an install with a large back catalogue must not wait for
-// the sweep before its next upload is derived.
+// The sweeps. They run after the handlers are registered, so the worker
+// is already taking jobs while they walk their tables — an install with
+// a large back catalogue must not wait for a sweep before its next
+// upload is derived.
 //
-// It is started rather than awaited, and never raises: a sweep is best
+// They are started rather than awaited, and none raises: a sweep is best
 // effort, and a worker that refused to run because it could not finish
-// one would be a worse answer than a boot that tries again. What it
-// missed is still owed, because the derivation rows are the record.
+// one would be a worse answer than a boot that tries again. What they
+// missed is still owed, because the rows are the record.
 const sweeping = new AbortController();
-const swept = runBackfillSweep({ db, log }, pipeline, { signal: sweeping.signal }).then(
-  (summary) => {
-    log.info({ ...summary }, "the backfill sweep finished");
-  },
-  (error: unknown) => {
-    log.error({ reason: reasonOf(error) }, "the backfill sweep did not finish");
-  },
-);
+const swept = Promise.all([
+  runBackfillSweep({ db, log }, pipeline, { signal: sweeping.signal }).then(
+    (summary) => {
+      log.info({ ...summary }, "the backfill sweep finished");
+    },
+    (error: unknown) => {
+      log.error({ reason: reasonOf(error) }, "the backfill sweep did not finish");
+    },
+  ),
+  // The same recovery for the executed copies (M15/5). A signed
+  // envelope whose copy is still owed is a job that was lost between
+  // the transition's commit and the queue send, and the row is what
+  // still says so. It runs beside the backfill rather than after it:
+  // neither derives anything, both only ask, and the executed copy is
+  // the one a person is waiting on.
+  runExecutedCopySweep({ db, log }, pipeline, { signal: sweeping.signal }).then(
+    (summary) => {
+      log.info({ ...summary }, "the executed-copy sweep finished");
+    },
+    (error: unknown) => {
+      log.error({ reason: reasonOf(error) }, "the executed-copy sweep did not finish");
+    },
+  ),
+  // The fallback status feed (M15/6). This one repeats rather than
+  // running once: the other two recover work the rows already say is
+  // owed, while this one is waiting for somebody to sign, which one
+  // walk at boot cannot see. It logs each round itself and never
+  // raises, and it resolves when the shutdown below aborts it.
+  startReconciliationSweeps({ db, log, resolveSigningProvider }, pipeline, {
+    signal: sweeping.signal,
+  }).catch((error: unknown) => {
+    // It answers rather than throws, so this is unreachable. It is
+    // caught anyway, for its neighbours' reason: the shutdown waits on
+    // this promise, and a rejection nobody handled would be an
+    // unhandled rejection rather than a line in the log.
+    log.error({ reason: reasonOf(error) }, "the reconciliation sweep stopped unexpectedly");
+  }),
+]);
 
 // A container is stopped by a signal, and a job in hand must not be
 // lost to it. Stopping waits for what is running and leaves what has

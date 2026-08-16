@@ -157,6 +157,27 @@ No `archived_at`: providers are deleted (future management surface), not archive
 
 ---
 
+### `signing_connectors`
+
+Source: **CTR-013** (provider-agnostic signing adapter), **TECH-013** (DocuSign JWT grant), **SET-007** (the pane's home)
+
+The credentials one e-signature provider is reached with. **Adapter-keyed**: one row per adapter, `provider` unique, `docusign` in v1 — a second provider is a second row, not a second table. The row is **org data, not deployment environment**: an Administrator configures it at runtime in Settings → Organization → Integrations → E-signature, and every use reads it live (the mailer-resolver pattern), so a rotation applies to the next call with no restart. An install with no row resolves to no provider, which is what keeps CTR-013's zero-config manual hand-off working.
+
+| Column                     | Type        | Notes                                                                                                                           |
+| -------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                                              |
+| `provider`                 | text (enum) | the adapter behind the row; `docusign` in v1. Unique — one connector per adapter                                                |
+| `environment`              | text (enum) | `demo` \| `production`; the two estates differ by host and account (**TECH-013**)                                               |
+| `integration_key`          | text        | DocuSign's integration key — the OAuth client id of the app                                                                     |
+| `api_user_id`              | text        | the provider-side user the integration signs as; a GUID in DocuSign's directory, never a row in ours                            |
+| `private_key`              | text        | RSA private key (PEM) that signs the JWT assertions. **Write-only** through the API; plaintext at rest, the accepted v1 posture |
+| `webhook_secret`           | text        | the Connect HMAC secret. **Write-only**, and **not nullable** — a connector without one would answer unsigned deliveries        |
+| `created_at`, `updated_at` | timestamptz |                                                                                                                                 |
+
+No `archived_at`: a connector is edited or deleted, never archived. The two secret columns are the **second named entry** on the future secrets-encryption pass (the first is `sso_providers.oidc_config`).
+
+---
+
 ### `two_factors`
 
 Source: **TECH-008** (TOTP second factor for password accounts)
@@ -629,17 +650,45 @@ Compound primary key on (`from_contract_id`, `to_contract_id`, `relation_type`).
 
 Source: **CTR-013**
 
-Signing envelopes sent via the e-signature adapter (DocuSign first connector). Manual hand-off (upload executed PDF) creates no envelope row.
+Signing envelopes sent via the e-signature adapter (DocuSign first connector). Manual hand-off (upload executed PDF) creates no envelope row. Landed in M15/2 with the columns the send writes and the later slices move; `executed_version_id` joined it in M15/5, the slice that files an executed copy.
 
-| Column                     | Type        | Notes                                        |
-| -------------------------- | ----------- | -------------------------------------------- |
-| `id`                       | UUID        | PK                                           |
-| `contract_id`              | UUID        | FK → `contracts.id`, not null                |
-| `provider`                 | text        | `docusign` in v1; adapter-keyed              |
-| `provider_envelope_id`     | text        | not null                                     |
-| `status`                   | text (enum) | `sent` \| `signed` \| `declined` \| `voided` |
-| `sent_at`, `completed_at`  | timestamptz | completed_at nullable                        |
-| `created_at`, `updated_at` | timestamptz |                                              |
+| Column                     | Type        | Notes                                                                                  |
+| -------------------------- | ----------- | -------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                     |
+| `contract_id`              | UUID        | FK → `contracts.id`, not null, cascade                                                 |
+| `provider`                 | text        | `docusign` in v1; adapter-keyed                                                        |
+| `provider_envelope_id`     | text        | not null; unique with `provider` — the webhook's correlation key                       |
+| `status`                   | text (enum) | `sent` \| `signed` \| `declined` \| `voided`, default `sent`                           |
+| `document_version_id`      | UUID        | FK → `document_versions.id`, nullable, SET NULL — which round went out (CTR-014)       |
+| `sent_by`                  | UUID        | FK → `users.id`, not null                                                              |
+| `reason`                   | text        | nullable; the decline or void reason, and only on those two statuses                   |
+| `executed_fetch`           | text (enum) | `pending` \| `ready` \| `failed`, default `pending` — the M12 derived-artifact pattern |
+| `executed_version_id`      | UUID        | FK → `document_versions.id`, nullable, SET NULL — the round **this envelope** filed    |
+| `sent_at`, `completed_at`  | timestamptz | completed_at nullable, and null exactly while the status is `sent`                     |
+| `created_at`, `updated_at` | timestamptz |                                                                                        |
+
+Indexes: `(contract_id)`; unique `(provider, provider_envelope_id)`; **partial unique `(contract_id) WHERE status = 'sent'`** — at most one live envelope per contract (CTR-013), the shape M14 used for the one-pending-ask rule.
+
+`executed_version_id` is **not** the same fact as `documents.executed_version_id`. The pin names the one version the record calls the signed copy and a team moves it by hand; this column says which version _this round_ produced, because a chain can hold two rounds both of kind `executed` and the row has to draw its own (CTR-014).
+
+---
+
+### `contract_envelope_signers`
+
+Source: **CTR-013**
+
+The people one envelope was sent to. Their own table because the record renders them: the envelope row answers "who was asked to sign this". A signer is a name and an email typed into the send dialog, never a user of this install and never a counterparty contact.
+
+| Column          | Type        | Notes                                                                         |
+| --------------- | ----------- | ----------------------------------------------------------------------------- |
+| `id`            | UUID        | PK                                                                            |
+| `envelope_id`   | UUID        | FK → `contract_envelopes.id`, not null, cascade                               |
+| `name`          | text        | not null                                                                      |
+| `email`         | text        | not null                                                                      |
+| `signing_order` | integer     | not null, ≥ 1, unique per envelope — a display order, **not** a routing order |
+| `created_at`    | timestamptz |                                                                               |
+
+Every signer is asked in parallel in v1 (CTR-013); `signing_order` records the order they were entered so the row draws them back as they were typed.
 
 ---
 

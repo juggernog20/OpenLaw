@@ -14,6 +14,8 @@ import { buildApp } from "./app.js";
 import { createMailerResolver } from "./lib/mailer.js";
 import { createDocEngineFromEnv } from "./lib/doc-engine/config.js";
 import { createStorageFromEnv } from "./lib/storage/config.js";
+import { createDocuSignDriverFactory, readDocuSignBaseUrl } from "./lib/signing/config.js";
+import { createSigningResolver } from "./lib/signing/resolver.js";
 import { maxUploadBytes } from "./lib/uploads.js";
 import { startPipeline } from "./pipeline/pg-boss.js";
 
@@ -72,6 +74,36 @@ const docEngine = (function readDocEngine() {
   }
 })();
 
+// CTR-013: the signing connector is org data, not environment, so the
+// app is injected with a resolver that reads the stored row live rather
+// than with a provider built at boot. An install with no connector
+// resolves to nothing, the send affordance is absent, and the manual
+// hand-off keeps working with zero configuration.
+//
+// Where those credentials are presented is a different question, and
+// it is read here for the storage root's reason: startup reads the
+// environment, and no module below does. Every real install leaves it
+// unset and reaches DocuSign's own estate; the dev/E2E overlay points
+// it at a stand-in on the host, so a test send can never reach a real
+// account (TECH-018).
+const docusignBaseUrl = (function readSigningHost() {
+  try {
+    return readDocuSignBaseUrl(process.env);
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  }
+})();
+if (docusignBaseUrl) {
+  console.warn(
+    `Signing is pointed at ${docusignBaseUrl} instead of DocuSign (DOCUSIGN_BASE_URL). This belongs to the dev/E2E overlay only — never run a real deployment this way.`,
+  );
+}
+const resolveSigningProvider = createSigningResolver(
+  db,
+  createDocuSignDriverFactory(docusignBaseUrl),
+);
+
 // The upload ceiling, in whole mebibytes, read here for the storage
 // root's reason: startup reads the environment, and no module does. An
 // unreadable value falls back to the default rather than refusing to
@@ -124,6 +156,7 @@ const app = await buildApp(
     storage,
     docEngine,
     jobs,
+    resolveSigningProvider,
     maxUploadBytes: uploadCeiling,
     webDist: webDistPresent ? webDist : undefined,
   },

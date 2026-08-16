@@ -902,6 +902,12 @@ describe("GET /contracts/:number — the record read", () => {
     const missing = await getContract(memberCookies, 999_999);
     expect(missing.statusCode, missing.body).toBe(404);
     expect(missing.headers["content-type"]).toContain("application/problem+json");
+    // The literal, not the NO_CONTRACT constant: the sentence is part of
+    // the security interface (DD-014), and since #254 one definition
+    // feeds every surface — so a reword there would pass every
+    // refused-equals-absent comparison. This is the one line that makes
+    // rewording it a deliberate act.
+    expect(missing.json().detail).toBe("No contract exists with this number.");
 
     const nonsense = await getContract(memberCookies, "not-a-number");
     expect(nonsense.statusCode, nonsense.body).toBe(400);

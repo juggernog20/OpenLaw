@@ -26,14 +26,17 @@
  * that names the actor and the slug; the same holds one level down, for
  * a payload that does not carry the keys its slug usually does.
  *
- * The vocabulary narrated here is the whole of it. A record feed can
- * only contain `contract.*` and `comment.*`, and those came first
- * (M9/6); the Administrator's audit log reads the table with no entity
- * scope and no tier filter, so it reaches everything — user
- * administration, settings, the taxonomies, the field catalog, the
- * registry, the identity provider, and an export of the log itself.
- * Those arms landed with that surface (M9/7). Adding an action family
- * is adding entries to `ARMS`, and nothing else.
+ * The vocabulary narrated here is the whole of it, and the compiler
+ * says so: `ARMS` is keyed by `ActivityAction` from `@openlaw/shared`,
+ * the same union the API writes rows against, so a slug that gains a
+ * write site and no sentence does not build. A record feed can only
+ * contain `contract.*` and `comment.*`, and those came first (M9/6);
+ * the Administrator's audit log reads the table with no entity scope
+ * and no tier filter, so it reaches everything — user administration,
+ * settings, the taxonomies, the field catalog, the registry, the
+ * identity provider, and an export of the log itself. Those arms landed
+ * with that surface (M9/7). Adding an action family is adding entries
+ * to `ARMS`, and nothing else.
  *
  * Nothing here reads comment text: `comment.*` payloads carry ids only,
  * because the log is append-only and an Administrator's hard redact has
@@ -63,8 +66,11 @@ import {
   LogOut,
   MessageSquare,
   Palette,
+  PenLine,
   PencilLine,
   Pin,
+  Plug,
+  Send,
   Settings,
   ShieldCheck,
   ShieldOff,
@@ -87,6 +93,7 @@ import {
 } from "lucide-react";
 import { defineMessage, type IntlShape, type MessageDescriptor } from "react-intl";
 import type { paths } from "@openlaw/api-client";
+import type { ActivityAction } from "@openlaw/shared";
 import { formatShortDate } from "./format";
 import { roleLabel } from "./roles";
 import {
@@ -178,6 +185,12 @@ export interface NarrationContext {
  * An entry's own data, as the log stores it: whatever the slug's writer
  * put there. Every read of it below is defensive, because the shapes
  * are as old as the rows and nothing prunes either.
+ *
+ * The shape a slug's writer puts there *today* is `ActivityPayloadMap`
+ * in `@openlaw/shared`, which is what the narration tests build their
+ * fixtures from. It is not this type: a row read off the wire is as old
+ * as the build that wrote it, and a reader that assumed today's keys
+ * would throw on yesterday's row.
  */
 type Payload = NarratableEntry["payload"];
 
@@ -188,6 +201,20 @@ function actorName(intl: IntlShape, entry: NarratableEntry): string {
     entry.actor?.displayName ??
     intl.formatMessage({ id: "activity.actor.system", defaultMessage: "OpenLaw" })
   );
+}
+
+/**
+ * The words a decline or a void ended with, as its sentence selects on
+ * them (CTR-013).
+ *
+ * Two values rather than one, because ICU `select` takes discrete arms
+ * and a reason is free text: the flag chooses the arm, the text fills
+ * it. A provider that reported no reason is the `no` arm, and the
+ * sentence still reads without inventing one.
+ */
+function reasonValues(payload: Payload): Record<string, string> {
+  const reason = text(payload, "reason");
+  return { hasReason: reason ? "yes" : "no", reason: reason ?? "" };
 }
 
 /** A payload value as a plain string, or null when the payload does not
@@ -267,6 +294,9 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "smtpUrl {SMTP server} smtpFrom {From address} " +
         "issuer {Issuer} domain {Email domain} clientId {Client ID} " +
         "clientSecret {Client secret} " +
+        "environment {Environment} integrationKey {Integration key} " +
+        "apiUserId {User ID} privateKey {RSA private key} " +
+        "webhookSecret {Connect HMAC secret} " +
         "legalName {Legal name} entityType {Entity type} " +
         "jurisdiction {Jurisdiction} formedOn {Formed on} " +
         "registrationNumber {Registration number} taxId {Tax ID} " +
@@ -644,11 +674,11 @@ function taxonomyValues(kind: string) {
  * description to change. An arm for a slug that cannot be written is a
  * sentence nobody will ever read.
  */
-function taxonomyArms(
-  kind: string,
+function taxonomyArms<Kind extends string, Verb extends keyof typeof TAXONOMY>(
+  kind: Kind,
   icon: LucideIcon,
-  verbs: readonly (keyof typeof TAXONOMY)[],
-): Record<string, Arm> {
+  verbs: readonly Verb[],
+): Record<`${Kind}.${Verb}`, Arm> {
   const values = taxonomyValues(kind);
   const arms: Record<keyof typeof TAXONOMY, Arm> = {
     created: { icon, message: TAXONOMY.created, values },
@@ -664,7 +694,14 @@ function taxonomyArms(
     restored: { icon: ArchiveRestore, message: TAXONOMY.restored, values },
     deleted: { icon: Trash2, message: TAXONOMY.deleted, values },
   };
-  return Object.fromEntries(verbs.map((verb) => [`${kind}.${verb}`, arms[verb]]));
+  // The keys are the slugs this prefix writes, and the return type says
+  // so: `ARMS` below is checked against the whole vocabulary, and a
+  // spread that answered a bare `Record<string, Arm>` would satisfy that
+  // check without covering anything.
+  return Object.fromEntries(verbs.map((verb) => [`${kind}.${verb}`, arms[verb]])) as Record<
+    `${Kind}.${Verb}`,
+    Arm
+  >;
 }
 
 /** The seven a settings taxonomy writes (contract, matter, and entity
@@ -716,24 +753,29 @@ const TYPE_FIELD = {
   }),
 } as const;
 
-/** The same four arms for one type-field prefix, keyed by slug. */
-function typeFieldArms(owner: string): Record<string, Arm> {
+/** The four verbs an attached-field catalog writes. */
+type TypeFieldVerb = "attached" | "detached" | "reordered" | "required_changed";
+
+/** The same four arms for one type-field prefix, keyed by slug. The
+ * return type names those slugs for `taxonomyArms`' reason. */
+function typeFieldArms<Owner extends string>(
+  owner: Owner,
+): Record<`${Owner}.${TypeFieldVerb}`, Arm> {
   const values = (intl: IntlShape, payload: Payload) => ({
     owner,
     type: named(intl, payload, "typeSlug"),
     field: named(intl, payload, "fieldSlug"),
     required: String(payload.isRequired === true),
   });
-  return {
-    [`${owner}.attached`]: { icon: Link2, message: TYPE_FIELD.attached, values },
-    [`${owner}.detached`]: { icon: Unlink, message: TYPE_FIELD.detached, values },
-    [`${owner}.reordered`]: { icon: ListOrdered, message: TYPE_FIELD.reordered, values },
-    [`${owner}.required_changed`]: {
-      icon: SquareCheck,
-      message: TYPE_FIELD.requiredChanged,
-      values,
-    },
+  const arms: Record<TypeFieldVerb, Arm> = {
+    attached: { icon: Link2, message: TYPE_FIELD.attached, values },
+    detached: { icon: Unlink, message: TYPE_FIELD.detached, values },
+    reordered: { icon: ListOrdered, message: TYPE_FIELD.reordered, values },
+    required_changed: { icon: SquareCheck, message: TYPE_FIELD.requiredChanged, values },
   };
+  return Object.fromEntries(
+    (Object.keys(arms) as TypeFieldVerb[]).map((verb) => [`${owner}.${verb}`, arms[verb]]),
+  ) as Record<`${Owner}.${TypeFieldVerb}`, Arm>;
 }
 
 /**
@@ -744,12 +786,14 @@ function typeFieldArms(owner: string): Record<string, Arm> {
  * user administration, settings, the taxonomies, the field catalog, the
  * registry, the identity provider, and an export of the log itself.
  *
- * A slug that is not here reads through the fallback at the bottom of
- * `narrateActivity`, which is what makes this table safe to be
- * incomplete — and it will be, because the log outlives the code that
- * wrote it.
+ * **Keyed by the vocabulary itself** (`@openlaw/shared`), so a slug the
+ * API learns to write without a sentence here does not compile. That is
+ * the one direction the compiler can hold: the other — a slug in the
+ * table that this build has never heard of — is what the fallback at the
+ * bottom of `narrateActivity` is for, because the log outlives the code
+ * that wrote it (DD-017).
  */
-const ARMS: Readonly<Record<string, Arm>> = {
+const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   "contract.created": {
     icon: FilePlus2,
     message: defineMessage({
@@ -926,6 +970,57 @@ const ARMS: Readonly<Record<string, Arm>> = {
       defaultMessage: "{actor} cancelled the approval request to {approver}",
     }),
     values: (intl, payload) => ({ approver: named(intl, payload, "approverName") }),
+  },
+  // One round of signature on the record (M15/2, M15/3, CTR-013). A
+  // verb per act, so a reader can tell a completed signature from a
+  // withdrawn one without opening a payload.
+  //
+  // The send names its actor, because a person made it. Signed and
+  // declined never do: the signers sign on the provider's own ceremony,
+  // and the status arrives from the provider's feed with no human here
+  // behind it. A sentence reading "{actor} signed this contract" would
+  // then name whoever the entry fell back to, which is nobody. A void
+  // is the one ending that can be either, and it selects on which.
+  "envelope.sent": {
+    icon: Send,
+    message: defineMessage({
+      id: "activity.envelope.sent",
+      defaultMessage: "{actor} sent this contract for signature",
+    }),
+  },
+  "envelope.signed": {
+    icon: PenLine,
+    message: defineMessage({
+      id: "activity.envelope.signed",
+      defaultMessage: "This contract's envelope was signed",
+    }),
+  },
+  // The reason rides in the sentence rather than beside it: it is the
+  // one thing a reader needs before the next round goes out, and a
+  // decline that arrived without words still reads.
+  "envelope.declined": {
+    icon: X,
+    message: defineMessage({
+      id: "activity.envelope.declined",
+      defaultMessage:
+        "This contract's envelope was declined{hasReason, select, yes { — {reason}} other {}}",
+    }),
+    values: (_intl, payload) => reasonValues(payload),
+  },
+  // The one ending a person can take (M15/4). A void on the record is
+  // somebody's act and names them; a void taken in the provider's own
+  // console arrives through the same feed with nobody here behind it,
+  // and the passive sentence is the honest one for it.
+  "envelope.voided": {
+    icon: Undo2,
+    message: defineMessage({
+      id: "activity.envelope.voided",
+      defaultMessage:
+        "{hasActor, select, yes {{actor} voided this contract's envelope} " +
+        "other {This contract's envelope was voided}}" +
+        "{hasReason, select, yes { — {reason}} other {}}",
+    }),
+    values: (_intl, payload) => reasonValues(payload),
   },
   "contract.archived": {
     icon: Archive,
@@ -1375,6 +1470,29 @@ const ARMS: Readonly<Record<string, Arm>> = {
     changes: fieldChange,
   },
 
+  // ---- The e-signature connector (CTR-013) ----
+  // Two verbs, so the audit log tells connecting an install to a
+  // provider apart from rotating a key on the one it already has. Both
+  // secrets read as `[secret]` on each side, for the identity
+  // provider's reason.
+  "signing_connector.configured": {
+    icon: Plug,
+    message: defineMessage({
+      id: "activity.signingConnector.configured",
+      defaultMessage: "{actor} connected the e-signature provider {provider}",
+    }),
+    values: (intl, payload) => ({ provider: named(intl, payload, "provider") }),
+  },
+  "signing_connector.updated": {
+    icon: Plug,
+    message: defineMessage({
+      id: "activity.signingConnector.updated",
+      defaultMessage: "{actor} changed the e-signature connector {provider}",
+    }),
+    values: (intl, payload) => ({ provider: named(intl, payload, "provider") }),
+    changes: fieldChange,
+  },
+
   // ---- The settings taxonomies and the field catalog ----
   ...taxonomyArms("contract_type", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("matter_type", Tag, TAXONOMY_VERBS),
@@ -1532,6 +1650,25 @@ const ARMS: Readonly<Record<string, Arm>> = {
  */
 const UNKNOWN = defineMessage({ id: "activity.unknown", defaultMessage: "{actor} — {action}" });
 
+/**
+ * The arm for a slug read off the wire, if this build has one.
+ *
+ * The lookup takes a plain string, and it has to: `ARMS` is keyed by
+ * this build's vocabulary, and the row is as old as the build that
+ * wrote it. Answering `undefined` for the rest is the fallback's cue.
+ *
+ * **By own key only.** `ARMS` is an object literal, so a bare index
+ * would answer for keys nobody wrote: a row whose action is
+ * `constructor` would read a function, and `__proto__` would read
+ * `Object.prototype`. Neither is an arm, and both would take the panel
+ * down on the one thing the fallback exists to survive — a slug this
+ * build has never heard of. Nothing constrains the `action` column
+ * (DD-017), so the row can say anything.
+ */
+function armFor(action: string): Arm | undefined {
+  return Object.hasOwn(ARMS, action) ? (ARMS as Readonly<Record<string, Arm>>)[action] : undefined;
+}
+
 /** One entry, narrated. Every arm reads its payload defensively; none of
  * them throws, and a slug with no arm falls through to `UNKNOWN`. */
 export function narrateActivity(
@@ -1540,7 +1677,14 @@ export function narrateActivity(
   context: NarrationContext = {},
 ): Narration {
   const actor = actorName(intl, entry);
-  const arm = ARMS[entry.action];
+  // Whether a person is behind this entry at all, for the one verb that
+  // both a person and the integration can take: an envelope voided on
+  // the record names the voider, and one voided in the provider's own
+  // console has nobody here to name. Every sentence gets it, because
+  // ICU takes what it is given and ignores what it does not use, and a
+  // second machinery for one arm would be a machinery to maintain.
+  const hasActor = entry.actor ? "yes" : "no";
+  const arm = armFor(entry.action);
   if (!arm) {
     return {
       icon: Activity,
@@ -1553,6 +1697,7 @@ export function narrateActivity(
     icon: arm.icon,
     sentence: intl.formatMessage(arm.message, {
       actor,
+      hasActor,
       ...arm.values?.(intl, entry.payload, changes),
     }),
     changes,

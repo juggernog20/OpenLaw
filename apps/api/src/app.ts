@@ -37,11 +37,13 @@ import type { MailerResolver } from "./lib/mailer.js";
 import type { DocEngine } from "./lib/doc-engine/engine.js";
 import type { JobQueue } from "./pipeline/jobs.js";
 import type { StorageAdapter } from "./lib/storage/adapter.js";
+import type { SigningResolver } from "./lib/signing/resolver.js";
 import { DEFAULT_MAX_UPLOAD_MB, MEGABYTE } from "./lib/uploads.js";
 import { metaRoutes } from "./modules/meta/routes.js";
 import { authRoutes } from "./modules/auth/routes.js";
 import { approverGroupsRoutes } from "./modules/approver-groups/routes.js";
 import { contractApprovalsRoutes } from "./modules/contract-approvals/routes.js";
+import { contractEnvelopesRoutes } from "./modules/contract-envelopes/routes.js";
 import { contractStatusesRoutes } from "./modules/contract-statuses/routes.js";
 import { contractTypesRoutes } from "./modules/contract-types/routes.js";
 import { attachedFieldsRoutes } from "./modules/contract-types/attached-fields.js";
@@ -61,6 +63,8 @@ import { onboardingRoutes } from "./modules/onboarding/routes.js";
 import { orgRoutes } from "./modules/org/routes.js";
 import { usersRoutes } from "./modules/users/routes.js";
 import { emailSettingsRoutes } from "./modules/email-settings/routes.js";
+import { signingConnectorRoutes } from "./modules/signing-connector/routes.js";
+import { signingWebhookRoutes } from "./modules/signing-webhook/routes.js";
 import { authHandler } from "./auth/handler.js";
 import { createAuth, type Auth, type AuthConfig } from "./auth/instance.js";
 import type { AuthenticatedSession, AuthenticatedUser } from "./auth/guards.js";
@@ -97,6 +101,15 @@ export interface AppDeps {
    */
   jobs: JobQueue;
   /**
+   * The signing provider (CTR-013), as a resolver rather than as an
+   * instance. The connector is org data an Administrator edits while
+   * the process runs, so it is read live per use (the mailer-resolver
+   * pattern) and an unconfigured install resolves to null — which is
+   * what lets the record leave the send affordance out entirely and
+   * keeps CTR-013's zero-config manual hand-off working.
+   */
+  resolveSigningProvider: SigningResolver;
+  /**
    * The largest file one upload may carry, in bytes (story 24). Read
    * from `MAX_UPLOAD_MB` at startup and injected, like the storage root
    * — no module reads the environment for it. Unset here, the default
@@ -120,6 +133,11 @@ declare module "fastify" {
     storage: StorageAdapter;
     docEngine: DocEngine;
     jobs: JobQueue;
+    resolveSigningProvider: SigningResolver;
+    /** The address this install answers on (BASE_URL), so the settings
+     * pane can show the webhook URL an Administrator pastes into the
+     * provider's console without reading source code. */
+    baseUrl: string;
     /** The upload ceiling in bytes, so the routes that refuse an
      * oversized file can name the limit they refused it against. */
     maxUploadBytes: number;
@@ -133,6 +151,8 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   app.decorate("storage", deps.storage);
   app.decorate("docEngine", deps.docEngine);
   app.decorate("jobs", deps.jobs);
+  app.decorate("resolveSigningProvider", deps.resolveSigningProvider);
+  app.decorate("baseUrl", deps.config.baseUrl);
   const maxUploadBytes = deps.maxUploadBytes ?? DEFAULT_MAX_UPLOAD_MB * MEGABYTE;
   app.decorate("maxUploadBytes", maxUploadBytes);
   app.decorate("auth", createAuth(deps.db, deps.config, deps.resolveMailer, app.log));
@@ -331,12 +351,18 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   });
 
   await app.register(authHandler);
+  // Registered beside the auth handler rather than with the /api/v1
+  // module plugins, and for its reason: it declares its own full path
+  // and installs a raw-buffer content-type parser that must not reach
+  // the zod-validated routes (M15/3).
+  await app.register(signingWebhookRoutes);
   await app.register(metaRoutes, { prefix: "/api/v1" });
   await app.register(authRoutes, { prefix: "/api/v1" });
   await app.register(onboardingRoutes, { prefix: "/api/v1" });
   await app.register(orgRoutes, { prefix: "/api/v1" });
   await app.register(usersRoutes, { prefix: "/api/v1" });
   await app.register(emailSettingsRoutes, { prefix: "/api/v1" });
+  await app.register(signingConnectorRoutes, { prefix: "/api/v1" });
   await app.register(contractTypesRoutes, { prefix: "/api/v1" });
   await app.register(attachedFieldsRoutes, { prefix: "/api/v1" });
   await app.register(matterTypesRoutes, { prefix: "/api/v1" });
@@ -345,6 +371,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(approverGroupsRoutes, { prefix: "/api/v1" });
   await app.register(contractsRoutes, { prefix: "/api/v1" });
   await app.register(contractApprovalsRoutes, { prefix: "/api/v1" });
+  await app.register(contractEnvelopesRoutes, { prefix: "/api/v1" });
   await app.register(counterpartiesRoutes, { prefix: "/api/v1" });
   await app.register(documentsRoutes, { prefix: "/api/v1" });
   await app.register(documentFoldersRoutes, { prefix: "/api/v1" });

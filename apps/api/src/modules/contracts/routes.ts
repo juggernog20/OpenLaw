@@ -129,7 +129,9 @@ import {
   VALUE_CADENCES,
   type Contract,
   type CustomFieldValue,
+  type Executor,
   type SQL,
+  type Transaction,
 } from "@openlaw/db";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
@@ -137,6 +139,7 @@ import {
   confidentialityWrite,
   contractTeamScope,
   CREATOR_TEAM_ROLE,
+  NO_CONTRACT,
   reachesLockedContract,
 } from "../../lib/contract-access.js";
 import {
@@ -542,9 +545,6 @@ function toRow(context: ContractContext) {
 }
 
 export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
-  type Tx = Parameters<Parameters<typeof app.db.transaction>[0]>[0];
-  type Executor = typeof app.db | Tx;
-
   /** The one read shape: the contract with its type name, status label,
    * derived stage, Owner, signing entity, and primary counterparty. All
    * three people-and-parties joins go outward — unassigned (CTR-004),
@@ -674,7 +674,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
    * path never has to assemble the row and the list itself. Called at
    * the end of every counterparty mutation, inside its transaction.
    */
-  async function counterpartiesEnvelope(tx: Tx, context: ContractContext) {
+  async function counterpartiesEnvelope(tx: Transaction, context: ContractContext) {
     const parties = await selectCounterparties(tx, context.row.id);
     return {
       contract: toRow({ ...context, primaryCounterparty: primaryOf(parties) }),
@@ -698,7 +698,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
    * name would be a permanent ruling that two organizations may never
    * share one, which is not ours to make here.
    */
-  async function findOrCreateCounterparty(tx: Tx, rawName: string) {
+  async function findOrCreateCounterparty(tx: Transaction, rawName: string) {
     const name = rawName.trim();
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(lower(${name})))`);
     const [existing] = await tx
@@ -733,7 +733,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
    * The caller holds the contract row's lock, which is what makes the
    * two statements one decision (CTR-011: the application enforces this).
    */
-  async function promotePrimary(tx: Tx, contractId: string, counterpartyId: string) {
+  async function promotePrimary(tx: Transaction, contractId: string, counterpartyId: string) {
     await tx
       .update(contractCounterparties)
       .set({ isPrimary: false })
@@ -761,7 +761,12 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
    * anyone, including the Contributor who is external counsel (MTR-006).
    * The lock stops a concurrent archive slipping between check and write.
    */
-  async function lockedUser(tx: Tx, userId: string, roles: readonly string[], refusal: string) {
+  async function lockedUser(
+    tx: Transaction,
+    userId: string,
+    roles: readonly string[],
+    refusal: string,
+  ) {
     const [person] = await tx
       .select({
         id: users.id,
@@ -807,11 +812,22 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
    * team rows cannot move under the answer; the question comes before
    * anything is written, so a refusal changes nothing. A contract this
    * viewer does not reach then answers exactly as a contract that was
-   * never made — the same status and the same words — so a write leaks
-   * no more than a read.
+   * never made — the same status and the same words, {@link NO_CONTRACT}
+   * shared with every other surface that refuses a record — so a write
+   * leaks no more than a read.
+   *
+   * It is **not** `reachedContract` (#254), and that is the one place in
+   * the API where the two shapes differ on purpose. `reachedContract`
+   * puts the row scope inside the locked `SELECT`; this takes the lock
+   * with no qualification but the immutable number, and asks reach after
+   * it, for the reason the paragraph above gives and the one
+   * `reachesLockedContract` gives. What every mutation here needs is the
+   * joined read anyway — the type name, the status label, the derived
+   * stage — which is a projection the shared reach read does not carry.
+   * The refusal is shared; the statement is not.
    */
   async function lockedContract(
-    tx: Tx,
+    tx: Transaction,
     number: number,
     user: AuthenticatedUser,
   ): Promise<ContractContext> {
@@ -821,7 +837,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       .where(eq(contracts.number, number))
       .limit(1)
       .for("update");
-    if (!locked) throw httpError(404, "No contract exists with this number.");
+    if (!locked) throw httpError(404, NO_CONTRACT);
 
     // The row is held, and a type and a status are both non-null FKs, so
     // the inner joins cannot fail to match. The guard stays because the
@@ -829,9 +845,9 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     // that trusted the row to exist would be one schema change away from
     // a crash instead of a refusal.
     const [target] = await selectContracts(tx).where(eq(contracts.id, locked.id)).limit(1);
-    if (!target) throw httpError(404, "No contract exists with this number.");
+    if (!target) throw httpError(404, NO_CONTRACT);
     if (!(await reachesLockedContract(tx, user, target.row))) {
-      throw httpError(404, "No contract exists with this number.");
+      throw httpError(404, NO_CONTRACT);
     }
     return target;
   }
@@ -849,7 +865,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
    * The reach refusal comes first, inside `lockedContract`: a 409 on a
    * record the viewer cannot reach would say the record is there. */
   async function editableContract(
-    tx: Tx,
+    tx: Transaction,
     number: number,
     user: AuthenticatedUser,
   ): Promise<ContractContext> {
@@ -883,18 +899,22 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
    * rule, asked in one place.
    */
   async function assertAudienceActor(
-    tx: Tx,
+    tx: Transaction,
     current: ContractContext,
     user: AuthenticatedUser,
     refusal: string,
   ) {
     const verdict = await confidentialityWrite(tx, user, current.row);
-    if (verdict === "unreachable") throw httpError(404, "No contract exists with this number.");
+    if (verdict === "unreachable") throw httpError(404, NO_CONTRACT);
     if (verdict === "refused") throw httpError(403, refusal);
   }
 
   /** Setting and clearing the flag itself (CTR-022). */
-  const assertMayFlagConfidential = (tx: Tx, current: ContractContext, user: AuthenticatedUser) =>
+  const assertMayFlagConfidential = (
+    tx: Transaction,
+    current: ContractContext,
+    user: AuthenticatedUser,
+  ) =>
     assertAudienceActor(
       tx,
       current,
@@ -918,7 +938,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
    * It runs before the archived refusal, for the flag guard's reason.
    */
   async function assertMayChangeTeam(
-    tx: Tx,
+    tx: Transaction,
     current: ContractContext,
     user: AuthenticatedUser,
   ): Promise<void> {
@@ -999,7 +1019,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
    * ever show or clear.
    */
   async function applyCustomFields(
-    tx: Tx,
+    tx: Transaction,
     attached: readonly AttachedCustomField[],
     stored: Readonly<Record<string, CustomFieldValue>>,
     incoming: Readonly<Record<string, CustomFieldValue | null>>,
@@ -1039,7 +1059,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
    * nothing new gets pointed at someone who has left. A row archived
    * after the fact stays on the record untouched.
    */
-  async function lockedReference(tx: Tx, field: AttachedCustomField, id: string) {
+  async function lockedReference(tx: Transaction, field: AttachedCustomField, id: string) {
     if (field.fieldType === "user") {
       // Anyone live: a custom person field is not the Owner, so it is
       // not held to the Member+ floor the Owner is (CTR-004).
@@ -1276,7 +1296,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // locked page would tell them it is there.
         .where(and(eq(contracts.number, request.params.number), teamScope(request.user)))
         .limit(1);
-      if (!row) throw httpError(404, "No contract exists with this number.");
+      if (!row) throw httpError(404, NO_CONTRACT);
       const [team, parties, custom] = await Promise.all([
         selectTeam(app.db, row.row.id),
         selectCounterparties(app.db, row.row.id),

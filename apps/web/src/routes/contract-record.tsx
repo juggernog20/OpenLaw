@@ -115,7 +115,16 @@ import {
   type LoaderFunctionArgs,
 } from "react-router";
 import { FormattedMessage, defineMessage, useIntl, type IntlShape } from "react-intl";
-import { Archive, ArchiveRestore, ChevronRight, FileText, Plus, Settings, X } from "lucide-react";
+import {
+  Archive,
+  ArchiveRestore,
+  ChevronRight,
+  FileText,
+  PenLine,
+  Plus,
+  Settings,
+  X,
+} from "lucide-react";
 import { SOFT_GATE_PROBLEM_TYPE } from "@openlaw/shared";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
@@ -142,6 +151,7 @@ import {
   type ValueCadence,
   type UserOption,
 } from "../lib/contracts";
+import { ENVELOPE_PILL, type ContractEnvelope, type SigningState } from "../lib/envelopes";
 import {
   commitsOnChange,
   sameDraft,
@@ -169,7 +179,7 @@ import { useCommentApplet } from "../components/comments/comment-applet";
 import { RecordApplets } from "../components/shell/record-applets";
 import { RecordTabs } from "../components/shell/record-tabs";
 import type { Applet } from "../components/shell/applets";
-import { ApprovalsCard } from "../components/approvals/approvals-card";
+import { ApprovalsSigningCard } from "../components/approvals/approvals-signing-card";
 import { Avatar } from "../components/avatar";
 import { ConfidentialBanner } from "../components/confidential-banner";
 import { ConfidentialToggle } from "../components/confidential-toggle";
@@ -209,7 +219,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
   // Contributor anyway; the record read alone carries every name the
   // page has to draw.
   const canEdit = isMemberPlus(user.role);
-  const [record, documents, folders, approvals, options, registry] = await Promise.all([
+  const [record, documents, folders, approvals, signing, options, registry] = await Promise.all([
     api.GET("/api/v1/contracts/{number}", { params: { path: { number } } }),
     // The record's paper (M11/2). Read by every viewer who reaches the
     // page — a Contributor on the team reads and downloads it too
@@ -233,6 +243,13 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     // itself is hidden from, which is the same refusal the record read
     // gives.
     api.GET("/api/v1/contracts/{number}/approvals", { params: { path: { number } } }),
+    // What paper this record has sent out for signature (M15/2,
+    // CTR-013), read by every viewer who reaches the page for the
+    // roster's reason. It carries two facts beside the envelopes —
+    // whether this install has a connector, and the chain a send would
+    // offer — so the card decides in one condition whether to draw the
+    // send control at all.
+    api.GET("/api/v1/contracts/{number}/envelopes", { params: { path: { number } } }),
     canEdit ? api.GET("/api/v1/contracts/options") : undefined,
     // The registry's own Member+ list is the signing-entity picker's
     // source (CTR-011): it is ordered by legal name and already leaves
@@ -250,6 +267,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     !documents.data ||
     !folders.data ||
     !approvals.data ||
+    !signing.data ||
     (canEdit && !(options?.data && registry?.data))
   ) {
     throw new Error("The contract could not be read.");
@@ -267,6 +285,10 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
      * the paper: an empty roster is a fact about the record, not a
      * fallback for a read that did not happen. */
     approvals: approvals.data.approvals,
+    /** The record's signing state (M15/2). Required like the roster:
+     * an install with no connector is a fact about the deployment, not
+     * a fallback for a read that did not happen. */
+    signing: signing.data,
     /** Where the next page of paper starts, or null when the first page
      * is all of it (CTR-024). */
     documentsCursor: documents.data.nextCursor,
@@ -315,6 +337,55 @@ type FieldKey =
  * to it — one constant, so the link cannot point at nothing. */
 const TEAM_CARD_ID = "contract-team";
 
+/** What the envelope chip says, one sentence per status (DES-036). Each
+ * one names the envelope rather than only its state, so the chip reads
+ * on its own beside a status pill that may say something similar and
+ * mean the contract instead. */
+const ENVELOPE_CHIP_LABEL = {
+  sent: defineMessage({ id: "contracts.record.envelope.sent", defaultMessage: "Envelope sent" }),
+  signed: defineMessage({
+    id: "contracts.record.envelope.signed",
+    defaultMessage: "Envelope signed",
+  }),
+  declined: defineMessage({
+    id: "contracts.record.envelope.declined",
+    defaultMessage: "Envelope declined",
+  }),
+  voided: defineMessage({
+    id: "contracts.record.envelope.voided",
+    defaultMessage: "Envelope voided",
+  }),
+} as const satisfies Record<ContractEnvelope["status"], { id: string; defaultMessage: string }>;
+
+/**
+ * Where the record's paper stands with its signers (grill row E.5).
+ *
+ * Conditional by design: a contract that has never been sent through a
+ * connector draws nothing at all, because CTR-013's manual hand-off is
+ * the whole path on an install with no connector and a chip saying so
+ * would be chrome about an absence.
+ *
+ * It takes the same DES-005 family the envelope row's pill takes, and
+ * carries a glyph, so two pills side by side in the sub-bar are not
+ * read as one: the left one names the contract's status, and this one
+ * names its envelope.
+ */
+function EnvelopeChip({ envelope }: Readonly<{ envelope: ContractEnvelope | null }>) {
+  if (!envelope) return null;
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center gap-1 rounded-pill px-2 py-0.5 text-xs font-medium ${ENVELOPE_PILL[envelope.status]}`}
+    >
+      {/* 12px, not DES-008's 16: the glyph sits inside a 12px pill
+          beside 12px text, which is the carve-out DES-034 records for
+          the stage pipeline's own interior glyphs. A 16px glyph here
+          would read as the larger of the two. */}
+      <PenLine size={12} aria-hidden="true" />
+      <FormattedMessage {...ENVELOPE_CHIP_LABEL[envelope.status]} />
+    </span>
+  );
+}
+
 /** SET-001's deep link to the contract configuration behind this
  * record — a slot that navigates rather than opening the panel. */
 const SETTINGS_APPLET: Applet = {
@@ -348,6 +419,7 @@ function ContractRecord() {
     documents: contractDocuments,
     folders: contractFolders,
     approvals: contractApprovals,
+    signing: contractSigning,
     documentsCursor,
     fields,
     customFieldRefs,
@@ -420,6 +492,12 @@ function ContractRecord() {
    * roster — an ask adds rows, a cancellation takes one away — and the
    * section replaces what it holds without a page re-read. */
   const [approvals, setApprovals] = useState<ContractApproval[]>(contractApprovals);
+  /** What paper the record has sent out for signature (M15/2). State
+   * rather than loader data because a send answers the record's whole
+   * signing state — the new envelope, and the send control going with
+   * it — and the section replaces what it holds without a page
+   * re-read. */
+  const [signing, setSigning] = useState<SigningState>(contractSigning);
   /**
    * Which version the doc panel is reading, or none (M12/2).
    *
@@ -817,6 +895,12 @@ function ContractRecord() {
                   <FormattedMessage id="contracts.archivedPill" defaultMessage="Archived" />
                 </span>
               )}
+              {/* The envelope chip (grill row E.5, DES-036): drawn when
+                  this record has sent paper out, and absent otherwise,
+                  so a contract signed by hand carries no chrome about a
+                  feature it never used. It says the newest round, which
+                  is the one anybody asking is asking about. */}
+              <EnvelopeChip envelope={signing.envelopes[0] ?? null} />
             </div>
             {/* CTR-001's six-stage backbone, beside the pill that names
                 the status behind it (grill-plan D.8). It reads on an
@@ -1393,13 +1477,16 @@ function ContractRecord() {
                 />
               )}
               {/* Who has been asked to sign the record off (M14/3,
-                  CTR-012), in the section the C5 mock draws it in. The
-                  roster is auto-derived: nothing here authors an event,
-                  and the request affordances are the only writes. */}
+                  CTR-012) and what paper it has sent out (M15/2,
+                  CTR-013), in the section the C5 mock draws it in. Both
+                  kinds of row are auto-derived: nothing here authors an
+                  event, and the request and send affordances are the
+                  only writes. */}
               {tab === "approvals" && (
-                <ApprovalsCard
+                <ApprovalsSigningCard
                   contractNumber={saved.number}
                   approvals={approvals}
+                  signing={signing}
                   users={users}
                   approverGroups={approverGroups}
                   // The live roster and the saved row, not the loader's
@@ -1414,6 +1501,7 @@ function ContractRecord() {
                   isConfidential={saved.isConfidential}
                   frozen={frozen}
                   onApprovals={setApprovals}
+                  onSigning={setSigning}
                 />
               )}
             </div>

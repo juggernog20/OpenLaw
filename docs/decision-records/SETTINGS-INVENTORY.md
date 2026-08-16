@@ -104,3 +104,26 @@ a frame (#81). The sweep's deltas:
 5. **ST8's reassignment select** shipped with a third outcome beside reassign and block: in-use
    rows with no live reassignment candidate disable the select and the danger CTA with an
    explanatory line (DES-020 amendment 3). The frame stands; it draws the reassign case.
+
+## Amendment (2026-08-16, M15 — the E-signature pane, #245)
+
+ST7 draws the Integrations section this milestone builds, and its rail treatment shipped as drawn:
+an **Integrations** entry in the Organization group, `plug` glyph, last in the group. Two deltas
+between the frame and the shipped pane:
+
+1. **ST7 draws a summary row, the pane ships a form.** The frame shows one DocuSign row — logo
+   square, name, "Connected" pill, a **Configure** button, and an account caption — which implies a
+   second screen or a dialog behind Configure. The shipped pane has no second screen: it is the
+   **credential form itself**, on the ST18 anatomy (environment, integration key, user ID, RSA
+   private key, Connect HMAC secret), with **Save connector** and **Test connection** beside each
+   other and a read-only **webhook URL** with a Copy button below a divider. The two secret fields
+   are write-only and start blank, with ST18's "Leave blank to keep the current value" hint. This
+   is the recorded normalization; the decisions win over the mock.
+2. **The frame cannot hold both cards at 1440×940.** The credential form is roughly four times the
+   height of the summary row it replaces, so redrawing ST7 truthfully would push the AI analysis
+   card (M31, CTR-008) off the 940 frame every other frame in this file keeps to. **ST7 is
+   therefore left as drawn**, and the redraw is scheduled for the M31 Integrations pass, which owns
+   the second card and can lay both out together — either as two frames or as one taller one.
+
+The **placement** the frame assumes is now a recorded decision rather than only a mock: **SET-007**
+supersedes CTR-013's "Settings → Contracts → E-signature" sentence, and Integrations is the home.

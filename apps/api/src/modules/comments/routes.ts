@@ -95,7 +95,9 @@ import {
   sql,
   users,
   type CommentVisibility,
+  type Executor,
   type SQL,
+  type Transaction,
 } from "@openlaw/db";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
@@ -259,9 +261,6 @@ const NO_RECORD = "No record exists with this reference.";
 const NO_COMMENT = "No comment exists with this id.";
 
 export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
-  type Tx = Parameters<Parameters<typeof app.db.transaction>[0]>[0];
-  type Executor = typeof app.db | Tx;
-
   /** The one comment projection, joined to its author. Callers add the
    * scope; the list adds the order too. */
   const selectComments = (db: Executor) =>
@@ -743,7 +742,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
    * the other's revision row.
    */
   async function heldComment(
-    tx: Tx,
+    tx: Transaction,
     user: AuthenticatedUser,
     commentId: string,
   ): Promise<HeldComment> {
@@ -776,7 +775,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
 
   /** The comment as it now stands, through the thread's own projection,
    * so a corrected row is the row the next load will draw. */
-  async function readBack(tx: Tx, commentId: string) {
+  async function readBack(tx: Transaction, commentId: string) {
     const [row] = await selectComments(tx).where(eq(comments.id, commentId));
     const mentions = await mentionsOf(tx, [commentId]);
     return toComment(row!, mentions.get(commentId));

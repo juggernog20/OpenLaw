@@ -1,27 +1,50 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 #
 # Development / E2E overlay (TECH-017, TECH-018): adds Mailpit as the
-# SMTP sink and points the app at it. This is the ONLY divergence from
-# the deployer stack — a mail catcher must never ship in compose.yml,
-# where it would silently swallow real invites and magic links.
+# SMTP sink and points the app at it, and points signing at a stand-in
+# on the host. Both are the same rule — an outbound side that must never
+# reach a real account from a test run — and neither may ship in
+# compose.yml, where a mail catcher would silently swallow real invites
+# and a signing stand-in would swallow real envelopes.
 #
 #   docker compose -f compose.yml -f compose.dev.yml up
 #
 # Mail UI and pollable REST API (used by the E2E suite): http://localhost:8025
 
+# What both processes need to reach the same stand-ins. The app and the
+# worker are the same image running two commands, and both resolve the
+# signing connector for themselves — the app to send and to verify a
+# delivery, the worker to fetch an executed copy — so a variable set on
+# one and forgotten on the other is a send that works and a signed PDF
+# that never lands.
+x-openlaw-dev-signing: &openlaw-dev-signing
+  # Where the DocuSign driver dials, unset on every real install. The
+  # E2E suite listens on this port on the host and answers DocuSign's
+  # shapes (21-m15-demo.spec.ts); SIGNING_STUB_PORT moves it so a second
+  # stack can run beside the default one.
+  DOCUSIGN_BASE_URL: http://host.docker.internal:${SIGNING_STUB_PORT:-8129}
+
+# host-gateway gives Linux engines the name Docker Desktop defines out
+# of the box, which is how both processes reach the suite's own servers
+# on the host: the mock OIDC issuer (10-settings.spec.ts) and the
+# signing stand-in (21-m15-demo.spec.ts).
+x-openlaw-dev-hosts: &openlaw-dev-hosts
+  - "host.docker.internal:host-gateway"
+
 services:
   app:
     environment:
+      <<: *openlaw-dev-signing
       SMTP_URL: smtp://mailpit:1025
       SMTP_FROM: OpenLaw <openlaw@localhost>
       # The E2E suite replays sign-in flows from one IP far faster than
       # any human; production keeps better-auth's limits.
       AUTH_RATE_LIMIT: "off"
-    extra_hosts:
-      # The E2E suite registers an OIDC provider against a mock issuer
-      # listening on the host (10-settings.spec.ts); host-gateway gives
-      # Linux engines the name Docker Desktop defines out of the box.
-      - "host.docker.internal:host-gateway"
+    extra_hosts: *openlaw-dev-hosts
+
+  worker:
+    environment: *openlaw-dev-signing
+    extra_hosts: *openlaw-dev-hosts
 
   mailpit:
     # Pinned like every other image: `latest` could change delivery

@@ -418,6 +418,41 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/signing-connectors/{provider}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The e-signature connector's state (CTR-013): whether it is configured, which estate and credentials it names, and the webhook URL to paste into the provider's console. Never the RSA key or the Connect secret */
+    get: operations["getSigningConnector"];
+    /** Save the e-signature connector (CTR-013, TECH-013). The RSA key and the Connect secret are write-only: blank keeps the stored value, a value rotates it. A first save without the Connect secret is refused — the webhook must never answer unsigned deliveries */
+    put: operations["saveSigningConnector"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/signing-connectors/{provider}/test": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Authenticate against the provider with the stored credentials (TECH-013's test button) and name the account they reach. Answers in place; changes nothing */
+    post: operations["testSigningConnector"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contract-types": {
     parameters: {
       query?: never;
@@ -1109,6 +1144,41 @@ export interface paths {
     post?: never;
     /** Withdraw a pending approval request (CTR-012). Three actors may: the person who asked, the contract's Owner, and an Administrator — a mistaken or obsolete ask should not sit open, and stale requests should not outlive the people or deals they were about. The row is deleted and the approval.cancelled activity entry is the durable record of it, which is why that entry names the approver. A decided request is never cancelled: it is part of the record. A request on a contract this viewer cannot reach answers 404, exactly as for one that does not exist; an archived contract takes no cancellation until it is restored */
     delete: operations["cancelContractApproval"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/envelopes": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One contract's signing envelopes, newest send first (CTR-013) — the adapter that carried each one, where it stands, who was asked to sign it, what went out, and when. A declined or voided envelope carries the reason it ended with, and a finished one carries the moment it ended. Both arrive from the provider's own feed, so the record answers them without anybody typing them in. Answers two facts beside the rows: whether this install has an e-signature connector at all, and the primary document this viewer may send, with its version chain newest round first. Both are what decide whether the record draws a send control, so an install with no connector and a record with no paper each answer plainly rather than by omission. A contract that has only ever been signed by hand holds no envelopes, which is the zero-config manual hand-off and not an error. Access is inherited from the contract and nothing else: a Contributor on the team reads it, and anyone who cannot reach the contract is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it */
+    get: operations["listContractEnvelopes"];
+    put?: never;
+    /** Send a version of the contract's primary document out for signature (CTR-013). The version must be a round of that document's own chain — loose attachments are not sendable in v1, because the executed copy comes back to the chain the send left from. Signers are name-and-email pairs and every one of them is asked at once: there is no routing order. Sending is legal at any stage; CTR-001's transitions stay unrestricted. Refused with a typed problem when this install has no e-signature connector, and with another when the contract already has an envelope out — two envelopes must never race for one signature. The provider is called first and the row commits once it accepts; an envelope the provider took but the record could not keep is voided again before the refusal is raised, so the two systems do not drift apart silently. Appends one envelope.sent entry on the contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract sends nothing until it is restored */
+    post: operations["sendContractEnvelope"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/envelopes/{envelopeId}/void": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Withdraw a live envelope (CTR-013). Three actors may: the person who sent it, the contract's Owner, and an Administrator — a mistaken or superseded send should not sit open, and it should not wait on the one person who made it. The reason is required, because the provider records it with the withdrawal and the record draws it on the row. The provider is told first and the voided transition is applied after it accepts, so the record never says withdrawn while the envelope is still collecting signatures. An envelope that has already ended — signed, declined, or voided — is refused: an ending is part of the record. Appends one envelope.voided entry on the contract at the working-team tier, attributed to the voider (DD-017). Once it is voided the contract sends again, because the one-live-envelope rule holds only while an envelope is out. An envelope on a contract this viewer cannot reach answers 404, exactly as for one that was never sent; an archived contract takes no void until it is restored */
+    post: operations["voidContractEnvelope"];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -3062,6 +3132,142 @@ export interface operations {
             /** @enum {boolean} */
             delivered: true;
             to: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getSigningConnector: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        provider: "docusign";
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            connector: {
+              /** @enum {string} */
+              provider: "docusign";
+              configured: boolean;
+              environment: ("demo" | "production") | null;
+              integrationKey: string | null;
+              apiUserId: string | null;
+              hasPrivateKey: boolean;
+              hasWebhookSecret: boolean;
+              webhookUrl: string;
+              updatedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  saveSigningConnector: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        provider: "docusign";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          environment: "demo" | "production";
+          integrationKey: string;
+          apiUserId: string;
+          privateKey?: string;
+          webhookSecret?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            connector: {
+              /** @enum {string} */
+              provider: "docusign";
+              configured: boolean;
+              environment: ("demo" | "production") | null;
+              integrationKey: string | null;
+              apiUserId: string | null;
+              hasPrivateKey: boolean;
+              hasWebhookSecret: boolean;
+              webhookUrl: string;
+              updatedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  testSigningConnector: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        provider: "docusign";
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** @enum {boolean} */
+            connected: true;
+            accountName: string;
+            accountId: string;
+            userEmail: string;
           };
         };
       };
@@ -6132,6 +6338,246 @@ export interface operations {
               requestedAt: string;
               decidedAt: string | null;
             }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listContractEnvelopes: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            envelopes: {
+              id: string;
+              provider: string;
+              /** @enum {string} */
+              status: "sent" | "signed" | "declined" | "voided";
+              signers: {
+                name: string;
+                email: string;
+              }[];
+              documentTitle: string | null;
+              documentVersionNumber: number | null;
+              reason: string | null;
+              sentBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              };
+              /** Format: date-time */
+              sentAt: string;
+              completedAt: string | null;
+              /** @enum {string} */
+              executedFetch: "pending" | "ready" | "failed";
+              executedCopy: {
+                documentId: string;
+                versionId: string;
+                versionNumber: number;
+                originalFilename: string;
+              } | null;
+            }[];
+            signingConfigured: boolean;
+            primaryDocument: {
+              id: string;
+              title: string;
+              versions: {
+                id: string;
+                versionNumber: number;
+                kind: string;
+                originalFilename: string;
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+            } | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  sendContractEnvelope: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          documentVersionId: string;
+          signers: {
+            name: string;
+            /** Format: email */
+            email: string;
+          }[];
+          subject?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            envelopes: {
+              id: string;
+              provider: string;
+              /** @enum {string} */
+              status: "sent" | "signed" | "declined" | "voided";
+              signers: {
+                name: string;
+                email: string;
+              }[];
+              documentTitle: string | null;
+              documentVersionNumber: number | null;
+              reason: string | null;
+              sentBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              };
+              /** Format: date-time */
+              sentAt: string;
+              completedAt: string | null;
+              /** @enum {string} */
+              executedFetch: "pending" | "ready" | "failed";
+              executedCopy: {
+                documentId: string;
+                versionId: string;
+                versionNumber: number;
+                originalFilename: string;
+              } | null;
+            }[];
+            signingConfigured: boolean;
+            primaryDocument: {
+              id: string;
+              title: string;
+              versions: {
+                id: string;
+                versionNumber: number;
+                kind: string;
+                originalFilename: string;
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+            } | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  voidContractEnvelope: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        envelopeId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          reason: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            envelopes: {
+              id: string;
+              provider: string;
+              /** @enum {string} */
+              status: "sent" | "signed" | "declined" | "voided";
+              signers: {
+                name: string;
+                email: string;
+              }[];
+              documentTitle: string | null;
+              documentVersionNumber: number | null;
+              reason: string | null;
+              sentBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              };
+              /** Format: date-time */
+              sentAt: string;
+              completedAt: string | null;
+              /** @enum {string} */
+              executedFetch: "pending" | "ready" | "failed";
+              executedCopy: {
+                documentId: string;
+                versionId: string;
+                versionNumber: number;
+                originalFilename: string;
+              } | null;
+            }[];
+            signingConfigured: boolean;
+            primaryDocument: {
+              id: string;
+              title: string;
+              versions: {
+                id: string;
+                versionNumber: number;
+                kind: string;
+                originalFilename: string;
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+            } | null;
           };
         };
       };

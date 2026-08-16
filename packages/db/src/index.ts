@@ -16,6 +16,7 @@ import * as authSchema from "./schema/auth.js";
 import * as commentsSchema from "./schema/comments.js";
 import * as contractApprovalsSchema from "./schema/contract-approvals.js";
 import * as contractCounterpartiesSchema from "./schema/contract-counterparties.js";
+import * as contractEnvelopesSchema from "./schema/contract-envelopes.js";
 import * as contractStatusesSchema from "./schema/contract-statuses.js";
 import * as contractTeamSchema from "./schema/contract-team.js";
 import * as contractTypeFieldsSchema from "./schema/contract-type-fields.js";
@@ -32,6 +33,7 @@ import * as fieldsSchema from "./schema/fields.js";
 import * as matterTypeFieldsSchema from "./schema/matter-type-fields.js";
 import * as matterTypesSchema from "./schema/matter-types.js";
 import * as orgSchema from "./schema/org.js";
+import * as signingConnectorsSchema from "./schema/signing-connectors.js";
 
 export * from "./schema/activity.js";
 export * from "./schema/approver-groups.js";
@@ -39,6 +41,7 @@ export * from "./schema/auth.js";
 export * from "./schema/comments.js";
 export * from "./schema/contract-approvals.js";
 export * from "./schema/contract-counterparties.js";
+export * from "./schema/contract-envelopes.js";
 export * from "./schema/contract-statuses.js";
 export * from "./schema/contract-team.js";
 export * from "./schema/contract-type-fields.js";
@@ -55,6 +58,7 @@ export * from "./schema/fields.js";
 export * from "./schema/matter-type-fields.js";
 export * from "./schema/matter-types.js";
 export * from "./schema/org.js";
+export * from "./schema/signing-connectors.js";
 export const schema = {
   ...activitySchema,
   ...approverGroupsSchema,
@@ -62,6 +66,7 @@ export const schema = {
   ...commentsSchema,
   ...contractApprovalsSchema,
   ...contractCounterpartiesSchema,
+  ...contractEnvelopesSchema,
   ...contractStatusesSchema,
   ...contractTeamSchema,
   ...contractTypeFieldsSchema,
@@ -78,6 +83,7 @@ export const schema = {
   ...matterTypeFieldsSchema,
   ...matterTypesSchema,
   ...orgSchema,
+  ...signingConnectorsSchema,
 };
 
 // Query operators re-exported so consumers use this package's drizzle-orm
@@ -104,8 +110,41 @@ export {
  * same reason the operators are: a second drizzle-orm copy makes the
  * SQL types incompatible. */
 export type { SQL } from "drizzle-orm";
+/** Joining one table twice in one query — the envelope row reads the
+ * round that went out and the round that came back (M15/5), and both
+ * are `document_versions`. Re-exported for the operators' reason. */
+export { alias } from "drizzle-orm/pg-core";
 
 export type Db = NodePgDatabase<typeof schema> & { $client: pg.Pool };
+
+/**
+ * A transaction inside one database handle — the executor
+ * `db.transaction(...)` hands its callback.
+ *
+ * It is named here rather than restated at each use because the shape
+ * is Drizzle's, not ours: every caller that wanted it was writing the
+ * same `Parameters<Parameters<Db["transaction"]>[0]>[0]` incantation,
+ * and one of them getting it subtly wrong would be an error the
+ * compiler could not tell from a deliberate narrowing.
+ */
+export type Transaction = Parameters<Parameters<Db["transaction"]>[0]>[0];
+
+/**
+ * A database handle **or** a transaction inside one — what a helper
+ * takes when it does not care which, and the API's one name for it.
+ *
+ * Most reads and writes below the route layer are written against this:
+ * a caller that checks and then writes passes its transaction, so the
+ * check and the write share one snapshot — and so that a caller holding
+ * a row lock does not take a second pooled connection to ask about the
+ * row it is holding.
+ *
+ * Ask for {@link Transaction} instead where being inside a transaction
+ * is the point: a `FOR UPDATE` taken on a pooled handle is released by
+ * the statement's own commit, so a helper that locks must not accept
+ * one.
+ */
+export type Executor = Db | Transaction;
 
 export function createDb(databaseUrl: string): Db {
   // pg's default connect wait is unbounded; a cap keeps failed attempts
