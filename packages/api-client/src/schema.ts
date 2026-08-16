@@ -418,6 +418,41 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/signing-connectors/{provider}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The e-signature connector's state (CTR-013): whether it is configured, which estate and credentials it names, and the webhook URL to paste into the provider's console. Never the RSA key or the Connect secret */
+    get: operations["getSigningConnector"];
+    /** Save the e-signature connector (CTR-013, TECH-013). The RSA key and the Connect secret are write-only: blank keeps the stored value, a value rotates it. A first save without the Connect secret is refused — the webhook must never answer unsigned deliveries */
+    put: operations["saveSigningConnector"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/signing-connectors/{provider}/test": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Authenticate against the provider with the stored credentials (TECH-013's test button) and name the account they reach. Answers in place; changes nothing */
+    post: operations["testSigningConnector"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contract-types": {
     parameters: {
       query?: never;
@@ -3062,6 +3097,142 @@ export interface operations {
             /** @enum {boolean} */
             delivered: true;
             to: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getSigningConnector: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        provider: "docusign";
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            connector: {
+              /** @enum {string} */
+              provider: "docusign";
+              configured: boolean;
+              environment: ("demo" | "production") | null;
+              integrationKey: string | null;
+              apiUserId: string | null;
+              hasPrivateKey: boolean;
+              hasWebhookSecret: boolean;
+              webhookUrl: string;
+              updatedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  saveSigningConnector: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        provider: "docusign";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          environment: "demo" | "production";
+          integrationKey: string;
+          apiUserId: string;
+          privateKey?: string;
+          webhookSecret?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            connector: {
+              /** @enum {string} */
+              provider: "docusign";
+              configured: boolean;
+              environment: ("demo" | "production") | null;
+              integrationKey: string | null;
+              apiUserId: string | null;
+              hasPrivateKey: boolean;
+              hasWebhookSecret: boolean;
+              webhookUrl: string;
+              updatedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  testSigningConnector: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        provider: "docusign";
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** @enum {boolean} */
+            connected: true;
+            accountName: string;
+            accountId: string;
+            userEmail: string;
           };
         };
       };

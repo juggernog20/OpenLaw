@@ -16,6 +16,7 @@ import { createUnconfiguredMailer } from "../src/lib/mailer.js";
 import { createLocalStorage } from "../src/lib/storage/local.js";
 import { createFakeDocEngine } from "../src/lib/doc-engine/fake.js";
 import { createUnconfiguredJobQueue } from "../src/pipeline/jobs.js";
+import { createUnconfiguredSigningResolver } from "../src/lib/signing/resolver.js";
 
 // Rendering the document only registers routes; nothing connects to the
 // database, sends mail, or stores a file, so inert stand-in dependencies
@@ -29,6 +30,7 @@ const app = await buildApp(
     storage: createLocalStorage({ root: join(tmpdir(), "openlaw-openapi-emit-never-written") }),
     docEngine: createFakeDocEngine(),
     jobs: createUnconfiguredJobQueue(),
+    resolveSigningProvider: createUnconfiguredSigningResolver(),
   },
   { logger: false },
 );

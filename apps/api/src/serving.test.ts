@@ -15,6 +15,7 @@ import { createDb } from "@openlaw/db";
 import { buildApp } from "./app.js";
 import { createFakeDocEngine } from "./lib/doc-engine/fake.js";
 import { createUnconfiguredJobQueue } from "./pipeline/jobs.js";
+import { createUnconfiguredSigningResolver } from "./lib/signing/resolver.js";
 import {
   CapturingMailer,
   createTestStorage,
@@ -52,6 +53,7 @@ describe("SPA serving", () => {
       storage: storage.storage,
       docEngine: createFakeDocEngine(),
       jobs: createUnconfiguredJobQueue(),
+      resolveSigningProvider: createUnconfiguredSigningResolver(),
       webDist,
     });
     await app.ready();
@@ -150,6 +152,7 @@ describe("readiness", () => {
         storage: storage.storage,
         docEngine: createFakeDocEngine(),
         jobs: createUnconfiguredJobQueue(),
+        resolveSigningProvider: createUnconfiguredSigningResolver(),
       });
       await app.ready();
     });

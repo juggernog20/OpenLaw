@@ -2212,6 +2212,336 @@
         }
       }
     },
+    "/api/v1/signing-connectors/{provider}": {
+      "get": {
+        "operationId": "getSigningConnector",
+        "summary": "The e-signature connector's state (CTR-013): whether it is configured, which estate and credentials it names, and the webhook URL to paste into the provider's console. Never the RSA key or the Connect secret",
+        "tags": ["signing-connector"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["docusign"]
+            },
+            "in": "path",
+            "name": "provider",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "connector": {
+                      "type": "object",
+                      "properties": {
+                        "provider": {
+                          "type": "string",
+                          "enum": ["docusign"]
+                        },
+                        "configured": {
+                          "type": "boolean"
+                        },
+                        "environment": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["demo", "production"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "integrationKey": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "apiUserId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "hasPrivateKey": {
+                          "type": "boolean"
+                        },
+                        "hasWebhookSecret": {
+                          "type": "boolean"
+                        },
+                        "webhookUrl": {
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "provider",
+                        "configured",
+                        "environment",
+                        "integrationKey",
+                        "apiUserId",
+                        "hasPrivateKey",
+                        "hasWebhookSecret",
+                        "webhookUrl",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["connector"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "saveSigningConnector",
+        "summary": "Save the e-signature connector (CTR-013, TECH-013). The RSA key and the Connect secret are write-only: blank keeps the stored value, a value rotates it. A first save without the Connect secret is refused — the webhook must never answer unsigned deliveries",
+        "tags": ["signing-connector"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "environment": {
+                    "type": "string",
+                    "enum": ["demo", "production"]
+                  },
+                  "integrationKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "apiUserId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "privateKey": {
+                    "type": "string",
+                    "maxLength": 20000
+                  },
+                  "webhookSecret": {
+                    "type": "string",
+                    "maxLength": 500
+                  }
+                },
+                "required": ["environment", "integrationKey", "apiUserId"]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["docusign"]
+            },
+            "in": "path",
+            "name": "provider",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "connector": {
+                      "type": "object",
+                      "properties": {
+                        "provider": {
+                          "type": "string",
+                          "enum": ["docusign"]
+                        },
+                        "configured": {
+                          "type": "boolean"
+                        },
+                        "environment": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["demo", "production"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "integrationKey": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "apiUserId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "hasPrivateKey": {
+                          "type": "boolean"
+                        },
+                        "hasWebhookSecret": {
+                          "type": "boolean"
+                        },
+                        "webhookUrl": {
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "provider",
+                        "configured",
+                        "environment",
+                        "integrationKey",
+                        "apiUserId",
+                        "hasPrivateKey",
+                        "hasWebhookSecret",
+                        "webhookUrl",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["connector"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/signing-connectors/{provider}/test": {
+      "post": {
+        "operationId": "testSigningConnector",
+        "summary": "Authenticate against the provider with the stored credentials (TECH-013's test button) and name the account they reach. Answers in place; changes nothing",
+        "tags": ["signing-connector"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["docusign"]
+            },
+            "in": "path",
+            "name": "provider",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "connected": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "accountName": {
+                      "type": "string"
+                    },
+                    "accountId": {
+                      "type": "string"
+                    },
+                    "userEmail": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["connected", "accountName", "accountId", "userEmail"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/contract-types": {
       "get": {
         "operationId": "listContractTypes",

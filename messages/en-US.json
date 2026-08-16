@@ -177,7 +177,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -214,6 +214,12 @@
   },
   "activity.orgSettings.updated": {
     "defaultMessage": "{actor} changed the organization settings"
+  },
+  "activity.signingConnector.configured": {
+    "defaultMessage": "{actor} connected the e-signature provider {provider}"
+  },
+  "activity.signingConnector.updated": {
+    "defaultMessage": "{actor} changed the e-signature connector {provider}"
   },
   "activity.someone": {
     "defaultMessage": "someone"
@@ -2393,6 +2399,72 @@
   "settings.contracts.title": {
     "defaultMessage": "Contracts"
   },
+  "settings.eSignature.connected": {
+    "defaultMessage": "Connected to {account}."
+  },
+  "settings.eSignature.docusign": {
+    "defaultMessage": "DocuSign"
+  },
+  "settings.eSignature.environment": {
+    "defaultMessage": "Environment"
+  },
+  "settings.eSignature.environment.demo": {
+    "defaultMessage": "Demo"
+  },
+  "settings.eSignature.environment.production": {
+    "defaultMessage": "Production"
+  },
+  "settings.eSignature.integrationKey": {
+    "defaultMessage": "Integration key"
+  },
+  "settings.eSignature.intro": {
+    "defaultMessage": "Connect your DocuSign account so contracts are sent for signature from their records. Without a connector, the manual path still works: upload the executed PDF and pin it by hand."
+  },
+  "settings.eSignature.privateKey": {
+    "defaultMessage": "RSA private key"
+  },
+  "settings.eSignature.privateKey.placeholder": {
+    "defaultMessage": "-----BEGIN RSA PRIVATE KEY-----"
+  },
+  "settings.eSignature.save": {
+    "defaultMessage": "Save connector"
+  },
+  "settings.eSignature.secret.hint": {
+    "defaultMessage": "Leave blank to keep the current value. Paste a new one to rotate."
+  },
+  "settings.eSignature.secretPlaceholder": {
+    "defaultMessage": "••••••••••••••••"
+  },
+  "settings.eSignature.test": {
+    "defaultMessage": "Test connection"
+  },
+  "settings.eSignature.testFailed": {
+    "defaultMessage": "The connection test failed. Check the credentials and try again."
+  },
+  "settings.eSignature.testing": {
+    "defaultMessage": "Testing the connection…"
+  },
+  "settings.eSignature.title": {
+    "defaultMessage": "E-signature"
+  },
+  "settings.eSignature.userId": {
+    "defaultMessage": "User ID"
+  },
+  "settings.eSignature.userId.hint": {
+    "defaultMessage": "The DocuSign user envelopes are sent as. Grant that user consent to the integration once, from the DocuSign console."
+  },
+  "settings.eSignature.webhookSecret": {
+    "defaultMessage": "Connect HMAC secret"
+  },
+  "settings.eSignature.webhookSecret.hint": {
+    "defaultMessage": "Required. OpenLaw checks it on every delivery, so nothing unsigned can change a record."
+  },
+  "settings.eSignature.webhookUrl": {
+    "defaultMessage": "Webhook URL"
+  },
+  "settings.eSignature.webhookUrl.hint": {
+    "defaultMessage": "Paste this into a DocuSign Connect configuration so envelope status reaches this install."
+  },
   "settings.entities.tab.types": {
     "defaultMessage": "Types"
   },
@@ -2743,6 +2815,9 @@
   },
   "settings.section.general": {
     "defaultMessage": "General"
+  },
+  "settings.section.integrations": {
+    "defaultMessage": "Integrations"
   },
   "settings.section.matters": {
     "defaultMessage": "Matters"

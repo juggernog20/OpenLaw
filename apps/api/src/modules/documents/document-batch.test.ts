@@ -28,6 +28,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { eq, users } from "@openlaw/db";
 import { buildApp } from "../../app.js";
+import { createUnconfiguredSigningResolver } from "../../lib/signing/resolver.js";
 import { fakeExtractedText } from "../../lib/doc-engine/fake.js";
 import { provisionUser } from "../../auth/instance.js";
 import {
@@ -357,6 +358,7 @@ describe("the per-file ceiling inside a batch", () => {
       resolveMailer: fixedMailerResolver(new CapturingMailer()),
       storage: harness.storage,
       docEngine: harness.docEngine,
+      resolveSigningProvider: createUnconfiguredSigningResolver(),
       jobs: harness.pipeline,
       maxUploadBytes: LIMIT,
     });

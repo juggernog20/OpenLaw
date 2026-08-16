@@ -199,6 +199,20 @@ export type ActivityAction =
   | "folder.deleted"
   | "sso_provider.registered"
   | "sso_provider.updated"
+  // The e-signature connector (M15/1, CTR-013). Two verbs rather than
+  // one generic settings edit: connecting an install to a signing
+  // provider for the first time is a different event from rotating a
+  // key on the one it already has, and an Administrator asking "when
+  // did the RSA key last change" has to be able to filter the audit log
+  // on it. Both are admin-only, like every settings mutation since M5.
+  //
+  // Neither payload ever carries a credential. The RSA key and the
+  // Connect secret record as `[secret]` on both sides of their change,
+  // the SSO client secret's shape and for its reason: this table is
+  // append-only, so a secret that reached a payload would be in the
+  // record forever.
+  | "signing_connector.configured"
+  | "signing_connector.updated"
   // Data leaving the system (M9/7, DD-017). An export is a security
   // event in its own right, so taking one appends an entry at
   // `admin_only` naming the filters it was taken under. It hangs off

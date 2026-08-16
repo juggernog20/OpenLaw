@@ -157,6 +157,27 @@ No `archived_at`: providers are deleted (future management surface), not archive
 
 ---
 
+### `signing_connectors`
+
+Source: **CTR-013** (provider-agnostic signing adapter), **TECH-013** (DocuSign JWT grant), **SET-007** (the pane's home)
+
+The credentials one e-signature provider is reached with. **Adapter-keyed**: one row per adapter, `provider` unique, `docusign` in v1 — a second provider is a second row, not a second table. The row is **org data, not deployment environment**: an Administrator configures it at runtime in Settings → Organization → Integrations → E-signature, and every use reads it live (the mailer-resolver pattern), so a rotation applies to the next call with no restart. An install with no row resolves to no provider, which is what keeps CTR-013's zero-config manual hand-off working.
+
+| Column                     | Type        | Notes                                                                                                                           |
+| -------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                                              |
+| `provider`                 | text (enum) | the adapter behind the row; `docusign` in v1. Unique — one connector per adapter                                                |
+| `environment`              | text (enum) | `demo` \| `production`; the two estates differ by host and account (**TECH-013**)                                               |
+| `integration_key`          | text        | DocuSign's integration key — the OAuth client id of the app                                                                     |
+| `api_user_id`              | text        | the provider-side user the integration signs as; a GUID in DocuSign's directory, never a row in ours                            |
+| `private_key`              | text        | RSA private key (PEM) that signs the JWT assertions. **Write-only** through the API; plaintext at rest, the accepted v1 posture |
+| `webhook_secret`           | text        | the Connect HMAC secret. **Write-only**, and **not nullable** — a connector without one would answer unsigned deliveries        |
+| `created_at`, `updated_at` | timestamptz |                                                                                                                                 |
+
+No `archived_at`: a connector is edited or deleted, never archived. The two secret columns are the **second named entry** on the future secrets-encryption pass (the first is `sso_providers.oidc_config`).
+
+---
+
 ### `two_factors`
 
 Source: **TECH-008** (TOTP second factor for password accounts)
