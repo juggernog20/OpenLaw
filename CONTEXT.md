@@ -157,7 +157,12 @@ The date by which somebody must act to stop a Contract renewing: its expiry date
 _Avoid_: notice date, notice period (that is the count of days this is derived from), cancellation deadline
 
 **Key date**:
-A named deadline on a Matter or Contract; key dates feed deadline surfaces [MTR-004, CTR-009].
+A named deadline on a Matter or Contract — a date, a label, and an optional note. Key dates feed deadline surfaces. A key date carries no owner and no reminder schedule of its own [MTR-004, CTR-009, NOT-004].
+_Avoid_: milestone, custom date, important date
+
+**Next deadline**:
+The earliest date that has not yet passed on a record's deadline surface — a date falling today still counts. On a Contract that surface is the union of its key dates, its expiry date, and its derived notice deadline, so the next deadline may be any of the three. A record whose every date has passed has none [CTR-009, MTR-004].
+_Avoid_: due date, upcoming date, next date
 
 **Task**:
 A lightweight checklist item. Deliberately not an entity — no comments, no status beyond done, and task due dates never feed deadline surfaces [MTR-005, CTR-017].

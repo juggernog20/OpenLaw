@@ -159,6 +159,7 @@ import {
   NO_CONTRACT,
   reachesLockedContract,
 } from "../../lib/contract-access.js";
+import { daysRemaining, noticeDeadline } from "../../lib/contract-term.js";
 import {
   AttachedCustomFieldSchema,
   assertRequiredCustomFields,
@@ -557,55 +558,6 @@ function toValue(row: Contract) {
     : { amount: row.valueAmount, currency: row.valueCurrency, cadence: row.valueCadence };
 }
 
-const DAY_MS = 86_400_000;
-
-/** A civil date as the instant of its own UTC midnight. The term
- * columns are calendar dates rather than moments, so every subtraction
- * below is done in one zone and stays whole days. */
-function civilInstant(date: string): number {
-  return Date.parse(`${date}T00:00:00Z`);
-}
-
-/** That instant back as the `YYYY-MM-DD` the wire and the column both
- * carry. */
-function civilDate(instant: number): string {
-  return new Date(instant).toISOString().slice(0, 10);
-}
-
-/**
- * CTR-006's notice deadline: the expiry minus the notice period.
- *
- * **Derived at read, stored nowhere.** It is null while either half is
- * missing: with no expiry there is nothing to subtract from, and with
- * no notice period there is nothing to subtract. An evergreen contract
- * holds no expiry, so it never has one — the blank falls out of the
- * model rather than being a case anybody writes.
- */
-function toNoticeDeadline(row: Contract): string | null {
-  if (row.expiryDate === null || row.noticePeriodDays === null) return null;
-  return civilDate(civilInstant(row.expiryDate) - row.noticePeriodDays * DAY_MS);
-}
-
-/**
- * How many days are left of the term: the expiry minus today.
- *
- * **Derived at read, stored nowhere** — and so it needs no job, no
- * sweep, and no clock seam: it is a function of one column and the
- * calendar, and a test controls it by writing a date on either side of
- * now. Negative once the expiry has passed, because a record whose term
- * ran out has to be able to say so.
- *
- * Today is taken in UTC. The seam has no viewer to take a timezone
- * from, and this is an at-a-glance count rather than a deadline
- * anybody's diary is set by — the deadline itself is the notice
- * deadline above, which is a calendar date and carries no zone at all.
- */
-function toDaysRemaining(row: Contract, now: Date = new Date()): number | null {
-  if (row.expiryDate === null) return null;
-  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  return Math.round((civilInstant(row.expiryDate) - today) / DAY_MS);
-}
-
 /** One value equals another when all three parts match, and no value
  * equals no value. A field that commits as a group compares as a group
  * — otherwise a re-sent identical value would write an audit row saying
@@ -658,12 +610,12 @@ function toRow(context: ContractContext) {
     expiryDate: row.expiryDate,
     renewalPeriodMonths: row.renewalPeriodMonths,
     noticePeriodDays: row.noticePeriodDays,
-    // The two CTR-006 derivations, computed here because here is where
-    // every answer is assembled — one place, so the record read, the
-    // list, and every write's answer can never disagree about a date
+    // The two CTR-006 derivations, taken from the one module that
+    // derives them — so the record read, the list, every write's answer,
+    // and the CTR-009 deadline union can never disagree about a date
     // none of them stores.
-    noticeDeadline: toNoticeDeadline(row),
-    daysRemaining: toDaysRemaining(row),
+    noticeDeadline: noticeDeadline(row.expiryDate, row.noticePeriodDays),
+    daysRemaining: daysRemaining(row.expiryDate),
     description: row.description,
     customFields: row.customFields,
     isConfidential: row.isConfidential,

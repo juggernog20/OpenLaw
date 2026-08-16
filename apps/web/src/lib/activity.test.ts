@@ -211,6 +211,23 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "approval.rejected": { ...APPROVER, hasNote: false },
   "approval.cancelled": APPROVER,
 
+  // ---- The record's key dates (CTR-009) ----
+  "key_date.added": {
+    keyDateId: "kd-1",
+    label: "Price review window opens",
+    date: "2027-03-01",
+  },
+  "key_date.edited": {
+    keyDateId: "kd-1",
+    label: "Price review window opens",
+    changed: { date: { from: "2027-03-01", to: "2027-04-01" } },
+  },
+  "key_date.removed": {
+    keyDateId: "kd-1",
+    label: "Price review window opens",
+    date: "2027-04-01",
+  },
+
   // ---- The Entities registry ----
   "entity.created": { legalName: "Helix Labs GmbH", entityType: "GmbH", status: "active" },
   "entity.updated": {

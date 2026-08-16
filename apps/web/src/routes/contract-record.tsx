@@ -10,16 +10,18 @@
  * chrome — with the Owner, the type, status, priority, and risk as
  * selects.
  *
- * Four sections, four addresses. **Overview** (`/contracts/42`) is
+ * Five sections, five addresses. **Overview** (`/contracts/42`) is
  * the record's own columns: the Contract card, the Description card
  * under it, and the Term timeline card that closes the section.
  * **Fields** (`/contracts/42/fields`) is what this contract's
  * type asks for on top of them. **Documents**
  * (`/contracts/42/documents`) is the paper. **Approvals**
  * (`/contracts/42/approvals`) is who has been asked to sign it off
- * (CTR-012, DES-035). The Team card is not one of the four — it stands
- * beside all of them, because who is on a contract is context for
- * reading any part of it.
+ * (CTR-012, DES-035). **Key dates** (`/contracts/42/key-dates`) is
+ * every date the record has, as one union — the team's own named dates,
+ * the expiry, and the derived notice deadline (CTR-009, DES-042). The
+ * Team card is not one of the five — it stands beside all of them,
+ * because who is on a contract is context for reading any part of it.
  *
  * The custom fields are CTR-016's, and they earn the card the C2 mock
  * draws for them. The contract's type decides which of them appear and
@@ -188,6 +190,7 @@ import {
 } from "../lib/custom-fields";
 import { currencyFractionDigits, currencyOptions, toMajorUnits, toMinorUnits } from "../lib/format";
 import { APPROVAL_PILL, isUnresolved, type ContractApproval } from "../lib/approvals";
+import { readContractKeyDates, type ContractDeadline } from "../lib/key-dates";
 import { FOLDER_ROOT, type ContractDocument } from "../lib/documents";
 import type { ContractFolder } from "../lib/folders";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
@@ -205,6 +208,7 @@ import { ApprovalsSigningCard } from "../components/approvals/approvals-signing-
 import { Avatar } from "../components/avatar";
 import { ConfidentialBanner } from "../components/confidential-banner";
 import { ConfidentialToggle } from "../components/confidential-toggle";
+import { KeyDatesCard } from "../components/contracts/key-dates-card";
 import { TermTimelineCard } from "../components/contracts/term-timeline-card";
 import { CounterpartyPicker, type CounterpartyPick } from "../components/counterparty-picker";
 import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
@@ -220,7 +224,7 @@ import { Label } from "../components/ui/label";
 
 /** The record's sections (DES-032), in the order the strip draws them.
  * The Overview is the bare address, so it has no segment of its own. */
-const RECORD_TABS = ["fields", "documents", "approvals"] as const;
+const RECORD_TABS = ["fields", "documents", "approvals", "key-dates"] as const;
 type RecordTabName = "overview" | (typeof RECORD_TABS)[number];
 
 export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
@@ -242,44 +246,51 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
   // Contributor anyway; the record read alone carries every name the
   // page has to draw.
   const canEdit = isMemberPlus(user.role);
-  const [record, documents, folders, approvals, signing, options, registry] = await Promise.all([
-    api.GET("/api/v1/contracts/{number}", { params: { path: { number } } }),
-    // The record's paper (M11/2). Read by every viewer who reaches the
-    // page — a Contributor on the team reads and downloads it too
-    // (DD-015) — and answered 404 for anyone the record itself is
-    // hidden from, which is the same refusal the record read gives.
-    //
-    // The record root only (M13/3): the tree draws its folders first and
-    // then the documents filed nowhere, and a folder's own documents
-    // load when it is opened. Reading the record's whole paper here
-    // would draw every filed document twice.
-    api.GET("/api/v1/contracts/{number}/documents", {
-      params: { path: { number }, query: { folder: FOLDER_ROOT } },
-    }),
-    // How that paper is filed (M13/2, DOC-006). One read for the whole
-    // tree, because a record's folder set is small and drawing it a
-    // level at a time would be a round trip per press.
-    api.GET("/api/v1/contracts/{number}/folders", { params: { path: { number } } }),
-    // Who has been asked to sign the record off (M14/3, CTR-012). Read
-    // by every viewer who reaches the page — a Contributor on the team
-    // reads the roster too — and answered 404 for anyone the record
-    // itself is hidden from, which is the same refusal the record read
-    // gives.
-    api.GET("/api/v1/contracts/{number}/approvals", { params: { path: { number } } }),
-    // What paper this record has sent out for signature (M15/2,
-    // CTR-013), read by every viewer who reaches the page for the
-    // roster's reason. It carries two facts beside the envelopes —
-    // whether this install has a connector, and the chain a send would
-    // offer — so the card decides in one condition whether to draw the
-    // send control at all.
-    api.GET("/api/v1/contracts/{number}/envelopes", { params: { path: { number } } }),
-    canEdit ? api.GET("/api/v1/contracts/options") : undefined,
-    // The registry's own Member+ list is the signing-entity picker's
-    // source (CTR-011): it is ordered by legal name and already leaves
-    // archived entities out, so the contracts surface needs no read of
-    // its own the way it does for the Administrator-only taxonomies.
-    canEdit ? api.GET("/api/v1/entities") : undefined,
-  ]);
+  const [record, documents, folders, approvals, signing, keyDates, options, registry] =
+    await Promise.all([
+      api.GET("/api/v1/contracts/{number}", { params: { path: { number } } }),
+      // The record's paper (M11/2). Read by every viewer who reaches the
+      // page — a Contributor on the team reads and downloads it too
+      // (DD-015) — and answered 404 for anyone the record itself is
+      // hidden from, which is the same refusal the record read gives.
+      //
+      // The record root only (M13/3): the tree draws its folders first and
+      // then the documents filed nowhere, and a folder's own documents
+      // load when it is opened. Reading the record's whole paper here
+      // would draw every filed document twice.
+      api.GET("/api/v1/contracts/{number}/documents", {
+        params: { path: { number }, query: { folder: FOLDER_ROOT } },
+      }),
+      // How that paper is filed (M13/2, DOC-006). One read for the whole
+      // tree, because a record's folder set is small and drawing it a
+      // level at a time would be a round trip per press.
+      api.GET("/api/v1/contracts/{number}/folders", { params: { path: { number } } }),
+      // Who has been asked to sign the record off (M14/3, CTR-012). Read
+      // by every viewer who reaches the page — a Contributor on the team
+      // reads the roster too — and answered 404 for anyone the record
+      // itself is hidden from, which is the same refusal the record read
+      // gives.
+      api.GET("/api/v1/contracts/{number}/approvals", { params: { path: { number } } }),
+      // What paper this record has sent out for signature (M15/2,
+      // CTR-013), read by every viewer who reaches the page for the
+      // roster's reason. It carries two facts beside the envelopes —
+      // whether this install has a connector, and the chain a send would
+      // offer — so the card decides in one condition whether to draw the
+      // send control at all.
+      api.GET("/api/v1/contracts/{number}/envelopes", { params: { path: { number } } }),
+      // Every date on the record (M16/3, CTR-009): its key dates, its
+      // expiry, and its derived notice deadline, as one union the seam has
+      // already ordered and marked. Read by every viewer who reaches the
+      // page for the roster's reason — a Contributor on the team reads the
+      // record's deadlines too.
+      api.GET("/api/v1/contracts/{number}/key-dates", { params: { path: { number } } }),
+      canEdit ? api.GET("/api/v1/contracts/options") : undefined,
+      // The registry's own Member+ list is the signing-entity picker's
+      // source (CTR-011): it is ordered by legal name and already leaves
+      // archived entities out, so the contracts surface needs no read of
+      // its own the way it does for the Administrator-only taxonomies.
+      canEdit ? api.GET("/api/v1/entities") : undefined,
+    ]);
   // The documents read is required, like the record read: every viewer
   // who reaches this page reads the paper on it (DD-015). A failure
   // here must not render as "No documents on this contract yet" — an
@@ -291,6 +302,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     !folders.data ||
     !approvals.data ||
     !signing.data ||
+    !keyDates.data ||
     (canEdit && !(options?.data && registry?.data))
   ) {
     throw new Error("The contract could not be read.");
@@ -312,6 +324,10 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
      * an install with no connector is a fact about the deployment, not
      * a fallback for a read that did not happen. */
     signing: signing.data,
+    /** Every date on the record, as one CTR-009 union (M16/3). Required
+     * like the roster: a record with no dates at all is a fact about it,
+     * not a fallback for a read that did not happen. */
+    deadlines: keyDates.data.deadlines,
     /** Where the next page of paper starts, or null when the first page
      * is all of it (CTR-024). */
     documentsCursor: documents.data.nextCursor,
@@ -460,6 +476,7 @@ function ContractRecord() {
     folders: contractFolders,
     approvals: contractApprovals,
     signing: contractSigning,
+    deadlines: contractDeadlines,
     documentsCursor,
     fields,
     customFieldRefs,
@@ -538,6 +555,15 @@ function ContractRecord() {
    * it — and the section replaces what it holds without a page
    * re-read. */
   const [signing, setSigning] = useState<SigningState>(contractSigning);
+  /** Every date on the record, as the CTR-009 union (M16/3). State
+   * rather than loader data because every key-date write answers the
+   * whole union — adding, moving, or removing one date can change which
+   * date the list calls next — and the section replaces what it holds
+   * without a page re-read. */
+  const [deadlines, setDeadlines] = useState<ContractDeadline[]>(contractDeadlines);
+  /** Which re-read of the union above is the newest one in flight. Two
+   * term commits in a row race, and only the last answer may land. */
+  const deadlinesRead = useRef(0);
   /**
    * Which version the doc panel is reading, or none (M12/2).
    *
@@ -687,6 +713,35 @@ function ContractRecord() {
     };
   }
 
+  /**
+   * Re-reads the record's deadline union (M16/3, CTR-009).
+   *
+   * Two of the three dates the Key dates section draws **are** the term,
+   * so a term edit moves that section as surely as it moves the timeline
+   * card. The union is re-read rather than patched here: its order, its
+   * day counts, and which date it calls next are the seam's answer
+   * (DES-040 clause 4), and a second copy of that rule on this page is
+   * the copy that drifts.
+   *
+   * Two term fields committed in quick succession put two reads in
+   * flight, and nothing makes them land in the order they were sent —
+   * so each read takes a ticket and only the newest one is allowed to
+   * write. Without it the older answer can arrive last and put the
+   * section back to the term before the second edit.
+   *
+   * A read that fails leaves the union as it was and says nothing. The
+   * commit itself has already landed and its own micro-state has already
+   * said so; a second failure note about a background read would report
+   * a change that did in fact happen as one that did not, and the
+   * section is on another tab from the field that raised it.
+   */
+  function refreshDeadlines(number: number) {
+    const ticket = ++deadlinesRead.current;
+    void readContractKeyDates(number).then((outcome) => {
+      if (outcome.ok && ticket === deadlinesRead.current) setDeadlines(outcome.deadlines);
+    });
+  }
+
   function note(key: FieldKey, status: FieldStatus, detail?: string) {
     setFieldStatus((current) => ({ ...current, [key]: status }));
     setFieldError((current) => ({ ...current, [key]: detail }));
@@ -733,6 +788,9 @@ function ContractRecord() {
       setTermFields(termDrafts(row));
     } else if (key in termFields) {
       setTermFields((current) => ({ ...current, [key]: termDrafts(row)[key as TermDraftKey] }));
+    }
+    if (key === "termType" || key === "expiryDate" || key === "noticePeriodDays") {
+      refreshDeadlines(row.number);
     }
     note(key, "saved");
     return { ok: true };
@@ -1093,6 +1151,12 @@ function ContractRecord() {
                     id="contracts.record.tab.approvals"
                     defaultMessage="Approvals"
                   />
+                ),
+              },
+              {
+                to: `/contracts/${saved.number}/key-dates`,
+                label: (
+                  <FormattedMessage id="contracts.record.tab.keyDates" defaultMessage="Key dates" />
                 ),
               },
             ]}
@@ -1778,6 +1842,23 @@ function ContractRecord() {
                   kinds of row are auto-derived: nothing here authors an
                   event, and the request and send affordances are the
                   only writes. */}
+              {/* Every date on the record, in the section the C6 mock
+                  draws it in (M16/3, CTR-009): the key dates the team
+                  adds, the contract's expiry, and the notice deadline
+                  the record derives — one list, ordered, with the next
+                  one named. */}
+              {tab === "key-dates" && (
+                <KeyDatesCard
+                  contractNumber={saved.number}
+                  deadlines={deadlines}
+                  // The saved row, not the loader's copy: editing the
+                  // notice period on the Overview changes what the
+                  // derived row's own sentence says about itself.
+                  noticePeriodDays={saved.noticePeriodDays}
+                  frozen={frozen}
+                  onDeadlines={setDeadlines}
+                />
+              )}
               {tab === "approvals" && (
                 <ApprovalsSigningCard
                   contractNumber={saved.number}

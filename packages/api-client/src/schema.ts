@@ -1236,6 +1236,42 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/contracts/{number}/key-dates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One contract's whole deadline surface (CTR-009): the union of its key dates, its expiry date, and its derived notice deadline, ordered with what is still ahead first and nearest first, then what has gone by, most recently passed first. Exactly one entry — the earliest still ahead — is marked as the next deadline, and none is on a record whose every date has passed. The expiry and the notice deadline carry no key date id, because no row backs them: the notice deadline is the expiry minus the notice period, computed on every read and stored nowhere, and both move by editing the term on the record. Access is inherited from the contract and nothing else: a Contributor on the team reads the surface, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it */
+    get: operations["listContractKeyDates"];
+    put?: never;
+    /** Put a named date on a contract (CTR-009): a calendar date, a label, and an optional note — the free-form escape hatch beside the typed term columns, for price reviews, option-exercise windows, and delivery milestones. A blank label is refused and a blank note is stored as no note at all. There is no owner and no per-date reminder schedule: NOT-004 fixed one global offset list for every tracked date. Answers the record's whole deadline surface, because a new date can change which one is next. Appends one key_date.added entry on the owning contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract takes no new date until it is restored */
+    post: operations["addContractKeyDate"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/key-dates/{keyDateId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Take a key date off a contract (CTR-009). The row is deleted and the key_date.removed activity entry is the durable record of it, which is why that entry carries the label and the date rather than only the id. Answers the record's whole deadline surface, because removing a date can change which one is next. A key date on a contract this viewer cannot reach answers 404, exactly as for one that does not exist; an archived contract takes no removal until it is restored */
+    delete: operations["removeContractKeyDate"];
+    options?: never;
+    head?: never;
+    /** Move a key date, rename it, or change its note (CTR-009). Every field is optional and only what is sent is read, so a surface that edits one of them sends one of them; a note is cleared by sending null. A request that changes nothing writes nothing and narrates nothing. Answers the record's whole deadline surface, because moving a date can change which one is next. Appends one key_date.edited entry naming only what moved, at the working-team tier (DD-017). A key date on a contract this viewer cannot reach answers 404, exactly as for one that does not exist; an archived contract takes no edit until it is restored */
+    patch: operations["updateContractKeyDate"];
+    trace?: never;
+  };
   "/api/v1/counterparties": {
     parameters: {
       query?: never;
@@ -6988,6 +7024,196 @@ export interface operations {
             errors?: {
               path: string;
               message: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listContractKeyDates: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            deadlines: {
+              /** @enum {string} */
+              source: "notice_deadline" | "expiry" | "key_date";
+              keyDateId: string | null;
+              /** Format: date */
+              date: string;
+              label: string | null;
+              note: string | null;
+              daysAway: number;
+              isNext: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  addContractKeyDate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: date */
+          date: string;
+          label: string;
+          note?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            deadlines: {
+              /** @enum {string} */
+              source: "notice_deadline" | "expiry" | "key_date";
+              keyDateId: string | null;
+              /** Format: date */
+              date: string;
+              label: string | null;
+              note: string | null;
+              daysAway: number;
+              isNext: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  removeContractKeyDate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        keyDateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            deadlines: {
+              /** @enum {string} */
+              source: "notice_deadline" | "expiry" | "key_date";
+              keyDateId: string | null;
+              /** Format: date */
+              date: string;
+              label: string | null;
+              note: string | null;
+              daysAway: number;
+              isNext: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateContractKeyDate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        keyDateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: date */
+          date?: string;
+          label?: string;
+          note?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            deadlines: {
+              /** @enum {string} */
+              source: "notice_deadline" | "expiry" | "key_date";
+              keyDateId: string | null;
+              /** Format: date */
+              date: string;
+              label: string | null;
+              note: string | null;
+              daysAway: number;
+              isNext: boolean;
             }[];
           };
         };

@@ -49,6 +49,9 @@ import {
   Archive,
   ArchiveRestore,
   Building2,
+  CalendarClock,
+  CalendarPlus,
+  CalendarX,
   Check,
   Clock,
   Download,
@@ -303,6 +306,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "termType {Term type} effectiveDate {Effective date} " +
         "expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} " +
         "noticePeriodDays {Notice period (days)} " +
+        "date {Date} label {Event} note {Note} " +
         "primaryCounterparty {Primary counterparty} " +
         "primaryDocument {Primary document} " +
         "displayName {Name} display_name {Display name} name {Name} " +
@@ -479,6 +483,22 @@ function folderNarration(intl: IntlShape, payload: Payload): Record<string, stri
 
 /** What a payload calls somebody or something it names, when it does.
  * A name that is not there is not a reason to render nothing. */
+/**
+ * The day a key-date entry is about, drawn through the standing
+ * short-date formatter (DES-014) rather than printed as the stored
+ * `YYYY-MM-DD`.
+ *
+ * The log is append-only, so an entry written by a build that carried no
+ * date still has to read as a sentence: an unreadable one falls back to
+ * the em dash the record already prints where it holds nothing.
+ */
+function keyDateOn(intl: IntlShape, payload: Payload): string {
+  const value = text(payload, "date");
+  return value === null
+    ? intl.formatMessage({ id: "contracts.record.notRecorded", defaultMessage: "—" })
+    : formatShortDate(value, { locale: intl.locale });
+}
+
 function named(intl: IntlShape, payload: Payload, key: string): string {
   return (
     text(payload, key) ?? intl.formatMessage({ id: "activity.someone", defaultMessage: "someone" })
@@ -994,6 +1014,45 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       defaultMessage: "{actor} cancelled the approval request to {approver}",
     }),
     values: (intl, payload) => ({ approver: named(intl, payload, "approverName") }),
+  },
+  // The record's free-form dates (M16/3, CTR-009). A verb per act, so a
+  // reader can tell a date being put on the record from one being moved
+  // or taken off without opening a payload.
+  //
+  // Each names the date, not only the act. A removal deletes the row, so
+  // its entry is the only thing left that says the date was ever there —
+  // and an added or edited one names it for the same reason the feed
+  // names a document: "changed a key date" sends the reader hunting.
+  "key_date.added": {
+    icon: CalendarPlus,
+    message: defineMessage({
+      id: "activity.keyDate.added",
+      defaultMessage: "{actor} added the key date {label} on {date}",
+    }),
+    values: (intl, payload) => ({
+      label: named(intl, payload, "label"),
+      date: keyDateOn(intl, payload),
+    }),
+  },
+  "key_date.edited": {
+    icon: CalendarClock,
+    message: defineMessage({
+      id: "activity.keyDate.edited",
+      defaultMessage: "{actor} changed the key date {label}",
+    }),
+    changes: changesFrom,
+    values: (intl, payload) => ({ label: named(intl, payload, "label") }),
+  },
+  "key_date.removed": {
+    icon: CalendarX,
+    message: defineMessage({
+      id: "activity.keyDate.removed",
+      defaultMessage: "{actor} removed the key date {label} on {date}",
+    }),
+    values: (intl, payload) => ({
+      label: named(intl, payload, "label"),
+      date: keyDateOn(intl, payload),
+    }),
   },
   // One round of signature on the record (M15/2, M15/3, CTR-013). A
   // verb per act, so a reader can tell a completed signature from a

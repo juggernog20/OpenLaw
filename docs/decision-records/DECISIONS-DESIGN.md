@@ -2624,6 +2624,90 @@ Thirteen ICU messages, all new. No new tokens: the bars and marks are fills from
 
 Grill rows **I.H1**, **I.H2**, **I.H3**, **I.X1**, **I.X2**, **I.X3**, **I.B1**, **I.B2**, **I.B6**, **I.B7**, and **I.B8** are discharged. **I.B3**, **I.B4**, and **I.B5** stay open, waiting on the confirmed roll — the same wait **G.R5** is in.
 
+## DES-042: The Key dates section — one union, one Source chip, and the next deadline named (extends DES-035, DES-032, DES-040)
+
+- **Status:** Accepted
+- **Date:** 2026-08-17
+
+### Context
+
+CTR-009 gives a contract free-form **key dates**: a date, a label, an optional note, added by the team beside CTR-006's typed term. It also commits the surface they land on — "deadline surfaces show the union of term-derived dates and key dates; earliest upcoming = next deadline". M16/3 builds both.
+
+`designs/contracts.pen` draws it as **C6 — Contract detail · Key dates**: its own tab in the record's section strip, a toolbar with "4 upcoming · 1 past" on the left and an "Add date" button on the right, then a six-column table — Date, Event, Source, Reminders, Due, Owner — with a two-line date cell, a `Derived` / `Key date` chip in Source, a relative pill in Due, and an avatar in Owner. A note row under the table reads "Term-derived dates update automatically when term fields change. All dates land in the daily digest and notify at the configured offsets."
+
+Three of the things the mock draws have no datum behind them, and one thing the union needs is not drawn:
+
+1. **There is no owner on a key date.** CTR-009 modelled `date + label + note` and #285 settled the open question the matters grill left: the Owner column is stripped, not adopted.
+2. **There is no per-date reminder schedule.** **NOT-004** fixed a single global admin-configurable offset list applied to every tracked date and explicitly rejected per-date schedules. The mock's "7d · 1d · same day" cell is that global contract drawn per row.
+3. **Nothing fires yet.** Reminders, the bell, and the daily digest are M18 (NOT-003). The note row's second sentence describes delivery this milestone does not build.
+4. **A key date carries a note, and the mock has no cell for it.**
+
+DES-035 clause 1 made Approvals a fourth section on the DES-032 strip. This is a fifth.
+
+### Decision
+
+**1. Key dates is a fifth section on the DES-032 strip, at `/contracts/42/key-dates`.** It follows Approvals, as the C6 mock's own tab order does. DES-032 clause 1's enumeration is extended for the second time, and clause 6's ceiling is untouched: that ceiling is on permanent **strips**, and this is a link inside the strip the record already has.
+
+**2. The section is one self-contained card, drawn as Documents and Approvals are drawn.** The `bg-raised` card with a `bg-section-header` head; the heading, the DES-020 count badge, the write micro-state, and the section's own control in that head; the table under it; and a plain empty line when there is nothing to draw. One section anatomy on the record, so a reader who has learnt the Approvals section has learnt this one.
+
+**3. The card draws the union, not the rows.** All three CTR-009 sources land in one table — the key dates, the contract's expiry, and the derived notice deadline — because the question the surface answers is "what is the next date on this contract", and that question does not care which column a date came out of. A separate list of key dates with the term's two dates printed above it would make the reader do the merge the decision exists to do for them.
+
+**4. Order, the day counts, and which date is next are the seam's answer, and the card recomputes none of them.** DES-040 clause 4 kept days remaining at the seam for one number; this keeps a whole ordering there for the same reason. The union arrives ordered — what is still ahead nearest-first, then what has gone by most-recently-first, which is the C6 mock's own row order — with `daysAway` on every entry and exactly one entry marked as next. A second copy of that rule on this page is the copy that drifts the first time a date moves.
+
+**5. The columns are the mock's, minus the two with nothing behind them: Date, Event, Source, Due, and a trailing action cell.** Owner goes (clause context 1) and Reminders goes (context 2). Neither leaves a blank: a column drawn empty asks the reader to work out what is missing, and the answer here is "nothing — the product does not have this".
+
+**6. The Date cell is one line through the DES-014 short-date helper, not the mock's two.** The mock splits "Oct 2" over "2026" because it always prints the year. The standing helper already decides when a year is needed — it grows one exactly when the date is not in the current year — and a second rule for this one cell would be a second rule to keep true.
+
+**7. The Event cell names the row, and the note is its second line.** A key date says what the team called it. The two derived rows are named here in the record's own copy, because the seam holds no label for a date it did not store (DES-013): "Current term expires", and "Renewal notice deadline — 90 days before expiry", which is the mock's own sentence with the record's own notice period in it. The note sits under the name at `text-xs text-muted` — the secondary line DES-035 clause 5 already spends on "a fact about this row", rather than a sixth column on a table that has no width for one.
+
+**8. Source is the mock's chip and answers one question: did the team write this down, or did the term produce it.** `Key date` takes `bg-control` with a `border-border-muted` hairline; `Derived` takes the neutral status family. Both derived rows share the one word — telling the expiry from the notice deadline is the Event cell's job, and a third chip reading would make the column answer two questions at once.
+
+**9. Due carries the distance, and past is one word.** An upcoming row reads the seam's `daysAway` through `formatDayDistance` — "in 3 days", "in 8 weeks", "in 5 months" — which steps the unit up as the distance grows, so a date most of a year out never reads as "in 291 days". A row behind us reads "Past", the mock's own word: how far behind is the Date cell's answer, and this column exists to say what is coming.
+
+**10. Exactly one row is the next deadline, it takes the `warning` pill, and it says so in words.** The pill families are `warning` for the next date and `neutral` for every other, which is what the C6 mock paints. Colour is never the sole carrier (DES-011), so "Next deadline" is drawn under the pill at `text-xs text-muted` on the one row that has it. `warning` rather than `danger` because a date that is coming is not a failure — CTR-006's engine is notify-only, and nothing on this surface asserts that a lapse happened.
+
+**11. Row actions live in one overflow menu, and the two derived rows have none at all.** The menu is DES-035 clause 9's — the shipped `DropdownMenu` on a `ghost` `icon` Button labelled "Actions for {label}" — holding **Edit date** and **Remove date**. The expiry is edited on the Overview's Contract card (DES-040) and the notice deadline is a subtraction rather than a field, so neither offers a trigger. Absent, never disabled: a greyed-out "Edit" on the notice deadline is an invitation to work out why, and the answer is a lesson about derivation.
+
+**12. Adding and editing are one dialog; removing is one press.** A date, a label, and a note are one act — a date nobody named is a date nobody can act on — so they commit together in the compound edit DES-017 carves out of the inline rule, and the same form does both jobs with its title and its confirm changing. Removing collects nothing and destroys nothing that matters: the row goes, the activity entry keeps it (DD-017), and putting the date back is one dialog away. That is DES-035 clause 10's reasoning, applied to the same kind of act.
+
+**13. The mock's note row is not drawn under the table, and half of it is drawn in the dialog.** Its first sentence — term-derived dates move when the term does — is what the Source chip already says, permanently, on every row. Its second describes M18's digest and offsets, which nothing here does yet: DES-035 clause 13's rule holds. What the dialog does say, at `text-xs text-muted` beside a `CalendarClock` glyph, is the thing somebody filling the form might look for and not find — "Every tracked date uses the same reminder offsets, set once in Settings." That is NOT-004 said where the absence is felt, which is clause 17's move for the group-snapshot sentence.
+
+**14. The empty line names both absences at once.** "No key dates on this contract yet, and no term dates to show beside them." — the `documents.empty` and `approvals.empty` anatomy, one `<p>` in the card's body. It is drawn only when the whole union is empty, because a record with an expiry and no key dates has a table to draw.
+
+### Rationale
+
+The union is the decision. CTR-009's own sentence puts three sources on one surface, and every alternative shape makes the reader merge them: a key-dates table with the term above it, a "next deadline" callout over a list, a section per source. One ordered table answers the question in one read, and the Source chip is the whole cost of mixing them.
+
+Stripping the Owner and Reminders columns is the mock's largest departure and the easiest to defend: both were drawn before the decisions that removed them, and drawing a column whose values the product cannot produce is worse than a narrower table.
+
+The next deadline being the seam's is the same call DES-040 clause 4 made one level down. Ordering, counting, and marking are one rule, and the surface that draws them is not where the rule should live — particularly here, where the order is the answer.
+
+### Alternatives considered
+
+- **Key dates as a card on the Overview.** Rejected: the C6 mock gives them a tab, the Overview already holds three cards, and a deadline list is a job somebody opens the record to do rather than something they read past.
+- **A separate list of key dates with the expiry and the notice deadline stated above it.** Rejected with clause 3: the reader would merge them, and the "next deadline" would then be a fourth thing to state.
+- **Keeping the Owner column with the record's Owner in it.** Rejected: it would draw one name on every row of every contract, which says nothing, and it would read as the per-date owner CTR-009 does not have.
+- **Keeping the Reminders column, drawn from the global offset list.** Rejected: identical content on every row of every contract is not a column, and the setting it renders lives in Settings (NOT-004). The dialog says it once instead.
+- **A `danger` pill on a date that has passed.** Rejected with clause 10: CTR-006's engine is notify-only and never asserts a lapse. A past date is a fact, not an alarm, and a record with three old milestones on it would read as three failures.
+- **Sorting the whole union by date, past dates included.** Rejected: it buries what is coming under what is done, which is the opposite of the surface's job, and it contradicts the C6 mock's own row order.
+- **A confirmation on remove.** Rejected: the entry keeps the date (DD-017) and re-adding it is one dialog. Confirmations spent on recoverable acts are confirmations nobody reads on the unrecoverable ones.
+- **Editing a key date inline, cell by cell.** Rejected: a label is meaningless without its date, and DES-017 carves the compound edit out for exactly this pairing.
+- **Deriving the day counts in the browser from each date.** Rejected with clause 4: the seam already answers them and it is the seam that ordered the list.
+
+### Consequences
+
+`KeyDatesCard` is the component and the contract record's `key-dates` section is the reference mount. `RECORD_TABS` grows by one and the loader reads the union beside the record, its paper, its folders, and its roster.
+
+A term commit on the Overview — the term type, the expiry, or the notice period — re-reads the union, because two of its three rows are the term. It re-reads rather than patching, for clause 4's reason.
+
+`formatDayDistance()` joins the DES-014 helper layer: a day count in, the largest unit that still reads out. It takes a count rather than a date precisely because the count is the seam's.
+
+The record now has five sections. `designs/contracts.pen` frame **C6 — Contract detail · Key dates** is the reference, with clauses 5, 6, 7, 8, 9, 11, and 13 recording where the build departs from it and why.
+
+Thirty-four ICU messages, all new — thirty on the card and its dialog, three on the activity narrator's new verbs, and one on the tab. No new tokens: the pills and chips reuse the DES-005 families already shipped, and the card reuses the Approvals section's own surfaces and its menu trigger.
+
+The activity narrator gains three verbs — added, edited, removed — and three changed-key labels (`date`, `label`, `note`). Each sentence names the date it is about, because a removal deletes the row and the entry is then all that is left of it.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -2669,3 +2753,4 @@ Grill rows **I.H1**, **I.H2**, **I.H3**, **I.X1**, **I.X2**, **I.X3**, **I.B1**,
 | DES-039 | The executed copy on the row, and the last two withheld notes (extends DES-038, DES-037, DES-036, DES-035)                                                           | Accepted |
 | DES-040 | The term on the Contract card — five fields, and the blanks the type forces (extends DES-017, DES-032)                                                               | Accepted |
 | DES-041 | The Term timeline card — the gutter, the two marks, and the open end (extends DES-040, DES-032, DES-012)                                                             | Accepted |
+| DES-042 | The Key dates section — one union, one Source chip, and the next deadline named (extends DES-035, DES-032, DES-040)                                                  | Accepted |
