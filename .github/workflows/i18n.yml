@@ -89,12 +89,21 @@ jobs:
             echo "<details><summary>Diff against the committed catalog</summary>"
             echo
             echo '````diff'
-            head -c "$LIMIT" i18n-drift.diff
-            echo
+            if [ "$(wc -c < i18n-drift.diff)" -gt "$LIMIT" ]; then
+              # Truncate on a line boundary, not a byte boundary. The
+              # catalog holds multi-byte characters (— and →), a byte cut
+              # can land inside one, and a comment body that is not valid
+              # UTF-8 fails the API call — turning the one drift too big
+              # to show in full into a red job. Dropping the cut's partial
+              # last line keeps every remaining character whole.
+              head -c "$LIMIT" i18n-drift.diff | sed '$d'
+            else
+              cat i18n-drift.diff
+            fi
             echo '````'
             if [ "$(wc -c < i18n-drift.diff)" -gt "$LIMIT" ]; then
               echo
-              echo "_Diff truncated at $LIMIT characters. Run the extract locally to see all of it._"
+              echo "_Diff truncated at $LIMIT bytes. Run the extract locally to see all of it._"
             fi
             echo
             echo "</details>"
