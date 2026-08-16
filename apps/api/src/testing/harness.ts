@@ -228,6 +228,17 @@ export interface TestHarness {
    * changes what the next round resolves.
    */
   resolveSigningProvider: SigningResolver;
+  /**
+   * This container's Postgres, as a connection string.
+   *
+   * Exposed for the one thing a suite cannot do through `pipeline`: act
+   * out a **second** process against the same database. The pipeline is
+   * a seam over pg-boss and deliberately says nothing about queues or
+   * schedules, so a suite asserting that two workers produce one
+   * scheduled round starts a second pipeline here rather than reaching
+   * inside this one.
+   */
+  databaseUrl: string;
   stop: () => Promise<void>;
 }
 
@@ -368,6 +379,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       pipeline: runningPipeline,
       jobLog,
       resolveSigningProvider,
+      databaseUrl: container.getConnectionUri(),
       get signing() {
         return signing;
       },

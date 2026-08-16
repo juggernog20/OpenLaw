@@ -73,6 +73,20 @@ export const JOB_QUEUES = {
    * convert.
    */
   executedCopyFetch: "envelope.executed-copy-fetch",
+  /**
+   * The reconciliation sweep (M15/6), on the same schedule the backfill
+   * sweep is on and for one extra reason.
+   *
+   * It carries no payload: the sweep asks the envelope rows which ones
+   * are still out, and those rows are the only input it has ever had.
+   * It is a queue rather than a timer in the worker because pg-boss
+   * holds the clock — and because this one **repeats**. The two boot
+   * sweeps ask for work the rows already say is owed, so a second
+   * replica finds nothing; this one asks a third party the same
+   * question every round, so a second replica doubled the requests
+   * against the endpoint DocuSign rate-limits hardest.
+   */
+  reconciliationSweep: "envelope.reconciliation-sweep",
 } as const;
 
 /** What the text-extraction queue carries. */

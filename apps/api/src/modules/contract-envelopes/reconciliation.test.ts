@@ -33,6 +33,7 @@
  * suites do.
  */
 
+import { PgBoss } from "pg-boss";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   activityLog,
@@ -42,6 +43,7 @@ import {
   contracts,
   contractStatuses,
   eq,
+  sql,
   users,
   type ContractStage,
 } from "@openlaw/db";
@@ -49,10 +51,12 @@ import { provisionUser } from "../../auth/instance.js";
 import type { ActivityAction } from "../../lib/activity.js";
 import { FAKE_SIGNATURE_HEADER, FAKE_VALID_INTEGRATION_KEY } from "../../lib/signing/fake.js";
 import type { WebhookDelivery } from "../../lib/signing/provider.js";
+import { JOB_QUEUES } from "../../pipeline/jobs.js";
+import { startPipeline } from "../../pipeline/pg-boss.js";
 import {
   runReconciliationSweep,
-  startReconciliationSweeps,
   RECONCILIATION_REFUSAL_LIMIT,
+  RECONCILIATION_SWEEP_CRON,
   type ReconciliationDeps,
   type ReconciliationSummary,
 } from "../../pipeline/reconciliation.js";
@@ -622,37 +626,78 @@ describe("a provider outage during a round", () => {
   }, 90_000);
 });
 
-describe("the boot-and-interval shape", () => {
-  it("sweeps at boot, again on the interval, and stops when told to", async () => {
-    const out = await recordWithEnvelopeOut("Fairhaven consultancy agreement");
-    const { lines, log } = recordingLog();
-    const stopping = new AbortController();
-    const rounds = startReconciliationSweeps(
-      { db: harness.db, log, resolveSigningProvider: harness.resolveSigningProvider },
-      harness.pipeline,
-      { signal: stopping.signal, intervalMs: 25 },
-    );
-
+/**
+ * The sweep repeats, so it is on pg-boss's clock rather than on a timer
+ * in the worker (#277). Two things follow, and both are asserted here
+ * rather than argued: **an install has one schedule however many workers
+ * it runs**, and **a tick converges** — the same convergence the rest of
+ * this file asserts against a hand-run round, reached the way production
+ * reaches it.
+ */
+describe("the scheduled shape", () => {
+  it("leaves one schedule and one singleton queue however many workers boot", async () => {
+    // A second worker against the same database — a replica, which is
+    // the whole subject. `startPipeline` is what declares the schedule,
+    // so booting it twice is the experiment.
+    const second = await startPipeline({
+      connectionString: harness.databaseUrl,
+      handlers: {
+        db: harness.db,
+        storage: harness.storage,
+        docEngine: harness.docEngine,
+        resolveSigningProvider: harness.resolveSigningProvider,
+        log: recordingLog().log,
+      },
+      log: recordingLog().log,
+    });
     try {
-      // The boot round runs on its own, and finds the envelope still
-      // out — nobody has signed anything yet.
-      await until(() => lines.some((line) => line.message.includes("finished a round")));
-      expect((await envelopeRow(out.contract.number, out.envelope.id)).status).toBe("sent");
-
-      // The signature happens after that round. Only a later one can
-      // see it, which is what "and again on the interval" means.
-      provider().complete(out.providerId);
-      await until(
-        async () => (await envelopeRow(out.contract.number, out.envelope.id)).status === "signed",
+      // pg-boss's own tables are the assertion. The schedule is an
+      // upsert keyed on the queue name, so two workers declaring it
+      // leave one row — which is what makes the cron election produce
+      // one round rather than one per replica.
+      const schedules = await harness.db.execute<{ name: string; cron: string }>(
+        sql`select name, cron from pgboss.schedule where name = ${JOB_QUEUES.reconciliationSweep}`,
       );
-    } finally {
-      stopping.abort();
-    }
-    // It stops when the container does, rather than outliving it.
-    await rounds;
+      expect(schedules.rows).toHaveLength(1);
+      expect(schedules.rows[0]?.cron).toBe(RECONCILIATION_SWEEP_CRON);
 
-    const roundsRun = lines.filter((line) => line.message.includes("finished a round")).length;
-    expect(roundsRun).toBeGreaterThan(1);
+      // Singleton, so a tick landing while a round is still walking
+      // waits for it rather than joining it: two rounds at once would
+      // be two sets of provider requests for one set of answers.
+      const queues = await harness.db.execute<{ policy: string }>(
+        sql`select policy from pgboss.queue where name = ${JOB_QUEUES.reconciliationSweep}`,
+      );
+      expect(queues.rows[0]?.policy).toBe("singleton");
+    } finally {
+      await second.stop();
+    }
+  }, 90_000);
+
+  it("converges an envelope when a tick runs the round", async () => {
+    // The cron is five minutes, which no suite may wait for. What is
+    // asserted is the handler the tick reaches: a job on the queue runs
+    // a real round against the real record, and the record converges.
+    const out = await recordWithEnvelopeOut("Fairhaven consultancy agreement");
+    expect((await envelopeRow(out.contract.number, out.envelope.id)).status).toBe("sent");
+
+    provider().complete(out.providerId);
+    const boss = new PgBoss({ connectionString: harness.databaseUrl });
+    try {
+      await boss.start();
+      await boss.send(JOB_QUEUES.reconciliationSweep, {});
+    } finally {
+      await boss.stop();
+    }
+
+    // The harness's own pipeline is the worker that takes it — the
+    // production registration, not a double.
+    await until(
+      async () => (await envelopeRow(out.contract.number, out.envelope.id)).status === "signed",
+      30_000,
+    );
+    expect(
+      harness.jobLog.some((line) => line.message === "the scheduled reconciliation sweep finished"),
+    ).toBe(true);
     await settledFetch(out.contract.number, out.envelope.id);
   }, 90_000);
 });
