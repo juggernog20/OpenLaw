@@ -26,14 +26,17 @@
  * that names the actor and the slug; the same holds one level down, for
  * a payload that does not carry the keys its slug usually does.
  *
- * The vocabulary narrated here is the whole of it. A record feed can
- * only contain `contract.*` and `comment.*`, and those came first
- * (M9/6); the Administrator's audit log reads the table with no entity
- * scope and no tier filter, so it reaches everything — user
- * administration, settings, the taxonomies, the field catalog, the
- * registry, the identity provider, and an export of the log itself.
- * Those arms landed with that surface (M9/7). Adding an action family
- * is adding entries to `ARMS`, and nothing else.
+ * The vocabulary narrated here is the whole of it, and the compiler
+ * says so: `ARMS` is keyed by `ActivityAction` from `@openlaw/shared`,
+ * the same union the API writes rows against, so a slug that gains a
+ * write site and no sentence does not build. A record feed can only
+ * contain `contract.*` and `comment.*`, and those came first (M9/6);
+ * the Administrator's audit log reads the table with no entity scope
+ * and no tier filter, so it reaches everything — user administration,
+ * settings, the taxonomies, the field catalog, the registry, the
+ * identity provider, and an export of the log itself. Those arms landed
+ * with that surface (M9/7). Adding an action family is adding entries
+ * to `ARMS`, and nothing else.
  *
  * Nothing here reads comment text: `comment.*` payloads carry ids only,
  * because the log is append-only and an Administrator's hard redact has
@@ -90,6 +93,7 @@ import {
 } from "lucide-react";
 import { defineMessage, type IntlShape, type MessageDescriptor } from "react-intl";
 import type { paths } from "@openlaw/api-client";
+import type { ActivityAction } from "@openlaw/shared";
 import { formatShortDate } from "./format";
 import { roleLabel } from "./roles";
 import {
@@ -181,6 +185,12 @@ export interface NarrationContext {
  * An entry's own data, as the log stores it: whatever the slug's writer
  * put there. Every read of it below is defensive, because the shapes
  * are as old as the rows and nothing prunes either.
+ *
+ * The shape a slug's writer puts there *today* is `ActivityPayloadMap`
+ * in `@openlaw/shared`, which is what the narration tests build their
+ * fixtures from. It is not this type: a row read off the wire is as old
+ * as the build that wrote it, and a reader that assumed today's keys
+ * would throw on yesterday's row.
  */
 type Payload = NarratableEntry["payload"];
 
@@ -664,11 +674,11 @@ function taxonomyValues(kind: string) {
  * description to change. An arm for a slug that cannot be written is a
  * sentence nobody will ever read.
  */
-function taxonomyArms(
-  kind: string,
+function taxonomyArms<Kind extends string, Verb extends keyof typeof TAXONOMY>(
+  kind: Kind,
   icon: LucideIcon,
-  verbs: readonly (keyof typeof TAXONOMY)[],
-): Record<string, Arm> {
+  verbs: readonly Verb[],
+): Record<`${Kind}.${Verb}`, Arm> {
   const values = taxonomyValues(kind);
   const arms: Record<keyof typeof TAXONOMY, Arm> = {
     created: { icon, message: TAXONOMY.created, values },
@@ -684,7 +694,14 @@ function taxonomyArms(
     restored: { icon: ArchiveRestore, message: TAXONOMY.restored, values },
     deleted: { icon: Trash2, message: TAXONOMY.deleted, values },
   };
-  return Object.fromEntries(verbs.map((verb) => [`${kind}.${verb}`, arms[verb]]));
+  // The keys are the slugs this prefix writes, and the return type says
+  // so: `ARMS` below is checked against the whole vocabulary, and a
+  // spread that answered a bare `Record<string, Arm>` would satisfy that
+  // check without covering anything.
+  return Object.fromEntries(verbs.map((verb) => [`${kind}.${verb}`, arms[verb]])) as Record<
+    `${Kind}.${Verb}`,
+    Arm
+  >;
 }
 
 /** The seven a settings taxonomy writes (contract, matter, and entity
@@ -736,24 +753,29 @@ const TYPE_FIELD = {
   }),
 } as const;
 
-/** The same four arms for one type-field prefix, keyed by slug. */
-function typeFieldArms(owner: string): Record<string, Arm> {
+/** The four verbs an attached-field catalog writes. */
+type TypeFieldVerb = "attached" | "detached" | "reordered" | "required_changed";
+
+/** The same four arms for one type-field prefix, keyed by slug. The
+ * return type names those slugs for `taxonomyArms`' reason. */
+function typeFieldArms<Owner extends string>(
+  owner: Owner,
+): Record<`${Owner}.${TypeFieldVerb}`, Arm> {
   const values = (intl: IntlShape, payload: Payload) => ({
     owner,
     type: named(intl, payload, "typeSlug"),
     field: named(intl, payload, "fieldSlug"),
     required: String(payload.isRequired === true),
   });
-  return {
-    [`${owner}.attached`]: { icon: Link2, message: TYPE_FIELD.attached, values },
-    [`${owner}.detached`]: { icon: Unlink, message: TYPE_FIELD.detached, values },
-    [`${owner}.reordered`]: { icon: ListOrdered, message: TYPE_FIELD.reordered, values },
-    [`${owner}.required_changed`]: {
-      icon: SquareCheck,
-      message: TYPE_FIELD.requiredChanged,
-      values,
-    },
+  const arms: Record<TypeFieldVerb, Arm> = {
+    attached: { icon: Link2, message: TYPE_FIELD.attached, values },
+    detached: { icon: Unlink, message: TYPE_FIELD.detached, values },
+    reordered: { icon: ListOrdered, message: TYPE_FIELD.reordered, values },
+    required_changed: { icon: SquareCheck, message: TYPE_FIELD.requiredChanged, values },
   };
+  return Object.fromEntries(
+    (Object.keys(arms) as TypeFieldVerb[]).map((verb) => [`${owner}.${verb}`, arms[verb]]),
+  ) as Record<`${Owner}.${TypeFieldVerb}`, Arm>;
 }
 
 /**
@@ -764,12 +786,14 @@ function typeFieldArms(owner: string): Record<string, Arm> {
  * user administration, settings, the taxonomies, the field catalog, the
  * registry, the identity provider, and an export of the log itself.
  *
- * A slug that is not here reads through the fallback at the bottom of
- * `narrateActivity`, which is what makes this table safe to be
- * incomplete — and it will be, because the log outlives the code that
- * wrote it.
+ * **Keyed by the vocabulary itself** (`@openlaw/shared`), so a slug the
+ * API learns to write without a sentence here does not compile. That is
+ * the one direction the compiler can hold: the other — a slug in the
+ * table that this build has never heard of — is what the fallback at the
+ * bottom of `narrateActivity` is for, because the log outlives the code
+ * that wrote it (DD-017).
  */
-const ARMS: Readonly<Record<string, Arm>> = {
+const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   "contract.created": {
     icon: FilePlus2,
     message: defineMessage({
@@ -1626,6 +1650,17 @@ const ARMS: Readonly<Record<string, Arm>> = {
  */
 const UNKNOWN = defineMessage({ id: "activity.unknown", defaultMessage: "{actor} — {action}" });
 
+/**
+ * The arm for a slug read off the wire, if this build has one.
+ *
+ * The lookup takes a plain string, and it has to: `ARMS` is keyed by
+ * this build's vocabulary, and the row is as old as the build that
+ * wrote it. Answering `undefined` for the rest is the fallback's cue.
+ */
+function armFor(action: string): Arm | undefined {
+  return (ARMS as Readonly<Record<string, Arm | undefined>>)[action];
+}
+
 /** One entry, narrated. Every arm reads its payload defensively; none of
  * them throws, and a slug with no arm falls through to `UNKNOWN`. */
 export function narrateActivity(
@@ -1641,7 +1676,7 @@ export function narrateActivity(
   // ICU takes what it is given and ignores what it does not use, and a
   // second machinery for one arm would be a machinery to maintain.
   const hasActor = entry.actor ? "yes" : "no";
-  const arm = ARMS[entry.action];
+  const arm = armFor(entry.action);
   if (!arm) {
     return {
       icon: Activity,

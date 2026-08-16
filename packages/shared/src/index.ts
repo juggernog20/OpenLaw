@@ -8,6 +8,21 @@
 export const OPENLAW_VERSION = "0.0.1";
 
 /**
+ * The Activity vocabulary (DD-017) — the action slugs and the payload
+ * each one writes. It is a module of its own because it is long, and it
+ * is re-exported here because `@openlaw/shared` has one entry point.
+ */
+export type {
+  ActivityAction,
+  ActivityPayloadMap,
+  ChangedFields,
+  EmptyActivityPayload,
+  FieldChangePayload,
+  TaxonomyActionPrefix,
+  TypeFieldActionPrefix,
+} from "./activity.js";
+
+/**
  * The RFC 9457 problem type CTR-012's soft gate refuses with (TECH-020).
  *
  * It is a wire contract, and it is here because both ends of the wire
