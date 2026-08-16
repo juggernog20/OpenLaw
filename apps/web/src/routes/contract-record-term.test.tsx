@@ -191,6 +191,40 @@ describe("the term on the contract record", () => {
     );
   });
 
+  it("keeps a sibling box's draft when a term commit lands beside it", async () => {
+    const user = userEvent.setup();
+    // The PATCH's answer is held until the test releases it, so the
+    // sibling's typing deterministically happens while the commit is in
+    // flight — the race a fast round-trip only sometimes opens.
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const api = recordApi();
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.method === "PATCH"
+          ? gate.then(() => api.handler(call) as Response)
+          : api.handler(call),
+    });
+    renderAt("/contracts/42");
+
+    // Blurring the effective date into the notice box starts its
+    // commit; the notice period is typed before the answer lands.
+    await user.type(await screen.findByLabelText("Effective date"), "2026-03-01");
+    const notice = screen.getByLabelText("Notice period (days)");
+    await user.click(notice);
+    await user.type(notice, "60");
+    release();
+
+    // The answer re-seeds only the box it committed: the sibling's
+    // in-progress draft is not this commit's to discard.
+    expect(await screen.findByText("Saved")).toBeInTheDocument();
+    expect(notice).toHaveValue(60);
+    expect(api.patches).toEqual([{ effectiveDate: "2026-03-01" }]);
+  });
+
   it("commits the term type on the select's own change", async () => {
     const user = userEvent.setup();
     const api = recordApi();

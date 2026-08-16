@@ -2551,7 +2551,7 @@ Absence is the design question this record actually answers. The three candidate
 
 ### Consequences
 
-`ContractRecord` grows one `TermField` component — a label, a date or number input, and its micro-state — plus one select and two `ReadOnlyField`s. The term's four typed fields hold their own drafts, and they re-seed as a group after any term commit, because a type change clears what the new type cannot hold and the answer carries more empty boxes than the request did.
+`ContractRecord` grows one `TermField` component — a label, a date or number input, and its micro-state — plus one select and two `ReadOnlyField`s. The term's four typed fields hold their own drafts. A term-type commit re-seeds all four, because a type change clears what the new type cannot hold and the answer carries more empty boxes than the request did; a typed field's own commit re-seeds only its own box, so a sibling box's in-progress edit survives the answer landing beside it.
 
 The activity narrator gains five changed-key labels and renders the term type through its own ICU message, so the feed says "Evergreen" where the column says `evergreen`.
 

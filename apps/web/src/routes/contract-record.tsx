@@ -716,11 +716,17 @@ function ContractRecord() {
     if (key === "title" || key === "description") {
       setDrafts((current) => ({ ...current, [key]: textDrafts(row)[key] }));
     }
-    // The term's inputs re-seed as a group, not one at a time: a term
-    // type commit clears the fields the new type cannot hold (CTR-006),
-    // so the answer to *that* commit carries two more empty boxes than
-    // the request did.
-    if (key === "termType" || key in termFields) setTermFields(termDrafts(row));
+    // A term-type commit re-seeds all four term inputs: it clears the
+    // fields the new type cannot hold (CTR-006), so its answer carries
+    // more empty boxes than the request did. A typed term field's own
+    // commit re-seeds only its own box — the rule above holds among the
+    // term fields too: another box's in-progress edit is not this
+    // commit's to discard.
+    if (key === "termType") {
+      setTermFields(termDrafts(row));
+    } else if (key in termFields) {
+      setTermFields((current) => ({ ...current, [key]: termDrafts(row)[key as TermDraftKey] }));
+    }
     note(key, "saved");
     return { ok: true };
   }
