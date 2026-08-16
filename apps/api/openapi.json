@@ -2246,6 +2246,21 @@
                         "configured": {
                           "type": "boolean"
                         },
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "disabledAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "environment": {
                           "anyOf": [
                             {
@@ -2302,6 +2317,8 @@
                       "required": [
                         "provider",
                         "configured",
+                        "enabled",
+                        "disabledAt",
                         "environment",
                         "integrationKey",
                         "apiUserId",
@@ -2399,6 +2416,21 @@
                         "configured": {
                           "type": "boolean"
                         },
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "disabledAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "environment": {
                           "anyOf": [
                             {
@@ -2455,6 +2487,143 @@
                       "required": [
                         "provider",
                         "configured",
+                        "enabled",
+                        "disabledAt",
+                        "environment",
+                        "integrationKey",
+                        "apiUserId",
+                        "hasPrivateKey",
+                        "hasWebhookSecret",
+                        "webhookUrl",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["connector"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteSigningConnector",
+        "summary": "Take the e-signature connector out (CTR-013). The row and both secrets go, and the install is back to the zero-config manual hand-off. Refused while any envelope is still out: deleting the credentials strands that round for good — nothing left to void it with, and nothing for the reconciliation sweep to ask. Turn the connector off instead if the sending has to stop before the paper comes back",
+        "tags": ["signing-connector"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["docusign"]
+            },
+            "in": "path",
+            "name": "provider",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "connector": {
+                      "type": "object",
+                      "properties": {
+                        "provider": {
+                          "type": "string",
+                          "enum": ["docusign"]
+                        },
+                        "configured": {
+                          "type": "boolean"
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "disabledAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "environment": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["demo", "production"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "integrationKey": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "apiUserId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "hasPrivateKey": {
+                          "type": "boolean"
+                        },
+                        "hasWebhookSecret": {
+                          "type": "boolean"
+                        },
+                        "webhookUrl": {
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "provider",
+                        "configured",
+                        "enabled",
+                        "disabledAt",
                         "environment",
                         "integrationKey",
                         "apiUserId",
@@ -2524,6 +2693,280 @@
                     }
                   },
                   "required": ["connected", "accountName", "accountId", "userEmail"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/signing-connectors/{provider}/disable": {
+      "post": {
+        "operationId": "disableSigningConnector",
+        "summary": "Turn the e-signature connector off (CTR-013) without losing its credentials. Every surface then answers as an unconfigured install does — the send control leaves the record and the manual hand-off is the path again. A live envelope does not refuse this: turning the connector back on picks the round up where the sweep left it",
+        "tags": ["signing-connector"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["docusign"]
+            },
+            "in": "path",
+            "name": "provider",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "connector": {
+                      "type": "object",
+                      "properties": {
+                        "provider": {
+                          "type": "string",
+                          "enum": ["docusign"]
+                        },
+                        "configured": {
+                          "type": "boolean"
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "disabledAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "environment": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["demo", "production"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "integrationKey": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "apiUserId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "hasPrivateKey": {
+                          "type": "boolean"
+                        },
+                        "hasWebhookSecret": {
+                          "type": "boolean"
+                        },
+                        "webhookUrl": {
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "provider",
+                        "configured",
+                        "enabled",
+                        "disabledAt",
+                        "environment",
+                        "integrationKey",
+                        "apiUserId",
+                        "hasPrivateKey",
+                        "hasWebhookSecret",
+                        "webhookUrl",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["connector"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/signing-connectors/{provider}/enable": {
+      "post": {
+        "operationId": "enableSigningConnector",
+        "summary": "Turn the e-signature connector back on with the credentials it already holds (CTR-013). The send control returns to the record and the reconciliation sweep reaches every round that was out while it was off",
+        "tags": ["signing-connector"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["docusign"]
+            },
+            "in": "path",
+            "name": "provider",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "connector": {
+                      "type": "object",
+                      "properties": {
+                        "provider": {
+                          "type": "string",
+                          "enum": ["docusign"]
+                        },
+                        "configured": {
+                          "type": "boolean"
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "disabledAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "environment": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["demo", "production"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "integrationKey": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "apiUserId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "hasPrivateKey": {
+                          "type": "boolean"
+                        },
+                        "hasWebhookSecret": {
+                          "type": "boolean"
+                        },
+                        "webhookUrl": {
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "provider",
+                        "configured",
+                        "enabled",
+                        "disabledAt",
+                        "environment",
+                        "integrationKey",
+                        "apiUserId",
+                        "hasPrivateKey",
+                        "hasWebhookSecret",
+                        "webhookUrl",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["connector"],
                   "additionalProperties": false
                 }
               }

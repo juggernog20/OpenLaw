@@ -383,6 +383,13 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     old: "[secret]",
     new: "[secret]",
   },
+  "signing_connector.disabled": { provider: "docusign", liveEnvelopes: 2 },
+  "signing_connector.enabled": { provider: "docusign" },
+  "signing_connector.removed": {
+    provider: "docusign",
+    environment: "demo",
+    integrationKey: "ik_1",
+  },
 
   // ---- One round of signature ----
   "envelope.sent": {

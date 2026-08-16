@@ -4,9 +4,25 @@
  * The signing connector (CTR-013, TECH-013) — the API behind Settings →
  * Organization → Integrations → E-signature.
  *
- * Three Administrator-only operations on one adapter-keyed connector:
- * read its state (never its secrets), save or rotate it, and test the
- * credentials against the provider.
+ * Six Administrator-only operations on one adapter-keyed connector: read
+ * its state (never its secrets), save or rotate it, test the credentials
+ * against the provider, turn it off, turn it back on, and take it out.
+ *
+ * **Off and out are different acts, and the pane offers both.** CTR-013
+ * promises that a team which never configures a connector loses nothing,
+ * and until #273 an install that configured one could not get back to
+ * that promise: there was no route and no control, so the send stayed on
+ * offer for ever. Turning it off is the reversible answer — the row and
+ * the credentials stay, and every surface answers as an unconfigured
+ * install does, because the resolver reads the switch. Taking it out is
+ * the other answer, for a team that wants the credentials gone.
+ *
+ * **A live envelope refuses the delete and not the disable.** Deleting
+ * strands a round that is still out for good: nothing left to void it
+ * with, and nothing for the reconciliation sweep to ask. Turning the
+ * connector off strands nothing, because turning it back on picks the
+ * round up again — so an Administrator who needs to stop the sending
+ * right now is never blocked by paper somebody else has out.
  *
  * **The two secrets are write-only.** The RSA private key and the
  * Connect HMAC secret go in and never come back: an omitted or blank
@@ -29,10 +45,13 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
+  contractEnvelopes,
+  count,
   eq,
   signingConnectors,
   SIGNING_ENVIRONMENTS,
   SIGNING_PROVIDERS,
+  type Executor,
   type SigningConnector,
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
@@ -59,6 +78,19 @@ const ConnectorSchema = z.object({
   provider: z.enum(SIGNING_PROVIDERS),
   /** False until an Administrator saves credentials for this provider. */
   configured: z.boolean(),
+  /**
+   * Whether the connector is switched on. False on a configured
+   * connector an Administrator turned off — the credentials are still
+   * here and everything else in the app answers as it would with no
+   * connector at all.
+   *
+   * A connector that was never configured reads `configured: false` and
+   * `enabled: false`, because the pane draws one control from the pair
+   * and "off" is the honest reading of both.
+   */
+  enabled: z.boolean(),
+  /** When it was turned off, or null while it is on. */
+  disabledAt: z.iso.datetime().nullable(),
   environment: z.enum(SIGNING_ENVIRONMENTS).nullable(),
   integrationKey: z.string().nullable(),
   apiUserId: z.string().nullable(),
@@ -105,6 +137,8 @@ function readConnector(
     return {
       provider,
       configured: false,
+      enabled: false,
+      disabledAt: null,
       environment: null,
       integrationKey: null,
       apiUserId: null,
@@ -117,6 +151,8 @@ function readConnector(
   return {
     provider,
     configured: true,
+    enabled: row.disabledAt === null,
+    disabledAt: row.disabledAt?.toISOString() ?? null,
     environment: row.environment,
     integrationKey: row.integrationKey,
     apiUserId: row.apiUserId,
@@ -361,6 +397,183 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         throw error;
       }
+    },
+  );
+
+  /** How many rounds this install has out right now.
+   *
+   * Read under the connector's own row lock, so a send that raced the
+   * switch is either counted here or refused by the resolver after it —
+   * the send resolves the connector before it dials anybody. */
+  async function liveEnvelopeCount(tx: Executor): Promise<number> {
+    const [row] = await tx
+      .select({ live: count() })
+      .from(contractEnvelopes)
+      .where(eq(contractEnvelopes.status, "sent"));
+    return row?.live ?? 0;
+  }
+
+  /** The stored row, locked, or the 404 an unconfigured install gets. */
+  async function lockedConnector(
+    tx: Executor,
+    provider: SigningConnector["provider"],
+  ): Promise<SigningConnector> {
+    const [row] = await tx
+      .select()
+      .from(signingConnectors)
+      .where(eq(signingConnectors.provider, provider))
+      .limit(1)
+      .for("update");
+    if (!row) {
+      throw httpError(404, "This install has no e-signature connector to change.");
+    }
+    return row;
+  }
+
+  app.post(
+    "/signing-connectors/:provider/disable",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "disableSigningConnector",
+        summary:
+          "Turn the e-signature connector off (CTR-013) without losing " +
+          "its credentials. Every surface then answers as an " +
+          "unconfigured install does — the send control leaves the " +
+          "record and the manual hand-off is the path again. A live " +
+          "envelope does not refuse this: turning the connector back on " +
+          "picks the round up where the sweep left it",
+        tags: ["signing-connector"],
+        params: ParamsSchema,
+        response: { 200: ConnectorEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const { provider } = request.params;
+      const saved = await app.db.transaction(async (tx) => {
+        const current = await lockedConnector(tx, provider);
+        if (current.disabledAt) {
+          throw httpError(409, "This e-signature connector is already turned off.");
+        }
+        // Counted before the write and recorded with it. While the
+        // connector is off the reconciliation sweep resolves nothing
+        // and these rounds stand still, so how many were out at that
+        // moment is the fact somebody reading the log afterwards wants.
+        const liveEnvelopes = await liveEnvelopeCount(tx);
+        const [row] = await tx
+          .update(signingConnectors)
+          .set({ disabledAt: new Date(), updatedAt: new Date() })
+          .where(eq(signingConnectors.id, current.id))
+          .returning();
+        if (!row) throw httpError(500, "The connector could not be turned off.");
+        await recordActivity(tx, {
+          entityType: "system",
+          actorId: request.user.id,
+          action: "signing_connector.disabled",
+          visibility: "admin_only",
+          payload: { provider, liveEnvelopes },
+        });
+        return row;
+      });
+      return { connector: readConnector(provider, saved, app.baseUrl) };
+    },
+  );
+
+  app.post(
+    "/signing-connectors/:provider/enable",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "enableSigningConnector",
+        summary:
+          "Turn the e-signature connector back on with the credentials " +
+          "it already holds (CTR-013). The send control returns to the " +
+          "record and the reconciliation sweep reaches every round that " +
+          "was out while it was off",
+        tags: ["signing-connector"],
+        params: ParamsSchema,
+        response: { 200: ConnectorEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const { provider } = request.params;
+      const saved = await app.db.transaction(async (tx) => {
+        const current = await lockedConnector(tx, provider);
+        if (!current.disabledAt) {
+          throw httpError(409, "This e-signature connector is already on.");
+        }
+        const [row] = await tx
+          .update(signingConnectors)
+          .set({ disabledAt: null, updatedAt: new Date() })
+          .where(eq(signingConnectors.id, current.id))
+          .returning();
+        if (!row) throw httpError(500, "The connector could not be turned on.");
+        await recordActivity(tx, {
+          entityType: "system",
+          actorId: request.user.id,
+          action: "signing_connector.enabled",
+          visibility: "admin_only",
+          payload: { provider },
+        });
+        return row;
+      });
+      return { connector: readConnector(provider, saved, app.baseUrl) };
+    },
+  );
+
+  app.delete(
+    "/signing-connectors/:provider",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "deleteSigningConnector",
+        summary:
+          "Take the e-signature connector out (CTR-013). The row and " +
+          "both secrets go, and the install is back to the zero-config " +
+          "manual hand-off. Refused while any envelope is still out: " +
+          "deleting the credentials strands that round for good — " +
+          "nothing left to void it with, and nothing for the " +
+          "reconciliation sweep to ask. Turn the connector off instead " +
+          "if the sending has to stop before the paper comes back",
+        tags: ["signing-connector"],
+        params: ParamsSchema,
+        response: { 200: ConnectorEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const { provider } = request.params;
+      await app.db.transaction(async (tx) => {
+        const current = await lockedConnector(tx, provider);
+        const liveEnvelopes = await liveEnvelopeCount(tx);
+        if (liveEnvelopes > 0) {
+          throw httpError(
+            409,
+            `${String(liveEnvelopes)} ${liveEnvelopes === 1 ? "envelope is" : "envelopes are"} ` +
+              "still out for signature. Removing the connector would leave " +
+              `${liveEnvelopes === 1 ? "it" : "them"} with no way to be voided or finished. ` +
+              "Void or finish the round first, or turn the connector off instead.",
+          );
+        }
+        // Written before the delete, so the entry and the row it
+        // describes commit together. The estate and the integration key
+        // ride along because after this transaction they exist nowhere
+        // else — the audit log is the only thing left that says which
+        // account this install was talking to.
+        await recordActivity(tx, {
+          entityType: "system",
+          actorId: request.user.id,
+          action: "signing_connector.removed",
+          visibility: "admin_only",
+          payload: {
+            provider,
+            environment: current.environment,
+            integrationKey: current.integrationKey,
+          },
+        });
+        await tx.delete(signingConnectors).where(eq(signingConnectors.id, current.id));
+      });
+      // The unconfigured answer, which is what this install now is.
+      return { connector: readConnector(provider, undefined, app.baseUrl) };
     },
   );
 };

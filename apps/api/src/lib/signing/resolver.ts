@@ -45,6 +45,15 @@
  * absence rule), and what the manual hand-off path depends on: CTR-013
  * promises OpenLaw works before anyone configures anything.
  *
+ * **A connector an Administrator turned off resolves to nothing too**,
+ * and that is the whole of what the switch does (#273). Every surface
+ * then answers as it did before the connector existed, which is what
+ * puts the manual hand-off back within reach for an install that has
+ * configured one. There is deliberately no third answer between
+ * "configured" and "not": a `disabled` state that callers had to branch
+ * on would be a second rule to keep in step at every seam, for a
+ * distinction only the settings pane is interested in.
+ *
  * The driver factory is a parameter so the test harness can build the
  * deterministic fake from the same stored row the production resolver
  * reads. The resolution itself — read the row, decide configured or not
@@ -52,7 +61,7 @@
  * row behaves the same under test as it does in the field.
  */
 
-import { eq, signingConnectors, type Db } from "@openlaw/db";
+import { and, eq, isNull, signingConnectors, type Db } from "@openlaw/db";
 import { createDocuSignProvider, type DocuSignConfig } from "./docusign.js";
 import type { SigningProvider } from "./provider.js";
 
@@ -86,12 +95,13 @@ export function createSigningResolver(
     const [row] = await db
       .select()
       .from(signingConnectors)
-      .where(eq(signingConnectors.provider, "docusign"))
+      .where(and(eq(signingConnectors.provider, "docusign"), isNull(signingConnectors.disabledAt)))
       .limit(1);
     if (!row) {
-      // The connector was removed. Dropped rather than left behind: a
-      // driver kept past its row is credentials this install has said
-      // it no longer holds.
+      // No connector, or one that is turned off. Dropped rather than
+      // left behind: a driver kept past its row is credentials this
+      // install has said it no longer holds, and a driver kept past a
+      // disable would keep sending after the switch was thrown.
       cached = null;
       return null;
     }

@@ -476,16 +476,27 @@ type SsoProviderPayloads = {
 };
 
 /**
- * The e-signature connector (M15/1, CTR-013). Two verbs rather than one
- * generic settings edit: connecting an install to a signing provider for
- * the first time is a different event from rotating a key on the one it
- * already has, and an Administrator asking "when did the RSA key last
+ * The e-signature connector (M15/1, CTR-013). A verb per act rather than
+ * one generic settings edit: connecting an install to a signing provider
+ * for the first time is a different event from rotating a key on the one
+ * it already has, and an Administrator asking "when did the RSA key last
  * change" has to be able to filter the audit log on it.
  *
- * Neither payload ever carries a credential. The RSA key and the Connect
+ * The last three are the connector's own lifecycle. **Turning the
+ * connector off and taking it out are different events and always will
+ * be**: one is reversible and keeps the credentials, and the other is
+ * the moment those credentials left this install. A reader who cannot
+ * tell them apart cannot answer "was the key still here last Tuesday",
+ * which is the question a credential's history exists for.
+ *
+ * No payload ever carries a credential. The RSA key and the Connect
  * secret record as `[secret]` on both sides of their change, the SSO
  * client secret's shape and for its reason: this table is append-only,
  * so a secret that reached a payload would be in the record forever.
+ * `signing_connector.removed` carries the estate and the integration key
+ * for that reason too — they are configuration, and after the row is
+ * gone this entry is the only thing that still says which account this
+ * install was talking to.
  */
 type SigningConnectorPayloads = {
   "signing_connector.configured": {
@@ -498,6 +509,20 @@ type SigningConnectorPayloads = {
     field: string;
     old: unknown;
     new: unknown;
+  };
+  /** Turned off, credentials kept. `liveEnvelopes` is how many rounds
+   * were still out at that moment — the sweep cannot reach them while
+   * the connector is off, and the entry is what says so afterwards. */
+  "signing_connector.disabled": { provider: string; liveEnvelopes: number };
+  /** Turned back on. The credentials are the ones that were there. */
+  "signing_connector.enabled": { provider: string };
+  /** Taken out. Refused while any envelope is live, so there is no
+   * count to carry: the record can only reach this state with nothing
+   * out. */
+  "signing_connector.removed": {
+    provider: string;
+    environment: string;
+    integrationKey: string;
   };
 };
 

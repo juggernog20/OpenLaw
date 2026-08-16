@@ -28,20 +28,31 @@ import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
+import { formatShortDate } from "../lib/format";
 import { problemDetail } from "../lib/messages";
 import { currentUser, needsSetup } from "../lib/session";
 import { PageTitle } from "../components/page-title";
 import { SettingsCard } from "../components/settings-card";
 import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Button } from "../components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { Switch } from "../components/ui/switch";
 
 /** The one adapter v1 ships (CTR-013). */
 const PROVIDER = "docusign" as const;
 
 type Connector =
   paths["/api/v1/signing-connectors/{provider}"]["get"]["responses"]["200"]["content"]["application/json"]["connector"];
+
+/**
+ * The three things on this pane that report separately.
+ *
+ * `lifecycle` covers the switch and the remove together, because they
+ * write the same row and only one of them is ever in flight.
+ */
+type Field = "connector" | "test" | "lifecycle";
 
 export async function settingsESignatureLoader() {
   const user = await currentUser();
@@ -93,15 +104,20 @@ export function SettingsESignaturePage() {
     [],
   );
 
-  const [status, setStatus] = useState<Record<"connector" | "test", FieldStatus>>({
+  const [status, setStatus] = useState<Record<Field, FieldStatus>>({
     connector: "idle",
     test: "idle",
+    lifecycle: "idle",
   });
-  const [detail, setDetail] = useState<Record<"connector" | "test", string | undefined>>({
+  const [detail, setDetail] = useState<Record<Field, string | undefined>>({
     connector: undefined,
     test: undefined,
+    lifecycle: undefined,
   });
   const [account, setAccount] = useState<string | null>(null);
+  /** Whether the remove confirmation is open. Removing takes both
+   * secrets with it, so it is never one click. */
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
 
   /**
    * Whether each write is already out.
@@ -115,8 +131,11 @@ export function SettingsESignaturePage() {
    */
   const saving = useRef(false);
   const testing = useRef(false);
+  /** The switch and the remove share one guard: both rewrite the same
+   * row, and neither may go out while the other is in flight. */
+  const changingLifecycle = useRef(false);
 
-  function note(field: "connector" | "test", value: FieldStatus, message?: string) {
+  function note(field: Field, value: FieldStatus, message?: string) {
     setStatus((current) => ({ ...current, [field]: value }));
     setDetail((current) => ({ ...current, [field]: message }));
   }
@@ -178,6 +197,82 @@ export function SettingsESignaturePage() {
       note("test", "error");
     } finally {
       testing.current = false;
+    }
+  }
+
+  /**
+   * Turns the connector off, or back on.
+   *
+   * Off is not a destructive act — the credentials stay and the switch
+   * comes back — so it commits on the click with no confirmation, the
+   * way every other switch in Settings does.
+   */
+  async function setEnabled(next: boolean): Promise<void> {
+    if (changingLifecycle.current) return;
+    changingLifecycle.current = true;
+    note("lifecycle", "saving");
+    // A test result describes a connector that was answering. Turning
+    // it off makes that answer stale, so it goes with the switch.
+    setAccount(null);
+    note("test", "idle");
+    try {
+      const { data, error } = await api.POST(
+        next
+          ? "/api/v1/signing-connectors/{provider}/enable"
+          : "/api/v1/signing-connectors/{provider}/disable",
+        { params: { path: { provider: PROVIDER } } },
+      );
+      if (!data) {
+        note("lifecycle", "error", problemDetail(error));
+        return;
+      }
+      setConnector(data.connector);
+      note("lifecycle", "saved");
+    } catch {
+      note("lifecycle", "error");
+    } finally {
+      changingLifecycle.current = false;
+    }
+  }
+
+  /**
+   * Takes the connector out.
+   *
+   * The API refuses while any envelope is still out and says how many,
+   * so the pane reports that refusal rather than pre-empting it: the
+   * count it would have to draw is a fact only the seam holds, and one
+   * it can hold correctly under a lock.
+   */
+  async function removeConnector(): Promise<void> {
+    if (changingLifecycle.current) return;
+    changingLifecycle.current = true;
+    note("lifecycle", "saving");
+    setAccount(null);
+    note("test", "idle");
+    try {
+      const { data, error } = await api.DELETE("/api/v1/signing-connectors/{provider}", {
+        params: { path: { provider: PROVIDER } },
+      });
+      if (!data) {
+        note("lifecycle", "error", problemDetail(error));
+        return;
+      }
+      setConnector(data.connector);
+      // Back to a blank form, because this install is back to having
+      // no connector — leaving the old key in the boxes would invite
+      // saving it again by reflex.
+      setEnvironment("demo");
+      setIntegrationKey("");
+      setApiUserId("");
+      setPrivateKey("");
+      setWebhookSecret("");
+      note("connector", "idle");
+      note("lifecycle", "saved");
+      setConfirmingRemove(false);
+    } catch {
+      note("lifecycle", "error");
+    } finally {
+      changingLifecycle.current = false;
     }
   }
 
@@ -417,7 +512,124 @@ export function SettingsESignaturePage() {
             />
           </p>
         </div>
+
+        {/* The connector's own lifecycle. Drawn only on a configured
+            install, the DES-035 absence rule: there is nothing to turn
+            off or take out until there is a connector. */}
+        {connector.configured && (
+          <div className="flex flex-col gap-4 border-t border-border-default pt-4">
+            <div className="flex items-start gap-3">
+              <Switch
+                id="ds-enabled"
+                checked={connector.enabled}
+                disabled={status.lifecycle === "saving"}
+                onCheckedChange={(next) => void setEnabled(next)}
+                aria-labelledby="ds-enabled-label"
+                aria-describedby="ds-enabled-hint"
+              />
+              <div className="flex flex-col gap-1">
+                <Label id="ds-enabled-label" htmlFor="ds-enabled">
+                  <FormattedMessage
+                    id="settings.eSignature.enabled"
+                    defaultMessage="Send for signature from records"
+                  />
+                </Label>
+                <p id="ds-enabled-hint" className="text-xs text-muted">
+                  {/* Branching on the timestamp rather than on the
+                      flag: the two say the same thing, and this one
+                      carries the date the copy needs. */}
+                  {connector.disabledAt === null ? (
+                    <FormattedMessage
+                      id="settings.eSignature.enabled.on"
+                      defaultMessage="Turn this off to go back to the manual path without losing the credentials. Records stop offering the send, and rounds already out stand still until you turn it back on."
+                    />
+                  ) : (
+                    <FormattedMessage
+                      id="settings.eSignature.enabled.off"
+                      defaultMessage="Off since {when}. Records show the manual path, and rounds already out stand still until you turn this back on."
+                      values={{ when: formatShortDate(connector.disabledAt) }}
+                    />
+                  )}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={status.lifecycle === "saving"}
+                onClick={() => setConfirmingRemove(true)}
+              >
+                <FormattedMessage
+                  id="settings.eSignature.remove"
+                  defaultMessage="Remove connector"
+                />
+              </Button>
+              <StatusNote status={status.lifecycle} detail={detail.lifecycle} />
+            </div>
+          </div>
+        )}
       </SettingsCard>
+      {confirmingRemove && (
+        <RemoveConnectorDialog
+          busy={status.lifecycle === "saving"}
+          onClose={() => setConfirmingRemove(false)}
+          onConfirm={() => void removeConnector()}
+        />
+      )}
     </>
+  );
+}
+
+/**
+ * The confirmation on taking the connector out.
+ *
+ * A dialog rather than a second click on the same button, because this
+ * is the one control on the pane that destroys something: both secrets
+ * go with the row, and re-connecting means asking DocuSign for them
+ * again. The button says what it does rather than "OK".
+ *
+ * It names the switch, because the switch is what most people who reach
+ * this button actually want — the reversible way to stop sending.
+ */
+function RemoveConnectorDialog({
+  busy,
+  onClose,
+  onConfirm,
+}: Readonly<{ busy: boolean; onClose: () => void; onConfirm: () => void }>) {
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent aria-describedby={undefined}>
+        <DialogTitle>
+          <FormattedMessage
+            id="settings.eSignature.removeTitle"
+            defaultMessage="Remove the DocuSign connector"
+          />
+        </DialogTitle>
+        <div className="mt-4 flex flex-col gap-4">
+          <p className="text-sm text-muted">
+            <FormattedMessage
+              id="settings.eSignature.removeBody"
+              defaultMessage="The RSA key and the Connect secret are deleted with the connector. Reconnecting means pasting both again. Records go back to the manual path."
+            />
+          </p>
+          <p className="text-sm text-muted">
+            <FormattedMessage
+              id="settings.eSignature.removeAlternative"
+              defaultMessage="To stop sending and keep the credentials, turn the connector off instead."
+            />
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={onClose}>
+              <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
+            </Button>
+            <Button type="button" variant="danger" disabled={busy} onClick={onConfirm}>
+              <FormattedMessage id="settings.eSignature.remove" defaultMessage="Remove connector" />
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
