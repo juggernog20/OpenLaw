@@ -36,7 +36,7 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arc 3, milestone 16** — term, renewal, and key dates. Arc 1 is done: the monorepo and CI, the
+**Arc 3, milestone 17** — tasks, relations, and end of life. Arc 1 is done: the monorepo and CI, the
 authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
 `/settings` destination with its Personal and Organization rails. Arc 2 is done too: the
 configurable types and statuses, the Entities registry, the contract record, the conversation on a
@@ -48,10 +48,14 @@ background pipeline that extracts every version's text, M13 organizes it, with f
 the record and a folder drop that recreates the structure it arrived with, M14 puts the
 six-stage backbone and its sign-off on the record — the stage pipeline, parallel approvals with
 reusable approver groups, and the soft gate that warns before a contract goes past open sign-off —
-and M15 sends the paper out and takes it back: the signing adapter with DocuSign behind it, the
+M15 sends the paper out and takes it back: the signing adapter with DocuSign behind it, the
 envelope on the record, the webhook and the sweep that both report what happened, and the executed
-PDF that files and pins itself when everybody has signed. The manual hand-off still needs no
-configuration at all.
+PDF that files and pins itself when everybody has signed — the manual hand-off still needs no
+configuration at all — and M16 gives the record a term: the five typed columns, the notice deadline
+and the pending-confirmation state that derive themselves out of them, the key dates that join both
+in one deadline surface, and the Renew dialog that routes a renewal to whichever of the four vehicles
+the team actually used. Nothing in it advances a date on its own; the notifier that fires on these
+dates is M18's.
 
 ---
 
@@ -284,13 +288,29 @@ makes OpenLaw a CLM rather than a database with a form on it.
   - The manual hand-off is untouched and needs no configuration — upload, pin, mark active
   - _Decisions:_ CTR-013, CTR-014, TECH-013, SET-007, DES-036, DES-037, DES-038 · _Issues:_ #244–#251
 
-- [ ] **M16 — Term, renewal, and key dates**
+- [x] **M16 — Term, renewal, and key dates**
       _Demo:_ Set a contract's term and notice period; the notice deadline derives itself, and choosing to
       renew routes to the vehicle you picked.
-  - Typed term and renewal columns; the derived notice deadline, computed and never stored
-  - Named key dates; the notify-only engine (nothing auto-advances a contract)
-  - Renewal routing by the user's choice of vehicle
-  - _Decisions:_ CTR-006, CTR-007, CTR-009
+  - CTR-006's five term columns on `contracts` — term type, effective date, expiry date, renewal period,
+    notice period — each an ordinary inline-committed field, with the cross-field rules refused by their
+    own problem types and a type change clearing what the new type cannot hold
+  - Four answers derived at read and stored nowhere: the notice deadline (expiry minus notice period),
+    days remaining, where a confirmed roll would land, and the renewal-pending-confirmation state below
+  - The Term timeline card draws the periods, the today line, and the derived notice-deadline marker
+  - `contract_key_dates` per CTR-009, and the deadline union the record reads as one list — the key dates,
+    the expiry, and the notice deadline, ordered outward from today with the next deadline named by the seam
+  - "Renewal pending confirmation" is a predicate over the record's own dates, not a status: the banner
+    appears because the read says so, and no job, sweep, or column is involved
+  - The Renew dialog's four CTR-007 vehicles — the confirmed roll writes here, and the amendment, the child
+    contract, and the standalone successor route to the surfaces that already exist
+  - The write side of CTR-015 lands with the routing: `contracts.parent_id` and `contract_relations`, both
+    through one guarded path; M17 keeps the read surfaces
+  - The successor is born prefilled with the deal — our entity, the counterparties, the value, the term
+    shape — and never with the record: no status, no team, no Owner, no Confidential flag
+  - Nothing fires and nothing advances on its own; the notifier is M18's, and what M16 ships is every datum
+    it will fire on
+  - _Decisions:_ CTR-006, CTR-007, CTR-009, CTR-015, DES-040, DES-041, DES-042, DES-043, DES-044 ·
+    _Issues:_ #282–#288
 
 - [ ] **M17 — Tasks, relations, and end of life**
       _Demo:_ Check off a task, link an amendment to its parent contract, then end the contract and confirm
