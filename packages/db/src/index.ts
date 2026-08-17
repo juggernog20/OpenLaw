@@ -183,6 +183,13 @@ export const ADVISORY_LOCK = {
   ssoProviderUpdate: 4101003,
   /** Held while stored credentials are resealed at boot (TECH-022). */
   secretsRewrap: 4101004,
+  /** Held across a CTR-015 relation write's check-and-write — a parent
+   * set or a typed link — because neither guard is one row's to hold in
+   * a race: a cycle is two parent writes threading past each other, and
+   * a symmetric `related` mirror is two keys the compound key cannot
+   * see as one. Taken as `pg_advisory_xact_lock`, inside the writing
+   * transaction, unlike the session locks above. */
+  contractRelations: 4101005,
 } as const;
 
 /**

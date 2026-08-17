@@ -19,7 +19,11 @@
  * a caller that asked for a link the record already holds deserves to be
  * told so by name. So the rules are asked here first, under the lock the
  * calling transaction already holds, and the constraints stand behind
- * whichever code arrives next.
+ * whichever code arrives next. What the constraints cannot hold is a
+ * race no single row can see — a cycle threaded by two concurrent
+ * parent writes, or a symmetric `related` mirror whose two directions
+ * are two different keys — so both writes also serialize under one
+ * transaction-scoped advisory lock ({@link ADVISORY_LOCK}).
  *
  * **A cycle is a walk and cannot be anything else.** One row can say
  * that a contract is not its own parent; it cannot say that its proposed
@@ -36,7 +40,16 @@
  * rename.
  */
 
-import { and, contractRelations, contracts, eq, or, type Transaction } from "@openlaw/db";
+import {
+  ADVISORY_LOCK,
+  and,
+  contractRelations,
+  contracts,
+  eq,
+  or,
+  sql,
+  type Transaction,
+} from "@openlaw/db";
 import type { ContractRelationType } from "@openlaw/db";
 import {
   CONTRACT_PARENT_CYCLE_PROBLEM_TYPE,
@@ -81,6 +94,14 @@ export async function setContractParent(
       type: CONTRACT_PARENT_CYCLE_PROBLEM_TYPE,
     });
   }
+  // The walk and the write must be one critical section across every
+  // process, or two writers could thread a cycle past each other — one
+  // putting A under B while another puts B under A, each walking a
+  // chain the other has not committed yet. This transaction-scoped
+  // lock serializes CTR-015's relation writes: taken after the
+  // caller's row lock, released with the commit, and cheap to wait on
+  // because what it guards is a short read walk and one UPDATE.
+  await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.contractRelations})`);
   // Walk up from the proposed parent. Meeting the child means the
   // child is already an ancestor of its would-be parent, and setting
   // the column would close the loop.
@@ -144,6 +165,15 @@ export async function linkContracts(
   if (fromId === toId) {
     throw httpError(409, "A contract cannot be linked to itself.");
   }
+  // One writer at a time, for the symmetric type's sake: the compound
+  // key cannot refuse a mirror row — (A, B) and (B, A) are two keys —
+  // so two ends asking for one `related` link at once would both read
+  // no row and both insert. The same lock the parent write takes makes
+  // the check and the insert one critical section across processes; it
+  // also turns the directional race's constraint violation into the
+  // named refusal below, because the second writer now reads after the
+  // first has committed.
+  await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.contractRelations})`);
   const sameLink = and(
     eq(contractRelations.fromContractId, fromId),
     eq(contractRelations.toContractId, toId),
@@ -165,11 +195,11 @@ export async function linkContracts(
     });
   }
 
-  // The key stands behind the check above: two callers that both read
-  // no row would both insert, and the second is refused by Postgres.
-  // `onConflictDoNothing` would make that silence, and a caller that
-  // asked for a link is owed an answer either way — so the insert is
-  // plain, and the race surfaces as the same refusal one step later.
+  // The key still stands behind the directional types for whatever
+  // code writes a row without taking the lock: a second row for one
+  // pair and one type is refused by Postgres. `onConflictDoNothing`
+  // would make that silence, and a caller that asked for a link is
+  // owed an answer either way — so the insert is plain.
   await tx.insert(contractRelations).values({
     fromContractId: fromId,
     toContractId: toId,
