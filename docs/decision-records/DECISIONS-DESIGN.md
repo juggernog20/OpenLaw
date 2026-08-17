@@ -2742,7 +2742,7 @@ Three things about the mock do not match what this slice can honestly draw, and 
 
 **7. The dialog lives on the record, not inside that card.** The banner is chrome and is on screen in every section, so the dialog it raises cannot live in a card that only the Approvals section mounts. `SoftGateDialog` already makes this move for the same reason, and it sits beside it.
 
-**8. The mock's radio list is not drawn, and the one vehicle's own sentence is drawn instead.** A group of one radio is a control that decides nothing, and three options that cannot be picked would advertise acts the product does not have (DES-035 clauses 9 and 13). What the selected option says — same record, the expiry advances — becomes the dialog's own statement of what pressing the button does. The list returns with the slice that builds the other three.
+**8. The mock's radio list is not drawn, and the one vehicle's own sentence is drawn instead.** A group of one radio is a control that decides nothing, and three options that cannot be picked would advertise acts the product does not have (DES-035 clauses 9 and 13). What the selected option says — same record, the expiry advances — becomes the dialog's own statement of what pressing the button does. The list returns with the slice that builds the other three. _(Discharged by **DES-044** (2026-08-17, M16/5): the other three exist, so the list is drawn.)_
 
 **9. The dialog collects one thing the mock does not draw: the new expiry.** A date `Input`, labelled "New expiry date", seeded with the expiry the **seam** proposes and editable before the press. The proposal is answered rather than computed here for DES-040 clause 4's reason, applied to a date instead of a count: the month arithmetic a roll needs — a term ending on the 31st rolled into February lands on the 28th — is one rule, and a dialog holding a second copy of it is the copy that drifts. Under the box, at `text-xs text-muted`, the term as it stands: "The term currently runs to {date}." That is what the person is moving from, said where they are moving it.
 
@@ -2802,6 +2802,86 @@ The activity narrator gains one verb. It keeps its own sentence rather than read
 
 Grill row **G.R5** is discharged. **I.B3**, **I.B4**, and **I.B5** stay open with clause 18, no longer waiting on a datum.
 
+## DES-044: The Renew dialog's four exits, and the prefilled create (extends DES-043, DES-035, DES-033, DES-017)
+
+- **Status:** Accepted
+- **Date:** 2026-08-17
+
+### Context
+
+M16/5 builds CTR-007's other three renewal vehicles, so the Renew dialog stops being a form with one button and becomes what the C9 mock always drew: a chooser. `designs/contracts.pen`'s `S9 Overlay` lists four options — **Confirm the roll** ("Same record — expiry advances to Jun 30, 2027."), **Paper as amendment** ("Renewal recorded as an amendment on this contract."), **Create child contract** ("New record parented to this one."), and **New successor contract** ("Standalone record linked as the renewal.") — over a foot reading "Logged to history. Reminders stop once confirmed."
+
+DES-043 clause 8 left that list out while three of the four could not be picked, and said it would return with the slice that built them. This is that slice. Three things the mock does not settle have to be settled here:
+
+1. **Three of the four do not commit anything.** Only the roll writes in this dialog. The other three take the person somewhere else — to the record's own paper, or to the create flow — and a button that says "Confirm renewal" before navigating would be lying about what it does.
+2. **The prefilled create has no drawn design.** C10 is the create modal and it draws no prefilled state, because M8 had nothing to prefill from.
+3. **Two of the three routed vehicles need a surface that already exists**, and reusing it is a decision with consequences for both.
+
+### Decision
+
+**1. The mock's radio list is drawn, one option per vehicle, in the mock's own order and words.** Titles and blurbs are the mock's; the glyphs are Lucide's (DES-008), one per vehicle, so the list reads before it is read. A radio group rather than four buttons: picking a vehicle is a decision about **what to record**, taken before the act, and the reader should see all four at once and reach them with the arrow keys. The chosen option takes the `status-info` family's paired fill and border, which is the mock's own treatment and a pair the contrast gate already checks.
+
+**2. Confirming the roll stays the default and keeps everything DES-043 gave it.** It is the vehicle an auto-renewing contract most often takes, and the only one that records the renewal here rather than somewhere else. Its date box, its "The term currently runs to {date}." line, its two client-side refusals, and its `fromExpiry` precondition are unchanged.
+
+**3. The date box belongs to the roll and is drawn only while the roll is chosen.** The other three vehicles record their new term on the record they are about to open, so a box here would collect a date nothing would do anything with — and a form that keeps a control for a path it is not on is DES-035 clause 13's mistake in miniature.
+
+**4. The button says the chosen vehicle's verb, and the foot note says what that vehicle leaves behind.** "Confirm renewal", "File the amendment", "Open the child contract", "Open the successor" — DES-035 clause 10 applied per exit. The note beside the `History` glyph follows: the roll keeps DES-043 clause 11's sentence, and each routed vehicle says where it is about to take the reader and, for the two that create a record, what does **not** come across. A button that navigates should say so before it is pressed.
+
+**5. The amendment option is absent, never disabled, on a record with no primary document.** DES-035 clause 9. Filing an amendment means appending a version to the record's instrument (CTR-014), and a record with no instrument has no chain to append to — so the act does not exist and no control for it is drawn. The other three are always on offer, because the Renew control is already drawn only on a record that can roll (DES-043 clause 6).
+
+**6. The amendment vehicle routes to the Documents section and opens its composer, seeded with the `amendment` kind.** No second upload form, and no amendment-shaped variant of the one that exists: the file, the note, and the write are the M11 upload path exactly as they are. What the routing contributes is the two things a person would otherwise have to do by hand — get to the right section, and set the kind. The seed is a **seed and not a lock**: the kind picker still offers all five, because a person who changed their mind between the dialog and the file should not have to start again.
+
+**7. The composer is opened once and the request is then spent.** Returning to the Documents section later must not re-open it, so the section answers the record as soon as it has taken the request up — including when there was no chain to open it on, so a request can never sit unanswered behind a page of paper.
+
+**8. The child and successor vehicles open the Contracts list's own create dialog, from the record.** Routing a renewal makes an ordinary contract, and a create form that behaved differently for renewals would be a second set of rules to keep in step with the first. The dialog moves to `components/contracts/` and gains one optional prop; nothing about its ordinary use changes.
+
+**9. It says which act it is, in its title and in one sentence above the boxes.** "Create child contract" or "Create successor contract" rather than "Create contract", and under it what came across and what did not: the counterparties, our entity, the value, and the term did; the team, the status, and the Confidential flag did not. CTR-015's no-inheritance stance is invisible in a form whose boxes are already full, so the dialog states it rather than letting a reader discover it on the record afterwards.
+
+**10. The two fields the dialog draws are seeded and stay editable; everything else is copied at the seam.** The title and the type are seeded from the record the renewal was routed from and whatever is in the boxes when Create is pressed is what the record is born with. The business facts the dialog does not draw are the seam's to copy, because it is the only place that can and the only place worth asserting it at. This is DES-040 clause 4's rule again — one derivation, at the end that owns it — applied to a copy instead of a count.
+
+**11. The Confidential toggle starts off, whatever the predecessor is flagged.** It is drawn exactly as it is on an ordinary create, so a person routing a renewal of a walled record can wall the successor in the same breath. It is a decision they take, not one inherited (DD-014, CTR-018). CTR-018's link-time "make this confidential too?" nudge is **not** drawn here: it belongs with M17's manual linking, where a link is made between two records that already exist.
+
+**12. Creating lands the person on the record that was just born.** It is where the renewal is finished — the dates the prefill brought across are the first thing anybody will move — and the ordinary create, which stays on the list it was raised from, is a different act with a different next step.
+
+**13. The two dialogs never overlap, and the second waits a frame for the first to leave.** Two modal layers swapped inside one commit leave the page inert: the outgoing layer tears itself down after the incoming one has decided whether it has to opt itself back in to pointer events, and the create dialog mounts unclickable. Deferring the second by a tick is the whole of the fix and costs a frame nobody sees. Recorded because it is invisible in the code and the failure it prevents is total.
+
+**14. Nothing about relations is drawn.** No relations panel, no hierarchy breadcrumb, no "renews C-42" line on either record, no manual linking, and no restricted-relative placeholder. This slice writes links and narrates the writes; every surface that reads one is M17's (CTR-015). The only place a reader meets a relation in M16 is the activity feed's own sentence.
+
+### Rationale
+
+The dialog's shape follows from a fact about the four vehicles that the mock's uniform list hides: one of them is a write and three of them are journeys. Drawing them as four equal options is right — the person is choosing what to record, and at that moment they are equal — but everything after the choice has to admit the difference, which is why the button, the foot note, and the date box all follow the selection rather than sitting still.
+
+Reusing the create dialog is the decision most worth defending. A dedicated "renewal contract" form would have let every field be prefilled and edited in one place, which is the stronger reading of "everything prefilled stays editable before create". It was rejected because it would fork creation: two forms, two required-field rules, two confidentiality toggles, and a second place for MTR-014 to be enforced. One form with a prefilled mode keeps creation one thing, and the fields it does not draw are editable on the record a moment later — which is where M8 always put them (DES-017).
+
+The prefill's split is therefore not a compromise but the same rule stated twice: whoever draws a value owns seeding it, and whoever owns the write owns copying the rest. The seam is also the only place the promise can be _tested_, which is what makes it the right owner of the part nobody can see.
+
+### Alternatives considered
+
+- **A dedicated renewal-create form with every business fact drawn.** Rejected above: it forks creation and duplicates MTR-014's enforcement point.
+- **Four buttons instead of a radio group.** Rejected: a button is a verb and these are nouns, and four verbs would ask the reader to decide and act in one motion with no way to look at the options first.
+- **Keeping one button label ("Continue") for all four.** Rejected with clause 4: DES-035 clause 10 exists because an act should say what it does, and "Continue" is the word that says least.
+- **Drawing the amendment option disabled with an explanation on a record with no paper.** Rejected with clause 5, DES-035 clause 9's rule: a control for an act that does not exist is not drawn as a disabled one.
+- **Routing the amendment to a fresh upload rather than the primary chain.** Rejected: CTR-007 says the renewal stays on the record it amends, and CTR-014 says the instrument is one document with one chain. A loose attachment would be paper the record does not treat as its own.
+- **Writing an `amends` relation for the amendment vehicle.** Rejected: no second record exists for it to point at. `amends` is for a contract that amends another contract, which is M17's manual linking and the child-contract case a team chooses to call an amendment.
+- **Prefilling the Confidential flag from the predecessor.** Rejected with clause 11: CTR-015 forbids it, and DD-014 makes walling a record an act somebody takes.
+- **Copying the predecessor's team so the successor opens with the same people.** Rejected for the same reason, and it is the copy that would have looked most helpful: a team is who is working _this_ paper, and a renewal is often worked by somebody else.
+- **Showing the new record's link on the predecessor immediately.** Rejected: it is a relations read surface and belongs to M17 whole, rather than half of it arriving here for one case.
+- **Leaving the Renew dialog open behind the create dialog so Cancel returns to the chooser.** Rejected with clause 13, and independently: a person who cancels a create has changed their mind about the renewal, not about the vehicle.
+
+### Consequences
+
+`ConfirmRenewalDialog` gains the radio list, a `canAmend` prop, and an `onRoute` callback; its date box, its refusals, and its `fromExpiry` precondition are untouched.
+
+`CreateContractDialog` moves from `routes/contracts.tsx` to `components/contracts/create-contract-dialog.tsx` and gains one optional `renewalOf` prop carrying the predecessor's number, the vehicle, and the two seeded fields. Its two control ids are namespaced (`contract-new-title`, `contract-new-type`) because the record page draws a Title box and a type picker of its own, and two elements sharing an id break the label association a screen reader follows.
+
+`DocumentsCard` gains an `amending` request and the answer to it, and its composer takes an optional seed kind. `ContractRecord` holds both requests, beside the Renew dialog it already held.
+
+Twenty-three new ICU messages — fourteen on the dialog's four options, its group label, and their verbs, three on its foot notes, four on the create dialog's titles and prefill sentences, and four on the activity narrator's two new verbs and the far record they name. No new tokens and no new contrast pairs: the chosen option reuses the `info` family's paired fg/bg and its fg on `bg-raised`, both of which the gate already checks.
+
+The activity narrator gains two verbs. `contract.relation_added` is one sentence with an arm per relation type rather than three verbs, because the act is the same act and only the word in the middle differs; an unknown type falls into a generic arm, because the log is append-only and a row written by a later build still has to read as a sentence.
+
+DES-043 clause 8 is discharged. Clause 18 is unchanged: confirmed rolls are still not drawn on the Term timeline card.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -2849,3 +2929,4 @@ Grill row **G.R5** is discharged. **I.B3**, **I.B4**, and **I.B5** stay open wit
 | DES-041 | The Term timeline card — the gutter, the two marks, and the open end (extends DES-040, DES-032, DES-012)                                                             | Accepted |
 | DES-042 | The Key dates section — one union, one Source chip, and the next deadline named (extends DES-035, DES-032, DES-040)                                                  | Accepted |
 | DES-043 | The renewal-pending banner, the Renew dialog, and the confirmed-renewal row (extends DES-035, DES-040, DES-017, DES-009)                                             | Accepted |
+| DES-044 | The Renew dialog's four exits, and the prefilled create (extends DES-043, DES-035, DES-033, DES-017)                                                                 | Accepted |

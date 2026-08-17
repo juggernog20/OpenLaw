@@ -164,6 +164,10 @@ _Avoid_: pending renewal status, lapsed, overdue renewal, expired (a fixed term 
 A person's assertion that an auto-renewing Contract renewed on the same paper, which advances its expiry date — the first of CTR-007's four renewal vehicles. Nothing in OpenLaw ever rolls a term on its own: a roll happens because somebody confirmed it, and the person may adjust the proposed new expiry before committing. Nothing stores a confirmed roll either — the activity entry it writes is the whole record of it, and both the Contract's renewal history and its last renewal date are that entry read back [CTR-006, CTR-007].
 _Avoid_: auto-renewal (nothing is automatic), rollover, renewal event, extension
 
+**Renewal vehicle**:
+How a team chooses to record a renewal. There are four and OpenLaw imposes none of them: **confirm the roll** (the same record's expiry advances), **amendment** (a version filed on the record's own paper), **child contract** (a new record born under the original), and **new contract** (a standalone successor linked back to its predecessor). The tool records what a team actually did rather than a doctrine, so a renewal is identified afterwards by its link and by the activity log — never by the shape of the record [CTR-007].
+_Avoid_: renewal type, renewal method, renewal path
+
 **Key date**:
 A named deadline on a Matter or Contract — a date, a label, and an optional note. Key dates feed deadline surfaces. A key date carries no owner and no reminder schedule of its own [MTR-004, CTR-009, NOT-004].
 _Avoid_: milestone, custom date, important date

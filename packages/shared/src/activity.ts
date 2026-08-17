@@ -413,6 +413,45 @@ type ContractPayloads = {
     from: string;
     to: string;
   };
+  /**
+   * CTR-015's two relation writes, and the two verbs M16/5's renewal
+   * routing puts them on the record with.
+   *
+   * They keep their own verbs rather than riding `contract.updated` for
+   * `team_added`'s reason: putting a record under another one, or
+   * saying that it renews another one, is not an edit of a field. It is
+   * a statement about two records, and a reader of the feed has to be
+   * able to tell "this contract was parented to C-51" from "somebody
+   * changed a date on it" without opening a payload.
+   *
+   * **The entry hangs off the record that changed, which is the new
+   * one.** Nothing is written on the far end — CTR-015's no-cascade
+   * stance is not only about status and confidentiality, and a feed
+   * entry on a record whose row nobody touched would be the log
+   * asserting an edit that never happened. What the far end shows is
+   * M17's relations panel, read from the rows themselves.
+   *
+   * Both payloads name the other record by number **and** title, for
+   * the reason every document payload names its file: the link may
+   * outlive a rename, and the entry has to still say which contract was
+   * meant.
+   */
+  "contract.parent_set": {
+    number: number;
+    title: string;
+    parentNumber: number;
+    parentTitle: string;
+  };
+  /** `relationType` is one of CTR-015's three, so the viewer selects a
+   * sentence on it rather than printing a slug. M16 writes `renews`
+   * alone; `related` and `amends` arrive with M17's manual linking. */
+  "contract.relation_added": {
+    number: number;
+    title: string;
+    relationType: string;
+    relatedNumber: number;
+    relatedTitle: string;
+  };
   "contract.archived": { number: number; title: string };
   "contract.restored": { number: number; title: string };
 };

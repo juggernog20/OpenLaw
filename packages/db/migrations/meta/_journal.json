@@ -337,6 +337,13 @@
       "when": 1786918236654,
       "tag": "0047_contract_key_dates",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1786928484229,
+      "tag": "0048_contract_relations",
+      "breakpoints": true
     }
   ]
 }

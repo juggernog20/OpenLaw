@@ -92,8 +92,17 @@
   "activity.contract.created": {
     "defaultMessage": "{actor} created this contract"
   },
+  "activity.contract.parentSet": {
+    "defaultMessage": "{actor} put this contract under {parent}"
+  },
   "activity.contract.primaryChanged": {
     "defaultMessage": "{actor} changed which counterparty the contract is listed under"
+  },
+  "activity.contract.relatedRecord": {
+    "defaultMessage": "{reference} ({title})"
+  },
+  "activity.contract.relationAdded": {
+    "defaultMessage": "{actor} linked this contract — {relationType, select, renews {it renews {related}} amends {it amends {related}} other {related to {related}}}"
   },
   "activity.contract.renewalConfirmed": {
     "defaultMessage": "{actor} confirmed the renewal — the term moved from {from} to {to}"
@@ -115,6 +124,9 @@
   },
   "activity.contract.typeReassigned": {
     "defaultMessage": "{actor} re-typed this contract"
+  },
+  "activity.contract.unnamedRecord": {
+    "defaultMessage": "another contract"
   },
   "activity.contract.updated": {
     "defaultMessage": "{actor} changed {count, plural, =0 {this contract} one {{field}} other {# fields}}"
@@ -1043,6 +1055,12 @@
   "contracts.form.owner": {
     "defaultMessage": "Owner"
   },
+  "contracts.form.prefillChild": {
+    "defaultMessage": "Prefilled from {reference} and born under it. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it."
+  },
+  "contracts.form.prefillSuccessor": {
+    "defaultMessage": "Prefilled from {reference} and linked as its renewal. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it."
+  },
   "contracts.form.priority": {
     "defaultMessage": "Priority"
   },
@@ -1064,11 +1082,17 @@
   "contracts.form.title": {
     "defaultMessage": "Create contract"
   },
+  "contracts.form.titleChild": {
+    "defaultMessage": "Create child contract"
+  },
   "contracts.form.titleField": {
     "defaultMessage": "Title"
   },
   "contracts.form.titleMissing": {
     "defaultMessage": "Name the contract."
+  },
+  "contracts.form.titleSuccessor": {
+    "defaultMessage": "Create successor contract"
   },
   "contracts.form.type": {
     "defaultMessage": "Contract type"
@@ -2072,6 +2096,15 @@
   "nav.home": {
     "defaultMessage": "Home"
   },
+  "renewal.action.amendment": {
+    "defaultMessage": "File the amendment"
+  },
+  "renewal.action.child": {
+    "defaultMessage": "Open the child contract"
+  },
+  "renewal.action.successor": {
+    "defaultMessage": "Open the successor"
+  },
   "renewal.block": {
     "defaultMessage": "Renewals"
   },
@@ -2097,16 +2130,25 @@
     "defaultMessage": "New expiry date"
   },
   "renewal.intro": {
-    "defaultMessage": "{reference} auto-renews in {months, plural, one {#-month} other {#-month}} periods. Confirming the roll advances this record's own expiry date."
+    "defaultMessage": "{reference} auto-renews in {months, plural, one {#-month} other {#-month}} periods. Choose how to record the new term."
   },
   "renewal.introNoPeriod": {
-    "defaultMessage": "{reference} auto-renews, and records no renewal period. Confirming the roll advances this record's own expiry date to the date you enter."
+    "defaultMessage": "{reference} auto-renews, and records no renewal period. Choose how to record the new term."
   },
   "renewal.mustAdvance": {
     "defaultMessage": "A roll moves the term forward. Pick a date after the current expiry."
   },
   "renewal.needExpiry": {
     "defaultMessage": "Pick the date the term now runs to."
+  },
+  "renewal.note.amendment": {
+    "defaultMessage": "Opens this record's Documents section to file an amendment on its paper. No new record is made."
+  },
+  "renewal.note.child": {
+    "defaultMessage": "Opens a new contract prefilled from this one, born under it. The team, the status, and the Confidential flag are not carried over."
+  },
+  "renewal.note.successor": {
+    "defaultMessage": "Opens a new contract prefilled from this one, linked as its renewal. The team, the status, and the Confidential flag are not carried over."
   },
   "renewal.recordedNote": {
     "defaultMessage": "Recorded on the record's activity. The contract's status and stage do not change."
@@ -2122,6 +2164,33 @@
   },
   "renewal.title": {
     "defaultMessage": "Confirm renewal"
+  },
+  "renewal.vehicle.amendment": {
+    "defaultMessage": "Paper as amendment"
+  },
+  "renewal.vehicle.amendmentBlurb": {
+    "defaultMessage": "Renewal recorded as an amendment on this contract's paper."
+  },
+  "renewal.vehicle.child": {
+    "defaultMessage": "Create child contract"
+  },
+  "renewal.vehicle.childBlurb": {
+    "defaultMessage": "New record parented to this one."
+  },
+  "renewal.vehicle.legend": {
+    "defaultMessage": "How to record it"
+  },
+  "renewal.vehicle.roll": {
+    "defaultMessage": "Confirm the roll"
+  },
+  "renewal.vehicle.rollBlurb": {
+    "defaultMessage": "Same record — the expiry advances."
+  },
+  "renewal.vehicle.successor": {
+    "defaultMessage": "New successor contract"
+  },
+  "renewal.vehicle.successorBlurb": {
+    "defaultMessage": "Standalone record linked as the renewal."
   },
   "role.administrator": {
     "defaultMessage": "Administrator"

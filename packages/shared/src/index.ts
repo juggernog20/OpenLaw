@@ -147,6 +147,33 @@ export const TERM_RENEWAL_PERIOD_PROBLEM_TYPE = "urn:openlaw:problem:term-renewa
 export const RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE = "urn:openlaw:problem:renewal-expiry-moved";
 
 /**
+ * The two refusals a relation write branches on (CTR-015, TECH-020).
+ *
+ * CTR-015 states both rules and leaves both to the application, because
+ * neither can be said by a single row: a duplicate is a second row for
+ * one pair and one type, and a cycle is a walk up the parent chain. Both
+ * are also database rules — the compound primary key and the
+ * not-your-own-parent check — but the database says them as a constraint
+ * violation, and a caller needs an answer.
+ *
+ * They name themselves for `SOFT_GATE_PROBLEM_TYPE`'s reason: both ends
+ * of the wire have to say the same string. A client reads them to tell a
+ * link that already exists — where the repair is to stop, because the
+ * record already says what the caller wanted it to say — from a link
+ * that would fold the hierarchy back on itself, where the repair is to
+ * pick another parent.
+ *
+ * A client must never tell these apart by reading `detail`. That is
+ * copy, and copy is rewritten.
+ */
+/** A link of this type already runs between these two contracts, in
+ * this direction (CTR-015's one-row-per-pair-per-type guard). */
+export const CONTRACT_RELATION_EXISTS_PROBLEM_TYPE = "urn:openlaw:problem:contract-relation-exists";
+/** The proposed parent already sits under the contract it was asked to
+ * parent, so setting it would close a loop (CTR-015's no-cycles rule). */
+export const CONTRACT_PARENT_CYCLE_PROBLEM_TYPE = "urn:openlaw:problem:contract-parent-cycle";
+
+/**
  * The two bounds one key date is held to (CTR-009).
  *
  * A label is a line and a note is a paragraph. Neither is the record's

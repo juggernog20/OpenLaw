@@ -69,6 +69,7 @@ import {
   Lock,
   LogOut,
   MessageSquare,
+  Network,
   Palette,
   PenLine,
   PencilLine,
@@ -502,6 +503,49 @@ function civilDateIn(intl: IntlShape, payload: Payload, key: string): string {
 
 /** The day a key-date entry is about. */
 const keyDateOn = (intl: IntlShape, payload: Payload): string => civilDateIn(intl, payload, "date");
+
+/**
+ * The contract at the far end of a relation entry (CTR-015), named as
+ * "C-51 (Acme master services agreement)".
+ *
+ * Both halves, because they answer two questions: the reference is what
+ * a person types into the address bar, and the title is what tells them
+ * whether they care. `prefix` picks which pair of payload keys to read —
+ * `parentNumber`/`parentTitle` or `relatedNumber`/`relatedTitle` — so
+ * one function serves both verbs.
+ *
+ * The log is append-only, so a payload written without either half still
+ * has to read as a sentence: a missing title collapses to the reference
+ * alone, and a payload with neither falls back to a wording about a
+ * **record**. Not `activity.someone`, which is a person's fallback — "put
+ * this contract under someone" is not a sentence about a hierarchy.
+ */
+function relatedRecord(intl: IntlShape, payload: Payload, prefix: "parent" | "related"): string {
+  const number = payload[`${prefix}Number`];
+  const title = text(payload, `${prefix}Title`);
+  if (typeof number !== "number" || !Number.isInteger(number)) {
+    return (
+      title ??
+      intl.formatMessage({
+        id: "activity.contract.unnamedRecord",
+        defaultMessage: "another contract",
+      })
+    );
+  }
+  const reference = intl.formatMessage(
+    { id: "contracts.reference", defaultMessage: "C-{number}" },
+    { number },
+  );
+  return title === null
+    ? reference
+    : intl.formatMessage(
+        {
+          id: "activity.contract.relatedRecord",
+          defaultMessage: "{reference} ({title})",
+        },
+        { reference, title },
+      );
+}
 
 function named(intl: IntlShape, payload: Payload, key: string): string {
   return (
@@ -1036,6 +1080,41 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     values: (intl, payload) => ({
       from: civilDateIn(intl, payload, "from"),
       to: civilDateIn(intl, payload, "to"),
+    }),
+  },
+  // CTR-015's two relation writes (M16/5), which renewal routing is the
+  // first feature to make. Each keeps its own verb rather than reading
+  // as an edit, for `team_added`'s reason: a statement about two records
+  // is not a field commit, and a reader should be able to tell them
+  // apart without opening a payload.
+  //
+  // Both name the far record by its reference **and** its title, because
+  // one of the two answers "which contract" and the other answers "which
+  // deal", and a reader of a feed usually wants the second.
+  "contract.parent_set": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.contract.parentSet",
+      defaultMessage: "{actor} put this contract under {parent}",
+    }),
+    values: (intl, payload) => ({ parent: relatedRecord(intl, payload, "parent") }),
+  },
+  // One sentence with an arm per relation type, rather than three verbs:
+  // the act is the same act — a link was written — and what differs is
+  // the word in the middle of it. `other` is the arm a type this build
+  // does not know falls into; the log is append-only, so a row written
+  // by a later build still has to read as a sentence.
+  "contract.relation_added": {
+    icon: Link2,
+    message: defineMessage({
+      id: "activity.contract.relationAdded",
+      defaultMessage:
+        "{actor} linked this contract — {relationType, select, renews {it renews {related}} " +
+        "amends {it amends {related}} other {related to {related}}}",
+    }),
+    values: (intl, payload) => ({
+      relationType: text(payload, "relationType") ?? "other",
+      related: relatedRecord(intl, payload, "related"),
     }),
   },
   // The record's free-form dates (M16/3, CTR-009). A verb per act, so a

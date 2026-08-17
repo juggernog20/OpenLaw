@@ -125,7 +125,7 @@
  * Users are bounced home, and the API's 403 is the real refusal.
  */
 
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Link,
   redirect,
@@ -216,6 +216,7 @@ import { Avatar } from "../components/avatar";
 import { ConfidentialBanner } from "../components/confidential-banner";
 import { ConfidentialToggle } from "../components/confidential-toggle";
 import { ConfirmRenewalDialog } from "../components/contracts/confirm-renewal-dialog";
+import { CreateContractDialog } from "../components/contracts/create-contract-dialog";
 import { KeyDatesCard } from "../components/contracts/key-dates-card";
 import { RenewalBanner } from "../components/contracts/renewal-banner";
 import { TermTimelineCard } from "../components/contracts/term-timeline-card";
@@ -590,6 +591,33 @@ function ContractRecord() {
    * reach it — which is `SoftGateDialog`'s reason for living here too. */
   const [renewing, setRenewing] = useState(false);
   const [renewalStatus, setRenewalStatus] = useState<FieldStatus>("idle");
+  /**
+   * Which routed renewal vehicle the create dialog is open for, or none
+   * (M16/5, CTR-007, DES-044).
+   *
+   * The dialog is the Contracts list's own, opened here so a renewal is
+   * routed from the record it is a renewal of. It lives beside the
+   * Renew dialog for the same reason that one lives here: the act is
+   * raised from the page's chrome, which is on screen in every section.
+   */
+  const [routingTo, setRoutingTo] = useState<"child" | "successor" | null>(null);
+  /**
+   * Whether the Documents section should open its version composer on
+   * the primary chain, ready to file an amendment (CTR-007's second
+   * vehicle).
+   *
+   * A flag rather than a document id: which document is the instrument
+   * is the record's own answer (CTR-014), and a second copy of it here
+   * would be the copy that drifts when the pin moves. The section
+   * clears it as soon as it has opened the composer, so navigating back
+   * to Documents later does not re-open it.
+   */
+  const [amending, setAmending] = useState(false);
+  /** The section's answer that it has taken the request up. Stable
+   * across renders, because the effect that opens the composer watches
+   * it: a new function every render would re-run the effect and re-open
+   * a composer the person had just closed. */
+  const stopAmending = useCallback(() => setAmending(false), []);
   /** Every date on the record, as the CTR-009 union (M16/3). State
    * rather than loader data because every key-date write answers the
    * whole union — adding, moving, or removing one date can change which
@@ -1964,6 +1992,12 @@ function ContractRecord() {
                   // trigger comes with it so closing puts focus back on
                   // the row control that opened it.
                   reading={reading?.versionId ?? null}
+                  // CTR-007's amendment vehicle, routed here from the
+                  // Renew dialog (M16/5). The section opens its
+                  // composer on the record's instrument; the file and
+                  // the write are the M11 upload path, unchanged.
+                  amending={amending ? (signing.primaryDocument?.id ?? null) : null}
+                  onAmendmentOpened={stopAmending}
                   onRead={(document, version, trigger) => {
                     readingTrigger.current = trigger;
                     setReading({ documentId: document.id, versionId: version.id });
@@ -2103,12 +2137,74 @@ function ContractRecord() {
           fromExpiry={saved.expiryDate}
           proposedExpiry={saved.proposedRenewalExpiry}
           renewalPeriodMonths={saved.renewalPeriodMonths}
+          // A chain to append to, or no amendment option at all: the
+          // record's own primary-document designation is the answer
+          // (CTR-014), and a control for an act that does not exist is
+          // not drawn (DES-035 clause 9). Read from the record's own
+          // answer rather than from the paper on screen, because that
+          // list is paged (CTR-024) and the instrument may not be on
+          // the page the reader is holding.
+          canAmend={signing.primaryDocument !== null}
           busy={renewalStatus === "saving"}
           onClose={() => setRenewing(false)}
           onConfirm={async (toExpiry) => {
             const refusal = await confirmRoll(toExpiry);
             if (refusal === null) setRenewing(false);
             return refusal;
+          }}
+          onRoute={(vehicle) => {
+            setRenewing(false);
+            if (vehicle === "amendment") {
+              // The act happens on the record's own paper, so the
+              // person is taken to the section that holds it and the
+              // composer opens there.
+              setAmending(true);
+              void navigate(`/contracts/${saved.number}/documents`);
+              return;
+            }
+            // One tick, on purpose. Two modal layers swapped inside a
+            // single commit leave the page inert: the outgoing dialog
+            // tears its layer down *after* the incoming one has decided
+            // whether it has to opt itself back in to pointer events, so
+            // the create dialog would mount unclickable. Letting the
+            // Renew dialog finish leaving first is the whole of the
+            // fix, and it costs a frame nobody sees.
+            setTimeout(() => setRoutingTo(vehicle), 0);
+          }}
+        />
+      )}
+      {/* CTR-007's third and fourth vehicles (M16/5). The Contracts
+          list's own create dialog, opened from the record so the seam
+          knows which contract the renewal is a renewal of — and seeded
+          with the two fields it draws, both still editable. Only a
+          Member+ viewer reaches this: the pickers it needs are loaded
+          for `canEdit` alone, and the Renew control that raises it is
+          drawn behind the same test. */}
+      {routingTo !== null && canEdit && (
+        <CreateContractDialog
+          // The record's own pickers, unchanged: the create dialog
+          // grows the picked type's required fields, and a `user` or
+          // `entity` field among them offers exactly what it offers on
+          // the record itself.
+          contractTypes={typeOptions}
+          people={peopleReferences}
+          entities={entityReferences}
+          renewalOf={{
+            number: saved.number,
+            vehicle: routingTo,
+            title: saved.title,
+            contractTypeId: saved.contractTypeId,
+          }}
+          onOpenChange={(open) => {
+            if (!open) setRoutingTo(null);
+          }}
+          onCreated={(row) => {
+            setRoutingTo(null);
+            // Straight to the record that was just born: it is where
+            // the person finishes the renewal, and the dates the
+            // prefill brought across are the first thing they will
+            // want to move.
+            void navigate(`/contracts/${row.number}`);
           }}
         />
       )}
