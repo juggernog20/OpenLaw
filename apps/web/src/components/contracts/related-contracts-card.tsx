@@ -82,8 +82,7 @@ function groupLinks(
     // An unknown relation type reads as a plain relation rather than
     // taking the card down: the API is append-only, and a row a later
     // build writes still has to render.
-    const label =
-      LINK_LABELS[link.relationType]?.[link.direction] ?? LINK_LABELS.related.outgoing;
+    const label = LINK_LABELS[link.relationType]?.[link.direction] ?? LINK_LABELS.related.outgoing;
     const key = String(label.id);
     const group = groups.get(key);
     if (group) {

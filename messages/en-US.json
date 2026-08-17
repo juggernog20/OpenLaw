@@ -26,6 +26,9 @@
   "action.reload": {
     "defaultMessage": "Reload"
   },
+  "action.rename": {
+    "defaultMessage": "Rename"
+  },
   "action.save": {
     "defaultMessage": "Save"
   },
@@ -298,6 +301,9 @@
   },
   "activity.task.reopened": {
     "defaultMessage": "{actor} reopened the task {title}"
+  },
+  "activity.task.untitled": {
+    "defaultMessage": "(untitled)"
   },
   "activity.taxonomy.archived": {
     "defaultMessage": "{actor} archived the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
@@ -908,9 +914,6 @@
   "comments.tombstone.redacted": {
     "defaultMessage": "Comment removed by an Administrator."
   },
-  "common.cancel": {
-    "defaultMessage": "Cancel"
-  },
   "confidential.marker": {
     "defaultMessage": "Confidential"
   },
@@ -932,20 +935,56 @@
   "contracts.column.counterparty": {
     "defaultMessage": "Counterparty"
   },
+  "contracts.column.createdAt": {
+    "defaultMessage": "Created"
+  },
+  "contracts.column.daysRemaining": {
+    "defaultMessage": "Term left"
+  },
+  "contracts.column.effectiveDate": {
+    "defaultMessage": "Starts"
+  },
+  "contracts.column.entity": {
+    "defaultMessage": "Our entity"
+  },
+  "contracts.column.expiryDate": {
+    "defaultMessage": "Expires"
+  },
+  "contracts.column.noEnd": {
+    "defaultMessage": "No end"
+  },
+  "contracts.column.none": {
+    "defaultMessage": "—"
+  },
+  "contracts.column.noticeDeadline": {
+    "defaultMessage": "Notice by"
+  },
   "contracts.column.owner": {
     "defaultMessage": "Owner"
+  },
+  "contracts.column.priority": {
+    "defaultMessage": "Priority"
   },
   "contracts.column.reference": {
     "defaultMessage": "Reference"
   },
+  "contracts.column.risk": {
+    "defaultMessage": "Risk"
+  },
   "contracts.column.status": {
     "defaultMessage": "Status"
+  },
+  "contracts.column.termType": {
+    "defaultMessage": "Term"
   },
   "contracts.column.title": {
     "defaultMessage": "Title"
   },
   "contracts.column.type": {
     "defaultMessage": "Type"
+  },
+  "contracts.column.updatedAt": {
+    "defaultMessage": "Updated"
   },
   "contracts.column.value": {
     "defaultMessage": "Value"
@@ -1216,6 +1255,9 @@
   },
   "contracts.relations.children": {
     "defaultMessage": "Children"
+  },
+  "contracts.relations.clearSelection": {
+    "defaultMessage": "Clear the picked contract"
   },
   "contracts.relations.cycleError": {
     "defaultMessage": "That contract already sits under this one. Pick another parent."
@@ -3536,6 +3578,30 @@
   "signing.voidTitle": {
     "defaultMessage": "Void envelope"
   },
+  "table.columns": {
+    "defaultMessage": "Columns"
+  },
+  "table.fillWidth": {
+    "defaultMessage": "Fill the width"
+  },
+  "table.fillsWidth": {
+    "defaultMessage": "Fills the remaining width"
+  },
+  "table.moveColumnDown": {
+    "defaultMessage": "Move {column} later"
+  },
+  "table.moveColumnUp": {
+    "defaultMessage": "Move {column} earlier"
+  },
+  "table.noMatchingRows": {
+    "defaultMessage": "No rows match the current filters."
+  },
+  "table.resetColumns": {
+    "defaultMessage": "Reset columns"
+  },
+  "table.resizeColumn": {
+    "defaultMessage": "Width of the {column} column"
+  },
   "tasks.actionsFor": {
     "defaultMessage": "Actions for {title}"
   },
@@ -3604,6 +3670,57 @@
   },
   "timezone.searchPlaceholder": {
     "defaultMessage": "Search timezones"
+  },
+  "views.builtIn": {
+    "defaultMessage": "Default view"
+  },
+  "views.copyOf": {
+    "defaultMessage": "{name} copy"
+  },
+  "views.defaultMarker": {
+    "defaultMessage": "Opens here"
+  },
+  "views.delete": {
+    "defaultMessage": "Delete…"
+  },
+  "views.delete.body": {
+    "defaultMessage": "{name} is removed. The contracts in it are not touched."
+  },
+  "views.delete.title": {
+    "defaultMessage": "Delete this view?"
+  },
+  "views.discard": {
+    "defaultMessage": "Discard unsaved changes"
+  },
+  "views.error": {
+    "defaultMessage": "The view could not be saved. Try again."
+  },
+  "views.label": {
+    "defaultMessage": "Views"
+  },
+  "views.modified": {
+    "defaultMessage": "Modified"
+  },
+  "views.name": {
+    "defaultMessage": "Name"
+  },
+  "views.rename": {
+    "defaultMessage": "Rename…"
+  },
+  "views.rename.title": {
+    "defaultMessage": "Rename this view"
+  },
+  "views.save": {
+    "defaultMessage": "Save"
+  },
+  "views.saveAs": {
+    "defaultMessage": "Save as…"
+  },
+  "views.saveAs.title": {
+    "defaultMessage": "Save this view"
+  },
+  "views.setDefault": {
+    "defaultMessage": "Set as default"
   },
   "welcome.auth.builtIn": {
     "defaultMessage": "Built-in sign-in"

@@ -29,6 +29,7 @@
   /* Borders */
   --border-default: #30363d;
   --border-muted: #21262d;
+  --border-strong: #484f58; /* Primer grey one step past default */
   --border-on-inverted: #30363d;
 
   /* Text */
