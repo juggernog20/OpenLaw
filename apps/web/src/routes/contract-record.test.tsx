@@ -1770,10 +1770,48 @@ describe("the contract record's section tabs (DES-032)", () => {
       "Key dates",
       "Tasks",
     ]);
+    // Empty sections carry no count chip — a zero is not news.
+    expect(strip.queryByRole("img")).not.toBeInTheDocument();
     // The Overview is the bare address, so it must not read as active
     // on its siblings — that is what `end` on the link is for.
     expect(strip.getByRole("link", { name: "Overview" })).toHaveAttribute("aria-current", "page");
     expect(strip.getByRole("link", { name: "Fields" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("chips Approvals, Key dates, and Tasks when those sections have work waiting", async () => {
+    const api = recordApi(contractRow());
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/contracts/42/approvals" && call.method === "GET") {
+          return json(200, {
+            approvals: [
+              { id: "a1", status: "pending" },
+              { id: "a2", status: "rejected" },
+              { id: "a3", status: "approved" },
+            ],
+          });
+        }
+        if (call.url.pathname === "/api/v1/contracts/42/key-dates" && call.method === "GET") {
+          return json(200, {
+            deadlines: [{ daysAway: 10 }, { daysAway: 0 }, { daysAway: -4 }],
+          });
+        }
+        if (call.url.pathname === "/api/v1/contracts/42/tasks" && call.method === "GET") {
+          return json(200, { tasks: [], doneCount: 1, totalCount: 4 });
+        }
+        return api.handler(call);
+      },
+    });
+    renderAt("/contracts/42");
+
+    const strip = within(await screen.findByRole("navigation", { name: "Contract sections" }));
+    // Open = unresolved (pending + rejected), not the whole roster.
+    expect(strip.getByRole("img", { name: "2 open approvals" })).toBeInTheDocument();
+    // Upcoming includes today; a date that has gone by does not.
+    expect(strip.getByRole("img", { name: "2 upcoming dates" })).toBeInTheDocument();
+    // Open = not done, not the whole checklist.
+    expect(strip.getByRole("img", { name: "3 open tasks" })).toBeInTheDocument();
   });
 
   it("shows one section at a time, and moves the address with the tab", async () => {

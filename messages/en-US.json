@@ -1226,6 +1226,9 @@
   "contracts.record.tab.approvals": {
     "defaultMessage": "Approvals"
   },
+  "contracts.record.tab.approvals.open": {
+    "defaultMessage": "{count, plural, one {# open approval} other {# open approvals}}"
+  },
   "contracts.record.tab.documents": {
     "defaultMessage": "Documents"
   },
@@ -1235,11 +1238,17 @@
   "contracts.record.tab.keyDates": {
     "defaultMessage": "Key dates"
   },
+  "contracts.record.tab.keyDates.upcoming": {
+    "defaultMessage": "{count, plural, one {# upcoming date} other {# upcoming dates}}"
+  },
   "contracts.record.tab.overview": {
     "defaultMessage": "Overview"
   },
   "contracts.record.tab.tasks": {
     "defaultMessage": "Tasks"
+  },
+  "contracts.record.tab.tasks.open": {
+    "defaultMessage": "{count, plural, one {# open task} other {# open tasks}}"
   },
   "contracts.reference": {
     "defaultMessage": "C-{number}"

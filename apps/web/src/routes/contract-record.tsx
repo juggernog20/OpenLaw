@@ -743,6 +743,15 @@ function ContractRecord() {
    */
   const frozen = archived || !canEdit;
   /**
+   * Work waiting in the three sections that carry a count chip on the
+   * tab strip. Unresolved approvals (pending, or a rejection nobody
+   * re-requested), upcoming dates on the CTR-009 union, and tasks that
+   * are not done. Zero is not drawn: an empty section is not news.
+   */
+  const openApprovalCount = approvals.filter(isUnresolved).length;
+  const upcomingDateCount = deadlines.filter((row) => row.daysAway >= 0).length;
+  const openTaskCount = taskTotalCount - taskDoneCount;
+  /**
    * Whether this viewer may decide who sees the record (DD-014,
    * CTR-022). The three actors are an Administrator, the person who
    * made it — the `creator` team row, which nothing adds or drops — and
@@ -1388,16 +1397,42 @@ function ContractRecord() {
                     defaultMessage="Approvals"
                   />
                 ),
+                count: openApprovalCount,
+                countLabel: intl.formatMessage(
+                  {
+                    id: "contracts.record.tab.approvals.open",
+                    defaultMessage:
+                      "{count, plural, one {# open approval} other {# open approvals}}",
+                  },
+                  { count: openApprovalCount },
+                ),
               },
               {
                 to: `/contracts/${saved.number}/key-dates`,
                 label: (
                   <FormattedMessage id="contracts.record.tab.keyDates" defaultMessage="Key dates" />
                 ),
+                count: upcomingDateCount,
+                countLabel: intl.formatMessage(
+                  {
+                    id: "contracts.record.tab.keyDates.upcoming",
+                    defaultMessage:
+                      "{count, plural, one {# upcoming date} other {# upcoming dates}}",
+                  },
+                  { count: upcomingDateCount },
+                ),
               },
               {
                 to: `/contracts/${saved.number}/tasks`,
                 label: <FormattedMessage id="contracts.record.tab.tasks" defaultMessage="Tasks" />,
+                count: openTaskCount,
+                countLabel: intl.formatMessage(
+                  {
+                    id: "contracts.record.tab.tasks.open",
+                    defaultMessage: "{count, plural, one {# open task} other {# open tasks}}",
+                  },
+                  { count: openTaskCount },
+                ),
               },
             ]}
           />
