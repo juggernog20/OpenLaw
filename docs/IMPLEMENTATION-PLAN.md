@@ -36,12 +36,12 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arc 3, milestone 17** — tasks, relations, and end of life. Arc 1 is done: the monorepo and CI, the
+**Arc 3, milestone 17 done** — tasks, relations, and end of life. Arc 1 is done: the monorepo and CI, the
 authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
 `/settings` destination with its Personal and Organization rails. Arc 2 is done too: the
 configurable types and statuses, the Entities registry, the contract record, the conversation on a
 record with the two read surfaces over the activity log, and the confidentiality gate that takes a
-walled-off contract out of the reach of everyone outside its team. Arc 3 is under way: M11 puts the
+walled-off contract out of the reach of everyone outside its team. Arc 3 runs to M17, with M18 still ahead: M11 puts the
 paper on the record — the version chain, the storage adapter, and the two drivers behind it — M12
 makes that paper readable, with the doc panel over five families, the doc-engine sidecar, and the
 background pipeline that extracts every version's text, M13 organizes it, with folders inside
@@ -51,11 +51,12 @@ reusable approver groups, and the soft gate that warns before a contract goes pa
 M15 sends the paper out and takes it back: the signing adapter with DocuSign behind it, the
 envelope on the record, the webhook and the sweep that both report what happened, and the executed
 PDF that files and pins itself when everybody has signed — the manual hand-off still needs no
-configuration at all — and M16 gives the record a term: the five typed columns, the notice deadline
+configuration at all — M16 gives the record a term: the five typed columns, the notice deadline
 and the pending-confirmation state that derive themselves out of them, the key dates that join both
 in one deadline surface, and the Renew dialog that routes a renewal to whichever of the four vehicles
-the team actually used. Nothing in it advances a date on its own; the notifier that fires on these
-dates is M18's.
+the team actually used — and M17 adds the task checklist, the relations panel with parent hierarchy
+and typed directional links, and end of life as a signal that leaves the record writable. Nothing in
+it advances a date on its own; the notifier that fires on these dates is M18's.
 
 ---
 
@@ -312,7 +313,7 @@ makes OpenLaw a CLM rather than a database with a form on it.
   - _Decisions:_ CTR-006, CTR-007, CTR-009, CTR-015, DES-040, DES-041, DES-042, DES-043, DES-044 ·
     _Issues:_ #282–#288
 
-- [ ] **M17 — Tasks, relations, and end of life**
+- [x] **M17 — Tasks, relations, and end of life**
       _Demo:_ Check off a task, link an amendment to its parent contract, then end the contract and confirm
       the record is still writable.
   - Lightweight checklist tasks — deliberately not an entity, and their due dates never feed deadline surfaces

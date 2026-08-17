@@ -509,9 +509,9 @@ Source: **DD-007**, **DD-014**, **CTR-001**
 
 Workflow object with parties; owns one or more Documents (draft, redlines, executed version, amendments). Referenced by Matters; can also stand alone.
 
-Schema **in progress** — being detailed in the Contracts module grill (`DECISIONS-CONTRACTS.md`, `CTR-###`).
+All columns landed through M17. Schema details in `DECISIONS-CONTRACTS.md` (`CTR-###`).
 
-Known columns so far:
+Columns:
 
 - `number` — unique integer, global auto-increment sequence (own sequence, independent of matters), displayed **C-42**, used in URLs `/contracts/42`; immutable per **CTR-003**
 - `title` — text, not null, free-form, editable per **CTR-003**
@@ -532,7 +532,7 @@ Known columns so far:
 - `custom_fields` — jsonb keyed by field slug per **CTR-016** (fields attached via `contract_type_fields`; values retained on detach)
 - `ai_unverified` — jsonb, nullable per **CTR-008**: map of field slug → extraction meta (evidence snippet, run info) for AI-written values not yet human-confirmed; entry removed on confirmation.
 - `entity_id` FK → `entities.id`, nullable until known per **CTR-011** — which of our entities signed
-- `parent_id` FK → `contracts.id`, nullable per **CTR-015** — single parent, arbitrary depth, no cycles (application-enforced); no inheritance semantics. Landed in M16/5, migration `0048_contract_relations`, with the routing that first writes it (CTR-007's child-contract vehicle). A `parent_id <> id` check states the shortest cycle as a row rule; the longer ones are the write path's walk. Indexed, because the walk rides it and so will M17's hierarchy surfaces
+- `parent_id` FK → `contracts.id`, nullable per **CTR-015** — single parent, arbitrary depth, no cycles (application-enforced); no inheritance semantics. Landed in M16/5, migration `0048_contract_relations`, with the routing that first writes it (CTR-007's child-contract vehicle). A `parent_id <> id` check states the shortest cycle as a row rule; the longer ones are the write path's walk. Indexed for the walk and the M17 hierarchy surfaces
 - `ended_at` — timestamptz, nullable per **CTR-019**: set on transition into the `ended` stage, cleared on reopen (activity log remains source of truth). Landed in M17/3, migration `0050_contract_ended_at`, with no backfill
 - `is_confidential` boolean per **DD-014**; never cascades to/from linked records per **CTR-018**
 - `matter_id` FK → `matters.id`, nullable per **DD-007** (contracts can stand alone)
@@ -647,7 +647,7 @@ Source: **CTR-015**
 
 Typed, directional links between contracts (beyond the `parent_id` hierarchy). One row per pair per type (application-enforced). No cascade/inheritance semantics; inaccessible relatives render as "restricted contract".
 
-Landed in M16/5, migration `0048_contract_relations`, with CTR-007's successor vehicle — the feature that first needs a renewal to be identified by its link. **M16 writes these rows and draws none of them**: the relations panel, the hierarchy breadcrumb, manual linking, and the restricted-relative rendering are all M17's.
+Landed in M16/5, migration `0048_contract_relations`, with CTR-007's successor vehicle — the feature that first needs a renewal to be identified by its link. M16 wrote the rows and the rules; M17 landed the relations panel, the hierarchy breadcrumb, manual link creation and removal, and the restricted-contract rendering.
 
 | Column             | Type        | Notes                                                                              |
 | ------------------ | ----------- | ---------------------------------------------------------------------------------- |
