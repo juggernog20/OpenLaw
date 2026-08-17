@@ -8,7 +8,7 @@
 
 import type { paths } from "@openlaw/api-client";
 import { api } from "./api";
-import { problemDetail } from "./messages";
+import { problemDetail, problemType } from "./messages";
 
 type RelationsResponse =
   paths["/api/v1/contracts/{number}/relations"]["get"]["responses"]["200"]["content"]["application/json"];
@@ -55,4 +55,100 @@ export async function readContractRelations(number: number): Promise<RelationsOu
   return data
     ? { ok: true, relations: data }
     : { ok: false, detail: problemDetail(error) };
+}
+
+// ---------------------------------------------------------------------------
+// Link candidates (M17/4, CTR-018)
+// ---------------------------------------------------------------------------
+
+type CandidatesResponse =
+  paths["/api/v1/contracts/{number}/link-candidates"]["get"]["responses"]["200"]["content"]["application/json"];
+
+/** One contract the picker may offer. */
+export type LinkCandidate = CandidatesResponse["candidates"][number];
+
+/** Fetches contracts this viewer can reach, matched by number or title. */
+export async function searchLinkCandidates(
+  number: number,
+  q: string,
+): Promise<LinkCandidate[]> {
+  const { data } = await api
+    .GET("/api/v1/contracts/{number}/link-candidates", {
+      params: { path: { number }, query: { q } },
+    })
+    .catch(() => ({ data: undefined }));
+  return data?.candidates ?? [];
+}
+
+// ---------------------------------------------------------------------------
+// Write operations (M17/4)
+// ---------------------------------------------------------------------------
+
+/** What a relation write answers. */
+export type RelationWriteOutcome =
+  | { ok: true; relations: ContractRelations }
+  | { ok: false; detail?: string; type?: string };
+
+/** Add a typed link between two contracts. */
+export async function addRelation(
+  number: number,
+  relatedContractNumber: number,
+  relationType: RelationType,
+): Promise<RelationWriteOutcome> {
+  const { data, error } = await api
+    .POST("/api/v1/contracts/{number}/relations", {
+      params: { path: { number } },
+      body: { relatedContractNumber, relationType },
+    })
+    .catch(() => ({ data: undefined, error: undefined }));
+  return data
+    ? { ok: true, relations: data }
+    : { ok: false, detail: problemDetail(error), type: problemType(error) };
+}
+
+/** Remove a typed link between two contracts. */
+export async function removeRelation(
+  number: number,
+  relatedContractNumber: number,
+  relationType: RelationType,
+): Promise<RelationWriteOutcome> {
+  const { data, error } = await api
+    .DELETE("/api/v1/contracts/{number}/relations", {
+      params: { path: { number } },
+      body: { relatedContractNumber, relationType },
+    })
+    .catch(() => ({ data: undefined, error: undefined }));
+  return data
+    ? { ok: true, relations: data }
+    : { ok: false, detail: problemDetail(error), type: problemType(error) };
+}
+
+/** Put a contract under a parent. */
+export async function setParent(
+  number: number,
+  parentContractNumber: number,
+): Promise<RelationWriteOutcome> {
+  const { data, error } = await api
+    .POST("/api/v1/contracts/{number}/parent", {
+      params: { path: { number } },
+      body: { parentContractNumber },
+    })
+    .catch(() => ({ data: undefined, error: undefined }));
+  return data
+    ? { ok: true, relations: data }
+    : { ok: false, detail: problemDetail(error), type: problemType(error) };
+}
+
+/** Take a contract out from under its parent. */
+export async function removeParent(
+  number: number,
+): Promise<RelationWriteOutcome> {
+  const { data, error } = await api
+    .DELETE("/api/v1/contracts/{number}/parent", {
+      params: { path: { number } },
+    })
+    .catch(() => ({ data: undefined, error: undefined }));
+  return data
+    ? { ok: true, relations: data }
+    : { ok: false, detail: problemDetail(error), type: problemType(error) };
 }

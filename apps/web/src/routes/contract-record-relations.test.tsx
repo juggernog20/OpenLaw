@@ -2,8 +2,8 @@
 
 /**
  * The record's Related contracts card on the Overview section (M17/2,
- * CTR-015), at `/contracts/42`, through the real route table with the
- * standard fetch stub.
+ * M17/4, CTR-015), at `/contracts/42`, through the real route table
+ * with the standard fetch stub.
  *
  * What the card draws: the parent chain root-first, the children, and
  * the typed links this contract carries — each reachable relative as a
@@ -14,13 +14,14 @@
  * "Contracts" and the current contract's reference — reachable parents
  * as links, restricted parents as an ellipsis.
  *
- * What it must not draw: no controls, no add-link dialog, no remove
- * menu. The card is read-only in M17/2; link management is a later
- * milestone.
+ * M17/4 adds link management: "Add link", "Set parent", per-row
+ * "Remove link" / "Remove parent" buttons, the link dialog with its
+ * picker, refusal rendering, and the CTR-018 confidentiality nudge.
  */
 
 import { describe, expect, it } from "vitest";
-import { screen, within } from "@testing-library/react";
+import { screen, within, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const MEMBER = {
@@ -334,5 +335,193 @@ describe("the breadcrumb's parent chain (CTR-015)", () => {
     // the assertion uses getAllByText to accept both.
     expect(screen.getAllByText("Restricted contract").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("…")).toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// M17/4: link management actions
+// ---------------------------------------------------------------------------
+
+describe("the card's link management actions (M17/4)", () => {
+  it("shows Add link and Set parent buttons for a Member+", async () => {
+    stubApi({ signedIn: MEMBER, extra: recordApi().handler });
+    renderAt("/contracts/42");
+
+    const card = await section();
+    expect(card.getByRole("button", { name: "Add link" })).toBeInTheDocument();
+    expect(card.getByRole("button", { name: "Set parent" })).toBeInTheDocument();
+  });
+
+  it("hides Set parent when the contract already has a parent", async () => {
+    const relations: RelationsData = {
+      parentChain: [
+        { restricted: false, number: 10, title: "Framework", statusName: "Active", stage: "active" },
+      ],
+      children: [],
+      links: [],
+    };
+    stubApi({ signedIn: MEMBER, extra: recordApi(relations).handler });
+    renderAt("/contracts/42");
+
+    const card = await section();
+    expect(card.getByRole("button", { name: "Add link" })).toBeInTheDocument();
+    expect(card.queryByRole("button", { name: "Set parent" })).not.toBeInTheDocument();
+  });
+
+  it("shows Remove link on a reachable link and not on a restricted one", async () => {
+    const relations: RelationsData = {
+      parentChain: [],
+      children: [],
+      links: [
+        {
+          relationType: "related",
+          direction: "outgoing",
+          contract: { restricted: false, number: 5, title: "Side letter", statusName: "Draft", stage: "draft" },
+        },
+        {
+          relationType: "renews",
+          direction: "outgoing",
+          contract: { restricted: true },
+        },
+      ],
+    };
+    stubApi({ signedIn: MEMBER, extra: recordApi(relations).handler });
+    renderAt("/contracts/42");
+
+    const card = await section();
+    // One Remove link button for the reachable entry.
+    const removeButtons = card.getAllByRole("button", { name: "Remove link" });
+    expect(removeButtons).toHaveLength(1);
+  });
+
+  it("shows Remove parent on a reachable immediate parent", async () => {
+    const relations: RelationsData = {
+      parentChain: [
+        { restricted: false, number: 10, title: "Framework", statusName: "Active", stage: "active" },
+      ],
+      children: [],
+      links: [],
+    };
+    stubApi({ signedIn: MEMBER, extra: recordApi(relations).handler });
+    renderAt("/contracts/42");
+
+    const card = await section();
+    expect(card.getByRole("button", { name: "Remove parent" })).toBeInTheDocument();
+  });
+
+  it("opens the link dialog when Add link is clicked", async () => {
+    const base = recordApi();
+    const handler = (call: StubCall) => {
+      // Stub the candidates endpoint.
+      if (call.url.pathname === "/api/v1/contracts/42/link-candidates" && call.method === "GET") {
+        return json(200, { candidates: [] });
+      }
+      return base.handler(call);
+    };
+    stubApi({ signedIn: MEMBER, extra: handler });
+    renderAt("/contracts/42");
+
+    const card = await section();
+    const user = userEvent.setup();
+    await user.click(card.getByRole("button", { name: "Add link" }));
+
+    // The dialog opens with the Link contract title.
+    await screen.findByRole("heading", { name: "Link contract" });
+  });
+
+  it("renders a duplicate-link refusal as an inline alert", async () => {
+    const base = recordApi();
+    const handler = (call: StubCall) => {
+      if (call.url.pathname === "/api/v1/contracts/42/link-candidates" && call.method === "GET") {
+        return json(200, {
+          candidates: [
+            { number: 5, title: "Side letter", statusName: "Draft", stage: "draft", isConfidential: false },
+          ],
+        });
+      }
+      if (call.url.pathname === "/api/v1/contracts/42/relations" && call.method === "POST") {
+        return json(409, {
+          type: "urn:openlaw:problem:contract-relation-exists",
+          detail: "These two contracts are already linked that way.",
+        });
+      }
+      return base.handler(call);
+    };
+    stubApi({ signedIn: MEMBER, extra: handler });
+    renderAt("/contracts/42");
+
+    const card = await section();
+    const user = userEvent.setup();
+    await user.click(card.getByRole("button", { name: "Add link" }));
+    await screen.findByRole("heading", { name: "Link contract" });
+
+    // Pick a candidate and submit.
+    const input = screen.getByRole("textbox", { name: "Search by number or title…" });
+    await user.type(input, "Side");
+    const candidateButton = await screen.findByRole("button", { name: /C-5/ });
+    await user.click(candidateButton);
+    await user.click(screen.getByRole("button", { name: "Link contract" }));
+
+    // The refusal appears as an inline alert.
+    await screen.findByRole("alert");
+    expect(screen.getByText("These two contracts are already linked that way.")).toBeInTheDocument();
+  });
+});
+
+describe("the CTR-018 confidentiality nudge", () => {
+  it("shows the nudge when exactly one side is confidential after linking", async () => {
+    const base = recordApi(
+      { parentChain: [], children: [], links: [] },
+      contractRow({ isConfidential: true }),
+    );
+    const handler = (call: StubCall) => {
+      if (call.url.pathname === "/api/v1/contracts/42/link-candidates" && call.method === "GET") {
+        return json(200, {
+          candidates: [
+            { number: 99, title: "Open contract", statusName: "Draft", stage: "draft", isConfidential: false },
+          ],
+        });
+      }
+      if (call.url.pathname === "/api/v1/contracts/42/relations" && call.method === "POST") {
+        return json(201, {
+          parentChain: [],
+          children: [],
+          links: [
+            {
+              relationType: "related",
+              direction: "outgoing",
+              contract: { restricted: false, number: 99, title: "Open contract", statusName: "Draft", stage: "draft" },
+            },
+          ],
+        });
+      }
+      return base.handler(call);
+    };
+    stubApi({ signedIn: MEMBER, extra: handler });
+    renderAt("/contracts/42");
+
+    const card = await section();
+    const user = userEvent.setup();
+    await user.click(card.getByRole("button", { name: "Add link" }));
+
+    // Wait for the dialog.
+    await screen.findByRole("heading", { name: "Link contract" });
+
+    // Type into the picker and select the candidate.
+    const input = screen.getByRole("textbox", { name: "Search by number or title…" });
+    await user.type(input, "Open");
+
+    // Wait for the candidate to appear and click it.
+    const candidateButton = await screen.findByRole("button", { name: /C-99/ });
+    await user.click(candidateButton);
+
+    // Submit the link.
+    const submitButton = screen.getByRole("button", { name: "Link contract" });
+    await user.click(submitButton);
+
+    // The nudge dialog appears.
+    await screen.findByRole("heading", { name: "Flag as confidential?" });
+    expect(screen.getByRole("button", { name: "Flag as confidential" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "No, leave it open" })).toBeInTheDocument();
   });
 });

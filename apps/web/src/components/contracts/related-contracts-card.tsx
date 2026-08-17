@@ -10,19 +10,28 @@
  * renders them. Each reachable entry is a link to the related record;
  * each restricted entry is a muted placeholder that says only "Restricted
  * contract" (DD-014).
+ *
+ * **M17/4 adds actions.** When `editable` is true the card offers "Add
+ * link", "Set parent", and per-row removal buttons for links and the
+ * parent. A restricted relative's row never offers actions, because no
+ * one manages a link into or out of a record they cannot see.
  */
 
-import { memo } from "react";
+import { memo, useCallback, useState } from "react";
 import { Link } from "react-router";
 import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
+import { Button } from "../ui/button";
 import { contractReference, STAGE_PILL } from "../../lib/contracts";
-import type {
-  ContractRelations,
-  RelationEntry,
-  ContractLink,
-  RelationType,
-  LinkDirection,
+import {
+  removeRelation,
+  removeParent,
+  type ContractRelations,
+  type RelationEntry,
+  type ContractLink,
+  type RelationType,
+  type LinkDirection,
 } from "../../lib/relations";
+import { LinkDialog } from "./link-dialog";
 
 // ---------------------------------------------------------------------------
 // Labels — every heading the card can draw. Declared through
@@ -39,6 +48,12 @@ const LABELS = defineMessages({
   amends: { id: "contracts.relations.amendsLabel", defaultMessage: "Amends" },
   amendedBy: { id: "contracts.relations.amendedByLabel", defaultMessage: "Amended by" },
   related: { id: "contracts.relations.relatedLabel", defaultMessage: "Related" },
+  addLink: { id: "contracts.relations.addLink", defaultMessage: "Add link" },
+  addParent: { id: "contracts.relations.addParent", defaultMessage: "Set parent" },
+  removeLink: { id: "contracts.relations.removeLink", defaultMessage: "Remove link" },
+  removeParent: { id: "contracts.relations.removeParent", defaultMessage: "Remove parent" },
+  unlinkError: { id: "contracts.relations.unlinkError", defaultMessage: "Could not unlink these contracts." },
+  unparentError: { id: "contracts.relations.unparentError", defaultMessage: "Could not remove the parent." },
 });
 
 /** Every combination of link type and direction the API may answer. */
@@ -74,7 +89,15 @@ function groupLinks(
 // Entry renderers
 // ---------------------------------------------------------------------------
 
-function RelationRow({ entry }: Readonly<{ entry: RelationEntry }>) {
+function RelationRow({
+  entry,
+  onRemove,
+  removeLabel,
+}: Readonly<{
+  entry: RelationEntry;
+  onRemove?: () => void;
+  removeLabel?: MessageDescriptor;
+}>) {
   const intl = useIntl();
   if (entry.restricted) {
     return (
@@ -100,6 +123,15 @@ function RelationRow({ entry }: Readonly<{ entry: RelationEntry }>) {
       >
         {entry.statusName}
       </span>
+      {onRemove && removeLabel && (
+        <button
+          type="button"
+          className="ml-auto text-xs text-link hover:underline"
+          onClick={onRemove}
+        >
+          <FormattedMessage {...removeLabel} />
+        </button>
+      )}
     </li>
   );
 }
@@ -107,7 +139,14 @@ function RelationRow({ entry }: Readonly<{ entry: RelationEntry }>) {
 function Subsection({
   label,
   entries,
-}: Readonly<{ label: MessageDescriptor; entries: readonly RelationEntry[] }>) {
+  onRemove,
+  removeLabel,
+}: Readonly<{
+  label: MessageDescriptor;
+  entries: readonly RelationEntry[];
+  onRemove?: (entry: RelationEntry) => void;
+  removeLabel?: MessageDescriptor;
+}>) {
   return (
     <div>
       <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-subtle">
@@ -115,7 +154,12 @@ function Subsection({
       </h3>
       <ul>
         {entries.map((entry, i) => (
-          <RelationRow key={entry.restricted ? `restricted-${i}` : entry.number} entry={entry} />
+          <RelationRow
+            key={entry.restricted ? `restricted-${i}` : entry.number}
+            entry={entry}
+            onRemove={onRemove && !entry.restricted ? () => onRemove(entry) : undefined}
+            removeLabel={removeLabel}
+          />
         ))}
       </ul>
     </div>
@@ -125,7 +169,12 @@ function Subsection({
 function LinkSubsection({
   label,
   links,
-}: Readonly<{ label: MessageDescriptor; links: readonly ContractLink[] }>) {
+  onRemove,
+}: Readonly<{
+  label: MessageDescriptor;
+  links: readonly ContractLink[];
+  onRemove?: (link: ContractLink) => void;
+}>) {
   return (
     <div>
       <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-subtle">
@@ -136,6 +185,8 @@ function LinkSubsection({
           <RelationRow
             key={link.contract.restricted ? `restricted-${i}` : link.contract.number}
             entry={link.contract}
+            onRemove={onRemove && !link.contract.restricted ? () => onRemove(link) : undefined}
+            removeLabel={LABELS.removeLink}
           />
         ))}
       </ul>
@@ -148,8 +199,22 @@ function LinkSubsection({
 // ---------------------------------------------------------------------------
 
 export const RelatedContractsCard = memo(function RelatedContractsCard({
-  relations,
-}: Readonly<{ relations: ContractRelations }>) {
+  contractNumber,
+  contractIsConfidential,
+  relations: initialRelations,
+  editable,
+}: Readonly<{
+  contractNumber: number;
+  contractIsConfidential: boolean;
+  relations: ContractRelations;
+  /** Whether the viewer is Member+ and the card should offer actions. */
+  editable: boolean;
+}>) {
+  const intl = useIntl();
+  const [relations, setRelations] = useState(initialRelations);
+  const [dialog, setDialog] = useState<"link" | "parent" | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
   const hasParent = relations.parentChain.length > 0;
   const hasChildren = relations.children.length > 0;
   const hasLinks = relations.links.length > 0;
@@ -157,35 +222,135 @@ export const RelatedContractsCard = memo(function RelatedContractsCard({
 
   const grouped = hasLinks ? groupLinks(relations.links) : null;
 
+  const handleRelationsChanged = useCallback((next: ContractRelations) => {
+    setRelations(next);
+    setError(null);
+  }, []);
+
+  const handleUnlink = useCallback(
+    async (link: ContractLink) => {
+      if (link.contract.restricted) return;
+      const result = await removeRelation(
+        contractNumber,
+        link.contract.number,
+        link.relationType,
+      );
+      if (result.ok) {
+        setRelations(result.relations);
+        setError(null);
+      } else {
+        setError(intl.formatMessage(LABELS.unlinkError));
+      }
+    },
+    [contractNumber, intl],
+  );
+
+  const handleUnparent = useCallback(async () => {
+    const result = await removeParent(contractNumber);
+    if (result.ok) {
+      setRelations(result.relations);
+      setError(null);
+    } else {
+      setError(intl.formatMessage(LABELS.unparentError));
+    }
+  }, [contractNumber, intl]);
+
+  // The immediate parent is the last entry in the chain (the chain is
+  // root-first). Only the immediate parent can be removed.
+  const immediateParent = hasParent ? relations.parentChain[relations.parentChain.length - 1]! : null;
+
   return (
-    <section
-      aria-labelledby="related-contracts-heading"
-      className="w-full overflow-hidden rounded-card border border-border-default bg-raised"
-    >
-      <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
-        <h2 id="related-contracts-heading" className="text-base font-semibold">
-          <FormattedMessage id="contracts.relations.section" defaultMessage="Related contracts" />
-        </h2>
-      </header>
-      <div className="p-4">
-        {empty ? (
-          <p className="text-sm text-muted">
-            <FormattedMessage
-              id="contracts.relations.empty"
-              defaultMessage="No related contracts."
-            />
-          </p>
-        ) : (
-          <div className="flex flex-col gap-4">
-            {hasParent && <Subsection label={LABELS.parent} entries={relations.parentChain} />}
-            {hasChildren && <Subsection label={LABELS.children} entries={relations.children} />}
-            {grouped &&
-              Array.from(grouped.values()).map(({ label, entries }) => (
-                <LinkSubsection key={String(label.id)} label={label} links={entries} />
-              ))}
-          </div>
-        )}
-      </div>
-    </section>
+    <>
+      <section
+        aria-labelledby="related-contracts-heading"
+        className="w-full overflow-hidden rounded-card border border-border-default bg-raised"
+      >
+        <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
+          <h2 id="related-contracts-heading" className="text-base font-semibold">
+            <FormattedMessage id="contracts.relations.section" defaultMessage="Related contracts" />
+          </h2>
+          {editable && (
+            <div className="ml-auto flex gap-1">
+              {!hasParent && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setDialog("parent")}
+                >
+                  <FormattedMessage {...LABELS.addParent} />
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setDialog("link")}
+              >
+                <FormattedMessage {...LABELS.addLink} />
+              </Button>
+            </div>
+          )}
+        </header>
+        <div className="p-4">
+          {error && (
+            <p role="alert" className="mb-2 text-xs text-status-danger-fg">
+              {error}
+            </p>
+          )}
+          {empty ? (
+            <p className="text-sm text-muted">
+              <FormattedMessage
+                id="contracts.relations.empty"
+                defaultMessage="No related contracts."
+              />
+            </p>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {hasParent && (
+                <div>
+                  <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-subtle">
+                    <FormattedMessage {...LABELS.parent} />
+                  </h3>
+                  <ul>
+                    {relations.parentChain.map((entry, i) => {
+                      const isImmediate = i === relations.parentChain.length - 1;
+                      const canRemove =
+                        editable && isImmediate && !entry.restricted;
+                      return (
+                        <RelationRow
+                          key={entry.restricted ? `restricted-${i}` : entry.number}
+                          entry={entry}
+                          onRemove={canRemove ? () => void handleUnparent() : undefined}
+                          removeLabel={LABELS.removeParent}
+                        />
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
+              {hasChildren && <Subsection label={LABELS.children} entries={relations.children} />}
+              {grouped &&
+                Array.from(grouped.values()).map(({ label, entries }) => (
+                  <LinkSubsection
+                    key={String(label.id)}
+                    label={label}
+                    links={entries}
+                    onRemove={editable ? (link) => void handleUnlink(link) : undefined}
+                  />
+                ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {dialog && (
+        <LinkDialog
+          contractNumber={contractNumber}
+          contractIsConfidential={contractIsConfidential}
+          mode={dialog}
+          onClose={() => setDialog(null)}
+          onRelationsChanged={handleRelationsChanged}
+        />
+      )}
+    </>
   );
 });

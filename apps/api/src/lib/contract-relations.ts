@@ -46,6 +46,7 @@ import {
   contractRelations,
   contracts,
   eq,
+  isNotNull,
   or,
   sql,
   type Transaction,
@@ -208,4 +209,73 @@ export async function linkContracts(
     toContractId: toId,
     relationType,
   });
+}
+
+/**
+ * Remove one typed link between two contracts (CTR-015).
+ *
+ * The symmetric `related` type is checked both ways — the row may have
+ * been written with either end as `from` — so the caller does not have
+ * to know the direction the row was written in.
+ *
+ * The advisory lock is taken for the same reason the write takes one:
+ * so a remove and a concurrent write cannot interleave in a way that
+ * loses the remove's intent.
+ *
+ * Nothing here narrates, for the same reason the write does not — the
+ * caller writes the activity entry.
+ */
+export async function unlinkContracts(
+  tx: Transaction,
+  link: Readonly<{ fromId: string; toId: string; relationType: ContractRelationType }>,
+): Promise<void> {
+  const { fromId, toId, relationType } = link;
+
+  await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.contractRelations})`);
+
+  const sameLink = and(
+    eq(contractRelations.fromContractId, fromId),
+    eq(contractRelations.toContractId, toId),
+    eq(contractRelations.relationType, relationType),
+  );
+  const mirrored = and(
+    eq(contractRelations.fromContractId, toId),
+    eq(contractRelations.toContractId, fromId),
+    eq(contractRelations.relationType, relationType),
+  );
+
+  const deleted = await tx
+    .delete(contractRelations)
+    .where(relationType === "related" ? or(sameLink, mirrored) : sameLink)
+    .returning({ createdAt: contractRelations.createdAt });
+
+  if (deleted.length === 0) {
+    throw httpError(404, "These two contracts are not linked that way.");
+  }
+}
+
+/**
+ * Take a contract out from under its parent (CTR-015).
+ *
+ * The advisory lock is taken so this cannot interleave with a
+ * concurrent parent write on the same branch of the hierarchy.
+ *
+ * Nothing here narrates, for the same reason the parent write does
+ * not.
+ */
+export async function removeContractParent(
+  tx: Transaction,
+  contractId: string,
+): Promise<void> {
+  await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.contractRelations})`);
+
+  const [updated] = await tx
+    .update(contracts)
+    .set({ parentId: null, updatedAt: new Date() })
+    .where(and(eq(contracts.id, contractId), isNotNull(contracts.parentId)))
+    .returning({ id: contracts.id });
+
+  if (!updated) {
+    throw httpError(409, "This contract does not have a parent.");
+  }
 }

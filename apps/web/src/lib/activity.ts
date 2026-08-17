@@ -1120,6 +1120,28 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       related: relatedRecord(intl, payload, "related"),
     }),
   },
+  // The removal siblings of the two relation writes above (M17/4).
+  "contract.relation_removed": {
+    icon: Link2,
+    message: defineMessage({
+      id: "activity.contract.relationRemoved",
+      defaultMessage:
+        "{actor} unlinked this contract — {relationType, select, renews {it no longer renews {related}} " +
+        "amends {it no longer amends {related}} other {no longer related to {related}}}",
+    }),
+    values: (intl, payload) => ({
+      relationType: text(payload, "relationType") ?? "other",
+      related: relatedRecord(intl, payload, "related"),
+    }),
+  },
+  "contract.parent_removed": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.contract.parentRemoved",
+      defaultMessage: "{actor} took this contract out from under {parent}",
+    }),
+    values: (intl, payload) => ({ parent: relatedRecord(intl, payload, "parent") }),
+  },
   // The record's free-form dates (M16/3, CTR-009). A verb per act, so a
   // reader can tell a date being put on the record from one being moved
   // or taken off without opening a payload.

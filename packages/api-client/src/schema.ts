@@ -4,10885 +4,11147 @@
  */
 
 export interface paths {
-  "/api/v1/meta": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Instance metadata */
-    get: operations["getMeta"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/me": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The signed-in user, with their live role and session */
-    get: operations["getMe"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/me/preferences": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /** Update the signed-in user's preferences (theme #44, timezone SET-006) */
-    patch: operations["updateMyPreferences"];
-    trace?: never;
-  };
-  "/api/v1/auth/setup": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Whether first-run setup (initial Administrator) is still required */
-    get: operations["getSetupStatus"];
-    put?: never;
-    /** First-run setup: create the initial Administrator */
-    post: operations["runSetup"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/methods": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** What the login screen may offer (TECH-008): the auth mode, the magic-link toggle, whether outbound email works, and the SSO provider to start, if one is registered */
-    get: operations["getAuthMethods"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/invites": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Invite a user (Administrator, Legal Team Member, or Contributor); re-sends the set-password email if they have not activated */
-    post: operations["inviteUser"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/invites/{userId}/resend": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Re-send a pending invite's set-password email (SET-005) */
-    post: operations["resendInvite"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/invites/{userId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /** Revoke a pending invite (SET-005): the row is removed and the emailed set-password link stops working */
-    delete: operations["revokeInvite"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/sso-providers": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The registered OIDC identity providers (TECH-008), with their client IDs but never their secrets */
-    get: operations["listSsoProviders"];
-    put?: never;
-    /** Register a bring-your-own OIDC identity provider (TECH-008); endpoint discovery runs from the issuer, and the response carries the callback URL to paste into the IdP console */
-    post: operations["registerSsoProvider"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/sso-providers/{providerId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /** Update the registered provider (TECH-008): omitted fields keep their stored values, endpoint discovery re-runs from the issuer, and a failed update leaves the provider untouched */
-    patch: operations["updateSsoProvider"];
-    trace?: never;
-  };
-  "/api/v1/auth/mode": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The organization's auth mode (TECH-008) */
-    get: operations["getAuthMode"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /** Switch the auth mode (TECH-008): `oidc` closes password sign-in for everyone but Administrators (break-glass); switching never invalidates existing sessions */
-    patch: operations["setAuthMode"];
-    trace?: never;
-  };
-  "/api/v1/auth/allowed-domains": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The magic-link domain allowlist (DD-010); empty admits nobody */
-    get: operations["getAllowedDomains"];
-    /** Replace the magic-link domain allowlist (DD-010); the list is normalised to lower case and enforced on the next request — an empty list closes the portal to everyone */
-    put: operations["setAllowedDomains"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/portal": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /** Open or close magic-link sign-in (DD-010's portal floor); takes effect on the next request, independent of the domain allowlist */
-    patch: operations["setMagicLinkEnabled"];
-    trace?: never;
-  };
-  "/api/v1/auth/magic-link": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Request a portal magic link (DD-010); the response is identical whether or not the address is eligible */
-    post: operations["requestMagicLink"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/onboarding": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** First-run onboarding state (SET-004), plus whether email is configured */
-    get: operations["getOnboardingStatus"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/onboarding/complete": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Mark first-run onboarding finished (SET-004); idempotent, and never reversed — the wizard is first-run only */
-    post: operations["completeOnboarding"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/org/general": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The organization's identity (SET-001 General pane) */
-    get: operations["getOrgGeneral"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /** Update the organization's identity; applies immediately (SET-003) and appends one audit entry per changed field */
-    patch: operations["updateOrgGeneral"];
-    trace?: never;
-  };
-  "/api/v1/users": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Every user with role, status, and last-active (SET-005); pending invites appear as rows with status `invited` */
-    get: operations["listUsers"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/users/{userId}/role": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /** Change a user's role in place (SET-005); effective on the target's next request — the guard chain reads the role live */
-    patch: operations["updateUserRole"];
-    trace?: never;
-  };
-  "/api/v1/users/{userId}/archive": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Archive a user (SET-005): sign-in is blocked and every live session is revoked in the same operation */
-    post: operations["archiveUser"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/users/{userId}/unarchive": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Restore an archived user (SET-003's recovery story): sign-in works again; the sessions archive revoked stay revoked */
-    post: operations["unarchiveUser"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/users/{userId}/revoke-sessions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Revoke every live session of a user (SET-005's lost-laptop case); the account itself is untouched */
-    post: operations["revokeUserSessions"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/email-settings": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Where outbound email is configured (#37): environment, app, or not at all — and the effective from-address. Never the relay URL */
-    get: operations["getEmailSettings"];
-    /** Save the app SMTP relay (#37): smtp:// or smtps:// URL with credentials inline, plus a from-address; both null clears. Takes effect on the next send. Refused while the environment pins SMTP — env always wins over app configuration */
-    put: operations["saveEmailSettings"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/email-settings/test": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Send a test email through the currently resolved mailer to the signed-in Administrator's own address (#37); fails loudly with a plain-language reason */
-    post: operations["sendTestEmail"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/signing-connectors/{provider}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The e-signature connector's state (CTR-013): whether it is configured, which estate and credentials it names, and the webhook URL to paste into the provider's console. Never the RSA key or the Connect secret */
-    get: operations["getSigningConnector"];
-    /** Save the e-signature connector (CTR-013, TECH-013). The RSA key and the Connect secret are write-only: blank keeps the stored value, a value rotates it. A first save without the Connect secret is refused — the webhook must never answer unsigned deliveries */
-    put: operations["saveSigningConnector"];
-    post?: never;
-    /** Take the e-signature connector out (CTR-013). The row and both secrets go, and the install is back to the zero-config manual hand-off. Refused while any envelope is still out: deleting the credentials strands that round for good — nothing left to void it with, and nothing for the reconciliation sweep to ask. Turn the connector off instead if the sending has to stop before the paper comes back */
-    delete: operations["deleteSigningConnector"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/signing-connectors/{provider}/test": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Authenticate against the provider with the stored credentials (TECH-013's test button) and name the account they reach. Answers in place; changes nothing */
-    post: operations["testSigningConnector"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/signing-connectors/{provider}/disable": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Turn the e-signature connector off (CTR-013) without losing its credentials. Every surface then answers as an unconfigured install does — the send control leaves the record and the manual hand-off is the path again. A live envelope does not refuse this: turning the connector back on picks the round up where the sweep left it */
-    post: operations["disableSigningConnector"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/signing-connectors/{provider}/enable": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Turn the e-signature connector back on with the credentials it already holds (CTR-013). The send control returns to the record and the reconciliation sweep reaches every round that was out while it was off */
-    post: operations["enableSigningConnector"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/signer-erasures": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Erase an external signer's name and address (CTR-013, DD-017). Every `envelope.sent` activity entry naming this address has that name and address rewritten to a tombstone, in place, and the envelope's signer rows for it are deleted. The entry keeps its shape: how many people were asked, and in what order, is about the contract rather than about the person. The erasure is itself appended to the log, carrying counts and no address. Refused for an address that belongs to a user of this install — their erasure is a different act. An address that was never a signer's answers with zeros. Copies already shipped to a SIEM are outside this install and are the operator's to purge */
-    post: operations["eraseSigner"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contract-types": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The contract type taxonomy in display order (CTR-002); archived rows only with includeArchived=true */
-    get: operations["listContractTypes"];
-    put?: never;
-    /** Add a contract type: the slug is derived here, once, and is immutable after creation; the row appends to the display order */
-    post: operations["createContractType"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contract-types/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** One contract type — the read behind the type editor */
-    get: operations["getContractType"];
-    put?: never;
-    post?: never;
-    /** Hard-delete a contract type; `other` refuses (CTR-002), and so does a type still used by contracts */
-    delete: operations["deleteContractType"];
-    options?: never;
-    head?: never;
-    /** Rename a contract type's display name (DES-017 in-place rename) or edit its description; the slug never changes, and even `other` may rename */
-    patch: operations["updateContractType"];
-    trace?: never;
-  };
-  "/api/v1/contract-types/order": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /** Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs */
-    put: operations["reorderContractTypes"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contract-types/{id}/archive": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Archive a contract type (SET-003 guarded): a type still used by contracts requires a reassignment target, which takes them; nothing is deleted; `other` refuses */
-    post: operations["archiveContractType"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contract-types/{id}/restore": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Restore an archived contract type (SET-003's recovery story) to the end of the display order */
-    post: operations["restoreContractType"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contract-types/{id}/fields": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** One contract type's attached fields in per-type order — the type editor's Attached fields card */
-    get: operations["listContractTypeFields"];
-    put?: never;
-    /** Attach a catalog field to a contract type: contract-scoped and global fields only (CTR-016), appended to the per-type order, optional from the start unless isRequired says otherwise */
-    post: operations["attachContractTypeField"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contract-types/{id}/fields/{fieldId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /** Detach a field from a contract type: the join row goes, the catalog definition and stored values stay (MTR-014) */
-    delete: operations["detachContractTypeField"];
-    options?: never;
-    head?: never;
-    /** Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard-enforced when a record is created on this type and when one is re-typed onto it (MTR-014) */
-    patch: operations["setContractTypeFieldRequired"];
-    trace?: never;
-  };
-  "/api/v1/contract-types/{id}/fields/order": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /** Apply a full permutation of one type's attached fields (SET-003 immediate apply); per-type orders renumber from 1 */
-    put: operations["reorderContractTypeFields"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/matter-types": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The matter type taxonomy in display order (MTR-001); archived rows only with includeArchived=true */
-    get: operations["listMatterTypes"];
-    put?: never;
-    /** Add a matter type: the slug is derived here, once, and is immutable after creation; the row appends to the display order */
-    post: operations["createMatterType"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/matter-types/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** One matter type — the read behind the type editor */
-    get: operations["getMatterType"];
-    put?: never;
-    post?: never;
-    /** Hard-delete a matter type; `other` refuses (MTR-001), and once matters exist (M22) an in-use type will refuse too */
-    delete: operations["deleteMatterType"];
-    options?: never;
-    head?: never;
-    /** Rename a matter type's display name (DES-017 in-place rename) or edit its description; the slug never changes, and even `other` may rename */
-    patch: operations["updateMatterType"];
-    trace?: never;
-  };
-  "/api/v1/matter-types/order": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /** Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs */
-    put: operations["reorderMatterTypes"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/matter-types/{id}/archive": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Archive a matter type (SET-003 guarded): it leaves pickers and the default list; nothing is deleted; `other` refuses */
-    post: operations["archiveMatterType"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/matter-types/{id}/restore": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Restore an archived matter type (SET-003's recovery story) to the end of the display order */
-    post: operations["restoreMatterType"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/matter-types/{id}/fields": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** One matter type's attached fields in per-type order — the type editor's Attached fields card */
-    get: operations["listMatterTypeFields"];
-    put?: never;
-    /** Attach a catalog field to a matter type: global fields only until M22 opens the matter scope (MTR-011), appended to the per-type order, optional from the start unless isRequired says otherwise */
-    post: operations["attachMatterTypeField"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/matter-types/{id}/fields/{fieldId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /** Detach a field from a matter type: the join row goes, the catalog definition and stored values stay (MTR-014) */
-    delete: operations["detachMatterTypeField"];
-    options?: never;
-    head?: never;
-    /** Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard enforcement arrives with the record milestone (M22) */
-    patch: operations["setMatterTypeFieldRequired"];
-    trace?: never;
-  };
-  "/api/v1/matter-types/{id}/fields/order": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /** Apply a full permutation of one type's attached fields (SET-003 immediate apply); per-type orders renumber from 1 */
-    put: operations["reorderMatterTypeFields"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contract-statuses": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The contract-status taxonomy in display order (CTR-001), each row carrying its fixed stage; archived rows only with includeArchived=true */
-    get: operations["listContractStatuses"];
-    put?: never;
-    /** Add a contract status: the stage is picked here, once, and is immutable after creation, like the derived slug; the row appends to the display order */
-    post: operations["createContractStatus"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contract-statuses/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /** Hard-delete a contract status; the protected `draft`, `active`, and `expired` rows refuse (CTR-001), as does the last unarchived status of a stage and a status still held by contracts */
-    delete: operations["deleteContractStatus"];
-    options?: never;
-    head?: never;
-    /** Rename a contract status's display name (DES-017 in-place rename); the slug and the stage never change — a body carrying `stage` is refused, and even protected rows may rename */
-    patch: operations["renameContractStatus"];
-    trace?: never;
-  };
-  "/api/v1/contract-statuses/order": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /** Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs */
-    put: operations["reorderContractStatuses"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contract-statuses/{id}/archive": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Archive a contract status (SET-003): it leaves pickers and the default list; nothing is deleted. A status still held by contracts refuses with the count (CTR-020 — statuses block, they never reassign), as does the last unarchived status of a stage (CTR-001 floor) and the protected `draft`, `active`, and `expired` rows */
-    post: operations["archiveContractStatus"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contract-statuses/{id}/restore": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Restore an archived contract status (SET-003's recovery story) to the end of the display order; its stage rides along unchanged */
-    post: operations["restoreContractStatus"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/approver-groups": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The CTR-012 approver-group templates in name order, each carrying its member list; archived groups only with includeArchived=true */
-    get: operations["listApproverGroups"];
-    put?: never;
-    /** Create an approver-group template with its name, an optional description, and an optional starting member list; members must be live Member+ users */
-    post: operations["createApproverGroup"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/approver-groups/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /** Rename an approver group (DES-017 in-place rename) and/or change its description; the two changes write their own activity entries */
-    patch: operations["updateApproverGroup"];
-    trace?: never;
-  };
-  "/api/v1/approver-groups/{id}/members": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /** Replace an approver group's member list; every id must name a live Member+ user, and each person added or removed writes its own activity entry */
-    put: operations["setApproverGroupMembers"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/approver-groups/{id}/archive": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Archive an approver group (SET-003): it leaves the apply picker and the default list. No guard and no reassignment — applying a group snapshots its members (CTR-012), so every request it already produced is untouched */
-    post: operations["archiveApproverGroup"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/approver-groups/{id}/restore": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Restore an archived approver group (SET-003's recovery story); its members ride along unchanged */
-    post: operations["restoreApproverGroup"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contracts": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The contract list, newest reference first: number, title, type, and status; archived contracts only with includeArchived=true; ended contracts only with includeEnded=true (CTR-019). Member+ read every contract that is not confidential; a Contributor reads exactly the contracts they hold a contract_team row on, archived and ended ones behind the same flags. A confidential contract is listed only for its named team, its Owner, and Administrators — silently absent for everyone else, so no count can reveal it */
-    get: operations["listContracts"];
-    put?: never;
-    /** Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward — except the Confidential flag (DD-014), which may be set here so a sensitive record is never visible to the wrong audience, even briefly. `renewalOf` routes a renewal into a new record (CTR-007's third and fourth vehicles, M16/5): the successor is born carrying its predecessor's business facts — our entity, the value, the term shape, and the counterparties — and linked to it, as a child by contracts.parent_id or as a standalone successor by a CTR-015 `renews` row. The team, the status, and the Confidential flag are **never** copied: CTR-015's no-inheritance stance, applied at birth. The title and the type are the body's, so whatever the person edited before pressing Create is what the record is born with. Appends the link's own activity action beside contract.created */
-    post: operations["createContract"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contracts/options": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The live contract types in display order, each with the fields it attaches (CTR-016) so the create dialog can grow the ones it requires; the live statuses; and the live people the Owner and team pickers offer — the create dialog's and the record's Member+ picker source; and the live approver groups the record's apply picker offers, each with the ids of the people applying it would ask (CTR-012) — the settings surfaces that manage all of these stay Administrator-only per SET-002 */
-    get: operations["listContractOptions"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contracts/{number}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** One contract by its CTR-003 number, with its Owner, its signing entity, its counterparties, its working group, and the fields its type attaches (CTR-016) in attachment order — the record page's read; archived contracts answer too, so restore stays reachable. A Contributor reads a contract they hold a contract_team row on, and is answered 404 on one they do not. A confidential contract answers the same 404 to anyone outside its named team, its Owner, and Administrators */
-    get: operations["getContract"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /** Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, the value, the CTR-006 term fields, the type, a custom field, or the status — any live status may follow any other (CTR-001). The value is one field in three parts: amount, currency, and cadence commit together and clear together. Re-typing re-checks the new type's hard-required fields before it commits (CTR-016/MTR-014), so the type and the values that satisfy it may be sent together. The term is five fields with one rule between them (CTR-006): an expiry on an evergreen contract and a renewal period on a contract that does not auto-renew are refused 400 with their own problem types, and a term-type change clears the fields the new type cannot hold, each clear narrated as the edit it is. The Confidential flag (DD-014) commits here too, but only for an Administrator, the contract's creator, or its Owner: anyone else who reaches the record is refused 403, and anyone who does not reach it is answered 404 like a contract that does not exist. A status change that moves the contract past the approval stage while approvals are pending or rejected meets CTR-012's soft gate: it is refused 409 with the unresolved approvals named, and the same commit with `overrideSoftGate` succeeds and is logged as an override. Never on an archived contract */
-    patch: operations["updateContract"];
-    trace?: never;
-  };
-  "/api/v1/contracts/{number}/renewal": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Confirm the roll (CTR-007's first renewal vehicle): the same record's term advances, on the say-so of a person. CTR-006's engine is notify-only and never advances a date on its own, so a contract that passed its expiry un-actioned reads as 'renewal pending confirmation' — a predicate over its dates, not a status — and waits for this. The request carries the expiry it was raised against and the expiry to advance to; the record proposes the second as the first plus the renewal period, and the caller may send a different date, because a roll whose dates shifted in negotiation is recorded as it really landed. The comparison is made under the contract's row lock, so two confirms racing for one roll advance the term exactly once and the loser is refused 409 by name rather than rolling it again. Only an auto-renewing contract with an expiry rolls, and a roll must move the term forward. The status and the stage are untouched: this moves one date. Appends one contract.renewal_confirmed entry at the working-team tier (DD-017) — the only record a renewal leaves, and what the record's renewal history reads back. Answers the record and its whole history. Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract rolls nothing until it is restored */
-    post: operations["confirmContractRenewal"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contracts/{number}/team": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Put a person on the contract team under a role (CTR-004). The key is contract + person + role, so the same person may hold two roles; the `creator` role is the server's to write */
-    post: operations["addContractTeamMember"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contracts/{number}/team/{userId}/{role}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /** Take one role off the contract team (CTR-004). The role is part of the address, so dropping a watcher leaves that same person's member row standing; `creator` is provenance and stays */
-    delete: operations["removeContractTeamMember"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contracts/{number}/counterparties": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Put a counterparty on the contract (CTR-011) — either one we already hold, by id, or an unknown name, which is created with just that name in the same transaction. A name we already hold is reused, never duplicated. The first party on a contract becomes its primary */
-    post: operations["addContractCounterparty"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contracts/{number}/counterparties/{counterpartyId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /** Take a counterparty off the contract (CTR-011). Removing the primary passes the flag to the party who joined next, so a contract with counterparties always has one; the counterparty record itself is untouched and stays on its other contracts */
-    delete: operations["removeContractCounterparty"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contracts/{number}/counterparties/{counterpartyId}/primary": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Name which counterparty the contract is listed under (CTR-011). There is no route to clear the flag: the primary moves to another party or it stays where it is */
-    post: operations["setPrimaryContractCounterparty"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contracts/{number}/archive": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Archive a contract (soft delete, for mistakes and imports — not the same as ending it): it leaves the default list and freezes; nothing is deleted, and restore is the way back */
-    post: operations["archiveContract"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contracts/{number}/restore": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Restore an archived contract (archive's recovery story): it rejoins the list and becomes editable again */
-    post: operations["restoreContract"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contracts/{number}/approvals": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The approval requests on one contract, oldest ask first (CTR-012) — who was asked, who asked them, where the request came from, the decision, the approver's note, and when it landed. Requests run in parallel, so the roster is a set rather than a queue, and a re-request after a rejection is a new row beneath the one it answers rather than an overwrite of it. Access is inherited from the contract and nothing else: a Contributor on the team reads the roster, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it */
-    get: operations["listContractApprovals"];
-    put?: never;
-    /** Ask one or more named colleagues to sign a contract off (CTR-012). Every request is created at once and every one of them runs in parallel — there are no chains and no order. An approver must be a live Member+ user: a Contributor, a Business User, and an archived person are each refused by name, because a request nobody can act on is worse than no request. On a confidential contract the approver must already be inside the record's audience, so no request is created that its approver could not open. At most one pending request per approver per contract — a second is refused rather than silently collapsed — but a decided one blocks nothing, so a re-request after a rejection writes a new row and the earlier ask stays on the record. Every request made here carries source manual; applying an approver group is its own act. Appends one approval.requested entry per approver on the owning contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract takes no new request until it is restored */
-    post: operations["requestContractApprovals"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contracts/{number}/approvals/group": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Apply an approver group to a contract (CTR-012): every current member of the template is asked to sign the record off, in one act and in parallel. The ask is a **snapshot** — each request records the group it came from, and renaming the template, editing its members, or archiving it never touches a request that already exists. A member who already holds a pending request on this contract is skipped rather than refused, because applying a group is one act about a set. An archived member is skipped too: they have left, so the ask would reach nobody. A group with nobody left to ask — no members, or every member already asked — is refused as the no-op it would be, and an archived group is refused because it has left the picker. Every other rule is the named ask's, applied by the same code: a member who is no longer Member+ is refused by name, and on a confidential contract a member outside the record's audience is refused by name too. Appends one approval.requested entry per person asked, naming the group, at the working-team tier (DD-017). Member+; an archived contract takes no request until it is restored */
-    post: operations["applyApproverGroup"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/approvals/{approvalId}/decision": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Approve or reject one request, with an optional note (CTR-012). Only the approver named on the request decides it — not the requester, not the Owner, and not an Administrator, because a sign-off somebody else recorded is not a sign-off. The decision is final: a request that has been answered is answered, and a fixed draft goes back to the same person as a new request rather than by reopening this one. Self-approval is allowed. Appends approval.approved or approval.rejected on the owning contract at the working-team tier (DD-017). A request on a contract this viewer cannot reach answers 404, exactly as for one that does not exist; an archived contract takes no decision until it is restored */
-    post: operations["decideContractApproval"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/approvals/{approvalId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /** Withdraw a pending approval request (CTR-012). Three actors may: the person who asked, the contract's Owner, and an Administrator — a mistaken or obsolete ask should not sit open, and stale requests should not outlive the people or deals they were about. The row is deleted and the approval.cancelled activity entry is the durable record of it, which is why that entry names the approver. A decided request is never cancelled: it is part of the record. A request on a contract this viewer cannot reach answers 404, exactly as for one that does not exist; an archived contract takes no cancellation until it is restored */
-    delete: operations["cancelContractApproval"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contracts/{number}/envelopes": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** One contract's signing envelopes, newest send first (CTR-013) — the adapter that carried each one, where it stands, who was asked to sign it, what went out, and when. A declined or voided envelope carries the reason it ended with, and a finished one carries the moment it ended. Both arrive from the provider's own feed, so the record answers them without anybody typing them in. Answers two facts beside the rows: whether this install has an e-signature connector at all, and the primary document this viewer may send, with its version chain newest round first. Both are what decide whether the record draws a send control, so an install with no connector and a record with no paper each answer plainly rather than by omission. A contract that has only ever been signed by hand holds no envelopes, which is the zero-config manual hand-off and not an error. Access is inherited from the contract and nothing else: a Contributor on the team reads it, and anyone who cannot reach the contract is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it */
-    get: operations["listContractEnvelopes"];
-    put?: never;
-    /** Send a version of the contract's primary document out for signature (CTR-013). The version must be a round of that document's own chain — loose attachments are not sendable in v1, because the executed copy comes back to the chain the send left from. Signers are name-and-email pairs and every one of them is asked at once: there is no routing order. Sending is legal at any stage; CTR-001's transitions stay unrestricted. Refused with a typed problem when this install has no e-signature connector, and with another when the contract already has an envelope out — two envelopes must never race for one signature. The provider is called first and the row commits once it accepts; an envelope the provider took but the record could not keep is voided again before the refusal is raised, so the two systems do not drift apart silently. Appends one envelope.sent entry on the contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract sends nothing until it is restored */
-    post: operations["sendContractEnvelope"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/envelopes/{envelopeId}/void": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Withdraw a live envelope (CTR-013). Three actors may: the person who sent it, the contract's Owner, and an Administrator — a mistaken or superseded send should not sit open, and it should not wait on the one person who made it. The reason is required, because the provider records it with the withdrawal and the record draws it on the row. The provider is told first and the voided transition is applied after it accepts, so the record never says withdrawn while the envelope is still collecting signatures. An envelope that has already ended — signed, declined, or voided — is refused: an ending is part of the record. Appends one envelope.voided entry on the contract at the working-team tier, attributed to the voider (DD-017). Once it is voided the contract sends again, because the one-live-envelope rule holds only while an envelope is out. An envelope on a contract this viewer cannot reach answers 404, exactly as for one that was never sent; an archived contract takes no void until it is restored */
-    post: operations["voidContractEnvelope"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contracts/{number}/key-dates": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** One contract's whole deadline surface (CTR-009): the union of its key dates, its expiry date, and its derived notice deadline, ordered with what is still ahead first and nearest first, then what has gone by, most recently passed first. Exactly one entry — the earliest still ahead — is marked as the next deadline, and none is on a record whose every date has passed. The expiry and the notice deadline carry no key date id, because no row backs them: the notice deadline is the expiry minus the notice period, computed on every read and stored nowhere, and both move by editing the term on the record. Access is inherited from the contract and nothing else: a Contributor on the team reads the surface, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it */
-    get: operations["listContractKeyDates"];
-    put?: never;
-    /** Put a named date on a contract (CTR-009): a calendar date, a label, and an optional note — the free-form escape hatch beside the typed term columns, for price reviews, option-exercise windows, and delivery milestones. A blank label is refused and a blank note is stored as no note at all. There is no owner and no per-date reminder schedule: NOT-004 fixed one global offset list for every tracked date. Answers the record's whole deadline surface, because a new date can change which one is next. Appends one key_date.added entry on the owning contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract takes no new date until it is restored */
-    post: operations["addContractKeyDate"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/key-dates/{keyDateId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /** Take a key date off a contract (CTR-009). The row is deleted and the key_date.removed activity entry is the durable record of it, which is why that entry carries the label and the date rather than only the id. Answers the record's whole deadline surface, because removing a date can change which one is next. A key date on a contract this viewer cannot reach answers 404, exactly as for one that does not exist; an archived contract takes no removal until it is restored */
-    delete: operations["removeContractKeyDate"];
-    options?: never;
-    head?: never;
-    /** Move a key date, rename it, or change its note (CTR-009). Every field is optional and only what is sent is read, so a surface that edits one of them sends one of them; a note is cleared by sending null. A request that changes nothing writes nothing and narrates nothing. Answers the record's whole deadline surface, because moving a date can change which one is next. Appends one key_date.edited entry naming only what moved, at the working-team tier (DD-017). A key date on a contract this viewer cannot reach answers 404, exactly as for one that does not exist; an archived contract takes no edit until it is restored */
-    patch: operations["updateContractKeyDate"];
-    trace?: never;
-  };
-  "/api/v1/contracts/{number}/relations": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The full relations graph for one contract (CTR-015): the parent chain root-first, the children, and the typed links in both directions. Each relative is either reachable — carrying its number, title, status name, and stage — or restricted, carrying only { restricted: true }. Access is inherited from the contract: a Contributor on the team reads the graph, and anyone who cannot reach the contract is answered 404 */
-    get: operations["getContractRelations"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contracts/{number}/tasks": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** One contract's task checklist (CTR-017): lightweight items with a done flag, an optional assignee, an optional due date, and a display order. Task due dates never appear in the deadline union or the next-deadline marker. Access is inherited from the contract: a Contributor on the team reads the checklist, and anyone who cannot reach the contract is answered 404 */
-    get: operations["listContractTasks"];
-    put?: never;
-    /** Add a task to a contract's checklist (CTR-017). A blank title is refused. The task starts not done, with the display order after the last existing task. Appends one task.added entry on the owning contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403. An archived contract takes no new task until it is restored */
-    post: operations["addContractTask"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/tasks/{taskId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /** Take a task off a contract's checklist (CTR-017). The row is deleted and the task.removed activity entry is the durable record of it, which is why that entry carries the title. A task on a contract this viewer cannot reach answers 404; an archived contract takes no removal until it is restored */
-    delete: operations["removeContractTask"];
-    options?: never;
-    head?: never;
-    /** Edit a task's title, assignee, or due date (CTR-017). Every field is optional and only what is sent is read. A request that changes nothing writes nothing and narrates nothing. Appends one task.edited entry naming only what moved, at the working-team tier (DD-017). A task on a contract this viewer cannot reach answers 404; an archived contract takes no edit until it is restored */
-    patch: operations["updateContractTask"];
-    trace?: never;
-  };
-  "/api/v1/tasks/{taskId}/toggle": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Toggle a task between done and not done (CTR-017). Completes an open task or reopens a done one. Appends one task.completed or task.reopened entry at the working-team tier (DD-017). A task on a contract this viewer cannot reach answers 404; an archived contract takes no toggle until it is restored */
-    post: operations["toggleContractTask"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contracts/{number}/tasks/reorder": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /** Reorder a contract's task checklist (CTR-017). The body carries the full ordered list of task ids; every task on the contract must appear exactly once. Member+; an archived contract takes no reorder until it is restored */
-    put: operations["reorderContractTasks"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/counterparties": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Find counterparties by name — the shared typeahead's read (CTR-011), reused by contract intake. Archived counterparties are never offered; an empty query answers the first names alphabetically, so an unprompted typeahead still opens onto something */
-    get: operations["searchCounterparties"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contracts/{number}/documents": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The paper on one contract (DOC-008), newest first, each with its whole version chain in order 1..n and one version of it marked current. Exactly one document is marked primary — the instrument the contract is — and any version the team has pinned as the signed copy is marked executed. A contract holds as many documents as it needs: a loose attachment such as a schedule or a certificate is its own document with its own chain, beside the main instrument rather than inside its history (CTR-014). Access is inherited from the contract and nothing else: a Contributor on the team reads the list, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. Archived documents (DOC-010) are left out; includeArchived=true draws them beside the live ones, which is where restoring one is offered. folder narrows the read to one listing (DOC-006): a folder's own id answers what is filed in that folder, `root` answers the documents filed in no folder, and omitting it answers the record's whole paper. Paging applies within whichever listing was asked for, so a heavy folder pages on its own. A folder on another contract, or one that never existed, answers 404 — exactly as a folder that was never created, because a folder's id says nothing about which record it is on */
-    get: operations["listContractDocuments"];
-    put?: never;
-    /** Upload a file to a contract, creating a document with version 1 (DOC-001). Any file type is accepted (DOC-004); the ceiling is the deployment's MAX_UPLOAD_MB, and a file over it is refused rather than stored. The version row records the original filename, the declared MIME type, the byte size the server counted, and the SHA-256 it computed while streaming. The blob is written through the storage adapter before the rows commit (DOC-012). The first document uploaded to a contract becomes its primary document — the instrument the contract is (CTR-014) — and every one after it is a loose attachment until somebody moves the designation. Appends document.created on the owning contract, and document.primary_set beside it when the designation was taken (DD-017). The document is filed where the form says (DOC-006, DOC-011): folderId is a folder already on this record, folderPath is a relative chain find-or-created beneath it segment by segment, and sending neither files the document at the record root. The chain is resolved under the owning contract's row lock — the same one that serialises version numbers — so uploads racing on one path converge on a single folder rather than manufacturing one each. A folder a drop creates on its way past writes no activity of its own; the document.created entry names the folder its file landed in (DD-017). A path that misuses the separator or would nest past the tree's ceiling is refused for that one file, and a batch's other files are untouched. The kind, note, folderId and folderPath fields must be sent before the file part. An archived contract takes no new paper until it is restored. A contract the uploader cannot reach answers 404, exactly as one that does not exist */
-    post: operations["uploadContractDocument"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/documents/{documentId}/versions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Append the next version to an existing document (DOC-001). The number is assigned under the owning contract's row lock, so two revisions uploaded at the same moment take consecutive numbers rather than colliding, and the chain runs 1..n with no gaps. The version carries one of the five CTR-014 kinds and, when the uploader wrote one, a short note saying what changed in this round. Nothing about the versions already in the chain is touched: they are immutable, and a correction is another version. Appends document.version_added on the owning contract (DD-017). The kind and note fields must be sent before the file part. An archived contract takes no new paper until it is restored. A document on a contract the uploader cannot reach answers 404, exactly as one that does not exist */
-    post: operations["uploadDocumentVersion"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/documents/{documentId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /** Destroy a whole document — the lawful-erasure answer (DOC-010). It removes the document row, every version row under it, every stored blob those versions name, and everything the pipeline derived from them: the extracted text and the display renditions, rows and blobs alike. It is whole-document by design: there is no route that deletes one version, because a chain somebody can cut pieces out of is not negotiation history (DOC-001), so the whole document goes or nothing does. It takes a typed confirmation: confirmTitle must be the document's own title, exactly. It is the Administrator's alone; every other role is refused 403, a Contributor and a Legal Team Member alike. The activity and audit entries written before it survive it and still name what was deleted, and the erasure appends document.hard_deleted beside them (DD-017) — the record stays accountable after the files are gone. It reaches an archived contract too, because erasure is compelled from outside the record and a frozen record is not a place to hide from it. A document on a contract the Administrator cannot reach answers 404 */
-    delete: operations["hardDeleteDocument"];
-    options?: never;
-    head?: never;
-    /** Rename a document or edit its description (DOC-007), one field per request as DES-017 commits them. The stored files are untouched by either: a version's own filename is what it arrived as and stays that, and a download still offers it back. Appends document.updated on the owning contract (DD-017), naming what changed. isConfidential is the third field, and it is not one of those two: it sets or clears DD-014's per-document flag, which narrows this one file to the contract's named team, its Owner, and Administrators, even on an open contract. It has an actor set narrower than the route's — an Administrator, the person who uploaded the document, and the contract's Owner — and anybody else who reaches the document is refused 403 rather than 404, because they can already see it. Each set and each clear appends its own action, document.confidentiality_set or document.confidentiality_cleared. folderId is the fourth, and it files the document (DOC-006): a folder on this document's own record, or null for the record root, with null and omitting the field two different requests. A folder on another contract answers 404, exactly as one that was never created, because a folder's id says nothing about which record it is on. Each move appends document.filed, carrying both folders by name so the entry outlives a rename. An archived contract takes no edit until it is restored. A document on a contract the editor cannot reach — and a confidential document they are outside the audience of — answers 404, exactly as one that does not exist */
-    patch: operations["updateDocument"];
-    trace?: never;
-  };
-  "/api/v1/documents/{documentId}/primary": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Name this document the contract's primary document — the instrument the contract is (CTR-014). Everything else on the record reads as a loose attachment beside it. The first document uploaded already holds the designation, so this is the reassignment: it moves to another document on the same contract, or it stays where it is. There is no route to clear it, because a record with paper on it has an instrument. Exactly one document holds the designation at any moment — it is one column on the contract, not a flag on each document. Appends document.primary_set on the owning contract (DD-017). An Administrator or a Legal Team Member who reaches the contract may move it; a Contributor on the team reads the record and is refused 403, because their write grid arrives with M23 (DD-015). An archived contract keeps the designation it has until it is restored. A document on a contract the actor cannot reach answers 404, exactly as one that does not exist */
-    post: operations["setPrimaryContractDocument"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/documents/{documentId}/executed-version": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Pin one version of this document as the signed copy (CTR-014) — the file previews, exports, and AI analysis target by default. The pin is explicit and is never read off a version's kind: a round tagged `executed` is what its uploader called it, and pinning is what the team decided. Any version can be pinned, current or superseded, and pinning one takes the pin off whichever version held it. A version of another document is refused: the pinned row must be a version of this one (DOC-001). Appends document.executed_set on the owning contract (DD-017). An Administrator or a Legal Team Member who reaches the contract may pin; a Contributor on the team reads the record and is refused 403 (DD-015). An archived contract takes no pin until it is restored. A document on a contract the actor cannot reach answers 404, exactly as one that does not exist */
-    post: operations["setExecutedDocumentVersion"];
-    /** Take the executed pin off this document (CTR-014). Every version is left exactly as it was — the pin is one column on the document, and clearing it says the record has no signed copy, never that a file changed or went away. Appends document.executed_cleared on the owning contract (DD-017). An Administrator or a Legal Team Member who reaches the contract may clear it; a Contributor on the team reads the record and is refused 403 (DD-015). An archived contract keeps its pin until it is restored. A document on a contract the actor cannot reach answers 404, exactly as one that does not exist */
-    delete: operations["clearExecutedDocumentVersion"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/documents/{documentId}/archive": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Archive a document (DOC-010's soft delete, for the wrong upload): it leaves the record's document list and its count, and nothing is destroyed. The row stays, the whole version chain stays, and every stored file stays — restoring it puts it back, so a wrong archive is a two-second fix. It is not the erasure path: that is the Administrator's hard delete, which leaves no row at all. Appends document.archived on the owning contract (DD-017). An Administrator or a Legal Team Member who reaches the contract may archive; a Contributor on the team reads the record and is refused 403, because their write grid arrives with M23 (DD-015). An archived contract keeps its paper as it stands until it is restored. A document on a contract the actor cannot reach answers 404, exactly as one that does not exist */
-    post: operations["archiveDocument"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/documents/{documentId}/restore": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Restore an archived document (DOC-010): it rejoins the record's document list and its count exactly as it was. Nothing had to be rebuilt, because archiving destroyed nothing — the chain, the notes, and the two CTR-014 designations come back with it. Appends document.restored on the owning contract (DD-017). An Administrator or a Legal Team Member who reaches the contract may restore; a Contributor on the team is refused 403 (DD-015). An archived contract is restored first, because a frozen record takes no change to its paper. A document on a contract the actor cannot reach answers 404, exactly as one that does not exist */
-    post: operations["restoreDocument"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/documents/{documentId}/versions/{versionId}/download": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Stream one version's file back, as an attachment. Every open is a download in M11 — in-app rendering is M12 — and there are no presigned URLs: the bytes come through the API behind the session and the owning contract's access predicate. A Contributor on the team downloads; anyone who cannot reach the contract is answered 404, exactly as for a document that does not exist */
-    get: operations["downloadDocumentVersion"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/documents/{documentId}/versions/{versionId}/preview": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Stream one version's file back for display in place — what the doc panel reads (M12/2, DOC-004). It is the download's twin and differs in exactly two headers: the disposition is inline, and the content type is the server's own rather than the one the upload declared. The type is routed from that declaration and the filename together — a hint, never a security decision — so a file that lies about itself can change which card the panel draws and can never change what the browser is told to do with it. A Word document and a PowerPoint deck stream the PDF rendition the pipeline converted them to (M12/4, DOC-004) rather than their own bytes, so the tracked changes and comments a conversion carries are what a reader sees; while that conversion is still running the answer is 409, and the rendition read is what a client polls. A family with no in-app preview is refused 415 and the panel offers the download instead: PDFs and raster images render today, and SVG does not, because an inline SVG is a script. Any version in the chain previews, superseded rounds included. It sits behind the same two predicates every document read does: a Contributor on the team previews what they may download, and anyone who cannot reach the contract — or is outside a confidential document's audience — is answered 404, exactly as for a document that was never uploaded */
-    get: operations["previewDocumentVersion"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/documents/{documentId}/versions/{versionId}/text": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Read one version's extracted text (M12/3, DOC-005). Every uploaded PDF has its text read in the background: a native text layer is taken as it is, and a PDF that is only pictures of pages is read with OCR. The original is always what the preview serves — this text is an index, never a displayed conversion, and no OCR'd file is stored. The answer is a state, never a status code: pending while the job is owed, ready with the words, failed when the job gave up, and unsupported for a file that will never have text, so a caller polls until it lands and stops when it will not. It sits behind the same two predicates every document read does: a Contributor on the team reads what they may download, and anyone who cannot reach the contract — or is outside a confidential document's audience — is answered 404, exactly as for a document that was never uploaded */
-    get: operations["readDocumentVersionText"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/documents/{documentId}/versions/{versionId}/rendition": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Say whether this version's display rendition is ready to preview (M12/4, DOC-004). A Word document and a PowerPoint deck do not draw in a browser, so the pipeline converts each one to a PDF in the background and the panel draws that — tracked changes and comments included. This is the state of that conversion, and it is what the panel polls while it shows its preparing state; live push is M30's job. The answer is a state, never a status code: pending while the job is owed, ready once the preview address will stream it, failed when the job gave up, and unsupported for a file that needs no conversion at all — a PDF, an image, a spreadsheet. A version whose conversion failed is offered its download instead; the upload itself is never blocked or failed by its pipeline. It sits behind the same two predicates every document read does: a Contributor on the team reads what they may download, and anyone who cannot reach the contract — or is outside a confidential document's audience — is answered 404, exactly as for a document that was never uploaded */
-    get: operations["readDocumentVersionRendition"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/documents/{documentId}/versions/{versionId}/email": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Read one uploaded email as a message (M12/5, DOC-004): its headers, its body, and the files that came with it. A MSG or an EML is parsed in process by a Node library — no doc engine, no conversion, and nothing stored — so the answer is the message as the file holds it, read fresh on every call. The HTML body is sanitized here, on the server, before it is handed out: nothing in it runs and nothing in it loads, so a tracking pixel cannot report that a lawyer opened a disclosed email. Attachments are listed with the family each one would render as, and each is reachable at its own address. A file that is not an email is refused 415, and one whose bytes cannot be read as the email they claim to be is refused 422 with the download offered. It sits behind the same two predicates every document read does: a Contributor on the team reads what they may download, and anyone who cannot reach the contract — or is outside a confidential document's audience — is answered 404, exactly as for a document that was never uploaded */
-    get: operations["readDocumentVersionEmail"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/documents/{documentId}/versions/{versionId}/attachments/{attachmentIndex}/download": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Stream one file out of a rendered email, as an attachment (M12/5, DOC-004). The index is the file's position in the message, which is a stable name for it because the version's bytes are immutable (DOC-001). Unlike a version's own download, this never echoes a declared type: a version's type was bounded and shape-checked when it was uploaded, and this one came out of the middle of a file nobody checked at all — so the bytes go out as `application/octet-stream`, with the attachment disposition and sniffing off. An attachment is not a side door: it sits behind the same two predicates its version does, so anyone who cannot reach the contract — or is outside a confidential document's audience — is answered 404, exactly as for a document that was never uploaded */
-    get: operations["downloadEmailAttachment"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/documents/{documentId}/versions/{versionId}/attachments/{attachmentIndex}/preview": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Stream one file out of a rendered email for display in place (M12/5, DOC-004), so a PDF or a photographed page attached to a message opens in the panel rather than in a Downloads folder. It is the attachment download's twin and differs in the same two headers a version's preview differs in: the disposition is inline, and the content type is chosen from the routing table rather than echoed from the message. An attachment outside the render set is refused 415 and the panel offers its download instead — there is no conversion path for an attachment, so a Word file inside an email downloads. It sits behind the same two predicates its version does: anyone who cannot reach the contract, or is outside a confidential document's audience, is answered 404 */
-    get: operations["previewEmailAttachment"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contracts/{number}/folders": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The folders on one contract, whole (DOC-006). Folders are scoped inside the record and nowhere else — there is no global tree, and the repository view stays flat with folder as a facet there. The set comes back in one answer rather than one level at a time, because a record's folder set is small and the Documents section draws the whole tree from it. Siblings are ordered by name without case, the way a file manager lists a directory. Each folder carries how many live documents are filed directly in it, counted for the viewer asking: an archived document is out of the count (DOC-010), and so is a confidential document this viewer is outside the audience of (DD-014) — left out by the same predicate that leaves it out of the folder's listing, so a count can never announce a document the listing hid. A zero therefore reads as an empty folder whether it is empty or its contents are not this viewer's to see. Access is inherited from the contract and nothing else: a Contributor on the team reads the tree, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it */
-    get: operations["listContractFolders"];
-    put?: never;
-    /** Create a folder on a contract, at the record root or inside another folder (DOC-006). The name is trimmed, must not be empty, is bounded at the filesystem's own ceiling, may not hold a slash, and may not be . or .. — a folder drop addresses a chain by path, and neither a name with a separator in it nor one of the two names a path is written with could be one segment of one. Those are the same rules every segment of a dropped path is held to, so a folder that can be typed can always be addressed by path and the reverse. Three invariants are refused here rather than left to the database: a parent on another contract is answered exactly as a parent that was never created, a sibling name already taken under the same parent is refused 409, and a folder deeper than the tree's ceiling is refused 409. Appends folder.created on the owning contract (DD-017), carrying the name so the entry outlives a later rename. Send path instead of name to recreate an empty directory of a dropped tree (DOC-011): the relative chain is find-or-created segment by segment beneath parentId, under the owning contract's row lock, so a segment already there is used rather than refused and two drops racing on one path converge on one folder. That form writes no activity — a folder a drop passed through is traversal rather than an act somebody performed, and the drop's story is its uploads (DD-017). Exactly one of name and path. Answers the record's whole folder set, because that is what the tree is drawn from. Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract takes no new folder until it is restored */
-    post: operations["createContractFolder"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/folders/{folderId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /** Dissolve a folder (DOC-006). Its child folders and the documents filed in it are re-filed into its parent — the record root when it had none — and nothing is destroyed: this route deletes no document, and erasing one stays DOC-010's separate Administrator-only path. Every document in the folder moves, the archived ones and the confidential ones the caller cannot see included: the re-file is a fact about the record's organization, not a read, and a row left behind would point at a folder that no longer exists. Because the children are re-filed rather than removed, a delete that would put two folders of the same name in one place is refused 409 rather than resolved by inventing a name. Appends folder.deleted on the owning contract (DD-017), carrying the folder's name — the entry outlives the row, so it is the only thing left that says what was dissolved. Answers the record's whole folder set, because every re-filed child moved. A folder on a contract the viewer cannot reach answers 404, exactly as one that does not exist; an archived contract takes no delete until it is restored */
-    delete: operations["deleteContractFolder"];
-    options?: never;
-    head?: never;
-    /** Rename a folder, move it under a different parent, or both (DOC-006). A new name is held to exactly the rules a created one is, . and .. among them; a request that names no name leaves the folder's own name unjudged, so a folder that predates a narrowing of those rules can still be moved and still be renamed out. parentId null moves it to the record root, and omitting parentId moves nothing — they are two different requests. A move carries the whole subtree, so the tree's depth ceiling is asked about the deepest folder underneath rather than about the moved row alone. The parent chain never cycles: a move that would put a folder inside itself, or inside one of its own descendants, is refused 409. A parent on another contract is answered exactly as a parent that was never created, and a sibling name already taken under the destination is refused 409. Appends folder.renamed and folder.moved on the owning contract (DD-017) — one entry per thing that happened, each carrying the folder's name. Answers the record's whole folder set. A folder on a contract the editor cannot reach answers 404, exactly as one that does not exist; an archived contract takes no edit until it is restored */
-    patch: operations["updateContractFolder"];
-    trace?: never;
-  };
-  "/api/v1/comments": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** One record's comment thread, flat and oldest first (CMT-002), filtered at query time to the DD-016 tiers the viewer is in the room for. A tier they are not in is omitted entirely — no placeholder, no gap, and no count. A record they cannot reach answers 404, exactly as one that does not exist. Paged from a server-fixed page size, newest end first (CTR-024): the page reads oldest-first inside itself, and `nextCursor` walks back into the older thread */
-    get: operations["listComments"];
-    put?: never;
-    /** Post a comment on a record at one of the DD-016 tiers. The seam refuses a tier the poster is not in the room for, so a Contributor cannot post Legal Only whatever the client sends, and it refuses a comment whose mentions outrun its tier (CMT-007), so the composer's confirmation explains the promotion rather than enforcing it. The tier is immutable afterwards (CMT-005) — there is no route that changes it. Writes one comment_mentions row per person named, and appends a comment.posted activity entry at the comment's own tier, all in the same transaction */
-    post: operations["postComment"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/comments/mention-candidates": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The people a comment on this record can address (CMT-007), each with the DD-016 tiers they hear on it — the @-typeahead's list, and what the promotion confirmation reads to work out the narrowest tier that includes everyone named. Somebody no tier reaches is left out rather than offered and refused. A record the viewer cannot reach answers 404 */
-    get: operations["listMentionCandidates"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/comments/unread": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** How many comments on this record the viewer has not read — the chat applet's badge (CMT-004). Counted over the same filtered set the thread is read at, so a tier the viewer is not in the room for contributes nothing; the viewer's own comments and both kinds of tombstone contribute nothing either. A viewer who has never opened the panel has every comment they can see counted. A record they cannot reach answers 404 */
-    get: operations["readUnreadComments"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/comments/read": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Mark this record's conversation read up to now, which is what opening the chat panel does (CMT-004). Writes the viewer's `comment_last_read` watermark and answers the count that remains — normally zero, and whatever landed between the read and this call otherwise. A record the viewer cannot reach answers 404 */
-    post: operations["markCommentsRead"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/comments/{commentId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /** Take a comment back. The author alone may. The delete is soft (CMT-005): the row keeps its place as a tombstone so the thread around it still reads, and the body moves to comment_revisions. Deleting a comment already removed writes nothing and answers the row as it stands. Appends comment.deleted at the comment's own tier */
-    delete: operations["deleteComment"];
-    options?: never;
-    head?: never;
-    /** Change what a comment says. The author alone may, and an Administrator is no exception — a correction to somebody else's words is a redact, not an edit. The prior body goes to comment_revisions and the row takes an edited marker, so a reader can tell the text moved since they read it. The tier is immutable (CMT-005): this route takes a body and nothing else. A comment already deleted or redacted has no text to change. Appends comment.edited at the comment's own tier */
-    patch: operations["editComment"];
-    trace?: never;
-  };
-  "/api/v1/comments/{commentId}/redact": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Remove what a comment said, for good. An Administrator alone may (CMT-005), on anybody's comment including their own. It clears the body, every comment_revisions row, and the list of who the text named — so text posted into the wrong record is gone rather than only hidden. This is the reason prior versions live outside the append-only log (CMT-006). The row stays as a tombstone, because the thread around it still has to read. Appends comment.redacted at the comment's own tier */
-    post: operations["redactComment"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/activity": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** One record's activity feed, newest first (DD-017), filtered at query time to the DD-016 tiers the viewer is in the room for. A comment entry rides the comment's own tier, so a Legal Only comment leaves no trace for anyone who could not read it — no row, no gap, and no count. An entry that names a confidential document (DD-014) is left out the same way, for anyone outside that document's audience. `admin_only` entries never appear here; the Administrator's audit log is their surface. Paged from a server-fixed page size: pass the previous page's `nextCursor` to read further back. A record the viewer cannot reach answers 404, exactly as one that does not exist */
-    get: operations["listActivity"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/audit-log": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The system-wide audit log (DD-017), newest first: every entry of every entity type and every tier, including the `admin_only` settings, user administration, and security entries that no record feed carries. Administrator-only (SET-002). Actor, action, entity type, date range, and search compose. Paged from a server-fixed page size: pass the previous page's `nextCursor` to read further back */
-    get: operations["listAuditLog"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/audit-log/actions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The action slugs the log actually holds, ascending — the vocabulary the action filter offers. Read from the table rather than from the code, because the log outlives the code that wrote it and a slug no longer emitted is still in there */
-    get: operations["listAuditLogActions"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/audit-log/export": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The currently filtered log as CSV (DD-017), newest first — the same filters the page takes, and exactly the set they name. The export is itself a security event: it appends an `export.performed` entry at `admin_only` naming its filters, and bounds itself at that entry, so an export never streams itself. Administrator-only (SET-002) */
-    get: operations["exportAuditLog"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/entity-types": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The entity type taxonomy in display order (ENT-001); archived rows only with includeArchived=true */
-    get: operations["listEntityTypes"];
-    put?: never;
-    /** Add an entity type: the slug is derived here, once, and is immutable after creation; the row appends to the display order */
-    post: operations["createEntityType"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/entity-types/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** One entity type — the read behind the type editor */
-    get: operations["getEntityType"];
-    put?: never;
-    post?: never;
-    /** Hard-delete an entity type; `other` refuses (ENT-001), and so does a type still used by entities */
-    delete: operations["deleteEntityType"];
-    options?: never;
-    head?: never;
-    /** Rename an entity type's display name (DES-017 in-place rename) or edit its description; the slug never changes, and even `other` may rename */
-    patch: operations["updateEntityType"];
-    trace?: never;
-  };
-  "/api/v1/entity-types/order": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /** Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs */
-    put: operations["reorderEntityTypes"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/entity-types/{id}/archive": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Archive an entity type (SET-003 guarded): a type still used by entities requires a reassignment target, which takes them; nothing is deleted; `other` refuses */
-    post: operations["archiveEntityType"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/entity-types/{id}/restore": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Restore an archived entity type (SET-003's recovery story) to the end of the display order */
-    post: operations["restoreEntityType"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/entities": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The registry, ordered by legal name (ENT-001) — the seam the M8 signing-entity picker consumes; archived rows only with includeArchived=true */
-    get: operations["listEntities"];
-    put?: never;
-    /** Register an entity with its ENT-001 identity card: legal name and type required, the rest optional; status defaults to active */
-    post: operations["createEntity"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/entities/types": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The live entity types in display order — the register form's Member+ picker source (the /entity-types settings surface stays Administrator-only per SET-002) */
-    get: operations["listEntityTypeOptions"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/entities/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** One entity's full ENT-001 identity card — the record page's read; archived entities answer too, so restore stays reachable */
-    get: operations["getEntity"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /** Correct any identity-card field in place (DES-017 per-field commits): the status only within the fixed ENT-001 enum, the type only to a live one, never on an archived entity */
-    patch: operations["updateEntity"];
-    trace?: never;
-  };
-  "/api/v1/entities/{id}/archive": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Archive an entity (soft delete, ENT-001): it leaves the list and the M8 picker; nothing is deleted, and #99's restore is the recovery story */
-    post: operations["archiveEntity"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/entities/{id}/restore": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Restore an archived entity (archive's recovery story, ENT-001): it rejoins the list and the M8 picker */
-    post: operations["restoreEntity"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/fields": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** The shared field catalog (CTR-016) scoped to contract and global fields, in creation order; archived rows only with includeArchived=true */
-    get: operations["listFields"];
-    put?: never;
-    /** Define a field: the slug derives from the name and the field type is picked here, once — both are immutable after creation. Select types take their options list; an AI prompt rides on contract-scoped fields only (CTR-008) */
-    post: operations["createField"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/fields/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /** Rename, describe, retag, or edit a field's options and AI prompt; the slug and the field type never change, and the scope moves through its own route — a body carrying any of them is refused, not silently stripped */
-    patch: operations["updateField"];
-    trace?: never;
-  };
-  "/api/v1/fields/{id}/scope": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /** Move a field's scope (CTR-016): promotion to global is always safe (values stay keyed by slug); any move into a module is refused while another module attaches the field */
-    put: operations["setFieldScope"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/fields/{id}/archive": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Archive a field (SET-003): it leaves the catalog and every form; the definition and all stored values are retained (MTR-014) — there is no hard delete */
-    post: operations["archiveField"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/fields/{id}/restore": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Restore an archived field (SET-003's recovery story): it rejoins the catalog under its original slug */
-    post: operations["restoreField"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
+    "/api/v1/meta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Instance metadata */
+        get: operations["getMeta"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The signed-in user, with their live role and session */
+        get: operations["getMe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update the signed-in user's preferences (theme #44, timezone SET-006) */
+        patch: operations["updateMyPreferences"];
+        trace?: never;
+    };
+    "/api/v1/auth/setup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Whether first-run setup (initial Administrator) is still required */
+        get: operations["getSetupStatus"];
+        put?: never;
+        /** First-run setup: create the initial Administrator */
+        post: operations["runSetup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/methods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What the login screen may offer (TECH-008): the auth mode, the magic-link toggle, whether outbound email works, and the SSO provider to start, if one is registered */
+        get: operations["getAuthMethods"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Invite a user (Administrator, Legal Team Member, or Contributor); re-sends the set-password email if they have not activated */
+        post: operations["inviteUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/invites/{userId}/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Re-send a pending invite's set-password email (SET-005) */
+        post: operations["resendInvite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/invites/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke a pending invite (SET-005): the row is removed and the emailed set-password link stops working */
+        delete: operations["revokeInvite"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/sso-providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The registered OIDC identity providers (TECH-008), with their client IDs but never their secrets */
+        get: operations["listSsoProviders"];
+        put?: never;
+        /** Register a bring-your-own OIDC identity provider (TECH-008); endpoint discovery runs from the issuer, and the response carries the callback URL to paste into the IdP console */
+        post: operations["registerSsoProvider"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/sso-providers/{providerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update the registered provider (TECH-008): omitted fields keep their stored values, endpoint discovery re-runs from the issuer, and a failed update leaves the provider untouched */
+        patch: operations["updateSsoProvider"];
+        trace?: never;
+    };
+    "/api/v1/auth/mode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The organization's auth mode (TECH-008) */
+        get: operations["getAuthMode"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Switch the auth mode (TECH-008): `oidc` closes password sign-in for everyone but Administrators (break-glass); switching never invalidates existing sessions */
+        patch: operations["setAuthMode"];
+        trace?: never;
+    };
+    "/api/v1/auth/allowed-domains": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The magic-link domain allowlist (DD-010); empty admits nobody */
+        get: operations["getAllowedDomains"];
+        /** Replace the magic-link domain allowlist (DD-010); the list is normalised to lower case and enforced on the next request — an empty list closes the portal to everyone */
+        put: operations["setAllowedDomains"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/portal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Open or close magic-link sign-in (DD-010's portal floor); takes effect on the next request, independent of the domain allowlist */
+        patch: operations["setMagicLinkEnabled"];
+        trace?: never;
+    };
+    "/api/v1/auth/magic-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request a portal magic link (DD-010); the response is identical whether or not the address is eligible */
+        post: operations["requestMagicLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/onboarding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** First-run onboarding state (SET-004), plus whether email is configured */
+        get: operations["getOnboardingStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/onboarding/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark first-run onboarding finished (SET-004); idempotent, and never reversed — the wizard is first-run only */
+        post: operations["completeOnboarding"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/org/general": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The organization's identity (SET-001 General pane) */
+        get: operations["getOrgGeneral"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update the organization's identity; applies immediately (SET-003) and appends one audit entry per changed field */
+        patch: operations["updateOrgGeneral"];
+        trace?: never;
+    };
+    "/api/v1/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every user with role, status, and last-active (SET-005); pending invites appear as rows with status `invited` */
+        get: operations["listUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/{userId}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change a user's role in place (SET-005); effective on the target's next request — the guard chain reads the role live */
+        patch: operations["updateUserRole"];
+        trace?: never;
+    };
+    "/api/v1/users/{userId}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive a user (SET-005): sign-in is blocked and every live session is revoked in the same operation */
+        post: operations["archiveUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/{userId}/unarchive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived user (SET-003's recovery story): sign-in works again; the sessions archive revoked stay revoked */
+        post: operations["unarchiveUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/{userId}/revoke-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke every live session of a user (SET-005's lost-laptop case); the account itself is untouched */
+        post: operations["revokeUserSessions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/email-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Where outbound email is configured (#37): environment, app, or not at all — and the effective from-address. Never the relay URL */
+        get: operations["getEmailSettings"];
+        /** Save the app SMTP relay (#37): smtp:// or smtps:// URL with credentials inline, plus a from-address; both null clears. Takes effect on the next send. Refused while the environment pins SMTP — env always wins over app configuration */
+        put: operations["saveEmailSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/email-settings/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send a test email through the currently resolved mailer to the signed-in Administrator's own address (#37); fails loudly with a plain-language reason */
+        post: operations["sendTestEmail"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/signing-connectors/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The e-signature connector's state (CTR-013): whether it is configured, which estate and credentials it names, and the webhook URL to paste into the provider's console. Never the RSA key or the Connect secret */
+        get: operations["getSigningConnector"];
+        /** Save the e-signature connector (CTR-013, TECH-013). The RSA key and the Connect secret are write-only: blank keeps the stored value, a value rotates it. A first save without the Connect secret is refused — the webhook must never answer unsigned deliveries */
+        put: operations["saveSigningConnector"];
+        post?: never;
+        /** Take the e-signature connector out (CTR-013). The row and both secrets go, and the install is back to the zero-config manual hand-off. Refused while any envelope is still out: deleting the credentials strands that round for good — nothing left to void it with, and nothing for the reconciliation sweep to ask. Turn the connector off instead if the sending has to stop before the paper comes back */
+        delete: operations["deleteSigningConnector"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/signing-connectors/{provider}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Authenticate against the provider with the stored credentials (TECH-013's test button) and name the account they reach. Answers in place; changes nothing */
+        post: operations["testSigningConnector"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/signing-connectors/{provider}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Turn the e-signature connector off (CTR-013) without losing its credentials. Every surface then answers as an unconfigured install does — the send control leaves the record and the manual hand-off is the path again. A live envelope does not refuse this: turning the connector back on picks the round up where the sweep left it */
+        post: operations["disableSigningConnector"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/signing-connectors/{provider}/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Turn the e-signature connector back on with the credentials it already holds (CTR-013). The send control returns to the record and the reconciliation sweep reaches every round that was out while it was off */
+        post: operations["enableSigningConnector"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/signer-erasures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Erase an external signer's name and address (CTR-013, DD-017). Every `envelope.sent` activity entry naming this address has that name and address rewritten to a tombstone, in place, and the envelope's signer rows for it are deleted. The entry keeps its shape: how many people were asked, and in what order, is about the contract rather than about the person. The erasure is itself appended to the log, carrying counts and no address. Refused for an address that belongs to a user of this install — their erasure is a different act. An address that was never a signer's answers with zeros. Copies already shipped to a SIEM are outside this install and are the operator's to purge */
+        post: operations["eraseSigner"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contract-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The contract type taxonomy in display order (CTR-002); archived rows only with includeArchived=true */
+        get: operations["listContractTypes"];
+        put?: never;
+        /** Add a contract type: the slug is derived here, once, and is immutable after creation; the row appends to the display order */
+        post: operations["createContractType"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contract-types/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One contract type — the read behind the type editor */
+        get: operations["getContractType"];
+        put?: never;
+        post?: never;
+        /** Hard-delete a contract type; `other` refuses (CTR-002), and so does a type still used by contracts */
+        delete: operations["deleteContractType"];
+        options?: never;
+        head?: never;
+        /** Rename a contract type's display name (DES-017 in-place rename) or edit its description; the slug never changes, and even `other` may rename */
+        patch: operations["updateContractType"];
+        trace?: never;
+    };
+    "/api/v1/contract-types/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs */
+        put: operations["reorderContractTypes"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contract-types/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive a contract type (SET-003 guarded): a type still used by contracts requires a reassignment target, which takes them; nothing is deleted; `other` refuses */
+        post: operations["archiveContractType"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contract-types/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived contract type (SET-003's recovery story) to the end of the display order */
+        post: operations["restoreContractType"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contract-types/{id}/fields": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One contract type's attached fields in per-type order — the type editor's Attached fields card */
+        get: operations["listContractTypeFields"];
+        put?: never;
+        /** Attach a catalog field to a contract type: contract-scoped and global fields only (CTR-016), appended to the per-type order, optional from the start unless isRequired says otherwise */
+        post: operations["attachContractTypeField"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contract-types/{id}/fields/{fieldId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Detach a field from a contract type: the join row goes, the catalog definition and stored values stay (MTR-014) */
+        delete: operations["detachContractTypeField"];
+        options?: never;
+        head?: never;
+        /** Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard-enforced when a record is created on this type and when one is re-typed onto it (MTR-014) */
+        patch: operations["setContractTypeFieldRequired"];
+        trace?: never;
+    };
+    "/api/v1/contract-types/{id}/fields/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Apply a full permutation of one type's attached fields (SET-003 immediate apply); per-type orders renumber from 1 */
+        put: operations["reorderContractTypeFields"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/matter-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The matter type taxonomy in display order (MTR-001); archived rows only with includeArchived=true */
+        get: operations["listMatterTypes"];
+        put?: never;
+        /** Add a matter type: the slug is derived here, once, and is immutable after creation; the row appends to the display order */
+        post: operations["createMatterType"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/matter-types/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One matter type — the read behind the type editor */
+        get: operations["getMatterType"];
+        put?: never;
+        post?: never;
+        /** Hard-delete a matter type; `other` refuses (MTR-001), and once matters exist (M22) an in-use type will refuse too */
+        delete: operations["deleteMatterType"];
+        options?: never;
+        head?: never;
+        /** Rename a matter type's display name (DES-017 in-place rename) or edit its description; the slug never changes, and even `other` may rename */
+        patch: operations["updateMatterType"];
+        trace?: never;
+    };
+    "/api/v1/matter-types/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs */
+        put: operations["reorderMatterTypes"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/matter-types/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive a matter type (SET-003 guarded): it leaves pickers and the default list; nothing is deleted; `other` refuses */
+        post: operations["archiveMatterType"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/matter-types/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived matter type (SET-003's recovery story) to the end of the display order */
+        post: operations["restoreMatterType"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/matter-types/{id}/fields": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One matter type's attached fields in per-type order — the type editor's Attached fields card */
+        get: operations["listMatterTypeFields"];
+        put?: never;
+        /** Attach a catalog field to a matter type: global fields only until M22 opens the matter scope (MTR-011), appended to the per-type order, optional from the start unless isRequired says otherwise */
+        post: operations["attachMatterTypeField"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/matter-types/{id}/fields/{fieldId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Detach a field from a matter type: the join row goes, the catalog definition and stored values stay (MTR-014) */
+        delete: operations["detachMatterTypeField"];
+        options?: never;
+        head?: never;
+        /** Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard enforcement arrives with the record milestone (M22) */
+        patch: operations["setMatterTypeFieldRequired"];
+        trace?: never;
+    };
+    "/api/v1/matter-types/{id}/fields/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Apply a full permutation of one type's attached fields (SET-003 immediate apply); per-type orders renumber from 1 */
+        put: operations["reorderMatterTypeFields"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contract-statuses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The contract-status taxonomy in display order (CTR-001), each row carrying its fixed stage; archived rows only with includeArchived=true */
+        get: operations["listContractStatuses"];
+        put?: never;
+        /** Add a contract status: the stage is picked here, once, and is immutable after creation, like the derived slug; the row appends to the display order */
+        post: operations["createContractStatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contract-statuses/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Hard-delete a contract status; the protected `draft`, `active`, and `expired` rows refuse (CTR-001), as does the last unarchived status of a stage and a status still held by contracts */
+        delete: operations["deleteContractStatus"];
+        options?: never;
+        head?: never;
+        /** Rename a contract status's display name (DES-017 in-place rename); the slug and the stage never change — a body carrying `stage` is refused, and even protected rows may rename */
+        patch: operations["renameContractStatus"];
+        trace?: never;
+    };
+    "/api/v1/contract-statuses/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs */
+        put: operations["reorderContractStatuses"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contract-statuses/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive a contract status (SET-003): it leaves pickers and the default list; nothing is deleted. A status still held by contracts refuses with the count (CTR-020 — statuses block, they never reassign), as does the last unarchived status of a stage (CTR-001 floor) and the protected `draft`, `active`, and `expired` rows */
+        post: operations["archiveContractStatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contract-statuses/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived contract status (SET-003's recovery story) to the end of the display order; its stage rides along unchanged */
+        post: operations["restoreContractStatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/approver-groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The CTR-012 approver-group templates in name order, each carrying its member list; archived groups only with includeArchived=true */
+        get: operations["listApproverGroups"];
+        put?: never;
+        /** Create an approver-group template with its name, an optional description, and an optional starting member list; members must be live Member+ users */
+        post: operations["createApproverGroup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/approver-groups/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Rename an approver group (DES-017 in-place rename) and/or change its description; the two changes write their own activity entries */
+        patch: operations["updateApproverGroup"];
+        trace?: never;
+    };
+    "/api/v1/approver-groups/{id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Replace an approver group's member list; every id must name a live Member+ user, and each person added or removed writes its own activity entry */
+        put: operations["setApproverGroupMembers"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/approver-groups/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive an approver group (SET-003): it leaves the apply picker and the default list. No guard and no reassignment — applying a group snapshots its members (CTR-012), so every request it already produced is untouched */
+        post: operations["archiveApproverGroup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/approver-groups/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived approver group (SET-003's recovery story); its members ride along unchanged */
+        post: operations["restoreApproverGroup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The contract list, newest reference first: number, title, type, and status; archived contracts only with includeArchived=true; ended contracts only with includeEnded=true (CTR-019). Member+ read every contract that is not confidential; a Contributor reads exactly the contracts they hold a contract_team row on, archived and ended ones behind the same flags. A confidential contract is listed only for its named team, its Owner, and Administrators — silently absent for everyone else, so no count can reveal it */
+        get: operations["listContracts"];
+        put?: never;
+        /** Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward — except the Confidential flag (DD-014), which may be set here so a sensitive record is never visible to the wrong audience, even briefly. `renewalOf` routes a renewal into a new record (CTR-007's third and fourth vehicles, M16/5): the successor is born carrying its predecessor's business facts — our entity, the value, the term shape, and the counterparties — and linked to it, as a child by contracts.parent_id or as a standalone successor by a CTR-015 `renews` row. The team, the status, and the Confidential flag are **never** copied: CTR-015's no-inheritance stance, applied at birth. The title and the type are the body's, so whatever the person edited before pressing Create is what the record is born with. Appends the link's own activity action beside contract.created */
+        post: operations["createContract"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The live contract types in display order, each with the fields it attaches (CTR-016) so the create dialog can grow the ones it requires; the live statuses; and the live people the Owner and team pickers offer — the create dialog's and the record's Member+ picker source; and the live approver groups the record's apply picker offers, each with the ids of the people applying it would ask (CTR-012) — the settings surfaces that manage all of these stay Administrator-only per SET-002 */
+        get: operations["listContractOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One contract by its CTR-003 number, with its Owner, its signing entity, its counterparties, its working group, and the fields its type attaches (CTR-016) in attachment order — the record page's read; archived contracts answer too, so restore stays reachable. A Contributor reads a contract they hold a contract_team row on, and is answered 404 on one they do not. A confidential contract answers the same 404 to anyone outside its named team, its Owner, and Administrators */
+        get: operations["getContract"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, the value, the CTR-006 term fields, the type, a custom field, or the status — any live status may follow any other (CTR-001). The value is one field in three parts: amount, currency, and cadence commit together and clear together. Re-typing re-checks the new type's hard-required fields before it commits (CTR-016/MTR-014), so the type and the values that satisfy it may be sent together. The term is five fields with one rule between them (CTR-006): an expiry on an evergreen contract and a renewal period on a contract that does not auto-renew are refused 400 with their own problem types, and a term-type change clears the fields the new type cannot hold, each clear narrated as the edit it is. The Confidential flag (DD-014) commits here too, but only for an Administrator, the contract's creator, or its Owner: anyone else who reaches the record is refused 403, and anyone who does not reach it is answered 404 like a contract that does not exist. A status change that moves the contract past the approval stage while approvals are pending or rejected meets CTR-012's soft gate: it is refused 409 with the unresolved approvals named, and the same commit with `overrideSoftGate` succeeds and is logged as an override. Never on an archived contract */
+        patch: operations["updateContract"];
+        trace?: never;
+    };
+    "/api/v1/contracts/{number}/renewal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm the roll (CTR-007's first renewal vehicle): the same record's term advances, on the say-so of a person. CTR-006's engine is notify-only and never advances a date on its own, so a contract that passed its expiry un-actioned reads as 'renewal pending confirmation' — a predicate over its dates, not a status — and waits for this. The request carries the expiry it was raised against and the expiry to advance to; the record proposes the second as the first plus the renewal period, and the caller may send a different date, because a roll whose dates shifted in negotiation is recorded as it really landed. The comparison is made under the contract's row lock, so two confirms racing for one roll advance the term exactly once and the loser is refused 409 by name rather than rolling it again. Only an auto-renewing contract with an expiry rolls, and a roll must move the term forward. The status and the stage are untouched: this moves one date. Appends one contract.renewal_confirmed entry at the working-team tier (DD-017) — the only record a renewal leaves, and what the record's renewal history reads back. Answers the record and its whole history. Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract rolls nothing until it is restored */
+        post: operations["confirmContractRenewal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{number}/team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Put a person on the contract team under a role (CTR-004). The key is contract + person + role, so the same person may hold two roles; the `creator` role is the server's to write */
+        post: operations["addContractTeamMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{number}/team/{userId}/{role}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Take one role off the contract team (CTR-004). The role is part of the address, so dropping a watcher leaves that same person's member row standing; `creator` is provenance and stays */
+        delete: operations["removeContractTeamMember"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{number}/counterparties": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Put a counterparty on the contract (CTR-011) — either one we already hold, by id, or an unknown name, which is created with just that name in the same transaction. A name we already hold is reused, never duplicated. The first party on a contract becomes its primary */
+        post: operations["addContractCounterparty"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{number}/counterparties/{counterpartyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Take a counterparty off the contract (CTR-011). Removing the primary passes the flag to the party who joined next, so a contract with counterparties always has one; the counterparty record itself is untouched and stays on its other contracts */
+        delete: operations["removeContractCounterparty"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{number}/counterparties/{counterpartyId}/primary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Name which counterparty the contract is listed under (CTR-011). There is no route to clear the flag: the primary moves to another party or it stays where it is */
+        post: operations["setPrimaryContractCounterparty"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{number}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive a contract (soft delete, for mistakes and imports — not the same as ending it): it leaves the default list and freezes; nothing is deleted, and restore is the way back */
+        post: operations["archiveContract"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{number}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived contract (archive's recovery story): it rejoins the list and becomes editable again */
+        post: operations["restoreContract"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{number}/approvals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The approval requests on one contract, oldest ask first (CTR-012) — who was asked, who asked them, where the request came from, the decision, the approver's note, and when it landed. Requests run in parallel, so the roster is a set rather than a queue, and a re-request after a rejection is a new row beneath the one it answers rather than an overwrite of it. Access is inherited from the contract and nothing else: a Contributor on the team reads the roster, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it */
+        get: operations["listContractApprovals"];
+        put?: never;
+        /** Ask one or more named colleagues to sign a contract off (CTR-012). Every request is created at once and every one of them runs in parallel — there are no chains and no order. An approver must be a live Member+ user: a Contributor, a Business User, and an archived person are each refused by name, because a request nobody can act on is worse than no request. On a confidential contract the approver must already be inside the record's audience, so no request is created that its approver could not open. At most one pending request per approver per contract — a second is refused rather than silently collapsed — but a decided one blocks nothing, so a re-request after a rejection writes a new row and the earlier ask stays on the record. Every request made here carries source manual; applying an approver group is its own act. Appends one approval.requested entry per approver on the owning contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract takes no new request until it is restored */
+        post: operations["requestContractApprovals"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{number}/approvals/group": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply an approver group to a contract (CTR-012): every current member of the template is asked to sign the record off, in one act and in parallel. The ask is a **snapshot** — each request records the group it came from, and renaming the template, editing its members, or archiving it never touches a request that already exists. A member who already holds a pending request on this contract is skipped rather than refused, because applying a group is one act about a set. An archived member is skipped too: they have left, so the ask would reach nobody. A group with nobody left to ask — no members, or every member already asked — is refused as the no-op it would be, and an archived group is refused because it has left the picker. Every other rule is the named ask's, applied by the same code: a member who is no longer Member+ is refused by name, and on a confidential contract a member outside the record's audience is refused by name too. Appends one approval.requested entry per person asked, naming the group, at the working-team tier (DD-017). Member+; an archived contract takes no request until it is restored */
+        post: operations["applyApproverGroup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/approvals/{approvalId}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve or reject one request, with an optional note (CTR-012). Only the approver named on the request decides it — not the requester, not the Owner, and not an Administrator, because a sign-off somebody else recorded is not a sign-off. The decision is final: a request that has been answered is answered, and a fixed draft goes back to the same person as a new request rather than by reopening this one. Self-approval is allowed. Appends approval.approved or approval.rejected on the owning contract at the working-team tier (DD-017). A request on a contract this viewer cannot reach answers 404, exactly as for one that does not exist; an archived contract takes no decision until it is restored */
+        post: operations["decideContractApproval"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/approvals/{approvalId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Withdraw a pending approval request (CTR-012). Three actors may: the person who asked, the contract's Owner, and an Administrator — a mistaken or obsolete ask should not sit open, and stale requests should not outlive the people or deals they were about. The row is deleted and the approval.cancelled activity entry is the durable record of it, which is why that entry names the approver. A decided request is never cancelled: it is part of the record. A request on a contract this viewer cannot reach answers 404, exactly as for one that does not exist; an archived contract takes no cancellation until it is restored */
+        delete: operations["cancelContractApproval"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{number}/envelopes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One contract's signing envelopes, newest send first (CTR-013) — the adapter that carried each one, where it stands, who was asked to sign it, what went out, and when. A declined or voided envelope carries the reason it ended with, and a finished one carries the moment it ended. Both arrive from the provider's own feed, so the record answers them without anybody typing them in. Answers two facts beside the rows: whether this install has an e-signature connector at all, and the primary document this viewer may send, with its version chain newest round first. Both are what decide whether the record draws a send control, so an install with no connector and a record with no paper each answer plainly rather than by omission. A contract that has only ever been signed by hand holds no envelopes, which is the zero-config manual hand-off and not an error. Access is inherited from the contract and nothing else: a Contributor on the team reads it, and anyone who cannot reach the contract is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it */
+        get: operations["listContractEnvelopes"];
+        put?: never;
+        /** Send a version of the contract's primary document out for signature (CTR-013). The version must be a round of that document's own chain — loose attachments are not sendable in v1, because the executed copy comes back to the chain the send left from. Signers are name-and-email pairs and every one of them is asked at once: there is no routing order. Sending is legal at any stage; CTR-001's transitions stay unrestricted. Refused with a typed problem when this install has no e-signature connector, and with another when the contract already has an envelope out — two envelopes must never race for one signature. The provider is called first and the row commits once it accepts; an envelope the provider took but the record could not keep is voided again before the refusal is raised, so the two systems do not drift apart silently. Appends one envelope.sent entry on the contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract sends nothing until it is restored */
+        post: operations["sendContractEnvelope"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/envelopes/{envelopeId}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Withdraw a live envelope (CTR-013). Three actors may: the person who sent it, the contract's Owner, and an Administrator — a mistaken or superseded send should not sit open, and it should not wait on the one person who made it. The reason is required, because the provider records it with the withdrawal and the record draws it on the row. The provider is told first and the voided transition is applied after it accepts, so the record never says withdrawn while the envelope is still collecting signatures. An envelope that has already ended — signed, declined, or voided — is refused: an ending is part of the record. Appends one envelope.voided entry on the contract at the working-team tier, attributed to the voider (DD-017). Once it is voided the contract sends again, because the one-live-envelope rule holds only while an envelope is out. An envelope on a contract this viewer cannot reach answers 404, exactly as for one that was never sent; an archived contract takes no void until it is restored */
+        post: operations["voidContractEnvelope"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{number}/key-dates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One contract's whole deadline surface (CTR-009): the union of its key dates, its expiry date, and its derived notice deadline, ordered with what is still ahead first and nearest first, then what has gone by, most recently passed first. Exactly one entry — the earliest still ahead — is marked as the next deadline, and none is on a record whose every date has passed. The expiry and the notice deadline carry no key date id, because no row backs them: the notice deadline is the expiry minus the notice period, computed on every read and stored nowhere, and both move by editing the term on the record. Access is inherited from the contract and nothing else: a Contributor on the team reads the surface, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it */
+        get: operations["listContractKeyDates"];
+        put?: never;
+        /** Put a named date on a contract (CTR-009): a calendar date, a label, and an optional note — the free-form escape hatch beside the typed term columns, for price reviews, option-exercise windows, and delivery milestones. A blank label is refused and a blank note is stored as no note at all. There is no owner and no per-date reminder schedule: NOT-004 fixed one global offset list for every tracked date. Answers the record's whole deadline surface, because a new date can change which one is next. Appends one key_date.added entry on the owning contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract takes no new date until it is restored */
+        post: operations["addContractKeyDate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/key-dates/{keyDateId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Take a key date off a contract (CTR-009). The row is deleted and the key_date.removed activity entry is the durable record of it, which is why that entry carries the label and the date rather than only the id. Answers the record's whole deadline surface, because removing a date can change which one is next. A key date on a contract this viewer cannot reach answers 404, exactly as for one that does not exist; an archived contract takes no removal until it is restored */
+        delete: operations["removeContractKeyDate"];
+        options?: never;
+        head?: never;
+        /** Move a key date, rename it, or change its note (CTR-009). Every field is optional and only what is sent is read, so a surface that edits one of them sends one of them; a note is cleared by sending null. A request that changes nothing writes nothing and narrates nothing. Answers the record's whole deadline surface, because moving a date can change which one is next. Appends one key_date.edited entry naming only what moved, at the working-team tier (DD-017). A key date on a contract this viewer cannot reach answers 404, exactly as for one that does not exist; an archived contract takes no edit until it is restored */
+        patch: operations["updateContractKeyDate"];
+        trace?: never;
+    };
+    "/api/v1/contracts/{number}/relations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The full relations graph for one contract (CTR-015): the parent chain root-first, the children, and the typed links in both directions. Each relative is either reachable — carrying its number, title, status name, and stage — or restricted, carrying only { restricted: true }. Access is inherited from the contract: a Contributor on the team reads the graph, and anyone who cannot reach the contract is answered 404 */
+        get: operations["getContractRelations"];
+        put?: never;
+        /** Link this contract to another with a chosen type — `related`, `renews`, or `amends` — through CTR-015's shared guarded path. Requires Member+ with reach on both ends. Narrates with `contract.relation_added` on the acted-from record only */
+        post: operations["addContractRelation"];
+        /** Unlink this contract from another — the removal sibling of addContractRelation. Requires Member+ with reach on both ends. Narrates with `contract.relation_removed` on the acted-from record only */
+        delete: operations["removeContractRelation"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{number}/link-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Contracts this viewer can reach that may be linked to the given contract — the mention-candidates precedent applied to relations (CTR-015, CTR-018). Found by number or title; the contract itself and archived contracts are excluded */
+        get: operations["listLinkCandidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{number}/parent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Put this contract under another — CTR-015's hierarchy. Requires Member+ with reach on both ends. Narrates with `contract.parent_set` on the acted-from record only */
+        post: operations["setContractParent"];
+        /** Take this contract out from under its parent — the removal sibling of setContractParent. Requires Member+ with reach on both the child and the parent. Narrates with `contract.parent_removed` on the acted-from record only */
+        delete: operations["removeContractParent"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{number}/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One contract's task checklist (CTR-017): lightweight items with a done flag, an optional assignee, an optional due date, and a display order. Task due dates never appear in the deadline union or the next-deadline marker. Access is inherited from the contract: a Contributor on the team reads the checklist, and anyone who cannot reach the contract is answered 404 */
+        get: operations["listContractTasks"];
+        put?: never;
+        /** Add a task to a contract's checklist (CTR-017). A blank title is refused. The task starts not done, with the display order after the last existing task. Appends one task.added entry on the owning contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403. An archived contract takes no new task until it is restored */
+        post: operations["addContractTask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tasks/{taskId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Take a task off a contract's checklist (CTR-017). The row is deleted and the task.removed activity entry is the durable record of it, which is why that entry carries the title. A task on a contract this viewer cannot reach answers 404; an archived contract takes no removal until it is restored */
+        delete: operations["removeContractTask"];
+        options?: never;
+        head?: never;
+        /** Edit a task's title, assignee, or due date (CTR-017). Every field is optional and only what is sent is read. A request that changes nothing writes nothing and narrates nothing. Appends one task.edited entry naming only what moved, at the working-team tier (DD-017). A task on a contract this viewer cannot reach answers 404; an archived contract takes no edit until it is restored */
+        patch: operations["updateContractTask"];
+        trace?: never;
+    };
+    "/api/v1/tasks/{taskId}/toggle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Toggle a task between done and not done (CTR-017). Completes an open task or reopens a done one. Appends one task.completed or task.reopened entry at the working-team tier (DD-017). A task on a contract this viewer cannot reach answers 404; an archived contract takes no toggle until it is restored */
+        post: operations["toggleContractTask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{number}/tasks/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Reorder a contract's task checklist (CTR-017). The body carries the full ordered list of task ids; every task on the contract must appear exactly once. Member+; an archived contract takes no reorder until it is restored */
+        put: operations["reorderContractTasks"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/counterparties": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Find counterparties by name — the shared typeahead's read (CTR-011), reused by contract intake. Archived counterparties are never offered; an empty query answers the first names alphabetically, so an unprompted typeahead still opens onto something */
+        get: operations["searchCounterparties"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{number}/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The paper on one contract (DOC-008), newest first, each with its whole version chain in order 1..n and one version of it marked current. Exactly one document is marked primary — the instrument the contract is — and any version the team has pinned as the signed copy is marked executed. A contract holds as many documents as it needs: a loose attachment such as a schedule or a certificate is its own document with its own chain, beside the main instrument rather than inside its history (CTR-014). Access is inherited from the contract and nothing else: a Contributor on the team reads the list, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. Archived documents (DOC-010) are left out; includeArchived=true draws them beside the live ones, which is where restoring one is offered. folder narrows the read to one listing (DOC-006): a folder's own id answers what is filed in that folder, `root` answers the documents filed in no folder, and omitting it answers the record's whole paper. Paging applies within whichever listing was asked for, so a heavy folder pages on its own. A folder on another contract, or one that never existed, answers 404 — exactly as a folder that was never created, because a folder's id says nothing about which record it is on */
+        get: operations["listContractDocuments"];
+        put?: never;
+        /** Upload a file to a contract, creating a document with version 1 (DOC-001). Any file type is accepted (DOC-004); the ceiling is the deployment's MAX_UPLOAD_MB, and a file over it is refused rather than stored. The version row records the original filename, the declared MIME type, the byte size the server counted, and the SHA-256 it computed while streaming. The blob is written through the storage adapter before the rows commit (DOC-012). The first document uploaded to a contract becomes its primary document — the instrument the contract is (CTR-014) — and every one after it is a loose attachment until somebody moves the designation. Appends document.created on the owning contract, and document.primary_set beside it when the designation was taken (DD-017). The document is filed where the form says (DOC-006, DOC-011): folderId is a folder already on this record, folderPath is a relative chain find-or-created beneath it segment by segment, and sending neither files the document at the record root. The chain is resolved under the owning contract's row lock — the same one that serialises version numbers — so uploads racing on one path converge on a single folder rather than manufacturing one each. A folder a drop creates on its way past writes no activity of its own; the document.created entry names the folder its file landed in (DD-017). A path that misuses the separator or would nest past the tree's ceiling is refused for that one file, and a batch's other files are untouched. The kind, note, folderId and folderPath fields must be sent before the file part. An archived contract takes no new paper until it is restored. A contract the uploader cannot reach answers 404, exactly as one that does not exist */
+        post: operations["uploadContractDocument"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{documentId}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Append the next version to an existing document (DOC-001). The number is assigned under the owning contract's row lock, so two revisions uploaded at the same moment take consecutive numbers rather than colliding, and the chain runs 1..n with no gaps. The version carries one of the five CTR-014 kinds and, when the uploader wrote one, a short note saying what changed in this round. Nothing about the versions already in the chain is touched: they are immutable, and a correction is another version. Appends document.version_added on the owning contract (DD-017). The kind and note fields must be sent before the file part. An archived contract takes no new paper until it is restored. A document on a contract the uploader cannot reach answers 404, exactly as one that does not exist */
+        post: operations["uploadDocumentVersion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{documentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Destroy a whole document — the lawful-erasure answer (DOC-010). It removes the document row, every version row under it, every stored blob those versions name, and everything the pipeline derived from them: the extracted text and the display renditions, rows and blobs alike. It is whole-document by design: there is no route that deletes one version, because a chain somebody can cut pieces out of is not negotiation history (DOC-001), so the whole document goes or nothing does. It takes a typed confirmation: confirmTitle must be the document's own title, exactly. It is the Administrator's alone; every other role is refused 403, a Contributor and a Legal Team Member alike. The activity and audit entries written before it survive it and still name what was deleted, and the erasure appends document.hard_deleted beside them (DD-017) — the record stays accountable after the files are gone. It reaches an archived contract too, because erasure is compelled from outside the record and a frozen record is not a place to hide from it. A document on a contract the Administrator cannot reach answers 404 */
+        delete: operations["hardDeleteDocument"];
+        options?: never;
+        head?: never;
+        /** Rename a document or edit its description (DOC-007), one field per request as DES-017 commits them. The stored files are untouched by either: a version's own filename is what it arrived as and stays that, and a download still offers it back. Appends document.updated on the owning contract (DD-017), naming what changed. isConfidential is the third field, and it is not one of those two: it sets or clears DD-014's per-document flag, which narrows this one file to the contract's named team, its Owner, and Administrators, even on an open contract. It has an actor set narrower than the route's — an Administrator, the person who uploaded the document, and the contract's Owner — and anybody else who reaches the document is refused 403 rather than 404, because they can already see it. Each set and each clear appends its own action, document.confidentiality_set or document.confidentiality_cleared. folderId is the fourth, and it files the document (DOC-006): a folder on this document's own record, or null for the record root, with null and omitting the field two different requests. A folder on another contract answers 404, exactly as one that was never created, because a folder's id says nothing about which record it is on. Each move appends document.filed, carrying both folders by name so the entry outlives a rename. An archived contract takes no edit until it is restored. A document on a contract the editor cannot reach — and a confidential document they are outside the audience of — answers 404, exactly as one that does not exist */
+        patch: operations["updateDocument"];
+        trace?: never;
+    };
+    "/api/v1/documents/{documentId}/primary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Name this document the contract's primary document — the instrument the contract is (CTR-014). Everything else on the record reads as a loose attachment beside it. The first document uploaded already holds the designation, so this is the reassignment: it moves to another document on the same contract, or it stays where it is. There is no route to clear it, because a record with paper on it has an instrument. Exactly one document holds the designation at any moment — it is one column on the contract, not a flag on each document. Appends document.primary_set on the owning contract (DD-017). An Administrator or a Legal Team Member who reaches the contract may move it; a Contributor on the team reads the record and is refused 403, because their write grid arrives with M23 (DD-015). An archived contract keeps the designation it has until it is restored. A document on a contract the actor cannot reach answers 404, exactly as one that does not exist */
+        post: operations["setPrimaryContractDocument"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{documentId}/executed-version": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pin one version of this document as the signed copy (CTR-014) — the file previews, exports, and AI analysis target by default. The pin is explicit and is never read off a version's kind: a round tagged `executed` is what its uploader called it, and pinning is what the team decided. Any version can be pinned, current or superseded, and pinning one takes the pin off whichever version held it. A version of another document is refused: the pinned row must be a version of this one (DOC-001). Appends document.executed_set on the owning contract (DD-017). An Administrator or a Legal Team Member who reaches the contract may pin; a Contributor on the team reads the record and is refused 403 (DD-015). An archived contract takes no pin until it is restored. A document on a contract the actor cannot reach answers 404, exactly as one that does not exist */
+        post: operations["setExecutedDocumentVersion"];
+        /** Take the executed pin off this document (CTR-014). Every version is left exactly as it was — the pin is one column on the document, and clearing it says the record has no signed copy, never that a file changed or went away. Appends document.executed_cleared on the owning contract (DD-017). An Administrator or a Legal Team Member who reaches the contract may clear it; a Contributor on the team reads the record and is refused 403 (DD-015). An archived contract keeps its pin until it is restored. A document on a contract the actor cannot reach answers 404, exactly as one that does not exist */
+        delete: operations["clearExecutedDocumentVersion"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{documentId}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive a document (DOC-010's soft delete, for the wrong upload): it leaves the record's document list and its count, and nothing is destroyed. The row stays, the whole version chain stays, and every stored file stays — restoring it puts it back, so a wrong archive is a two-second fix. It is not the erasure path: that is the Administrator's hard delete, which leaves no row at all. Appends document.archived on the owning contract (DD-017). An Administrator or a Legal Team Member who reaches the contract may archive; a Contributor on the team reads the record and is refused 403, because their write grid arrives with M23 (DD-015). An archived contract keeps its paper as it stands until it is restored. A document on a contract the actor cannot reach answers 404, exactly as one that does not exist */
+        post: operations["archiveDocument"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{documentId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived document (DOC-010): it rejoins the record's document list and its count exactly as it was. Nothing had to be rebuilt, because archiving destroyed nothing — the chain, the notes, and the two CTR-014 designations come back with it. Appends document.restored on the owning contract (DD-017). An Administrator or a Legal Team Member who reaches the contract may restore; a Contributor on the team is refused 403 (DD-015). An archived contract is restored first, because a frozen record takes no change to its paper. A document on a contract the actor cannot reach answers 404, exactly as one that does not exist */
+        post: operations["restoreDocument"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{documentId}/versions/{versionId}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Stream one version's file back, as an attachment. Every open is a download in M11 — in-app rendering is M12 — and there are no presigned URLs: the bytes come through the API behind the session and the owning contract's access predicate. A Contributor on the team downloads; anyone who cannot reach the contract is answered 404, exactly as for a document that does not exist */
+        get: operations["downloadDocumentVersion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{documentId}/versions/{versionId}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Stream one version's file back for display in place — what the doc panel reads (M12/2, DOC-004). It is the download's twin and differs in exactly two headers: the disposition is inline, and the content type is the server's own rather than the one the upload declared. The type is routed from that declaration and the filename together — a hint, never a security decision — so a file that lies about itself can change which card the panel draws and can never change what the browser is told to do with it. A Word document and a PowerPoint deck stream the PDF rendition the pipeline converted them to (M12/4, DOC-004) rather than their own bytes, so the tracked changes and comments a conversion carries are what a reader sees; while that conversion is still running the answer is 409, and the rendition read is what a client polls. A family with no in-app preview is refused 415 and the panel offers the download instead: PDFs and raster images render today, and SVG does not, because an inline SVG is a script. Any version in the chain previews, superseded rounds included. It sits behind the same two predicates every document read does: a Contributor on the team previews what they may download, and anyone who cannot reach the contract — or is outside a confidential document's audience — is answered 404, exactly as for a document that was never uploaded */
+        get: operations["previewDocumentVersion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{documentId}/versions/{versionId}/text": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read one version's extracted text (M12/3, DOC-005). Every uploaded PDF has its text read in the background: a native text layer is taken as it is, and a PDF that is only pictures of pages is read with OCR. The original is always what the preview serves — this text is an index, never a displayed conversion, and no OCR'd file is stored. The answer is a state, never a status code: pending while the job is owed, ready with the words, failed when the job gave up, and unsupported for a file that will never have text, so a caller polls until it lands and stops when it will not. It sits behind the same two predicates every document read does: a Contributor on the team reads what they may download, and anyone who cannot reach the contract — or is outside a confidential document's audience — is answered 404, exactly as for a document that was never uploaded */
+        get: operations["readDocumentVersionText"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{documentId}/versions/{versionId}/rendition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Say whether this version's display rendition is ready to preview (M12/4, DOC-004). A Word document and a PowerPoint deck do not draw in a browser, so the pipeline converts each one to a PDF in the background and the panel draws that — tracked changes and comments included. This is the state of that conversion, and it is what the panel polls while it shows its preparing state; live push is M30's job. The answer is a state, never a status code: pending while the job is owed, ready once the preview address will stream it, failed when the job gave up, and unsupported for a file that needs no conversion at all — a PDF, an image, a spreadsheet. A version whose conversion failed is offered its download instead; the upload itself is never blocked or failed by its pipeline. It sits behind the same two predicates every document read does: a Contributor on the team reads what they may download, and anyone who cannot reach the contract — or is outside a confidential document's audience — is answered 404, exactly as for a document that was never uploaded */
+        get: operations["readDocumentVersionRendition"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{documentId}/versions/{versionId}/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read one uploaded email as a message (M12/5, DOC-004): its headers, its body, and the files that came with it. A MSG or an EML is parsed in process by a Node library — no doc engine, no conversion, and nothing stored — so the answer is the message as the file holds it, read fresh on every call. The HTML body is sanitized here, on the server, before it is handed out: nothing in it runs and nothing in it loads, so a tracking pixel cannot report that a lawyer opened a disclosed email. Attachments are listed with the family each one would render as, and each is reachable at its own address. A file that is not an email is refused 415, and one whose bytes cannot be read as the email they claim to be is refused 422 with the download offered. It sits behind the same two predicates every document read does: a Contributor on the team reads what they may download, and anyone who cannot reach the contract — or is outside a confidential document's audience — is answered 404, exactly as for a document that was never uploaded */
+        get: operations["readDocumentVersionEmail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{documentId}/versions/{versionId}/attachments/{attachmentIndex}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Stream one file out of a rendered email, as an attachment (M12/5, DOC-004). The index is the file's position in the message, which is a stable name for it because the version's bytes are immutable (DOC-001). Unlike a version's own download, this never echoes a declared type: a version's type was bounded and shape-checked when it was uploaded, and this one came out of the middle of a file nobody checked at all — so the bytes go out as `application/octet-stream`, with the attachment disposition and sniffing off. An attachment is not a side door: it sits behind the same two predicates its version does, so anyone who cannot reach the contract — or is outside a confidential document's audience — is answered 404, exactly as for a document that was never uploaded */
+        get: operations["downloadEmailAttachment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{documentId}/versions/{versionId}/attachments/{attachmentIndex}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Stream one file out of a rendered email for display in place (M12/5, DOC-004), so a PDF or a photographed page attached to a message opens in the panel rather than in a Downloads folder. It is the attachment download's twin and differs in the same two headers a version's preview differs in: the disposition is inline, and the content type is chosen from the routing table rather than echoed from the message. An attachment outside the render set is refused 415 and the panel offers its download instead — there is no conversion path for an attachment, so a Word file inside an email downloads. It sits behind the same two predicates its version does: anyone who cannot reach the contract, or is outside a confidential document's audience, is answered 404 */
+        get: operations["previewEmailAttachment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{number}/folders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The folders on one contract, whole (DOC-006). Folders are scoped inside the record and nowhere else — there is no global tree, and the repository view stays flat with folder as a facet there. The set comes back in one answer rather than one level at a time, because a record's folder set is small and the Documents section draws the whole tree from it. Siblings are ordered by name without case, the way a file manager lists a directory. Each folder carries how many live documents are filed directly in it, counted for the viewer asking: an archived document is out of the count (DOC-010), and so is a confidential document this viewer is outside the audience of (DD-014) — left out by the same predicate that leaves it out of the folder's listing, so a count can never announce a document the listing hid. A zero therefore reads as an empty folder whether it is empty or its contents are not this viewer's to see. Access is inherited from the contract and nothing else: a Contributor on the team reads the tree, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it */
+        get: operations["listContractFolders"];
+        put?: never;
+        /** Create a folder on a contract, at the record root or inside another folder (DOC-006). The name is trimmed, must not be empty, is bounded at the filesystem's own ceiling, may not hold a slash, and may not be . or .. — a folder drop addresses a chain by path, and neither a name with a separator in it nor one of the two names a path is written with could be one segment of one. Those are the same rules every segment of a dropped path is held to, so a folder that can be typed can always be addressed by path and the reverse. Three invariants are refused here rather than left to the database: a parent on another contract is answered exactly as a parent that was never created, a sibling name already taken under the same parent is refused 409, and a folder deeper than the tree's ceiling is refused 409. Appends folder.created on the owning contract (DD-017), carrying the name so the entry outlives a later rename. Send path instead of name to recreate an empty directory of a dropped tree (DOC-011): the relative chain is find-or-created segment by segment beneath parentId, under the owning contract's row lock, so a segment already there is used rather than refused and two drops racing on one path converge on one folder. That form writes no activity — a folder a drop passed through is traversal rather than an act somebody performed, and the drop's story is its uploads (DD-017). Exactly one of name and path. Answers the record's whole folder set, because that is what the tree is drawn from. Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract takes no new folder until it is restored */
+        post: operations["createContractFolder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/folders/{folderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Dissolve a folder (DOC-006). Its child folders and the documents filed in it are re-filed into its parent — the record root when it had none — and nothing is destroyed: this route deletes no document, and erasing one stays DOC-010's separate Administrator-only path. Every document in the folder moves, the archived ones and the confidential ones the caller cannot see included: the re-file is a fact about the record's organization, not a read, and a row left behind would point at a folder that no longer exists. Because the children are re-filed rather than removed, a delete that would put two folders of the same name in one place is refused 409 rather than resolved by inventing a name. Appends folder.deleted on the owning contract (DD-017), carrying the folder's name — the entry outlives the row, so it is the only thing left that says what was dissolved. Answers the record's whole folder set, because every re-filed child moved. A folder on a contract the viewer cannot reach answers 404, exactly as one that does not exist; an archived contract takes no delete until it is restored */
+        delete: operations["deleteContractFolder"];
+        options?: never;
+        head?: never;
+        /** Rename a folder, move it under a different parent, or both (DOC-006). A new name is held to exactly the rules a created one is, . and .. among them; a request that names no name leaves the folder's own name unjudged, so a folder that predates a narrowing of those rules can still be moved and still be renamed out. parentId null moves it to the record root, and omitting parentId moves nothing — they are two different requests. A move carries the whole subtree, so the tree's depth ceiling is asked about the deepest folder underneath rather than about the moved row alone. The parent chain never cycles: a move that would put a folder inside itself, or inside one of its own descendants, is refused 409. A parent on another contract is answered exactly as a parent that was never created, and a sibling name already taken under the destination is refused 409. Appends folder.renamed and folder.moved on the owning contract (DD-017) — one entry per thing that happened, each carrying the folder's name. Answers the record's whole folder set. A folder on a contract the editor cannot reach answers 404, exactly as one that does not exist; an archived contract takes no edit until it is restored */
+        patch: operations["updateContractFolder"];
+        trace?: never;
+    };
+    "/api/v1/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One record's comment thread, flat and oldest first (CMT-002), filtered at query time to the DD-016 tiers the viewer is in the room for. A tier they are not in is omitted entirely — no placeholder, no gap, and no count. A record they cannot reach answers 404, exactly as one that does not exist. Paged from a server-fixed page size, newest end first (CTR-024): the page reads oldest-first inside itself, and `nextCursor` walks back into the older thread */
+        get: operations["listComments"];
+        put?: never;
+        /** Post a comment on a record at one of the DD-016 tiers. The seam refuses a tier the poster is not in the room for, so a Contributor cannot post Legal Only whatever the client sends, and it refuses a comment whose mentions outrun its tier (CMT-007), so the composer's confirmation explains the promotion rather than enforcing it. The tier is immutable afterwards (CMT-005) — there is no route that changes it. Writes one comment_mentions row per person named, and appends a comment.posted activity entry at the comment's own tier, all in the same transaction */
+        post: operations["postComment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/comments/mention-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The people a comment on this record can address (CMT-007), each with the DD-016 tiers they hear on it — the @-typeahead's list, and what the promotion confirmation reads to work out the narrowest tier that includes everyone named. Somebody no tier reaches is left out rather than offered and refused. A record the viewer cannot reach answers 404 */
+        get: operations["listMentionCandidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/comments/unread": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** How many comments on this record the viewer has not read — the chat applet's badge (CMT-004). Counted over the same filtered set the thread is read at, so a tier the viewer is not in the room for contributes nothing; the viewer's own comments and both kinds of tombstone contribute nothing either. A viewer who has never opened the panel has every comment they can see counted. A record they cannot reach answers 404 */
+        get: operations["readUnreadComments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/comments/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark this record's conversation read up to now, which is what opening the chat panel does (CMT-004). Writes the viewer's `comment_last_read` watermark and answers the count that remains — normally zero, and whatever landed between the read and this call otherwise. A record the viewer cannot reach answers 404 */
+        post: operations["markCommentsRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/comments/{commentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Take a comment back. The author alone may. The delete is soft (CMT-005): the row keeps its place as a tombstone so the thread around it still reads, and the body moves to comment_revisions. Deleting a comment already removed writes nothing and answers the row as it stands. Appends comment.deleted at the comment's own tier */
+        delete: operations["deleteComment"];
+        options?: never;
+        head?: never;
+        /** Change what a comment says. The author alone may, and an Administrator is no exception — a correction to somebody else's words is a redact, not an edit. The prior body goes to comment_revisions and the row takes an edited marker, so a reader can tell the text moved since they read it. The tier is immutable (CMT-005): this route takes a body and nothing else. A comment already deleted or redacted has no text to change. Appends comment.edited at the comment's own tier */
+        patch: operations["editComment"];
+        trace?: never;
+    };
+    "/api/v1/comments/{commentId}/redact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Remove what a comment said, for good. An Administrator alone may (CMT-005), on anybody's comment including their own. It clears the body, every comment_revisions row, and the list of who the text named — so text posted into the wrong record is gone rather than only hidden. This is the reason prior versions live outside the append-only log (CMT-006). The row stays as a tombstone, because the thread around it still has to read. Appends comment.redacted at the comment's own tier */
+        post: operations["redactComment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One record's activity feed, newest first (DD-017), filtered at query time to the DD-016 tiers the viewer is in the room for. A comment entry rides the comment's own tier, so a Legal Only comment leaves no trace for anyone who could not read it — no row, no gap, and no count. An entry that names a confidential document (DD-014) is left out the same way, for anyone outside that document's audience. `admin_only` entries never appear here; the Administrator's audit log is their surface. Paged from a server-fixed page size: pass the previous page's `nextCursor` to read further back. A record the viewer cannot reach answers 404, exactly as one that does not exist */
+        get: operations["listActivity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/audit-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The system-wide audit log (DD-017), newest first: every entry of every entity type and every tier, including the `admin_only` settings, user administration, and security entries that no record feed carries. Administrator-only (SET-002). Actor, action, entity type, date range, and search compose. Paged from a server-fixed page size: pass the previous page's `nextCursor` to read further back */
+        get: operations["listAuditLog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/audit-log/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The action slugs the log actually holds, ascending — the vocabulary the action filter offers. Read from the table rather than from the code, because the log outlives the code that wrote it and a slug no longer emitted is still in there */
+        get: operations["listAuditLogActions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/audit-log/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The currently filtered log as CSV (DD-017), newest first — the same filters the page takes, and exactly the set they name. The export is itself a security event: it appends an `export.performed` entry at `admin_only` naming its filters, and bounds itself at that entry, so an export never streams itself. Administrator-only (SET-002) */
+        get: operations["exportAuditLog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/entity-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The entity type taxonomy in display order (ENT-001); archived rows only with includeArchived=true */
+        get: operations["listEntityTypes"];
+        put?: never;
+        /** Add an entity type: the slug is derived here, once, and is immutable after creation; the row appends to the display order */
+        post: operations["createEntityType"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/entity-types/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One entity type — the read behind the type editor */
+        get: operations["getEntityType"];
+        put?: never;
+        post?: never;
+        /** Hard-delete an entity type; `other` refuses (ENT-001), and so does a type still used by entities */
+        delete: operations["deleteEntityType"];
+        options?: never;
+        head?: never;
+        /** Rename an entity type's display name (DES-017 in-place rename) or edit its description; the slug never changes, and even `other` may rename */
+        patch: operations["updateEntityType"];
+        trace?: never;
+    };
+    "/api/v1/entity-types/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs */
+        put: operations["reorderEntityTypes"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/entity-types/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive an entity type (SET-003 guarded): a type still used by entities requires a reassignment target, which takes them; nothing is deleted; `other` refuses */
+        post: operations["archiveEntityType"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/entity-types/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived entity type (SET-003's recovery story) to the end of the display order */
+        post: operations["restoreEntityType"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/entities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The registry, ordered by legal name (ENT-001) — the seam the M8 signing-entity picker consumes; archived rows only with includeArchived=true */
+        get: operations["listEntities"];
+        put?: never;
+        /** Register an entity with its ENT-001 identity card: legal name and type required, the rest optional; status defaults to active */
+        post: operations["createEntity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/entities/types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The live entity types in display order — the register form's Member+ picker source (the /entity-types settings surface stays Administrator-only per SET-002) */
+        get: operations["listEntityTypeOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/entities/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One entity's full ENT-001 identity card — the record page's read; archived entities answer too, so restore stays reachable */
+        get: operations["getEntity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Correct any identity-card field in place (DES-017 per-field commits): the status only within the fixed ENT-001 enum, the type only to a live one, never on an archived entity */
+        patch: operations["updateEntity"];
+        trace?: never;
+    };
+    "/api/v1/entities/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive an entity (soft delete, ENT-001): it leaves the list and the M8 picker; nothing is deleted, and #99's restore is the recovery story */
+        post: operations["archiveEntity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/entities/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived entity (archive's recovery story, ENT-001): it rejoins the list and the M8 picker */
+        post: operations["restoreEntity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fields": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The shared field catalog (CTR-016) scoped to contract and global fields, in creation order; archived rows only with includeArchived=true */
+        get: operations["listFields"];
+        put?: never;
+        /** Define a field: the slug derives from the name and the field type is picked here, once — both are immutable after creation. Select types take their options list; an AI prompt rides on contract-scoped fields only (CTR-008) */
+        post: operations["createField"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fields/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Rename, describe, retag, or edit a field's options and AI prompt; the slug and the field type never change, and the scope moves through its own route — a body carrying any of them is refused, not silently stripped */
+        patch: operations["updateField"];
+        trace?: never;
+    };
+    "/api/v1/fields/{id}/scope": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Move a field's scope (CTR-016): promotion to global is always safe (values stay keyed by slug); any move into a module is refused while another module attaches the field */
+        put: operations["setFieldScope"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fields/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive a field (SET-003): it leaves the catalog and every form; the definition and all stored values are retained (MTR-014) — there is no hard delete */
+        post: operations["archiveField"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fields/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived field (SET-003's recovery story): it rejoins the catalog under its original slug */
+        post: operations["restoreField"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    ProblemInput: {
-      /** @default about:blank */
-      type: string;
-      title: string;
-      status: number;
-      detail?: string;
-      instance?: string;
-      errors?: {
-        path: string;
-        message: string;
-      }[];
+    schemas: {
+        ProblemInput: {
+            /** @default about:blank */
+            type: string;
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+                path: string;
+                message: string;
+            }[];
+        };
+        MetaInput: {
+            /** @constant */
+            name: "OpenLaw";
+            version: string;
+        };
+        Problem: {
+            /** @default about:blank */
+            type: string;
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+                path: string;
+                message: string;
+            }[];
+        };
+        Meta: {
+            /** @constant */
+            name: "OpenLaw";
+            version: string;
+        };
     };
-    MetaInput: {
-      /** @constant */
-      name: "OpenLaw";
-      version: string;
-    };
-    Problem: {
-      /** @default about:blank */
-      type: string;
-      title: string;
-      status: number;
-      detail?: string;
-      instance?: string;
-      errors?: {
-        path: string;
-        message: string;
-      }[];
-    };
-    Meta: {
-      /** @constant */
-      name: "OpenLaw";
-      version: string;
-    };
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  getMeta: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    getMeta: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["Meta"];
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  getMe: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            user: {
-              id: string;
-              email: string;
-              displayName: string;
-              /** @enum {string} */
-              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
-              /** @enum {string} */
-              theme: "light" | "warm" | "dark";
-              image: string | null;
-              timezone: string | null;
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Meta"];
+                };
             };
-            session: {
-              id: string;
-              /** Format: date-time */
-              expiresAt: string;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  updateMyPreferences: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          /** @enum {string} */
-          theme?: "light" | "warm" | "dark";
-          timezone?: string | null;
+    getMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            user: {
-              id: string;
-              email: string;
-              displayName: string;
-              /** @enum {string} */
-              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
-              /** @enum {string} */
-              theme: "light" | "warm" | "dark";
-              image: string | null;
-              timezone: string | null;
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        user: {
+                            id: string;
+                            email: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+                            /** @enum {string} */
+                            theme: "light" | "warm" | "dark";
+                            image: string | null;
+                            timezone: string | null;
+                        };
+                        session: {
+                            id: string;
+                            /** Format: date-time */
+                            expiresAt: string;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  getSetupStatus: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            needsSetup: boolean;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  runSetup: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          /** Format: email */
-          email: string;
-          displayName: string;
-          password: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            user: {
-              id: string;
-              email: string;
-              displayName: string;
-              /** @enum {string} */
-              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
-              /** @enum {string} */
-              theme: "light" | "warm" | "dark";
-              image: string | null;
-              timezone: string | null;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  getAuthMethods: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    updateMyPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": {
-            /** @enum {string} */
-            mode: "built_in" | "oidc";
-            magicLinkEnabled: boolean;
-            emailConfigured: boolean;
-            ssoProviderId: string | null;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  inviteUser: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          /** Format: email */
-          email: string;
-          displayName: string;
-          /** @enum {string} */
-          role: "administrator" | "legal_team_member" | "contributor";
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            user: {
-              id: string;
-              email: string;
-              displayName: string;
-              /** @enum {string} */
-              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
-              /** @enum {string} */
-              theme: "light" | "warm" | "dark";
-              image: string | null;
-              timezone: string | null;
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    theme?: "light" | "warm" | "dark";
+                    timezone?: string | null;
+                };
             };
-          };
         };
-      };
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            user: {
-              id: string;
-              email: string;
-              displayName: string;
-              /** @enum {string} */
-              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
-              /** @enum {string} */
-              theme: "light" | "warm" | "dark";
-              image: string | null;
-              timezone: string | null;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        user: {
+                            id: string;
+                            email: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+                            /** @enum {string} */
+                            theme: "light" | "warm" | "dark";
+                            image: string | null;
+                            timezone: string | null;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  resendInvite: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        userId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            user: {
-              id: string;
-              email: string;
-              displayName: string;
-              /** @enum {string} */
-              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
-              /** @enum {string} */
-              theme: "light" | "warm" | "dark";
-              image: string | null;
-              timezone: string | null;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  revokeInvite: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        userId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
+    getSetupStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content?: never;
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  listSsoProviders: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            providers: {
-              id: string;
-              providerId: string;
-              issuer: string;
-              domain: string;
-              clientId: string | null;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  registerSsoProvider: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          providerId: string;
-          /** Format: uri */
-          issuer: string;
-          domain: string;
-          clientId: string;
-          clientSecret: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            provider: {
-              id: string;
-              providerId: string;
-              issuer: string;
-              domain: string;
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        needsSetup: boolean;
+                    };
+                };
             };
-            callbackUrl: string;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  updateSsoProvider: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        providerId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          /** Format: uri */
-          issuer?: string;
-          domain?: string;
-          clientId?: string;
-          clientSecret?: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            provider: {
-              id: string;
-              providerId: string;
-              issuer: string;
-              domain: string;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
-            callbackUrl: string;
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  getAuthMode: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    runSetup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": {
-            /** @enum {string} */
-            mode: "built_in" | "oidc";
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  setAuthMode: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          /** @enum {string} */
-          mode: "built_in" | "oidc";
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            /** @enum {string} */
-            mode: "built_in" | "oidc";
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  getAllowedDomains: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            domains: string[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  setAllowedDomains: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          domains: string[];
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            domains: string[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  setMagicLinkEnabled: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          magicLinkEnabled: boolean;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            magicLinkEnabled: boolean;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  requestMagicLink: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          /** Format: email */
-          email: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      202: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            message: string;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  getOnboardingStatus: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            completed: boolean;
-            emailConfigured: boolean;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  completeOnboarding: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            completed: boolean;
-            emailConfigured: boolean;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  getOrgGeneral: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            general: {
-              name: string;
-              logo: string | null;
-              /** @enum {string} */
-              defaultLocale: "en-US";
-              defaultTimezone: string;
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: email */
+                    email: string;
+                    displayName: string;
+                    password: string;
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  updateOrgGeneral: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          name?: string;
-          logo?: string | null;
-          /** @enum {string} */
-          defaultLocale?: "en-US";
-          defaultTimezone?: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            general: {
-              name: string;
-              logo: string | null;
-              /** @enum {string} */
-              defaultLocale: "en-US";
-              defaultTimezone: string;
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        user: {
+                            id: string;
+                            email: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+                            /** @enum {string} */
+                            theme: "light" | "warm" | "dark";
+                            image: string | null;
+                            timezone: string | null;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  listUsers: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            users: {
-              id: string;
-              email: string;
-              displayName: string;
-              /** @enum {string} */
-              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
-              /** @enum {string} */
-              status: "active" | "invited" | "archived";
-              lastActiveAt: string | null;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  updateUserRole: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        userId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          /** @enum {string} */
-          role: "administrator" | "legal_team_member" | "contributor" | "business_user";
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            user: {
-              id: string;
-              email: string;
-              displayName: string;
-              /** @enum {string} */
-              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
-              /** @enum {string} */
-              status: "active" | "invited" | "archived";
-              lastActiveAt: string | null;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  archiveUser: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        userId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    getAuthMethods: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": {
-            user: {
-              id: string;
-              email: string;
-              displayName: string;
-              /** @enum {string} */
-              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
-              /** @enum {string} */
-              status: "active" | "invited" | "archived";
-              lastActiveAt: string | null;
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        mode: "built_in" | "oidc";
+                        magicLinkEnabled: boolean;
+                        emailConfigured: boolean;
+                        ssoProviderId: string | null;
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  unarchiveUser: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        userId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            user: {
-              id: string;
-              email: string;
-              displayName: string;
-              /** @enum {string} */
-              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
-              /** @enum {string} */
-              status: "active" | "invited" | "archived";
-              lastActiveAt: string | null;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  revokeUserSessions: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        userId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
+    inviteUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content?: never;
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  getEmailSettings: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            /** @enum {string} */
-            source: "env" | "app" | "unset";
-            fromAddress: string | null;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  saveEmailSettings: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          smtpUrl: string | null;
-          smtpFrom: string | null;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            /** @enum {string} */
-            source: "env" | "app" | "unset";
-            fromAddress: string | null;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  sendTestEmail: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            /** @enum {boolean} */
-            delivered: true;
-            to: string;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  getSigningConnector: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        provider: "docusign";
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            connector: {
-              /** @enum {string} */
-              provider: "docusign";
-              configured: boolean;
-              enabled: boolean;
-              disabledAt: string | null;
-              environment: ("demo" | "production") | null;
-              integrationKey: string | null;
-              apiUserId: string | null;
-              hasPrivateKey: boolean;
-              hasWebhookSecret: boolean;
-              webhookUrl: string;
-              updatedAt: string | null;
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: email */
+                    email: string;
+                    displayName: string;
+                    /** @enum {string} */
+                    role: "administrator" | "legal_team_member" | "contributor";
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  saveSigningConnector: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        provider: "docusign";
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          /** @enum {string} */
-          environment: "demo" | "production";
-          integrationKey: string;
-          apiUserId: string;
-          privateKey?: string;
-          webhookSecret?: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            connector: {
-              /** @enum {string} */
-              provider: "docusign";
-              configured: boolean;
-              enabled: boolean;
-              disabledAt: string | null;
-              environment: ("demo" | "production") | null;
-              integrationKey: string | null;
-              apiUserId: string | null;
-              hasPrivateKey: boolean;
-              hasWebhookSecret: boolean;
-              webhookUrl: string;
-              updatedAt: string | null;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        user: {
+                            id: string;
+                            email: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+                            /** @enum {string} */
+                            theme: "light" | "warm" | "dark";
+                            image: string | null;
+                            timezone: string | null;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  deleteSigningConnector: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        provider: "docusign";
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            connector: {
-              /** @enum {string} */
-              provider: "docusign";
-              configured: boolean;
-              enabled: boolean;
-              disabledAt: string | null;
-              environment: ("demo" | "production") | null;
-              integrationKey: string | null;
-              apiUserId: string | null;
-              hasPrivateKey: boolean;
-              hasWebhookSecret: boolean;
-              webhookUrl: string;
-              updatedAt: string | null;
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        user: {
+                            id: string;
+                            email: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+                            /** @enum {string} */
+                            theme: "light" | "warm" | "dark";
+                            image: string | null;
+                            timezone: string | null;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  testSigningConnector: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        provider: "docusign";
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            /** @enum {boolean} */
-            connected: true;
-            accountName: string;
-            accountId: string;
-            userEmail: string;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  disableSigningConnector: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        provider: "docusign";
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            connector: {
-              /** @enum {string} */
-              provider: "docusign";
-              configured: boolean;
-              enabled: boolean;
-              disabledAt: string | null;
-              environment: ("demo" | "production") | null;
-              integrationKey: string | null;
-              apiUserId: string | null;
-              hasPrivateKey: boolean;
-              hasWebhookSecret: boolean;
-              webhookUrl: string;
-              updatedAt: string | null;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  enableSigningConnector: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        provider: "docusign";
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            connector: {
-              /** @enum {string} */
-              provider: "docusign";
-              configured: boolean;
-              enabled: boolean;
-              disabledAt: string | null;
-              environment: ("demo" | "production") | null;
-              integrationKey: string | null;
-              apiUserId: string | null;
-              hasPrivateKey: boolean;
-              hasWebhookSecret: boolean;
-              webhookUrl: string;
-              updatedAt: string | null;
+    resendInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
             };
-          };
+            cookie?: never;
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  eraseSigner: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          /** Format: email */
-          email: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            erasure: {
-              entriesRedacted: number;
-              signerRowsDeleted: number;
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        user: {
+                            id: string;
+                            email: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+                            /** @enum {string} */
+                            theme: "light" | "warm" | "dark";
+                            image: string | null;
+                            timezone: string | null;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  listContractTypes: {
-    parameters: {
-      query?: {
-        includeArchived?: "true" | "false";
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            contractTypes: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  createContractType: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          displayName: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            contractType: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  getContractType: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            contractType: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
+    revokeInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
             };
-          };
+            cookie?: never;
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  deleteContractType: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  updateContractType: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          displayName?: string;
-          description?: string | null;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            contractType: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  reorderContractTypes: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          ids: string[];
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            contractTypes: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  archiveContractType: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          reassignToId?: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            contractType: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  restoreContractType: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    listSsoProviders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": {
-            contractType: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        providers: {
+                            id: string;
+                            providerId: string;
+                            issuer: string;
+                            domain: string;
+                            clientId: string | null;
+                        }[];
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  listContractTypeFields: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            attachedFields: {
-              fieldId: string;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              /** @enum {string} */
-              moduleScope: "contract" | "global";
-              displayOrder: number;
-              isRequired: boolean;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  attachContractTypeField: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          fieldId: string;
-          isRequired?: boolean;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            attachedField: {
-              fieldId: string;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              /** @enum {string} */
-              moduleScope: "contract" | "global";
-              displayOrder: number;
-              isRequired: boolean;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  detachContractTypeField: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-        fieldId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
+    registerSsoProvider: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content?: never;
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  setContractTypeFieldRequired: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-        fieldId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          isRequired: boolean;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            attachedField: {
-              fieldId: string;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              /** @enum {string} */
-              moduleScope: "contract" | "global";
-              displayOrder: number;
-              isRequired: boolean;
+        requestBody: {
+            content: {
+                "application/json": {
+                    providerId: string;
+                    /** Format: uri */
+                    issuer: string;
+                    domain: string;
+                    clientId: string;
+                    clientSecret: string;
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  reorderContractTypeFields: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          fieldIds: string[];
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            attachedFields: {
-              fieldId: string;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              /** @enum {string} */
-              moduleScope: "contract" | "global";
-              displayOrder: number;
-              isRequired: boolean;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  listMatterTypes: {
-    parameters: {
-      query?: {
-        includeArchived?: "true" | "false";
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            matterTypes: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  createMatterType: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          displayName: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            matterType: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        provider: {
+                            id: string;
+                            providerId: string;
+                            issuer: string;
+                            domain: string;
+                        };
+                        callbackUrl: string;
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  getMatterType: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            matterType: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  deleteMatterType: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  updateMatterType: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          displayName?: string;
-          description?: string | null;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            matterType: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
+    updateSsoProvider: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                providerId: string;
             };
-          };
+            cookie?: never;
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  reorderMatterTypes: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          ids: string[];
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            matterTypes: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  archiveMatterType: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          reassignToId?: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            matterType: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uri */
+                    issuer?: string;
+                    domain?: string;
+                    clientId?: string;
+                    clientSecret?: string;
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  restoreMatterType: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            matterType: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        provider: {
+                            id: string;
+                            providerId: string;
+                            issuer: string;
+                            domain: string;
+                        };
+                        callbackUrl: string;
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  listMatterTypeFields: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            attachedFields: {
-              fieldId: string;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              /** @enum {string} */
-              moduleScope: "global";
-              displayOrder: number;
-              isRequired: boolean;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  attachMatterTypeField: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          fieldId: string;
-          isRequired?: boolean;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            attachedField: {
-              fieldId: string;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              /** @enum {string} */
-              moduleScope: "global";
-              displayOrder: number;
-              isRequired: boolean;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  detachMatterTypeField: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-        fieldId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
+    getAuthMode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content?: never;
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  setMatterTypeFieldRequired: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-        fieldId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          isRequired: boolean;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            attachedField: {
-              fieldId: string;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              /** @enum {string} */
-              moduleScope: "global";
-              displayOrder: number;
-              isRequired: boolean;
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        mode: "built_in" | "oidc";
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  reorderMatterTypeFields: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          fieldIds: string[];
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            attachedFields: {
-              fieldId: string;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              /** @enum {string} */
-              moduleScope: "global";
-              displayOrder: number;
-              isRequired: boolean;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  listContractStatuses: {
-    parameters: {
-      query?: {
-        includeArchived?: "true" | "false";
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            contractStatuses: {
-              id: string;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  createContractStatus: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          displayName: string;
-          /** @enum {string} */
-          stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            contractStatus: {
-              id: string;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  deleteContractStatus: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
+    setAuthMode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content?: never;
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  renameContractStatus: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          displayName: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            contractStatus: {
-              id: string;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    mode: "built_in" | "oidc";
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  reorderContractStatuses: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          ids: string[];
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            contractStatuses: {
-              id: string;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  archiveContractStatus: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            contractStatus: {
-              id: string;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        mode: "built_in" | "oidc";
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  restoreContractStatus: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            contractStatus: {
-              id: string;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  listApproverGroups: {
-    parameters: {
-      query?: {
-        includeArchived?: "true" | "false";
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    getAllowedDomains: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": {
-            approverGroups: {
-              id: string;
-              name: string;
-              description: string | null;
-              archivedAt: string | null;
-              members: {
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        domains: string[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setAllowedDomains: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    domains: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        domains: string[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setMagicLinkEnabled: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    magicLinkEnabled: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        magicLinkEnabled: boolean;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    requestMagicLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: email */
+                    email: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        message: string;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getOnboardingStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        completed: boolean;
+                        emailConfigured: boolean;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    completeOnboarding: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        completed: boolean;
+                        emailConfigured: boolean;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getOrgGeneral: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        general: {
+                            name: string;
+                            logo: string | null;
+                            /** @enum {string} */
+                            defaultLocale: "en-US";
+                            defaultTimezone: string;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updateOrgGeneral: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name?: string;
+                    logo?: string | null;
+                    /** @enum {string} */
+                    defaultLocale?: "en-US";
+                    defaultTimezone?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        general: {
+                            name: string;
+                            logo: string | null;
+                            /** @enum {string} */
+                            defaultLocale: "en-US";
+                            defaultTimezone: string;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listUsers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        users: {
+                            id: string;
+                            email: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+                            /** @enum {string} */
+                            status: "active" | "invited" | "archived";
+                            lastActiveAt: string | null;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updateUserRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        user: {
+                            id: string;
+                            email: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+                            /** @enum {string} */
+                            status: "active" | "invited" | "archived";
+                            lastActiveAt: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    archiveUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        user: {
+                            id: string;
+                            email: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+                            /** @enum {string} */
+                            status: "active" | "invited" | "archived";
+                            lastActiveAt: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    unarchiveUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        user: {
+                            id: string;
+                            email: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+                            /** @enum {string} */
+                            status: "active" | "invited" | "archived";
+                            lastActiveAt: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    revokeUserSessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getEmailSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        source: "env" | "app" | "unset";
+                        fromAddress: string | null;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    saveEmailSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    smtpUrl: string | null;
+                    smtpFrom: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        source: "env" | "app" | "unset";
+                        fromAddress: string | null;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    sendTestEmail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        delivered: true;
+                        to: string;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getSigningConnector: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: "docusign";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        connector: {
+                            /** @enum {string} */
+                            provider: "docusign";
+                            configured: boolean;
+                            enabled: boolean;
+                            disabledAt: string | null;
+                            environment: ("demo" | "production") | null;
+                            integrationKey: string | null;
+                            apiUserId: string | null;
+                            hasPrivateKey: boolean;
+                            hasWebhookSecret: boolean;
+                            webhookUrl: string;
+                            updatedAt: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    saveSigningConnector: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: "docusign";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    environment: "demo" | "production";
+                    integrationKey: string;
+                    apiUserId: string;
+                    privateKey?: string;
+                    webhookSecret?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        connector: {
+                            /** @enum {string} */
+                            provider: "docusign";
+                            configured: boolean;
+                            enabled: boolean;
+                            disabledAt: string | null;
+                            environment: ("demo" | "production") | null;
+                            integrationKey: string | null;
+                            apiUserId: string | null;
+                            hasPrivateKey: boolean;
+                            hasWebhookSecret: boolean;
+                            webhookUrl: string;
+                            updatedAt: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteSigningConnector: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: "docusign";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        connector: {
+                            /** @enum {string} */
+                            provider: "docusign";
+                            configured: boolean;
+                            enabled: boolean;
+                            disabledAt: string | null;
+                            environment: ("demo" | "production") | null;
+                            integrationKey: string | null;
+                            apiUserId: string | null;
+                            hasPrivateKey: boolean;
+                            hasWebhookSecret: boolean;
+                            webhookUrl: string;
+                            updatedAt: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    testSigningConnector: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: "docusign";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        connected: true;
+                        accountName: string;
+                        accountId: string;
+                        userEmail: string;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    disableSigningConnector: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: "docusign";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        connector: {
+                            /** @enum {string} */
+                            provider: "docusign";
+                            configured: boolean;
+                            enabled: boolean;
+                            disabledAt: string | null;
+                            environment: ("demo" | "production") | null;
+                            integrationKey: string | null;
+                            apiUserId: string | null;
+                            hasPrivateKey: boolean;
+                            hasWebhookSecret: boolean;
+                            webhookUrl: string;
+                            updatedAt: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    enableSigningConnector: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: "docusign";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        connector: {
+                            /** @enum {string} */
+                            provider: "docusign";
+                            configured: boolean;
+                            enabled: boolean;
+                            disabledAt: string | null;
+                            environment: ("demo" | "production") | null;
+                            integrationKey: string | null;
+                            apiUserId: string | null;
+                            hasPrivateKey: boolean;
+                            hasWebhookSecret: boolean;
+                            webhookUrl: string;
+                            updatedAt: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    eraseSigner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: email */
+                    email: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        erasure: {
+                            entriesRedacted: number;
+                            signerRowsDeleted: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listContractTypes: {
+        parameters: {
+            query?: {
+                includeArchived?: "true" | "false";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        contractTypes: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    createContractType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    displayName: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        contractType: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getContractType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-                email: string;
-              }[];
-              memberCount: number;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  createApproverGroup: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          name: string;
-          description?: string;
-          memberIds?: string[];
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            approverGroup: {
-              id: string;
-              name: string;
-              description: string | null;
-              archivedAt: string | null;
-              members: {
-                id: string;
-                displayName: string;
-                email: string;
-              }[];
-              memberCount: number;
             };
-          };
+            cookie?: never;
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  updateApproverGroup: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          name?: string;
-          description?: string | null;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            approverGroup: {
-              id: string;
-              name: string;
-              description: string | null;
-              archivedAt: string | null;
-              members: {
-                id: string;
-                displayName: string;
-                email: string;
-              }[];
-              memberCount: number;
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        contractType: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  setApproverGroupMembers: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          memberIds: string[];
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            approverGroup: {
-              id: string;
-              name: string;
-              description: string | null;
-              archivedAt: string | null;
-              members: {
-                id: string;
-                displayName: string;
-                email: string;
-              }[];
-              memberCount: number;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  archiveApproverGroup: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            approverGroup: {
-              id: string;
-              name: string;
-              description: string | null;
-              archivedAt: string | null;
-              members: {
+    deleteContractType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-                email: string;
-              }[];
-              memberCount: number;
             };
-          };
+            cookie?: never;
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  restoreApproverGroup: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            approverGroup: {
-              id: string;
-              name: string;
-              description: string | null;
-              archivedAt: string | null;
-              members: {
-                id: string;
-                displayName: string;
-                email: string;
-              }[];
-              memberCount: number;
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  listContracts: {
-    parameters: {
-      query?: {
-        includeArchived?: "true" | "false";
-        includeEnded?: "true" | "false";
-        cursor?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            contracts: {
-              id: string;
-              number: number;
-              title: string;
-              contractTypeId: string;
-              contractTypeName: string;
-              statusId: string;
-              statusName: string;
-              /** @enum {string} */
-              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
-              manager: {
-                id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
-              primaryCounterparty: {
-                id: string;
-                name: string;
-              } | null;
-              /** @enum {string} */
-              priority: "low" | "medium" | "high" | "critical";
-              risk: ("low" | "medium" | "high" | "critical") | null;
-              value: {
-                amount: number;
-                currency: string;
-                /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
-              } | null;
-              /** @enum {string} */
-              termType: "fixed" | "auto_renew" | "evergreen";
-              effectiveDate: string | null;
-              expiryDate: string | null;
-              renewalPeriodMonths: number | null;
-              noticePeriodDays: number | null;
-              noticeDeadline: string | null;
-              daysRemaining: number | null;
-              renewalPendingConfirmation: boolean;
-              proposedRenewalExpiry: string | null;
-              description: string | null;
-              customFields: {
-                [key: string]: string | number | boolean | string[];
-              };
-              isConfidential: boolean;
-              endedAt: string | null;
-              archivedAt: string | null;
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
-            }[];
-            nextCursor: string | null;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  createContract: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          title: string;
-          contractTypeId: string;
-          customFields?: {
-            [key: string]: (string | number | boolean | string[]) | null;
-          };
-          isConfidential?: boolean;
-          renewalOf?: {
-            number: number;
-            /** @enum {string} */
-            vehicle: "child" | "successor";
-          };
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            contract: {
-              id: string;
-              number: number;
-              title: string;
-              contractTypeId: string;
-              contractTypeName: string;
-              statusId: string;
-              statusName: string;
-              /** @enum {string} */
-              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
-              manager: {
-                id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
-              primaryCounterparty: {
-                id: string;
-                name: string;
-              } | null;
-              /** @enum {string} */
-              priority: "low" | "medium" | "high" | "critical";
-              risk: ("low" | "medium" | "high" | "critical") | null;
-              value: {
-                amount: number;
-                currency: string;
-                /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
-              } | null;
-              /** @enum {string} */
-              termType: "fixed" | "auto_renew" | "evergreen";
-              effectiveDate: string | null;
-              expiryDate: string | null;
-              renewalPeriodMonths: number | null;
-              noticePeriodDays: number | null;
-              noticeDeadline: string | null;
-              daysRemaining: number | null;
-              renewalPendingConfirmation: boolean;
-              proposedRenewalExpiry: string | null;
-              description: string | null;
-              customFields: {
-                [key: string]: string | number | boolean | string[];
-              };
-              isConfidential: boolean;
-              endedAt: string | null;
-              archivedAt: string | null;
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
-          };
         };
-      };
-      /** @description The named types are CTR-015's guards: the link already exists, the parent would close a loop, or both ends are one contract. An unnamed 409 is an archived predecessor; print it. */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": {
-            /**
-             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
-             * @enum {string}
-             */
-            type:
-              | "urn:openlaw:problem:contract-relation-exists"
-              | "urn:openlaw:problem:contract-parent-cycle"
-              | "urn:openlaw:problem:contract-self-link"
-              | "about:blank";
-            title: string;
-            status: number;
-            detail?: string;
-            instance?: string;
-            errors?: {
-              path: string;
-              message: string;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  listContractOptions: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    updateContractType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
         };
-        content: {
-          "application/json": {
-            contractTypes: {
-              id: string;
-              slug: string;
-              displayName: string;
-              fields: {
+        requestBody: {
+            content: {
+                "application/json": {
+                    displayName?: string;
+                    description?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        contractType: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    reorderContractTypes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    ids: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        contractTypes: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    archiveContractType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reassignToId?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        contractType: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    restoreContractType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        contractType: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listContractTypeFields: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        attachedFields: {
+                            fieldId: string;
+                            slug: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            fieldType: "text" | "long_text" | "number" | "date" | "boolean" | "single_select" | "multi_select" | "user" | "entity";
+                            /** @enum {string} */
+                            moduleScope: "contract" | "global";
+                            displayOrder: number;
+                            isRequired: boolean;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    attachContractTypeField: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    fieldId: string;
+                    isRequired?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        attachedField: {
+                            fieldId: string;
+                            slug: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            fieldType: "text" | "long_text" | "number" | "date" | "boolean" | "single_select" | "multi_select" | "user" | "entity";
+                            /** @enum {string} */
+                            moduleScope: "contract" | "global";
+                            displayOrder: number;
+                            isRequired: boolean;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    detachContractTypeField: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
                 fieldId: string;
-                slug: string;
-                displayName: string;
-                description: string | null;
-                /** @enum {string} */
-                fieldType:
-                  | "text"
-                  | "long_text"
-                  | "number"
-                  | "date"
-                  | "boolean"
-                  | "single_select"
-                  | "multi_select"
-                  | "user"
-                  | "entity";
-                options: string[] | null;
-                displayOrder: number;
-                isRequired: boolean;
-              }[];
-            }[];
-            contractStatuses: {
-              id: string;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
-            }[];
-            users: {
-              id: string;
-              displayName: string;
-              image: string | null;
-              archived: boolean;
-              /** @enum {string} */
-              role: "administrator" | "legal_team_member" | "contributor" | "business_user";
-            }[];
-            approverGroups: {
-              id: string;
-              name: string;
-              memberIds: string[];
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  getContract: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            contract: {
-              id: string;
-              number: number;
-              title: string;
-              contractTypeId: string;
-              contractTypeName: string;
-              statusId: string;
-              statusName: string;
-              /** @enum {string} */
-              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
-              manager: {
-                id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
-              primaryCounterparty: {
-                id: string;
-                name: string;
-              } | null;
-              /** @enum {string} */
-              priority: "low" | "medium" | "high" | "critical";
-              risk: ("low" | "medium" | "high" | "critical") | null;
-              value: {
-                amount: number;
-                currency: string;
-                /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
-              } | null;
-              /** @enum {string} */
-              termType: "fixed" | "auto_renew" | "evergreen";
-              effectiveDate: string | null;
-              expiryDate: string | null;
-              renewalPeriodMonths: number | null;
-              noticePeriodDays: number | null;
-              noticeDeadline: string | null;
-              daysRemaining: number | null;
-              renewalPendingConfirmation: boolean;
-              proposedRenewalExpiry: string | null;
-              description: string | null;
-              customFields: {
-                [key: string]: string | number | boolean | string[];
-              };
-              isConfidential: boolean;
-              endedAt: string | null;
-              archivedAt: string | null;
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
             };
-            fields: {
-              fieldId: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              options: string[] | null;
-              displayOrder: number;
-              isRequired: boolean;
-            }[];
-            customFieldRefs: {
-              users: {
-                id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              }[];
-              entities: {
-                id: string;
-                legalName: string;
-              }[];
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
-            team: {
-              id: string;
-              displayName: string;
-              image: string | null;
-              archived: boolean;
-              /** @enum {string} */
-              role: "member" | "watcher" | "creator" | "contributor";
-            }[];
-            counterparties: {
-              id: string;
-              name: string;
-              jurisdiction: string | null;
-              isPrimary: boolean;
-            }[];
-            renewals: {
-              id: string;
-              /** Format: date */
-              from: string;
-              /** Format: date */
-              to: string;
-              /** Format: date-time */
-              confirmedAt: string;
-              confirmedBy: {
-                id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              } | null;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  updateContract: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          title?: string;
-          description?: string | null;
-          managerId?: string | null;
-          entityId?: string | null;
-          /** @enum {string} */
-          priority?: "low" | "medium" | "high" | "critical";
-          risk?: ("low" | "medium" | "high" | "critical") | null;
-          value?: {
-            amount: number;
-            currency: string;
-            /** @enum {string} */
-            cadence: "one_time" | "monthly" | "annually";
-          } | null;
-          /** @enum {string} */
-          termType?: "fixed" | "auto_renew" | "evergreen";
-          effectiveDate?: string | null;
-          expiryDate?: string | null;
-          renewalPeriodMonths?: number | null;
-          noticePeriodDays?: number | null;
-          contractTypeId?: string;
-          customFields?: {
-            [key: string]: (string | number | boolean | string[]) | null;
-          };
-          statusId?: string;
-          isConfidential?: boolean;
-          overrideSoftGate?: boolean;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            contract: {
-              id: string;
-              number: number;
-              title: string;
-              contractTypeId: string;
-              contractTypeName: string;
-              statusId: string;
-              statusName: string;
-              /** @enum {string} */
-              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
-              manager: {
-                id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
-              primaryCounterparty: {
-                id: string;
-                name: string;
-              } | null;
-              /** @enum {string} */
-              priority: "low" | "medium" | "high" | "critical";
-              risk: ("low" | "medium" | "high" | "critical") | null;
-              value: {
-                amount: number;
-                currency: string;
-                /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
-              } | null;
-              /** @enum {string} */
-              termType: "fixed" | "auto_renew" | "evergreen";
-              effectiveDate: string | null;
-              expiryDate: string | null;
-              renewalPeriodMonths: number | null;
-              noticePeriodDays: number | null;
-              noticeDeadline: string | null;
-              daysRemaining: number | null;
-              renewalPendingConfirmation: boolean;
-              proposedRenewalExpiry: string | null;
-              description: string | null;
-              customFields: {
-                [key: string]: string | number | boolean | string[];
-              };
-              isConfidential: boolean;
-              endedAt: string | null;
-              archivedAt: string | null;
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
-            fields: {
-              fieldId: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              options: string[] | null;
-              displayOrder: number;
-              isRequired: boolean;
-            }[];
-            customFieldRefs: {
-              users: {
+        };
+    };
+    setContractTypeFieldRequired: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              }[];
-              entities: {
-                id: string;
-                legalName: string;
-              }[];
+                fieldId: string;
             };
-          };
+            cookie?: never;
         };
-      };
-      /** @description The term data would contradict its own type (CTR-006): an expiry on an evergreen contract, or a renewal period on a contract that does not auto-renew. Change the term type, or leave the value off. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": {
-            /**
-             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
-             * @enum {string}
-             */
-            type:
-              | "urn:openlaw:problem:term-expiry-on-evergreen"
-              | "urn:openlaw:problem:term-renewal-period"
-              | "about:blank";
-            title: string;
-            status: number;
-            detail?: string;
-            instance?: string;
-            errors?: {
-              path: string;
-              message: string;
-            }[];
-          };
-        };
-      };
-      /** @description The status change crosses CTR-012's approval gate with approvals still unresolved. Re-send with `overrideSoftGate` to record it as an override. */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": {
-            /**
-             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
-             * @enum {string}
-             */
-            type: "urn:openlaw:problem:approval-soft-gate" | "about:blank";
-            title: string;
-            status: number;
-            detail?: string;
-            instance?: string;
-            errors?: {
-              path: string;
-              message: string;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  confirmContractRenewal: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          /** Format: date */
-          fromExpiry: string;
-          /** Format: date */
-          toExpiry: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            contract: {
-              id: string;
-              number: number;
-              title: string;
-              contractTypeId: string;
-              contractTypeName: string;
-              statusId: string;
-              statusName: string;
-              /** @enum {string} */
-              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
-              manager: {
-                id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
-              primaryCounterparty: {
-                id: string;
-                name: string;
-              } | null;
-              /** @enum {string} */
-              priority: "low" | "medium" | "high" | "critical";
-              risk: ("low" | "medium" | "high" | "critical") | null;
-              value: {
-                amount: number;
-                currency: string;
-                /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
-              } | null;
-              /** @enum {string} */
-              termType: "fixed" | "auto_renew" | "evergreen";
-              effectiveDate: string | null;
-              expiryDate: string | null;
-              renewalPeriodMonths: number | null;
-              noticePeriodDays: number | null;
-              noticeDeadline: string | null;
-              daysRemaining: number | null;
-              renewalPendingConfirmation: boolean;
-              proposedRenewalExpiry: string | null;
-              description: string | null;
-              customFields: {
-                [key: string]: string | number | boolean | string[];
-              };
-              isConfidential: boolean;
-              endedAt: string | null;
-              archivedAt: string | null;
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
+        requestBody: {
+            content: {
+                "application/json": {
+                    isRequired: boolean;
+                };
             };
-            renewals: {
-              id: string;
-              /** Format: date */
-              from: string;
-              /** Format: date */
-              to: string;
-              /** Format: date-time */
-              confirmedAt: string;
-              confirmedBy: {
-                id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              } | null;
-            }[];
-          };
         };
-      };
-      /** @description The named type says this contract's expiry is no longer the one the roll was raised against (CTR-006) — read the record again and confirm against the expiry it now holds, which is the one refusal here a client acts on rather than prints. An unnamed 409 is an archived record or one that records no expiry to roll; print it. */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": {
-            /**
-             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
-             * @enum {string}
-             */
-            type: "urn:openlaw:problem:renewal-expiry-moved" | "about:blank";
-            title: string;
-            status: number;
-            detail?: string;
-            instance?: string;
-            errors?: {
-              path: string;
-              message: string;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  addContractTeamMember: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          userId: string;
-          /** @enum {string} */
-          role: "member" | "watcher" | "creator" | "contributor";
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            team: {
-              id: string;
-              displayName: string;
-              image: string | null;
-              archived: boolean;
-              /** @enum {string} */
-              role: "member" | "watcher" | "creator" | "contributor";
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  removeContractTeamMember: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-        userId: string;
-        role: "member" | "watcher" | "creator" | "contributor";
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            team: {
-              id: string;
-              displayName: string;
-              image: string | null;
-              archived: boolean;
-              /** @enum {string} */
-              role: "member" | "watcher" | "creator" | "contributor";
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  addContractCounterparty: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          counterpartyId?: string;
-          name?: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            contract: {
-              id: string;
-              number: number;
-              title: string;
-              contractTypeId: string;
-              contractTypeName: string;
-              statusId: string;
-              statusName: string;
-              /** @enum {string} */
-              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
-              manager: {
-                id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
-              primaryCounterparty: {
-                id: string;
-                name: string;
-              } | null;
-              /** @enum {string} */
-              priority: "low" | "medium" | "high" | "critical";
-              risk: ("low" | "medium" | "high" | "critical") | null;
-              value: {
-                amount: number;
-                currency: string;
-                /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
-              } | null;
-              /** @enum {string} */
-              termType: "fixed" | "auto_renew" | "evergreen";
-              effectiveDate: string | null;
-              expiryDate: string | null;
-              renewalPeriodMonths: number | null;
-              noticePeriodDays: number | null;
-              noticeDeadline: string | null;
-              daysRemaining: number | null;
-              renewalPendingConfirmation: boolean;
-              proposedRenewalExpiry: string | null;
-              description: string | null;
-              customFields: {
-                [key: string]: string | number | boolean | string[];
-              };
-              isConfidential: boolean;
-              endedAt: string | null;
-              archivedAt: string | null;
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        attachedField: {
+                            fieldId: string;
+                            slug: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            fieldType: "text" | "long_text" | "number" | "date" | "boolean" | "single_select" | "multi_select" | "user" | "entity";
+                            /** @enum {string} */
+                            moduleScope: "contract" | "global";
+                            displayOrder: number;
+                            isRequired: boolean;
+                        };
+                    };
+                };
             };
-            counterparties: {
-              id: string;
-              name: string;
-              jurisdiction: string | null;
-              isPrimary: boolean;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  removeContractCounterparty: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-        counterpartyId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            contract: {
-              id: string;
-              number: number;
-              title: string;
-              contractTypeId: string;
-              contractTypeName: string;
-              statusId: string;
-              statusName: string;
-              /** @enum {string} */
-              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
-              manager: {
-                id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
-              primaryCounterparty: {
-                id: string;
-                name: string;
-              } | null;
-              /** @enum {string} */
-              priority: "low" | "medium" | "high" | "critical";
-              risk: ("low" | "medium" | "high" | "critical") | null;
-              value: {
-                amount: number;
-                currency: string;
-                /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
-              } | null;
-              /** @enum {string} */
-              termType: "fixed" | "auto_renew" | "evergreen";
-              effectiveDate: string | null;
-              expiryDate: string | null;
-              renewalPeriodMonths: number | null;
-              noticePeriodDays: number | null;
-              noticeDeadline: string | null;
-              daysRemaining: number | null;
-              renewalPendingConfirmation: boolean;
-              proposedRenewalExpiry: string | null;
-              description: string | null;
-              customFields: {
-                [key: string]: string | number | boolean | string[];
-              };
-              isConfidential: boolean;
-              endedAt: string | null;
-              archivedAt: string | null;
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
-            counterparties: {
-              id: string;
-              name: string;
-              jurisdiction: string | null;
-              isPrimary: boolean;
-            }[];
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  setPrimaryContractCounterparty: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-        counterpartyId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            contract: {
-              id: string;
-              number: number;
-              title: string;
-              contractTypeId: string;
-              contractTypeName: string;
-              statusId: string;
-              statusName: string;
-              /** @enum {string} */
-              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
-              manager: {
+    reorderContractTypeFields: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
-              primaryCounterparty: {
-                id: string;
-                name: string;
-              } | null;
-              /** @enum {string} */
-              priority: "low" | "medium" | "high" | "critical";
-              risk: ("low" | "medium" | "high" | "critical") | null;
-              value: {
-                amount: number;
-                currency: string;
-                /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
-              } | null;
-              /** @enum {string} */
-              termType: "fixed" | "auto_renew" | "evergreen";
-              effectiveDate: string | null;
-              expiryDate: string | null;
-              renewalPeriodMonths: number | null;
-              noticePeriodDays: number | null;
-              noticeDeadline: string | null;
-              daysRemaining: number | null;
-              renewalPendingConfirmation: boolean;
-              proposedRenewalExpiry: string | null;
-              description: string | null;
-              customFields: {
-                [key: string]: string | number | boolean | string[];
-              };
-              isConfidential: boolean;
-              endedAt: string | null;
-              archivedAt: string | null;
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
             };
-            counterparties: {
-              id: string;
-              name: string;
-              jurisdiction: string | null;
-              isPrimary: boolean;
-            }[];
-          };
+            cookie?: never;
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  archiveContract: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            contract: {
-              id: string;
-              number: number;
-              title: string;
-              contractTypeId: string;
-              contractTypeName: string;
-              statusId: string;
-              statusName: string;
-              /** @enum {string} */
-              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
-              manager: {
-                id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
-              primaryCounterparty: {
-                id: string;
-                name: string;
-              } | null;
-              /** @enum {string} */
-              priority: "low" | "medium" | "high" | "critical";
-              risk: ("low" | "medium" | "high" | "critical") | null;
-              value: {
-                amount: number;
-                currency: string;
-                /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
-              } | null;
-              /** @enum {string} */
-              termType: "fixed" | "auto_renew" | "evergreen";
-              effectiveDate: string | null;
-              expiryDate: string | null;
-              renewalPeriodMonths: number | null;
-              noticePeriodDays: number | null;
-              noticeDeadline: string | null;
-              daysRemaining: number | null;
-              renewalPendingConfirmation: boolean;
-              proposedRenewalExpiry: string | null;
-              description: string | null;
-              customFields: {
-                [key: string]: string | number | boolean | string[];
-              };
-              isConfidential: boolean;
-              endedAt: string | null;
-              archivedAt: string | null;
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
+        requestBody: {
+            content: {
+                "application/json": {
+                    fieldIds: string[];
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  restoreContract: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            contract: {
-              id: string;
-              number: number;
-              title: string;
-              contractTypeId: string;
-              contractTypeName: string;
-              statusId: string;
-              statusName: string;
-              /** @enum {string} */
-              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
-              manager: {
-                id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              } | null;
-              entity: {
-                id: string;
-                legalName: string;
-              } | null;
-              primaryCounterparty: {
-                id: string;
-                name: string;
-              } | null;
-              /** @enum {string} */
-              priority: "low" | "medium" | "high" | "critical";
-              risk: ("low" | "medium" | "high" | "critical") | null;
-              value: {
-                amount: number;
-                currency: string;
-                /** @enum {string} */
-                cadence: "one_time" | "monthly" | "annually";
-              } | null;
-              /** @enum {string} */
-              termType: "fixed" | "auto_renew" | "evergreen";
-              effectiveDate: string | null;
-              expiryDate: string | null;
-              renewalPeriodMonths: number | null;
-              noticePeriodDays: number | null;
-              noticeDeadline: string | null;
-              daysRemaining: number | null;
-              renewalPendingConfirmation: boolean;
-              proposedRenewalExpiry: string | null;
-              description: string | null;
-              customFields: {
-                [key: string]: string | number | boolean | string[];
-              };
-              isConfidential: boolean;
-              endedAt: string | null;
-              archivedAt: string | null;
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        attachedFields: {
+                            fieldId: string;
+                            slug: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            fieldType: "text" | "long_text" | "number" | "date" | "boolean" | "single_select" | "multi_select" | "user" | "entity";
+                            /** @enum {string} */
+                            moduleScope: "contract" | "global";
+                            displayOrder: number;
+                            isRequired: boolean;
+                        }[];
+                    };
+                };
             };
-          };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  listContractApprovals: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    listMatterTypes: {
+        parameters: {
+            query?: {
+                includeArchived?: "true" | "false";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": {
-            approvals: {
-              id: string;
-              approver: {
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        matterTypes: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    createMatterType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    displayName: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        matterType: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getMatterType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-                image: string | null;
-              };
-              requestedBy: {
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        matterType: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteMatterType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-                image: string | null;
-              };
-              /** @enum {string} */
-              source: "manual" | "group";
-              groupName: string | null;
-              /** @enum {string} */
-              status: "pending" | "approved" | "rejected";
-              note: string | null;
-              /** Format: date-time */
-              requestedAt: string;
-              decidedAt: string | null;
-            }[];
-          };
+            };
+            cookie?: never;
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  requestContractApprovals: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          approverIds: string[];
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            approvals: {
-              id: string;
-              approver: {
+    updateMatterType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-                image: string | null;
-              };
-              requestedBy: {
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    displayName?: string;
+                    description?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        matterType: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    reorderMatterTypes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    ids: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        matterTypes: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    archiveMatterType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-                image: string | null;
-              };
-              /** @enum {string} */
-              source: "manual" | "group";
-              groupName: string | null;
-              /** @enum {string} */
-              status: "pending" | "approved" | "rejected";
-              note: string | null;
-              /** Format: date-time */
-              requestedAt: string;
-              decidedAt: string | null;
-            }[];
-          };
+            };
+            cookie?: never;
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
+        requestBody: {
+            content: {
+                "application/json": {
+                    reassignToId?: string;
+                };
+            };
         };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        matterType: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
-      };
     };
-  };
-  applyApproverGroup: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          groupId: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            approvals: {
-              id: string;
-              approver: {
+    restoreMatterType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-                image: string | null;
-              };
-              requestedBy: {
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        matterType: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listMatterTypeFields: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-                image: string | null;
-              };
-              /** @enum {string} */
-              source: "manual" | "group";
-              groupName: string | null;
-              /** @enum {string} */
-              status: "pending" | "approved" | "rejected";
-              note: string | null;
-              /** Format: date-time */
-              requestedAt: string;
-              decidedAt: string | null;
-            }[];
-          };
+            };
+            cookie?: never;
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        attachedFields: {
+                            fieldId: string;
+                            slug: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            fieldType: "text" | "long_text" | "number" | "date" | "boolean" | "single_select" | "multi_select" | "user" | "entity";
+                            /** @enum {string} */
+                            moduleScope: "global";
+                            displayOrder: number;
+                            isRequired: boolean;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  decideContractApproval: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        approvalId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          /** @enum {string} */
-          decision: "approved" | "rejected";
-          note?: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            approvals: {
-              id: string;
-              approver: {
+    attachMatterTypeField: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-                image: string | null;
-              };
-              requestedBy: {
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    fieldId: string;
+                    isRequired?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        attachedField: {
+                            fieldId: string;
+                            slug: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            fieldType: "text" | "long_text" | "number" | "date" | "boolean" | "single_select" | "multi_select" | "user" | "entity";
+                            /** @enum {string} */
+                            moduleScope: "global";
+                            displayOrder: number;
+                            isRequired: boolean;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    detachMatterTypeField: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-                image: string | null;
-              };
-              /** @enum {string} */
-              source: "manual" | "group";
-              groupName: string | null;
-              /** @enum {string} */
-              status: "pending" | "approved" | "rejected";
-              note: string | null;
-              /** Format: date-time */
-              requestedAt: string;
-              decidedAt: string | null;
-            }[];
-          };
+                fieldId: string;
+            };
+            cookie?: never;
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  cancelContractApproval: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        approvalId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            approvals: {
-              id: string;
-              approver: {
+    setMatterTypeFieldRequired: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-                image: string | null;
-              };
-              requestedBy: {
+                fieldId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    isRequired: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        attachedField: {
+                            fieldId: string;
+                            slug: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            fieldType: "text" | "long_text" | "number" | "date" | "boolean" | "single_select" | "multi_select" | "user" | "entity";
+                            /** @enum {string} */
+                            moduleScope: "global";
+                            displayOrder: number;
+                            isRequired: boolean;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    reorderMatterTypeFields: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-                image: string | null;
-              };
-              /** @enum {string} */
-              source: "manual" | "group";
-              groupName: string | null;
-              /** @enum {string} */
-              status: "pending" | "approved" | "rejected";
-              note: string | null;
-              /** Format: date-time */
-              requestedAt: string;
-              decidedAt: string | null;
-            }[];
-          };
+            };
+            cookie?: never;
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
+        requestBody: {
+            content: {
+                "application/json": {
+                    fieldIds: string[];
+                };
+            };
         };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        attachedFields: {
+                            fieldId: string;
+                            slug: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            fieldType: "text" | "long_text" | "number" | "date" | "boolean" | "single_select" | "multi_select" | "user" | "entity";
+                            /** @enum {string} */
+                            moduleScope: "global";
+                            displayOrder: number;
+                            isRequired: boolean;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
-      };
     };
-  };
-  listContractEnvelopes: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
+    listContractStatuses: {
+        parameters: {
+            query?: {
+                includeArchived?: "true" | "false";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        contractStatuses: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    createContractStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": {
-            envelopes: {
-              id: string;
-              provider: string;
-              /** @enum {string} */
-              status: "sent" | "signed" | "declined" | "voided";
-              signers: {
-                name: string;
-                email: string;
-              }[];
-              documentTitle: string | null;
-              documentVersionNumber: number | null;
-              reason: string | null;
-              sentBy: {
-                id: string;
-                displayName: string;
-                image: string | null;
-              };
-              /** Format: date-time */
-              sentAt: string;
-              completedAt: string | null;
-              /** @enum {string} */
-              executedFetch: "pending" | "ready" | "failed";
-              executedCopy: {
-                documentId: string;
-                versionId: string;
-                versionNumber: number;
-                originalFilename: string;
-              } | null;
-            }[];
-            signingConfigured: boolean;
-            primaryDocument: {
-              id: string;
-              title: string;
-              versions: {
-                id: string;
-                versionNumber: number;
-                kind: string;
-                originalFilename: string;
-                /** Format: date-time */
-                createdAt: string;
-              }[];
-            } | null;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  sendContractEnvelope: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          documentVersionId: string;
-          signers: {
-            name: string;
-            /** Format: email */
-            email: string;
-          }[];
-          subject?: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            envelopes: {
-              id: string;
-              provider: string;
-              /** @enum {string} */
-              status: "sent" | "signed" | "declined" | "voided";
-              signers: {
-                name: string;
-                email: string;
-              }[];
-              documentTitle: string | null;
-              documentVersionNumber: number | null;
-              reason: string | null;
-              sentBy: {
-                id: string;
-                displayName: string;
-                image: string | null;
-              };
-              /** Format: date-time */
-              sentAt: string;
-              completedAt: string | null;
-              /** @enum {string} */
-              executedFetch: "pending" | "ready" | "failed";
-              executedCopy: {
-                documentId: string;
-                versionId: string;
-                versionNumber: number;
-                originalFilename: string;
-              } | null;
-            }[];
-            signingConfigured: boolean;
-            primaryDocument: {
-              id: string;
-              title: string;
-              versions: {
-                id: string;
-                versionNumber: number;
-                kind: string;
-                originalFilename: string;
-                /** Format: date-time */
-                createdAt: string;
-              }[];
-            } | null;
-          };
-        };
-      };
-      /** @description The send was refused: this install has no e-signature connector, or the contract already has an envelope out. An archived contract is refused here too, without naming a type. */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": {
-            /**
-             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
-             * @enum {string}
-             */
-            type:
-              | "urn:openlaw:problem:signing-not-configured"
-              | "urn:openlaw:problem:envelope-live"
-              | "about:blank";
-            title: string;
-            status: number;
-            detail?: string;
-            instance?: string;
-            errors?: {
-              path: string;
-              message: string;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  voidContractEnvelope: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        envelopeId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          reason: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            envelopes: {
-              id: string;
-              provider: string;
-              /** @enum {string} */
-              status: "sent" | "signed" | "declined" | "voided";
-              signers: {
-                name: string;
-                email: string;
-              }[];
-              documentTitle: string | null;
-              documentVersionNumber: number | null;
-              reason: string | null;
-              sentBy: {
-                id: string;
-                displayName: string;
-                image: string | null;
-              };
-              /** Format: date-time */
-              sentAt: string;
-              completedAt: string | null;
-              /** @enum {string} */
-              executedFetch: "pending" | "ready" | "failed";
-              executedCopy: {
-                documentId: string;
-                versionId: string;
-                versionNumber: number;
-                originalFilename: string;
-              } | null;
-            }[];
-            signingConfigured: boolean;
-            primaryDocument: {
-              id: string;
-              title: string;
-              versions: {
-                id: string;
-                versionNumber: number;
-                kind: string;
-                originalFilename: string;
-                /** Format: date-time */
-                createdAt: string;
-              }[];
-            } | null;
-          };
-        };
-      };
-      /** @description The void was refused: this install has no e-signature connector. An envelope that has already ended, and an archived contract, are refused here too, without naming a type. */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": {
-            /**
-             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
-             * @enum {string}
-             */
-            type: "urn:openlaw:problem:signing-not-configured" | "about:blank";
-            title: string;
-            status: number;
-            detail?: string;
-            instance?: string;
-            errors?: {
-              path: string;
-              message: string;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  listContractKeyDates: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            deadlines: {
-              /** @enum {string} */
-              source: "notice_deadline" | "expiry" | "key_date";
-              keyDateId: string | null;
-              /** Format: date */
-              date: string;
-              label: string | null;
-              note: string | null;
-              daysAway: number;
-              isNext: boolean;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  addContractKeyDate: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          /** Format: date */
-          date: string;
-          label: string;
-          note?: string | null;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            deadlines: {
-              /** @enum {string} */
-              source: "notice_deadline" | "expiry" | "key_date";
-              keyDateId: string | null;
-              /** Format: date */
-              date: string;
-              label: string | null;
-              note: string | null;
-              daysAway: number;
-              isNext: boolean;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  removeContractKeyDate: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        keyDateId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            deadlines: {
-              /** @enum {string} */
-              source: "notice_deadline" | "expiry" | "key_date";
-              keyDateId: string | null;
-              /** Format: date */
-              date: string;
-              label: string | null;
-              note: string | null;
-              daysAway: number;
-              isNext: boolean;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  updateContractKeyDate: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        keyDateId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          /** Format: date */
-          date?: string;
-          label?: string;
-          note?: string | null;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            deadlines: {
-              /** @enum {string} */
-              source: "notice_deadline" | "expiry" | "key_date";
-              keyDateId: string | null;
-              /** Format: date */
-              date: string;
-              label: string | null;
-              note: string | null;
-              daysAway: number;
-              isNext: boolean;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  getContractRelations: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            parentChain: (
-              | {
-                  /** @enum {boolean} */
-                  restricted: true;
-                }
-              | {
-                  /** @enum {boolean} */
-                  restricted: false;
-                  number: number;
-                  title: string;
-                  statusName: string;
-                  /** @enum {string} */
-                  stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
-                }
-            )[];
-            children: (
-              | {
-                  /** @enum {boolean} */
-                  restricted: true;
-                }
-              | {
-                  /** @enum {boolean} */
-                  restricted: false;
-                  number: number;
-                  title: string;
-                  statusName: string;
-                  /** @enum {string} */
-                  stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
-                }
-            )[];
-            links: {
-              /** @enum {string} */
-              relationType: "related" | "renews" | "amends";
-              /** @enum {string} */
-              direction: "outgoing" | "incoming";
-              contract:
-                | {
-                    /** @enum {boolean} */
-                    restricted: true;
-                  }
-                | {
-                    /** @enum {boolean} */
-                    restricted: false;
-                    number: number;
-                    title: string;
-                    statusName: string;
+        requestBody: {
+            content: {
+                "application/json": {
+                    displayName: string;
                     /** @enum {string} */
                     stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
-                  };
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  listContractTasks: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            tasks: {
-              id: string;
-              title: string;
-              isDone: boolean;
-              assigneeId: string | null;
-              dueDate: string | null;
-              displayOrder: number;
-            }[];
-            doneCount: number;
-            totalCount: number;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  addContractTask: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          title: string;
-          assigneeId?: string | null;
-          dueDate?: string | null;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            tasks: {
-              id: string;
-              title: string;
-              isDone: boolean;
-              assigneeId: string | null;
-              dueDate: string | null;
-              displayOrder: number;
-            }[];
-            doneCount: number;
-            totalCount: number;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  removeContractTask: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        taskId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            tasks: {
-              id: string;
-              title: string;
-              isDone: boolean;
-              assigneeId: string | null;
-              dueDate: string | null;
-              displayOrder: number;
-            }[];
-            doneCount: number;
-            totalCount: number;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  updateContractTask: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        taskId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          title?: string;
-          assigneeId?: string | null;
-          dueDate?: string | null;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            tasks: {
-              id: string;
-              title: string;
-              isDone: boolean;
-              assigneeId: string | null;
-              dueDate: string | null;
-              displayOrder: number;
-            }[];
-            doneCount: number;
-            totalCount: number;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  toggleContractTask: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        taskId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            tasks: {
-              id: string;
-              title: string;
-              isDone: boolean;
-              assigneeId: string | null;
-              dueDate: string | null;
-              displayOrder: number;
-            }[];
-            doneCount: number;
-            totalCount: number;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  reorderContractTasks: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          taskIds: string[];
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            tasks: {
-              id: string;
-              title: string;
-              isDone: boolean;
-              assigneeId: string | null;
-              dueDate: string | null;
-              displayOrder: number;
-            }[];
-            doneCount: number;
-            totalCount: number;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  searchCounterparties: {
-    parameters: {
-      query?: {
-        query?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            counterparties: {
-              id: string;
-              name: string;
-              jurisdiction: string | null;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  listContractDocuments: {
-    parameters: {
-      query?: {
-        includeArchived?: "true" | "false";
-        folder?: "root" | string;
-        cursor?: string;
-      };
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            documents: {
-              id: string;
-              title: string;
-              description: string | null;
-              isPrimary: boolean;
-              versions: {
-                id: string;
-                versionNumber: number;
-                /** @enum {string} */
-                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
-                note: string | null;
-                originalFilename: string;
-                mimeType: string;
-                /** @enum {string} */
-                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
-                byteSize: number;
-                checksumSha256: string;
-                uploadedBy: {
-                  id: string;
-                  displayName: string;
-                  image: string | null;
-                  archived: boolean;
                 };
-                /** Format: date-time */
-                createdAt: string;
-                isCurrent: boolean;
-                isExecuted: boolean;
-              }[];
-              archivedAt: string | null;
-              isConfidential: boolean;
-              folderId: string | null;
-              createdBy: {
-                id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              };
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
-            }[];
-            nextCursor: string | null;
-          };
+            };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  uploadContractDocument: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "multipart/form-data": {
-          /**
-           * Format: binary
-           * @description The file itself. Any type is accepted (DOC-004).
-           */
-          file: string;
-          /**
-           * @description What this version is in the negotiation (CTR-014). Defaults to `draft_ours`. Must be sent before the file part.
-           * @enum {string}
-           */
-          kind?: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
-          /** @description What changed in this round, kept beside the file. Must be sent before the file part. */
-          note?: string;
-          /** @description Where the file is filed: a folder already on this record (DOC-006), or omitted for the record root. Must be sent before the file part. */
-          folderId?: string;
-          /** @description A relative folder path, `/` separated, find-or-created beneath `folderId` before the document is filed into its last segment (DOC-011). Must be sent before the file part. */
-          folderPath?: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            document: {
-              id: string;
-              title: string;
-              description: string | null;
-              isPrimary: boolean;
-              versions: {
-                id: string;
-                versionNumber: number;
-                /** @enum {string} */
-                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
-                note: string | null;
-                originalFilename: string;
-                mimeType: string;
-                /** @enum {string} */
-                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
-                byteSize: number;
-                checksumSha256: string;
-                uploadedBy: {
-                  id: string;
-                  displayName: string;
-                  image: string | null;
-                  archived: boolean;
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
                 };
-                /** Format: date-time */
-                createdAt: string;
-                isCurrent: boolean;
-                isExecuted: boolean;
-              }[];
-              archivedAt: string | null;
-              isConfidential: boolean;
-              folderId: string | null;
-              createdBy: {
-                id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              };
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
-            };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  uploadDocumentVersion: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        documentId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "multipart/form-data": {
-          /**
-           * Format: binary
-           * @description The file itself. Any type is accepted (DOC-004).
-           */
-          file: string;
-          /**
-           * @description What this version is in the negotiation (CTR-014). Defaults to `draft_ours`. Must be sent before the file part.
-           * @enum {string}
-           */
-          kind?: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
-          /** @description What changed in this round, kept beside the file. Must be sent before the file part. */
-          note?: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            document: {
-              id: string;
-              title: string;
-              description: string | null;
-              isPrimary: boolean;
-              versions: {
-                id: string;
-                versionNumber: number;
-                /** @enum {string} */
-                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
-                note: string | null;
-                originalFilename: string;
-                mimeType: string;
-                /** @enum {string} */
-                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
-                byteSize: number;
-                checksumSha256: string;
-                uploadedBy: {
-                  id: string;
-                  displayName: string;
-                  image: string | null;
-                  archived: boolean;
+                content: {
+                    "application/json": {
+                        contractStatus: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
                 };
-                /** Format: date-time */
-                createdAt: string;
-                isCurrent: boolean;
-                isExecuted: boolean;
-              }[];
-              archivedAt: string | null;
-              isConfidential: boolean;
-              folderId: string | null;
-              createdBy: {
-                id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              };
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  hardDeleteDocument: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        documentId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          confirmTitle: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            documents: {
-              id: string;
-              title: string;
-              description: string | null;
-              isPrimary: boolean;
-              versions: {
-                id: string;
-                versionNumber: number;
-                /** @enum {string} */
-                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
-                note: string | null;
-                originalFilename: string;
-                mimeType: string;
-                /** @enum {string} */
-                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
-                byteSize: number;
-                checksumSha256: string;
-                uploadedBy: {
-                  id: string;
-                  displayName: string;
-                  image: string | null;
-                  archived: boolean;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
                 };
-                /** Format: date-time */
-                createdAt: string;
-                isCurrent: boolean;
-                isExecuted: boolean;
-              }[];
-              archivedAt: string | null;
-              isConfidential: boolean;
-              folderId: string | null;
-              createdBy: {
-                id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              };
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
-            }[];
-            nextCursor: string | null;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  updateDocument: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        documentId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          title?: string;
-          description?: string | null;
-          isConfidential?: boolean;
-          folderId?: string | null;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            document: {
-              id: string;
-              title: string;
-              description: string | null;
-              isPrimary: boolean;
-              versions: {
-                id: string;
-                versionNumber: number;
-                /** @enum {string} */
-                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
-                note: string | null;
-                originalFilename: string;
-                mimeType: string;
-                /** @enum {string} */
-                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
-                byteSize: number;
-                checksumSha256: string;
-                uploadedBy: {
-                  id: string;
-                  displayName: string;
-                  image: string | null;
-                  archived: boolean;
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
-                /** Format: date-time */
-                createdAt: string;
-                isCurrent: boolean;
-                isExecuted: boolean;
-              }[];
-              archivedAt: string | null;
-              isConfidential: boolean;
-              folderId: string | null;
-              createdBy: {
-                id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              };
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  setPrimaryContractDocument: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        documentId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            documents: {
-              id: string;
-              title: string;
-              description: string | null;
-              isPrimary: boolean;
-              versions: {
+    deleteContractStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                versionNumber: number;
-                /** @enum {string} */
-                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
-                note: string | null;
-                originalFilename: string;
-                mimeType: string;
-                /** @enum {string} */
-                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
-                byteSize: number;
-                checksumSha256: string;
-                uploadedBy: {
-                  id: string;
-                  displayName: string;
-                  image: string | null;
-                  archived: boolean;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
                 };
-                /** Format: date-time */
-                createdAt: string;
-                isCurrent: boolean;
-                isExecuted: boolean;
-              }[];
-              archivedAt: string | null;
-              isConfidential: boolean;
-              folderId: string | null;
-              createdBy: {
-                id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              };
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
-            }[];
-            nextCursor: string | null;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  setExecutedDocumentVersion: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        documentId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          versionId: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            document: {
-              id: string;
-              title: string;
-              description: string | null;
-              isPrimary: boolean;
-              versions: {
-                id: string;
-                versionNumber: number;
-                /** @enum {string} */
-                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
-                note: string | null;
-                originalFilename: string;
-                mimeType: string;
-                /** @enum {string} */
-                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
-                byteSize: number;
-                checksumSha256: string;
-                uploadedBy: {
-                  id: string;
-                  displayName: string;
-                  image: string | null;
-                  archived: boolean;
+                content?: never;
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
                 };
-                /** Format: date-time */
-                createdAt: string;
-                isCurrent: boolean;
-                isExecuted: boolean;
-              }[];
-              archivedAt: string | null;
-              isConfidential: boolean;
-              folderId: string | null;
-              createdBy: {
-                id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              };
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
-            };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  clearExecutedDocumentVersion: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        documentId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            document: {
-              id: string;
-              title: string;
-              description: string | null;
-              isPrimary: boolean;
-              versions: {
-                id: string;
-                versionNumber: number;
-                /** @enum {string} */
-                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
-                note: string | null;
-                originalFilename: string;
-                mimeType: string;
-                /** @enum {string} */
-                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
-                byteSize: number;
-                checksumSha256: string;
-                uploadedBy: {
-                  id: string;
-                  displayName: string;
-                  image: string | null;
-                  archived: boolean;
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
-                /** Format: date-time */
-                createdAt: string;
-                isCurrent: boolean;
-                isExecuted: boolean;
-              }[];
-              archivedAt: string | null;
-              isConfidential: boolean;
-              folderId: string | null;
-              createdBy: {
-                id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              };
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  archiveDocument: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        documentId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            document: {
-              id: string;
-              title: string;
-              description: string | null;
-              isPrimary: boolean;
-              versions: {
+    renameContractStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                versionNumber: number;
-                /** @enum {string} */
-                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
-                note: string | null;
-                originalFilename: string;
-                mimeType: string;
-                /** @enum {string} */
-                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
-                byteSize: number;
-                checksumSha256: string;
-                uploadedBy: {
-                  id: string;
-                  displayName: string;
-                  image: string | null;
-                  archived: boolean;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    displayName: string;
                 };
-                /** Format: date-time */
-                createdAt: string;
-                isCurrent: boolean;
-                isExecuted: boolean;
-              }[];
-              archivedAt: string | null;
-              isConfidential: boolean;
-              folderId: string | null;
-              createdBy: {
-                id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              };
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  restoreDocument: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        documentId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            document: {
-              id: string;
-              title: string;
-              description: string | null;
-              isPrimary: boolean;
-              versions: {
-                id: string;
-                versionNumber: number;
-                /** @enum {string} */
-                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
-                note: string | null;
-                originalFilename: string;
-                mimeType: string;
-                /** @enum {string} */
-                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
-                byteSize: number;
-                checksumSha256: string;
-                uploadedBy: {
-                  id: string;
-                  displayName: string;
-                  image: string | null;
-                  archived: boolean;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
                 };
-                /** Format: date-time */
-                createdAt: string;
-                isCurrent: boolean;
-                isExecuted: boolean;
-              }[];
-              archivedAt: string | null;
-              isConfidential: boolean;
-              folderId: string | null;
-              createdBy: {
+                content: {
+                    "application/json": {
+                        contractStatus: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    reorderContractStatuses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    ids: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        contractStatuses: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    archiveContractStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              };
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
             };
-          };
+            cookie?: never;
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  downloadDocumentVersion: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        documentId: string;
-        versionId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/octet-stream": string;
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  previewDocumentVersion: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        documentId: string;
-        versionId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/pdf": string;
-          "image/png": string;
-          "image/jpeg": string;
-          "image/gif": string;
-          "image/webp": string;
-          "image/bmp": string;
-          "image/avif": string;
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  readDocumentVersionText: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        documentId: string;
-        versionId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            text: {
-              /** @enum {string} */
-              state: "pending" | "ready" | "failed" | "unsupported";
-              source: ("native_layer" | "ocr" | "rendition" | "email_body") | null;
-              text: string | null;
-              updatedAt: string | null;
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        contractStatus: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  readDocumentVersionRendition: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        documentId: string;
-        versionId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            rendition: {
-              /** @enum {string} */
-              state: "pending" | "ready" | "failed" | "unsupported";
-              updatedAt: string | null;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  readDocumentVersionEmail: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        documentId: string;
-        versionId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            email: {
-              subject: string | null;
-              from: {
-                name: string | null;
-                address: string | null;
-              } | null;
-              to: {
-                name: string | null;
-                address: string | null;
-              }[];
-              cc: {
-                name: string | null;
-                address: string | null;
-              }[];
-              bcc: {
-                name: string | null;
-                address: string | null;
-              }[];
-              date: string | null;
-              html: string | null;
-              text: string | null;
-              attachments: {
-                index: number;
-                filename: string;
-                mimeType: string;
-                byteSize: number;
-                /** @enum {string} */
-                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
-                isInline: boolean;
-              }[];
-            };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  downloadEmailAttachment: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        documentId: string;
-        versionId: string;
-        attachmentIndex: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/octet-stream": string;
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  previewEmailAttachment: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        documentId: string;
-        versionId: string;
-        attachmentIndex: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/pdf": string;
-          "image/png": string;
-          "image/jpeg": string;
-          "image/gif": string;
-          "image/webp": string;
-          "image/bmp": string;
-          "image/avif": string;
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  listContractFolders: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            folders: {
-              id: string;
-              name: string;
-              parentId: string | null;
-              documentCount: number;
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  createContractFolder: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        number: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          name?: string;
-          path?: string;
-          parentId?: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            folders: {
-              id: string;
-              name: string;
-              parentId: string | null;
-              documentCount: number;
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  deleteContractFolder: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        folderId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            folders: {
-              id: string;
-              name: string;
-              parentId: string | null;
-              documentCount: number;
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  updateContractFolder: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        folderId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          name?: string;
-          parentId?: string | null;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            folders: {
-              id: string;
-              name: string;
-              parentId: string | null;
-              documentCount: number;
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  listComments: {
-    parameters: {
-      query: {
-        entityType: "contract";
-        entityId: string;
-        cursor?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            comments: {
-              id: string;
-              /** @enum {string} */
-              entityType: "contract";
-              entityId: string;
-              author: {
+    restoreContractStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              };
-              body: string;
-              /** @enum {string} */
-              visibility: "legal_only" | "working_team" | "full_thread";
-              mentions: {
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        contractStatus: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listApproverGroups: {
+        parameters: {
+            query?: {
+                includeArchived?: "true" | "false";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        approverGroups: {
+                            id: string;
+                            name: string;
+                            description: string | null;
+                            archivedAt: string | null;
+                            members: {
+                                id: string;
+                                displayName: string;
+                                email: string;
+                            }[];
+                            memberCount: number;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    createApproverGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    description?: string;
+                    memberIds?: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        approverGroup: {
+                            id: string;
+                            name: string;
+                            description: string | null;
+                            archivedAt: string | null;
+                            members: {
+                                id: string;
+                                displayName: string;
+                                email: string;
+                            }[];
+                            memberCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updateApproverGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-              }[];
-              /** Format: date-time */
-              createdAt: string;
-              editedAt: string | null;
-              deletedAt: string | null;
-              redactedAt: string | null;
-            }[];
-            nextCursor: string | null;
-          };
+            };
+            cookie?: never;
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
+        requestBody: {
+            content: {
+                "application/json": {
+                    name?: string;
+                    description?: string | null;
+                };
+            };
         };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        approverGroup: {
+                            id: string;
+                            name: string;
+                            description: string | null;
+                            archivedAt: string | null;
+                            members: {
+                                id: string;
+                                displayName: string;
+                                email: string;
+                            }[];
+                            memberCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
-      };
     };
-  };
-  postComment: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          /** @enum {string} */
-          entityType: "contract";
-          entityId: string;
-          body: string;
-          /** @enum {string} */
-          visibility: "legal_only" | "working_team" | "full_thread";
-          mentions?: string[];
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            comment: {
-              id: string;
-              /** @enum {string} */
-              entityType: "contract";
-              entityId: string;
-              author: {
+    setApproverGroupMembers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              };
-              body: string;
-              /** @enum {string} */
-              visibility: "legal_only" | "working_team" | "full_thread";
-              mentions: {
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    memberIds: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        approverGroup: {
+                            id: string;
+                            name: string;
+                            description: string | null;
+                            archivedAt: string | null;
+                            members: {
+                                id: string;
+                                displayName: string;
+                                email: string;
+                            }[];
+                            memberCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    archiveApproverGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-              }[];
-              /** Format: date-time */
-              createdAt: string;
-              editedAt: string | null;
-              deletedAt: string | null;
-              redactedAt: string | null;
             };
-          };
+            cookie?: never;
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        approverGroup: {
+                            id: string;
+                            name: string;
+                            description: string | null;
+                            archivedAt: string | null;
+                            members: {
+                                id: string;
+                                displayName: string;
+                                email: string;
+                            }[];
+                            memberCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  listMentionCandidates: {
-    parameters: {
-      query: {
-        entityType: "contract";
-        entityId: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            candidates: {
-              id: string;
-              displayName: string;
-              image: string | null;
-              tiers: ("legal_only" | "working_team" | "full_thread")[];
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  readUnreadComments: {
-    parameters: {
-      query: {
-        entityType: "contract";
-        entityId: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            unread: number;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  markCommentsRead: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          /** @enum {string} */
-          entityType: "contract";
-          entityId: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            unread: number;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  deleteComment: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        commentId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            comment: {
-              id: string;
-              /** @enum {string} */
-              entityType: "contract";
-              entityId: string;
-              author: {
+    restoreApproverGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              };
-              body: string;
-              /** @enum {string} */
-              visibility: "legal_only" | "working_team" | "full_thread";
-              mentions: {
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        approverGroup: {
+                            id: string;
+                            name: string;
+                            description: string | null;
+                            archivedAt: string | null;
+                            members: {
+                                id: string;
+                                displayName: string;
+                                email: string;
+                            }[];
+                            memberCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listContracts: {
+        parameters: {
+            query?: {
+                includeArchived?: "true" | "false";
+                includeEnded?: "true" | "false";
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        contracts: {
+                            id: string;
+                            number: number;
+                            title: string;
+                            contractTypeId: string;
+                            contractTypeName: string;
+                            statusId: string;
+                            statusName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                            manager: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            } | null;
+                            entity: {
+                                id: string;
+                                legalName: string;
+                            } | null;
+                            primaryCounterparty: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            /** @enum {string} */
+                            priority: "low" | "medium" | "high" | "critical";
+                            risk: ("low" | "medium" | "high" | "critical") | null;
+                            value: {
+                                amount: number;
+                                currency: string;
+                                /** @enum {string} */
+                                cadence: "one_time" | "monthly" | "annually";
+                            } | null;
+                            /** @enum {string} */
+                            termType: "fixed" | "auto_renew" | "evergreen";
+                            effectiveDate: string | null;
+                            expiryDate: string | null;
+                            renewalPeriodMonths: number | null;
+                            noticePeriodDays: number | null;
+                            noticeDeadline: string | null;
+                            daysRemaining: number | null;
+                            renewalPendingConfirmation: boolean;
+                            proposedRenewalExpiry: string | null;
+                            description: string | null;
+                            customFields: {
+                                [key: string]: string | number | boolean | string[];
+                            };
+                            isConfidential: boolean;
+                            endedAt: string | null;
+                            archivedAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        }[];
+                        nextCursor: string | null;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    createContract: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    title: string;
+                    contractTypeId: string;
+                    customFields?: {
+                        [key: string]: (string | number | boolean | string[]) | null;
+                    };
+                    isConfidential?: boolean;
+                    renewalOf?: {
+                        number: number;
+                        /** @enum {string} */
+                        vehicle: "child" | "successor";
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        contract: {
+                            id: string;
+                            number: number;
+                            title: string;
+                            contractTypeId: string;
+                            contractTypeName: string;
+                            statusId: string;
+                            statusName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                            manager: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            } | null;
+                            entity: {
+                                id: string;
+                                legalName: string;
+                            } | null;
+                            primaryCounterparty: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            /** @enum {string} */
+                            priority: "low" | "medium" | "high" | "critical";
+                            risk: ("low" | "medium" | "high" | "critical") | null;
+                            value: {
+                                amount: number;
+                                currency: string;
+                                /** @enum {string} */
+                                cadence: "one_time" | "monthly" | "annually";
+                            } | null;
+                            /** @enum {string} */
+                            termType: "fixed" | "auto_renew" | "evergreen";
+                            effectiveDate: string | null;
+                            expiryDate: string | null;
+                            renewalPeriodMonths: number | null;
+                            noticePeriodDays: number | null;
+                            noticeDeadline: string | null;
+                            daysRemaining: number | null;
+                            renewalPendingConfirmation: boolean;
+                            proposedRenewalExpiry: string | null;
+                            description: string | null;
+                            customFields: {
+                                [key: string]: string | number | boolean | string[];
+                            };
+                            isConfidential: boolean;
+                            endedAt: string | null;
+                            archivedAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+            };
+            /** @description The named types are CTR-015's guards: the link already exists, the parent would close a loop, or both ends are one contract. An unnamed 409 is an archived predecessor; print it. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /**
+                         * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+                         * @enum {string}
+                         */
+                        type: "urn:openlaw:problem:contract-relation-exists" | "urn:openlaw:problem:contract-parent-cycle" | "urn:openlaw:problem:contract-self-link" | "about:blank";
+                        title: string;
+                        status: number;
+                        detail?: string;
+                        instance?: string;
+                        errors?: {
+                            path: string;
+                            message: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listContractOptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        contractTypes: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            fields: {
+                                fieldId: string;
+                                slug: string;
+                                displayName: string;
+                                description: string | null;
+                                /** @enum {string} */
+                                fieldType: "text" | "long_text" | "number" | "date" | "boolean" | "single_select" | "multi_select" | "user" | "entity";
+                                options: string[] | null;
+                                displayOrder: number;
+                                isRequired: boolean;
+                            }[];
+                        }[];
+                        contractStatuses: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                        }[];
+                        users: {
+                            id: string;
+                            displayName: string;
+                            image: string | null;
+                            archived: boolean;
+                            /** @enum {string} */
+                            role: "administrator" | "legal_team_member" | "contributor" | "business_user";
+                        }[];
+                        approverGroups: {
+                            id: string;
+                            name: string;
+                            memberIds: string[];
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getContract: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        contract: {
+                            id: string;
+                            number: number;
+                            title: string;
+                            contractTypeId: string;
+                            contractTypeName: string;
+                            statusId: string;
+                            statusName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                            manager: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            } | null;
+                            entity: {
+                                id: string;
+                                legalName: string;
+                            } | null;
+                            primaryCounterparty: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            /** @enum {string} */
+                            priority: "low" | "medium" | "high" | "critical";
+                            risk: ("low" | "medium" | "high" | "critical") | null;
+                            value: {
+                                amount: number;
+                                currency: string;
+                                /** @enum {string} */
+                                cadence: "one_time" | "monthly" | "annually";
+                            } | null;
+                            /** @enum {string} */
+                            termType: "fixed" | "auto_renew" | "evergreen";
+                            effectiveDate: string | null;
+                            expiryDate: string | null;
+                            renewalPeriodMonths: number | null;
+                            noticePeriodDays: number | null;
+                            noticeDeadline: string | null;
+                            daysRemaining: number | null;
+                            renewalPendingConfirmation: boolean;
+                            proposedRenewalExpiry: string | null;
+                            description: string | null;
+                            customFields: {
+                                [key: string]: string | number | boolean | string[];
+                            };
+                            isConfidential: boolean;
+                            endedAt: string | null;
+                            archivedAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                        fields: {
+                            fieldId: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            /** @enum {string} */
+                            fieldType: "text" | "long_text" | "number" | "date" | "boolean" | "single_select" | "multi_select" | "user" | "entity";
+                            options: string[] | null;
+                            displayOrder: number;
+                            isRequired: boolean;
+                        }[];
+                        customFieldRefs: {
+                            users: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            }[];
+                            entities: {
+                                id: string;
+                                legalName: string;
+                            }[];
+                        };
+                        team: {
+                            id: string;
+                            displayName: string;
+                            image: string | null;
+                            archived: boolean;
+                            /** @enum {string} */
+                            role: "member" | "watcher" | "creator" | "contributor";
+                        }[];
+                        counterparties: {
+                            id: string;
+                            name: string;
+                            jurisdiction: string | null;
+                            isPrimary: boolean;
+                        }[];
+                        renewals: {
+                            id: string;
+                            /** Format: date */
+                            from: string;
+                            /** Format: date */
+                            to: string;
+                            /** Format: date-time */
+                            confirmedAt: string;
+                            confirmedBy: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            } | null;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updateContract: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    title?: string;
+                    description?: string | null;
+                    managerId?: string | null;
+                    entityId?: string | null;
+                    /** @enum {string} */
+                    priority?: "low" | "medium" | "high" | "critical";
+                    risk?: ("low" | "medium" | "high" | "critical") | null;
+                    value?: {
+                        amount: number;
+                        currency: string;
+                        /** @enum {string} */
+                        cadence: "one_time" | "monthly" | "annually";
+                    } | null;
+                    /** @enum {string} */
+                    termType?: "fixed" | "auto_renew" | "evergreen";
+                    effectiveDate?: string | null;
+                    expiryDate?: string | null;
+                    renewalPeriodMonths?: number | null;
+                    noticePeriodDays?: number | null;
+                    contractTypeId?: string;
+                    customFields?: {
+                        [key: string]: (string | number | boolean | string[]) | null;
+                    };
+                    statusId?: string;
+                    isConfidential?: boolean;
+                    overrideSoftGate?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        contract: {
+                            id: string;
+                            number: number;
+                            title: string;
+                            contractTypeId: string;
+                            contractTypeName: string;
+                            statusId: string;
+                            statusName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                            manager: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            } | null;
+                            entity: {
+                                id: string;
+                                legalName: string;
+                            } | null;
+                            primaryCounterparty: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            /** @enum {string} */
+                            priority: "low" | "medium" | "high" | "critical";
+                            risk: ("low" | "medium" | "high" | "critical") | null;
+                            value: {
+                                amount: number;
+                                currency: string;
+                                /** @enum {string} */
+                                cadence: "one_time" | "monthly" | "annually";
+                            } | null;
+                            /** @enum {string} */
+                            termType: "fixed" | "auto_renew" | "evergreen";
+                            effectiveDate: string | null;
+                            expiryDate: string | null;
+                            renewalPeriodMonths: number | null;
+                            noticePeriodDays: number | null;
+                            noticeDeadline: string | null;
+                            daysRemaining: number | null;
+                            renewalPendingConfirmation: boolean;
+                            proposedRenewalExpiry: string | null;
+                            description: string | null;
+                            customFields: {
+                                [key: string]: string | number | boolean | string[];
+                            };
+                            isConfidential: boolean;
+                            endedAt: string | null;
+                            archivedAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                        fields: {
+                            fieldId: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            /** @enum {string} */
+                            fieldType: "text" | "long_text" | "number" | "date" | "boolean" | "single_select" | "multi_select" | "user" | "entity";
+                            options: string[] | null;
+                            displayOrder: number;
+                            isRequired: boolean;
+                        }[];
+                        customFieldRefs: {
+                            users: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            }[];
+                            entities: {
+                                id: string;
+                                legalName: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+            /** @description The term data would contradict its own type (CTR-006): an expiry on an evergreen contract, or a renewal period on a contract that does not auto-renew. Change the term type, or leave the value off. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /**
+                         * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+                         * @enum {string}
+                         */
+                        type: "urn:openlaw:problem:term-expiry-on-evergreen" | "urn:openlaw:problem:term-renewal-period" | "about:blank";
+                        title: string;
+                        status: number;
+                        detail?: string;
+                        instance?: string;
+                        errors?: {
+                            path: string;
+                            message: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description The status change crosses CTR-012's approval gate with approvals still unresolved. Re-send with `overrideSoftGate` to record it as an override. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /**
+                         * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+                         * @enum {string}
+                         */
+                        type: "urn:openlaw:problem:approval-soft-gate" | "about:blank";
+                        title: string;
+                        status: number;
+                        detail?: string;
+                        instance?: string;
+                        errors?: {
+                            path: string;
+                            message: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    confirmContractRenewal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: date */
+                    fromExpiry: string;
+                    /** Format: date */
+                    toExpiry: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        contract: {
+                            id: string;
+                            number: number;
+                            title: string;
+                            contractTypeId: string;
+                            contractTypeName: string;
+                            statusId: string;
+                            statusName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                            manager: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            } | null;
+                            entity: {
+                                id: string;
+                                legalName: string;
+                            } | null;
+                            primaryCounterparty: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            /** @enum {string} */
+                            priority: "low" | "medium" | "high" | "critical";
+                            risk: ("low" | "medium" | "high" | "critical") | null;
+                            value: {
+                                amount: number;
+                                currency: string;
+                                /** @enum {string} */
+                                cadence: "one_time" | "monthly" | "annually";
+                            } | null;
+                            /** @enum {string} */
+                            termType: "fixed" | "auto_renew" | "evergreen";
+                            effectiveDate: string | null;
+                            expiryDate: string | null;
+                            renewalPeriodMonths: number | null;
+                            noticePeriodDays: number | null;
+                            noticeDeadline: string | null;
+                            daysRemaining: number | null;
+                            renewalPendingConfirmation: boolean;
+                            proposedRenewalExpiry: string | null;
+                            description: string | null;
+                            customFields: {
+                                [key: string]: string | number | boolean | string[];
+                            };
+                            isConfidential: boolean;
+                            endedAt: string | null;
+                            archivedAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                        renewals: {
+                            id: string;
+                            /** Format: date */
+                            from: string;
+                            /** Format: date */
+                            to: string;
+                            /** Format: date-time */
+                            confirmedAt: string;
+                            confirmedBy: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            } | null;
+                        }[];
+                    };
+                };
+            };
+            /** @description The named type says this contract's expiry is no longer the one the roll was raised against (CTR-006) — read the record again and confirm against the expiry it now holds, which is the one refusal here a client acts on rather than prints. An unnamed 409 is an archived record or one that records no expiry to roll; print it. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /**
+                         * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+                         * @enum {string}
+                         */
+                        type: "urn:openlaw:problem:renewal-expiry-moved" | "about:blank";
+                        title: string;
+                        status: number;
+                        detail?: string;
+                        instance?: string;
+                        errors?: {
+                            path: string;
+                            message: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    addContractTeamMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    userId: string;
+                    /** @enum {string} */
+                    role: "member" | "watcher" | "creator" | "contributor";
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        team: {
+                            id: string;
+                            displayName: string;
+                            image: string | null;
+                            archived: boolean;
+                            /** @enum {string} */
+                            role: "member" | "watcher" | "creator" | "contributor";
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    removeContractTeamMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+                userId: string;
+                role: "member" | "watcher" | "creator" | "contributor";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        team: {
+                            id: string;
+                            displayName: string;
+                            image: string | null;
+                            archived: boolean;
+                            /** @enum {string} */
+                            role: "member" | "watcher" | "creator" | "contributor";
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    addContractCounterparty: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    counterpartyId?: string;
+                    name?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        contract: {
+                            id: string;
+                            number: number;
+                            title: string;
+                            contractTypeId: string;
+                            contractTypeName: string;
+                            statusId: string;
+                            statusName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                            manager: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            } | null;
+                            entity: {
+                                id: string;
+                                legalName: string;
+                            } | null;
+                            primaryCounterparty: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            /** @enum {string} */
+                            priority: "low" | "medium" | "high" | "critical";
+                            risk: ("low" | "medium" | "high" | "critical") | null;
+                            value: {
+                                amount: number;
+                                currency: string;
+                                /** @enum {string} */
+                                cadence: "one_time" | "monthly" | "annually";
+                            } | null;
+                            /** @enum {string} */
+                            termType: "fixed" | "auto_renew" | "evergreen";
+                            effectiveDate: string | null;
+                            expiryDate: string | null;
+                            renewalPeriodMonths: number | null;
+                            noticePeriodDays: number | null;
+                            noticeDeadline: string | null;
+                            daysRemaining: number | null;
+                            renewalPendingConfirmation: boolean;
+                            proposedRenewalExpiry: string | null;
+                            description: string | null;
+                            customFields: {
+                                [key: string]: string | number | boolean | string[];
+                            };
+                            isConfidential: boolean;
+                            endedAt: string | null;
+                            archivedAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                        counterparties: {
+                            id: string;
+                            name: string;
+                            jurisdiction: string | null;
+                            isPrimary: boolean;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    removeContractCounterparty: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+                counterpartyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        contract: {
+                            id: string;
+                            number: number;
+                            title: string;
+                            contractTypeId: string;
+                            contractTypeName: string;
+                            statusId: string;
+                            statusName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                            manager: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            } | null;
+                            entity: {
+                                id: string;
+                                legalName: string;
+                            } | null;
+                            primaryCounterparty: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            /** @enum {string} */
+                            priority: "low" | "medium" | "high" | "critical";
+                            risk: ("low" | "medium" | "high" | "critical") | null;
+                            value: {
+                                amount: number;
+                                currency: string;
+                                /** @enum {string} */
+                                cadence: "one_time" | "monthly" | "annually";
+                            } | null;
+                            /** @enum {string} */
+                            termType: "fixed" | "auto_renew" | "evergreen";
+                            effectiveDate: string | null;
+                            expiryDate: string | null;
+                            renewalPeriodMonths: number | null;
+                            noticePeriodDays: number | null;
+                            noticeDeadline: string | null;
+                            daysRemaining: number | null;
+                            renewalPendingConfirmation: boolean;
+                            proposedRenewalExpiry: string | null;
+                            description: string | null;
+                            customFields: {
+                                [key: string]: string | number | boolean | string[];
+                            };
+                            isConfidential: boolean;
+                            endedAt: string | null;
+                            archivedAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                        counterparties: {
+                            id: string;
+                            name: string;
+                            jurisdiction: string | null;
+                            isPrimary: boolean;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setPrimaryContractCounterparty: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+                counterpartyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        contract: {
+                            id: string;
+                            number: number;
+                            title: string;
+                            contractTypeId: string;
+                            contractTypeName: string;
+                            statusId: string;
+                            statusName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                            manager: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            } | null;
+                            entity: {
+                                id: string;
+                                legalName: string;
+                            } | null;
+                            primaryCounterparty: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            /** @enum {string} */
+                            priority: "low" | "medium" | "high" | "critical";
+                            risk: ("low" | "medium" | "high" | "critical") | null;
+                            value: {
+                                amount: number;
+                                currency: string;
+                                /** @enum {string} */
+                                cadence: "one_time" | "monthly" | "annually";
+                            } | null;
+                            /** @enum {string} */
+                            termType: "fixed" | "auto_renew" | "evergreen";
+                            effectiveDate: string | null;
+                            expiryDate: string | null;
+                            renewalPeriodMonths: number | null;
+                            noticePeriodDays: number | null;
+                            noticeDeadline: string | null;
+                            daysRemaining: number | null;
+                            renewalPendingConfirmation: boolean;
+                            proposedRenewalExpiry: string | null;
+                            description: string | null;
+                            customFields: {
+                                [key: string]: string | number | boolean | string[];
+                            };
+                            isConfidential: boolean;
+                            endedAt: string | null;
+                            archivedAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                        counterparties: {
+                            id: string;
+                            name: string;
+                            jurisdiction: string | null;
+                            isPrimary: boolean;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    archiveContract: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        contract: {
+                            id: string;
+                            number: number;
+                            title: string;
+                            contractTypeId: string;
+                            contractTypeName: string;
+                            statusId: string;
+                            statusName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                            manager: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            } | null;
+                            entity: {
+                                id: string;
+                                legalName: string;
+                            } | null;
+                            primaryCounterparty: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            /** @enum {string} */
+                            priority: "low" | "medium" | "high" | "critical";
+                            risk: ("low" | "medium" | "high" | "critical") | null;
+                            value: {
+                                amount: number;
+                                currency: string;
+                                /** @enum {string} */
+                                cadence: "one_time" | "monthly" | "annually";
+                            } | null;
+                            /** @enum {string} */
+                            termType: "fixed" | "auto_renew" | "evergreen";
+                            effectiveDate: string | null;
+                            expiryDate: string | null;
+                            renewalPeriodMonths: number | null;
+                            noticePeriodDays: number | null;
+                            noticeDeadline: string | null;
+                            daysRemaining: number | null;
+                            renewalPendingConfirmation: boolean;
+                            proposedRenewalExpiry: string | null;
+                            description: string | null;
+                            customFields: {
+                                [key: string]: string | number | boolean | string[];
+                            };
+                            isConfidential: boolean;
+                            endedAt: string | null;
+                            archivedAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    restoreContract: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        contract: {
+                            id: string;
+                            number: number;
+                            title: string;
+                            contractTypeId: string;
+                            contractTypeName: string;
+                            statusId: string;
+                            statusName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                            manager: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            } | null;
+                            entity: {
+                                id: string;
+                                legalName: string;
+                            } | null;
+                            primaryCounterparty: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            /** @enum {string} */
+                            priority: "low" | "medium" | "high" | "critical";
+                            risk: ("low" | "medium" | "high" | "critical") | null;
+                            value: {
+                                amount: number;
+                                currency: string;
+                                /** @enum {string} */
+                                cadence: "one_time" | "monthly" | "annually";
+                            } | null;
+                            /** @enum {string} */
+                            termType: "fixed" | "auto_renew" | "evergreen";
+                            effectiveDate: string | null;
+                            expiryDate: string | null;
+                            renewalPeriodMonths: number | null;
+                            noticePeriodDays: number | null;
+                            noticeDeadline: string | null;
+                            daysRemaining: number | null;
+                            renewalPendingConfirmation: boolean;
+                            proposedRenewalExpiry: string | null;
+                            description: string | null;
+                            customFields: {
+                                [key: string]: string | number | boolean | string[];
+                            };
+                            isConfidential: boolean;
+                            endedAt: string | null;
+                            archivedAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listContractApprovals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        approvals: {
+                            id: string;
+                            approver: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                            };
+                            requestedBy: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                            };
+                            /** @enum {string} */
+                            source: "manual" | "group";
+                            groupName: string | null;
+                            /** @enum {string} */
+                            status: "pending" | "approved" | "rejected";
+                            note: string | null;
+                            /** Format: date-time */
+                            requestedAt: string;
+                            decidedAt: string | null;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    requestContractApprovals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    approverIds: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        approvals: {
+                            id: string;
+                            approver: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                            };
+                            requestedBy: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                            };
+                            /** @enum {string} */
+                            source: "manual" | "group";
+                            groupName: string | null;
+                            /** @enum {string} */
+                            status: "pending" | "approved" | "rejected";
+                            note: string | null;
+                            /** Format: date-time */
+                            requestedAt: string;
+                            decidedAt: string | null;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    applyApproverGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    groupId: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        approvals: {
+                            id: string;
+                            approver: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                            };
+                            requestedBy: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                            };
+                            /** @enum {string} */
+                            source: "manual" | "group";
+                            groupName: string | null;
+                            /** @enum {string} */
+                            status: "pending" | "approved" | "rejected";
+                            note: string | null;
+                            /** Format: date-time */
+                            requestedAt: string;
+                            decidedAt: string | null;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    decideContractApproval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                approvalId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    decision: "approved" | "rejected";
+                    note?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        approvals: {
+                            id: string;
+                            approver: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                            };
+                            requestedBy: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                            };
+                            /** @enum {string} */
+                            source: "manual" | "group";
+                            groupName: string | null;
+                            /** @enum {string} */
+                            status: "pending" | "approved" | "rejected";
+                            note: string | null;
+                            /** Format: date-time */
+                            requestedAt: string;
+                            decidedAt: string | null;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    cancelContractApproval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                approvalId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        approvals: {
+                            id: string;
+                            approver: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                            };
+                            requestedBy: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                            };
+                            /** @enum {string} */
+                            source: "manual" | "group";
+                            groupName: string | null;
+                            /** @enum {string} */
+                            status: "pending" | "approved" | "rejected";
+                            note: string | null;
+                            /** Format: date-time */
+                            requestedAt: string;
+                            decidedAt: string | null;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listContractEnvelopes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        envelopes: {
+                            id: string;
+                            provider: string;
+                            /** @enum {string} */
+                            status: "sent" | "signed" | "declined" | "voided";
+                            signers: {
+                                name: string;
+                                email: string;
+                            }[];
+                            documentTitle: string | null;
+                            documentVersionNumber: number | null;
+                            reason: string | null;
+                            sentBy: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                            };
+                            /** Format: date-time */
+                            sentAt: string;
+                            completedAt: string | null;
+                            /** @enum {string} */
+                            executedFetch: "pending" | "ready" | "failed";
+                            executedCopy: {
+                                documentId: string;
+                                versionId: string;
+                                versionNumber: number;
+                                originalFilename: string;
+                            } | null;
+                        }[];
+                        signingConfigured: boolean;
+                        primaryDocument: {
+                            id: string;
+                            title: string;
+                            versions: {
+                                id: string;
+                                versionNumber: number;
+                                kind: string;
+                                originalFilename: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                        } | null;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    sendContractEnvelope: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    documentVersionId: string;
+                    signers: {
+                        name: string;
+                        /** Format: email */
+                        email: string;
+                    }[];
+                    subject?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        envelopes: {
+                            id: string;
+                            provider: string;
+                            /** @enum {string} */
+                            status: "sent" | "signed" | "declined" | "voided";
+                            signers: {
+                                name: string;
+                                email: string;
+                            }[];
+                            documentTitle: string | null;
+                            documentVersionNumber: number | null;
+                            reason: string | null;
+                            sentBy: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                            };
+                            /** Format: date-time */
+                            sentAt: string;
+                            completedAt: string | null;
+                            /** @enum {string} */
+                            executedFetch: "pending" | "ready" | "failed";
+                            executedCopy: {
+                                documentId: string;
+                                versionId: string;
+                                versionNumber: number;
+                                originalFilename: string;
+                            } | null;
+                        }[];
+                        signingConfigured: boolean;
+                        primaryDocument: {
+                            id: string;
+                            title: string;
+                            versions: {
+                                id: string;
+                                versionNumber: number;
+                                kind: string;
+                                originalFilename: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                        } | null;
+                    };
+                };
+            };
+            /** @description The send was refused: this install has no e-signature connector, or the contract already has an envelope out. An archived contract is refused here too, without naming a type. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /**
+                         * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+                         * @enum {string}
+                         */
+                        type: "urn:openlaw:problem:signing-not-configured" | "urn:openlaw:problem:envelope-live" | "about:blank";
+                        title: string;
+                        status: number;
+                        detail?: string;
+                        instance?: string;
+                        errors?: {
+                            path: string;
+                            message: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    voidContractEnvelope: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                envelopeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        envelopes: {
+                            id: string;
+                            provider: string;
+                            /** @enum {string} */
+                            status: "sent" | "signed" | "declined" | "voided";
+                            signers: {
+                                name: string;
+                                email: string;
+                            }[];
+                            documentTitle: string | null;
+                            documentVersionNumber: number | null;
+                            reason: string | null;
+                            sentBy: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                            };
+                            /** Format: date-time */
+                            sentAt: string;
+                            completedAt: string | null;
+                            /** @enum {string} */
+                            executedFetch: "pending" | "ready" | "failed";
+                            executedCopy: {
+                                documentId: string;
+                                versionId: string;
+                                versionNumber: number;
+                                originalFilename: string;
+                            } | null;
+                        }[];
+                        signingConfigured: boolean;
+                        primaryDocument: {
+                            id: string;
+                            title: string;
+                            versions: {
+                                id: string;
+                                versionNumber: number;
+                                kind: string;
+                                originalFilename: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                        } | null;
+                    };
+                };
+            };
+            /** @description The void was refused: this install has no e-signature connector. An envelope that has already ended, and an archived contract, are refused here too, without naming a type. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /**
+                         * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+                         * @enum {string}
+                         */
+                        type: "urn:openlaw:problem:signing-not-configured" | "about:blank";
+                        title: string;
+                        status: number;
+                        detail?: string;
+                        instance?: string;
+                        errors?: {
+                            path: string;
+                            message: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listContractKeyDates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        deadlines: {
+                            /** @enum {string} */
+                            source: "notice_deadline" | "expiry" | "key_date";
+                            keyDateId: string | null;
+                            /** Format: date */
+                            date: string;
+                            label: string | null;
+                            note: string | null;
+                            daysAway: number;
+                            isNext: boolean;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    addContractKeyDate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: date */
+                    date: string;
+                    label: string;
+                    note?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        deadlines: {
+                            /** @enum {string} */
+                            source: "notice_deadline" | "expiry" | "key_date";
+                            keyDateId: string | null;
+                            /** Format: date */
+                            date: string;
+                            label: string | null;
+                            note: string | null;
+                            daysAway: number;
+                            isNext: boolean;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    removeContractKeyDate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                keyDateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        deadlines: {
+                            /** @enum {string} */
+                            source: "notice_deadline" | "expiry" | "key_date";
+                            keyDateId: string | null;
+                            /** Format: date */
+                            date: string;
+                            label: string | null;
+                            note: string | null;
+                            daysAway: number;
+                            isNext: boolean;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updateContractKeyDate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                keyDateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: date */
+                    date?: string;
+                    label?: string;
+                    note?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        deadlines: {
+                            /** @enum {string} */
+                            source: "notice_deadline" | "expiry" | "key_date";
+                            keyDateId: string | null;
+                            /** Format: date */
+                            date: string;
+                            label: string | null;
+                            note: string | null;
+                            daysAway: number;
+                            isNext: boolean;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getContractRelations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        parentChain: ({
+                            /** @enum {boolean} */
+                            restricted: true;
+                        } | {
+                            /** @enum {boolean} */
+                            restricted: false;
+                            number: number;
+                            title: string;
+                            statusName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                        })[];
+                        children: ({
+                            /** @enum {boolean} */
+                            restricted: true;
+                        } | {
+                            /** @enum {boolean} */
+                            restricted: false;
+                            number: number;
+                            title: string;
+                            statusName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                        })[];
+                        links: {
+                            /** @enum {string} */
+                            relationType: "related" | "renews" | "amends";
+                            /** @enum {string} */
+                            direction: "outgoing" | "incoming";
+                            contract: {
+                                /** @enum {boolean} */
+                                restricted: true;
+                            } | {
+                                /** @enum {boolean} */
+                                restricted: false;
+                                number: number;
+                                title: string;
+                                statusName: string;
+                                /** @enum {string} */
+                                stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                            };
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    addContractRelation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    relatedContractNumber: number;
+                    /** @enum {string} */
+                    relationType: "related" | "renews" | "amends";
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        parentChain: ({
+                            /** @enum {boolean} */
+                            restricted: true;
+                        } | {
+                            /** @enum {boolean} */
+                            restricted: false;
+                            number: number;
+                            title: string;
+                            statusName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                        })[];
+                        children: ({
+                            /** @enum {boolean} */
+                            restricted: true;
+                        } | {
+                            /** @enum {boolean} */
+                            restricted: false;
+                            number: number;
+                            title: string;
+                            statusName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                        })[];
+                        links: {
+                            /** @enum {string} */
+                            relationType: "related" | "renews" | "amends";
+                            /** @enum {string} */
+                            direction: "outgoing" | "incoming";
+                            contract: {
+                                /** @enum {boolean} */
+                                restricted: true;
+                            } | {
+                                /** @enum {boolean} */
+                                restricted: false;
+                                number: number;
+                                title: string;
+                                statusName: string;
+                                /** @enum {string} */
+                                stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                            };
+                        }[];
+                    };
+                };
+            };
+            /** @description The link already exists, both ends are one contract, or the pair is already linked this way. An unnamed 409 is an archived record; print it. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /**
+                         * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+                         * @enum {string}
+                         */
+                        type: "urn:openlaw:problem:contract-relation-exists" | "urn:openlaw:problem:contract-self-link" | "about:blank";
+                        title: string;
+                        status: number;
+                        detail?: string;
+                        instance?: string;
+                        errors?: {
+                            path: string;
+                            message: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    removeContractRelation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    relatedContractNumber: number;
+                    /** @enum {string} */
+                    relationType: "related" | "renews" | "amends";
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        parentChain: ({
+                            /** @enum {boolean} */
+                            restricted: true;
+                        } | {
+                            /** @enum {boolean} */
+                            restricted: false;
+                            number: number;
+                            title: string;
+                            statusName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                        })[];
+                        children: ({
+                            /** @enum {boolean} */
+                            restricted: true;
+                        } | {
+                            /** @enum {boolean} */
+                            restricted: false;
+                            number: number;
+                            title: string;
+                            statusName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                        })[];
+                        links: {
+                            /** @enum {string} */
+                            relationType: "related" | "renews" | "amends";
+                            /** @enum {string} */
+                            direction: "outgoing" | "incoming";
+                            contract: {
+                                /** @enum {boolean} */
+                                restricted: true;
+                            } | {
+                                /** @enum {boolean} */
+                                restricted: false;
+                                number: number;
+                                title: string;
+                                statusName: string;
+                                /** @enum {string} */
+                                stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                            };
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listLinkCandidates: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        candidates: {
+                            number: number;
+                            title: string;
+                            statusName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                            isConfidential: boolean;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setContractParent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    parentContractNumber: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        parentChain: ({
+                            /** @enum {boolean} */
+                            restricted: true;
+                        } | {
+                            /** @enum {boolean} */
+                            restricted: false;
+                            number: number;
+                            title: string;
+                            statusName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                        })[];
+                        children: ({
+                            /** @enum {boolean} */
+                            restricted: true;
+                        } | {
+                            /** @enum {boolean} */
+                            restricted: false;
+                            number: number;
+                            title: string;
+                            statusName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                        })[];
+                        links: {
+                            /** @enum {string} */
+                            relationType: "related" | "renews" | "amends";
+                            /** @enum {string} */
+                            direction: "outgoing" | "incoming";
+                            contract: {
+                                /** @enum {boolean} */
+                                restricted: true;
+                            } | {
+                                /** @enum {boolean} */
+                                restricted: false;
+                                number: number;
+                                title: string;
+                                statusName: string;
+                                /** @enum {string} */
+                                stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                            };
+                        }[];
+                    };
+                };
+            };
+            /** @description The parent would close a loop. An unnamed 409 is an archived record; print it. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /**
+                         * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+                         * @enum {string}
+                         */
+                        type: "urn:openlaw:problem:contract-parent-cycle" | "about:blank";
+                        title: string;
+                        status: number;
+                        detail?: string;
+                        instance?: string;
+                        errors?: {
+                            path: string;
+                            message: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    removeContractParent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        parentChain: ({
+                            /** @enum {boolean} */
+                            restricted: true;
+                        } | {
+                            /** @enum {boolean} */
+                            restricted: false;
+                            number: number;
+                            title: string;
+                            statusName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                        })[];
+                        children: ({
+                            /** @enum {boolean} */
+                            restricted: true;
+                        } | {
+                            /** @enum {boolean} */
+                            restricted: false;
+                            number: number;
+                            title: string;
+                            statusName: string;
+                            /** @enum {string} */
+                            stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                        })[];
+                        links: {
+                            /** @enum {string} */
+                            relationType: "related" | "renews" | "amends";
+                            /** @enum {string} */
+                            direction: "outgoing" | "incoming";
+                            contract: {
+                                /** @enum {boolean} */
+                                restricted: true;
+                            } | {
+                                /** @enum {boolean} */
+                                restricted: false;
+                                number: number;
+                                title: string;
+                                statusName: string;
+                                /** @enum {string} */
+                                stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                            };
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listContractTasks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        tasks: {
+                            id: string;
+                            title: string;
+                            isDone: boolean;
+                            assigneeId: string | null;
+                            dueDate: string | null;
+                            displayOrder: number;
+                        }[];
+                        doneCount: number;
+                        totalCount: number;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    addContractTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    title: string;
+                    assigneeId?: string | null;
+                    dueDate?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        tasks: {
+                            id: string;
+                            title: string;
+                            isDone: boolean;
+                            assigneeId: string | null;
+                            dueDate: string | null;
+                            displayOrder: number;
+                        }[];
+                        doneCount: number;
+                        totalCount: number;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    removeContractTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        tasks: {
+                            id: string;
+                            title: string;
+                            isDone: boolean;
+                            assigneeId: string | null;
+                            dueDate: string | null;
+                            displayOrder: number;
+                        }[];
+                        doneCount: number;
+                        totalCount: number;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updateContractTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    title?: string;
+                    assigneeId?: string | null;
+                    dueDate?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        tasks: {
+                            id: string;
+                            title: string;
+                            isDone: boolean;
+                            assigneeId: string | null;
+                            dueDate: string | null;
+                            displayOrder: number;
+                        }[];
+                        doneCount: number;
+                        totalCount: number;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    toggleContractTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        tasks: {
+                            id: string;
+                            title: string;
+                            isDone: boolean;
+                            assigneeId: string | null;
+                            dueDate: string | null;
+                            displayOrder: number;
+                        }[];
+                        doneCount: number;
+                        totalCount: number;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    reorderContractTasks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    taskIds: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        tasks: {
+                            id: string;
+                            title: string;
+                            isDone: boolean;
+                            assigneeId: string | null;
+                            dueDate: string | null;
+                            displayOrder: number;
+                        }[];
+                        doneCount: number;
+                        totalCount: number;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    searchCounterparties: {
+        parameters: {
+            query?: {
+                query?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        counterparties: {
+                            id: string;
+                            name: string;
+                            jurisdiction: string | null;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listContractDocuments: {
+        parameters: {
+            query?: {
+                includeArchived?: "true" | "false";
+                folder?: "root" | string;
+                cursor?: string;
+            };
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        documents: {
+                            id: string;
+                            title: string;
+                            description: string | null;
+                            isPrimary: boolean;
+                            versions: {
+                                id: string;
+                                versionNumber: number;
+                                /** @enum {string} */
+                                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                                note: string | null;
+                                originalFilename: string;
+                                mimeType: string;
+                                /** @enum {string} */
+                                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                                byteSize: number;
+                                checksumSha256: string;
+                                uploadedBy: {
+                                    id: string;
+                                    displayName: string;
+                                    image: string | null;
+                                    archived: boolean;
+                                };
+                                /** Format: date-time */
+                                createdAt: string;
+                                isCurrent: boolean;
+                                isExecuted: boolean;
+                            }[];
+                            archivedAt: string | null;
+                            isConfidential: boolean;
+                            folderId: string | null;
+                            createdBy: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            };
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        }[];
+                        nextCursor: string | null;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    uploadContractDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * Format: binary
+                     * @description The file itself. Any type is accepted (DOC-004).
+                     */
+                    file: string;
+                    /**
+                     * @description What this version is in the negotiation (CTR-014). Defaults to `draft_ours`. Must be sent before the file part.
+                     * @enum {string}
+                     */
+                    kind?: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                    /** @description What changed in this round, kept beside the file. Must be sent before the file part. */
+                    note?: string;
+                    /** @description Where the file is filed: a folder already on this record (DOC-006), or omitted for the record root. Must be sent before the file part. */
+                    folderId?: string;
+                    /** @description A relative folder path, `/` separated, find-or-created beneath `folderId` before the document is filed into its last segment (DOC-011). Must be sent before the file part. */
+                    folderPath?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        document: {
+                            id: string;
+                            title: string;
+                            description: string | null;
+                            isPrimary: boolean;
+                            versions: {
+                                id: string;
+                                versionNumber: number;
+                                /** @enum {string} */
+                                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                                note: string | null;
+                                originalFilename: string;
+                                mimeType: string;
+                                /** @enum {string} */
+                                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                                byteSize: number;
+                                checksumSha256: string;
+                                uploadedBy: {
+                                    id: string;
+                                    displayName: string;
+                                    image: string | null;
+                                    archived: boolean;
+                                };
+                                /** Format: date-time */
+                                createdAt: string;
+                                isCurrent: boolean;
+                                isExecuted: boolean;
+                            }[];
+                            archivedAt: string | null;
+                            isConfidential: boolean;
+                            folderId: string | null;
+                            createdBy: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            };
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    uploadDocumentVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * Format: binary
+                     * @description The file itself. Any type is accepted (DOC-004).
+                     */
+                    file: string;
+                    /**
+                     * @description What this version is in the negotiation (CTR-014). Defaults to `draft_ours`. Must be sent before the file part.
+                     * @enum {string}
+                     */
+                    kind?: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                    /** @description What changed in this round, kept beside the file. Must be sent before the file part. */
+                    note?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        document: {
+                            id: string;
+                            title: string;
+                            description: string | null;
+                            isPrimary: boolean;
+                            versions: {
+                                id: string;
+                                versionNumber: number;
+                                /** @enum {string} */
+                                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                                note: string | null;
+                                originalFilename: string;
+                                mimeType: string;
+                                /** @enum {string} */
+                                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                                byteSize: number;
+                                checksumSha256: string;
+                                uploadedBy: {
+                                    id: string;
+                                    displayName: string;
+                                    image: string | null;
+                                    archived: boolean;
+                                };
+                                /** Format: date-time */
+                                createdAt: string;
+                                isCurrent: boolean;
+                                isExecuted: boolean;
+                            }[];
+                            archivedAt: string | null;
+                            isConfidential: boolean;
+                            folderId: string | null;
+                            createdBy: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            };
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    hardDeleteDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    confirmTitle: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        documents: {
+                            id: string;
+                            title: string;
+                            description: string | null;
+                            isPrimary: boolean;
+                            versions: {
+                                id: string;
+                                versionNumber: number;
+                                /** @enum {string} */
+                                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                                note: string | null;
+                                originalFilename: string;
+                                mimeType: string;
+                                /** @enum {string} */
+                                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                                byteSize: number;
+                                checksumSha256: string;
+                                uploadedBy: {
+                                    id: string;
+                                    displayName: string;
+                                    image: string | null;
+                                    archived: boolean;
+                                };
+                                /** Format: date-time */
+                                createdAt: string;
+                                isCurrent: boolean;
+                                isExecuted: boolean;
+                            }[];
+                            archivedAt: string | null;
+                            isConfidential: boolean;
+                            folderId: string | null;
+                            createdBy: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            };
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        }[];
+                        nextCursor: string | null;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updateDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    title?: string;
+                    description?: string | null;
+                    isConfidential?: boolean;
+                    folderId?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        document: {
+                            id: string;
+                            title: string;
+                            description: string | null;
+                            isPrimary: boolean;
+                            versions: {
+                                id: string;
+                                versionNumber: number;
+                                /** @enum {string} */
+                                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                                note: string | null;
+                                originalFilename: string;
+                                mimeType: string;
+                                /** @enum {string} */
+                                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                                byteSize: number;
+                                checksumSha256: string;
+                                uploadedBy: {
+                                    id: string;
+                                    displayName: string;
+                                    image: string | null;
+                                    archived: boolean;
+                                };
+                                /** Format: date-time */
+                                createdAt: string;
+                                isCurrent: boolean;
+                                isExecuted: boolean;
+                            }[];
+                            archivedAt: string | null;
+                            isConfidential: boolean;
+                            folderId: string | null;
+                            createdBy: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            };
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setPrimaryContractDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        documents: {
+                            id: string;
+                            title: string;
+                            description: string | null;
+                            isPrimary: boolean;
+                            versions: {
+                                id: string;
+                                versionNumber: number;
+                                /** @enum {string} */
+                                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                                note: string | null;
+                                originalFilename: string;
+                                mimeType: string;
+                                /** @enum {string} */
+                                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                                byteSize: number;
+                                checksumSha256: string;
+                                uploadedBy: {
+                                    id: string;
+                                    displayName: string;
+                                    image: string | null;
+                                    archived: boolean;
+                                };
+                                /** Format: date-time */
+                                createdAt: string;
+                                isCurrent: boolean;
+                                isExecuted: boolean;
+                            }[];
+                            archivedAt: string | null;
+                            isConfidential: boolean;
+                            folderId: string | null;
+                            createdBy: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            };
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        }[];
+                        nextCursor: string | null;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setExecutedDocumentVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    versionId: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        document: {
+                            id: string;
+                            title: string;
+                            description: string | null;
+                            isPrimary: boolean;
+                            versions: {
+                                id: string;
+                                versionNumber: number;
+                                /** @enum {string} */
+                                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                                note: string | null;
+                                originalFilename: string;
+                                mimeType: string;
+                                /** @enum {string} */
+                                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                                byteSize: number;
+                                checksumSha256: string;
+                                uploadedBy: {
+                                    id: string;
+                                    displayName: string;
+                                    image: string | null;
+                                    archived: boolean;
+                                };
+                                /** Format: date-time */
+                                createdAt: string;
+                                isCurrent: boolean;
+                                isExecuted: boolean;
+                            }[];
+                            archivedAt: string | null;
+                            isConfidential: boolean;
+                            folderId: string | null;
+                            createdBy: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            };
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    clearExecutedDocumentVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        document: {
+                            id: string;
+                            title: string;
+                            description: string | null;
+                            isPrimary: boolean;
+                            versions: {
+                                id: string;
+                                versionNumber: number;
+                                /** @enum {string} */
+                                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                                note: string | null;
+                                originalFilename: string;
+                                mimeType: string;
+                                /** @enum {string} */
+                                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                                byteSize: number;
+                                checksumSha256: string;
+                                uploadedBy: {
+                                    id: string;
+                                    displayName: string;
+                                    image: string | null;
+                                    archived: boolean;
+                                };
+                                /** Format: date-time */
+                                createdAt: string;
+                                isCurrent: boolean;
+                                isExecuted: boolean;
+                            }[];
+                            archivedAt: string | null;
+                            isConfidential: boolean;
+                            folderId: string | null;
+                            createdBy: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            };
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    archiveDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        document: {
+                            id: string;
+                            title: string;
+                            description: string | null;
+                            isPrimary: boolean;
+                            versions: {
+                                id: string;
+                                versionNumber: number;
+                                /** @enum {string} */
+                                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                                note: string | null;
+                                originalFilename: string;
+                                mimeType: string;
+                                /** @enum {string} */
+                                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                                byteSize: number;
+                                checksumSha256: string;
+                                uploadedBy: {
+                                    id: string;
+                                    displayName: string;
+                                    image: string | null;
+                                    archived: boolean;
+                                };
+                                /** Format: date-time */
+                                createdAt: string;
+                                isCurrent: boolean;
+                                isExecuted: boolean;
+                            }[];
+                            archivedAt: string | null;
+                            isConfidential: boolean;
+                            folderId: string | null;
+                            createdBy: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            };
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    restoreDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        document: {
+                            id: string;
+                            title: string;
+                            description: string | null;
+                            isPrimary: boolean;
+                            versions: {
+                                id: string;
+                                versionNumber: number;
+                                /** @enum {string} */
+                                kind: "draft_ours" | "redline_theirs" | "redline_ours" | "executed" | "amendment";
+                                note: string | null;
+                                originalFilename: string;
+                                mimeType: string;
+                                /** @enum {string} */
+                                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                                byteSize: number;
+                                checksumSha256: string;
+                                uploadedBy: {
+                                    id: string;
+                                    displayName: string;
+                                    image: string | null;
+                                    archived: boolean;
+                                };
+                                /** Format: date-time */
+                                createdAt: string;
+                                isCurrent: boolean;
+                                isExecuted: boolean;
+                            }[];
+                            archivedAt: string | null;
+                            isConfidential: boolean;
+                            folderId: string | null;
+                            createdBy: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            };
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    downloadDocumentVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: string;
+                versionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    previewDocumentVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: string;
+                versionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                    "image/png": string;
+                    "image/jpeg": string;
+                    "image/gif": string;
+                    "image/webp": string;
+                    "image/bmp": string;
+                    "image/avif": string;
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    readDocumentVersionText: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: string;
+                versionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        text: {
+                            /** @enum {string} */
+                            state: "pending" | "ready" | "failed" | "unsupported";
+                            source: ("native_layer" | "ocr" | "rendition" | "email_body") | null;
+                            text: string | null;
+                            updatedAt: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    readDocumentVersionRendition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: string;
+                versionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        rendition: {
+                            /** @enum {string} */
+                            state: "pending" | "ready" | "failed" | "unsupported";
+                            updatedAt: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    readDocumentVersionEmail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: string;
+                versionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        email: {
+                            subject: string | null;
+                            from: {
+                                name: string | null;
+                                address: string | null;
+                            } | null;
+                            to: {
+                                name: string | null;
+                                address: string | null;
+                            }[];
+                            cc: {
+                                name: string | null;
+                                address: string | null;
+                            }[];
+                            bcc: {
+                                name: string | null;
+                                address: string | null;
+                            }[];
+                            date: string | null;
+                            html: string | null;
+                            text: string | null;
+                            attachments: {
+                                index: number;
+                                filename: string;
+                                mimeType: string;
+                                byteSize: number;
+                                /** @enum {string} */
+                                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                                isInline: boolean;
+                            }[];
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    downloadEmailAttachment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: string;
+                versionId: string;
+                attachmentIndex: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    previewEmailAttachment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: string;
+                versionId: string;
+                attachmentIndex: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                    "image/png": string;
+                    "image/jpeg": string;
+                    "image/gif": string;
+                    "image/webp": string;
+                    "image/bmp": string;
+                    "image/avif": string;
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listContractFolders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        folders: {
+                            id: string;
+                            name: string;
+                            parentId: string | null;
+                            documentCount: number;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    createContractFolder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name?: string;
+                    path?: string;
+                    parentId?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        folders: {
+                            id: string;
+                            name: string;
+                            parentId: string | null;
+                            documentCount: number;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteContractFolder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                folderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        folders: {
+                            id: string;
+                            name: string;
+                            parentId: string | null;
+                            documentCount: number;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updateContractFolder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                folderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name?: string;
+                    parentId?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        folders: {
+                            id: string;
+                            name: string;
+                            parentId: string | null;
+                            documentCount: number;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listComments: {
+        parameters: {
+            query: {
+                entityType: "contract";
+                entityId: string;
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        comments: {
+                            id: string;
+                            /** @enum {string} */
+                            entityType: "contract";
+                            entityId: string;
+                            author: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            };
+                            body: string;
+                            /** @enum {string} */
+                            visibility: "legal_only" | "working_team" | "full_thread";
+                            mentions: {
+                                id: string;
+                                displayName: string;
+                            }[];
+                            /** Format: date-time */
+                            createdAt: string;
+                            editedAt: string | null;
+                            deletedAt: string | null;
+                            redactedAt: string | null;
+                        }[];
+                        nextCursor: string | null;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    postComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    entityType: "contract";
+                    entityId: string;
+                    body: string;
+                    /** @enum {string} */
+                    visibility: "legal_only" | "working_team" | "full_thread";
+                    mentions?: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        comment: {
+                            id: string;
+                            /** @enum {string} */
+                            entityType: "contract";
+                            entityId: string;
+                            author: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            };
+                            body: string;
+                            /** @enum {string} */
+                            visibility: "legal_only" | "working_team" | "full_thread";
+                            mentions: {
+                                id: string;
+                                displayName: string;
+                            }[];
+                            /** Format: date-time */
+                            createdAt: string;
+                            editedAt: string | null;
+                            deletedAt: string | null;
+                            redactedAt: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listMentionCandidates: {
+        parameters: {
+            query: {
+                entityType: "contract";
+                entityId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        candidates: {
+                            id: string;
+                            displayName: string;
+                            image: string | null;
+                            tiers: ("legal_only" | "working_team" | "full_thread")[];
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    readUnreadComments: {
+        parameters: {
+            query: {
+                entityType: "contract";
+                entityId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        unread: number;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    markCommentsRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    entityType: "contract";
+                    entityId: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        unread: number;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                commentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        comment: {
+                            id: string;
+                            /** @enum {string} */
+                            entityType: "contract";
+                            entityId: string;
+                            author: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            };
+                            body: string;
+                            /** @enum {string} */
+                            visibility: "legal_only" | "working_team" | "full_thread";
+                            mentions: {
+                                id: string;
+                                displayName: string;
+                            }[];
+                            /** Format: date-time */
+                            createdAt: string;
+                            editedAt: string | null;
+                            deletedAt: string | null;
+                            redactedAt: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    editComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                commentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    body: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        comment: {
+                            id: string;
+                            /** @enum {string} */
+                            entityType: "contract";
+                            entityId: string;
+                            author: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            };
+                            body: string;
+                            /** @enum {string} */
+                            visibility: "legal_only" | "working_team" | "full_thread";
+                            mentions: {
+                                id: string;
+                                displayName: string;
+                            }[];
+                            /** Format: date-time */
+                            createdAt: string;
+                            editedAt: string | null;
+                            deletedAt: string | null;
+                            redactedAt: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    redactComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                commentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        comment: {
+                            id: string;
+                            /** @enum {string} */
+                            entityType: "contract";
+                            entityId: string;
+                            author: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            };
+                            body: string;
+                            /** @enum {string} */
+                            visibility: "legal_only" | "working_team" | "full_thread";
+                            mentions: {
+                                id: string;
+                                displayName: string;
+                            }[];
+                            /** Format: date-time */
+                            createdAt: string;
+                            editedAt: string | null;
+                            deletedAt: string | null;
+                            redactedAt: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listActivity: {
+        parameters: {
+            query: {
+                entityType: "contract";
+                entityId: string;
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        entries: {
+                            id: string;
+                            action: string;
+                            /** @enum {string} */
+                            visibility: "legal_only" | "working_team" | "full_thread";
+                            actor: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            } | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            payload: {
+                                [key: string]: unknown;
+                            };
+                        }[];
+                        nextCursor: string | null;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listAuditLog: {
+        parameters: {
+            query?: {
+                actorId?: string;
+                action?: string;
+                entityType?: "matter" | "contract" | "document" | "request" | "user" | "entity" | "system";
+                from?: string;
+                to?: string;
+                q?: string;
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        entries: {
+                            id: string;
+                            action: string;
+                            /** @enum {string} */
+                            entityType: "matter" | "contract" | "document" | "request" | "user" | "entity" | "system";
+                            /** @enum {string} */
+                            visibility: "legal_only" | "working_team" | "full_thread" | "admin_only";
+                            entityId: string | null;
+                            actor: {
+                                id: string;
+                                displayName: string;
+                                image: string | null;
+                                archived: boolean;
+                            } | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            payload: {
+                                [key: string]: unknown;
+                            };
+                        }[];
+                        nextCursor: string | null;
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listAuditLogActions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        actions: string[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    exportAuditLog: {
+        parameters: {
+            query?: {
+                actorId?: string;
+                action?: string;
+                entityType?: "matter" | "contract" | "document" | "request" | "user" | "entity" | "system";
+                from?: string;
+                to?: string;
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listEntityTypes: {
+        parameters: {
+            query?: {
+                includeArchived?: "true" | "false";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        entityTypes: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    createEntityType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    displayName: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        entityType: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getEntityType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-              }[];
-              /** Format: date-time */
-              createdAt: string;
-              editedAt: string | null;
-              deletedAt: string | null;
-              redactedAt: string | null;
             };
-          };
+            cookie?: never;
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        entityType: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  editComment: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        commentId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          body: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            comment: {
-              id: string;
-              /** @enum {string} */
-              entityType: "contract";
-              entityId: string;
-              author: {
+    deleteEntityType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              };
-              body: string;
-              /** @enum {string} */
-              visibility: "legal_only" | "working_team" | "full_thread";
-              mentions: {
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updateEntityType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-              }[];
-              /** Format: date-time */
-              createdAt: string;
-              editedAt: string | null;
-              deletedAt: string | null;
-              redactedAt: string | null;
             };
-          };
+            cookie?: never;
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
+        requestBody: {
+            content: {
+                "application/json": {
+                    displayName?: string;
+                    description?: string | null;
+                };
+            };
         };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        entityType: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
-      };
     };
-  };
-  redactComment: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        commentId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    reorderEntityTypes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": {
-            comment: {
-              id: string;
-              /** @enum {string} */
-              entityType: "contract";
-              entityId: string;
-              author: {
+        requestBody: {
+            content: {
+                "application/json": {
+                    ids: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        entityTypes: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    archiveEntityType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              };
-              body: string;
-              /** @enum {string} */
-              visibility: "legal_only" | "working_team" | "full_thread";
-              mentions: {
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reassignToId?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        entityType: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    restoreEntityType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-              }[];
-              /** Format: date-time */
-              createdAt: string;
-              editedAt: string | null;
-              deletedAt: string | null;
-              redactedAt: string | null;
             };
-          };
+            cookie?: never;
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        entityType: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            displayOrder: number;
+                            isSystemDefault: boolean;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  listActivity: {
-    parameters: {
-      query: {
-        entityType: "contract";
-        entityId: string;
-        cursor?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    listEntities: {
+        parameters: {
+            query?: {
+                includeArchived?: "true" | "false";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": {
-            entries: {
-              id: string;
-              action: string;
-              /** @enum {string} */
-              visibility: "legal_only" | "working_team" | "full_thread";
-              actor: {
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        entities: {
+                            id: string;
+                            legalName: string;
+                            entityTypeId: string;
+                            entityTypeName: string;
+                            jurisdiction: string | null;
+                            formedOn: string | null;
+                            registrationNumber: string | null;
+                            taxId: string | null;
+                            registeredAgent: string | null;
+                            registeredAddress: string | null;
+                            /** @enum {string} */
+                            status: "active" | "dormant" | "dissolved" | "divested";
+                            archivedAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    createEntity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    legalName: string;
+                    entityTypeId: string;
+                    jurisdiction?: string;
+                    /** Format: date */
+                    formedOn?: string;
+                    registrationNumber?: string;
+                    taxId?: string;
+                    registeredAgent?: string;
+                    registeredAddress?: string;
+                    /** @enum {string} */
+                    status?: "active" | "dormant" | "dissolved" | "divested";
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        entity: {
+                            id: string;
+                            legalName: string;
+                            entityTypeId: string;
+                            entityTypeName: string;
+                            jurisdiction: string | null;
+                            formedOn: string | null;
+                            registrationNumber: string | null;
+                            taxId: string | null;
+                            registeredAgent: string | null;
+                            registeredAddress: string | null;
+                            /** @enum {string} */
+                            status: "active" | "dormant" | "dissolved" | "divested";
+                            archivedAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listEntityTypeOptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        entityTypes: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getEntity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              } | null;
-              /** Format: date-time */
-              createdAt: string;
-              payload: {
-                [key: string]: unknown;
-              };
-            }[];
-            nextCursor: string | null;
-          };
+            };
+            cookie?: never;
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        entity: {
+                            id: string;
+                            legalName: string;
+                            entityTypeId: string;
+                            entityTypeName: string;
+                            jurisdiction: string | null;
+                            formedOn: string | null;
+                            registrationNumber: string | null;
+                            taxId: string | null;
+                            registeredAgent: string | null;
+                            registeredAddress: string | null;
+                            /** @enum {string} */
+                            status: "active" | "dormant" | "dissolved" | "divested";
+                            archivedAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  listAuditLog: {
-    parameters: {
-      query?: {
-        actorId?: string;
-        action?: string;
-        entityType?: "matter" | "contract" | "document" | "request" | "user" | "entity" | "system";
-        from?: string;
-        to?: string;
-        q?: string;
-        cursor?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            entries: {
-              id: string;
-              action: string;
-              /** @enum {string} */
-              entityType:
-                "matter" | "contract" | "document" | "request" | "user" | "entity" | "system";
-              /** @enum {string} */
-              visibility: "legal_only" | "working_team" | "full_thread" | "admin_only";
-              entityId: string | null;
-              actor: {
+    updateEntity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
-                displayName: string;
-                image: string | null;
-                archived: boolean;
-              } | null;
-              /** Format: date-time */
-              createdAt: string;
-              payload: {
-                [key: string]: unknown;
-              };
-            }[];
-            nextCursor: string | null;
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  listAuditLogActions: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            actions: string[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  exportAuditLog: {
-    parameters: {
-      query?: {
-        actorId?: string;
-        action?: string;
-        entityType?: "matter" | "contract" | "document" | "request" | "user" | "entity" | "system";
-        from?: string;
-        to?: string;
-        q?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  listEntityTypes: {
-    parameters: {
-      query?: {
-        includeArchived?: "true" | "false";
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            entityTypes: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  createEntityType: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          displayName: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            entityType: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
             };
-          };
+            cookie?: never;
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  getEntityType: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            entityType: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
+        requestBody: {
+            content: {
+                "application/json": {
+                    legalName?: string;
+                    entityTypeId?: string;
+                    jurisdiction?: string | null;
+                    formedOn?: string | null;
+                    registrationNumber?: string | null;
+                    taxId?: string | null;
+                    registeredAgent?: string | null;
+                    registeredAddress?: string | null;
+                    /** @enum {string} */
+                    status?: "active" | "dormant" | "dissolved" | "divested";
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  deleteEntityType: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  updateEntityType: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          displayName?: string;
-          description?: string | null;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            entityType: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        entity: {
+                            id: string;
+                            legalName: string;
+                            entityTypeId: string;
+                            entityTypeName: string;
+                            jurisdiction: string | null;
+                            formedOn: string | null;
+                            registrationNumber: string | null;
+                            taxId: string | null;
+                            registeredAgent: string | null;
+                            registeredAddress: string | null;
+                            /** @enum {string} */
+                            status: "active" | "dormant" | "dissolved" | "divested";
+                            archivedAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  reorderEntityTypes: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          ids: string[];
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            entityTypes: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  archiveEntityType: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          reassignToId?: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            entityType: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  restoreEntityType: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            entityType: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              displayOrder: number;
-              isSystemDefault: boolean;
-              archivedAt: string | null;
-              inUseCount: number;
+    archiveEntity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
             };
-          };
+            cookie?: never;
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  listEntities: {
-    parameters: {
-      query?: {
-        includeArchived?: "true" | "false";
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            entities: {
-              id: string;
-              legalName: string;
-              entityTypeId: string;
-              entityTypeName: string;
-              jurisdiction: string | null;
-              formedOn: string | null;
-              registrationNumber: string | null;
-              taxId: string | null;
-              registeredAgent: string | null;
-              registeredAddress: string | null;
-              /** @enum {string} */
-              status: "active" | "dormant" | "dissolved" | "divested";
-              archivedAt: string | null;
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  createEntity: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          legalName: string;
-          entityTypeId: string;
-          jurisdiction?: string;
-          /** Format: date */
-          formedOn?: string;
-          registrationNumber?: string;
-          taxId?: string;
-          registeredAgent?: string;
-          registeredAddress?: string;
-          /** @enum {string} */
-          status?: "active" | "dormant" | "dissolved" | "divested";
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            entity: {
-              id: string;
-              legalName: string;
-              entityTypeId: string;
-              entityTypeName: string;
-              jurisdiction: string | null;
-              formedOn: string | null;
-              registrationNumber: string | null;
-              taxId: string | null;
-              registeredAgent: string | null;
-              registeredAddress: string | null;
-              /** @enum {string} */
-              status: "active" | "dormant" | "dissolved" | "divested";
-              archivedAt: string | null;
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        entity: {
+                            id: string;
+                            legalName: string;
+                            entityTypeId: string;
+                            entityTypeName: string;
+                            jurisdiction: string | null;
+                            formedOn: string | null;
+                            registrationNumber: string | null;
+                            taxId: string | null;
+                            registeredAgent: string | null;
+                            registeredAddress: string | null;
+                            /** @enum {string} */
+                            status: "active" | "dormant" | "dissolved" | "divested";
+                            archivedAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  listEntityTypeOptions: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            entityTypes: {
-              id: string;
-              slug: string;
-              displayName: string;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  getEntity: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            entity: {
-              id: string;
-              legalName: string;
-              entityTypeId: string;
-              entityTypeName: string;
-              jurisdiction: string | null;
-              formedOn: string | null;
-              registrationNumber: string | null;
-              taxId: string | null;
-              registeredAgent: string | null;
-              registeredAddress: string | null;
-              /** @enum {string} */
-              status: "active" | "dormant" | "dissolved" | "divested";
-              archivedAt: string | null;
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  updateEntity: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          legalName?: string;
-          entityTypeId?: string;
-          jurisdiction?: string | null;
-          formedOn?: string | null;
-          registrationNumber?: string | null;
-          taxId?: string | null;
-          registeredAgent?: string | null;
-          registeredAddress?: string | null;
-          /** @enum {string} */
-          status?: "active" | "dormant" | "dissolved" | "divested";
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            entity: {
-              id: string;
-              legalName: string;
-              entityTypeId: string;
-              entityTypeName: string;
-              jurisdiction: string | null;
-              formedOn: string | null;
-              registrationNumber: string | null;
-              taxId: string | null;
-              registeredAgent: string | null;
-              registeredAddress: string | null;
-              /** @enum {string} */
-              status: "active" | "dormant" | "dissolved" | "divested";
-              archivedAt: string | null;
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
+    restoreEntity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
             };
-          };
+            cookie?: never;
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  archiveEntity: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            entity: {
-              id: string;
-              legalName: string;
-              entityTypeId: string;
-              entityTypeName: string;
-              jurisdiction: string | null;
-              formedOn: string | null;
-              registrationNumber: string | null;
-              taxId: string | null;
-              registeredAgent: string | null;
-              registeredAddress: string | null;
-              /** @enum {string} */
-              status: "active" | "dormant" | "dissolved" | "divested";
-              archivedAt: string | null;
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        entity: {
+                            id: string;
+                            legalName: string;
+                            entityTypeId: string;
+                            entityTypeName: string;
+                            jurisdiction: string | null;
+                            formedOn: string | null;
+                            registrationNumber: string | null;
+                            taxId: string | null;
+                            registeredAgent: string | null;
+                            registeredAddress: string | null;
+                            /** @enum {string} */
+                            status: "active" | "dormant" | "dissolved" | "divested";
+                            archivedAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  restoreEntity: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            entity: {
-              id: string;
-              legalName: string;
-              entityTypeId: string;
-              entityTypeName: string;
-              jurisdiction: string | null;
-              formedOn: string | null;
-              registrationNumber: string | null;
-              taxId: string | null;
-              registeredAgent: string | null;
-              registeredAddress: string | null;
-              /** @enum {string} */
-              status: "active" | "dormant" | "dissolved" | "divested";
-              archivedAt: string | null;
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  listFields: {
-    parameters: {
-      query?: {
-        includeArchived?: "true" | "false";
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            fields: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              /** @enum {string} */
-              moduleScope: "contract" | "global";
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              options: string[] | null;
-              /** @enum {string} */
-              fieldTag: "business" | "legal";
-              aiPrompt: string | null;
-              archivedAt: string | null;
-              inUseCount: number;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  createField: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          displayName: string;
-          description?: string;
-          /** @enum {string} */
-          moduleScope: "contract" | "global";
-          /** @enum {string} */
-          fieldType:
-            | "text"
-            | "long_text"
-            | "number"
-            | "date"
-            | "boolean"
-            | "single_select"
-            | "multi_select"
-            | "user"
-            | "entity";
-          /** @enum {string} */
-          fieldTag: "business" | "legal";
-          options?: string[];
-          aiPrompt?: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            field: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              /** @enum {string} */
-              moduleScope: "contract" | "global";
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              options: string[] | null;
-              /** @enum {string} */
-              fieldTag: "business" | "legal";
-              aiPrompt: string | null;
-              archivedAt: string | null;
-              inUseCount: number;
+    listFields: {
+        parameters: {
+            query?: {
+                includeArchived?: "true" | "false";
             };
-          };
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  updateField: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          displayName?: string;
-          description?: string | null;
-          /** @enum {string} */
-          fieldTag?: "business" | "legal";
-          options?: string[];
-          aiPrompt?: string | null;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            field: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              /** @enum {string} */
-              moduleScope: "contract" | "global";
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              options: string[] | null;
-              /** @enum {string} */
-              fieldTag: "business" | "legal";
-              aiPrompt: string | null;
-              archivedAt: string | null;
-              inUseCount: number;
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        fields: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            /** @enum {string} */
+                            moduleScope: "contract" | "global";
+                            /** @enum {string} */
+                            fieldType: "text" | "long_text" | "number" | "date" | "boolean" | "single_select" | "multi_select" | "user" | "entity";
+                            options: string[] | null;
+                            /** @enum {string} */
+                            fieldTag: "business" | "legal";
+                            aiPrompt: string | null;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        }[];
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  setFieldScope: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          /** @enum {string} */
-          moduleScope: "contract" | "global";
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            field: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              /** @enum {string} */
-              moduleScope: "contract" | "global";
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              options: string[] | null;
-              /** @enum {string} */
-              fieldTag: "business" | "legal";
-              aiPrompt: string | null;
-              archivedAt: string | null;
-              inUseCount: number;
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
-  archiveField: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    createField: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": {
-            field: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              /** @enum {string} */
-              moduleScope: "contract" | "global";
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              options: string[] | null;
-              /** @enum {string} */
-              fieldTag: "business" | "legal";
-              aiPrompt: string | null;
-              archivedAt: string | null;
-              inUseCount: number;
+        requestBody: {
+            content: {
+                "application/json": {
+                    displayName: string;
+                    description?: string;
+                    /** @enum {string} */
+                    moduleScope: "contract" | "global";
+                    /** @enum {string} */
+                    fieldType: "text" | "long_text" | "number" | "date" | "boolean" | "single_select" | "multi_select" | "user" | "entity";
+                    /** @enum {string} */
+                    fieldTag: "business" | "legal";
+                    options?: string[];
+                    aiPrompt?: string;
+                };
             };
-          };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  restoreField: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            field: {
-              id: string;
-              slug: string;
-              displayName: string;
-              description: string | null;
-              /** @enum {string} */
-              moduleScope: "contract" | "global";
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              options: string[] | null;
-              /** @enum {string} */
-              fieldTag: "business" | "legal";
-              aiPrompt: string | null;
-              archivedAt: string | null;
-              inUseCount: number;
+        responses: {
+            /** @description Default Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        field: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            /** @enum {string} */
+                            moduleScope: "contract" | "global";
+                            /** @enum {string} */
+                            fieldType: "text" | "long_text" | "number" | "date" | "boolean" | "single_select" | "multi_select" | "user" | "entity";
+                            options: string[] | null;
+                            /** @enum {string} */
+                            fieldTag: "business" | "legal";
+                            aiPrompt: string | null;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
+                };
             };
-          };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
     };
-  };
+    updateField: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    displayName?: string;
+                    description?: string | null;
+                    /** @enum {string} */
+                    fieldTag?: "business" | "legal";
+                    options?: string[];
+                    aiPrompt?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        field: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            /** @enum {string} */
+                            moduleScope: "contract" | "global";
+                            /** @enum {string} */
+                            fieldType: "text" | "long_text" | "number" | "date" | "boolean" | "single_select" | "multi_select" | "user" | "entity";
+                            options: string[] | null;
+                            /** @enum {string} */
+                            fieldTag: "business" | "legal";
+                            aiPrompt: string | null;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setFieldScope: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    moduleScope: "contract" | "global";
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        field: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            /** @enum {string} */
+                            moduleScope: "contract" | "global";
+                            /** @enum {string} */
+                            fieldType: "text" | "long_text" | "number" | "date" | "boolean" | "single_select" | "multi_select" | "user" | "entity";
+                            options: string[] | null;
+                            /** @enum {string} */
+                            fieldTag: "business" | "legal";
+                            aiPrompt: string | null;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    archiveField: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        field: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            /** @enum {string} */
+                            moduleScope: "contract" | "global";
+                            /** @enum {string} */
+                            fieldType: "text" | "long_text" | "number" | "date" | "boolean" | "single_select" | "multi_select" | "user" | "entity";
+                            options: string[] | null;
+                            /** @enum {string} */
+                            fieldTag: "business" | "legal";
+                            aiPrompt: string | null;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    restoreField: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        field: {
+                            id: string;
+                            slug: string;
+                            displayName: string;
+                            description: string | null;
+                            /** @enum {string} */
+                            moduleScope: "contract" | "global";
+                            /** @enum {string} */
+                            fieldType: "text" | "long_text" | "number" | "date" | "boolean" | "single_select" | "multi_select" | "user" | "entity";
+                            options: string[] | null;
+                            /** @enum {string} */
+                            fieldTag: "business" | "legal";
+                            aiPrompt: string | null;
+                            archivedAt: string | null;
+                            inUseCount: number;
+                        };
+                    };
+                };
+            };
+            /** @description Problem details (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
 }

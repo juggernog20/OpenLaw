@@ -2014,7 +2014,14 @@ function ContractRecord() {
                       contract carries. Absent when the read failed — an
                       empty state is a fact about the record, not a
                       fallback for a read that did not happen. */}
-                  {relations !== null && <RelatedContractsCard relations={relations} />}
+                  {relations !== null && (
+                    <RelatedContractsCard
+                      contractNumber={saved.number}
+                      contractIsConfidential={saved.isConfidential}
+                      relations={relations}
+                      editable={canEdit && !archived}
+                    />
+                  )}
                 </>
               )}
               {/* CTR-016's fields, in the card the C2 mock draws for
