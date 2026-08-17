@@ -236,6 +236,21 @@
   "activity.keyDate.removed": {
     "defaultMessage": "{actor} removed the key date {label} on {date}"
   },
+  "activity.task.added": {
+    "defaultMessage": "{actor} added the task {title}"
+  },
+  "activity.task.completed": {
+    "defaultMessage": "{actor} completed the task {title}"
+  },
+  "activity.task.edited": {
+    "defaultMessage": "{actor} changed the task {title}"
+  },
+  "activity.task.removed": {
+    "defaultMessage": "{actor} removed the task {title}"
+  },
+  "activity.task.reopened": {
+    "defaultMessage": "{actor} reopened the task {title}"
+  },
   "activity.loadError": {
     "defaultMessage": "The history could not be read. Reopen the panel to try again."
   },
@@ -1172,6 +1187,9 @@
   "contracts.record.tab.overview": {
     "defaultMessage": "Overview"
   },
+  "contracts.record.tab.tasks": {
+    "defaultMessage": "Tasks"
+  },
   "contracts.reference": {
     "defaultMessage": "C-{number}"
   },
@@ -2046,6 +2064,54 @@
     "defaultMessage": "Key date"
   },
   "keyDates.writeFailed": {
+    "defaultMessage": "The change could not be saved. Try again."
+  },
+  "tasks.actionsFor": {
+    "defaultMessage": "Actions for {title}"
+  },
+  "tasks.add": {
+    "defaultMessage": "Add task"
+  },
+  "tasks.addTitle": {
+    "defaultMessage": "Add a task"
+  },
+  "tasks.count.done": {
+    "defaultMessage": "{done} of {total} done"
+  },
+  "tasks.countLabel": {
+    "defaultMessage": "{count, plural, one {# task} other {# tasks}}"
+  },
+  "tasks.dueDate": {
+    "defaultMessage": "Due {date}"
+  },
+  "tasks.edit": {
+    "defaultMessage": "Edit task"
+  },
+  "tasks.editTitle": {
+    "defaultMessage": "Edit task"
+  },
+  "tasks.empty": {
+    "defaultMessage": "No tasks on this contract yet."
+  },
+  "tasks.field.dueDate": {
+    "defaultMessage": "Due date (optional)"
+  },
+  "tasks.field.title": {
+    "defaultMessage": "Title"
+  },
+  "tasks.needTitle": {
+    "defaultMessage": "Name what needs doing."
+  },
+  "tasks.remove": {
+    "defaultMessage": "Remove task"
+  },
+  "tasks.section": {
+    "defaultMessage": "Tasks"
+  },
+  "tasks.toggleLabel": {
+    "defaultMessage": "{isDone, select, true {Reopen task: {title}} other {Complete task: {title}}}"
+  },
+  "tasks.writeFailed": {
     "defaultMessage": "The change could not be saved. Try again."
   },
   "keys.arrows": {

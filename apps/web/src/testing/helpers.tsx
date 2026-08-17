@@ -213,6 +213,12 @@ export function stubApi(state: ApiState) {
     if (/^\/api\/v1\/contracts\/\d+\/key-dates$/.test(call.url.pathname) && call.method === "GET") {
       return json(200, { deadlines: [] });
     }
+    // And every task on it (M17/1, CTR-017). Empty by default for the
+    // roster's reason: a record with no tasks is the ordinary case, and
+    // only the suites about the checklist supply one.
+    if (/^\/api\/v1\/contracts\/\d+\/tasks$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { tasks: [], doneCount: 0, totalCount: 0 });
+    }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
       return json(200, state.onboarding ?? { completed: true, emailConfigured: true });
     }

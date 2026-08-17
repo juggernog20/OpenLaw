@@ -626,6 +626,8 @@ Source: **CTR-017** (mirrors `matter_tasks`, MTR-005)
 
 Lightweight checklist. Task due dates do **not** feed deadline surfaces.
 
+Landed in M17/1, migration `0049_contract_tasks`.
+
 | Column                     | Type        | Notes                         |
 | -------------------------- | ----------- | ----------------------------- |
 | `id`                       | UUID        | PK                            |
