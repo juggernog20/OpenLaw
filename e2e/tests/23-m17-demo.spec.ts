@@ -436,22 +436,25 @@ test.describe("M17 demo path", () => {
       await expect(linkDialog).toBeVisible();
       // Select the link type "Amends".
       await linkDialog.getByLabel("Link type").selectOption("amends");
-      // Search for the parent contract.
-      await linkDialog.getByRole("combobox").fill(`C-${parentNumber}`);
-      // Wait for the search results and pick the parent.
-      const parentOption = linkDialog.getByRole("option", {
-        name: new RegExp(`C-${parentNumber}`),
-      });
+      // Search for the parent by its per-run title, which names exactly
+      // one live contract on the never-reset instance — a digit query
+      // would title-match any leftover row whose stamp carries the same
+      // digits, and the picker pages at twenty.
+      await linkDialog.getByLabel("Search by number or title…").fill(parentTitle);
+      // The candidates render as buttons carrying the reference, the
+      // title, and the status; the title picks the parent out.
+      const parentOption = linkDialog.getByRole("button").filter({ hasText: parentTitle });
       await expect(parentOption).toBeVisible();
       await parentOption.click();
 
-      // Submit the link.
+      // Submit the link. The confirm button carries the dialog's own
+      // name, "Link contract".
       const linked = memberPage.waitForResponse(
         (response) =>
           response.url().endsWith(`/api/v1/contracts/${childNumber}/relations`) &&
           response.request().method() === "POST",
       );
-      await linkDialog.getByRole("button", { name: "Add link" }).click();
+      await linkDialog.getByRole("button", { name: "Link contract" }).click();
       expect((await linked).status()).toBe(201);
       await expect(linkDialog).toBeHidden();
 
@@ -508,15 +511,12 @@ test.describe("M17 demo path", () => {
       expect(afterEnd.endedAt).not.toBeNull();
       expect(afterEnd.statusId).toBe(ended.id);
 
-      // The feed records the status change with the actor.
+      // The feed records the status change with the actor. A status
+      // move is narrated under its own verb (DD-017), so it is read
+      // there rather than in the field-edit entries.
       const endFeed = await readFeed(memberPage.request, parentContract.id);
-      const statusEntries = entriesOf(endFeed, "contract.updated");
-      const endEntry = statusEntries.find(
-        (entry) =>
-          entry.payload.changed &&
-          typeof entry.payload.changed === "object" &&
-          "status" in (entry.payload.changed as Record<string, unknown>),
-      );
+      const statusEntries = entriesOf(endFeed, "contract.status_changed");
+      const endEntry = statusEntries.find((entry) => entry.payload.toStage === "ended");
       expect(endEntry).toBeDefined();
       expect(endEntry!.actor?.displayName).toBe(MEMBER_NAME);
 
@@ -540,9 +540,11 @@ test.describe("M17 demo path", () => {
       expect(afterWrite.stage).toBe("ended");
       expect(afterWrite.endedAt).not.toBeNull();
 
-      // The screen half: reload and confirm the description renders.
+      // The screen half: reload, and the Description card's textarea
+      // holds what the seam stored — a textbox carries its value, not
+      // text content, so it is read by its label.
       await memberPage.reload();
-      await expect(memberPage.getByText(description)).toBeVisible();
+      await expect(memberPage.getByLabel("Description", { exact: true })).toHaveValue(description);
 
       // ---- Reopening is an ordinary status change ----
 
