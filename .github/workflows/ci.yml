@@ -169,15 +169,19 @@ jobs:
         with:
           fetch-depth: 0
 
-      # This job runs no pnpm — the fidelity script is plain node and the
-      # stack is built by Compose. pnpm is here because setup-node reads
-      # `packageManager` from package.json and turns its cache on by
-      # itself, then fails when the manager it just chose is not on PATH.
-      - uses: pnpm/action-setup@v4
-
+      # This job runs no pnpm and installs nothing — the fidelity script
+      # is plain node and the stack is built by Compose. So the package
+      # manager's cache is turned off rather than fed: setup-node reads
+      # `packageManager` from package.json and switches caching on by
+      # itself, and a job that never installs has no store for the
+      # post-job save to find. It failed the job on that ("Path
+      # Validation Error … no cache is being saved") after the rehearsal
+      # itself had passed every step, which is the worst kind of red: a
+      # green check turned red by cleanup.
       - uses: actions/setup-node@v5
         with:
           node-version: 24
+          package-manager-cache: false
 
       # Throwaway per-run secrets, as in the E2E job. Written once and
       # kept across both halves: OPENLAW_SECRET_KEY has to be the same
