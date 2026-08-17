@@ -7,9 +7,10 @@
  * — `number`, `title`, the type and status FKs, `manager_id`,
  * `priority`, `risk`, the CTR-010 value trio, `description`,
  * `custom_fields`, timestamps, and the soft-delete stamp. M10 adds
- * `is_confidential`, the one column DD-014's gate needs. Term, parent,
- * and matter linking arrive with their own milestones. SCHEMA.md is the
- * naming reference, never a migration to transcribe.
+ * `is_confidential`, the one column DD-014's gate needs. M16 adds the
+ * five CTR-006 term columns. Parent and matter linking arrive with
+ * their own milestones. SCHEMA.md is the naming reference, never a
+ * migration to transcribe.
  *
  * `number` is CTR-003's global reference: a dedicated Postgres identity
  * sequence, independent of the future matters sequence, rendered C-###
@@ -28,6 +29,7 @@ import {
   boolean,
   char,
   check,
+  date,
   index,
   integer,
   jsonb,
@@ -70,6 +72,17 @@ export type SeverityLevel = (typeof SEVERITY_LEVELS)[number];
 export const VALUE_CADENCES = ["one_time", "monthly", "annually"] as const;
 export type ValueCadence = (typeof VALUE_CADENCES)[number];
 
+/**
+ * CTR-006's term type: what kind of commitment this contract is.
+ *
+ * Code branches on it — an evergreen contract holds no expiry, a
+ * renewal period belongs to an auto-renewing one alone, and the
+ * "renewal pending confirmation" predicate reads it — so it is a fixed
+ * enum, not an admin-configurable list.
+ */
+export const TERM_TYPES = ["fixed", "auto_renew", "evergreen"] as const;
+export type TermType = (typeof TERM_TYPES)[number];
+
 export const contracts = pgTable(
   "contracts",
   {
@@ -105,6 +118,34 @@ export const contracts = pgTable(
     priority: text("priority", { enum: SEVERITY_LEVELS }).notNull().default("medium"),
     /** CTR-005: NULL = not yet assessed, which is not the same as low. */
     risk: text("risk", { enum: SEVERITY_LEVELS }),
+    /**
+     * CTR-006's term, in five columns that are five fields (M16/1).
+     *
+     * The type is not null, because every contract is one of the three
+     * kinds whether or not anybody has said so. `fixed` is the default
+     * and the backfill for every row that existed before this column
+     * did: it is the least-asserting of the three — it claims no
+     * automatic roll and no perpetual life — and a team re-types its
+     * evergreens by edit.
+     */
+    termType: text("term_type", { enum: TERM_TYPES }).notNull().default("fixed"),
+    /** When the term starts. NULL until known — a contract is often
+     * recorded before the countersigned copy comes back. */
+    effectiveDate: date("effective_date"),
+    /** When the term ends. NULL for an evergreen contract, which has no
+     * end, and NULL on the other two until somebody records one. The
+     * derived notice deadline and days remaining are both subtractions
+     * from this, so both are blank while it is. */
+    expiryDate: date("expiry_date"),
+    /** How far one confirmed roll advances the expiry. Auto-renewing
+     * contracts only: nothing rolls on the other two, so a number there
+     * would be a fact about a thing that never happens. */
+    renewalPeriodMonths: integer("renewal_period_months"),
+    /** The action window before expiry, in days. Legal on any term
+     * type: a fixed-term contract can carry a notice obligation just as
+     * an auto-renewing one can. The notice deadline derives only when
+     * there is an expiry to subtract it from. */
+    noticePeriodDays: integer("notice_period_days"),
     /** CTR-010's value, in three columns that are one field. The amount
      * is an integer count of the currency's smallest unit — cents for
      * USD, yen for JPY — never a float, so no rounding can creep into a
@@ -116,6 +157,31 @@ export const contracts = pgTable(
     valueCurrency: char("value_currency", { length: 3 }),
     /** What the amount is per (CTR-010). */
     valueCadence: text("value_cadence", { enum: VALUE_CADENCES }),
+    /**
+     * CTR-015's hierarchy: the one contract this one sits under (M16/5).
+     *
+     * **One parent, arbitrary depth, and no cycles.** A single column is
+     * the one-parent rule stated as a shape, the way
+     * `primary_document_id` states its own. Depth is whatever a team
+     * draws — an MSA over its SOWs, and a SOW over an amendment of it.
+     * Cycles are refused by the write path, which walks up from the
+     * proposed parent before it commits; the column can only say that a
+     * row is not its own parent, and it does.
+     *
+     * **Nothing flows down it** (CTR-015, CTR-018). Status, team,
+     * confidentiality, and the term stay the record's own. The link is
+     * navigational, so a child born under a confidential parent is open
+     * unless somebody says otherwise.
+     *
+     * NULL is the ordinary case: most contracts stand alone. No cascade
+     * — a contract is soft-deleted rather than dropped, so the reference
+     * outlives an archive, and nothing here decides what a hard delete
+     * would mean.
+     */
+    // The return type is written out for `primary_document_id`'s reason:
+    // the reference closes on this same table, and TypeScript cannot
+    // infer a type that depends on itself.
+    parentId: text("parent_id").references((): AnyPgColumn => contracts.id),
     /** DD-014's opt-in gate, and the whole of it: when set, only the
      * named team, the Owner, and Administrators reach the record or
      * anything attached to it. Not null with a `false` default because
@@ -206,6 +272,10 @@ export const contracts = pgTable(
     // check every contract for one naming it as its instrument, and
     // without an index that check is a sequential scan of `contracts`.
     index("contracts_primary_document_idx").on(table.primaryDocumentId),
+    // "What sits under this contract" — the read M17's hierarchy
+    // breadcrumb and relations panel ride, and the walk the cycle guard
+    // already makes on every parent write.
+    index("contracts_parent_idx").on(table.parentId),
     // `entity_id` carries no index yet: nothing in M8 reads contracts by
     // the entity that signs them. The roll-up that will (ENT-007, M27)
     // brings its own, per the incremental-schema doctrine.
@@ -217,6 +287,37 @@ export const contracts = pgTable(
     check(
       "contracts_value_cadence_check",
       sql`${table.valueCadence} in ('one_time', 'monthly', 'annually')`,
+    ),
+    check(
+      "contracts_term_type_check",
+      sql`${table.termType} in ('fixed', 'auto_renew', 'evergreen')`,
+    ),
+    // CTR-006's two shape rules, stated where no write path can get
+    // past them. The API refuses both with a named problem type, which
+    // is the answer a person reads; these are the answer the row obeys,
+    // so a term can never contradict its own type whichever code put it
+    // there. An evergreen contract has no end, and only an
+    // auto-renewing one rolls.
+    check(
+      "contracts_evergreen_expiry_check",
+      sql`${table.termType} <> 'evergreen' or ${table.expiryDate} is null`,
+    ),
+    check(
+      "contracts_renewal_period_term_check",
+      sql`${table.termType} = 'auto_renew' or ${table.renewalPeriodMonths} is null`,
+    ),
+    // Two periods, two bounds. A roll of zero months would advance an
+    // expiry to itself, and a negative notice period would put the
+    // deadline after the date it warns about — neither is a term, both
+    // are data-entry slips. The ceilings are generous rather than
+    // meaningful: a century of months and a century of days.
+    check(
+      "contracts_renewal_period_range_check",
+      sql`${table.renewalPeriodMonths} is null or ${table.renewalPeriodMonths} between 1 and 1200`,
+    ),
+    check(
+      "contracts_notice_period_range_check",
+      sql`${table.noticePeriodDays} is null or ${table.noticePeriodDays} between 0 and 36500`,
     ),
     // Two bounds on one column. A negative contract value is not a
     // value — it is a data-entry slip; rebates and credits are
@@ -241,6 +342,13 @@ export const contracts = pgTable(
     // or bare string would make `custom_fields ? slug` — the archive
     // guard's own test — an error rather than an answer.
     check("contracts_custom_fields_check", sql`jsonb_typeof(${table.customFields}) = 'object'`),
+    // The shortest cycle CTR-015 forbids, stated where no write path can
+    // get past it. The longer ones need a walk and the walk is the write
+    // path's; this is the one case a single row can decide by itself.
+    check(
+      "contracts_parent_not_self_check",
+      sql`${table.parentId} is null or ${table.parentId} <> ${table.id}`,
+    ),
   ],
 );
 

@@ -177,7 +177,9 @@ jobs:
       # post-job save to find. It failed the job on that ("Path
       # Validation Error … no cache is being saved") after the rehearsal
       # itself had passed every step, which is the worst kind of red: a
-      # green check turned red by cleanup.
+      # green check turned red by cleanup. Turning the cache off also
+      # takes the pnpm setup step with it — it was only ever here to put
+      # the manager the cache had chosen on PATH.
       - uses: actions/setup-node@v5
         with:
           node-version: 24

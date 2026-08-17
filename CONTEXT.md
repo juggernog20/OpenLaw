@@ -148,8 +148,33 @@ The configurable taxonomy on a Matter, Contract, or Request, and the designated 
 An entry in the shared custom-field catalog, defined once with a module scope and attached to the types that should render it [MTR-011, CTR-016].
 _Avoid_: custom field (when referring to the catalog entry itself), attribute, property
 
+**Term type**:
+What kind of commitment a Contract is — **fixed**, **auto-renewing**, or **evergreen**. It is one of three fixed values, not a configurable label, because the rest of the term follows from it: an evergreen Contract holds no expiry date, and only an auto-renewing one holds a renewal period [CTR-006].
+_Avoid_: renewal type, contract term (that is the period, not its kind), auto-renew flag
+
+**Notice deadline**:
+The date by which somebody must act to stop a Contract renewing: its expiry date minus its notice period. It is **derived and never stored** — it moves the moment either half does — and it exists only where there is an expiry to subtract from, so an evergreen Contract has none [CTR-006].
+_Avoid_: notice date, notice period (that is the count of days this is derived from), cancellation deadline
+
+**Renewal pending confirmation**:
+What an auto-renewing Contract says about itself once its expiry date has passed and nobody has confirmed the roll. It is **derived, never stored** — a reading of the record's own dates, true whenever the Contract auto-renews, is not archived, and its expiry is behind us — so it appears without a job running and clears the moment the expiry advances. It is a banner and never a status: the Contract's status and stage are untouched by it [CTR-006].
+_Avoid_: pending renewal status, lapsed, overdue renewal, expired (a fixed term that ran out has simply ended)
+
+**Confirmed roll**:
+A person's assertion that an auto-renewing Contract renewed on the same paper, which advances its expiry date — the first of CTR-007's four renewal vehicles. Nothing in OpenLaw ever rolls a term on its own: a roll happens because somebody confirmed it, and the person may adjust the proposed new expiry before committing. Nothing stores a confirmed roll either — the activity entry it writes is the whole record of it, and both the Contract's renewal history and its last renewal date are that entry read back [CTR-006, CTR-007].
+_Avoid_: auto-renewal (nothing is automatic), rollover, renewal event, extension
+
+**Renewal vehicle**:
+How a team chooses to record a renewal. There are four and OpenLaw imposes none of them: **confirm the roll** (the same record's expiry advances), **amendment** (a version filed on the record's own paper), **child contract** (a new record born under the original), and **new contract** (a standalone successor linked back to its predecessor). The tool records what a team actually did rather than a doctrine, so a renewal is identified afterwards by its link and by the activity log — never by the shape of the record [CTR-007].
+_Avoid_: renewal type, renewal method, renewal path
+
 **Key date**:
-A named deadline on a Matter or Contract; key dates feed deadline surfaces [MTR-004, CTR-009].
+A named deadline on a Matter or Contract — a date, a label, and an optional note. Key dates feed deadline surfaces. A key date carries no owner and no reminder schedule of its own [MTR-004, CTR-009, NOT-004].
+_Avoid_: milestone, custom date, important date
+
+**Next deadline**:
+The earliest date that has not yet passed on a record's deadline surface — a date falling today still counts. On a Contract that surface is the union of its key dates, its expiry date, and its derived notice deadline, so the next deadline may be any of the three. A record whose every date has passed has none [CTR-009, MTR-004].
+_Avoid_: due date, upcoming date, next date
 
 **Task**:
 A lightweight checklist item. Deliberately not an entity — no comments, no status beyond done, and task due dates never feed deadline surfaces [MTR-005, CTR-017].

@@ -95,6 +95,19 @@ function contractRow(overrides: Record<string, unknown> = {}) {
     priority: "medium",
     risk: null,
     value: null,
+    // CTR-006's term: `fixed` is where every contract starts, and
+    // nothing else about the term is recorded yet.
+    termType: "fixed",
+    effectiveDate: null,
+    expiryDate: null,
+    renewalPeriodMonths: null,
+    noticePeriodDays: null,
+    // Derived at read and stored nowhere — both blank while there is no
+    // expiry to subtract from.
+    noticeDeadline: null,
+    daysRemaining: null,
+    renewalPendingConfirmation: false,
+    proposedRenewalExpiry: null,
     description: null,
     customFields: {},
     isConfidential: false,
@@ -204,6 +217,7 @@ function recordApi(
         customFieldRefs: { users: [], entities: [] },
         team: [{ id: "u2", displayName: "Nadia Counsel", image: null, role: "creator" }],
         counterparties: [],
+        renewals: [],
       });
     }
     if (call.url.pathname === "/api/v1/contracts/42/envelopes" && call.method === "GET") {

@@ -53,6 +53,35 @@
  * integer count of the currency's smallest unit; no total is stored,
  * because every total (annual × term) is derivable from what is.
  *
+ * The term is CTR-006's, and it is five columns that are five fields
+ * (M16/1): the type, the effective date, the expiry, the renewal period
+ * in months, and the notice period in days. Each commits on its own
+ * through the same per-field PATCH, and the type is what decides which
+ * of the other four the record may hold — an expiry on an evergreen
+ * contract and a renewal period off an auto-renewing one are refused
+ * with their own problem types, and a type change clears what the new
+ * type cannot hold, each clear narrated as the edit it is.
+ *
+ * Four answers ride out of every read that nothing stores: the notice
+ * deadline (expiry minus the notice period), the days remaining (expiry
+ * minus today), whether a roll is pending confirmation, and where a
+ * confirmed roll would take the expiry. They are computed where the
+ * answer is assembled, so no surface can disagree with another about a
+ * fact none of them holds, and none needs a job, a sweep, or a clock —
+ * all four are functions of the term columns and the calendar.
+ *
+ * The roll itself is CTR-007's first renewal vehicle (M16/4), and it is
+ * the one act on this record that CTR-006's notify-only engine waits
+ * for. Nothing here advances a date on its own; a person confirms, and
+ * `expiry_date` moves under the row's lock. The request carries the
+ * expiry it was raised against, so two confirms racing for one roll
+ * advance the term exactly once and the loser is told the record moved.
+ * The status and the stage are untouched — the pending state is a
+ * reading of the dates, not a transition — and the roll writes its own
+ * activity action, which is the **only** record a renewal leaves: the
+ * record's renewal history and its "Last renewal" fact are that log read
+ * back (grill row G.R5).
+ *
  * The custom fields are CTR-016's, and they are the M6 catalog finally
  * doing work. The contract's type attaches fields through
  * `contract_type_fields`; that join decides which render and in what
@@ -103,6 +132,7 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
+  activityLog,
   and,
   approverGroupMembers,
   approverGroups,
@@ -124,6 +154,7 @@ import {
   ne,
   SEVERITY_LEVELS,
   sql,
+  TERM_TYPES,
   users,
   USER_ROLES,
   VALUE_CADENCES,
@@ -142,6 +173,13 @@ import {
   NO_CONTRACT,
   reachesLockedContract,
 } from "../../lib/contract-access.js";
+import { linkContracts, setContractParent } from "../../lib/contract-relations.js";
+import {
+  daysRemaining,
+  noticeDeadline,
+  proposedRollExpiry,
+  renewalPending,
+} from "../../lib/contract-term.js";
 import {
   AttachedCustomFieldSchema,
   assertRequiredCustomFields,
@@ -151,7 +189,16 @@ import {
   selectAttachedFields,
   type AttachedCustomField,
 } from "../../lib/custom-fields.js";
-import { SOFT_GATE_PROBLEM_TYPE } from "@openlaw/shared";
+import {
+  CONTRACT_PARENT_CYCLE_PROBLEM_TYPE,
+  CONTRACT_RELATION_EXISTS_PROBLEM_TYPE,
+  CONTRACT_SELF_LINK_PROBLEM_TYPE,
+  RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE,
+  SOFT_GATE_PROBLEM_TYPE,
+  TERM_EXPIRY_ON_EVERGREEN_PROBLEM_TYPE,
+  TERM_RENEWAL_PERIOD_PROBLEM_TYPE,
+  type ActivityPayloadMap,
+} from "@openlaw/shared";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import { assertApprovalGate, type UnresolvedApproval } from "../../lib/soft-gate.js";
 
@@ -182,6 +229,17 @@ const DRAFT_STATUS_SLUG = "draft";
  * not a feed somebody reads.
  */
 const PAGE_SIZE = 50;
+
+/**
+ * How many confirmed rolls the record envelope carries (CTR-006).
+ *
+ * The history is read out of the activity log on every record read, and
+ * a contract that rolls monthly grows it without end. 50 matches the
+ * table page above, because the renewals are drawn as a table too, and
+ * a record that has rolled more than fifty times is asking a question
+ * the feed answers better than the card does.
+ */
+const RENEWAL_HISTORY_LIMIT = 50;
 
 /** A cursor is a contract id, and nothing longer is worth reading. */
 const CursorSchema = z.string().min(1).max(64);
@@ -231,6 +289,80 @@ const ContractValueInput = z.strictObject({
     }),
   cadence: z.enum(VALUE_CADENCES),
 });
+
+/** CTR-006's three kinds of commitment. Code branches on it, so it is a
+ * fixed enum rather than an admin-configurable list. */
+const TermTypeSchema = z.enum(TERM_TYPES);
+
+/**
+ * The two term periods, bounded exactly as the database bounds them.
+ *
+ * A roll of zero months would advance an expiry to itself and a
+ * negative notice period would put the deadline after the date it warns
+ * about; neither is a term. The ceilings are generous rather than
+ * meaningful — a century of months, a century of days — and they are
+ * here so a slip reads as a refusal at the seam rather than as a
+ * constraint violation out of Postgres.
+ */
+const RenewalPeriodSchema = z.int().min(1).max(1200);
+const NoticePeriodSchema = z.int().min(0).max(36_500);
+
+/**
+ * CTR-007's two routed vehicles, and which record the renewal is being
+ * routed from (M16/5).
+ *
+ * The other two vehicles are not here, because neither makes a record.
+ * Confirming the roll moves the predecessor's own expiry and has its own
+ * route; papering the renewal as an amendment files a version on the
+ * primary document's chain, which is the M11 write path and needs
+ * nothing from this one.
+ *
+ * `child` and `successor` are separate values rather than a relation
+ * type, because they are two shapes and not two spellings: a child sits
+ * *under* its predecessor in the CTR-015 hierarchy, and a successor
+ * stands beside it holding a `renews` link. Naming the link type here
+ * would make the caller responsible for a choice the vehicle already
+ * makes.
+ */
+const RenewalOfSchema = z.strictObject({
+  /** The predecessor's CTR-003 number — the reference a person speaks,
+   * exactly as every other contract route takes it. */
+  number: z.int().positive(),
+  vehicle: z.enum(["child", "successor"]),
+});
+
+/**
+ * CTR-007's prefill: the business facts a routed renewal is born with.
+ *
+ * **This list is the decision.** The deal is the same deal — our side of
+ * it, what it is worth, and the shape of its term — so re-keying those
+ * onto the successor is work with no judgement in it. Everything else is
+ * a fact about the *record* rather than the deal: the status says where
+ * this paper has got to, the team says who is working it, the Owner says
+ * who is accountable for it, priority and risk are assessments nobody
+ * has made yet, and the Confidential flag is an audience decision. None
+ * of them is inherited (CTR-015), so none of them is here.
+ *
+ * The term is copied as its **shape**, dates and all. A successor whose
+ * dates have not been agreed yet is edited on the record; a successor
+ * that simply continues the same commitment is right already. Copying
+ * the type without the periods would leave an auto-renewing record that
+ * does not know how far it rolls, which is a worse starting point than
+ * either.
+ */
+function businessFactsOf(predecessor: Contract) {
+  return {
+    entityId: predecessor.entityId,
+    valueAmount: predecessor.valueAmount,
+    valueCurrency: predecessor.valueCurrency,
+    valueCadence: predecessor.valueCadence,
+    termType: predecessor.termType,
+    effectiveDate: predecessor.effectiveDate,
+    expiryDate: predecessor.expiryDate,
+    renewalPeriodMonths: predecessor.renewalPeriodMonths,
+    noticePeriodDays: predecessor.noticePeriodDays,
+  };
+}
 
 /** A person as every contract surface renders them: name and face, plus
  * the SET-005 archived flag the shared identity component greys on. */
@@ -307,6 +439,64 @@ const ContractRowSchema = z.object({
    * says nothing about money. The C1 mock draws it as a list column, so
    * it rides every row, not just the record's. */
   value: ContractValueSchema.nullable(),
+  /** CTR-006's term type. Not null: every contract is one of the three
+   * kinds whether or not anybody has said so, and `fixed` is what a
+   * record starts on. */
+  termType: TermTypeSchema,
+  /** When the term starts; NULL until known. */
+  effectiveDate: z.iso.date().nullable(),
+  /** When the term ends; NULL for an evergreen contract, which has no
+   * end, and NULL on the other two until somebody records one. */
+  expiryDate: z.iso.date().nullable(),
+  /** How far one confirmed roll advances the expiry. Auto-renewing
+   * contracts only, so NULL on the other two. */
+  renewalPeriodMonths: z.int().nullable(),
+  /** The action window before expiry, in days. Legal on any term
+   * type. */
+  noticePeriodDays: z.int().nullable(),
+  /**
+   * CTR-006's notice deadline: the expiry minus the notice period,
+   * **derived at read and never stored**. NULL while either half is
+   * missing — there is nothing to subtract from, or nothing to
+   * subtract — which is why an evergreen contract never has one.
+   */
+  noticeDeadline: z.iso.date().nullable(),
+  /**
+   * How many days are left of the term: the expiry minus today,
+   * **derived at read and never stored**. Negative once the expiry has
+   * passed, which is a fact the record has to be able to say. NULL when
+   * no expiry is recorded, and so always NULL for an evergreen
+   * contract.
+   */
+  daysRemaining: z.int().nullable(),
+  /**
+   * CTR-006's "renewal pending confirmation": this contract auto-renews,
+   * is not archived, and its expiry has gone by with nobody confirming
+   * the roll.
+   *
+   * **A predicate, not a status.** No column holds it and no job sets
+   * it — it is true because the record's own dates say so, and false
+   * again the moment the expiry advances or the term is re-typed. That
+   * is CTR-006's notify-only engine in one boolean: nothing here
+   * advances a date, so the record says the date passed and waits for a
+   * person. The status and the stage are untouched by it.
+   */
+  renewalPendingConfirmation: z.boolean(),
+  /**
+   * Where a confirmed roll would take the expiry: the current expiry
+   * plus the renewal period, **derived at read and never stored**. NULL
+   * whenever the record cannot roll — a term that does not auto-renew,
+   * an expiry nobody recorded, or a renewal period nobody recorded.
+   *
+   * It is a proposal and never a commitment: the person confirming may
+   * enter a different date, because a roll whose dates shifted in
+   * negotiation is recorded as it really landed (CTR-007). It is
+   * answered here rather than computed by the surface for DES-040 clause
+   * 4's reason — one date two places could disagree about is one place's
+   * to own, and the month arithmetic a roll needs is not something a
+   * dialog should keep a second copy of.
+   */
+  proposedRenewalExpiry: z.iso.date().nullable(),
   description: z.string().nullable(),
   /** CTR-016's custom fields, keyed by the catalog field's slug. Which
    * of these the record draws is the type's attachment join to say, not
@@ -327,6 +517,37 @@ const ContractRowSchema = z.object({
 });
 
 const ContractEnvelope = z.object({ contract: ContractRowSchema });
+
+/**
+ * One confirmed roll, as the record reads its own renewal history back
+ * out of the activity log (CTR-006, CTR-007, grill row G.R5).
+ *
+ * **Nothing stores a renewal.** The roll moves one column and appends
+ * one `contract.renewal_confirmed` entry, and that entry is the whole
+ * record of it — so the confirmed-renewal rows on the record's card and
+ * the "Last renewal" fact among its facts are both this, read back. A
+ * renewal table would be a second copy of a history the log already
+ * keeps append-only.
+ *
+ * `from` and `to` are the expiry either side of the roll. Both, because
+ * a roll the person adjusted committed what they entered rather than
+ * the proposal, and the row has to say what the term actually moved
+ * from rather than leave a reader to recompute it.
+ */
+const ConfirmedRenewalSchema = z.object({
+  /** The activity entry's own id — the row's key, and nothing else
+   * addresses it: a confirmed roll is a fact, not a thing to edit. */
+  id: z.string(),
+  /** The expiry the term ran to before the roll. */
+  from: z.iso.date(),
+  /** The expiry it advanced to. */
+  to: z.iso.date(),
+  confirmedAt: z.iso.datetime(),
+  /** Who confirmed it. NULL only where the log holds no actor, which is
+   * a system entry — no path in this build writes one, and the row
+   * still reads rather than disappearing. */
+  confirmedBy: PersonSchema.nullable(),
+});
 
 /**
  * The people and Entities the stored custom-field values name (CTR-016's
@@ -359,6 +580,18 @@ const ContractFieldsEnvelope = ContractEnvelope.extend({
 const ContractRecordEnvelope = ContractFieldsEnvelope.extend({
   team: z.array(TeamMemberSchema),
   counterparties: z.array(CounterpartySchema),
+  /** Every confirmed roll on this record, most recent first (G.R5). It
+   * rides the record read for the team's reason — only the record draws
+   * a renewal history — and most-recent-first so the "Last renewal"
+   * fact is the first row rather than a scan for a maximum. */
+  renewals: z.array(ConfirmedRenewalSchema),
+});
+
+/** What the confirmed roll answers with: the record, because the roll
+ * moved its expiry and cleared its pending state, and the whole history,
+ * because the roll just added to it. */
+const ContractRenewalsEnvelope = ContractEnvelope.extend({
+  renewals: z.array(ConfirmedRenewalSchema),
 });
 const TeamEnvelope = z.object({ team: z.array(TeamMemberSchema) });
 /** What every counterparty write answers with. The contract rides along
@@ -536,6 +769,23 @@ function toRow(context: ContractContext) {
     priority: row.priority,
     risk: row.risk,
     value: toValue(row),
+    termType: row.termType,
+    effectiveDate: row.effectiveDate,
+    expiryDate: row.expiryDate,
+    renewalPeriodMonths: row.renewalPeriodMonths,
+    noticePeriodDays: row.noticePeriodDays,
+    // The two CTR-006 derivations, taken from the one module that
+    // derives them — so the record read, the list, every write's answer,
+    // and the CTR-009 deadline union can never disagree about a date
+    // none of them stores.
+    noticeDeadline: noticeDeadline(row.expiryDate, row.noticePeriodDays),
+    daysRemaining: daysRemaining(row.expiryDate),
+    // The pending state and the roll's proposal, from the same module
+    // and for the same reason: neither is a column, neither needs a job,
+    // and a surface that computed either of them itself would be the
+    // copy that drifts.
+    renewalPendingConfirmation: renewalPending(row),
+    proposedRenewalExpiry: proposedRollExpiry(row),
     description: row.description,
     customFields: row.customFields,
     isConfidential: row.isConfidential,
@@ -661,6 +911,78 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       .innerJoin(counterparties, eq(contractCounterparties.counterpartyId, counterparties.id))
       .where(eq(contractCounterparties.contractId, contractId))
       .orderBy(desc(contractCounterparties.isPrimary), asc(sql`lower(${counterparties.name})`));
+
+  /**
+   * One contract's renewal history, read straight out of the activity
+   * log (CTR-006, CTR-007, grill row G.R5).
+   *
+   * **This is the only state a confirmed roll leaves behind.** The roll
+   * advances one column and appends one entry, so the entries *are* the
+   * history — the confirmed-renewal rows on the record's card and the
+   * "Last renewal" fact among its facts both read this. A renewal table
+   * would be a second copy of a history the log already keeps
+   * append-only, and it would need its own erasure and audit rules to
+   * say the same thing twice.
+   *
+   * Most recent first, so the last renewal is the first row: the fact
+   * the record draws is then a read of `[0]` rather than a scan for a
+   * maximum, and the card draws a history newest-first, which is the
+   * order somebody asking "when did we last renew this" reads in.
+   *
+   * The actor is joined out for the same reason the roster joins its
+   * approvers: a row that named an id would make the surface look one
+   * up. An entry with no actor still reads — nothing in this build
+   * writes one, and a row that vanished because a column was null would
+   * lose a roll the record made.
+   */
+  const selectRenewals = async (db: Executor, contractId: string) => {
+    const rows = await db
+      .select({
+        id: activityLog.id,
+        payload: activityLog.payload,
+        createdAt: activityLog.createdAt,
+        actor: {
+          id: users.id,
+          displayName: users.displayName,
+          image: users.image,
+          archivedAt: users.archivedAt,
+        },
+      })
+      .from(activityLog)
+      .leftJoin(users, eq(activityLog.actorId, users.id))
+      .where(
+        and(
+          eq(activityLog.entityType, "contract"),
+          eq(activityLog.entityId, contractId),
+          eq(activityLog.action, "contract.renewal_confirmed"),
+        ),
+      )
+      // Newest first, tie-broken on the id: uuidv7 is time-ordered, so
+      // two rolls committed in one millisecond still read in the order
+      // they were written.
+      .orderBy(desc(activityLog.createdAt), desc(activityLog.id))
+      // Bounded, because this rides every record read and a monthly
+      // roll grows it forever. The newest are what the card draws and
+      // what "Last renewal" reads, so the cut is at the old end. A
+      // record that outruns the bound has its whole history in the
+      // feed, which is where a long history belongs.
+      .limit(RENEWAL_HISTORY_LIMIT);
+    return rows.map((row) => {
+      // Read through the shared vocabulary rather than an inline shape,
+      // so a change to what the roll writes fails to compile here
+      // instead of quietly answering undefined. The column is jsonb and
+      // the log is append-only, so the cast is unavoidable; naming the
+      // vocabulary entry is what makes it check anything at all.
+      const payload = row.payload as ActivityPayloadMap["contract.renewal_confirmed"];
+      return {
+        id: row.id,
+        from: payload.from,
+        to: payload.to,
+        confirmedAt: row.createdAt.toISOString(),
+        confirmedBy: toPersonOrNull(row.actor),
+      };
+    });
+  };
 
   /** The row's `primaryCounterparty` derived from the party list a write
    * path just produced — the same answer the list query's flag-keyed
@@ -1298,12 +1620,13 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(and(eq(contracts.number, request.params.number), teamScope(request.user)))
         .limit(1);
       if (!row) throw httpError(404, NO_CONTRACT);
-      const [team, parties, custom] = await Promise.all([
+      const [team, parties, custom, renewals] = await Promise.all([
         selectTeam(app.db, row.row.id),
         selectCounterparties(app.db, row.row.id),
         customFieldsEnvelope(app.db, row),
+        selectRenewals(app.db, row.row.id),
       ]);
-      return { contract: toRow(row), ...custom, team, counterparties: parties };
+      return { contract: toRow(row), ...custom, team, counterparties: parties, renewals };
     },
   );
 
@@ -1321,7 +1644,18 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           "CTR-003 sequence. Everything else is set inline on the record " +
           "afterward — except the Confidential flag (DD-014), which may " +
           "be set here so a sensitive record is never visible to the " +
-          "wrong audience, even briefly",
+          "wrong audience, even briefly. " +
+          "`renewalOf` routes a renewal into a new record (CTR-007's " +
+          "third and fourth vehicles, M16/5): the successor is born " +
+          "carrying its predecessor's business facts — our entity, the " +
+          "value, the term shape, and the counterparties — and linked " +
+          "to it, as a child by contracts.parent_id or as a standalone " +
+          "successor by a CTR-015 `renews` row. The team, the status, " +
+          "and the Confidential flag are **never** copied: CTR-015's " +
+          "no-inheritance stance, applied at birth. The title and the " +
+          "type are the body's, so whatever the person edited before " +
+          "pressing Create is what the record is born with. Appends the " +
+          "link's own activity action beside contract.created",
         tags: ["contracts"],
         // Strict: the number is the sequence's to give, so a body
         // carrying one is refused rather than silently ignored.
@@ -1337,13 +1671,43 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
            * the creator is one of the three who may set it. Omitted
            * means open, which is the product's default (DD-014). */
           isConfidential: z.boolean().optional(),
+          /** CTR-007's routing (M16/5). Omitted is the ordinary create:
+           * a record that renews nothing and sits under nobody. */
+          renewalOf: RenewalOfSchema.optional(),
         }),
-        response: { 201: ContractEnvelope, default: problemResponse },
+        response: {
+          201: ContractEnvelope,
+          // The two refusals a routed create can give that a client acts
+          // on rather than prints. Neither is reachable through the
+          // routing itself — a newborn contract has no descendants and
+          // no links — but the write path is CTR-015's, and it answers
+          // the same way whichever caller reaches it.
+          409: problemTypeResponse(
+            "The named types are CTR-015's guards: the link already exists, the parent " +
+              "would close a loop, or both ends are one contract. An unnamed 409 is an " +
+              "archived predecessor; print it.",
+            [
+              CONTRACT_RELATION_EXISTS_PROBLEM_TYPE,
+              CONTRACT_PARENT_CYCLE_PROBLEM_TYPE,
+              CONTRACT_SELF_LINK_PROBLEM_TYPE,
+            ],
+          ),
+          default: problemResponse,
+        },
       },
     },
     async (request, reply) => {
-      const { title, contractTypeId } = request.body;
+      const { title, contractTypeId, renewalOf } = request.body;
       const created = await app.db.transaction(async (tx) => {
+        // The predecessor first, and under its own row lock, so the
+        // facts copied onto the successor are the ones the record held
+        // at the moment the renewal was routed. Reach is asked here as
+        // it is everywhere else: a predecessor this viewer cannot reach
+        // answers exactly as one that was never made, and an archived
+        // one routes nothing until it is restored.
+        const predecessor = renewalOf
+          ? await editableContract(tx, renewalOf.number, request.user)
+          : null;
         // Lock the type row so a concurrent archive can't slip between
         // the check and the insert.
         const [contractType] = await tx
@@ -1391,6 +1755,41 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         );
         assertRequiredCustomFields(attached, customFields);
 
+        // CTR-007's prefill, and the whole of it: the business facts
+        // of the deal, copied so routing a renewal is not re-keying
+        // a contract. The type and the title are the body's, below,
+        // because those are the two the create dialog draws and the
+        // person may have edited either before pressing.
+        //
+        // What is deliberately absent is the point of the list. The
+        // status is the draft seed for every contract born here, the
+        // Owner is unassigned, the team is the creator's row alone,
+        // and the Confidential flag is the body's — CTR-015's
+        // no-inheritance stance, applied at birth. Priority and risk
+        // are absent for the same reason: they are assessments of a
+        // record, and a new record has not been assessed.
+        const copied = predecessor ? businessFactsOf(predecessor.row) : null;
+        // Our entity is copied live or not at all, the counterparties'
+        // rule (below) applied to our own side: the field write refuses
+        // an archived signatory, so nothing new gets signed by an
+        // entity that has left the registry — and a copy that carried
+        // one onto a *new* record would be the way around that rule.
+        // The predecessor keeps what signed it either way (CTR-011).
+        //
+        // The row is locked for the same reason the field write locks
+        // it: an unlocked read lets a concurrent archive commit between
+        // the check and the insert, and the record is then born holding
+        // what this check exists to keep off it.
+        if (copied?.entityId) {
+          const [signatory] = await tx
+            .select({ archivedAt: entities.archivedAt })
+            .from(entities)
+            .where(eq(entities.id, copied.entityId))
+            .limit(1)
+            .for("update");
+          if (!signatory || signatory.archivedAt !== null) copied.entityId = null;
+        }
+
         const isConfidential = request.body.isConfidential ?? false;
         const [row] = await tx
           .insert(contracts)
@@ -1400,6 +1799,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             statusId: draft.id,
             customFields,
             isConfidential,
+            ...(copied ?? {}),
           })
           .returning();
         // Provenance, written once and never again (CTR-004): who made
@@ -1443,18 +1843,118 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             payload: { number: row!.number, title: row!.title },
           });
         }
-        return {
-          row: row!,
-          contractTypeName: contractType.displayName,
-          statusName: draft.displayName,
-          stage: draft.stage,
-          // A new contract is unassigned, which of ours signs is not
-          // known yet, and nobody is recorded on the other side; all
-          // three are set on the record afterwards.
-          manager: null,
-          entity: null,
-          primaryCounterparty: null,
-        };
+        if (!predecessor || !renewalOf) {
+          return {
+            row: row!,
+            contractTypeName: contractType.displayName,
+            statusName: draft.displayName,
+            stage: draft.stage,
+            // A new contract is unassigned, which of ours signs is not
+            // known yet, and nobody is recorded on the other side; all
+            // three are set on the record afterwards.
+            manager: null,
+            entity: null,
+            primaryCounterparty: null,
+          };
+        }
+
+        // The other side of the deal, copied party for party with the
+        // primary still primary (CTR-011). The rows are copied rather
+        // than the names re-typed, so a renewal of a tripartite
+        // agreement is born with all three and nobody has to find them
+        // again — and the counterparty records themselves are shared,
+        // because they are the same companies.
+        //
+        // **Live parties only.** A party that signed the predecessor is
+        // a fact of that contract and stays on it however the register
+        // changed afterwards; a party nobody may add by hand today must
+        // not arrive on a *new* record through a copy, or routing would
+        // be the way around the rule the add route states (MTR-014's
+        // principle). The primary is carried across and re-seated when
+        // the party holding it is the one that left, so the invariant
+        // "a contract with parties has a primary" holds at birth.
+        const parties = await tx
+          .select({
+            counterpartyId: contractCounterparties.counterpartyId,
+            isPrimary: contractCounterparties.isPrimary,
+          })
+          .from(contractCounterparties)
+          .innerJoin(
+            counterparties,
+            and(
+              eq(contractCounterparties.counterpartyId, counterparties.id),
+              isNull(counterparties.archivedAt),
+            ),
+          )
+          .where(eq(contractCounterparties.contractId, predecessor.row.id))
+          .orderBy(desc(contractCounterparties.isPrimary), asc(sql`lower(${counterparties.name})`));
+        if (parties.length > 0) {
+          const keepsPrimary = parties.some((party) => party.isPrimary);
+          await tx.insert(contractCounterparties).values(
+            parties.map((party, index) => ({
+              contractId: row!.id,
+              counterpartyId: party.counterpartyId,
+              isPrimary: keepsPrimary ? party.isPrimary : index === 0,
+            })),
+          );
+        }
+
+        // The link, through CTR-015's own write path so its two guards
+        // are asked here exactly as they will be asked by M17's manual
+        // linking. Neither can refuse this particular call — a record
+        // born a moment ago has no descendants to loop through and no
+        // links to duplicate — and it goes through the guarded path all
+        // the same, because the rule belongs to the write and not to the
+        // caller that happens to be safe.
+        //
+        // The entry hangs off the record that changed, which is the new
+        // one: nothing was written on the predecessor, and a feed entry
+        // on a record nobody touched would be the log asserting an edit
+        // that never happened. Both ends are named by number and title,
+        // so the sentence survives a rename of either.
+        if (renewalOf.vehicle === "child") {
+          await setContractParent(tx, { childId: row!.id, parentId: predecessor.row.id });
+          await recordActivity(tx, {
+            entityType: "contract",
+            entityId: row!.id,
+            actorId: request.user.id,
+            action: "contract.parent_set",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: {
+              number: row!.number,
+              title: row!.title,
+              parentNumber: predecessor.row.number,
+              parentTitle: predecessor.row.title,
+            },
+          });
+        } else {
+          await linkContracts(tx, {
+            fromId: row!.id,
+            toId: predecessor.row.id,
+            relationType: "renews",
+          });
+          await recordActivity(tx, {
+            entityType: "contract",
+            entityId: row!.id,
+            actorId: request.user.id,
+            action: "contract.relation_added",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: {
+              number: row!.number,
+              title: row!.title,
+              relationType: "renews",
+              relatedNumber: predecessor.row.number,
+              relatedTitle: predecessor.row.title,
+            },
+          });
+        }
+
+        // The copied facts read back off the row that now holds them,
+        // rather than off the predecessor's context: the entity and the
+        // primary party the answer names have to be the ones this record
+        // was born with, and one joined read is what guarantees it.
+        const [born] = await selectContracts(tx).where(eq(contracts.id, row!.id)).limit(1);
+        return born!;
       });
       return reply.status(201).send({ contract: toRow(created) });
     },
@@ -1469,13 +1969,19 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "Commit one field of a contract in place (DES-017 per-field " +
           "commits): title, description, the Owner, the signing entity, " +
-          "priority, risk, the value, the type, a custom field, or the " +
+          "priority, risk, the value, the CTR-006 term fields, the type, " +
+          "a custom field, or the " +
           "status — any live status may follow any other (CTR-001). The " +
           "value is one field in three parts: amount, currency, and " +
           "cadence commit together and clear together. Re-typing " +
           "re-checks the new type's hard-required fields before it " +
           "commits (CTR-016/MTR-014), so the type and the values that " +
-          "satisfy it may be sent together. The Confidential flag " +
+          "satisfy it may be sent together. The term is five fields with " +
+          "one rule between them (CTR-006): an expiry on an evergreen " +
+          "contract and a renewal period on a contract that does not " +
+          "auto-renew are refused 400 with their own problem types, and " +
+          "a term-type change clears the fields the new type cannot " +
+          "hold, each clear narrated as the edit it is. The Confidential flag " +
           "(DD-014) commits here too, but only for an Administrator, the " +
           "contract's creator, or its Owner: anyone else who reaches the " +
           "record is refused 403, and anyone who does not reach it is " +
@@ -1504,6 +2010,23 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
            * whose value was taken off read the same, because both are
            * "no value is recorded". */
           value: ContractValueInput.nullable().optional(),
+          /** CTR-006's term type. Changing it clears the fields the new
+           * type cannot hold, and each clear is narrated as the edit it
+           * is. There is no `null`: every contract is one of the three
+           * kinds. */
+          termType: TermTypeSchema.optional(),
+          /** CTR-006's start of term. `null` clears it back to not
+           * known, which is where every contract starts. */
+          effectiveDate: z.iso.date().nullable().optional(),
+          /** CTR-006's end of term. Refused on an evergreen contract,
+           * which has no end; `null` clears it. */
+          expiryDate: z.iso.date().nullable().optional(),
+          /** CTR-006's roll length. Refused on anything but an
+           * auto-renewing contract; `null` clears it. */
+          renewalPeriodMonths: RenewalPeriodSchema.nullable().optional(),
+          /** CTR-006's action window before expiry. Legal on any term
+           * type; `null` clears it. */
+          noticePeriodDays: NoticePeriodSchema.nullable().optional(),
           /** CTR-002's type, re-picked. Re-typing is the second place
            * MTR-014's required rule holds, so this may travel with the
            * `customFields` that satisfy the new type — the one compound
@@ -1529,6 +2052,16 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         }),
         response: {
           200: ContractFieldsEnvelope,
+          // CTR-006's two shape rules. A client branches on these
+          // because the repair is a choice nothing else on this route
+          // asks for — change the term type, or drop the value — and
+          // because the record draws its term controls by the same rule.
+          400: problemTypeResponse(
+            "The term data would contradict its own type (CTR-006): an expiry on an " +
+              "evergreen contract, or a renewal period on a contract that does not " +
+              "auto-renew. Change the term type, or leave the value off.",
+            [TERM_EXPIRY_ON_EVERGREEN_PROBLEM_TYPE, TERM_RENEWAL_PERIOD_PROBLEM_TYPE],
+          ),
           // CTR-012's soft gate is the one refusal on this route a
           // caller has to act on rather than print: the same request
           // with `overrideSoftGate` succeeds, so a client that could
@@ -1641,6 +2174,91 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         if (body.risk !== undefined && body.risk !== target.risk) {
           patch.risk = body.risk;
           changed.risk = { from: target.risk, to: body.risk };
+        }
+
+        // CTR-006's term: five fields with one rule running between
+        // them. Each commits on its own like every other field
+        // (DES-017), and the type is what decides which of the other
+        // four the record may hold at all.
+        //
+        // The type this write lands on, whether it is being changed or
+        // merely being read: everything below is checked against it, so
+        // a term type and the dates that suit it may travel together.
+        const termType = body.termType ?? target.termType;
+        if (body.termType !== undefined && body.termType !== target.termType) {
+          patch.termType = body.termType;
+          changed.termType = { from: target.termType, to: body.termType };
+        }
+
+        // What the type will not hold, refused before anything is
+        // written. A value sent in the same breath as the type that
+        // forbids it is a contradiction rather than an oversight, so it
+        // is refused rather than quietly dropped — the clearing below
+        // is for what the record already held, which nobody re-sent.
+        if (body.expiryDate != null && termType === "evergreen") {
+          throw httpError(400, "An evergreen contract has no expiry date.", {
+            type: TERM_EXPIRY_ON_EVERGREEN_PROBLEM_TYPE,
+          });
+        }
+        if (body.renewalPeriodMonths != null && termType !== "auto_renew") {
+          throw httpError(400, "Only an auto-renewing contract has a renewal period.", {
+            type: TERM_RENEWAL_PERIOD_PROBLEM_TYPE,
+          });
+        }
+
+        if (body.effectiveDate !== undefined && body.effectiveDate !== target.effectiveDate) {
+          patch.effectiveDate = body.effectiveDate;
+          changed.effectiveDate = { from: target.effectiveDate, to: body.effectiveDate };
+        }
+        if (body.expiryDate !== undefined && body.expiryDate !== target.expiryDate) {
+          patch.expiryDate = body.expiryDate;
+          changed.expiryDate = { from: target.expiryDate, to: body.expiryDate };
+        }
+        if (
+          body.renewalPeriodMonths !== undefined &&
+          body.renewalPeriodMonths !== target.renewalPeriodMonths
+        ) {
+          patch.renewalPeriodMonths = body.renewalPeriodMonths;
+          changed.renewalPeriodMonths = {
+            from: target.renewalPeriodMonths,
+            to: body.renewalPeriodMonths,
+          };
+        }
+        if (
+          body.noticePeriodDays !== undefined &&
+          body.noticePeriodDays !== target.noticePeriodDays
+        ) {
+          patch.noticePeriodDays = body.noticePeriodDays;
+          changed.noticePeriodDays = {
+            from: target.noticePeriodDays,
+            to: body.noticePeriodDays,
+          };
+        }
+
+        // The clears a type change forces, narrated as the edits they
+        // are (CTR-006). Re-typing a contract to evergreen takes its
+        // expiry off, and re-typing it off auto-renew takes its renewal
+        // period off, because the record must not go on holding a fact
+        // its type says it cannot have. Each lands in the same changed
+        // map as an ordinary edit, so the feed says the expiry was
+        // cleared rather than leaving a reader to infer it from the
+        // type change beside it.
+        //
+        // The value read is the one this write will leave behind — a
+        // clear sent in the same request has already been recorded, and
+        // nothing here writes it twice.
+        const nextExpiry = patch.expiryDate === undefined ? target.expiryDate : patch.expiryDate;
+        if (termType === "evergreen" && nextExpiry !== null) {
+          patch.expiryDate = null;
+          changed.expiryDate = { from: nextExpiry, to: null };
+        }
+        const nextRenewalPeriod =
+          patch.renewalPeriodMonths === undefined
+            ? target.renewalPeriodMonths
+            : patch.renewalPeriodMonths;
+        if (termType !== "auto_renew" && nextRenewalPeriod !== null) {
+          patch.renewalPeriodMonths = null;
+          changed.renewalPeriodMonths = { from: nextRenewalPeriod, to: null };
         }
 
         // CTR-002's type, re-picked — and with it the whole CTR-016
@@ -1889,6 +2507,143 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         fields: attached,
         customFieldRefs: await customFieldRefs(app.db, attached, context.row.customFields),
       };
+    },
+  );
+
+  app.post(
+    "/contracts/:number/renewal",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "confirmContractRenewal",
+        summary:
+          "Confirm the roll (CTR-007's first renewal vehicle): the same " +
+          "record's term advances, on the say-so of a person. CTR-006's " +
+          "engine is notify-only and never advances a date on its own, " +
+          "so a contract that passed its expiry un-actioned reads as " +
+          "'renewal pending confirmation' — a predicate over its dates, " +
+          "not a status — and waits for this. The request carries the " +
+          "expiry it was raised against and the expiry to advance to; " +
+          "the record proposes the second as the first plus the renewal " +
+          "period, and the caller may send a different date, because a " +
+          "roll whose dates shifted in negotiation is recorded as it " +
+          "really landed. The comparison is made under the contract's " +
+          "row lock, so two confirms racing for one roll advance the " +
+          "term exactly once and the loser is refused 409 by name " +
+          "rather than rolling it again. Only an auto-renewing contract " +
+          "with an expiry rolls, and a roll must move the term forward. " +
+          "The status and the stage are untouched: this moves one date. " +
+          "Appends one contract.renewal_confirmed entry at the " +
+          "working-team tier (DD-017) — the only record a renewal " +
+          "leaves, and what the record's renewal history reads back. " +
+          "Answers the record and its whole history. Member+: a " +
+          "Contributor who reaches the record is refused 403 rather " +
+          "than 404, because they can already see it. An archived " +
+          "contract rolls nothing until it is restored",
+        tags: ["contracts"],
+        params: NumberParams,
+        // Strict: an unknown key is a client bug, not a silent strip.
+        body: z.strictObject({
+          /** The expiry the person was looking at when they confirmed.
+           * It is the precondition, not a value to write: the seam
+           * refuses the roll when the record no longer holds it, which
+           * is what makes a confirmed roll exactly-once. */
+          fromExpiry: z.iso.date(),
+          /** Where the term now runs to. The record proposes
+           * `proposedRenewalExpiry` and the caller may send another
+           * date, so long as it is later than `fromExpiry`. */
+          toExpiry: z.iso.date(),
+        }),
+        response: {
+          200: ContractRenewalsEnvelope,
+          // The one refusal a client acts on rather than prints: the
+          // record moved under the dialog, so the repair is to read the
+          // new expiry and offer the roll again — which no other 409 on
+          // this route asks for.
+          409: problemTypeResponse(
+            "The named type says this contract's expiry is no longer the one the roll " +
+              "was raised against (CTR-006) — read the record again and confirm against " +
+              "the expiry it now holds, which is the one refusal here a client acts on " +
+              "rather than prints. An unnamed 409 is an archived record or one that " +
+              "records no expiry to roll; print it.",
+            [RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE],
+          ),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => {
+      const { fromExpiry, toExpiry } = request.body;
+      // A roll advances a term. A date on or before the one it starts
+      // from is not a shorter roll, it is a correction — and a
+      // correction is an edit of the expiry, which the record's own
+      // PATCH already does and narrates as the edit it is.
+      if (toExpiry <= fromExpiry) {
+        throw httpError(400, "A confirmed roll must move the expiry date forward.");
+      }
+
+      return await app.db.transaction(async (tx) => {
+        // The lock first, and every question asked under it: a confirm
+        // that raced this one may have archived the record, re-typed
+        // its term, or already advanced the expiry.
+        const current = await editableContract(tx, request.params.number, request.user);
+        const { row } = current;
+
+        if (row.termType !== "auto_renew") {
+          throw httpError(
+            400,
+            "Only an auto-renewing contract rolls. Change the term type, or edit the " +
+              "expiry date directly.",
+          );
+        }
+        if (row.expiryDate === null) {
+          throw httpError(
+            409,
+            "This contract records no expiry date, so there is no term to roll forward.",
+          );
+        }
+        // The precondition, decided on the locked row. Sending the
+        // expiry the person saw is what turns two simultaneous confirms
+        // into one advance: the first moves the column, and the second
+        // no longer matches.
+        if (row.expiryDate !== fromExpiry) {
+          throw httpError(
+            409,
+            "This contract's expiry has already moved. Read the record again before " +
+              "confirming the roll.",
+            { type: RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE },
+          );
+        }
+
+        const [updated] = await tx
+          .update(contracts)
+          // One column, and the timestamp every write moves. Not the
+          // status and not the stage: CTR-006 says the pending state is
+          // a banner rather than a transition, and confirming it is a
+          // move of one date rather than a move through the lifecycle.
+          .set({ expiryDate: toExpiry, updatedAt: new Date() })
+          .where(eq(contracts.id, row.id))
+          .returning();
+
+        // The roll keeps its own verb rather than riding
+        // `contract.updated`: nothing stores a renewal, so this entry is
+        // the whole record that one happened, and it is what the
+        // record's renewal history and its "Last renewal" fact read back
+        // (G.R5).
+        await recordActivity(tx, {
+          entityType: "contract",
+          entityId: row.id,
+          actorId: request.user.id,
+          action: "contract.renewal_confirmed",
+          visibility: RECORD_ACTIVITY_TIER,
+          payload: { number: row.number, title: row.title, from: fromExpiry, to: toExpiry },
+        });
+
+        return {
+          contract: toRow({ ...current, row: updated! }),
+          renewals: await selectRenewals(tx, row.id),
+        };
+      });
     },
   );
 

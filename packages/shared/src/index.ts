@@ -101,6 +101,100 @@ export const SIGNING_NOT_CONFIGURED_PROBLEM_TYPE = "urn:openlaw:problem:signing-
 export const ENVELOPE_LIVE_PROBLEM_TYPE = "urn:openlaw:problem:envelope-live";
 
 /**
+ * The two refusals a term write branches on (CTR-006, TECH-020).
+ *
+ * CTR-006's term data cannot contradict its own type: an evergreen
+ * contract has no end, and only an auto-renewing one rolls. Both
+ * refusals name themselves for `SOFT_GATE_PROBLEM_TYPE`'s reason —
+ * both ends of the wire have to say the same string.
+ *
+ * A client reads them to know that the term *type* and the value
+ * disagree, which is a different repair from every other 400 the same
+ * PATCH can give: either the type changes or the value is dropped, and
+ * only the client knows which of the two the person meant. The record
+ * uses the same rule to decide which of the term controls it draws at
+ * all, so it meets these refusals only when the record moved under it.
+ *
+ * A client must never tell these apart by reading `detail`. That is
+ * copy, and copy is rewritten.
+ */
+/** An expiry date was sent for a contract whose term type is
+ * `evergreen`. */
+export const TERM_EXPIRY_ON_EVERGREEN_PROBLEM_TYPE = "urn:openlaw:problem:term-expiry-on-evergreen";
+/** A renewal period was sent for a contract whose term type is not
+ * `auto_renew`. */
+export const TERM_RENEWAL_PERIOD_PROBLEM_TYPE = "urn:openlaw:problem:term-renewal-period";
+
+/**
+ * The refusal a confirmed roll branches on (CTR-006, CTR-007, TECH-020).
+ *
+ * A roll is confirmed against the expiry the person was looking at. The
+ * request carries that date, the seam compares it under the contract's
+ * row lock, and a mismatch is refused — so two people confirming the
+ * same roll at the same moment advance the term **once**, and the
+ * second one is told the record moved rather than rolling it a second
+ * time.
+ *
+ * It names itself for `SOFT_GATE_PROBLEM_TYPE`'s reason: both ends of
+ * the wire have to say the same string. The dialog reads it to tell a
+ * lost race — where the answer is "look again, the term has already
+ * advanced" — from every other 400 the same confirm can give, where the
+ * answer is "fix what you typed".
+ *
+ * A client must never tell these apart by reading `detail`. That is
+ * copy, and copy is rewritten.
+ */
+export const RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE = "urn:openlaw:problem:renewal-expiry-moved";
+
+/**
+ * The two refusals a relation write branches on (CTR-015, TECH-020).
+ *
+ * CTR-015 states both rules and leaves both to the application, because
+ * neither can be said by a single row: a duplicate is a second row for
+ * one pair and one type, and a cycle is a walk up the parent chain. Both
+ * are also database rules — the compound primary key and the
+ * not-your-own-parent check — but the database says them as a constraint
+ * violation, and a caller needs an answer.
+ *
+ * They name themselves for `SOFT_GATE_PROBLEM_TYPE`'s reason: both ends
+ * of the wire have to say the same string. A client reads them to tell a
+ * link that already exists — where the repair is to stop, because the
+ * record already says what the caller wanted it to say — from a link
+ * that would fold the hierarchy back on itself, where the repair is to
+ * pick another parent.
+ *
+ * A client must never tell these apart by reading `detail`. That is
+ * copy, and copy is rewritten.
+ */
+/** A link of this type already runs between these two contracts, in
+ * this direction (CTR-015's one-row-per-pair-per-type guard). */
+export const CONTRACT_RELATION_EXISTS_PROBLEM_TYPE = "urn:openlaw:problem:contract-relation-exists";
+/** The proposed parent already sits under the contract it was asked to
+ * parent, so setting it would close a loop (CTR-015's no-cycles rule). */
+export const CONTRACT_PARENT_CYCLE_PROBLEM_TYPE = "urn:openlaw:problem:contract-parent-cycle";
+/** Both ends of the proposed link are the same contract. Its own type
+ * rather than the cycle's, because the cycle names a *parent* and this
+ * refusal answers every relation type; the repair is to pick another
+ * far end, not another parent. */
+export const CONTRACT_SELF_LINK_PROBLEM_TYPE = "urn:openlaw:problem:contract-self-link";
+
+/**
+ * The two bounds one key date is held to (CTR-009).
+ *
+ * A label is a line and a note is a paragraph. Neither is the record's
+ * long-form conversation — that is what comments are for (CMT-004) — and
+ * the deadline table draws both in one row, so a label that ran to a
+ * paragraph would break the surface it exists for.
+ *
+ * Shared for `MAX_APPROVAL_NOTE_LENGTH`'s reason: the dialog's boxes
+ * stop at these and the write refuses past them, and two literals for
+ * one wire contract would let a box keep accepting text the seam has
+ * stopped taking.
+ */
+export const MAX_KEY_DATE_LABEL_LENGTH = 200;
+export const MAX_KEY_DATE_NOTE_LENGTH = 2000;
+
+/**
  * How many people one envelope may be sent to (CTR-013).
  *
  * A bound rather than a preference, and a generous one: naming a

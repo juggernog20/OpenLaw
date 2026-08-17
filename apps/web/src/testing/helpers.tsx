@@ -206,6 +206,13 @@ export function stubApi(state: ApiState) {
     if (/^\/api\/v1\/contracts\/\d+\/envelopes$/.test(call.url.pathname) && call.method === "GET") {
       return json(200, { envelopes: [], signingConfigured: false, primaryDocument: null });
     }
+    // And every date on it (M16/3, CTR-009). Empty by default for the
+    // roster's reason: a record with no key dates and no term dates is
+    // the ordinary case, and only the suites about the deadline surface
+    // supply one.
+    if (/^\/api\/v1\/contracts\/\d+\/key-dates$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { deadlines: [] });
+    }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
       return json(200, state.onboarding ?? { completed: true, emailConfigured: true });
     }

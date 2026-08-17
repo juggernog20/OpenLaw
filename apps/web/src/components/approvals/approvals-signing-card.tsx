@@ -10,7 +10,24 @@
  * row** (DES-035 clause 3, DES-036). Until M15 it held approval rows
  * alone and was called "Approvals", because a heading naming two things
  * while showing one reads as broken. Envelope rows are the second kind;
- * confirmed-renewal rows are the third and arrive with M16.
+ * confirmed-renewal rows are the third, and they arrived with M16/4.
+ *
+ * **The renewal history is the third family, and it is drawn last**
+ * (M16/4, CTR-006, DES-043). The first two say where the contract is
+ * going — who still has to sign it off, and what paper is out — and
+ * this one says where it has been. Every row is one
+ * `contract.renewal_confirmed` entry read back out of the activity log,
+ * because nothing stores a renewal; a record with no confirmed roll
+ * draws no block at all rather than an empty line for a history most
+ * contracts never have.
+ *
+ * **Renewing is the card's third act, and it is the whole reason a
+ * fourth control is in the head.** A roll writes a renewal row, so the
+ * control that raises it sits where those rows land, exactly as the
+ * send sits beside the envelopes it makes. The dialog itself lives on
+ * the record rather than in this card, because the pending banner
+ * raises the same dialog from the page's chrome where every section can
+ * reach it — the move `SoftGateDialog` already makes.
  *
  * **The roster is a set, not a queue** (CTR-012). Every request runs in
  * parallel, so nothing here draws an order of play — the rows are the
@@ -86,7 +103,17 @@
 
 import { useRef, useState } from "react";
 import { FormattedMessage, useIntl, defineMessage, type IntlShape } from "react-intl";
-import { Check, Download, MoreHorizontal, Plus, Send, Undo2, Users, X } from "lucide-react";
+import {
+  Check,
+  Download,
+  MoreHorizontal,
+  Plus,
+  RotateCw,
+  Send,
+  Undo2,
+  Users,
+  X,
+} from "lucide-react";
 import {
   MAX_APPROVAL_NOTE_LENGTH,
   MAX_ENVELOPE_REASON_LENGTH,
@@ -115,6 +142,7 @@ import {
   type SigningOutcome,
   type SigningState,
 } from "../../lib/envelopes";
+import type { ConfirmedRenewal } from "../../lib/renewals";
 import type { ApproverGroupOption, ContractTeamMember, UserOption } from "../../lib/contracts";
 import type { Role } from "../../lib/roles";
 import { documentDownloadHref } from "../../lib/documents";
@@ -174,6 +202,9 @@ export function ApprovalsSigningCard({
   contractNumber,
   approvals,
   signing,
+  renewals,
+  canRenew,
+  onRenew,
   users,
   approverGroups,
   team,
@@ -191,6 +222,20 @@ export function ApprovalsSigningCard({
    * install has a connector at all, and the primary document a send
    * would offer. All three decide whether the send control is drawn. */
   signing: SigningState;
+  /** Every confirmed roll on this record, most recent first (M16/4,
+   * CTR-006). Read back out of the activity log — nothing stores a
+   * renewal — so an empty list means no roll has been confirmed, which
+   * is the standing state of most records. */
+  renewals: readonly ConfirmedRenewal[];
+  /** Whether this record can roll at all: it auto-renews, it records an
+   * expiry, and this viewer may write it. False and the head draws no
+   * Renew control — absent, never disabled (DES-035 clause 9). */
+  canRenew: boolean;
+  /** Opens the Renew dialog. It lives on the record rather than in this
+   * card because the pending banner raises the same dialog from the
+   * page's chrome, where every section can reach it — the move
+   * `SoftGateDialog` already makes. */
+  onRenew: () => void;
   /** The people the record's pickers read, Member+ and otherwise. */
   users: readonly UserOption[];
   /** The live approver-group templates (CTR-012). Empty when an
@@ -365,10 +410,16 @@ export function ApprovalsSigningCard({
     return null;
   }
 
-  /** Whether both blocks are on screen. The sub-headings appear only
-   * then: a card drawing one kind of row needs no label saying which
-   * kind it is. */
-  const bothBlocks = signing.envelopes.length > 0;
+  /**
+   * Whether more than one row family is on screen. The sub-headings
+   * appear only then: a card drawing one kind of row needs no label
+   * saying which kind it is, and a heading over the only table on a
+   * card would label an absence.
+   *
+   * The roster is always drawn — as a table or as its empty line — so
+   * either of the two conditional families turns the headings on.
+   */
+  const manyBlocks = signing.envelopes.length > 0 || renewals.length > 0;
 
   return (
     <section
@@ -433,6 +484,21 @@ export function ApprovalsSigningCard({
                 <FormattedMessage id="signing.send" defaultMessage="Send for signature" />
               </Button>
             )}
+            {/* The Renew act (M16/4, CTR-007). It lives on this card
+                because this is where the rows it writes land, exactly
+                as "Send for signature" lives beside the envelope rows
+                it makes. Absent — never disabled — on a record that
+                cannot roll: a contract that does not auto-renew or
+                records no expiry has no term for a roll to advance, and
+                a greyed-out control would be an invitation to work out
+                why (DES-035 clause 9). The pending banner's own call to
+                action opens the same dialog from the page's chrome. */}
+            {canRenew && (
+              <Button variant="secondary" disabled={busy} onClick={onRenew}>
+                <RotateCw size={16} aria-hidden="true" />
+                <FormattedMessage id="renewal.renew" defaultMessage="Renew" />
+              </Button>
+            )}
             {/* The C5 mock's pair, in its order. Absent rather than
                 disabled when no Administrator has set a template up:
                 a control whose dialog could only say "there are none"
@@ -454,7 +520,7 @@ export function ApprovalsSigningCard({
           out (grill row E.5's conditional). A contract signed by hand
           holds no envelope, and the card then reads exactly as it did
           before M15. */}
-      {bothBlocks && (
+      {signing.envelopes.length > 0 && (
         <>
           <h3
             id="contract-signing-heading"
@@ -532,13 +598,20 @@ export function ApprovalsSigningCard({
               />
             </p>
           )}
-          <h3
-            id="contract-approvals-block-heading"
-            className="border-y border-border-muted px-4 py-2 text-sm font-medium text-muted"
-          >
-            <FormattedMessage id="approvals.block" defaultMessage="Approvals" />
-          </h3>
         </>
+      )}
+      {/* The roster's own sub-heading, drawn whenever the card holds a
+          second family — an envelope block above it, a renewal block
+          below it, or both. It carries the block above's closing rule
+          as well as its own, which is why it takes `border-y` where the
+          other two take `border-b`. */}
+      {manyBlocks && (
+        <h3
+          id="contract-approvals-block-heading"
+          className="border-y border-border-muted px-4 py-2 text-sm font-medium text-muted"
+        >
+          <FormattedMessage id="approvals.block" defaultMessage="Approvals" />
+        </h3>
       )}
       {approvals.length === 0 ? (
         <p className="px-4 py-3 text-base text-muted">
@@ -554,7 +627,7 @@ export function ApprovalsSigningCard({
               to be told which one they are in. */}
           <table
             className="w-full"
-            aria-labelledby={bothBlocks ? "contract-approvals-block-heading" : undefined}
+            aria-labelledby={manyBlocks ? "contract-approvals-block-heading" : undefined}
           >
             <thead>
               <tr className="text-start text-sm font-medium text-muted">
@@ -604,6 +677,51 @@ export function ApprovalsSigningCard({
             </tbody>
           </table>
         </div>
+      )}
+      {/* The record's renewal history (M16/4, CTR-006, grill rows G.R5
+          and I.B3), drawn only when a roll has been confirmed. It is
+          last because the card's first two families say where the
+          contract is going — who still has to sign it off, and what
+          paper is out — and this one says where it has been. A record
+          with no confirmed roll draws nothing at all rather than an
+          empty line: the roster's own empty line already tells the
+          reader this card holds nothing, and a second one under it
+          would announce the absence of a history most contracts never
+          have. */}
+      {renewals.length > 0 && (
+        <>
+          <h3
+            id="contract-renewals-heading"
+            className="border-y border-border-muted px-4 py-2 text-sm font-medium text-muted"
+          >
+            <FormattedMessage id="renewal.block" defaultMessage="Renewals" />
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full" aria-labelledby="contract-renewals-heading">
+              <thead>
+                <tr className="text-start text-sm font-medium text-muted">
+                  <th scope="col" className="px-4 py-2 text-start font-medium">
+                    <FormattedMessage id="renewal.column.renewal" defaultMessage="Renewal" />
+                  </th>
+                  <th scope="col" className="w-64 px-4 py-2 text-start font-medium">
+                    <FormattedMessage
+                      id="renewal.column.confirmedBy"
+                      defaultMessage="Confirmed by"
+                    />
+                  </th>
+                  <th scope="col" className="w-28 px-4 py-2 text-start font-medium">
+                    <FormattedMessage id="renewal.column.confirmed" defaultMessage="Confirmed" />
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {renewals.map((renewal) => (
+                  <RenewalRow key={renewal.id} renewal={renewal} intl={intl} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
       {sending && signing.primaryDocument !== null && (
         <SendEnvelopeDialog
@@ -1011,6 +1129,71 @@ function ApprovalRow({
           )}
         </td>
       )}
+    </tr>
+  );
+}
+
+/**
+ * One confirmed roll (M16/4, CTR-006, CTR-007's first vehicle).
+ *
+ * Three cells, and no action cell at all. **A confirmed roll is a fact,
+ * not a thing to change**: nothing undoes an assertion that a term
+ * renewed, and the way to correct a date somebody typed wrong is to
+ * edit the expiry on the record's own Contract card, which narrates as
+ * the edit it is. DES-035 clause 9's rule holds — a control for an act
+ * that does not exist is not drawn as a disabled one.
+ *
+ * The first cell takes the two-line anatomy the Approver and Signers
+ * cells already use: the expiry the term now runs to, and under it the
+ * date it advanced from. The two dates **are** the roll, and putting
+ * the second on the row's own secondary line costs no width on a card
+ * that has none to spare (DES-035 clause 5's move).
+ */
+function RenewalRow({ renewal, intl }: Readonly<{ renewal: ConfirmedRenewal; intl: IntlShape }>) {
+  return (
+    <tr className="border-t border-border-muted">
+      <td className="px-4 py-2.5">
+        <div className="flex min-w-0 flex-col">
+          <span className="truncate text-base font-medium text-primary">
+            <FormattedMessage
+              id="renewal.row.advancedTo"
+              defaultMessage="Term advanced to {date}"
+              values={{ date: formatShortDate(renewal.to, { locale: intl.locale }) }}
+            />
+          </span>
+          <span className="truncate text-xs text-muted">
+            <FormattedMessage
+              id="renewal.row.advancedFrom"
+              defaultMessage="From {date}"
+              values={{ date: formatShortDate(renewal.from, { locale: intl.locale }) }}
+            />
+          </span>
+        </div>
+      </td>
+      <td className="px-4 py-2.5">
+        {/* Nothing in this build writes a roll with no actor, so the em
+            dash here is the answer for a log row that predates a
+            person rather than a case anybody reaches. The row still
+            reads: a renewal the record cannot attribute is still a
+            renewal the record made. */}
+        {renewal.confirmedBy === null ? (
+          <span className="text-sm text-muted">{intl.formatMessage(NOT_YET)}</span>
+        ) : (
+          <div className="flex items-center gap-2">
+            <Avatar
+              name={renewal.confirmedBy.displayName}
+              image={renewal.confirmedBy.image}
+              className="size-6"
+            />
+            <span className="truncate text-base text-primary">
+              {renewal.confirmedBy.displayName}
+            </span>
+          </div>
+        )}
+      </td>
+      <td className="px-4 py-2.5 text-sm text-muted">
+        {formatShortDate(renewal.confirmedAt, { locale: intl.locale })}
+      </td>
     </tr>
   );
 }

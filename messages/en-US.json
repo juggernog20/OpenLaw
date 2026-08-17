@@ -92,8 +92,20 @@
   "activity.contract.created": {
     "defaultMessage": "{actor} created this contract"
   },
+  "activity.contract.parentSet": {
+    "defaultMessage": "{actor} put this contract under {parent}"
+  },
   "activity.contract.primaryChanged": {
     "defaultMessage": "{actor} changed which counterparty the contract is listed under"
+  },
+  "activity.contract.relatedRecord": {
+    "defaultMessage": "{reference} ({title})"
+  },
+  "activity.contract.relationAdded": {
+    "defaultMessage": "{actor} linked this contract — {relationType, select, renews {it renews {related}} amends {it amends {related}} other {related to {related}}}"
+  },
+  "activity.contract.renewalConfirmed": {
+    "defaultMessage": "{actor} confirmed the renewal — the term moved from {from} to {to}"
   },
   "activity.contract.restored": {
     "defaultMessage": "{actor} restored this contract"
@@ -112,6 +124,9 @@
   },
   "activity.contract.typeReassigned": {
     "defaultMessage": "{actor} re-typed this contract"
+  },
+  "activity.contract.unnamedRecord": {
+    "defaultMessage": "another contract"
   },
   "activity.contract.updated": {
     "defaultMessage": "{actor} changed {count, plural, =0 {this contract} one {{field}} other {# fields}}"
@@ -189,7 +204,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -211,6 +226,15 @@
   },
   "activity.folder.unnamed": {
     "defaultMessage": "unnamed"
+  },
+  "activity.keyDate.added": {
+    "defaultMessage": "{actor} added the key date {label} on {date}"
+  },
+  "activity.keyDate.edited": {
+    "defaultMessage": "{actor} changed the key date {label}"
+  },
+  "activity.keyDate.removed": {
+    "defaultMessage": "{actor} removed the key date {label} on {date}"
   },
   "activity.loadError": {
     "defaultMessage": "The history could not be read. Reopen the panel to try again."
@@ -950,6 +974,12 @@
   "contracts.create": {
     "defaultMessage": "Create contract"
   },
+  "contracts.daysPastExpiry": {
+    "defaultMessage": "{days, plural, one {# day past expiry} other {# days past expiry}}"
+  },
+  "contracts.daysRemaining": {
+    "defaultMessage": "{days, plural, =0 {Expires today} one {# day left} other {# days left}}"
+  },
   "contracts.empty.archived.body": {
     "defaultMessage": "Archived contracts are kept out of the way until they are restored."
   },
@@ -995,23 +1025,47 @@
   "contracts.form.createError": {
     "defaultMessage": "The contract could not be created."
   },
+  "contracts.form.daysRemaining": {
+    "defaultMessage": "Days remaining"
+  },
   "contracts.form.description": {
     "defaultMessage": "Description"
   },
   "contracts.form.draftNote": {
     "defaultMessage": "New contracts start in Draft. Set everything else on the record."
   },
+  "contracts.form.effectiveDate": {
+    "defaultMessage": "Effective date"
+  },
   "contracts.form.entity": {
     "defaultMessage": "Our entity"
+  },
+  "contracts.form.expiryDate": {
+    "defaultMessage": "Expiry date"
   },
   "contracts.form.fieldMissing": {
     "defaultMessage": "Fill {field} — this contract type requires it."
   },
+  "contracts.form.lastRenewal": {
+    "defaultMessage": "Last renewal"
+  },
+  "contracts.form.noticePeriod": {
+    "defaultMessage": "Notice period (days)"
+  },
   "contracts.form.owner": {
     "defaultMessage": "Owner"
   },
+  "contracts.form.prefillChild": {
+    "defaultMessage": "Prefilled from {reference} and born under it. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it."
+  },
+  "contracts.form.prefillSuccessor": {
+    "defaultMessage": "Prefilled from {reference} and linked as its renewal. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it."
+  },
   "contracts.form.priority": {
     "defaultMessage": "Priority"
+  },
+  "contracts.form.renewalPeriod": {
+    "defaultMessage": "Renewal period (months)"
   },
   "contracts.form.risk": {
     "defaultMessage": "Risk"
@@ -1022,14 +1076,23 @@
   "contracts.form.submit": {
     "defaultMessage": "Create"
   },
+  "contracts.form.termType": {
+    "defaultMessage": "Term type"
+  },
   "contracts.form.title": {
     "defaultMessage": "Create contract"
+  },
+  "contracts.form.titleChild": {
+    "defaultMessage": "Create child contract"
   },
   "contracts.form.titleField": {
     "defaultMessage": "Title"
   },
   "contracts.form.titleMissing": {
     "defaultMessage": "Name the contract."
+  },
+  "contracts.form.titleSuccessor": {
+    "defaultMessage": "Create successor contract"
   },
   "contracts.form.type": {
     "defaultMessage": "Contract type"
@@ -1079,6 +1142,9 @@
   "contracts.record.envelope.voided": {
     "defaultMessage": "Envelope voided"
   },
+  "contracts.record.notRecorded": {
+    "defaultMessage": "—"
+  },
   "contracts.record.readOnlyNote": {
     "defaultMessage": "This record is read-only. Ask a Legal Team Member to make a change."
   },
@@ -1100,11 +1166,23 @@
   "contracts.record.tab.fields": {
     "defaultMessage": "Fields"
   },
+  "contracts.record.tab.keyDates": {
+    "defaultMessage": "Key dates"
+  },
   "contracts.record.tab.overview": {
     "defaultMessage": "Overview"
   },
   "contracts.reference": {
     "defaultMessage": "C-{number}"
+  },
+  "renewal.banner": {
+    "defaultMessage": "Renewal date passed — pending confirmation. The term does not advance until a human confirms."
+  },
+  "renewal.bannerRegion": {
+    "defaultMessage": "Renewal pending confirmation"
+  },
+  "renewal.review": {
+    "defaultMessage": "Review renewal"
   },
   "contracts.restoreError": {
     "defaultMessage": "{reference} could not be restored."
@@ -1195,6 +1273,48 @@
   },
   "contracts.teamRole": {
     "defaultMessage": "{role, select, member {Member} watcher {Watcher} creator {Creator} contributor {Contributor} other {Unknown}}"
+  },
+  "contracts.termTimeline.empty": {
+    "defaultMessage": "{missing, select, start {No effective date on this contract yet.} end {No expiry date on this contract yet.} other {No term dates on this contract yet.}}"
+  },
+  "contracts.termTimeline.heading": {
+    "defaultMessage": "Term timeline"
+  },
+  "contracts.termTimeline.key": {
+    "defaultMessage": "Timeline key"
+  },
+  "contracts.termTimeline.keyInitial": {
+    "defaultMessage": "Initial term"
+  },
+  "contracts.termTimeline.keyNotice": {
+    "defaultMessage": "Notice deadline"
+  },
+  "contracts.termTimeline.keyRolls": {
+    "defaultMessage": "Renewals"
+  },
+  "contracts.termTimeline.noEnd": {
+    "defaultMessage": "No end date"
+  },
+  "contracts.termTimeline.noticeDeadlineOn": {
+    "defaultMessage": "Notice deadline {date}"
+  },
+  "contracts.termTimeline.openPeriodDates": {
+    "defaultMessage": "From {start}"
+  },
+  "contracts.termTimeline.period": {
+    "defaultMessage": "{renewal, plural, =0 {Initial term} other {Renewal #}}"
+  },
+  "contracts.termTimeline.periodDates": {
+    "defaultMessage": "{start} – {end}"
+  },
+  "contracts.termTimeline.periods": {
+    "defaultMessage": "Term periods"
+  },
+  "contracts.termTimeline.today": {
+    "defaultMessage": "Today"
+  },
+  "contracts.termTypeLabel": {
+    "defaultMessage": "{termType, select, fixed {Fixed term} auto_renew {Auto-renewing} evergreen {Evergreen} other {Unknown}}"
   },
   "contracts.title": {
     "defaultMessage": "Contracts"
@@ -1841,6 +1961,93 @@
   "home.title": {
     "defaultMessage": "Home"
   },
+  "keyDates.actionsFor": {
+    "defaultMessage": "Actions for {label}"
+  },
+  "keyDates.add": {
+    "defaultMessage": "Add date"
+  },
+  "keyDates.addTitle": {
+    "defaultMessage": "Add a key date"
+  },
+  "keyDates.column.actions": {
+    "defaultMessage": "Actions"
+  },
+  "keyDates.column.date": {
+    "defaultMessage": "Date"
+  },
+  "keyDates.column.due": {
+    "defaultMessage": "Due"
+  },
+  "keyDates.column.event": {
+    "defaultMessage": "Event"
+  },
+  "keyDates.column.source": {
+    "defaultMessage": "Source"
+  },
+  "keyDates.count.past": {
+    "defaultMessage": "{count} past"
+  },
+  "keyDates.count.upcoming": {
+    "defaultMessage": "{count} upcoming"
+  },
+  "keyDates.countLabel": {
+    "defaultMessage": "{count, plural, one {# date} other {# dates}}"
+  },
+  "keyDates.edit": {
+    "defaultMessage": "Edit date"
+  },
+  "keyDates.editTitle": {
+    "defaultMessage": "Edit key date"
+  },
+  "keyDates.empty": {
+    "defaultMessage": "No key dates on this contract yet, and no term dates to show beside them."
+  },
+  "keyDates.event.expiry": {
+    "defaultMessage": "Current term expires"
+  },
+  "keyDates.event.notice": {
+    "defaultMessage": "Renewal notice deadline"
+  },
+  "keyDates.event.noticeWithPeriod": {
+    "defaultMessage": "Renewal notice deadline — {days, plural, one {# day} other {# days}} before expiry"
+  },
+  "keyDates.field.date": {
+    "defaultMessage": "Date"
+  },
+  "keyDates.field.label": {
+    "defaultMessage": "Event"
+  },
+  "keyDates.field.note": {
+    "defaultMessage": "Note (optional)"
+  },
+  "keyDates.needDate": {
+    "defaultMessage": "Pick a date."
+  },
+  "keyDates.needLabel": {
+    "defaultMessage": "Name what the date is."
+  },
+  "keyDates.next": {
+    "defaultMessage": "Next deadline"
+  },
+  "keyDates.past": {
+    "defaultMessage": "Past"
+  },
+  "keyDates.remove": {
+    "defaultMessage": "Remove date"
+  },
+  "keyDates.section": {
+    "defaultMessage": "Key dates"
+  },
+  "keyDates.source.derived": {
+    "defaultMessage": "Derived"
+  },
+  "keyDates.source.keyDate": {
+    "defaultMessage": "Key date"
+  },
+  "keyDates.writeFailed": {
+    "defaultMessage": "The change could not be saved. Try again."
+  },
   "keys.arrows": {
     "defaultMessage": "Move within menus and lists"
   },
@@ -1885,6 +2092,102 @@
   },
   "nav.home": {
     "defaultMessage": "Home"
+  },
+  "renewal.action.amendment": {
+    "defaultMessage": "File the amendment"
+  },
+  "renewal.action.child": {
+    "defaultMessage": "Open the child contract"
+  },
+  "renewal.action.successor": {
+    "defaultMessage": "Open the successor"
+  },
+  "renewal.block": {
+    "defaultMessage": "Renewals"
+  },
+  "renewal.column.confirmed": {
+    "defaultMessage": "Confirmed"
+  },
+  "renewal.column.confirmedBy": {
+    "defaultMessage": "Confirmed by"
+  },
+  "renewal.column.renewal": {
+    "defaultMessage": "Renewal"
+  },
+  "renewal.confirm": {
+    "defaultMessage": "Confirm renewal"
+  },
+  "renewal.confirmFailed": {
+    "defaultMessage": "The renewal could not be confirmed. Try again."
+  },
+  "renewal.currentExpiry": {
+    "defaultMessage": "The term currently runs to {date}."
+  },
+  "renewal.field.expiry": {
+    "defaultMessage": "New expiry date"
+  },
+  "renewal.intro": {
+    "defaultMessage": "{reference} auto-renews in {months, plural, one {#-month} other {#-month}} periods. Choose how to record the new term."
+  },
+  "renewal.introNoPeriod": {
+    "defaultMessage": "{reference} auto-renews, and records no renewal period. Choose how to record the new term."
+  },
+  "renewal.mustAdvance": {
+    "defaultMessage": "A roll moves the term forward. Pick a date after the current expiry."
+  },
+  "renewal.needExpiry": {
+    "defaultMessage": "Pick the date the term now runs to."
+  },
+  "renewal.note.amendment": {
+    "defaultMessage": "Opens this record's Documents section to file an amendment on its paper. No new record is made."
+  },
+  "renewal.note.child": {
+    "defaultMessage": "Opens a new contract prefilled from this one, born under it. The team, the status, and the Confidential flag are not carried over."
+  },
+  "renewal.note.successor": {
+    "defaultMessage": "Opens a new contract prefilled from this one, linked as its renewal. The team, the status, and the Confidential flag are not carried over."
+  },
+  "renewal.recordedNote": {
+    "defaultMessage": "Recorded on the record's activity. The contract's status and stage do not change."
+  },
+  "renewal.renew": {
+    "defaultMessage": "Renew"
+  },
+  "renewal.row.advancedFrom": {
+    "defaultMessage": "From {date}"
+  },
+  "renewal.row.advancedTo": {
+    "defaultMessage": "Term advanced to {date}"
+  },
+  "renewal.title": {
+    "defaultMessage": "Confirm renewal"
+  },
+  "renewal.vehicle.amendment": {
+    "defaultMessage": "Paper as amendment"
+  },
+  "renewal.vehicle.amendmentBlurb": {
+    "defaultMessage": "Renewal recorded as an amendment on this contract's paper."
+  },
+  "renewal.vehicle.child": {
+    "defaultMessage": "Create child contract"
+  },
+  "renewal.vehicle.childBlurb": {
+    "defaultMessage": "New record parented to this one."
+  },
+  "renewal.vehicle.legend": {
+    "defaultMessage": "How to record it"
+  },
+  "renewal.vehicle.roll": {
+    "defaultMessage": "Confirm the roll"
+  },
+  "renewal.vehicle.rollBlurb": {
+    "defaultMessage": "Same record — the expiry advances."
+  },
+  "renewal.vehicle.successor": {
+    "defaultMessage": "New successor contract"
+  },
+  "renewal.vehicle.successorBlurb": {
+    "defaultMessage": "Standalone record linked as the renewal."
   },
   "role.administrator": {
     "defaultMessage": "Administrator"

@@ -970,7 +970,7 @@ export interface paths {
     /** The contract list, newest reference first: number, title, type, and status; archived contracts only with includeArchived=true. Member+ read every contract that is not confidential; a Contributor reads exactly the contracts they hold a contract_team row on, archived ones behind the same flag. A confidential contract is listed only for its named team, its Owner, and Administrators — silently absent for everyone else, so no count can reveal it */
     get: operations["listContracts"];
     put?: never;
-    /** Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward — except the Confidential flag (DD-014), which may be set here so a sensitive record is never visible to the wrong audience, even briefly */
+    /** Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward — except the Confidential flag (DD-014), which may be set here so a sensitive record is never visible to the wrong audience, even briefly. `renewalOf` routes a renewal into a new record (CTR-007's third and fourth vehicles, M16/5): the successor is born carrying its predecessor's business facts — our entity, the value, the term shape, and the counterparties — and linked to it, as a child by contracts.parent_id or as a standalone successor by a CTR-015 `renews` row. The team, the status, and the Confidential flag are **never** copied: CTR-015's no-inheritance stance, applied at birth. The title and the type are the body's, so whatever the person edited before pressing Create is what the record is born with. Appends the link's own activity action beside contract.created */
     post: operations["createContract"];
     delete?: never;
     options?: never;
@@ -1009,8 +1009,25 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
-    /** Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, the value, the type, a custom field, or the status — any live status may follow any other (CTR-001). The value is one field in three parts: amount, currency, and cadence commit together and clear together. Re-typing re-checks the new type's hard-required fields before it commits (CTR-016/MTR-014), so the type and the values that satisfy it may be sent together. The Confidential flag (DD-014) commits here too, but only for an Administrator, the contract's creator, or its Owner: anyone else who reaches the record is refused 403, and anyone who does not reach it is answered 404 like a contract that does not exist. A status change that moves the contract past the approval stage while approvals are pending or rejected meets CTR-012's soft gate: it is refused 409 with the unresolved approvals named, and the same commit with `overrideSoftGate` succeeds and is logged as an override. Never on an archived contract */
+    /** Commit one field of a contract in place (DES-017 per-field commits): title, description, the Owner, the signing entity, priority, risk, the value, the CTR-006 term fields, the type, a custom field, or the status — any live status may follow any other (CTR-001). The value is one field in three parts: amount, currency, and cadence commit together and clear together. Re-typing re-checks the new type's hard-required fields before it commits (CTR-016/MTR-014), so the type and the values that satisfy it may be sent together. The term is five fields with one rule between them (CTR-006): an expiry on an evergreen contract and a renewal period on a contract that does not auto-renew are refused 400 with their own problem types, and a term-type change clears the fields the new type cannot hold, each clear narrated as the edit it is. The Confidential flag (DD-014) commits here too, but only for an Administrator, the contract's creator, or its Owner: anyone else who reaches the record is refused 403, and anyone who does not reach it is answered 404 like a contract that does not exist. A status change that moves the contract past the approval stage while approvals are pending or rejected meets CTR-012's soft gate: it is refused 409 with the unresolved approvals named, and the same commit with `overrideSoftGate` succeeds and is logged as an override. Never on an archived contract */
     patch: operations["updateContract"];
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/renewal": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Confirm the roll (CTR-007's first renewal vehicle): the same record's term advances, on the say-so of a person. CTR-006's engine is notify-only and never advances a date on its own, so a contract that passed its expiry un-actioned reads as 'renewal pending confirmation' — a predicate over its dates, not a status — and waits for this. The request carries the expiry it was raised against and the expiry to advance to; the record proposes the second as the first plus the renewal period, and the caller may send a different date, because a roll whose dates shifted in negotiation is recorded as it really landed. The comparison is made under the contract's row lock, so two confirms racing for one roll advance the term exactly once and the loser is refused 409 by name rather than rolling it again. Only an auto-renewing contract with an expiry rolls, and a roll must move the term forward. The status and the stage are untouched: this moves one date. Appends one contract.renewal_confirmed entry at the working-team tier (DD-017) — the only record a renewal leaves, and what the record's renewal history reads back. Answers the record and its whole history. Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract rolls nothing until it is restored */
+    post: operations["confirmContractRenewal"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   "/api/v1/contracts/{number}/team": {
@@ -1234,6 +1251,42 @@ export interface paths {
     options?: never;
     head?: never;
     patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/key-dates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One contract's whole deadline surface (CTR-009): the union of its key dates, its expiry date, and its derived notice deadline, ordered with what is still ahead first and nearest first, then what has gone by, most recently passed first. Exactly one entry — the earliest still ahead — is marked as the next deadline, and none is on a record whose every date has passed. The expiry and the notice deadline carry no key date id, because no row backs them: the notice deadline is the expiry minus the notice period, computed on every read and stored nowhere, and both move by editing the term on the record. Access is inherited from the contract and nothing else: a Contributor on the team reads the surface, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it */
+    get: operations["listContractKeyDates"];
+    put?: never;
+    /** Put a named date on a contract (CTR-009): a calendar date, a label, and an optional note — the free-form escape hatch beside the typed term columns, for price reviews, option-exercise windows, and delivery milestones. A blank label is refused and a blank note is stored as no note at all. There is no owner and no per-date reminder schedule: NOT-004 fixed one global offset list for every tracked date. Answers the record's whole deadline surface, because a new date can change which one is next. Appends one key_date.added entry on the owning contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract takes no new date until it is restored */
+    post: operations["addContractKeyDate"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/key-dates/{keyDateId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Take a key date off a contract (CTR-009). The row is deleted and the key_date.removed activity entry is the durable record of it, which is why that entry carries the label and the date rather than only the id. Answers the record's whole deadline surface, because removing a date can change which one is next. A key date on a contract this viewer cannot reach answers 404, exactly as for one that does not exist; an archived contract takes no removal until it is restored */
+    delete: operations["removeContractKeyDate"];
+    options?: never;
+    head?: never;
+    /** Move a key date, rename it, or change its note (CTR-009). Every field is optional and only what is sent is read, so a surface that edits one of them sends one of them; a note is cleared by sending null. A request that changes nothing writes nothing and narrates nothing. Answers the record's whole deadline surface, because moving a date can change which one is next. Appends one key_date.edited entry naming only what moved, at the working-team tier (DD-017). A key date on a contract this viewer cannot reach answers 404, exactly as for one that does not exist; an archived contract takes no edit until it is restored */
+    patch: operations["updateContractKeyDate"];
     trace?: never;
   };
   "/api/v1/counterparties": {
@@ -5359,6 +5412,16 @@ export interface operations {
                 /** @enum {string} */
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -5401,6 +5464,11 @@ export interface operations {
             [key: string]: (string | number | boolean | string[]) | null;
           };
           isConfidential?: boolean;
+          renewalOf?: {
+            number: number;
+            /** @enum {string} */
+            vehicle: "child" | "successor";
+          };
         };
       };
     };
@@ -5445,6 +5513,16 @@ export interface operations {
                 /** @enum {string} */
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -5456,6 +5534,33 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+          };
+        };
+      };
+      /** @description The named types are CTR-015's guards: the link already exists, the parent would close a loop, or both ends are one contract. An unnamed 409 is an archived predecessor; print it. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type:
+              | "urn:openlaw:problem:contract-relation-exists"
+              | "urn:openlaw:problem:contract-parent-cycle"
+              | "urn:openlaw:problem:contract-self-link"
+              | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
           };
         };
       };
@@ -5596,6 +5701,16 @@ export interface operations {
                 /** @enum {string} */
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -5653,6 +5768,21 @@ export interface operations {
               jurisdiction: string | null;
               isPrimary: boolean;
             }[];
+            renewals: {
+              id: string;
+              /** Format: date */
+              from: string;
+              /** Format: date */
+              to: string;
+              /** Format: date-time */
+              confirmedAt: string;
+              confirmedBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+            }[];
           };
         };
       };
@@ -5692,6 +5822,12 @@ export interface operations {
             /** @enum {string} */
             cadence: "one_time" | "monthly" | "annually";
           } | null;
+          /** @enum {string} */
+          termType?: "fixed" | "auto_renew" | "evergreen";
+          effectiveDate?: string | null;
+          expiryDate?: string | null;
+          renewalPeriodMonths?: number | null;
+          noticePeriodDays?: number | null;
           contractTypeId?: string;
           customFields?: {
             [key: string]: (string | number | boolean | string[]) | null;
@@ -5743,6 +5879,16 @@ export interface operations {
                 /** @enum {string} */
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -5789,6 +5935,32 @@ export interface operations {
           };
         };
       };
+      /** @description The term data would contradict its own type (CTR-006): an expiry on an evergreen contract, or a renewal period on a contract that does not auto-renew. Change the term type, or leave the value off. */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type:
+              | "urn:openlaw:problem:term-expiry-on-evergreen"
+              | "urn:openlaw:problem:term-renewal-period"
+              | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+          };
+        };
+      };
       /** @description The status change crosses CTR-012's approval gate with approvals still unresolved. Re-send with `overrideSoftGate` to record it as an override. */
       409: {
         headers: {
@@ -5801,6 +5973,139 @@ export interface operations {
              * @enum {string}
              */
             type: "urn:openlaw:problem:approval-soft-gate" | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  confirmContractRenewal: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: date */
+          fromExpiry: string;
+          /** Format: date */
+          toExpiry: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contract: {
+              id: string;
+              number: number;
+              title: string;
+              contractTypeId: string;
+              contractTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              entity: {
+                id: string;
+                legalName: string;
+              } | null;
+              primaryCounterparty: {
+                id: string;
+                name: string;
+              } | null;
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              value: {
+                amount: number;
+                currency: string;
+                /** @enum {string} */
+                cadence: "one_time" | "monthly" | "annually";
+              } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
+              description: string | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              isConfidential: boolean;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+            renewals: {
+              id: string;
+              /** Format: date */
+              from: string;
+              /** Format: date */
+              to: string;
+              /** Format: date-time */
+              confirmedAt: string;
+              confirmedBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+            }[];
+          };
+        };
+      };
+      /** @description The named type says this contract's expiry is no longer the one the roll was raised against (CTR-006) — read the record again and confirm against the expiry it now holds, which is the one refusal here a client acts on rather than prints. An unnamed 409 is an archived record or one that records no expiry to roll; print it. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type: "urn:openlaw:problem:renewal-expiry-moved" | "about:blank";
             title: string;
             status: number;
             detail?: string;
@@ -5971,6 +6276,16 @@ export interface operations {
                 /** @enum {string} */
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -6054,6 +6369,16 @@ export interface operations {
                 /** @enum {string} */
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -6137,6 +6462,16 @@ export interface operations {
                 /** @enum {string} */
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -6219,6 +6554,16 @@ export interface operations {
                 /** @enum {string} */
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -6295,6 +6640,16 @@ export interface operations {
                 /** @enum {string} */
                 cadence: "one_time" | "monthly" | "annually";
               } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -6884,6 +7239,196 @@ export interface operations {
             errors?: {
               path: string;
               message: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listContractKeyDates: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            deadlines: {
+              /** @enum {string} */
+              source: "notice_deadline" | "expiry" | "key_date";
+              keyDateId: string | null;
+              /** Format: date */
+              date: string;
+              label: string | null;
+              note: string | null;
+              daysAway: number;
+              isNext: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  addContractKeyDate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: date */
+          date: string;
+          label: string;
+          note?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            deadlines: {
+              /** @enum {string} */
+              source: "notice_deadline" | "expiry" | "key_date";
+              keyDateId: string | null;
+              /** Format: date */
+              date: string;
+              label: string | null;
+              note: string | null;
+              daysAway: number;
+              isNext: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  removeContractKeyDate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        keyDateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            deadlines: {
+              /** @enum {string} */
+              source: "notice_deadline" | "expiry" | "key_date";
+              keyDateId: string | null;
+              /** Format: date */
+              date: string;
+              label: string | null;
+              note: string | null;
+              daysAway: number;
+              isNext: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateContractKeyDate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        keyDateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: date */
+          date?: string;
+          label?: string;
+          note?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            deadlines: {
+              /** @enum {string} */
+              source: "notice_deadline" | "expiry" | "key_date";
+              keyDateId: string | null;
+              /** Format: date */
+              date: string;
+              label: string | null;
+              note: string | null;
+              daysAway: number;
+              isNext: boolean;
             }[];
           };
         };

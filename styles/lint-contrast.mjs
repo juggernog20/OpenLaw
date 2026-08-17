@@ -97,8 +97,17 @@ PAIRS.push(["avatar-fg", "avatar-bg", UI]);
 // The stage pipeline's check glyph (DES-034) — a meaningful graphical
 // object drawn straight on the strip's bg-control, outside the
 // success family's own bg/fg pairing. The chevron separators are
-// decorative (aria-hidden) and exempt under WCAG 1.4.11.
+// decorative (aria-hidden) and exempt under WCAG 1.4.11. The Term
+// timeline's today line (DES-041) reuses this same pair.
 PAIRS.push(["status-success-fg", "bg-control", UI]);
+// The Term timeline's fills (DES-041) — the period bars and the
+// notice-deadline rule are meaningful graphical objects drawn straight
+// on the plot's bg-control, and the key's swatches are the objects
+// that map each fill to its name, drawn on the card's bg-raised.
+for (const family of ["info", "assigned", "severe"]) {
+  PAIRS.push([`status-${family}-fg`, "bg-control", UI]);
+  PAIRS.push([`status-${family}-fg`, "bg-raised", UI]);
+}
 
 /* Tokens whose value `transparent` means "the underlying surface shows
  * through" — resolved to that surface before checking. */

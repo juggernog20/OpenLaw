@@ -10,15 +10,18 @@
  * chrome — with the Owner, the type, status, priority, and risk as
  * selects.
  *
- * Four sections, four addresses. **Overview** (`/contracts/42`) is
- * the record's own columns: the Contract card and the Description card
- * under it. **Fields** (`/contracts/42/fields`) is what this contract's
+ * Five sections, five addresses. **Overview** (`/contracts/42`) is
+ * the record's own columns: the Contract card, the Description card
+ * under it, and the Term timeline card that closes the section.
+ * **Fields** (`/contracts/42/fields`) is what this contract's
  * type asks for on top of them. **Documents**
  * (`/contracts/42/documents`) is the paper. **Approvals**
  * (`/contracts/42/approvals`) is who has been asked to sign it off
- * (CTR-012, DES-035). The Team card is not one of the four — it stands
- * beside all of them, because who is on a contract is context for
- * reading any part of it.
+ * (CTR-012, DES-035). **Key dates** (`/contracts/42/key-dates`) is
+ * every date the record has, as one union — the team's own named dates,
+ * the expiry, and the derived notice deadline (CTR-009, DES-042). The
+ * Team card is not one of the five — it stands beside all of them,
+ * because who is on a contract is context for reading any part of it.
  *
  * The custom fields are CTR-016's, and they earn the card the C2 mock
  * draws for them. The contract's type decides which of them appear and
@@ -41,6 +44,23 @@
  * that commit together, clear together, and revert together. DES-017
  * still governs it — the group is what blur and Escape act on, because
  * a value half-committed or half-reverted is a value nobody chose.
+ *
+ * The term is CTR-006's, and it is five fields with one rule running
+ * between them. The type — fixed, auto-renewing, or evergreen — decides
+ * which of the other four the record may hold: an evergreen contract is
+ * offered no expiry, and nothing but an auto-renewing one is asked how
+ * far a roll goes. Those two are drawn as facts with an em dash rather
+ * than as boxes the seam would refuse everything typed into, which is
+ * the honest blank the grill's X.6 rule asks for. The notice period is
+ * drawn whatever the type says, because a notice obligation sits on any
+ * kind of term. Days remaining closes the group: it is derived from the
+ * expiry and stored nowhere, so it is a fact of the record rather than
+ * a field of it, and it is blank for a contract with no end.
+ *
+ * The Term timeline card closes the Overview with the same term drawn
+ * as a picture (DES-041): the periods the record's dates imply, the
+ * today line, and the derived notice-deadline mark. It holds nothing of
+ * its own — every mark on it is one of the dates the card above edits.
  *
  * The people are CTR-004's: one Owner (`manager_id`, labelled "Owner",
  * name only) who may be left unassigned, and the working group in the
@@ -105,7 +125,7 @@
  * Users are bounced home, and the API's 403 is the real refusal.
  */
 
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Link,
   redirect,
@@ -125,13 +145,14 @@ import {
   Settings,
   X,
 } from "lucide-react";
-import { SOFT_GATE_PROBLEM_TYPE } from "@openlaw/shared";
+import { RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE, SOFT_GATE_PROBLEM_TYPE } from "@openlaw/shared";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import {
   ADDABLE_TEAM_ROLES,
   cadenceLabel,
   contractReference,
+  daysRemainingLabel,
   type ContractCounterparty,
   type ContractValue,
   formatContractValue,
@@ -141,6 +162,8 @@ import {
   signingEntityOptions,
   STAGE_PILL,
   teamRoleLabel,
+  TERM_TYPES,
+  termTypeLabel,
   VALUE_CADENCES,
   type ContractRow,
   type ContractStatusOption,
@@ -148,6 +171,7 @@ import {
   type ContractTeamRole,
   type ContractTypeOption,
   type SeverityLevel,
+  type TermType,
   type ValueCadence,
   type UserOption,
 } from "../lib/contracts";
@@ -164,8 +188,16 @@ import {
   type CustomFieldValue,
   type CustomFieldValues,
 } from "../lib/custom-fields";
-import { currencyFractionDigits, currencyOptions, toMajorUnits, toMinorUnits } from "../lib/format";
+import {
+  currencyFractionDigits,
+  currencyOptions,
+  formatShortDate,
+  toMajorUnits,
+  toMinorUnits,
+} from "../lib/format";
 import { APPROVAL_PILL, isUnresolved, type ContractApproval } from "../lib/approvals";
+import { readContractKeyDates, type ContractDeadline } from "../lib/key-dates";
+import { confirmContractRenewal, type ConfirmedRenewal } from "../lib/renewals";
 import { FOLDER_ROOT, type ContractDocument } from "../lib/documents";
 import type { ContractFolder } from "../lib/folders";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
@@ -183,6 +215,11 @@ import { ApprovalsSigningCard } from "../components/approvals/approvals-signing-
 import { Avatar } from "../components/avatar";
 import { ConfidentialBanner } from "../components/confidential-banner";
 import { ConfidentialToggle } from "../components/confidential-toggle";
+import { ConfirmRenewalDialog } from "../components/contracts/confirm-renewal-dialog";
+import { CreateContractDialog } from "../components/contracts/create-contract-dialog";
+import { KeyDatesCard } from "../components/contracts/key-dates-card";
+import { RenewalBanner } from "../components/contracts/renewal-banner";
+import { TermTimelineCard } from "../components/contracts/term-timeline-card";
 import { CounterpartyPicker, type CounterpartyPick } from "../components/counterparty-picker";
 import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
 import { DocPanel } from "../components/documents/doc-panel";
@@ -197,7 +234,7 @@ import { Label } from "../components/ui/label";
 
 /** The record's sections (DES-032), in the order the strip draws them.
  * The Overview is the bare address, so it has no segment of its own. */
-const RECORD_TABS = ["fields", "documents", "approvals"] as const;
+const RECORD_TABS = ["fields", "documents", "approvals", "key-dates"] as const;
 type RecordTabName = "overview" | (typeof RECORD_TABS)[number];
 
 export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
@@ -219,44 +256,51 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
   // Contributor anyway; the record read alone carries every name the
   // page has to draw.
   const canEdit = isMemberPlus(user.role);
-  const [record, documents, folders, approvals, signing, options, registry] = await Promise.all([
-    api.GET("/api/v1/contracts/{number}", { params: { path: { number } } }),
-    // The record's paper (M11/2). Read by every viewer who reaches the
-    // page — a Contributor on the team reads and downloads it too
-    // (DD-015) — and answered 404 for anyone the record itself is
-    // hidden from, which is the same refusal the record read gives.
-    //
-    // The record root only (M13/3): the tree draws its folders first and
-    // then the documents filed nowhere, and a folder's own documents
-    // load when it is opened. Reading the record's whole paper here
-    // would draw every filed document twice.
-    api.GET("/api/v1/contracts/{number}/documents", {
-      params: { path: { number }, query: { folder: FOLDER_ROOT } },
-    }),
-    // How that paper is filed (M13/2, DOC-006). One read for the whole
-    // tree, because a record's folder set is small and drawing it a
-    // level at a time would be a round trip per press.
-    api.GET("/api/v1/contracts/{number}/folders", { params: { path: { number } } }),
-    // Who has been asked to sign the record off (M14/3, CTR-012). Read
-    // by every viewer who reaches the page — a Contributor on the team
-    // reads the roster too — and answered 404 for anyone the record
-    // itself is hidden from, which is the same refusal the record read
-    // gives.
-    api.GET("/api/v1/contracts/{number}/approvals", { params: { path: { number } } }),
-    // What paper this record has sent out for signature (M15/2,
-    // CTR-013), read by every viewer who reaches the page for the
-    // roster's reason. It carries two facts beside the envelopes —
-    // whether this install has a connector, and the chain a send would
-    // offer — so the card decides in one condition whether to draw the
-    // send control at all.
-    api.GET("/api/v1/contracts/{number}/envelopes", { params: { path: { number } } }),
-    canEdit ? api.GET("/api/v1/contracts/options") : undefined,
-    // The registry's own Member+ list is the signing-entity picker's
-    // source (CTR-011): it is ordered by legal name and already leaves
-    // archived entities out, so the contracts surface needs no read of
-    // its own the way it does for the Administrator-only taxonomies.
-    canEdit ? api.GET("/api/v1/entities") : undefined,
-  ]);
+  const [record, documents, folders, approvals, signing, keyDates, options, registry] =
+    await Promise.all([
+      api.GET("/api/v1/contracts/{number}", { params: { path: { number } } }),
+      // The record's paper (M11/2). Read by every viewer who reaches the
+      // page — a Contributor on the team reads and downloads it too
+      // (DD-015) — and answered 404 for anyone the record itself is
+      // hidden from, which is the same refusal the record read gives.
+      //
+      // The record root only (M13/3): the tree draws its folders first and
+      // then the documents filed nowhere, and a folder's own documents
+      // load when it is opened. Reading the record's whole paper here
+      // would draw every filed document twice.
+      api.GET("/api/v1/contracts/{number}/documents", {
+        params: { path: { number }, query: { folder: FOLDER_ROOT } },
+      }),
+      // How that paper is filed (M13/2, DOC-006). One read for the whole
+      // tree, because a record's folder set is small and drawing it a
+      // level at a time would be a round trip per press.
+      api.GET("/api/v1/contracts/{number}/folders", { params: { path: { number } } }),
+      // Who has been asked to sign the record off (M14/3, CTR-012). Read
+      // by every viewer who reaches the page — a Contributor on the team
+      // reads the roster too — and answered 404 for anyone the record
+      // itself is hidden from, which is the same refusal the record read
+      // gives.
+      api.GET("/api/v1/contracts/{number}/approvals", { params: { path: { number } } }),
+      // What paper this record has sent out for signature (M15/2,
+      // CTR-013), read by every viewer who reaches the page for the
+      // roster's reason. It carries two facts beside the envelopes —
+      // whether this install has a connector, and the chain a send would
+      // offer — so the card decides in one condition whether to draw the
+      // send control at all.
+      api.GET("/api/v1/contracts/{number}/envelopes", { params: { path: { number } } }),
+      // Every date on the record (M16/3, CTR-009): its key dates, its
+      // expiry, and its derived notice deadline, as one union the seam has
+      // already ordered and marked. Read by every viewer who reaches the
+      // page for the roster's reason — a Contributor on the team reads the
+      // record's deadlines too.
+      api.GET("/api/v1/contracts/{number}/key-dates", { params: { path: { number } } }),
+      canEdit ? api.GET("/api/v1/contracts/options") : undefined,
+      // The registry's own Member+ list is the signing-entity picker's
+      // source (CTR-011): it is ordered by legal name and already leaves
+      // archived entities out, so the contracts surface needs no read of
+      // its own the way it does for the Administrator-only taxonomies.
+      canEdit ? api.GET("/api/v1/entities") : undefined,
+    ]);
   // The documents read is required, like the record read: every viewer
   // who reaches this page reads the paper on it (DD-015). A failure
   // here must not render as "No documents on this contract yet" — an
@@ -268,6 +312,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     !folders.data ||
     !approvals.data ||
     !signing.data ||
+    !keyDates.data ||
     (canEdit && !(options?.data && registry?.data))
   ) {
     throw new Error("The contract could not be read.");
@@ -289,6 +334,16 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
      * an install with no connector is a fact about the deployment, not
      * a fallback for a read that did not happen. */
     signing: signing.data,
+    /** Every date on the record, as one CTR-009 union (M16/3). Required
+     * like the roster: a record with no dates at all is a fact about it,
+     * not a fallback for a read that did not happen. */
+    deadlines: keyDates.data.deadlines,
+    /** Every confirmed roll on the record, most recent first (M16/4,
+     * CTR-006). It rides the record read because nothing stores a
+     * renewal — these are the activity log's own entries read back
+     * (grill row G.R5) — and two surfaces draw them: the card's rows,
+     * and the Contract card's "Last renewal" fact. */
+    renewals: record.data.renewals,
     /** Where the next page of paper starts, or null when the first page
      * is all of it (CTR-024). */
     documentsCursor: documents.data.nextCursor,
@@ -311,6 +366,13 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
  * signing entity, the type, the status, priority, and risk have their
  * own selects, and the counterparties have their own routes. */
 type TextFieldKey = "title" | "description";
+/**
+ * The four term fields that commit as typed text (CTR-006, DES-017):
+ * two calendar dates and two counts. The term type is the fifth, and it
+ * is a select, so it commits on its own change like every other select
+ * on this card.
+ */
+type TermDraftKey = "effectiveDate" | "expiryDate" | "renewalPeriodMonths" | "noticePeriodDays";
 /** One custom field's key, namespaced by slug so a catalog field named
  * "Title" and the record's own title are never one micro-state. */
 type CustomFieldKey = `field:${string}`;
@@ -321,7 +383,9 @@ type CustomFieldKey = `field:${string}`;
 type CommitOutcome = { ok: true } | { ok: false; detail?: string; type?: string };
 type FieldKey =
   | TextFieldKey
+  | TermDraftKey
   | CustomFieldKey
+  | "termType"
   | "managerId"
   | "entityId"
   | "counterparties"
@@ -331,6 +395,14 @@ type FieldKey =
   | "risk"
   | "value"
   | "isConfidential";
+
+/**
+ * The em dash the record prints where it holds nothing (grill row X.6):
+ * a term field the contract's type cannot hold, and a countdown with no
+ * expiry to count to. One string, so no two of those places can
+ * disagree about what an absence looks like.
+ */
+const NOT_RECORDED = defineMessage({ id: "contracts.record.notRecorded", defaultMessage: "—" });
 
 /** The Team card's anchor. Two places name it: the card itself, and
  * the confidentiality banner's "Manage team" link, which is a fragment
@@ -420,6 +492,8 @@ function ContractRecord() {
     folders: contractFolders,
     approvals: contractApprovals,
     signing: contractSigning,
+    deadlines: contractDeadlines,
+    renewals: contractRenewals,
     documentsCursor,
     fields,
     customFieldRefs,
@@ -499,6 +573,61 @@ function ContractRecord() {
    * re-read. */
   const [signing, setSigning] = useState<SigningState>(contractSigning);
   /**
+   * Every confirmed roll on the record, most recent first (M16/4,
+   * CTR-006). State rather than loader data because confirming a roll
+   * answers the whole history, and the card replaces what it holds
+   * without a page re-read.
+   *
+   * Two surfaces read it and neither derives anything from it: the
+   * card draws the rows, and the Contract card's "Last renewal" fact
+   * reads the first one. Nothing stores a renewal, so this is the
+   * activity log read back (grill row G.R5) and there is no second
+   * copy of it anywhere.
+   */
+  const [renewals, setRenewals] = useState<ConfirmedRenewal[]>(contractRenewals);
+  /** Whether the Renew dialog is open. It lives here rather than in the
+   * card that holds the renewal rows, because the pending banner raises
+   * the same dialog from the page's chrome — where every section can
+   * reach it — which is `SoftGateDialog`'s reason for living here too. */
+  const [renewing, setRenewing] = useState(false);
+  const [renewalStatus, setRenewalStatus] = useState<FieldStatus>("idle");
+  /**
+   * Which routed renewal vehicle the create dialog is open for, or none
+   * (M16/5, CTR-007, DES-044).
+   *
+   * The dialog is the Contracts list's own, opened here so a renewal is
+   * routed from the record it is a renewal of. It lives beside the
+   * Renew dialog for the same reason that one lives here: the act is
+   * raised from the page's chrome, which is on screen in every section.
+   */
+  const [routingTo, setRoutingTo] = useState<"child" | "successor" | null>(null);
+  /**
+   * Whether the Documents section should open its version composer on
+   * the primary chain, ready to file an amendment (CTR-007's second
+   * vehicle).
+   *
+   * A flag rather than a document id: which document is the instrument
+   * is the record's own answer (CTR-014), and a second copy of it here
+   * would be the copy that drifts when the pin moves. The section
+   * clears it as soon as it has opened the composer, so navigating back
+   * to Documents later does not re-open it.
+   */
+  const [amending, setAmending] = useState(false);
+  /** The section's answer that it has taken the request up. Stable
+   * across renders, because the effect that opens the composer watches
+   * it: a new function every render would re-run the effect and re-open
+   * a composer the person had just closed. */
+  const stopAmending = useCallback(() => setAmending(false), []);
+  /** Every date on the record, as the CTR-009 union (M16/3). State
+   * rather than loader data because every key-date write answers the
+   * whole union — adding, moving, or removing one date can change which
+   * date the list calls next — and the section replaces what it holds
+   * without a page re-read. */
+  const [deadlines, setDeadlines] = useState<ContractDeadline[]>(contractDeadlines);
+  /** Which re-read of the union above is the newest one in flight. Two
+   * term commits in a row race, and only the last answer may land. */
+  const deadlinesRead = useRef(0);
+  /**
    * Which version the doc panel is reading, or none (M12/2).
    *
    * The record holds it rather than the Documents section, because the
@@ -523,6 +652,12 @@ function ContractRecord() {
   /** The other side (CTR-011), primary first as the API orders it. */
   const [parties, setParties] = useState<ContractCounterparty[]>(counterparties);
   const [drafts, setDrafts] = useState<Record<TextFieldKey, string>>(() => textDrafts(contract));
+  /** The term's four typed fields, held as text while they are being
+   * edited: a half-typed date and an empty count are both states an
+   * input passes through, and neither is a value to commit (CTR-006). */
+  const [termFields, setTermFields] = useState<Record<TermDraftKey, string>>(() =>
+    termDrafts(contract),
+  );
   const [fieldStatus, setFieldStatus] = useState<Partial<Record<FieldKey, FieldStatus>>>({});
   const [fieldError, setFieldError] = useState<Partial<Record<FieldKey, string | undefined>>>({});
   const [archiveStatus, setArchiveStatus] = useState<FieldStatus>("idle");
@@ -630,6 +765,46 @@ function ContractRecord() {
     return { title: row.title, description: row.description ?? "" };
   }
 
+  /** The saved term, as the four inputs hold it: an unrecorded date and
+   * an unrecorded count are both an empty box. */
+  function termDrafts(row: ContractRow): Record<TermDraftKey, string> {
+    return {
+      effectiveDate: row.effectiveDate ?? "",
+      expiryDate: row.expiryDate ?? "",
+      renewalPeriodMonths: row.renewalPeriodMonths === null ? "" : String(row.renewalPeriodMonths),
+      noticePeriodDays: row.noticePeriodDays === null ? "" : String(row.noticePeriodDays),
+    };
+  }
+
+  /**
+   * Re-reads the record's deadline union (M16/3, CTR-009).
+   *
+   * Two of the three dates the Key dates section draws **are** the term,
+   * so a term edit moves that section as surely as it moves the timeline
+   * card. The union is re-read rather than patched here: its order, its
+   * day counts, and which date it calls next are the seam's answer
+   * (DES-040 clause 4), and a second copy of that rule on this page is
+   * the copy that drifts.
+   *
+   * Two term fields committed in quick succession put two reads in
+   * flight, and nothing makes them land in the order they were sent —
+   * so each read takes a ticket and only the newest one is allowed to
+   * write. Without it the older answer can arrive last and put the
+   * section back to the term before the second edit.
+   *
+   * A read that fails leaves the union as it was and says nothing. The
+   * commit itself has already landed and its own micro-state has already
+   * said so; a second failure note about a background read would report
+   * a change that did in fact happen as one that did not, and the
+   * section is on another tab from the field that raised it.
+   */
+  function refreshDeadlines(number: number) {
+    const ticket = ++deadlinesRead.current;
+    void readContractKeyDates(number).then((outcome) => {
+      if (outcome.ok && ticket === deadlinesRead.current) setDeadlines(outcome.deadlines);
+    });
+  }
+
   function note(key: FieldKey, status: FieldStatus, detail?: string) {
     setFieldStatus((current) => ({ ...current, [key]: status }));
     setFieldError((current) => ({ ...current, [key]: detail }));
@@ -666,8 +841,144 @@ function ContractRecord() {
     if (key === "title" || key === "description") {
       setDrafts((current) => ({ ...current, [key]: textDrafts(row)[key] }));
     }
+    // A term-type commit re-seeds all four term inputs: it clears the
+    // fields the new type cannot hold (CTR-006), so its answer carries
+    // more empty boxes than the request did. A typed term field's own
+    // commit re-seeds only its own box — the rule above holds among the
+    // term fields too: another box's in-progress edit is not this
+    // commit's to discard.
+    if (key === "termType") {
+      setTermFields(termDrafts(row));
+    } else if (key in termFields) {
+      setTermFields((current) => ({ ...current, [key]: termDrafts(row)[key as TermDraftKey] }));
+    }
+    if (key === "termType" || key === "expiryDate" || key === "noticePeriodDays") {
+      refreshDeadlines(row.number);
+    }
     note(key, "saved");
     return { ok: true };
+  }
+
+  /**
+   * Confirms the roll (M16/4, CTR-007's first vehicle).
+   *
+   * The `fromExpiry` it sends is the **saved** expiry and never a draft
+   * from the Contract card: it is the precondition the seam compares
+   * under the row's lock, and sending a half-typed box would either
+   * refuse a good roll or confirm one against a date nobody committed.
+   *
+   * The answer carries the record and the whole history, so both are
+   * replaced: the roll moved the expiry, which cleared the pending
+   * banner and moved the deadline union under it.
+   *
+   * A refusal is printed once, in the dialog the act was raised from
+   * (DES-035 clause 12), so it is returned rather than noted anywhere.
+   * One refusal is also acted on: a lost race — refused by
+   * `RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE`'s name — means the record moved
+   * under the dialog, so the record is read again and the fresh row
+   * adopted. Without that read, every re-press would carry the same
+   * stale precondition and lose the same race against a record that has
+   * already stopped moving.
+   */
+  async function confirmRoll(toExpiry: string): Promise<string | null> {
+    const failed = () =>
+      intl.formatMessage({
+        id: "renewal.confirmFailed",
+        defaultMessage: "The renewal could not be confirmed. Try again.",
+      });
+    // Both triggers and the dialog's own mount are drawn behind this,
+    // so it is unreachable in practice. It answers a refusal rather
+    // than silence because a guard that reported success would close
+    // the dialog on a roll that never happened.
+    if (saved.expiryDate === null) return failed();
+    setRenewalStatus("saving");
+    const outcome = await confirmContractRenewal(saved.number, saved.expiryDate, toExpiry);
+    if (!outcome.ok) {
+      setRenewalStatus("idle");
+      // The one refusal a client acts on rather than prints: the expiry
+      // moved under the dialog — somebody else confirmed the roll or
+      // edited the date — so the record is read again and its fresh row
+      // adopted, the same set a field commit adopts. The dialog then
+      // names the expiry the record now holds, and a re-press carries
+      // it as the precondition rather than looping on the stale one.
+      if (outcome.type === RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE) {
+        const { data } = await api
+          .GET("/api/v1/contracts/{number}", { params: { path: { number: saved.number } } })
+          .catch(() => ({ data: undefined }));
+        if (data) {
+          setSaved(data.contract);
+          setRenewals(data.renewals);
+          setAttached(data.fields);
+          setRefs(data.customFieldRefs);
+          setTermFields(termDrafts(data.contract));
+          refreshDeadlines(data.contract.number);
+        }
+      }
+      // Falsy rather than nullish, the two other dialogs on this page
+      // already do: a refusal that carried an empty `detail` would put
+      // an empty alert in the dialog, which reads as a write that
+      // failed silently.
+      return outcome.detail || failed();
+    }
+    setSaved(outcome.contract);
+    setRenewals(outcome.renewals);
+    // The expiry moved, so the derived notice deadline moved with it and
+    // the CTR-009 union has to be read again — the same refresh a term
+    // commit already asks for.
+    setTermFields(termDrafts(outcome.contract));
+    refreshDeadlines(outcome.contract.number);
+    setRenewalStatus("saved");
+    return null;
+  }
+
+  /**
+   * One of the term's four typed fields, committed on blur or Enter
+   * (DES-017). An empty box is `null` — nothing recorded.
+   *
+   * A count that is not a whole number is not a commit and not a
+   * revert: it says so under the field and keeps what was typed, which
+   * is the answer a custom number field already gives, and the only one
+   * that leaves the person able to fix their own typo.
+   */
+  function commitTerm(key: TermDraftKey) {
+    // Enter already committed this draft and the PATCH is in flight —
+    // the blur that follows must not send a duplicate.
+    if (fieldStatus[key] === "saving") return;
+    const draft = termFields[key].trim();
+    if (draft === termDrafts(saved)[key]) {
+      revertTerm(key);
+      return;
+    }
+    const isCount = key === "renewalPeriodMonths" || key === "noticePeriodDays";
+    if (draft === "") {
+      void commit(key, { [key]: null });
+      return;
+    }
+    if (!isCount) {
+      void commit(key, { [key]: draft });
+      return;
+    }
+    const count = Number(draft);
+    if (!Number.isInteger(count)) {
+      note(
+        key,
+        "error",
+        intl.formatMessage({
+          id: "contracts.field.numberInvalid",
+          defaultMessage: "Enter this as a number.",
+        }),
+      );
+      return;
+    }
+    void commit(key, { [key]: count });
+  }
+
+  /** Puts the box back to what the record holds, and drops any refusal
+   * the abandoned draft left standing — the note was about text that is
+   * now gone, and under a saved value it would read as a lie. */
+  function revertTerm(key: TermDraftKey) {
+    setTermFields((current) => ({ ...current, [key]: termDrafts(saved)[key] }));
+    note(key, "idle");
   }
 
   /**
@@ -764,6 +1075,7 @@ function ContractRecord() {
       const row = data.contract;
       setSaved(row);
       setDrafts(textDrafts(row));
+      setTermFields(termDrafts(row));
       setArchiveStatus("idle");
     } else {
       setArchiveStatus("error");
@@ -777,6 +1089,7 @@ function ContractRecord() {
   }
 
   const reference = contractReference(intl, saved.number);
+  const notRecorded = intl.formatMessage(NOT_RECORDED);
   /** The Owner runs the contract, and contract surfaces are Member+
    * (DD-013) — so only Member+ people are offered. The API's refusal is
    * the real guard; this keeps the picker from offering a dead end. */
@@ -847,8 +1160,23 @@ function ContractRecord() {
       // included viewer — and only the three actors are pointed at the
       // Team card, which is where the audience is changed.
       banner={
-        saved.isConfidential ? (
-          <ConfidentialBanner manageTeamHref={canFlag ? `#${TEAM_CARD_ID}` : undefined} />
+        saved.isConfidential || saved.renewalPendingConfirmation ? (
+          <>
+            {saved.isConfidential && (
+              <ConfidentialBanner manageTeamHref={canFlag ? `#${TEAM_CARD_ID}` : undefined} />
+            )}
+            {/* CTR-006's pending state, drawn where the C9 mock stacks
+                it — the same strip DES-009 uses, under the
+                confidentiality statement when a record carries both.
+                Confidentiality leads because it governs who may read
+                the page at all, and this one is about one date on it.
+                It is a reading of the record's own expiry, so it goes
+                the moment the roll is confirmed, and only a Member+
+                viewer who may write is offered the way in. */}
+            {saved.renewalPendingConfirmation && (
+              <RenewalBanner onReview={canEdit ? () => setRenewing(true) : undefined} />
+            )}
+          </>
         ) : undefined
       }
       subbar={
@@ -973,6 +1301,12 @@ function ContractRecord() {
                     id="contracts.record.tab.approvals"
                     defaultMessage="Approvals"
                   />
+                ),
+              },
+              {
+                to: `/contracts/${saved.number}/key-dates`,
+                label: (
+                  <FormattedMessage id="contracts.record.tab.keyDates" defaultMessage="Key dates" />
                 ),
               },
             ]}
@@ -1333,6 +1667,199 @@ function ContractRecord() {
                         onStatus={(next, detail) => note("value", next, detail)}
                         onCommit={(next) => void commit("value", { value: next })}
                       />
+                      {/* CTR-006's term: five fields, and one rule
+                          running between them. Each commits on its own
+                          (DES-017, no carve-out), and the type is what
+                          decides which of the other four this record
+                          may hold at all — so the two the type forbids
+                          are drawn as facts with an em dash rather than
+                          as boxes the seam would refuse everything
+                          typed into. The blank is honest either way: it
+                          says the record holds nothing there, which is
+                          exactly true. */}
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="contract-term-type">
+                          <FormattedMessage
+                            id="contracts.form.termType"
+                            defaultMessage="Term type"
+                          />
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <select
+                            id="contract-term-type"
+                            value={saved.termType}
+                            className={CONTROL_CLASS}
+                            disabled={frozen}
+                            onChange={(event) =>
+                              void commit("termType", {
+                                termType: event.target.value as TermType,
+                              })
+                            }
+                          >
+                            {TERM_TYPES.map((option) => (
+                              <option key={option} value={option}>
+                                {termTypeLabel(intl, option)}
+                              </option>
+                            ))}
+                          </select>
+                          <StatusNote
+                            status={fieldStatus.termType ?? "idle"}
+                            detail={fieldError.termType}
+                          />
+                        </div>
+                      </div>
+                      <TermField
+                        id="contract-effective-date"
+                        type="date"
+                        label={
+                          <FormattedMessage
+                            id="contracts.form.effectiveDate"
+                            defaultMessage="Effective date"
+                          />
+                        }
+                        draft={termFields.effectiveDate}
+                        frozen={frozen}
+                        status={fieldStatus.effectiveDate ?? "idle"}
+                        error={fieldError.effectiveDate}
+                        onDraft={(next) =>
+                          setTermFields((current) => ({ ...current, effectiveDate: next }))
+                        }
+                        onCommit={() => commitTerm("effectiveDate")}
+                        onRevert={() => revertTerm("effectiveDate")}
+                      />
+                      {/* An evergreen contract has no end, so the record
+                          does not offer to invent one for it. */}
+                      {saved.termType === "evergreen" ? (
+                        <ReadOnlyField
+                          label={
+                            <FormattedMessage
+                              id="contracts.form.expiryDate"
+                              defaultMessage="Expiry date"
+                            />
+                          }
+                          value={notRecorded}
+                        />
+                      ) : (
+                        <TermField
+                          id="contract-expiry-date"
+                          type="date"
+                          label={
+                            <FormattedMessage
+                              id="contracts.form.expiryDate"
+                              defaultMessage="Expiry date"
+                            />
+                          }
+                          draft={termFields.expiryDate}
+                          frozen={frozen}
+                          status={fieldStatus.expiryDate ?? "idle"}
+                          error={fieldError.expiryDate}
+                          onDraft={(next) =>
+                            setTermFields((current) => ({ ...current, expiryDate: next }))
+                          }
+                          onCommit={() => commitTerm("expiryDate")}
+                          onRevert={() => revertTerm("expiryDate")}
+                        />
+                      )}
+                      {/* Nothing rolls but an auto-renewing contract, so
+                          nothing else is asked how far a roll goes. */}
+                      {saved.termType === "auto_renew" ? (
+                        <TermField
+                          id="contract-renewal-period"
+                          type="number"
+                          // A roll of zero months would advance an
+                          // expiry to itself, so the stepper cannot
+                          // reach it — the same floor the seam holds.
+                          min={1}
+                          label={
+                            <FormattedMessage
+                              id="contracts.form.renewalPeriod"
+                              defaultMessage="Renewal period (months)"
+                            />
+                          }
+                          draft={termFields.renewalPeriodMonths}
+                          frozen={frozen}
+                          status={fieldStatus.renewalPeriodMonths ?? "idle"}
+                          error={fieldError.renewalPeriodMonths}
+                          onDraft={(next) =>
+                            setTermFields((current) => ({ ...current, renewalPeriodMonths: next }))
+                          }
+                          onCommit={() => commitTerm("renewalPeriodMonths")}
+                          onRevert={() => revertTerm("renewalPeriodMonths")}
+                        />
+                      ) : (
+                        <ReadOnlyField
+                          label={
+                            <FormattedMessage
+                              id="contracts.form.renewalPeriod"
+                              defaultMessage="Renewal period (months)"
+                            />
+                          }
+                          value={notRecorded}
+                        />
+                      )}
+                      {/* A notice obligation sits on any kind of term,
+                          so this box is drawn whatever the type says.
+                          The deadline it feeds derives only when there
+                          is an expiry to subtract it from. */}
+                      <TermField
+                        id="contract-notice-period"
+                        type="number"
+                        // Zero days' notice is a real term: some
+                        // contracts end on the date and no earlier.
+                        min={0}
+                        label={
+                          <FormattedMessage
+                            id="contracts.form.noticePeriod"
+                            defaultMessage="Notice period (days)"
+                          />
+                        }
+                        draft={termFields.noticePeriodDays}
+                        frozen={frozen}
+                        status={fieldStatus.noticePeriodDays ?? "idle"}
+                        error={fieldError.noticePeriodDays}
+                        onDraft={(next) =>
+                          setTermFields((current) => ({ ...current, noticePeriodDays: next }))
+                        }
+                        onCommit={() => commitTerm("noticePeriodDays")}
+                        onRevert={() => revertTerm("noticePeriodDays")}
+                      />
+                      {/* Derived from the expiry and never stored, so it
+                          is a fact of the record rather than a field of
+                          it — and blank for an evergreen contract,
+                          which has no end to count down to. */}
+                      <ReadOnlyField
+                        label={
+                          <FormattedMessage
+                            id="contracts.form.daysRemaining"
+                            defaultMessage="Days remaining"
+                          />
+                        }
+                        value={daysRemainingLabel(intl, saved.daysRemaining) ?? notRecorded}
+                      />
+                      {/* When the term last rolled (grill row G.R5).
+                          Read from the record's renewal history rather
+                          than from a column, because nothing stores a
+                          renewal: the confirmed-roll entries are what
+                          says one happened, and the newest of them is
+                          the first the seam answers. A record where no
+                          roll has been confirmed prints the same em
+                          dash every other absence on this card prints
+                          (X.6, DES-040 clause 5) — most contracts have
+                          never renewed, and that is a fact rather than
+                          a gap. */}
+                      <ReadOnlyField
+                        label={
+                          <FormattedMessage
+                            id="contracts.form.lastRenewal"
+                            defaultMessage="Last renewal"
+                          />
+                        }
+                        value={
+                          renewals[0]
+                            ? formatShortDate(renewals[0].confirmedAt, { locale: intl.locale })
+                            : notRecorded
+                        }
+                      />
                       {/* Who may see the record at all (DD-014). It closes
                       the card because it is the record's audience
                       rather than one of its business facts, and it is
@@ -1410,6 +1937,13 @@ function ContractRecord() {
                       />
                     </div>
                   </section>
+                  {/* CTR-006's term as a picture (M16/2). It closes the
+                      Overview because it draws facts the two cards
+                      above already state — the mock's own order, where
+                      the Timeframe card is the section's last — and it
+                      holds nothing of its own: every mark on it is one
+                      of the record's dates. */}
+                  <TermTimelineCard contract={saved} />
                 </>
               )}
               {/* CTR-016's fields, in the card the C2 mock draws for
@@ -1458,6 +1992,12 @@ function ContractRecord() {
                   // trigger comes with it so closing puts focus back on
                   // the row control that opened it.
                   reading={reading?.versionId ?? null}
+                  // CTR-007's amendment vehicle, routed here from the
+                  // Renew dialog (M16/5). The section opens its
+                  // composer on the record's instrument; the file and
+                  // the write are the M11 upload path, unchanged.
+                  amending={amending ? (signing.primaryDocument?.id ?? null) : null}
+                  onAmendmentOpened={stopAmending}
                   onRead={(document, version, trigger) => {
                     readingTrigger.current = trigger;
                     setReading({ documentId: document.id, versionId: version.id });
@@ -1482,11 +2022,38 @@ function ContractRecord() {
                   kinds of row are auto-derived: nothing here authors an
                   event, and the request and send affordances are the
                   only writes. */}
+              {/* Every date on the record, in the section the C6 mock
+                  draws it in (M16/3, CTR-009): the key dates the team
+                  adds, the contract's expiry, and the notice deadline
+                  the record derives — one list, ordered, with the next
+                  one named. */}
+              {tab === "key-dates" && (
+                <KeyDatesCard
+                  contractNumber={saved.number}
+                  deadlines={deadlines}
+                  // The saved row, not the loader's copy: editing the
+                  // notice period on the Overview changes what the
+                  // derived row's own sentence says about itself.
+                  noticePeriodDays={saved.noticePeriodDays}
+                  frozen={frozen}
+                  onDeadlines={setDeadlines}
+                />
+              )}
               {tab === "approvals" && (
                 <ApprovalsSigningCard
                   contractNumber={saved.number}
                   approvals={approvals}
                   signing={signing}
+                  renewals={renewals}
+                  // A record rolls when it auto-renews and records an
+                  // expiry to advance — the seam's own two conditions,
+                  // mirrored here so the head draws no control the
+                  // seam would refuse. Whether the term has lapsed is
+                  // deliberately not one of them: confirming a roll
+                  // before the notice deadline is a normal act, and the
+                  // banner is the reminder, not the gate.
+                  canRenew={!frozen && saved.termType === "auto_renew" && saved.expiryDate !== null}
+                  onRenew={() => setRenewing(true)}
                   users={users}
                   approverGroups={approverGroups}
                   // The live roster and the saved row, not the loader's
@@ -1555,6 +2122,90 @@ function ContractRecord() {
             if (!open) setGateTo(null);
           }}
           onConfirm={() => changeStatus(gateTo.id, true)}
+        />
+      )}
+      {/* The Renew dialog (M16/4, CTR-007). It lives on the record
+          rather than in the card that holds the renewal rows, because
+          the pending banner raises it from the page's chrome and the
+          chrome is on screen in every section — `SoftGateDialog`'s own
+          reason for sitting here. The expiry guard is the same one the
+          two triggers are drawn behind, said once more where the write
+          is made: a record with no expiry has no term to roll. */}
+      {renewing && saved.expiryDate !== null && (
+        <ConfirmRenewalDialog
+          reference={contractReference(intl, saved.number)}
+          fromExpiry={saved.expiryDate}
+          proposedExpiry={saved.proposedRenewalExpiry}
+          renewalPeriodMonths={saved.renewalPeriodMonths}
+          // A chain to append to, or no amendment option at all: the
+          // record's own primary-document designation is the answer
+          // (CTR-014), and a control for an act that does not exist is
+          // not drawn (DES-035 clause 9). Read from the record's own
+          // answer rather than from the paper on screen, because that
+          // list is paged (CTR-024) and the instrument may not be on
+          // the page the reader is holding.
+          canAmend={signing.primaryDocument !== null}
+          busy={renewalStatus === "saving"}
+          onClose={() => setRenewing(false)}
+          onConfirm={async (toExpiry) => {
+            const refusal = await confirmRoll(toExpiry);
+            if (refusal === null) setRenewing(false);
+            return refusal;
+          }}
+          onRoute={(vehicle) => {
+            setRenewing(false);
+            if (vehicle === "amendment") {
+              // The act happens on the record's own paper, so the
+              // person is taken to the section that holds it and the
+              // composer opens there.
+              setAmending(true);
+              void navigate(`/contracts/${saved.number}/documents`);
+              return;
+            }
+            // One tick, on purpose. Two modal layers swapped inside a
+            // single commit leave the page inert: the outgoing dialog
+            // tears its layer down *after* the incoming one has decided
+            // whether it has to opt itself back in to pointer events, so
+            // the create dialog would mount unclickable. Letting the
+            // Renew dialog finish leaving first is the whole of the
+            // fix, and it costs a frame nobody sees.
+            setTimeout(() => setRoutingTo(vehicle), 0);
+          }}
+        />
+      )}
+      {/* CTR-007's third and fourth vehicles (M16/5). The Contracts
+          list's own create dialog, opened from the record so the seam
+          knows which contract the renewal is a renewal of — and seeded
+          with the two fields it draws, both still editable. Only a
+          Member+ viewer reaches this: the pickers it needs are loaded
+          for `canEdit` alone, and the Renew control that raises it is
+          drawn behind the same test. */}
+      {routingTo !== null && canEdit && (
+        <CreateContractDialog
+          // The record's own pickers, unchanged: the create dialog
+          // grows the picked type's required fields, and a `user` or
+          // `entity` field among them offers exactly what it offers on
+          // the record itself.
+          contractTypes={typeOptions}
+          people={peopleReferences}
+          entities={entityReferences}
+          renewalOf={{
+            number: saved.number,
+            vehicle: routingTo,
+            title: saved.title,
+            contractTypeId: saved.contractTypeId,
+          }}
+          onOpenChange={(open) => {
+            if (!open) setRoutingTo(null);
+          }}
+          onCreated={(row) => {
+            setRoutingTo(null);
+            // Straight to the record that was just born: it is where
+            // the person finishes the renewal, and the dates the
+            // prefill brought across are the first thing they will
+            // want to move.
+            void navigate(`/contracts/${row.number}`);
+          }}
         />
       )}
     </AppShell>
@@ -2911,6 +3562,70 @@ function RetypeDialog({
 /** A stated fact rather than an editable field: the reference is
  * immutable (CTR-003), so it is the one thing on the record no control
  * answers for. */
+/**
+ * One of the term's four typed fields (CTR-006): a calendar date or a
+ * count of months or days.
+ *
+ * It is an ordinary inline field and nothing more — DES-017's rule with
+ * no carve-out. Blur and Enter commit, Escape reverts, and the field's
+ * own micro-state sits beside the box. The rule *between* the term
+ * fields is the card's to apply, not this one's: what this draws is
+ * whatever it was handed, and the card decides whether the contract's
+ * type lets it be drawn at all.
+ */
+function TermField({
+  id,
+  type,
+  min,
+  label,
+  draft,
+  frozen,
+  status,
+  error,
+  onDraft,
+  onCommit,
+  onRevert,
+}: Readonly<{
+  id: string;
+  type: "date" | "number";
+  /** The floor a count may not go under, as the seam bounds it: a roll
+   * is at least one month, a notice period at least zero days. Unused
+   * on a date. */
+  min?: number;
+  label: React.ReactNode;
+  draft: string;
+  frozen: boolean;
+  status: FieldStatus;
+  error: string | undefined;
+  onDraft: (next: string) => void;
+  onCommit: () => void;
+  onRevert: () => void;
+}>) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor={id}>{label}</Label>
+      <div className="flex items-center gap-2">
+        <Input
+          id={id}
+          type={type}
+          // A count of months or days is a whole number, and the
+          // keypad a phone offers should say so.
+          {...(type === "number" ? { inputMode: "numeric" as const, min, step: 1 } : {})}
+          value={draft}
+          disabled={frozen}
+          onChange={(event) => onDraft(event.target.value)}
+          onBlur={onCommit}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") onCommit();
+            if (event.key === "Escape") onRevert();
+          }}
+        />
+        <StatusNote status={status} detail={error} />
+      </div>
+    </div>
+  );
+}
+
 function ReadOnlyField({ label, value }: Readonly<{ label: React.ReactNode; value: string }>) {
   return (
     <div className="flex flex-col gap-1.5">
