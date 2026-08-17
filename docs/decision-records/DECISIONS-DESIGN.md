@@ -3141,7 +3141,7 @@ Notification-surface UX is feature-level by this record's own scope line, so the
 
 **11. Both failures are DES-026's.** A first page that fails says so and leaves no stale list, with reopening as the way back; a failed "Show older" keeps the list and the control, because the retry is already under the reader's hand.
 
-**12. The empty state is the panel's own line** — "Nothing to catch up on. Anything that needs you shows up here." — in the row's own inset, with no foot and no mark-all-read beside it.
+**12. The empty state is the panel's own line** — "Nothing to catch up on. News about your records shows up here." — in the row's own inset, with no foot and no mark-all-read beside it. It says "news", not "anything that needs you": NOT-002's ambient group is here too, and a comment posted on your record is news that needs nothing from you.
 
 ### Recorded normalization points (frame deviations accepted)
 
