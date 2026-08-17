@@ -79,6 +79,15 @@ const OUTSIDER = {
   displayName: "Otto Outsider",
   password: "correct-horse-battery", // NOSONAR — fixture for a throwaway container
 } as const;
+/** Whose bell the two writes are exercised on. Their own person, so a
+ * count can be asserted exactly: every other fixture accumulates items
+ * across the suite, and "the badge is now zero" is not a claim you can
+ * make about a shared bell. */
+const READER = {
+  email: "notif-reader@example.com",
+  displayName: "Rita Reader",
+  password: "correct-horse-battery", // NOSONAR — fixture for a throwaway container
+} as const;
 
 let harness: TestHarness;
 const cookies = new Map<string, Record<string, string>>();
@@ -127,7 +136,7 @@ beforeAll(async () => {
   userIds.set(ADMIN.email, admin!.id);
   cookies.set(ADMIN.email, await signInCookies(harness.app, ADMIN.email, ADMIN.password));
 
-  for (const fixture of [MEMBER, APPROVER, INSIDER, OUTSIDER] as const) {
+  for (const fixture of [MEMBER, APPROVER, INSIDER, OUTSIDER, READER] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, user.id));
     userIds.set(fixture.email, user.id);
@@ -203,6 +212,53 @@ async function unread(fixture: { email: string }): Promise<number> {
   });
   expect(res.statusCode, res.body).toBe(200);
   return (res.json() as { unread: number }).unread;
+}
+
+/** Marks the named items read, as opening the centre on a page does. */
+async function markRead(fixture: { email: string }, ids: string[]): Promise<number> {
+  const res = await harness.app.inject({
+    method: "POST",
+    url: "/api/v1/notifications/read",
+    cookies: as(fixture),
+    payload: { ids },
+  });
+  expect(res.statusCode, res.body).toBe(200);
+  return (res.json() as { unread: number }).unread;
+}
+
+/** Zeroes the badge, as the mark-all-read affordance does. */
+async function markAllRead(fixture: { email: string }): Promise<number> {
+  const res = await harness.app.inject({
+    method: "POST",
+    url: "/api/v1/notifications/read-all",
+    cookies: as(fixture),
+  });
+  expect(res.statusCode, res.body).toBe(200);
+  return (res.json() as { unread: number }).unread;
+}
+
+/** Seeds bell items straight into the table. What the write routes are
+ * under test for is the read model, not the fan-out, and one approval
+ * route call per item would be one email per item to prove it. */
+async function seedItems(
+  fixture: { email: string },
+  contract: ContractRow,
+  howMany: number,
+): Promise<string[]> {
+  const rows = await harness.db
+    .insert(notifications)
+    .values(
+      Array.from({ length: howMany }, (_, index) => ({
+        userId: idOf(fixture),
+        eventType: "approval.requested",
+        entityType: "contract" as const,
+        entityId: contract.id,
+        payload: { contractNumber: contract.number, contractTitle: contract.title, seq: index },
+        emailOwed: false,
+      })),
+    )
+    .returning({ id: notifications.id });
+  return rows.map((row) => row.id);
 }
 
 /** Every notification row one person holds, newest first. Read from the
@@ -477,6 +533,91 @@ describe("the reads answer for the signed-in person", () => {
     // Newest first, as a feed is read.
     const times = first.notifications.map((row) => Date.parse(row.createdAt));
     expect([...times].sort((a, b) => b - a)).toEqual(times);
+  });
+});
+
+describe("reading is the only ceremony (NOT-005)", () => {
+  it("marks the named items read and answers the badge that remains", async () => {
+    const contract = await newContract("Notify · read on open");
+    const ids = await seedItems(READER, contract, 5);
+    expect(await unread(READER)).toBe(5);
+
+    // What opening the centre does: the page it just drew, and nothing
+    // else. The two it did not draw are still unread.
+    const remaining = await markRead(READER, ids.slice(0, 3));
+    expect(remaining).toBe(2);
+    expect(await unread(READER)).toBe(2);
+
+    const page = await bell(READER);
+    const byId = new Map(page.notifications.map((row) => [row.id, row]));
+    for (const id of ids.slice(0, 3)) expect(byId.get(id)?.readAt).not.toBeNull();
+    for (const id of ids.slice(3)) expect(byId.get(id)?.readAt).toBeNull();
+  });
+
+  it("leaves a first sighting's stamp where it is when the page is drawn again", async () => {
+    const contract = await newContract("Notify · drawn twice");
+    const ids = await seedItems(READER, contract, 1);
+    await markRead(READER, ids);
+    const first = (await bell(READER)).notifications.find((row) => row.id === ids[0])?.readAt;
+    expect(first).not.toBeNull();
+
+    // A second draw of the same page must not move the stamp: "when was
+    // this read" is a fact about the first sighting.
+    await markRead(READER, ids);
+    const second = (await bell(READER)).notifications.find((row) => row.id === ids[0])?.readAt;
+    expect(second).toBe(first);
+  });
+
+  it("zeroes the badge on mark-all-read", async () => {
+    const contract = await newContract("Notify · back from holiday");
+    await seedItems(READER, contract, 4);
+    expect(await unread(READER)).toBeGreaterThan(0);
+
+    expect(await markAllRead(READER)).toBe(0);
+    expect(await unread(READER)).toBe(0);
+    expect((await bell(READER)).notifications.every((row) => row.readAt !== null)).toBe(true);
+  });
+
+  it("matches nothing on another person's ids, and refuses no one", async () => {
+    const contract = await newContract("Notify · not yours to read");
+    const theirs = await seedItems(APPROVER, contract, 1);
+    const before = await unread(APPROVER);
+
+    // Not a 404: a refusal would answer whether the id exists. It
+    // simply matches nothing, and the answer is this caller's own badge.
+    expect(await markRead(READER, theirs)).toBe(await unread(READER));
+    expect(await unread(APPROVER)).toBe(before);
+  });
+
+  it("leaves an item about a walled-off record unread, and outside the count", async () => {
+    const contract = await newContract("Notify · walled before reading");
+    const ids = await seedItems(OUTSIDER, contract, 1);
+    await wallOff(contract.id);
+
+    // Already outside the badge, so mark-all-read has nothing to say
+    // about it — and clearing it would be a write on a record this
+    // person can no longer see.
+    await markRead(OUTSIDER, ids);
+    await markAllRead(OUTSIDER);
+    const [row] = await harness.db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.id, ids[0]!));
+    expect(row?.readAt).toBeNull();
+  });
+
+  it("refuses a caller who is not signed in", async () => {
+    const read = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/notifications/read",
+      payload: { ids: ["any"] },
+    });
+    expect(read.statusCode).toBe(401);
+    const all = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/notifications/read-all",
+    });
+    expect(all.statusCode).toBe(401);
   });
 });
 

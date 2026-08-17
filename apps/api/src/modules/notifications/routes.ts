@@ -1,21 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The bell, as the API answers it (NOT-001, NOT-005) — M18/1's read
- * side, which is API-only: the top-nav bell and the notification centre
- * are the next slice's, and they read exactly this.
+ * The bell, as the API answers it (NOT-001, NOT-005).
  *
- * Two reads and no writes. **The list** is this person's items, newest
+ * Two reads and two writes. **The list** is this person's items, newest
  * first, paged. **The count** is their unread badge, which NOT-005 caps
  * at "9+" for display — the cap is the badge's, not the number's, so
  * this answers the count and the surface decides how to draw it.
  *
- * **Both reads are the signed-in person's, and only theirs.** There is
- * no user parameter and no way to ask for somebody else's bell: a
- * notification is addressed to one person, and the address is the whole
- * scope.
+ * The two writes are NOT-005's whole read model. **Marking a page read**
+ * is what opening the centre does: there is no per-item read ceremony,
+ * so the only thing that makes an item read is having been shown it.
+ * **Marking everything read** is the affordance that zeroes the badge
+ * after a holiday. Both answer the unread count that remains, for the
+ * reason `POST /comments/read` does: the badge takes the server's
+ * number rather than assuming its own write cleared it.
  *
- * **Both re-apply the confidentiality predicate** (DD-014, M10). An item
+ * **Every route here is the signed-in person's, and only theirs.** There
+ * is no user parameter and no way to ask for — or to write on — somebody
+ * else's bell: a notification is addressed to one person, and the
+ * address is the whole scope. An id naming another person's item is not
+ * refused, because a refusal would answer the question "does this id
+ * exist"; it simply matches nothing.
+ *
+ * **All four re-apply the confidentiality predicate** (DD-014, M10). An item
  * written while a record was open is an item about a record that may
  * since have been walled off, and the answer is M10's: it leaves the
  * list *and* the count, silently. Not a tombstone, not a gap, and not a
@@ -39,8 +47,10 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { and, count, desc, eq, isNull, notifications, sql } from "@openlaw/db";
+import { and, count, desc, eq, inArray, isNull, notifications, sql } from "@openlaw/db";
+import type { Executor } from "@openlaw/db";
 import { requireAuth } from "../../auth/guards.js";
+import type { AuthenticatedUser } from "../../auth/user.js";
 import { notificationScope } from "../../lib/notifications/audience.js";
 import { problemResponse } from "../../lib/problem.js";
 
@@ -55,6 +65,32 @@ const PAGE_SIZE = 25;
 /** One item's id, as a cursor. Bounded rather than shaped, like every
  * id in this API. */
 const RecordIdSchema = z.string().min(1).max(64);
+
+/** What both writes answer: the badge that remains (NOT-005). */
+const UnreadEnvelope = z.object({ unread: z.number().int().nonnegative() });
+
+/**
+ * The badge, over exactly the rows the list would answer with.
+ *
+ * One function, asked by the count route and by both writes, so the
+ * number a write hands back can never disagree with the number a poll
+ * would read a moment later.
+ */
+async function unreadCount(db: Executor, user: AuthenticatedUser): Promise<number> {
+  const [row] = await db
+    .select({ unread: count() })
+    .from(notifications)
+    .where(
+      and(
+        eq(notifications.userId, user.id),
+        isNull(notifications.readAt),
+        // The same predicate the list composes. One rule, so the badge
+        // can never promise an item the centre will not draw.
+        notificationScope(db, user),
+      ),
+    );
+  return row?.unread ?? 0;
+}
 
 const NotificationSchema = z.object({
   id: z.string(),
@@ -184,26 +220,95 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
           "a since-walled-off record leaves the count as silently as it " +
           "leaves the list",
         tags: ["notifications"],
-        response: {
-          200: z.object({ unread: z.number().int().nonnegative() }),
-          default: problemResponse,
-        },
+        response: { 200: UnreadEnvelope, default: problemResponse },
       },
     },
-    async (request) => {
-      const [row] = await app.db
-        .select({ unread: count() })
-        .from(notifications)
-        .where(
-          and(
-            eq(notifications.userId, request.user.id),
-            isNull(notifications.readAt),
-            // The same predicate the list composes. One rule, so the
-            // badge can never promise an item the centre will not draw.
-            notificationScope(app.db, request.user),
-          ),
-        );
-      return { unread: row?.unread ?? 0 };
+    async (request) => ({ unread: await unreadCount(app.db, request.user) }),
+  );
+
+  app.post(
+    "/notifications/read",
+    {
+      preHandler: requireAuth,
+      schema: {
+        operationId: "markNotificationsRead",
+        summary:
+          "Mark the named items read — what opening the notification " +
+          "centre does with the page it just drew (NOT-005). There is " +
+          "no per-item read ceremony, so being shown an item is the " +
+          "only thing that reads it. One page's worth of ids at a time, " +
+          "because the centre draws a page at a time. Ids that are not " +
+          "this person's, are already read, or are about a record they " +
+          "can no longer reach match nothing and are not refused — a " +
+          "refusal would answer whether an id exists. Answers the " +
+          "unread count that remains: normally what the page did not " +
+          "cover, plus whatever landed while it was being read",
+        tags: ["notifications"],
+        body: z.strictObject({
+          /** The ids of the items just drawn. One page's worth is the
+           * bound, because that is the unit the centre reads in. */
+          ids: z.array(RecordIdSchema).min(1).max(PAGE_SIZE),
+        }),
+        response: { 200: UnreadEnvelope, default: problemResponse },
+      },
     },
+    async (request) =>
+      // One transaction, so the count is read on the snapshot the write
+      // landed on rather than on whatever the next connection sees.
+      await app.db.transaction(async (tx) => {
+        await tx
+          .update(notifications)
+          .set({ readAt: sql`now()` })
+          .where(
+            and(
+              inArray(notifications.id, request.body.ids),
+              eq(notifications.userId, request.user.id),
+              // Already-read items keep the stamp they got the first
+              // time. "When was this read" is a fact about the first
+              // sighting, and a second page draw must not move it.
+              isNull(notifications.readAt),
+              // The wall applies to the write as it applies to the
+              // reads. An item the reader can no longer be shown is an
+              // item they cannot have read, so it stays unread — and
+              // invisible, so nothing counts it either.
+              notificationScope(tx, request.user),
+            ),
+          );
+        return { unread: await unreadCount(tx, request.user) };
+      }),
+  );
+
+  app.post(
+    "/notifications/read-all",
+    {
+      preHandler: requireAuth,
+      schema: {
+        operationId: "markAllNotificationsRead",
+        summary:
+          "Mark every unread item read — the affordance that zeroes the " +
+          "badge after a holiday (NOT-005). It covers exactly what the " +
+          "badge counts, so an item about a record the reader can no " +
+          "longer reach is left alone: it is already outside the count, " +
+          "and clearing it would be a write on a record they cannot " +
+          "see. Answers the unread count that remains, which is zero " +
+          "unless something landed while the request was in flight",
+        tags: ["notifications"],
+        response: { 200: UnreadEnvelope, default: problemResponse },
+      },
+    },
+    async (request) =>
+      await app.db.transaction(async (tx) => {
+        await tx
+          .update(notifications)
+          .set({ readAt: sql`now()` })
+          .where(
+            and(
+              eq(notifications.userId, request.user.id),
+              isNull(notifications.readAt),
+              notificationScope(tx, request.user),
+            ),
+          );
+        return { unread: await unreadCount(tx, request.user) };
+      }),
   );
 };
