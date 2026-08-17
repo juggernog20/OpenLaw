@@ -1904,7 +1904,7 @@ Naming the thread's control "Show older" rather than "Show more" is not cosmetic
 
 ### Consequences
 
-`ContractsTable` takes a `foot` slot and a landing row; the Documents section and the comment thread carry their own. Three new messages per surface — the control, the failure, and the live-region sentence — and one new plural form for the contracts count. No new tokens: the strip is `border-border-default` on the card's own surface, and the control is the shipped secondary `Button`.
+`ContractsTable` takes a `foot` slot and a landing row; the Documents section and the comment thread carry their own. _(DES-046 replaced `ContractsTable` with `ManagedTable`, which carries the `foot` slot and the landing row unchanged.)_ Three new messages per surface — the control, the failure, and the live-region sentence — and one new plural form for the contracts count. No new tokens: the strip is `border-border-default` on the card's own surface, and the control is the shipped secondary `Button`.
 
 Every list bounded after this inherits the foot rather than inventing one, and any surface that pages backwards inherits the head placement with it. M12's document panel is the first that will.
 
