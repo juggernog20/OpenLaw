@@ -20,6 +20,7 @@
 
 import type { ReactNode } from "react";
 import { NavLink } from "react-router";
+import { formatCount } from "../../lib/format";
 import { cn } from "../../lib/utils";
 
 export interface RecordTab {
@@ -30,6 +31,17 @@ export interface RecordTab {
    * tab reads as active on every sibling section. */
   end?: boolean;
   label: ReactNode;
+  /**
+   * Work waiting in this section. Drawn as a DES-005 count chip beside
+   * the label when greater than zero; an empty section is not news, so
+   * zero and unset both mean no chip.
+   */
+  count?: number;
+  /**
+   * The chip's accessible name — a whole phrase, because a lone "3"
+   * after a tab label says nothing. Required for the chip to render.
+   */
+  countLabel?: string;
 }
 
 export function RecordTabs({
@@ -45,23 +57,35 @@ export function RecordTabs({
       aria-label={label}
       className="flex shrink-0 border-b border-(--chrome-subbar-border) bg-canvas px-page-x"
     >
-      {tabs.map((tab) => (
-        <NavLink
-          key={tab.to}
-          to={tab.to}
-          end={tab.end}
-          className={({ isActive }) =>
-            cn(
-              "flex h-9 items-center px-3 text-base whitespace-nowrap",
-              isActive
-                ? "-mb-px border-b-2 border-accent font-semibold text-primary"
-                : "text-muted hover:text-primary",
-            )
-          }
-        >
-          {tab.label}
-        </NavLink>
-      ))}
+      {tabs.map((tab) => {
+        const count = tab.count ?? 0;
+        return (
+          <NavLink
+            key={tab.to}
+            to={tab.to}
+            end={tab.end}
+            className={({ isActive }) =>
+              cn(
+                "flex h-9 items-center gap-1 px-3 text-base whitespace-nowrap",
+                isActive
+                  ? "-mb-px border-b-2 border-accent font-semibold text-primary"
+                  : "text-muted hover:text-primary",
+              )
+            }
+          >
+            {tab.label}
+            {count > 0 && tab.countLabel ? (
+              <span
+                role="img"
+                aria-label={tab.countLabel}
+                className="shrink-0 rounded-chip bg-badge-count-bg px-1.5 py-px text-xs font-medium tabular-nums text-badge-count-fg"
+              >
+                {formatCount(count)}
+              </span>
+            ) : null}
+          </NavLink>
+        );
+      })}
     </nav>
   );
 }

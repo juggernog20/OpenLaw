@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The doc panel's PDF surface (M12/2, DOC-004): one page drawn into a
- * canvas by pdf.js, with a transparent text layer over it so the words
- * can be selected and copied.
+ * The doc panel's PDF surface (M12/2, DOC-004): every page drawn into
+ * its own canvas by pdf.js, stacked in one scrolling column, each with a
+ * transparent text layer over it so the words can be selected and
+ * copied.
  *
  * **Ours, never the browser's.** A PDF handed to the browser's own
  * plugin viewer looks different in every browser, carries its own
@@ -16,6 +17,19 @@
  * a comment has to be copy-paste (story 15), so every page renders the
  * canvas and then positions pdf.js's own text runs over it, invisible
  * and selectable. Without it a preview is a picture of a contract.
+ *
+ * **The well scrolls through the whole document, not one page at a
+ * time** (2026-08-18 fix). Every page takes its own box in one column
+ * the reader scrolls — the way every other PDF viewer reads — and the
+ * pages near the reader draw into their own canvas. A page that scrolls
+ * far enough away hands its drawing back and keeps its box, so a
+ * three-hundred-page agreement costs a few pages of memory rather than
+ * three hundred. "Page X of Y" and the page turn buttons
+ * still work, but they are a position in that scroll, read from an
+ * `IntersectionObserver` on each page rather than a state that decides
+ * what to draw: a page turn scrolls the target page to the top of the
+ * well, and the label follows whichever page the reader actually
+ * scrolled to, turn button or not.
  *
  * **pdf.js is loaded on demand.** It is a megabyte of parser, and a
  * record page that shows no PDF should not pay for it. The import
@@ -31,7 +45,7 @@
  * click away.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 // pdf.js's own stylesheet, which is what positions the text runs over
@@ -60,6 +74,19 @@ const ZOOM_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2, 3] as const;
 /** Where a freshly opened page starts: the page at its own size. */
 const DEFAULT_ZOOM_INDEX = 2;
 
+/**
+ * How far outside the well a page is still drawn, as a share of the
+ * well's own height.
+ *
+ * A canvas holds a bitmap the size of the page it drew, and a long
+ * agreement has hundreds of pages — drawn all at once that is a browser
+ * tab that runs out of memory reading one contract. So only the pages
+ * near the reader keep a drawing, and the rest give theirs back. Two
+ * wells of slack either side is enough that a fast scroll lands on a
+ * page that is already drawn rather than on a blank one.
+ */
+const DRAW_MARGIN = "200%";
+
 /** What the surface is doing, for the reader and for the tests. */
 type Stage = "loading" | "ready" | "failed";
 
@@ -77,20 +104,26 @@ export function PdfPreview({
   const intl = useIntl();
   const [stage, setStage] = useState<Stage>("loading");
   const [pageCount, setPageCount] = useState(0);
+  /** Which page the well says it is on. Read from the scroll, not the
+   * other way around: turning to a page scrolls the well, and it is the
+   * scroll landing that sets this. */
   const [pageNumber, setPageNumber] = useState(1);
   const [zoomIndex, setZoomIndex] = useState<number>(DEFAULT_ZOOM_INDEX);
-  const canvas = useRef<HTMLCanvasElement>(null);
-  const textLayer = useRef<HTMLDivElement>(null);
-  /** The open document, kept out of state: it is a handle to close, not
-   * a value anything renders from, and putting it in state would redraw
-   * the surface every time it is opened. */
+  const well = useRef<HTMLDivElement>(null);
+  /** The open document, for every page to draw from. State rather than
+   * a ref — every page below is read from it during render, and a ref
+   * read there is a value React cannot see change. */
+  const [openDocument, setOpenDocument] = useState<LoadedDocument | null>(null);
+  /** The same handle, kept a step behind in a ref for the closing
+   * effect below: a document opened after the panel already asked to
+   * close it must still be found and torn down, and an unmount runs
+   * after state has already been thrown away. */
   const loaded = useRef<LoadedDocument | null>(null);
-  /** The draws, one after another. pdf.js refuses a second `render()`
-   * into a canvas whose previous paint is still in flight, so a page
-   * turn pressed mid-paint must queue behind the paint it replaces —
-   * started concurrently it would reject, and the surface would read
-   * that as a PDF that cannot be shown. */
-  const draws = useRef<Promise<void>>(Promise.resolve());
+  /** Each page's own most recent intersection ratio, read together to
+   * decide which page is "on screen" when more than one straddles the
+   * well at once (a short page, a tall well). Cleared on a new
+   * document, same as the page and zoom below. */
+  const visibility = useRef(new Map<number, number>());
 
   // Opening the file, and closing it again. Keyed on the address alone:
   // a new version in the panel is a new document, and the page and the
@@ -100,6 +133,8 @@ export function PdfPreview({
     setStage("loading");
     setPageNumber(1);
     setZoomIndex(DEFAULT_ZOOM_INDEX);
+    setOpenDocument(null);
+    visibility.current.clear();
 
     const opening = openPdf(src);
     void opening.then(
@@ -109,6 +144,7 @@ export function PdfPreview({
           return;
         }
         loaded.current = document;
+        setOpenDocument(document);
         setPageCount(document.numPages);
         setStage("ready");
       },
@@ -129,34 +165,28 @@ export function PdfPreview({
     };
   }, [src]);
 
-  // Drawing the page that is showing, at the zoom that is set. It runs
-  // again on every page turn and every zoom step. Each run queues
-  // behind the one before it — the canvas takes one paint at a time —
-  // and a run that went stale while it waited refuses to write into a
-  // canvas that has moved on.
-  useEffect(() => {
-    if (stage !== "ready") return;
-    const document = loaded.current;
-    const target = canvas.current;
-    if (!document || !target) return;
+  // The current page, from whichever page's own observer last reported
+  // the highest ratio. A `Map` rather than one page's callback winning:
+  // a well taller than one page can straddle two of them, and the
+  // reader's own idea of "which page am I on" is the one covering the
+  // most of it, not whichever fired last.
+  const onPageVisible = useCallback((page: number, ratio: number) => {
+    visibility.current.set(page, ratio);
+    let best = page;
+    let bestRatio = 0;
+    for (const [candidate, candidateRatio] of visibility.current) {
+      if (candidateRatio > bestRatio) {
+        bestRatio = candidateRatio;
+        best = candidate;
+      }
+    }
+    if (bestRatio > 0) setPageNumber(best);
+  }, []);
 
-    let live = true;
-    draws.current = draws.current.then(() =>
-      drawPage({
-        document,
-        pageNumber,
-        scale: ZOOM_STEPS[zoomIndex] ?? 1,
-        canvas: target,
-        textLayer: textLayer.current,
-        isLive: () => live,
-      }).catch(() => {
-        if (live) setStage("failed");
-      }),
-    );
-    return () => {
-      live = false;
-    };
-  }, [stage, pageNumber, zoomIndex]);
+  function turnTo(page: number) {
+    const target = well.current?.querySelector<HTMLElement>(`[data-page-number="${page}"]`);
+    target?.scrollIntoView({ block: "start" });
+  }
 
   if (stage === "failed") {
     return (
@@ -181,7 +211,7 @@ export function PdfPreview({
             variant="ghost"
             size="icon"
             disabled={pageNumber <= 1}
-            onClick={() => setPageNumber((current) => Math.max(1, current - 1))}
+            onClick={() => turnTo(Math.max(1, pageNumber - 1))}
             aria-label={intl.formatMessage({
               id: "docPanel.pdf.previousPage",
               defaultMessage: "Previous page",
@@ -204,7 +234,7 @@ export function PdfPreview({
             variant="ghost"
             size="icon"
             disabled={pageNumber >= pageCount}
-            onClick={() => setPageNumber((current) => Math.min(pageCount, current + 1))}
+            onClick={() => turnTo(Math.min(pageCount, pageNumber + 1))}
             aria-label={intl.formatMessage({
               id: "docPanel.pdf.nextPage",
               defaultMessage: "Next page",
@@ -243,40 +273,234 @@ export function PdfPreview({
           </Button>
         </div>
       </div>
-      {/* The well, and the page floating on it — the ViewerWell and
-          DocPage of the DOC2 mock. It takes focus and a name of its
-          own: a scrolling region whose only content is a canvas has
-          nothing else a keyboard can land on, and a page a keyboard
-          cannot scroll is a page a keyboard cannot read (M4). */}
+      {/* The well, and every page floating on it — the ViewerWell and
+          DocPage of the DOC2 mock, stacked rather than swapped. It
+          takes focus and a name of its own: a scrolling region whose
+          only content is canvases has nothing else a keyboard can land
+          on, and a page a keyboard cannot scroll is a page a keyboard
+          cannot read (M4). */}
       <div
+        ref={well}
         tabIndex={0}
         role="region"
+        // The file, and nothing that moves. A name that carried the
+        // page number would change under every scroll tick, and a
+        // region whose name keeps changing is one a screen reader keeps
+        // announcing. Which page is which is on each page's own canvas,
+        // and where the reader is is on the toolbar above.
         aria-label={intl.formatMessage(
-          { id: "docPanel.pdf.pages", defaultMessage: "{filename}, page {page} of {total}" },
-          { filename, page: pageNumber, total: pageCount },
+          { id: "docPanel.pdf.pages", defaultMessage: "{filename}, pages" },
+          { filename },
         )}
-        className="min-h-0 flex-1 overflow-auto bg-canvas p-4 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-link"
+        className="flex min-h-0 flex-1 flex-col items-center gap-4 overflow-auto bg-canvas p-4 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-link"
       >
-        <div className="relative mx-auto w-fit bg-raised shadow-sm">
-          <canvas
-            ref={canvas}
-            // The canvas carries the picture; the layer over it carries
-            // the words. Naming the file here is what a reader who
-            // cannot see the page is told the region is.
-            aria-label={filename}
-            role="img"
-            className="block"
-          />
-          {/* pdf.js positions its own absolutely placed runs inside
-              this, and its `textLayer` class is what makes them
-              transparent, absolutely placed, and selectable — which is
-              the whole of "text selection" (story 15). */}
-          <div ref={textLayer} className="textLayer" />
-        </div>
+        {openDocument &&
+          Array.from({ length: pageCount }, (_, i) => i + 1).map((page) => (
+            <PdfPage
+              key={page}
+              document={openDocument}
+              pageNumber={page}
+              filename={filename}
+              scale={zoom}
+              root={well}
+              onVisible={onPageVisible}
+            />
+          ))}
       </div>
     </div>
   );
 }
+
+/**
+ * One page of the well: its own canvas, its own text layer, and two
+ * `IntersectionObserver`s of its own.
+ *
+ * A page rather than the whole surface owns the observers because each
+ * page's visibility is independent of the others — a well tall enough to
+ * straddle two pages needs both answers to pick the more-visible one,
+ * which `PdfPreview` does across every page's own report.
+ *
+ * **The box always exists; the drawing does not.** The page measures
+ * itself as soon as it mounts and holds that size whether it is drawn or
+ * not, so the well's scroll height is the whole document from the start
+ * and a page turn lands where it should. Only a page near the reader
+ * keeps a canvas and a text layer — the rest hand theirs back, and take
+ * them again on the way past. Two observers rather than one: the tight
+ * one answers "which page am I on", and the generous one answers "is
+ * this worth drawing". Sharing them would make every page within two
+ * wells of the reader a candidate for the page number.
+ *
+ * **Memoized, because the parent re-renders on every scroll tick.**
+ * Each page reports its own visibility upward, and that sets the page
+ * number, and that renders `PdfPreview` again — so without this a
+ * three-hundred-page document reconciles three hundred components for
+ * every few pixels scrolled. Every prop below is stable across those
+ * renders on purpose: the document is state, the well is a ref object,
+ * and `onVisible` is wrapped once.
+ */
+const PdfPage = memo(function PdfPage({
+  document,
+  pageNumber,
+  filename,
+  scale,
+  root,
+  onVisible,
+}: Readonly<{
+  document: LoadedDocument;
+  pageNumber: number;
+  filename: string;
+  scale: number;
+  /** The well's own scrolling element, watched rather than the
+   * viewport — a page "visible" against the window could still be
+   * scrolled out of a well shorter than it. */
+  root: RefObject<HTMLDivElement | null>;
+  onVisible: (page: number, ratio: number) => void;
+}>) {
+  const intl = useIntl();
+  const container = useRef<HTMLDivElement>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const textLayer = useRef<HTMLDivElement>(null);
+  /** This page's own size in CSS pixels at the scale that is set, read
+   * from pdf.js without drawing anything. It is what keeps the box on
+   * the well while the drawing is away. */
+  const [size, setSize] = useState<{ width: number; height: number } | null>(null);
+  /** Whether the reader is close enough that this page is worth
+   * drawing. Starts false and the observer answers immediately — an
+   * `IntersectionObserver` reports on the first frame after it is
+   * given a target, drawn or not. */
+  const [near, setNear] = useState(false);
+  /** The draws, one after another. pdf.js refuses a second `render()`
+   * into a canvas whose previous paint is still in flight, so a zoom
+   * step pressed mid-paint must queue behind the paint it replaces —
+   * started concurrently it would reject, and the page would read that
+   * as a PDF that cannot be shown. Scoped to this page's own canvas:
+   * pages draw independently of each other. */
+  const draws = useRef<Promise<void>>(Promise.resolve());
+  /** The latest callback, relayed through a ref so the observer below
+   * is set up once per page rather than torn down and rebuilt on every
+   * render — `onVisible` closes over `PdfPreview`'s own state and is a
+   * new function most renders. */
+  const onVisibleRef = useRef(onVisible);
+  useEffect(() => {
+    onVisibleRef.current = onVisible;
+  });
+
+  // Measuring this page, which costs no raster: pdf.js hands back the
+  // page's own viewport and the size falls out of it. It runs again on
+  // every zoom step, because the box has to grow with the drawing that
+  // will land in it.
+  useEffect(() => {
+    let live = true;
+    void document.getPage(pageNumber).then(
+      (page) => {
+        if (!live) return;
+        const layout = page.getViewport({ scale });
+        setSize({ width: Math.floor(layout.width), height: Math.floor(layout.height) });
+      },
+      () => undefined,
+    );
+    return () => {
+      live = false;
+    };
+  }, [document, pageNumber, scale]);
+
+  // Drawing this page while the reader is near it, and handing the
+  // drawing back when they are not. Both go through the same queue:
+  // pdf.js refuses a second `render()` into a canvas whose previous
+  // paint is still in flight, and a release that landed mid-paint would
+  // resize the canvas out from under it. A run that went stale while it
+  // waited refuses to write into a canvas that has moved on.
+  useEffect(() => {
+    const target = canvas.current;
+    if (!target) return;
+    if (!near) {
+      draws.current = draws.current.then(() => {
+        releasePage(target, textLayer.current);
+      });
+      return;
+    }
+    let live = true;
+    draws.current = draws.current.then(() =>
+      drawPage({
+        document,
+        pageNumber,
+        scale,
+        canvas: target,
+        textLayer: textLayer.current,
+        isLive: () => live,
+      }).catch(() => undefined),
+    );
+    return () => {
+      live = false;
+    };
+  }, [document, pageNumber, scale, near]);
+
+  // Reports how much of this page's own container is inside the well —
+  // set up once per page and read through the ref above, rather than
+  // depending on `onVisible` directly, so a parent re-render (which
+  // this callback itself causes, on every scroll) never tears the
+  // observer down.
+  useEffect(() => {
+    const node = container.current;
+    const rootNode = root.current;
+    if (!node || !rootNode) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const ratio = entries[0]?.intersectionRatio ?? 0;
+        onVisibleRef.current(pageNumber, ratio);
+      },
+      { root: rootNode, threshold: [0, 0.25, 0.5, 0.75, 1] },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [root, pageNumber]);
+
+  // The other question, asked of the same page with the well's own
+  // bounds stretched by `DRAW_MARGIN`: is the reader close enough that
+  // this page should be holding a drawing at all.
+  useEffect(() => {
+    const node = container.current;
+    const rootNode = root.current;
+    if (!node || !rootNode) return;
+    const observer = new IntersectionObserver(
+      (entries) => setNear(entries[0]?.isIntersecting ?? false),
+      { root: rootNode, rootMargin: DRAW_MARGIN },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [root, pageNumber]);
+
+  return (
+    <div
+      ref={container}
+      data-page-number={pageNumber}
+      // Sized from the measurement rather than from the canvas, so a
+      // page that is holding no drawing still holds its place: the
+      // well's scroll bar means the same thing at every scroll
+      // position, and turning to page 200 lands on page 200.
+      style={size ? { width: size.width, height: size.height } : undefined}
+      className="relative shrink-0 bg-raised shadow-sm"
+    >
+      <canvas
+        ref={canvas}
+        // The canvas carries the picture; the layer over it carries
+        // the words. Naming the file and the page here is what a
+        // reader who cannot see the page is told each one is.
+        aria-label={intl.formatMessage(
+          { id: "docPanel.pdf.page", defaultMessage: "{filename}, page {page}" },
+          { filename, page: pageNumber },
+        )}
+        role="img"
+        className="block"
+      />
+      {/* pdf.js positions its own absolutely placed runs inside
+          this, and its `textLayer` class is what makes them
+          transparent, absolutely placed, and selectable — which is
+          the whole of "text selection" (story 15). */}
+      <div ref={textLayer} className="textLayer" />
+    </div>
+  );
+});
 
 /**
  * Opens one PDF through pdf.js, loading the library on the way.
@@ -322,11 +546,28 @@ function assetUrl(folder: string): string {
 }
 
 /**
+ * Hands one page's drawing back: the canvas bitmap and the text runs
+ * over it.
+ *
+ * Sizing the canvas to nothing is what frees the bitmap — a canvas keeps
+ * its buffer for as long as it has a size, and clearing the pixels does
+ * not release a byte. The element itself stays, with its name, and its
+ * container keeps the measured size, so nothing on the well moves.
+ */
+function releasePage(canvas: HTMLCanvasElement, textLayer: HTMLDivElement | null): void {
+  canvas.width = 0;
+  canvas.height = 0;
+  canvas.style.removeProperty("width");
+  canvas.style.removeProperty("height");
+  textLayer?.replaceChildren();
+}
+
+/**
  * Draws one page into the canvas and lays its text over it.
  *
- * `isLive` is asked after every await. A page turn or a zoom step
- * started before this one finished must not paint over the newer one,
- * and pdf.js has no cancellation that reaches this far in.
+ * `isLive` is asked after every await. A zoom step started before this
+ * one finished must not paint over the newer one, and pdf.js has no
+ * cancellation that reaches this far in.
  */
 async function drawPage(options: {
   document: LoadedDocument;

@@ -424,6 +424,12 @@ DOC-004 named the doc panel as the surface that would settle the deferred pick, 
 
 Nothing ships from this addendum: no second `@font-face`, no `--font-serif` token. A face nothing renders is weight in the bundle and a token nobody picks.
 
+### Addendum (2026-08-18): a record's own title is `text-md`, not `text-lg` or `text-xl`
+
+The size ramp's "page title (h1)" role names `text-xl` (20px); the contract and entity record headers shipped at `text-lg` (18px) instead — already smaller than the documented role before this addendum, and still too large in practice. Both sit inside a single-line subbar crowded with a breadcrumb link, a reference badge, a status pill, and the stage pipeline, all set at 13px or smaller — a role built for a standalone page heading does not fit a title squeezed among that much other chrome on one row.
+
+**The record-title role is split from the standalone page-title role.** `text-xl` stays the size for a page title that owns its own line with nothing beside it. A record's `<h1 id="page-title">`, which shares its line with breadcrumb, reference, and status chrome, now sets `text-md` (14px, `font-semibold`) — one step above the 13px chrome around it, enough to still read as the heading without dominating the row. Both record headers (`contract-record.tsx`, `entity-record.tsx`) share the same subbar shape and move together for that reason. The `-0.2px` h1 letter-spacing (base-layer rule) still applies; it is a rule about the element, not about which size role that element carries.
+
 ---
 
 ## DES-007: Spacing scale + density target — Tailwind default scale, 5 layout tokens, 4 chrome dimensions, normalized to 48/8/16
@@ -492,7 +498,7 @@ Per DES-001, geometry is theme-invariant — these need to be normalized to a si
 - `styles/globals.css` adds 5 `--spacing-*` layout tokens (registered in `@theme` so they generate Tailwind utilities) and 4 chrome-dimension CSS variables (also in `@theme` for centralized location, but not utility-generating under Tailwind v4's namespace conventions).
 - The Pencil mocks for the Warm theme should be normalized to 48px nav / 8px gap / 16px header padding in a follow-up pass. Not a blocker — implementation proceeds against the contract.
 - A breakpoint / responsive-collapse strategy is **not** decided here. The 320px right-rail and the top-nav layout assume a desktop viewport target; mobile/tablet is a separate DES.
-- The record-page right side defers to **DES-016**: `--width-activitybar: 48px` + `--width-panel: 320px` are the layout contract (`--width-rail` is retired). Below the width threshold the panel overlays instead of docking while the activity bar remains visible. Future pages that opt out (e.g. full-bleed editors, focus mode) override at the layout-shell level rather than via per-page padding math.
+- The record-page right side defers to **DES-016**: `--width-activitybar: 48px` + `--width-panel: 320px` are the layout contract (`--width-rail` is retired). The applet panel always docks as a flex sibling of the record content (DES-016 2026-08-17 clarification; its overlay-below-1100px rule is superseded). The doc panel docks above 1400px of record-content width and overlays that content below it (DES-016 2026-08-18 second-pass clarification) — the applet panel and the activity bar are outside the box it covers, so it never hides either. Future pages that opt out (e.g. full-bleed editors, focus mode) override at the layout-shell level rather than via per-page padding math.
 - Dense / comfortable user-preference density is parked. If it ever ships, the 5 layout tokens are the right surface to vary (smaller `--spacing-card-y` for compact, larger for comfortable) — adding a `data-density="compact"` attribute to `<html>` would mirror the theme-attribute pattern from DES-001.
 
 ---
@@ -806,14 +812,14 @@ The responsive system is built primarily on **container queries and intrinsic la
 
 #### Rules
 
-| Region                                                                                                | Mechanism                                                   | Behavior                                                                                                                                                                                                              |
-| ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Top nav, sub-bar, header                                                                              | Viewport                                                    | Below 768px: top nav collapses to hamburger; sub-bar simplifies to title + primary action; filter chips collapse into a "Filters" sheet. At 768px and above: full chrome as in mocks.                                 |
-| Side panel (`--width-panel: 320px` per **DES-016**; the 48px `--width-activitybar` is always visible) | **Container query** on the page-content container           | Docked when content container ≥ ~1100px wide; below the threshold the panel **overlays** instead of docking, opened from the activity bar. The panel is supplementary by design; pages must remain useful without it. |
-| Tables                                                                                                | **Container query** on the table's wrapper                  | Card-stack rendering when wrapper `< ~640px`; row rendering above. Decoupled from viewport entirely so tables don't break inside narrow modal bodies.                                                                 |
-| Two-pane detail layouts                                                                               | **Container query** on the layout shell                     | Single-pane below ~1024px-of-shell; two-pane above. Secondary pane reachable via a back-button-driven sub-route in single-pane mode.                                                                                  |
-| Card grids, chip rows                                                                                 | `grid-template-columns: repeat(auto-fit, minmax(Npx, 1fr))` | Auto-reflow; no breakpoint code.                                                                                                                                                                                      |
-| Modals                                                                                                | Viewport                                                    | Full-screen below 768px; centered overlay above.                                                                                                                                                                      |
+| Region                                                                                                | Mechanism                                                   | Behavior                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Top nav, sub-bar, header                                                                              | Viewport                                                    | Below 768px: top nav collapses to hamburger; sub-bar simplifies to title + primary action; filter chips collapse into a "Filters" sheet. At 768px and above: full chrome as in mocks.                                                                                                                                                                                                                                                                                                                                                                                               |
+| Side panel (`--width-panel: 320px` per **DES-016**; the 48px `--width-activitybar` is always visible) | Flex sibling of the record content                          | **Applet panel: always docked** (DES-016 2026-08-17 clarification) — opening it takes a 320px column and the record content shrinks; overlay-below-1100px is superseded. **Doc panel: docked above 1400px of record-content width, overlaying below it** (DES-016 2026-08-18 second pass) — at `--width-docpanel` (720px) it has nowhere to dock on a narrow window without squeezing the section behind it. It covers the record content only; the applet panel and the activity bar sit outside that box, so the two panels are never hidden by it and an open applet narrows it. |
+| Tables                                                                                                | **Container query** on the table's wrapper                  | Card-stack rendering when wrapper `< ~640px`; row rendering above. Decoupled from viewport entirely so tables don't break inside narrow modal bodies.                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Two-pane detail layouts                                                                               | **Container query** on the layout shell                     | Single-pane below ~1024px-of-shell; two-pane above. Secondary pane reachable via a back-button-driven sub-route in single-pane mode.                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Card grids, chip rows                                                                                 | `grid-template-columns: repeat(auto-fit, minmax(Npx, 1fr))` | Auto-reflow; no breakpoint code.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Modals                                                                                                | Viewport                                                    | Full-screen below 768px; centered overlay above.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
 #### What this commits to
 
@@ -845,7 +851,7 @@ The responsive system is built primarily on **container queries and intrinsic la
 
 - A `<Container>` or equivalent layout primitive is required at build-out: a wrapper that establishes a `container-type: inline-size` context for its children, so descendants can use `@container` queries against it. Likely added as a base-layer pattern, not a Tailwind utility.
 - The page-content area, the table wrapper, and the layout shell are the three named container contexts. Each is wired up at the layout-shell level.
-- The right rail's collapse threshold (~1100px container width) and the table's card-stack threshold (~640px wrapper width) are tuning values; they land as named constants in the styles layer (e.g. `--container-rail-threshold`, `--container-table-stack-threshold`) and are revisited once real content lands.
+- The table's card-stack threshold (~640px wrapper width) is a tuning value; it lands as a named constant in the styles layer (e.g. `--container-table-stack-threshold`) and is revisited once real content lands. The applet panel's former ~1100px overlay threshold is retired (DES-016 2026-08-17 clarification). The doc panel's 1400px dock/overlay threshold is a fourth named container context — the record-content region, which `RecordApplets` establishes with the applet panel and the activity bar outside it (DES-016 2026-08-18 second pass).
 - Tailwind v4's `@container` modifier is used directly in component classes. Naming convention: container-scoped breakpoints use the `@`-prefixed Tailwind syntax to make the distinction from viewport breakpoints obvious in the source.
 - A single viewport breakpoint at `md` (768px) governs the mobile shell. No `sm`/`lg`/`xl` viewport modifiers should appear in the codebase for content responsiveness — flag in PR review if they do.
 - The mobile shell requires: a hamburger drawer for the top-nav items, a "Filters" sheet for sub-bar filter collapse, a stacked-card rendering for tables, and full-screen modal variants. These are concrete component-build-out items.
@@ -937,7 +943,7 @@ DES-013 plumbed the `Intl.*` formatting APIs and locale-on-user. The remaining d
 | **Deadlines / due dates**                                             | Short absolute + relative qualifier when relevant                           | `May 10, 2026 (in 7 days)` / `May 1 (3 days overdue)`                                                        |
 | **Detail-screen authoritative timestamps** (audit log, file metadata) | Long absolute with time + zone, **no seconds**                              | `May 3, 2026, 2:34 PM PDT`                                                                                   |
 | **Tooltip on any displayed time**                                     | Same as detail-screen format (long absolute, hours+minutes, timezone label) | `May 3, 2026, 2:34 PM PDT`                                                                                   |
-| **Date inputs**                                                       | Browser-native `<input type="date">`                                        | (locale-aware by default)                                                                                    |
+| **Date inputs**                                                       | Calendar popover (`DatePicker`); display via `formatFullDate`               | `May 3, 2026`                                                                                                |
 | **Time inputs**                                                       | Browser-native `<input type="time">`                                        | (locale-aware by default)                                                                                    |
 
 Tooltip and authoritative-timestamp formats are intentionally identical — one canonical "human-readable absolute time" and one canonical "compact display." No ISO 8601 in the UI; ISO is for storage and APIs only.
@@ -970,6 +976,7 @@ The `formatDate(date, options?)` / `formatNumber(value, options?)` / `formatCurr
 
 - `formatRelativeOrShort(date)` → activity-feed rule
 - `formatShortDate(date)` → upload-column rule
+- `formatFullDate(date)` → date-input rule (always the year)
 - `formatLongDateTime(date)` → audit-log + tooltip rule (same convention)
 - `formatDeadline(date)` → due-date rule with relative qualifier
 - `formatCount(n)`, `formatPercent(n)`, `formatFileSize(bytes)` → number variants
@@ -1109,7 +1116,7 @@ The contract-details mocks carried two competing right-side systems: a module ch
 - **One right-side system: the activity bar** — a persistent 48px vertical icon strip on record pages, VS Code-style. Each icon is an **applet available on that page**; clicking expands the side panel hosting that applet (one applet visible at a time; clicking the active icon collapses).
 - **Applet set is page-scoped.** Contract details: team (DES-047, Lucide `User`), chat (CMT-004 comment panel), history (DD-017 activity feed), settings deep-link (SET-001, below a divider). The document panel (K) opens as a wider sibling layer per the doc-panel spec, not inside the applet panel.
 - **The module chip row is removed** from record pages (E.0 remove — chips duplicated applet/section jobs).
-- **DES-007 amendment:** the record-page right side is `--width-activitybar: 48px` + `--width-panel: 320px` (the panel reuses the old rail width; `--width-rail` is renamed/retired in favor of these two tokens). Container-query behavior carries over: below the width threshold the panel overlays instead of docking; the bar remains.
+- **DES-007 amendment:** the record-page right side is `--width-activitybar: 48px` + `--width-panel: 320px` (the panel reuses the old rail width; `--width-rail` is renamed/retired in favor of these two tokens). The applet panel always docks as a flex sibling (2026-08-17 clarification); the doc panel docks above 1400px and overlays the record content below it (2026-08-18 second pass); the bar remains.
 - Active applet gets the V13 indicator strip (J.0); only chat carries a badge (CMT-004; J.X2).
 
 ### Rationale
@@ -1134,10 +1141,40 @@ Take geometry from the ActivityBar and panel frames of the matter-detail screens
 2. **Fill the badge with the new `--badge-alert-bg` / `--badge-alert-fg` pair.** matters.pen fills the chat badge `#CF222E` with white text — Light's danger red — but the badge is an attention count, not a danger status, so do not borrow `status-danger-fg` (in Dark it is too light to carry white text). Per-theme values: Light `#CF222E` on `#FFFFFF` (5.4:1), Warm `#A05540` on `#FBFAF7` (5.2:1, warm's own red), Dark `#DA3633` on `#FFFFFF` (4.6:1). Keep `--badge-count-*` as the neutral counter.
 3. **Set the badge count in `text-xs` (11px) where the frames draw 9px** — DES-006's ramp floors at 11px — making the badge a 16px pill rather than the frames' 14px. Render glyphs at the 20px Lucide step where the frames draw 18px — DES-008's ramp is 16/20/24, and DES-019 already normalized the brand glyph 18→20.
 4. **Mark the active applet with DES-016's accent indicator strip (3×48px, `--width-activitybar-indicator`) and a `text-primary` glyph.** Do not copy matters.pen's active treatment: it draws no strip and tints the glyph `#51B3D6`, but that is the avatar token, not an interactive one, and it reads 2.4:1 on white, under DES-011's 3:1 affordance floor. The strip is what DES-016 decided (J.0); the V13 frame draws it in the accent. Back-port to matters.pen when those mocks next get touched. (The `CONTRACT-DETAILS-INVENTORY.md` J.0 row called the strip a green pill; corrected — the frame draws a square-ended accent bar.)
-5. **Give the panel a 44px header: the applet's title (13px semibold) and a close X (16px glyph), over a `border-muted` rule.** Both M3 and M13 draw it. Keep the close control even though it duplicates the bar toggle — the panel can overlay below the container threshold, where the collapse affordance must not be 320px away on the far side of the panel. Treat the M3 header's count pill ("4", total comments) as applet content, not panel chrome; it lands with the chat applet (M8/M9). Focus the panel container when it opens — not its close control, which reads as "you probably want to leave" — then close on `Esc` and return focus to the applet's bar icon. DES-010's overlay rules, wired by hand because the panel is a plain `aside`, not a Radix overlay. The same open-focus rule covers a fragment that expands the panel (DES-047): without it, `Esc` does nothing until the user tabs in.
+5. **Give the panel a 44px header: the applet's title (13px semibold) and a close X (16px glyph), over a `border-muted` rule.** Both M3 and M13 draw it. Keep the close control even though it duplicates the bar toggle — it is the near-hand collapse. Treat the M3 header's count pill ("4", total comments) as applet content, not panel chrome; it lands with the chat applet (M8/M9). Focus the panel container when it opens — not its close control, which reads as "you probably want to leave" — then close on `Esc` and return focus to the applet's bar icon. DES-010's overlay rules, wired by hand because the panel is a plain `aside`, not a Radix overlay. The same open-focus rule covers a fragment that expands the panel (DES-047): without it, `Esc` does nothing until the user tabs in.
 6. **Type a slot as either a panel or a link.** DES-016 names settings as a deep link, so the applet type is a union: `render` opens the panel, `href` navigates. Only `render` slots own the panel, and only they toggle. Group link slots below the divider.
 
-Dock via a container query at 1100px of record-region width per DES-012. Write the threshold literally into the class list: Tailwind scans source text, and container conditions cannot read a CSS variable.
+Dock via a container query at 1100px of record-region width per DES-012. Write the threshold literally into the class list: Tailwind scans source text, and container conditions cannot read a CSS variable. **Superseded 2026-08-17** for the applet panel, which always docks. The doc panel keeps a threshold of its own at 1400px (the M12/2 clarification below, as amended by the 2026-08-18 second pass), and the rule about writing it literally still holds.
+
+### Implementation clarification (2026-08-17): applet panel always docks
+
+The overlay-below-1100px behaviour (DES-012's side-panel row, and the dock sentence above) is superseded for the **applet panel**. Opening an applet always takes a `--width-panel` (320px) flex column beside the record content; the content shrinks. Overlaying covered the record rather than sharing the row with it, which is the opposite of the VS Code activity-bar model this decision named. The close X in the panel header stays.
+
+The column opens and closes on a 200ms `width` transition (`ease-out`), so the record flexes with it rather than snapping. The aside stays mounted through the close so the slide has something to clip; it is `inert` the moment closing starts (focus already restored to the bar). `prefers-reduced-motion` already collapses the duration (DES-011). This is chrome motion, not a hover/focus state — the one exception on this surface to DES-003's animation floor.
+
+### Implementation clarification (2026-08-18): doc panel always docks too
+
+**Superseded the same day** by the clarification that follows. The diagnosis was right and the remedy was wrong: the applet was covered by the overlay's reach, not by the fact that it overlaid. Held for the record.
+
+The overlay-below-1400px rule (point 2 of the M12/2 clarification below) is superseded. Overlaying pinned the document to the inner edge of the activity bar at `z-20`, so an applet that opened in the same row was covered and appeared not to open. The doc panel is now a flex sibling like the applet: content · doc panel · applet panel · activity bar. Opening an applet pushes the document column the same way it pushes the record content.
+
+On the **Documents** section the list yields to the viewer: it is the index of the file being read, and showing it beside the viewer was the overlay the docking pass removed. The panel then grows (`flex-1`) into that column. Other sections stay beside the viewer at `--width-docpanel` (720px) — chatting about a clause while looking at Fields is still the point of a third column. The overlay-closes-on-tab-change fix that follows is also superseded — that close existed only because the overlay hid the section the tab had just revealed.
+
+### Implementation clarification (2026-08-18, second pass): the doc panel docks or overlays, and its overlay covers the record content only
+
+The **applet panel** still always docks — the 2026-08-17 clarification above stands. This one is about the **doc panel**, and it withdraws the "always docks" clarification above it. Overlay-below-1400px is reinstated for that panel, and so is the tab-change close that follows.
+
+**Why the dock alone did not work.** `--width-docpanel` is 720px and the activity bar is 48px. On a 1038px window that leaves 270px for the section behind the panel — the record's own fields, drawn in a sliver too narrow to read or to edit. Covering a section is recoverable in one click; squeezing it to nothing is not. So the panel keeps its threshold: above 1400px of room it is the 720px column, below it covers the section instead.
+
+**What the real defect was.** Not the overlay — its reach. The panel spanned the whole record row to the inner edge of the activity bar, so anything else in that row went under it, and an applet opened behind the document and read as not opening at all. That is what the "always docks" pass was chasing.
+
+**The fix is a containing block, not a layout mode.** `RecordApplets` now draws the record content and the layer inside their own positioned region, with the applet panel and the activity bar as siblings **outside** it. That one region is both the box an overlaying layer is positioned against and the box the docking threshold measures. Three things follow, and they are the whole of this clarification:
+
+1. **A document never covers an applet**, docked or overlaying. Reading a clause while discussing it in chat — the case point 1 of the M12/2 clarification names — works at every width.
+2. **Opening an applet narrows the document, not the record.** The region loses 320px; the overlay inside it narrows with it.
+3. **The threshold is spent by whatever is in the row.** A window that fits three columns docks. The same window with an applet open may fall under 1400px and hand the dock back, which is the same trade a narrower window makes.
+
+**The Documents list stops yielding.** `hideContent` and `fill` are withdrawn. The list docks beside the viewer above the threshold and is covered below it, exactly like Fields or Approvals — "beside the record it lives on" is what DOC2 draws, and hiding the index of the thing being read was a workaround for a fixed column that no longer exists.
 
 ### Implementation clarification (2026-08-14, M12/2 #185): the doc panel, the wider sibling layer
 
@@ -1145,7 +1182,7 @@ DES-016 said the document panel (K) "opens as a wider sibling layer per the doc-
 
 1. **The doc panel is a third column, not a second panel.** Docked, the record region reads content · doc panel · applet panel · activity bar. Both panels open together and neither closes the other: they answer different questions, and a reader who is discussing a clause in the chat applet is exactly the reader who wants the clause on screen. It is rendered by `RecordApplets`, through a `layer` slot beside the applet panel — a layer drawn inside the page's own content would sit inside the record's scroll and could not hold a column.
 
-2. **`--width-docpanel: 720px`, docking at 1400px of record-region width.** The width comes from the mock: DOC2 draws a 640px page, and 720 carries it with the well's own padding either side. The threshold is 1400 rather than DES-016's 1100 because a docked doc panel has to leave the record readable beside it, and 1100 − 720 does not. Below it the panel overlays the record region, pinned to the inner edge of the activity bar, which never disappears — DES-016's own behaviour, at a wider number because it is a wider thing. Write the threshold literally into the class list, for the reason above.
+2. **`--width-docpanel: 720px` when sharing the row, and an overlay when there is no room to share it.** The width comes from the mock: DOC2 draws a 640px page, and 720 carries it with the well's own padding either side. Below 1400px of record-content width the panel covers that content rather than squeezing it — see the 2026-08-18 second-pass clarification for what the covered box is and what stays outside it. Every section is treated the same way, Documents included.
 
 3. **A 44px header, then a 40px toolbar.** The header is the applet panel's chrome verbatim — the document's title at 13px semibold and a close X at 16px — plus a file glyph and the version pill K.H3 draws, in the neutral `badge-count` pair, because the round on screen is a structural fact and not a status. The toolbar under it is DOC2's: `bg-canvas`, the filename at 12px muted on the leading edge, and the download (K.T8) on the trailing one. The title and the filename are two different strings and both are drawn — the record renames a document freely (DOC-007) and the Document Version keeps the name it arrived under.
 
@@ -1158,6 +1195,14 @@ DES-016 said the document panel (K) "opens as a wider sibling layer per the doc-
 7. **The document's name is the control that opens it.** A Document Version the panel can read is a `button`; one it cannot is the download link M11 shipped. That split is not cosmetic: a link that opened a panel would break everything a link promises, and a button that downloaded would lose the right-click, the middle-click, and the `download` attribute that names the saved file. Which one a row draws is read off the family the server routed the version to (DOC-004) — the web holds no list of file types. The version being read is marked `aria-current`.
 
 8. **A Document Version outside the render set gets a card, never an empty well.** It states the filename, its size, one sentence saying why it is not on screen, and its download. The sentence is per family, because "not yet" (Word, PowerPoint, email — M12/3 and M12/4) is a different fact from "not ever" (the long tail).
+
+### Implementation clarification (2026-08-18, bug fix): overlaying the doc panel closes on a section-tab change
+
+**Withdrawn and reinstated the same day.** The "doc panel always docks too" clarification retired this close, and the second-pass clarification above put the overlay back and this close with it. It applies whenever the panel overlays, and never when it docks.
+
+Below the 1400px docking threshold the doc panel overlays the record's content column rather than sharing the row with it (point 2, above). Before this fix, that overlay stayed open across a section-tab change: a reader who opened a document from Documents and then clicked Fields, Approvals, Key dates, or Tasks saw the tab strip's active tab move but the screen never changed — the panel covered the new section exactly as it had covered Documents, which read as the tab strip having stopped working. Only Overview and Documents were ever covered by a test, and both happen to be the two sections a reader is most likely to check with a document already open, so the gap went unnoticed.
+
+The fix: `DocPanel` watches its own `ResizeObserver`-reported width and tells its caller whether it is currently docked. `ContractRecord` keeps the answer in a ref and, only when its `tab` param actually changes, closes the panel if that ref says it is overlaying. Docked, a tab change leaves the panel open — the same "beside, not instead" behavior point 1 already named, now actually reachable from every section rather than just two of them.
 
 ## DES-017: Editing model — per-field inline commit, no page edit mode
 
@@ -1898,7 +1943,7 @@ Naming the thread's control "Show older" rather than "Show more" is not cosmetic
 
 ### Consequences
 
-`ContractsTable` takes a `foot` slot and a landing row; the Documents section and the comment thread carry their own. Three new messages per surface — the control, the failure, and the live-region sentence — and one new plural form for the contracts count. No new tokens: the strip is `border-border-default` on the card's own surface, and the control is the shipped secondary `Button`.
+`ContractsTable` takes a `foot` slot and a landing row; the Documents section and the comment thread carry their own. _(DES-046 replaced `ContractsTable` with `ManagedTable`, which carries the `foot` slot and the landing row unchanged.)_ Three new messages per surface — the control, the failure, and the live-region sentence — and one new plural form for the contracts count. No new tokens: the strip is `border-border-default` on the card's own surface, and the control is the shipped secondary `Button`.
 
 Every list bounded after this inherits the foot rather than inventing one, and any surface that pages backwards inherits the head placement with it. M12's document panel is the first that will.
 
@@ -2520,7 +2565,7 @@ What the mock has no answer for is the rule between the fields. CTR-006 says an 
 
 ### Decision
 
-**1. The five term fields are ordinary fields of the Contract card, in the order the term is read: type, effective date, expiry, renewal period, notice period.** They take the same anatomy every field on that card takes — a `Label`, the control, and the field's own micro-state beside it — and each commits on its own (DES-017, no carve-out). The type is a select and commits on its own change, exactly as status, priority, and risk do; the two dates and the two counts are `Input`s that commit on blur or Enter and revert on Escape, exactly as the title does. The card grows one group; it grows no new pattern.
+**1. The five term fields are ordinary fields of the Contract card, in the order the term is read: type, effective date, expiry, renewal period, notice period.** They take the same anatomy every field on that card takes — a `Label`, the control, and the field's own micro-state beside it — and each commits on its own (DES-017, no carve-out). The type is a select and commits on its own change, exactly as status, priority, and risk do; the two dates are the shared `DatePicker` and commit when a day is picked (DES-048); the two counts are `Input`s that commit on blur or Enter and revert on Escape, exactly as the title does. The card grows one group; it grows no new pattern.
 
 **2. A field the contract's type cannot hold is drawn as a fact with an em dash, not as a disabled control.** An evergreen contract draws no expiry box, and anything but an auto-renewing one draws no renewal-period box; in each place the label stays and the value is "—". This is DES-035 clause 9's rule read for a field rather than an act: a control whose every commit the seam would refuse is a dead end, and a disabled box invites somebody to work out why it is disabled. The label stays because grill row **X.6** already settled that schema-backed core fields render with an em dash rather than disappearing — the record's shape should not change under a reader when a select moves.
 
@@ -2551,7 +2596,7 @@ Absence is the design question this record actually answers. The three candidate
 
 ### Consequences
 
-`ContractRecord` grows one `TermField` component — a label, a date or number input, and its micro-state — plus one select and two `ReadOnlyField`s. The term's four typed fields hold their own drafts. A term-type commit re-seeds all four, because a type change clears what the new type cannot hold and the answer carries more empty boxes than the request did; a typed field's own commit re-seeds only its own box, so a sibling box's in-progress edit survives the answer landing beside it.
+`ContractRecord` grows one `TermField` component — a label, a date picker or number input, and its micro-state — plus one select and two `ReadOnlyField`s. The term's four typed fields hold their own drafts. A term-type commit re-seeds all four, because a type change clears what the new type cannot hold and the answer carries more empty boxes than the request did; a typed field's own commit re-seeds only its own box, so a sibling box's in-progress edit survives the answer landing beside it.
 
 The activity narrator gains five changed-key labels and renders the term type through its own ICU message, so the feed says "Evergreen" where the column says `evergreen`.
 
@@ -3023,6 +3068,41 @@ The `User` glyph is the one the request named. `Users` would have named the grou
 ### Consequences
 
 `useTeamApplet` in `apps/web/src/components/contracts/team-applet.tsx` is the slot, mounted first in the contract record's applet set. `PanelApplet` gains an optional `hash` so a fragment can open an applet; the team slot is the first user. DES-016's applet set, DES-032 clause 5, and DES-028's fragment destination are amended above. No new tokens.
+
+## DES-048: Date inputs are a calendar popover (amends DES-014, DES-040)
+
+- **Status:** Accepted
+- **Date:** 2026-08-18
+
+### Context
+
+DES-014 originally picked the browser-native `<input type="date">` so locale chrome came for free. In practice that chrome is the empty `dd/mm/yyyy` placeholder, a picker that differs by browser, and a year control that is awkward for contract dates years from now. The Contract card's effective date and expiry are the first fields that make that cost obvious.
+
+### Decision
+
+**1. A date field is the shared `DatePicker`:** a C10-shaped control showing `formatFullDate` (always the year), opening a month calendar in a Popover. Empty shows "Select a date". The value it holds and writes is still a bare `YYYY-MM-DD`.
+
+**2. Month and year are dropdowns,** so a date years out is one pick, not twelve next-month clicks. The range is 1970 through fifty years ahead.
+
+**3. Picking a day commits immediately,** the same DES-017 rule a select already follows. Clearing is a "Clear" verb in the popover. Escape on the closed trigger reverts a refused or uncommitted draft; Escape on the open calendar dismisses it without writing.
+
+**4. First consumers are the two term dates on the Contract card.** Other native date inputs (key dates, the renewal dialog, custom fields, filters) migrate as those surfaces are touched. Time inputs stay native.
+
+**5. Previous and next sit still while the month changes, and the popover stays in view.** The calendar's width is the seven day columns, not the month caption, so a longer name cannot shove the chrome. The grid always draws six weeks, so paging months cannot resize the box either. Collision still places the popover above or below the field — and shifts it if needed — so the whole calendar stays on screen; a short viewport can scroll inside the popover.
+
+### Rationale
+
+The native control answered locale for free and cost no component. It also answered with chrome nobody asked for, and it made a date five years out harder to type than a title. A calendar that jumps by month and year, showing the same `May 3, 2026` the rest of the page already prints, is the control the dates were always going to need. Commit-on-pick keeps DES-017: a day is a decision, not a draft.
+
+### Alternatives considered
+
+- **Keep the native input.** Rejected: the empty `dd/mm/yyyy` chrome is the complaint this decision answers.
+- **A typed text field plus a calendar button.** Rejected for v1: two ways to enter one civil date, and a parse to own. Revisit if people ask to type.
+- **Hand-rolled month grid, no `react-day-picker`.** Rejected: keyboard and screen-reader month navigation is what the library is for; DES-004 already pointed at shadcn's Calendar.
+
+### Consequences
+
+`apps/web/src/components/date-picker.tsx` is the control; `calendar.tsx` and `popover.tsx` are the owned shadcn pieces under `components/ui/`. `formatFullDate` joins the DES-014 helper layer. `react-day-picker` and `@radix-ui/react-popover` are web-app dependencies. DES-014's Date inputs row and DES-040 clause 1 are amended above. The month grid uses `fixedWeeks` so collision can place the popover without a later resize moving previous/next. No new tokens.
 
 ## Index of decisions
 

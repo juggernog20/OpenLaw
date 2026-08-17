@@ -11,12 +11,16 @@
  * when it opens, not on Close; Esc from inside then closes it
  * (DES-010's overlay rule — Radix does not drive this aside).
  *
- * Docking is a container query on the record region, per DES-012. At or
- * above ~1100px of region width the panel is a flex sibling holding its
- * own 320px column; below that it overlays the content, pinned to the
- * inner edge of the activity bar, which never disappears. The threshold
- * is written into the class list literally: Tailwind scans source text,
- * so a variable would leave the utility ungenerated.
+ * Always a flex sibling: opening it takes a 320px column and the
+ * record content shrinks. Overlaying (DES-012's below-threshold rule)
+ * is superseded for this panel — see the DES-016 2026-08-17
+ * clarification. The doc panel is the other case and keeps a threshold
+ * of its own, so do not read this as a rule about layers in general.
+ * This column is outside the box that panel can cover, which is why
+ * the two are open together at any width. The clip
+ * that slides the column lives on RecordApplets; this aside is the
+ * inner 320px, packed to the trailing edge so the growing clip reads
+ * as a drawer coming out of the activity bar.
  */
 
 import { useEffect, useRef, type ReactNode } from "react";
@@ -27,6 +31,7 @@ export function AppletPanel({
   id,
   label,
   accessory,
+  inert = false,
   onClose,
   children,
 }: Readonly<{
@@ -35,6 +40,12 @@ export function AppletPanel({
   label: string;
   /** The active applet's own header content, beside the title. */
   accessory?: ReactNode;
+  /**
+   * True while the clip is sliding shut. Focus has already gone back
+   * to the bar, so the aside must not stay in the tab order or the
+   * a11y tree for those 200ms.
+   */
+  inert?: boolean;
   onClose: () => void;
   children: ReactNode;
 }>) {
@@ -46,8 +57,9 @@ export function AppletPanel({
   // container takes it rather than the close button: landing on Close
   // reads as "you probably want to leave". Same treatment as DocPanel.
   useEffect(() => {
+    if (inert) return;
     panel.current?.focus();
-  }, [id, label]);
+  }, [id, label, inert]);
 
   return (
     <aside // NOSONAR — the listener serves DES-010's Esc rule, not interactivity
@@ -62,7 +74,8 @@ export function AppletPanel({
       onKeyDown={(event) => {
         if (event.key === "Escape" && !event.defaultPrevented) onClose();
       }}
-      className="absolute inset-y-0 end-(--width-activitybar) z-10 flex w-(--width-panel) shrink-0 flex-col border-s border-border-default bg-raised outline-none @min-[1100px]/record:static @min-[1100px]/record:z-auto"
+      inert={inert}
+      className="flex h-full w-(--width-panel) shrink-0 flex-col border-s border-border-default bg-raised outline-none"
     >
       <header className="flex h-11 shrink-0 items-center justify-between border-b border-border-muted px-4">
         <div className="flex min-w-0 items-center gap-2">

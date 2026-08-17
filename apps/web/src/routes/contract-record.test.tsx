@@ -31,7 +31,7 @@
  * Users are bounced home; unauthenticated visitors land on login.
  */
 
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
@@ -224,6 +224,14 @@ async function openTeam(user: ReturnType<typeof userEvent.setup>) {
     await user.click(icon);
   }
   return screen.getByRole("complementary", { name: "Team" });
+}
+
+/** jsdom does not fire the clip's width transitionend, so a close
+ * test that waits for the aside to unmount has to dispatch it. */
+function finishAppletSlide(panel: HTMLElement) {
+  const clip = panel.parentElement;
+  expect(clip).not.toBeNull();
+  fireEvent.transitionEnd(clip!, { propertyName: "width" });
 }
 
 function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
@@ -1770,10 +1778,48 @@ describe("the contract record's section tabs (DES-032)", () => {
       "Key dates",
       "Tasks",
     ]);
+    // Empty sections carry no count chip — a zero is not news.
+    expect(strip.queryByRole("img")).not.toBeInTheDocument();
     // The Overview is the bare address, so it must not read as active
     // on its siblings — that is what `end` on the link is for.
     expect(strip.getByRole("link", { name: "Overview" })).toHaveAttribute("aria-current", "page");
     expect(strip.getByRole("link", { name: "Fields" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("chips Approvals, Key dates, and Tasks when those sections have work waiting", async () => {
+    const api = recordApi(contractRow());
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/contracts/42/approvals" && call.method === "GET") {
+          return json(200, {
+            approvals: [
+              { id: "a1", status: "pending" },
+              { id: "a2", status: "rejected" },
+              { id: "a3", status: "approved" },
+            ],
+          });
+        }
+        if (call.url.pathname === "/api/v1/contracts/42/key-dates" && call.method === "GET") {
+          return json(200, {
+            deadlines: [{ daysAway: 10 }, { daysAway: 0 }, { daysAway: -4 }],
+          });
+        }
+        if (call.url.pathname === "/api/v1/contracts/42/tasks" && call.method === "GET") {
+          return json(200, { tasks: [], doneCount: 1, totalCount: 4 });
+        }
+        return api.handler(call);
+      },
+    });
+    renderAt("/contracts/42");
+
+    const strip = within(await screen.findByRole("navigation", { name: "Contract sections" }));
+    // Open = unresolved (pending + rejected), not the whole roster.
+    expect(strip.getByRole("img", { name: "2 open approvals" })).toBeInTheDocument();
+    // Upcoming includes today; a date that has gone by does not.
+    expect(strip.getByRole("img", { name: "2 upcoming dates" })).toBeInTheDocument();
+    // Open = not done, not the whole checklist.
+    expect(strip.getByRole("img", { name: "3 open tasks" })).toBeInTheDocument();
   });
 
   it("shows one section at a time, and moves the address with the tab", async () => {
@@ -2169,6 +2215,7 @@ describe("the contract record's comment applet (M9/2)", () => {
     });
 
     await user.click(within(panel).getByRole("button", { name: "Close" }));
+    finishAppletSlide(panel);
     expect(screen.queryByRole("complementary", { name: "Comments" })).not.toBeInTheDocument();
     // DES-010: the panel is not a Radix overlay, so focus is restored
     // by hand — to the bar icon that opened it.
@@ -3423,6 +3470,7 @@ describe("the contract record's history applet (M9/6)", () => {
     expect(activity.cursors).toEqual([null]);
 
     await user.click(within(panel).getByRole("button", { name: "Close" }));
+    finishAppletSlide(panel);
     expect(screen.queryByRole("complementary", { name: "History" })).not.toBeInTheDocument();
     expect(icon).toHaveFocus();
   });
@@ -4488,12 +4536,12 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(
       within(section).getByRole("button", { name: "Orion_MSA_2026_draft.docx" }),
     ).toBeVisible();
-    // The kind, the number, the pin, the size, and when it landed, as
-    // the C4 mock draws them.
+    // The kind, the number, and when it landed. No "Current" mark: this
+    // is the head row, which is current by construction (lib/documents.ts
+    // `chainOf`) — the mark would only repeat what the row's own
+    // position already says.
     expect(within(section).getByText("Draft · ours")).toBeVisible();
     expect(within(section).getByText("v1")).toBeVisible();
-    expect(within(section).getByText("Current")).toBeVisible();
-    expect(within(section).getByText("88 kB")).toBeVisible();
   });
 
   it("says so plainly when the record has no paper on it", async () => {
@@ -4515,7 +4563,6 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     // nothing else: the current round, under the document's own name.
     expect(within(section).getAllByRole("row")).toHaveLength(2); // header + current
     expect(within(section).getByText("v3")).toBeVisible();
-    expect(within(section).getByText("Current")).toBeVisible();
     expect(within(section).getByText("The main instrument. Clause 8 was the fight.")).toBeVisible();
     expect(within(section).getByText("Held the indemnity.")).toBeVisible();
 
@@ -4532,18 +4579,13 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(within(section).getByRole("button", { name: "round_2.docx" })).toBeVisible();
     expect(within(section).getByText("Their first pass. Clause 8 is the fight.")).toBeVisible();
     expect(within(section).getByRole("button", { name: "round_1.docx" })).toBeVisible();
-    // Ordered newest first under the current round, and the pin is on
-    // the round that leads.
+    // Ordered newest first under the current round.
     const rows = within(section).getAllByRole("row").slice(1);
     expect(rows.map((row) => within(row).getByText(/^v\d+$/).textContent)).toEqual([
       "v3",
       "v2",
       "v1",
     ]);
-    expect(within(rows[0]!).getByText("Current")).toBeVisible();
-    for (const row of rows.slice(1)) {
-      expect(within(row).queryByText("Current")).not.toBeInTheDocument();
-    }
   });
 
   it("draws no disclosure for a document with one version", async () => {
@@ -4748,12 +4790,14 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       within(section).getByRole("button", { name: /Show the 2 earlier versions of/ }),
     );
     // The signed copy is often not the last round: this contract was
-    // signed in round two and redlined again in round three.
+    // signed in round two and redlined again in round three. A
+    // superseded round's pin lives in its own row's menu (CTR-014).
     await user.click(
       within(section).getByRole("button", {
-        name: "Pin version 2 of Orion Cloud — master services agreement as the executed copy",
+        name: "Actions for version 2 of Orion Cloud — master services agreement",
       }),
     );
+    await user.click(await screen.findByRole("menuitem", { name: "Mark as executed copy" }));
 
     await waitFor(() => expect(api.writes).toHaveLength(1));
     expect(api.writes[0]).toEqual({
@@ -4761,16 +4805,20 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       body: { versionId: "ver-b" },
     });
     expect(await within(section).findByText("Executed")).toBeVisible();
-    // Current and executed are two marks on two rows, not one fact.
-    expect(within(section).getByText("Current")).toBeVisible();
 
-    // The same control, named for what it toggles: the state is on
-    // `aria-pressed`, not in the name.
-    const pin = within(section).getByRole("button", {
-      name: "Pin version 2 of Orion Cloud — master services agreement as the executed copy",
-    });
-    await waitFor(() => expect(pin).toHaveAttribute("aria-pressed", "true"));
-    await user.click(pin);
+    // The same menu, and the item's own label carries the direction
+    // now — "Unmark" once the round is pinned.
+    await user.click(
+      within(section).getByRole("button", {
+        name: "Actions for version 2 of Orion Cloud — master services agreement",
+      }),
+    );
+    await waitFor(async () =>
+      expect(
+        await screen.findByRole("menuitem", { name: "Unmark as executed copy" }),
+      ).toBeVisible(),
+    );
+    await user.click(screen.getByRole("menuitem", { name: "Unmark as executed copy" }));
 
     await waitFor(() => expect(api.writes).toHaveLength(2));
     expect(api.writes[1]!.url).toBe("/api/v1/documents/doc-3/executed-version:DELETE");
@@ -4789,17 +4837,17 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     };
     stubApi({ signedIn: MEMBER, extra: documentsApi([signed]).handler });
     renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
 
     const section = await documentsSection();
     // The kind is what the uploader called this round; the pin is what
     // the team decided, and nobody has decided yet. One "Executed" on
-    // the row — the kind pill — and none beside the version number.
+    // the row — the kind pill — and the menu still offers to mark it,
+    // not unmark it.
     expect(within(section).getAllByText("Executed")).toHaveLength(1);
-    expect(
-      within(section).getByRole("button", {
-        name: "Pin version 1 of Orion_MSA_2026_signed.pdf as the executed copy",
-      }),
-    ).toBeVisible();
+    expect(await menuVerbs(user, section, "Orion_MSA_2026_signed.pdf")).toContain(
+      "Mark as executed copy",
+    );
   });
 
   it("reports the seam's own refusal when a designation is turned down", async () => {
@@ -4845,7 +4893,6 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     // grid arrives in M23.
     expect(within(section).queryByRole("button", { name: "Upload" })).not.toBeInTheDocument();
     expect(within(section).queryByRole("button", { name: /^Actions for/ })).not.toBeInTheDocument();
-    expect(within(section).queryByRole("button", { name: /^Pin version/ })).not.toBeInTheDocument();
     expect(within(section).queryByRole("switch")).not.toBeInTheDocument();
   });
 
@@ -4863,7 +4910,6 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     const section = await documentsSection();
     expect(within(section).queryByRole("button", { name: "Upload" })).not.toBeInTheDocument();
     expect(within(section).queryByRole("button", { name: /^Actions for/ })).not.toBeInTheDocument();
-    expect(within(section).queryByRole("button", { name: /^Pin version/ })).not.toBeInTheDocument();
     expect(within(section).queryByRole("switch")).not.toBeInTheDocument();
     // Reading it is not editing it: the file opens and the marks stay.
     expect(
@@ -4945,7 +4991,6 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     // erasure is the Administrator's, not theirs.
     expect(await menuVerbs(user, section, "Orion_MSA_2026_draft.docx")).toEqual(["Restore"]);
     await user.keyboard("{Escape}");
-    expect(within(section).queryByRole("button", { name: /^Pin version/ })).not.toBeInTheDocument();
   });
 
   it("keeps the erasure off a Legal Team Member's menu", async () => {
@@ -4959,6 +5004,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     // the typed-confirmation test below.
     const member = await documentsSection();
     expect(await menuVerbs(user, member, "Orion_MSA_2026_draft.docx")).toEqual([
+      "Mark as executed copy",
       "Add version",
       "Edit details",
       // Filing is Member+, like every other write on the record's paper
@@ -5649,7 +5695,10 @@ describe("the doc panel (M12/2)", () => {
     // on — this path drops the reference rather than restoring to a
     // control that is no longer there.
     expect(
-      within(list).queryByRole("button", { name: "Orion Cloud — master services agreement" }),
+      within(list).queryByRole("button", {
+        name: "Orion Cloud — master services agreement",
+        hidden: true,
+      }),
     ).toBeNull();
   });
 
@@ -6637,6 +6686,8 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
     expect(
       await screen.findByRole("complementary", { name: "signed.pdf, version 1" }),
     ).toBeVisible();
+    // Beside the list it was opened from, not instead of it (DOC2).
+    expect(screen.getByRole("region", { name: /^Documents/ })).toBeVisible();
   });
 
   it("keeps a filed document's panel open across a section tab round trip", async () => {
@@ -6660,11 +6711,126 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
     await user.click(screen.getByRole("link", { name: "Overview" }));
     await screen.findByLabelText("Title");
     await user.click(screen.getByRole("link", { name: "Documents" }));
-    await documentsSection();
+    // Still reading, and the list it was opened from is back beside it.
+    expect(await documentsSection()).toBeVisible();
 
     expect(
       await screen.findByRole("complementary", { name: "signed.pdf, version 1" }),
     ).toBeVisible();
+  });
+
+  it("keeps the panel open on a tab other than Overview or Documents", async () => {
+    const api = filingApi(
+      [readableFiled("doc-2", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    await user.click(await within(section).findByRole("button", { name: "signed.pdf" }));
+    await screen.findByRole("complementary", { name: "signed.pdf, version 1" });
+
+    await user.click(screen.getByRole("link", { name: "Fields" }));
+    await screen.findByRole("region", { name: "Fields" });
+
+    expect(screen.getByRole("complementary", { name: "signed.pdf, version 1" })).toBeVisible();
+    // Docked above the threshold, it is the 720px column beside the
+    // section rather than the layer over it.
+    expect(screen.getByRole("complementary", { name: "signed.pdf, version 1" })).toHaveClass(
+      "@min-[1400px]/record:w-(--width-docpanel)",
+      "@min-[1400px]/record:shrink-0",
+    );
+  });
+
+  /**
+   * A `ResizeObserver` that hands its callback back, so a test can say
+   * how wide the record-content region is.
+   *
+   * jsdom lays nothing out, so the project's own polyfill never fires
+   * and every panel reads as docked. That is the right default for the
+   * tests above, and useless for the one below — the overlay case only
+   * exists at a width jsdom will never report on its own.
+   */
+  class RecordingResizeObserver implements ResizeObserver {
+    static instances: RecordingResizeObserver[] = [];
+    readonly callback: ResizeObserverCallback;
+    constructor(callback: ResizeObserverCallback) {
+      this.callback = callback;
+      RecordingResizeObserver.instances.push(this);
+    }
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+
+  it("closes the panel on a section tab change while it overlays the record", async () => {
+    // The bug this is here for: below the docking threshold the panel
+    // covers whatever section is showing, so a reader who clicked
+    // Fields was left looking at the document and read the tab strip as
+    // broken. Docked it stays open (the test above); overlaying it gets
+    // out of the way.
+    RecordingResizeObserver.instances = [];
+    vi.stubGlobal("ResizeObserver", RecordingResizeObserver);
+    const api = filingApi(
+      [readableFiled("doc-2", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    await user.click(await within(section).findByRole("button", { name: "signed.pdf" }));
+    await screen.findByRole("complementary", { name: "signed.pdf, version 1" });
+
+    // Narrower than the 1400px the panel needs to dock into.
+    const observer = RecordingResizeObserver.instances.at(-1)!;
+    observer.callback(
+      [{ contentRect: { width: 900 } }] as unknown as ResizeObserverEntry[],
+      observer,
+    );
+
+    await user.click(screen.getByRole("link", { name: "Fields" }));
+    await screen.findByRole("region", { name: "Fields" });
+
+    expect(
+      screen.queryByRole("complementary", { name: "signed.pdf, version 1" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("opens an applet beside the document viewer rather than under it", async () => {
+    // The panel used to overlay the whole row and cover any applet
+    // that opened in it. Its containing block is the record-content
+    // region now, which the applet panel and the activity bar are
+    // outside of, so opening Team while a document is on screen leaves
+    // both complementaries visible whether the panel docks or overlays.
+    const api = filingApi(
+      [readableFiled("doc-2", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    await user.click(await within(section).findByRole("button", { name: "signed.pdf" }));
+    const doc = await screen.findByRole("complementary", { name: "signed.pdf, version 1" });
+
+    const bar = screen.getByRole("toolbar", { name: "Applets" });
+    await user.click(within(bar).getByRole("button", { name: "Team" }));
+    const applet = await screen.findByRole("complementary", { name: "Team" });
+
+    expect(doc).toBeVisible();
+    expect(applet).toBeVisible();
+    // The applet is a sibling of the region the doc panel is drawn in,
+    // never a child of it — so no z-index of the panel's can put it
+    // underneath.
+    expect(doc.parentElement).not.toContainElement(applet);
   });
 
   /**

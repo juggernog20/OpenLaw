@@ -643,14 +643,17 @@ function textAddress(document: DocumentRow, versionId: string): string {
  * it, one element per run — that layer is the only place the page's
  * words exist in the DOM. It is found by the library's own class rather
  * than by a role, because pdf.js marks every run `role="presentation"`
- * so the words are never read twice. The layer is asserted to be there
- * before its runs are read, so a pdf.js upgrade that renames it fails
- * saying so.
+ * so the words are never read twice. Every page in the well draws its
+ * own layer (2026-08-18: the well scrolls through the whole document
+ * rather than swapping one page's canvas), so this reads all of them
+ * rather than assuming one — at least one is asserted to be there
+ * before its runs are read, so a pdf.js upgrade that renames the class
+ * fails saying so.
  */
 async function wordsOnScreen(panel: Locator): Promise<string> {
-  const layer = panel.locator(".textLayer");
-  await expect(layer, "the PDF surface has no pdf.js text layer").toHaveCount(1);
-  const runs = await layer.locator("> *").allTextContents();
+  const layers = panel.locator(".textLayer");
+  await expect(layers.first(), "the PDF surface has no pdf.js text layer").toBeAttached();
+  const runs = await layers.locator("> *").allTextContents();
   return runs.join(" ").replaceAll(/\s+/g, " ").trim();
 }
 

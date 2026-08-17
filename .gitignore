@@ -18,6 +18,9 @@ coverage/
 # Playwright (e2e/)
 test-results/
 playwright-report/
+# Snapshots and screenshots the Playwright MCP server writes while an
+# agent drives a browser. Never part of the build.
+.playwright-mcp/
 
 # Host-development blob store (scripts/dev-hot.sh)
 .storage/

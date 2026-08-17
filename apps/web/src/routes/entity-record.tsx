@@ -217,7 +217,7 @@ export function EntityRecordPage() {
             </Link>
             <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-subtle" />
             <Building2 size={16} aria-hidden="true" className="shrink-0 text-muted" />
-            <h1 id="page-title" className="truncate text-lg font-semibold">
+            <h1 id="page-title" className="truncate text-md font-semibold">
               {saved.legalName}
             </h1>
             <span

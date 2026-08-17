@@ -288,6 +288,20 @@ describe("the contract record's Approvals section", () => {
     expect(screen.queryByText(/rejected/)).not.toBeInTheDocument();
   });
 
+  it("counts only open approvals on the tab chip", async () => {
+    // Two asks on the roster, one of them settled. The chip is a
+    // standing count of what is still owed, so it says one.
+    const api = recordApi([
+      approval({ id: "a1", status: "approved" }),
+      approval({ id: "a2", approver: named("u1"), status: "pending" }),
+    ]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    const strip = within(await screen.findByRole("navigation", { name: "Contract sections" }));
+    expect(await strip.findByRole("img", { name: "1 open approval" })).toBeInTheDocument();
+  });
+
   it("says so plainly when nobody has been asked", async () => {
     const api = recordApi([]);
     stubApi({ signedIn: MEMBER, extra: api.handler });

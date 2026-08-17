@@ -230,6 +230,7 @@ import { DocPanel } from "../components/documents/doc-panel";
 import { DocumentsCard } from "../components/documents/documents-card";
 import { PageTitle } from "../components/page-title";
 import { StagePipeline } from "../components/stage-pipeline";
+import { DatePicker } from "../components/date-picker";
 import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
@@ -690,6 +691,20 @@ function ContractRecord() {
    * DES-010's restore-to-trigger rule, wired by hand because the panel
    * is a plain aside. */
   const readingTrigger = useRef<HTMLElement | null>(null);
+  /** Whether the doc panel is currently docked beside the record
+   * content rather than overlaying it, per `DocPanel`'s own
+   * `ResizeObserver`. A ref, not state — nothing here needs to
+   * re-render on every resize, only to know the current answer at the
+   * moment a section tab changes. Starts `true` (docked): a page that
+   * has not measured yet keeps today's stay-open behavior rather than
+   * guessing narrow. */
+  const readingDocked = useRef(true);
+  /** The same answer again, as state this time, because the record
+   * content has to re-render to go inert underneath a panel that
+   * covers it. The ref above stays: the tab-change effect below reads
+   * the current answer without wanting a render of its own, and a
+   * threshold crossing is rare enough that one render costs nothing. */
+  const [readingCovers, setReadingCovers] = useState(false);
   /** The other side (CTR-011), primary first as the API orders it. */
   const [parties, setParties] = useState<ContractCounterparty[]>(counterparties);
   const [drafts, setDrafts] = useState<Record<TextFieldKey, string>>(() => textDrafts(contract));
@@ -742,6 +757,15 @@ function ContractRecord() {
    * offers and what the note above the cards says.
    */
   const frozen = archived || !canEdit;
+  /**
+   * Work waiting in the three sections that carry a count chip on the
+   * tab strip. Unresolved approvals (pending, or a rejection nobody
+   * re-requested), upcoming dates on the CTR-009 union, and tasks that
+   * are not done. Zero is not drawn: an empty section is not news.
+   */
+  const openApprovalCount = approvals.filter(isUnresolved).length;
+  const upcomingDateCount = deadlines.filter((row) => row.daysAway >= 0).length;
+  const openTaskCount = taskTotalCount - taskDoneCount;
   /**
    * Whether this viewer may decide who sees the record (DD-014,
    * CTR-022). The three actors are an Administrator, the person who
@@ -807,6 +831,20 @@ function ContractRecord() {
     }
   }, [reading, open]);
 
+  // A section-tab change while the panel overlays the record closes it
+  // (2026-08-18 fix, second pass): docked, the panel sits beside
+  // whatever section is showing, so a tab change leaves it open on
+  // purpose. Below the docking threshold it covers that section
+  // instead, and a reader who asked for Fields is shown the document
+  // they were already reading rather than Fields — which reads as the
+  // tab strip having stopped working. Keyed on `tab` alone, and it
+  // reads nothing else from this render: it runs when the section
+  // actually changes, never on the resize that keeps `readingDocked`
+  // current, and closing a panel that is already closed is a no-op.
+  useEffect(() => {
+    if (!readingDocked.current) closeReading();
+  }, [tab]);
+
   /** Closes the panel and puts focus back on the control that opened
    * it — DES-010's restore-to-trigger rule, wired by hand because the
    * panel is a plain aside. */
@@ -815,6 +853,11 @@ function ContractRecord() {
     // Before the panel unmounts the element focus is sitting in.
     readingTrigger.current?.focus();
     readingTrigger.current = null;
+    // Nothing is measuring any more. Back to the default the next
+    // panel opens on, so a closed panel's last width cannot decide
+    // what the one after it does.
+    readingDocked.current = true;
+    setReadingCovers(false);
   }
 
   function textDrafts(row: ContractRow): Record<TextFieldKey, string> {
@@ -996,11 +1039,13 @@ function ContractRecord() {
    * is the answer a custom number field already gives, and the only one
    * that leaves the person able to fix their own typo.
    */
-  function commitTerm(key: TermDraftKey) {
+  function commitTerm(key: TermDraftKey, next?: string) {
     // Enter already committed this draft and the PATCH is in flight —
     // the blur that follows must not send a duplicate.
     if (fieldStatus[key] === "saving") return;
-    const draft = termFields[key].trim();
+    // A date picker commits in the same tick as it writes the draft, so
+    // the value has to ride the call — React has not re-rendered yet.
+    const draft = (next ?? termFields[key]).trim();
     if (draft === termDrafts(saved)[key]) {
       revertTerm(key);
       return;
@@ -1296,7 +1341,7 @@ function ContractRecord() {
               ))}
               <FileText size={16} aria-hidden="true" className="shrink-0 text-muted" />
               <span className="shrink-0 text-base font-medium text-muted">{reference}</span>
-              <h1 id="page-title" className="truncate text-lg font-semibold">
+              <h1 id="page-title" className="truncate text-md font-semibold">
                 {saved.title}
               </h1>
               <span
@@ -1388,16 +1433,42 @@ function ContractRecord() {
                     defaultMessage="Approvals"
                   />
                 ),
+                count: openApprovalCount,
+                countLabel: intl.formatMessage(
+                  {
+                    id: "contracts.record.tab.approvals.open",
+                    defaultMessage:
+                      "{count, plural, one {# open approval} other {# open approvals}}",
+                  },
+                  { count: openApprovalCount },
+                ),
               },
               {
                 to: `/contracts/${saved.number}/key-dates`,
                 label: (
                   <FormattedMessage id="contracts.record.tab.keyDates" defaultMessage="Key dates" />
                 ),
+                count: upcomingDateCount,
+                countLabel: intl.formatMessage(
+                  {
+                    id: "contracts.record.tab.keyDates.upcoming",
+                    defaultMessage:
+                      "{count, plural, one {# upcoming date} other {# upcoming dates}}",
+                  },
+                  { count: upcomingDateCount },
+                ),
               },
               {
                 to: `/contracts/${saved.number}/tasks`,
                 label: <FormattedMessage id="contracts.record.tab.tasks" defaultMessage="Tasks" />,
+                count: openTaskCount,
+                countLabel: intl.formatMessage(
+                  {
+                    id: "contracts.record.tab.tasks.open",
+                    defaultMessage: "{count, plural, one {# open task} other {# open tasks}}",
+                  },
+                  { count: openTaskCount },
+                ),
               },
             ]}
           />
@@ -1423,7 +1494,10 @@ function ContractRecord() {
             : [teamApplet, chatApplet, historyApplet]
         }
         // DES-016's wider sibling layer (M12/2): the document being
-        // read, beside the record rather than instead of it.
+        // read, beside the record rather than instead of it. Which
+        // section is showing changes nothing here — the panel docks
+        // beside the Documents list the same way it docks beside
+        // Fields, and covers either one when there is no room to dock.
         layer={
           open && (
             <DocPanel
@@ -1431,9 +1505,18 @@ function ContractRecord() {
               title={open.document.title}
               version={open.version}
               onClose={closeReading}
+              onDockedChange={(docked) => {
+                readingDocked.current = docked;
+                setReadingCovers(!docked);
+              }}
             />
           )
         }
+        // Covered content is unreachable content: while the panel
+        // overlays the section instead of docking beside it, the
+        // controls behind it leave the tab order and the accessibility
+        // tree, so a keyboard cannot land on a button nobody can see.
+        contentCovered={open !== null && readingCovers}
       >
         <div className="flex flex-col gap-4 overflow-y-auto px-page-x py-page-y">
           {archived && (
@@ -1790,7 +1873,7 @@ function ContractRecord() {
                     onDraft={(next) =>
                       setTermFields((current) => ({ ...current, effectiveDate: next }))
                     }
-                    onCommit={() => commitTerm("effectiveDate")}
+                    onCommit={(next) => commitTerm("effectiveDate", next)}
                     onRevert={() => revertTerm("effectiveDate")}
                   />
                   {/* An evergreen contract has no end, so the record
@@ -1822,7 +1905,7 @@ function ContractRecord() {
                       onDraft={(next) =>
                         setTermFields((current) => ({ ...current, expiryDate: next }))
                       }
-                      onCommit={() => commitTerm("expiryDate")}
+                      onCommit={(next) => commitTerm("expiryDate", next)}
                       onRevert={() => revertTerm("expiryDate")}
                     />
                   )}
@@ -3303,11 +3386,12 @@ function RetypeDialog({
  * count of months or days.
  *
  * It is an ordinary inline field and nothing more — DES-017's rule with
- * no carve-out. Blur and Enter commit, Escape reverts, and the field's
- * own micro-state sits beside the box. The rule *between* the term
- * fields is the card's to apply, not this one's: what this draws is
- * whatever it was handed, and the card decides whether the contract's
- * type lets it be drawn at all.
+ * no carve-out. A date commits when a day is picked (DES-048); a count
+ * commits on blur or Enter and reverts on Escape, exactly as the title
+ * does. The field's own micro-state sits beside the control. The rule
+ * *between* the term fields is the card's to apply, not this one's:
+ * what this draws is whatever it was handed, and the card decides
+ * whether the contract's type lets it be drawn at all.
  */
 function TermField({
   id,
@@ -3334,28 +3418,43 @@ function TermField({
   status: FieldStatus;
   error: string | undefined;
   onDraft: (next: string) => void;
-  onCommit: () => void;
+  onCommit: (next?: string) => void;
   onRevert: () => void;
 }>) {
   return (
     <div className="flex flex-col gap-1.5">
       <Label htmlFor={id}>{label}</Label>
       <div className="flex items-center gap-2">
-        <Input
-          id={id}
-          type={type}
-          // A count of months or days is a whole number, and the
-          // keypad a phone offers should say so.
-          {...(type === "number" ? { inputMode: "numeric" as const, min, step: 1 } : {})}
-          value={draft}
-          disabled={frozen}
-          onChange={(event) => onDraft(event.target.value)}
-          onBlur={onCommit}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") onCommit();
-            if (event.key === "Escape") onRevert();
-          }}
-        />
+        {type === "date" ? (
+          <DatePicker
+            id={id}
+            value={draft}
+            disabled={frozen}
+            onChange={(next) => {
+              onDraft(next);
+              onCommit(next);
+            }}
+            onRevert={onRevert}
+          />
+        ) : (
+          <Input
+            id={id}
+            type="number"
+            // A count of months or days is a whole number, and the
+            // keypad a phone offers should say so.
+            inputMode="numeric"
+            min={min}
+            step={1}
+            value={draft}
+            disabled={frozen}
+            onChange={(event) => onDraft(event.target.value)}
+            onBlur={() => onCommit()}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") onCommit();
+              if (event.key === "Escape") onRevert();
+            }}
+          />
+        )}
         <StatusNote status={status} detail={error} />
       </div>
     </div>

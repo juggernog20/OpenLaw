@@ -20,6 +20,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import { pickDate } from "../testing/dates";
 
 /** Frozen mid-day so no plausible display timezone moves the calendar
  * date the card calls today. */
@@ -356,10 +357,7 @@ describe("the Term timeline card", () => {
 
     expect((await timeline()).getByText("Notice deadline Dec 1")).toBeInTheDocument();
 
-    const expiry = screen.getByLabelText("Expiry date");
-    await user.clear(expiry);
-    await user.type(expiry, "2026-11-30");
-    await user.click(screen.getByLabelText("Title"));
+    await pickDate(user, "Expiry date", "2026-11-30");
 
     await waitFor(() => expect(api.patches).toEqual([{ expiryDate: "2026-11-30" }]));
     const after = await timeline();
