@@ -19,6 +19,7 @@ import * as contractCounterpartiesSchema from "./schema/contract-counterparties.
 import * as contractEnvelopesSchema from "./schema/contract-envelopes.js";
 import * as contractKeyDatesSchema from "./schema/contract-key-dates.js";
 import * as contractRelationsSchema from "./schema/contract-relations.js";
+import * as contractTasksSchema from "./schema/contract-tasks.js";
 import * as contractStatusesSchema from "./schema/contract-statuses.js";
 import * as contractTeamSchema from "./schema/contract-team.js";
 import * as contractTypeFieldsSchema from "./schema/contract-type-fields.js";
@@ -32,6 +33,7 @@ import * as documentsSchema from "./schema/documents.js";
 import * as entitiesSchema from "./schema/entities.js";
 import * as entityTypesSchema from "./schema/entity-types.js";
 import * as fieldsSchema from "./schema/fields.js";
+import * as listViewsSchema from "./schema/list-views.js";
 import * as matterTypeFieldsSchema from "./schema/matter-type-fields.js";
 import * as matterTypesSchema from "./schema/matter-types.js";
 import * as orgSchema from "./schema/org.js";
@@ -47,6 +49,7 @@ export * from "./schema/contract-counterparties.js";
 export * from "./schema/contract-envelopes.js";
 export * from "./schema/contract-key-dates.js";
 export * from "./schema/contract-relations.js";
+export * from "./schema/contract-tasks.js";
 export * from "./schema/contract-statuses.js";
 export * from "./schema/contract-team.js";
 export * from "./schema/contract-type-fields.js";
@@ -60,6 +63,7 @@ export * from "./schema/documents.js";
 export * from "./schema/entities.js";
 export * from "./schema/entity-types.js";
 export * from "./schema/fields.js";
+export * from "./schema/list-views.js";
 export * from "./schema/matter-type-fields.js";
 export * from "./schema/matter-types.js";
 export * from "./schema/org.js";
@@ -76,6 +80,7 @@ export const schema = {
   ...contractEnvelopesSchema,
   ...contractKeyDatesSchema,
   ...contractRelationsSchema,
+  ...contractTasksSchema,
   ...contractStatusesSchema,
   ...contractTeamSchema,
   ...contractTypeFieldsSchema,
@@ -89,6 +94,7 @@ export const schema = {
   ...entitiesSchema,
   ...entityTypesSchema,
   ...fieldsSchema,
+  ...listViewsSchema,
   ...matterTypeFieldsSchema,
   ...matterTypesSchema,
   ...orgSchema,
@@ -123,6 +129,10 @@ export type { SQL } from "drizzle-orm";
  * round that went out and the round that came back (M15/5), and both
  * are `document_versions`. Re-exported for the operators' reason. */
 export { alias } from "drizzle-orm/pg-core";
+/** What a helper that builds an expression over an arbitrary column
+ * takes — the contracts list's severity ramp orders `priority` and `risk`
+ * through one function. Re-exported for the operators' reason. */
+export type { AnyPgColumn } from "drizzle-orm/pg-core";
 
 export type Db = NodePgDatabase<typeof schema> & { $client: pg.Pool };
 

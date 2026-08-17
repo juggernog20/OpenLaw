@@ -213,6 +213,26 @@ export function stubApi(state: ApiState) {
     if (/^\/api\/v1\/contracts\/\d+\/key-dates$/.test(call.url.pathname) && call.method === "GET") {
       return json(200, { deadlines: [] });
     }
+    // And every task on it (M17/1, CTR-017). Empty by default for the
+    // roster's reason: a record with no tasks is the ordinary case, and
+    // only the suites about the checklist supply one.
+    if (/^\/api\/v1\/contracts\/\d+\/tasks$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { tasks: [], doneCount: 0, totalCount: 0 });
+    }
+    // And every relation on it (M17/2, CTR-015). Empty by default for
+    // the roster's reason: a record with no relations is the ordinary
+    // case, and only the suites about the relations surface supply one.
+    if (/^\/api\/v1\/contracts\/\d+\/relations$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { parentChain: [], children: [], links: [] });
+    }
+    // And this person's saved list views (DD-019). None by default, which
+    // is what a fresh install has — the built-in layout is code, not a
+    // seeded row. Only the suites about views supply any. Without this the
+    // read would throw and be swallowed by `readViews`, which is the right
+    // production behaviour and a bad thing for a test to lean on.
+    if (call.url.pathname === "/api/v1/list-views" && call.method === "GET") {
+      return json(200, { views: [] });
+    }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
       return json(200, state.onboarding ?? { completed: true, emailConfigured: true });
     }

@@ -53,6 +53,8 @@ import {
   CalendarPlus,
   CalendarX,
   Check,
+  CircleCheck,
+  CircleDot,
   Clock,
   Download,
   Eraser as EraserIcon,
@@ -66,6 +68,7 @@ import {
   KeyRound,
   Link2,
   ListOrdered,
+  ListPlus,
   Lock,
   LogOut,
   MessageSquare,
@@ -550,6 +553,16 @@ function relatedRecord(intl: IntlShape, payload: Payload, prefix: "parent" | "re
 function named(intl: IntlShape, payload: Payload, key: string): string {
   return (
     text(payload, key) ?? intl.formatMessage({ id: "activity.someone", defaultMessage: "someone" })
+  );
+}
+
+/** What a task entry calls the task it names. Its own fallback rather
+ * than {@link named}'s, because that one is a person's — "added the
+ * task someone" is not a sentence. */
+function taskNamed(intl: IntlShape, payload: Payload): string {
+  return (
+    text(payload, "title") ??
+    intl.formatMessage({ id: "activity.task.untitled", defaultMessage: "(untitled)" })
   );
 }
 
@@ -1117,6 +1130,28 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       related: relatedRecord(intl, payload, "related"),
     }),
   },
+  // The removal siblings of the two relation writes above (M17/4).
+  "contract.relation_removed": {
+    icon: Link2,
+    message: defineMessage({
+      id: "activity.contract.relationRemoved",
+      defaultMessage:
+        "{actor} unlinked this contract — {relationType, select, renews {it no longer renews {related}} " +
+        "amends {it no longer amends {related}} other {no longer related to {related}}}",
+    }),
+    values: (intl, payload) => ({
+      relationType: text(payload, "relationType") ?? "other",
+      related: relatedRecord(intl, payload, "related"),
+    }),
+  },
+  "contract.parent_removed": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.contract.parentRemoved",
+      defaultMessage: "{actor} took this contract out from under {parent}",
+    }),
+    values: (intl, payload) => ({ parent: relatedRecord(intl, payload, "parent") }),
+  },
   // The record's free-form dates (M16/3, CTR-009). A verb per act, so a
   // reader can tell a date being put on the record from one being moved
   // or taken off without opening a payload.
@@ -1155,6 +1190,53 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       label: named(intl, payload, "label"),
       date: keyDateOn(intl, payload),
     }),
+  },
+  // The record's task checklist (M17/1, CTR-017). A verb per act, so a
+  // reader can tell a task being added from one being completed, edited,
+  // reopened, or removed without opening a payload.
+  //
+  // Each names the task, not only the act. A removal deletes the row, so
+  // its entry is the only thing left that says the task was ever there.
+  "task.added": {
+    icon: ListPlus,
+    message: defineMessage({
+      id: "activity.task.added",
+      defaultMessage: "{actor} added the task {title}",
+    }),
+    values: (intl, payload) => ({ title: taskNamed(intl, payload) }),
+  },
+  "task.edited": {
+    icon: PenLine,
+    message: defineMessage({
+      id: "activity.task.edited",
+      defaultMessage: "{actor} changed the task {title}",
+    }),
+    changes: changesFrom,
+    values: (intl, payload) => ({ title: taskNamed(intl, payload) }),
+  },
+  "task.completed": {
+    icon: CircleCheck,
+    message: defineMessage({
+      id: "activity.task.completed",
+      defaultMessage: "{actor} completed the task {title}",
+    }),
+    values: (intl, payload) => ({ title: taskNamed(intl, payload) }),
+  },
+  "task.reopened": {
+    icon: CircleDot,
+    message: defineMessage({
+      id: "activity.task.reopened",
+      defaultMessage: "{actor} reopened the task {title}",
+    }),
+    values: (intl, payload) => ({ title: taskNamed(intl, payload) }),
+  },
+  "task.removed": {
+    icon: Trash2,
+    message: defineMessage({
+      id: "activity.task.removed",
+      defaultMessage: "{actor} removed the task {title}",
+    }),
+    values: (intl, payload) => ({ title: taskNamed(intl, payload) }),
   },
   // One round of signature on the record (M15/2, M15/3, CTR-013). A
   // verb per act, so a reader can tell a completed signature from a

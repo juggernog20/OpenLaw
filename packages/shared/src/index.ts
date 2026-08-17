@@ -195,6 +195,13 @@ export const MAX_KEY_DATE_LABEL_LENGTH = 200;
 export const MAX_KEY_DATE_NOTE_LENGTH = 2000;
 
 /**
+ * One title constraint for the lightweight checklist (CTR-017). The
+ * database's `btrim` guard and the route's Zod schema both say 200; this
+ * keeps the input's `maxLength` in the same word.
+ */
+export const MAX_TASK_TITLE_LENGTH = 200;
+
+/**
  * How many people one envelope may be sent to (CTR-013).
  *
  * A bound rather than a preference, and a generous one: naming a
@@ -225,3 +232,84 @@ export const MAX_ENVELOPE_SUBJECT_LENGTH = 200;
  * types theirs on the record — and both end up in the same cell.
  */
 export const MAX_ENVELOPE_REASON_LENGTH = 1000;
+
+/**
+ * The surfaces that can hold a saved view (DD-019).
+ *
+ * `contracts` is the only list with a managed table today. Matters,
+ * documents, and entities join by adding their key here and a column
+ * catalogue on their page — no migration, because the column is text
+ * (DD-019 clause 3).
+ *
+ * Shared because the seam validates the key on every write and the web
+ * app names it on every read. One typo in either copy would silently
+ * save views nobody's list ever asks for.
+ */
+export const LIST_VIEW_SURFACES = ["contracts"] as const;
+export type ListViewSurface = (typeof LIST_VIEW_SURFACES)[number];
+
+/**
+ * The ceiling on a saved view's name (DD-019).
+ *
+ * Long enough for "Renewals due this quarter", short enough to read in
+ * a menu row without truncating. The database holds the same number as
+ * a check constraint, because a name is the one part of a view a person
+ * types.
+ */
+export const MAX_LIST_VIEW_NAME_LENGTH = 60;
+
+/**
+ * How many views one person may save per surface.
+ *
+ * A menu is the whole interface for choosing one (DES-046 clause 6), so
+ * the bound is what still reads as a menu rather than a list needing its
+ * own search. Nothing about the table needs it; the reader does.
+ */
+export const MAX_LIST_VIEWS_PER_SURFACE = 25;
+
+/**
+ * The columns the contracts list can be sorted by (DD-019 clause 2).
+ *
+ * A closed set, not "any column": each key names a SQL expression the
+ * seam can order and keyset-page on, and the reference number breaks
+ * every tie (CTR-024).
+ *
+ * Three groups of column are deliberately absent, each for its own
+ * reason:
+ *
+ * - **Derived at read** — the notice deadline, days remaining, the
+ *   renewal proposal. No index can serve an ordering the row does not
+ *   hold, and the arithmetic behind them lives in the API rather than in
+ *   the table (CTR-006).
+ * - **The contract value** (CTR-010). It is an amount, a currency, and a
+ *   cadence, and there is no honest single order over the three: 500 GBP
+ *   monthly against 900 USD one-time needs an exchange rate and a term,
+ *   neither of which this product has. Ordering on the bare amount would
+ *   answer confidently and wrongly. The named upgrade path is a stored
+ *   normalized amount, which wants an FX decision first.
+ * - **The custom fields** (CTR-016). They live in one `jsonb` map and
+ *   are attached per type, so a sort over one of them orders a column
+ *   most rows do not have.
+ *
+ * Shared because the web app's column catalogue marks a column sortable
+ * by naming its key here, and the seam refuses a key it does not know.
+ */
+export const CONTRACT_SORT_KEYS = [
+  "number",
+  "title",
+  "type",
+  "status",
+  "owner",
+  "counterparty",
+  "risk",
+  "priority",
+  "effectiveDate",
+  "expiryDate",
+  "createdAt",
+  "updatedAt",
+] as const;
+export type ContractSortKey = (typeof CONTRACT_SORT_KEYS)[number];
+
+/** Which way a sorted column runs. */
+export const SORT_DIRECTIONS = ["asc", "desc"] as const;
+export type SortDirection = (typeof SORT_DIRECTIONS)[number];

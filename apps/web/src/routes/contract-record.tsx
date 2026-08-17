@@ -10,7 +10,7 @@
  * chrome — with the Owner, the type, status, priority, and risk as
  * selects.
  *
- * Five sections, five addresses. **Overview** (`/contracts/42`) is
+ * Six sections, six addresses. **Overview** (`/contracts/42`) is
  * the record's own columns: the Contract card, the Description card
  * under it, and the Term timeline card that closes the section.
  * **Fields** (`/contracts/42/fields`) is what this contract's
@@ -19,9 +19,11 @@
  * (`/contracts/42/approvals`) is who has been asked to sign it off
  * (CTR-012, DES-035). **Key dates** (`/contracts/42/key-dates`) is
  * every date the record has, as one union — the team's own named dates,
- * the expiry, and the derived notice deadline (CTR-009, DES-042). The
- * Team card is not one of the five — it stands beside all of them,
- * because who is on a contract is context for reading any part of it.
+ * the expiry, and the derived notice deadline (CTR-009, DES-042).
+ * **Tasks** (`/contracts/42/tasks`) is the lightweight checklist
+ * (CTR-017). The Team card is not one of the six — it stands beside
+ * all of them, because who is on a contract is context for reading any
+ * part of it.
  *
  * The custom fields are CTR-016's, and they earn the card the C2 mock
  * draws for them. The contract's type decides which of them appear and
@@ -197,6 +199,7 @@ import {
 } from "../lib/format";
 import { APPROVAL_PILL, isUnresolved, type ContractApproval } from "../lib/approvals";
 import { readContractKeyDates, type ContractDeadline } from "../lib/key-dates";
+import type { ContractTask } from "../lib/tasks";
 import { confirmContractRenewal, type ConfirmedRenewal } from "../lib/renewals";
 import { FOLDER_ROOT, type ContractDocument } from "../lib/documents";
 import type { ContractFolder } from "../lib/folders";
@@ -218,6 +221,8 @@ import { ConfidentialToggle } from "../components/confidential-toggle";
 import { ConfirmRenewalDialog } from "../components/contracts/confirm-renewal-dialog";
 import { CreateContractDialog } from "../components/contracts/create-contract-dialog";
 import { KeyDatesCard } from "../components/contracts/key-dates-card";
+import { RelatedContractsCard } from "../components/contracts/related-contracts-card";
+import { TasksCard } from "../components/contracts/tasks-card";
 import { RenewalBanner } from "../components/contracts/renewal-banner";
 import { TermTimelineCard } from "../components/contracts/term-timeline-card";
 import { CounterpartyPicker, type CounterpartyPick } from "../components/counterparty-picker";
@@ -234,7 +239,7 @@ import { Label } from "../components/ui/label";
 
 /** The record's sections (DES-032), in the order the strip draws them.
  * The Overview is the bare address, so it has no segment of its own. */
-const RECORD_TABS = ["fields", "documents", "approvals", "key-dates"] as const;
+const RECORD_TABS = ["fields", "documents", "approvals", "key-dates", "tasks"] as const;
 type RecordTabName = "overview" | (typeof RECORD_TABS)[number];
 
 export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
@@ -256,51 +261,72 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
   // Contributor anyway; the record read alone carries every name the
   // page has to draw.
   const canEdit = isMemberPlus(user.role);
-  const [record, documents, folders, approvals, signing, keyDates, options, registry] =
-    await Promise.all([
-      api.GET("/api/v1/contracts/{number}", { params: { path: { number } } }),
-      // The record's paper (M11/2). Read by every viewer who reaches the
-      // page — a Contributor on the team reads and downloads it too
-      // (DD-015) — and answered 404 for anyone the record itself is
-      // hidden from, which is the same refusal the record read gives.
-      //
-      // The record root only (M13/3): the tree draws its folders first and
-      // then the documents filed nowhere, and a folder's own documents
-      // load when it is opened. Reading the record's whole paper here
-      // would draw every filed document twice.
-      api.GET("/api/v1/contracts/{number}/documents", {
-        params: { path: { number }, query: { folder: FOLDER_ROOT } },
-      }),
-      // How that paper is filed (M13/2, DOC-006). One read for the whole
-      // tree, because a record's folder set is small and drawing it a
-      // level at a time would be a round trip per press.
-      api.GET("/api/v1/contracts/{number}/folders", { params: { path: { number } } }),
-      // Who has been asked to sign the record off (M14/3, CTR-012). Read
-      // by every viewer who reaches the page — a Contributor on the team
-      // reads the roster too — and answered 404 for anyone the record
-      // itself is hidden from, which is the same refusal the record read
-      // gives.
-      api.GET("/api/v1/contracts/{number}/approvals", { params: { path: { number } } }),
-      // What paper this record has sent out for signature (M15/2,
-      // CTR-013), read by every viewer who reaches the page for the
-      // roster's reason. It carries two facts beside the envelopes —
-      // whether this install has a connector, and the chain a send would
-      // offer — so the card decides in one condition whether to draw the
-      // send control at all.
-      api.GET("/api/v1/contracts/{number}/envelopes", { params: { path: { number } } }),
-      // Every date on the record (M16/3, CTR-009): its key dates, its
-      // expiry, and its derived notice deadline, as one union the seam has
-      // already ordered and marked. Read by every viewer who reaches the
-      // page for the roster's reason — a Contributor on the team reads the
-      // record's deadlines too.
-      api.GET("/api/v1/contracts/{number}/key-dates", { params: { path: { number } } }),
-      canEdit ? api.GET("/api/v1/contracts/options") : undefined,
-      // The registry's own Member+ list is the signing-entity picker's
-      // source (CTR-011): it is ordered by legal name and already leaves
-      // archived entities out, so the contracts surface needs no read of
-      // its own the way it does for the Administrator-only taxonomies.
-      canEdit ? api.GET("/api/v1/entities") : undefined,
-    ]);
+  const [
+    record,
+    documents,
+    folders,
+    approvals,
+    signing,
+    keyDates,
+    tasks,
+    relations,
+    options,
+    registry,
+  ] = await Promise.all([
+    api.GET("/api/v1/contracts/{number}", { params: { path: { number } } }),
+    // The record's paper (M11/2). Read by every viewer who reaches the
+    // page — a Contributor on the team reads and downloads it too
+    // (DD-015) — and answered 404 for anyone the record itself is
+    // hidden from, which is the same refusal the record read gives.
+    //
+    // The record root only (M13/3): the tree draws its folders first and
+    // then the documents filed nowhere, and a folder's own documents
+    // load when it is opened. Reading the record's whole paper here
+    // would draw every filed document twice.
+    api.GET("/api/v1/contracts/{number}/documents", {
+      params: { path: { number }, query: { folder: FOLDER_ROOT } },
+    }),
+    // How that paper is filed (M13/2, DOC-006). One read for the whole
+    // tree, because a record's folder set is small and drawing it a
+    // level at a time would be a round trip per press.
+    api.GET("/api/v1/contracts/{number}/folders", { params: { path: { number } } }),
+    // Who has been asked to sign the record off (M14/3, CTR-012). Read
+    // by every viewer who reaches the page — a Contributor on the team
+    // reads the roster too — and answered 404 for anyone the record
+    // itself is hidden from, which is the same refusal the record read
+    // gives.
+    api.GET("/api/v1/contracts/{number}/approvals", { params: { path: { number } } }),
+    // What paper this record has sent out for signature (M15/2,
+    // CTR-013), read by every viewer who reaches the page for the
+    // roster's reason. It carries two facts beside the envelopes —
+    // whether this install has a connector, and the chain a send would
+    // offer — so the card decides in one condition whether to draw the
+    // send control at all.
+    api.GET("/api/v1/contracts/{number}/envelopes", { params: { path: { number } } }),
+    // Every date on the record (M16/3, CTR-009): its key dates, its
+    // expiry, and its derived notice deadline, as one union the seam has
+    // already ordered and marked. Read by every viewer who reaches the
+    // page for the roster's reason — a Contributor on the team reads the
+    // record's deadlines too.
+    api.GET("/api/v1/contracts/{number}/key-dates", { params: { path: { number } } }),
+    // The record's task checklist (M17/1, CTR-017): lightweight items
+    // with a done flag, an optional assignee, an optional due date, and
+    // a display order. Read by every viewer who reaches the page for
+    // the roster's reason — a Contributor on the team reads the checklist.
+    api.GET("/api/v1/contracts/{number}/tasks", { params: { path: { number } } }),
+    // The contract's relation surface (M17/2, CTR-015): its parent chain,
+    // children, and typed links. Optional — a read failure does not block
+    // the page, it only hides the Related contracts card.
+    api
+      .GET("/api/v1/contracts/{number}/relations", { params: { path: { number } } })
+      .catch(() => ({ data: undefined, error: undefined })),
+    canEdit ? api.GET("/api/v1/contracts/options") : undefined,
+    // The registry's own Member+ list is the signing-entity picker's
+    // source (CTR-011): it is ordered by legal name and already leaves
+    // archived entities out, so the contracts surface needs no read of
+    // its own the way it does for the Administrator-only taxonomies.
+    canEdit ? api.GET("/api/v1/entities") : undefined,
+  ]);
   // The documents read is required, like the record read: every viewer
   // who reaches this page reads the paper on it (DD-015). A failure
   // here must not render as "No documents on this contract yet" — an
@@ -313,6 +339,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     !approvals.data ||
     !signing.data ||
     !keyDates.data ||
+    !tasks.data ||
     (canEdit && !(options?.data && registry?.data))
   ) {
     throw new Error("The contract could not be read.");
@@ -338,6 +365,12 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
      * like the roster: a record with no dates at all is a fact about it,
      * not a fallback for a read that did not happen. */
     deadlines: keyDates.data.deadlines,
+    /** The record's task checklist (M17/1, CTR-017). Required like the
+     * roster: a record with no tasks at all is a fact about it, not a
+     * fallback for a read that did not happen. */
+    tasks: tasks.data.tasks,
+    taskDoneCount: tasks.data.doneCount,
+    taskTotalCount: tasks.data.totalCount,
     /** Every confirmed roll on the record, most recent first (M16/4,
      * CTR-006). It rides the record read because nothing stores a
      * renewal — these are the activity log's own entries read back
@@ -359,6 +392,10 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
      * the options answer: a read-only viewer applies nothing. */
     approverGroups: options?.data?.approverGroups ?? [],
     entities: registry?.data?.entities ?? [],
+    /** The contract's relation surface (M17/2, CTR-015): parent chain,
+     * children, and typed links. Optional — a read failure hides the
+     * card rather than blocking the page. */
+    relations: relations?.data ?? null,
   };
 }
 
@@ -482,7 +519,7 @@ export function ContractRecordPage() {
 function ContractRecord() {
   // Which section is on screen (DES-032). The loader has already sent
   // an unknown segment to the Overview, so anything that survives to
-  // here is one of the four.
+  // here is one of the five tab segments or "overview".
   const tab = (useParams().tab ?? "overview") as RecordTabName;
   const {
     user,
@@ -493,6 +530,9 @@ function ContractRecord() {
     approvals: contractApprovals,
     signing: contractSigning,
     deadlines: contractDeadlines,
+    tasks: contractTasks,
+    taskDoneCount: contractTaskDoneCount,
+    taskTotalCount: contractTaskTotalCount,
     renewals: contractRenewals,
     documentsCursor,
     fields,
@@ -504,6 +544,7 @@ function ContractRecord() {
     users,
     approverGroups,
     entities,
+    relations,
   } = useLoaderData<typeof contractRecordLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
@@ -627,6 +668,12 @@ function ContractRecord() {
   /** Which re-read of the union above is the newest one in flight. Two
    * term commits in a row race, and only the last answer may land. */
   const deadlinesRead = useRef(0);
+  /** The record's task checklist (M17/1, CTR-017). State rather than
+   * loader data because every task write answers the whole checklist,
+   * and the section replaces what it holds without a page re-read. */
+  const [tasks, setTasks] = useState<ContractTask[]>(contractTasks);
+  const [taskDoneCount, setTaskDoneCount] = useState(contractTaskDoneCount);
+  const [taskTotalCount, setTaskTotalCount] = useState(contractTaskTotalCount);
   /**
    * Which version the doc panel is reading, or none (M12/2).
    *
@@ -1208,6 +1255,36 @@ function ContractRecord() {
                 <FormattedMessage id="contracts.title" defaultMessage="Contracts" />
               </Link>
               <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-subtle" />
+              {/* Parent chain breadcrumb segments (M17/2, CTR-015): each
+                  reachable parent as a link, each restricted one as a
+                  muted placeholder. The chain is root-first, so the
+                  topmost ancestor comes right after "Contracts". */}
+              {relations?.parentChain.map((entry, i) => (
+                <span
+                  key={entry.restricted ? `restricted-${i}` : entry.number}
+                  className="flex shrink-0 items-center gap-2"
+                >
+                  {entry.restricted ? (
+                    <span className="text-base text-muted">
+                      <span aria-hidden="true">&hellip;</span>
+                      <span className="sr-only">
+                        <FormattedMessage
+                          id="contracts.relations.restricted"
+                          defaultMessage="Restricted contract"
+                        />
+                      </span>
+                    </span>
+                  ) : (
+                    <Link
+                      to={`/contracts/${entry.number}`}
+                      className="shrink-0 rounded-chip text-base text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+                    >
+                      {contractReference(intl, entry.number)}
+                    </Link>
+                  )}
+                  <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-subtle" />
+                </span>
+              ))}
               <FileText size={16} aria-hidden="true" className="shrink-0 text-muted" />
               <span className="shrink-0 text-base font-medium text-muted">{reference}</span>
               <h1 id="page-title" className="truncate text-lg font-semibold">
@@ -1308,6 +1385,10 @@ function ContractRecord() {
                 label: (
                   <FormattedMessage id="contracts.record.tab.keyDates" defaultMessage="Key dates" />
                 ),
+              },
+              {
+                to: `/contracts/${saved.number}/tasks`,
+                label: <FormattedMessage id="contracts.record.tab.tasks" defaultMessage="Tasks" />,
               },
             ]}
           />
@@ -1944,6 +2025,19 @@ function ContractRecord() {
                       holds nothing of its own: every mark on it is one
                       of the record's dates. */}
                   <TermTimelineCard contract={saved} />
+                  {/* The contract's relation surface (M17/2, CTR-015): the
+                      parent chain, the children, and the typed links this
+                      contract carries. Absent when the read failed — an
+                      empty state is a fact about the record, not a
+                      fallback for a read that did not happen. */}
+                  {relations !== null && (
+                    <RelatedContractsCard
+                      contractNumber={saved.number}
+                      contractIsConfidential={saved.isConfidential}
+                      relations={relations}
+                      editable={canEdit && !archived}
+                    />
+                  )}
                 </>
               )}
               {/* CTR-016's fields, in the card the C2 mock draws for
@@ -2037,6 +2131,23 @@ function ContractRecord() {
                   noticePeriodDays={saved.noticePeriodDays}
                   frozen={frozen}
                   onDeadlines={setDeadlines}
+                />
+              )}
+              {/* The record's task checklist (M17/1, CTR-017):
+                  lightweight items with a done flag, an optional
+                  assignee, and an optional due date. */}
+              {tab === "tasks" && (
+                <TasksCard
+                  contractNumber={saved.number}
+                  tasks={tasks}
+                  doneCount={taskDoneCount}
+                  totalCount={taskTotalCount}
+                  frozen={frozen}
+                  onTasksChange={(outcome) => {
+                    setTasks(outcome.tasks);
+                    setTaskDoneCount(outcome.doneCount);
+                    setTaskTotalCount(outcome.totalCount);
+                  }}
                 />
               )}
               {tab === "approvals" && (

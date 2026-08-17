@@ -115,6 +115,13 @@ The exception path — converting a mis-routed Request to the other kind, lossle
 Moving a Matter into a `closed`-category status. A signal, not a lock — the record stays writable [MTR-008]. The Contract equivalent is **Ending** [CTR-019].
 _Avoid_: completing, finishing, resolving
 
+**Ending**:
+Moving a Contract into a status whose stage is `ended`. A signal, not a lock — the record stays writable. An ended Contract drops out of the default list and the renewal-pending predicate, but its record page is untouched. Reopening is an ordinary status change that clears the signal [CTR-019].
+_Avoid_: closing (that is the Matter equivalent), terminating, expiring (those are status labels, not the lifecycle act)
+
+**`ended_at`**:
+The queryable summary of whether a Contract has ended: stamped on transition into the `ended` stage, cleared on leaving it. The activity log stays the source of truth for the transition history; this column is what the default list and the renewal-pending predicate filter on [CTR-019].
+
 **Archiving**:
 Soft delete, for mistakes and imports. Separate from Closing and Ending, and never a synonym for them [MTR-008].
 
@@ -138,6 +145,18 @@ The per-record narrative of what happened, inheriting the visibility tier of eac
 **Audit log**:
 The Administrator-only, append-only system-wide record, including security events the activity feed omits [DD-017].
 _Avoid_: using "audit log" and "activity feed" interchangeably — they are two surfaces over one table
+
+**Parent contract**:
+The single Contract one level above another in the `parent_id` hierarchy — MSA over SOW, original over substantial amendment. Arbitrarily deep, no cycles, and no inheritance: the parent's status, team, and confidentiality never flow to its children [CTR-015].
+_Avoid_: master contract, umbrella, wrapper
+
+**Contract link type**:
+The kind of typed directional link between two Contracts: `related` (symmetric), `renews` (directional — the linking Contract renews the other), or `amends` (directional — the linking Contract amends the other). One row per pair per type; each link is read from both directions [CTR-015].
+_Avoid_: relation type (use "link type" in prose), connection type
+
+**Restricted contract**:
+The server's answer when a relative on the relations surface is a Contract the viewer cannot reach. The response carries no number and no title — the placeholder is the server's decision, not the client's redaction [CTR-018].
+_Avoid_: hidden contract, redacted contract, inaccessible contract
 
 ### Configuration
 
@@ -220,6 +239,8 @@ _Avoid_: approval task, sign-off item, approval step, reviewer
 - A **Request** converts to exactly one **Matter** or one **Contract**, or is resolved or declined — never both [INT-007]
 - A **Status** maps to exactly one **Stage** (contracts) or **Category** (matters); the mapping is immutable once set
 - A **Matter** may have one parent **Matter**, arbitrarily deep, with no inheritance semantics [MTR-015]
+- A **Contract** may have one parent **Contract**, arbitrarily deep, with no inheritance semantics [CTR-015]
+- A **Contract** may hold typed links to other **Contracts** — `renews`, `amends`, or the symmetric `related` — each read from both directions, from the same single row [CTR-015]
 - A **Contract** holds many **Approval Requests**, each naming one approver; at most one of them is pending per approver [CTR-012]
 
 ## Example dialogue

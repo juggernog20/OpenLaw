@@ -967,7 +967,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The contract list, newest reference first: number, title, type, and status; archived contracts only with includeArchived=true. Member+ read every contract that is not confidential; a Contributor reads exactly the contracts they hold a contract_team row on, archived ones behind the same flag. A confidential contract is listed only for its named team, its Owner, and Administrators — silently absent for everyone else, so no count can reveal it */
+    /** The contract list: number, title, type, and status; newest reference first unless sort names a column, and unknown-valued rows always last (DD-019). Archived contracts only with includeArchived=true; ended contracts only with includeEnded=true (CTR-019). Member+ read every contract that is not confidential; a Contributor reads exactly the contracts they hold a contract_team row on, archived and ended ones behind the same flags. A confidential contract is listed only for its named team, its Owner, and Administrators — silently absent for everyone else, so no count can reveal it */
     get: operations["listContracts"];
     put?: never;
     /** Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward — except the Confidential flag (DD-014), which may be set here so a sensitive record is never visible to the wrong audience, even briefly. `renewalOf` routes a renewal into a new record (CTR-007's third and fourth vehicles, M16/5): the successor is born carrying its predecessor's business facts — our entity, the value, the term shape, and the counterparties — and linked to it, as a child by contracts.parent_id or as a standalone successor by a CTR-015 `renews` row. The team, the status, and the Confidential flag are **never** copied: CTR-015's no-inheritance stance, applied at birth. The title and the type are the body's, so whatever the person edited before pressing Create is what the record is born with. Appends the link's own activity action beside contract.created */
@@ -1287,6 +1287,130 @@ export interface paths {
     head?: never;
     /** Move a key date, rename it, or change its note (CTR-009). Every field is optional and only what is sent is read, so a surface that edits one of them sends one of them; a note is cleared by sending null. A request that changes nothing writes nothing and narrates nothing. Answers the record's whole deadline surface, because moving a date can change which one is next. Appends one key_date.edited entry naming only what moved, at the working-team tier (DD-017). A key date on a contract this viewer cannot reach answers 404, exactly as for one that does not exist; an archived contract takes no edit until it is restored */
     patch: operations["updateContractKeyDate"];
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/relations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The full relations graph for one contract (CTR-015): the parent chain root-first, the children, and the typed links in both directions. Each relative is either reachable — carrying its number, title, status name, and stage — or restricted, carrying only { restricted: true }. Access is inherited from the contract: a Contributor on the team reads the graph, and anyone who cannot reach the contract is answered 404 */
+    get: operations["getContractRelations"];
+    put?: never;
+    /** Link this contract to another with a chosen type — `related`, `renews`, or `amends` — through CTR-015's shared guarded path. Requires Member+ with reach on both ends. Narrates with `contract.relation_added` on the acted-from record only */
+    post: operations["addContractRelation"];
+    /** Unlink this contract from another — the removal sibling of addContractRelation. Requires Member+ with reach on both ends. Narrates with `contract.relation_removed` on the acted-from record only */
+    delete: operations["removeContractRelation"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/link-candidates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Contracts this viewer can reach that may be linked to the given contract — the mention-candidates precedent applied to relations (CTR-015, CTR-018). Found by number or title; the contract itself and archived contracts are excluded */
+    get: operations["listLinkCandidates"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/parent": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Put this contract under another — CTR-015's hierarchy. Requires Member+ with reach on both ends. Narrates with `contract.parent_set` on the acted-from record only */
+    post: operations["setContractParent"];
+    /** Take this contract out from under its parent — the removal sibling of setContractParent. Requires Member+ with reach on both the child and the parent. Narrates with `contract.parent_removed` on the acted-from record only */
+    delete: operations["removeContractParent"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/tasks": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One contract's task checklist (CTR-017): lightweight items with a done flag, an optional assignee, an optional due date, and a display order. Task due dates never appear in the deadline union or the next-deadline marker. Access is inherited from the contract: a Contributor on the team reads the checklist, and anyone who cannot reach the contract is answered 404 */
+    get: operations["listContractTasks"];
+    put?: never;
+    /** Add a task to a contract's checklist (CTR-017). A blank title is refused. The task starts not done, with the display order after the last existing task. Appends one task.added entry on the owning contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403. An archived contract takes no new task until it is restored */
+    post: operations["addContractTask"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/tasks/{taskId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Take a task off a contract's checklist (CTR-017). The row is deleted and the task.removed activity entry is the durable record of it, which is why that entry carries the title. A task on a contract this viewer cannot reach answers 404; an archived contract takes no removal until it is restored */
+    delete: operations["removeContractTask"];
+    options?: never;
+    head?: never;
+    /** Edit a task's title, assignee, or due date (CTR-017). Every field is optional and only what is sent is read. A request that changes nothing writes nothing and narrates nothing. Appends one task.edited entry naming only what moved, at the working-team tier (DD-017). A task on a contract this viewer cannot reach answers 404; an archived contract takes no edit until it is restored */
+    patch: operations["updateContractTask"];
+    trace?: never;
+  };
+  "/api/v1/tasks/{taskId}/toggle": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Toggle a task between done and not done (CTR-017). Completes an open task or reopens a done one. Appends one task.completed or task.reopened entry at the working-team tier (DD-017). A task on a contract this viewer cannot reach answers 404; an archived contract takes no toggle until it is restored */
+    post: operations["toggleContractTask"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/tasks/reorder": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Reorder a contract's task checklist (CTR-017). The body carries the full ordered list of task ids; every task on the contract must appear exactly once. Member+; an archived contract takes no reorder until it is restored */
+    put: operations["reorderContractTasks"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   "/api/v1/counterparties": {
@@ -2014,6 +2138,42 @@ export interface paths {
     options?: never;
     head?: never;
     patch?: never;
+    trace?: never;
+  };
+  "/api/v1/list-views": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Your saved views of one list (DD-019), ordered by name. A view is private: this answers only your own, and never reveals that anybody else has one. At most one carries isDefault, which is the view the list opens on; none doing so means the list opens on its built-in layout */
+    get: operations["listSavedViews"];
+    put?: never;
+    /** Save the list you are looking at as a named view (DD-019). The name must be one you are not already using on this list, compared case-insensitively — 409 if it is. Pass isDefault to make this the view the list opens on, which clears whichever view held that. Answers your whole view list, so the menu needs no second read */
+    post: operations["createSavedView"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/list-views/{viewId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Delete one of your saved views (DD-019). A hard delete: a view is a preference, not a record, so there is nothing to keep and no archive to restore from. Deleting the default leaves the surface with none, which opens the built-in layout. Somebody else's view id answers 404 */
+    delete: operations["deleteSavedView"];
+    options?: never;
+    head?: never;
+    /** Change one of your saved views (DD-019): overwrite its config with the list you are looking at, rename it, or make it the view the list opens on. Every field is optional and an omitted one is left alone. Somebody else's view id answers 404, the same as an id that was never issued — a view is private, and access is not advertised. isDefault false on the view that holds it leaves the surface with no default, which opens the built-in layout */
+    patch: operations["updateSavedView"];
     trace?: never;
   };
 }
@@ -5364,6 +5524,21 @@ export interface operations {
     parameters: {
       query?: {
         includeArchived?: "true" | "false";
+        includeEnded?: "true" | "false";
+        sort?:
+          | "number"
+          | "title"
+          | "type"
+          | "status"
+          | "owner"
+          | "counterparty"
+          | "risk"
+          | "priority"
+          | "effectiveDate"
+          | "expiryDate"
+          | "createdAt"
+          | "updatedAt";
+        dir?: "asc" | "desc";
         cursor?: string;
       };
       header?: never;
@@ -5427,6 +5602,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              endedAt: string | null;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -5528,6 +5704,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              endedAt: string | null;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -5716,6 +5893,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              endedAt: string | null;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -5894,6 +6072,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              endedAt: string | null;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -6070,6 +6249,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              endedAt: string | null;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -6291,6 +6471,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              endedAt: string | null;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -6384,6 +6565,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              endedAt: string | null;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -6477,6 +6659,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              endedAt: string | null;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -6569,6 +6752,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              endedAt: string | null;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -6655,6 +6839,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              endedAt: string | null;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -7430,6 +7615,803 @@ export interface operations {
               daysAway: number;
               isNext: boolean;
             }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getContractRelations: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            parentChain: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                }
+            )[];
+            children: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                }
+            )[];
+            links: {
+              /** @enum {string} */
+              relationType: "related" | "renews" | "amends";
+              /** @enum {string} */
+              direction: "outgoing" | "incoming";
+              contract:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    number: number;
+                    title: string;
+                    statusName: string;
+                    /** @enum {string} */
+                    stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                  };
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  addContractRelation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          relatedContractNumber: number;
+          /** @enum {string} */
+          relationType: "related" | "renews" | "amends";
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            parentChain: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                }
+            )[];
+            children: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                }
+            )[];
+            links: {
+              /** @enum {string} */
+              relationType: "related" | "renews" | "amends";
+              /** @enum {string} */
+              direction: "outgoing" | "incoming";
+              contract:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    number: number;
+                    title: string;
+                    statusName: string;
+                    /** @enum {string} */
+                    stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                  };
+            }[];
+          };
+        };
+      };
+      /** @description The link already exists, both ends are one contract, or the pair is already linked this way. An unnamed 409 is an archived record; print it. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type:
+              | "urn:openlaw:problem:contract-relation-exists"
+              | "urn:openlaw:problem:contract-self-link"
+              | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  removeContractRelation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          relatedContractNumber: number;
+          /** @enum {string} */
+          relationType: "related" | "renews" | "amends";
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            parentChain: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                }
+            )[];
+            children: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                }
+            )[];
+            links: {
+              /** @enum {string} */
+              relationType: "related" | "renews" | "amends";
+              /** @enum {string} */
+              direction: "outgoing" | "incoming";
+              contract:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    number: number;
+                    title: string;
+                    statusName: string;
+                    /** @enum {string} */
+                    stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                  };
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listLinkCandidates: {
+    parameters: {
+      query: {
+        q: string;
+      };
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            candidates: {
+              number: number;
+              title: string;
+              statusName: string;
+              /** @enum {string} */
+              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              isConfidential: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setContractParent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          parentContractNumber: number;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            parentChain: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                }
+            )[];
+            children: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                }
+            )[];
+            links: {
+              /** @enum {string} */
+              relationType: "related" | "renews" | "amends";
+              /** @enum {string} */
+              direction: "outgoing" | "incoming";
+              contract:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    number: number;
+                    title: string;
+                    statusName: string;
+                    /** @enum {string} */
+                    stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                  };
+            }[];
+          };
+        };
+      };
+      /** @description The parent would close a loop. An unnamed 409 is an archived record; print it. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type: "urn:openlaw:problem:contract-parent-cycle" | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  removeContractParent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            parentChain: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                }
+            )[];
+            children: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                }
+            )[];
+            links: {
+              /** @enum {string} */
+              relationType: "related" | "renews" | "amends";
+              /** @enum {string} */
+              direction: "outgoing" | "incoming";
+              contract:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    number: number;
+                    title: string;
+                    statusName: string;
+                    /** @enum {string} */
+                    stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                  };
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listContractTasks: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            tasks: {
+              id: string;
+              title: string;
+              isDone: boolean;
+              assigneeId: string | null;
+              dueDate: string | null;
+              displayOrder: number;
+            }[];
+            doneCount: number;
+            totalCount: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  addContractTask: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          title: string;
+          assigneeId?: string | null;
+          dueDate?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            tasks: {
+              id: string;
+              title: string;
+              isDone: boolean;
+              assigneeId: string | null;
+              dueDate: string | null;
+              displayOrder: number;
+            }[];
+            doneCount: number;
+            totalCount: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  removeContractTask: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        taskId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            tasks: {
+              id: string;
+              title: string;
+              isDone: boolean;
+              assigneeId: string | null;
+              dueDate: string | null;
+              displayOrder: number;
+            }[];
+            doneCount: number;
+            totalCount: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateContractTask: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        taskId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          title?: string;
+          assigneeId?: string | null;
+          dueDate?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            tasks: {
+              id: string;
+              title: string;
+              isDone: boolean;
+              assigneeId: string | null;
+              dueDate: string | null;
+              displayOrder: number;
+            }[];
+            doneCount: number;
+            totalCount: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  toggleContractTask: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        taskId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            tasks: {
+              id: string;
+              title: string;
+              isDone: boolean;
+              assigneeId: string | null;
+              dueDate: string | null;
+              displayOrder: number;
+            }[];
+            doneCount: number;
+            totalCount: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  reorderContractTasks: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          taskIds: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            tasks: {
+              id: string;
+              title: string;
+              isDone: boolean;
+              assigneeId: string | null;
+              dueDate: string | null;
+              displayOrder: number;
+            }[];
+            doneCount: number;
+            totalCount: number;
           };
         };
       };
@@ -10417,6 +11399,266 @@ export interface operations {
               archivedAt: string | null;
               inUseCount: number;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listSavedViews: {
+    parameters: {
+      query: {
+        surface: "contracts";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            views: {
+              id: string;
+              /** @enum {string} */
+              surface: "contracts";
+              name: string;
+              config: {
+                columns: {
+                  key: string;
+                  width: number | null;
+                }[];
+                flexKey?: string | null;
+                sort: {
+                  key: string;
+                  /** @enum {string} */
+                  dir: "asc" | "desc";
+                } | null;
+                filters: {
+                  [key: string]: boolean | string;
+                };
+              };
+              isDefault: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createSavedView: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          surface: "contracts";
+          name: string;
+          config: {
+            columns: {
+              key: string;
+              width: number | null;
+            }[];
+            flexKey?: string | null;
+            sort: {
+              key: string;
+              /** @enum {string} */
+              dir: "asc" | "desc";
+            } | null;
+            filters: {
+              [key: string]: boolean | string;
+            };
+          };
+          isDefault?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            views: {
+              id: string;
+              /** @enum {string} */
+              surface: "contracts";
+              name: string;
+              config: {
+                columns: {
+                  key: string;
+                  width: number | null;
+                }[];
+                flexKey?: string | null;
+                sort: {
+                  key: string;
+                  /** @enum {string} */
+                  dir: "asc" | "desc";
+                } | null;
+                filters: {
+                  [key: string]: boolean | string;
+                };
+              };
+              isDefault: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteSavedView: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        viewId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            views: {
+              id: string;
+              /** @enum {string} */
+              surface: "contracts";
+              name: string;
+              config: {
+                columns: {
+                  key: string;
+                  width: number | null;
+                }[];
+                flexKey?: string | null;
+                sort: {
+                  key: string;
+                  /** @enum {string} */
+                  dir: "asc" | "desc";
+                } | null;
+                filters: {
+                  [key: string]: boolean | string;
+                };
+              };
+              isDefault: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateSavedView: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        viewId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name?: string;
+          config?: {
+            columns: {
+              key: string;
+              width: number | null;
+            }[];
+            flexKey?: string | null;
+            sort: {
+              key: string;
+              /** @enum {string} */
+              dir: "asc" | "desc";
+            } | null;
+            filters: {
+              [key: string]: boolean | string;
+            };
+          };
+          isDefault?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            views: {
+              id: string;
+              /** @enum {string} */
+              surface: "contracts";
+              name: string;
+              config: {
+                columns: {
+                  key: string;
+                  width: number | null;
+                }[];
+                flexKey?: string | null;
+                sort: {
+                  key: string;
+                  /** @enum {string} */
+                  dir: "asc" | "desc";
+                } | null;
+                filters: {
+                  [key: string]: boolean | string;
+                };
+              };
+              isDefault: boolean;
+            }[];
           };
         };
       };

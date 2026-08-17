@@ -243,6 +243,14 @@ export const contracts = pgTable(
       .notNull()
       .defaultNow()
       .$onUpdate(() => new Date()),
+    /** CTR-019's end-of-life signal: set on transition into the `ended`
+     * stage, cleared on leaving it (reopen). The activity log stays the
+     * source of truth for the transition history; this column is the
+     * queryable summary. NULL on every non-ended contract and on every
+     * row that existed before the column did — no backfill, because a
+     * contract that has never been moved to an ended status has never
+     * ended. */
+    endedAt: timestamp("ended_at", { withTimezone: true }),
     /** Soft delete for mistakes and imports (CONTEXT.md: Archiving is
      * never a synonym for Ending, which is CTR-019's own column). */
     archivedAt: timestamp("archived_at", { withTimezone: true }),

@@ -36,6 +36,7 @@
   /* Borders */
   --border-default: #eae5dc;
   --border-muted: #efe9dd;
+  --border-strong: #d3c9b6; /* cream ramp one step past default */
   --border-on-inverted: #d8d0c0;
 
   /* Text */

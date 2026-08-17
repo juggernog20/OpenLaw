@@ -158,6 +158,7 @@ import {
   users,
   USER_ROLES,
   VALUE_CADENCES,
+  type AnyPgColumn,
   type Contract,
   type CustomFieldValue,
   type Executor,
@@ -193,11 +194,15 @@ import {
   CONTRACT_PARENT_CYCLE_PROBLEM_TYPE,
   CONTRACT_RELATION_EXISTS_PROBLEM_TYPE,
   CONTRACT_SELF_LINK_PROBLEM_TYPE,
+  CONTRACT_SORT_KEYS,
   RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE,
+  SORT_DIRECTIONS,
   SOFT_GATE_PROBLEM_TYPE,
   TERM_EXPIRY_ON_EVERGREEN_PROBLEM_TYPE,
   TERM_RENEWAL_PERIOD_PROBLEM_TYPE,
   type ActivityPayloadMap,
+  type ContractSortKey,
+  type SortDirection,
 } from "@openlaw/shared";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import { assertApprovalGate, type UnresolvedApproval } from "../../lib/soft-gate.js";
@@ -243,6 +248,31 @@ const RENEWAL_HISTORY_LIMIT = 50;
 
 /** A cursor is a contract id, and nothing longer is worth reading. */
 const CursorSchema = z.string().min(1).max(64);
+
+/** The sort the list was asked for, or null for its natural order. */
+interface SortRequest {
+  key: ContractSortKey;
+  dir: SortDirection;
+}
+
+/**
+ * DES-018's severity ramp as a number the database can order.
+ *
+ * `priority` and `risk` hold slugs, and ordering slugs sorts them
+ * critical, high, low, medium — an alphabet, not a ramp. The `case`
+ * restates the sequence DES-018 already fixed, so "sort by risk" answers
+ * what the word means. Built from `SEVERITY_LEVELS` rather than written
+ * out, so a level added to the ramp cannot be left out of the ordering.
+ *
+ * NULL stays NULL: risk unassessed is not low risk (CTR-005), and the
+ * ordering puts it with the other unknowns at the end.
+ */
+function severityRank(column: AnyPgColumn): SQL {
+  const arms = SEVERITY_LEVELS.map(
+    (level, index) => sql`when ${level} then ${sql.raw(String(index + 1))}`,
+  );
+  return sql`case ${column} ${sql.join(arms, sql` `)} end`;
+}
 
 /** Only a Member+ user can be the Owner: the Owner runs the contract,
  * and a read-only viewer cannot run one (CTR-004, DD-013). */
@@ -511,6 +541,9 @@ const ContractRowSchema = z.object({
    * receives this row already reaches it, and the flag is here to be
    * drawn (DES-009's marker and banner), never to be inferred from. */
   isConfidential: z.boolean(),
+  /** CTR-019's queryable summary: when this contract entered the ended
+   * stage. NULL on every non-ended contract; cleared on reopen. */
+  endedAt: z.iso.datetime().nullable(),
   archivedAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
@@ -789,6 +822,7 @@ function toRow(context: ContractContext) {
     description: row.description,
     customFields: row.customFields,
     isConfidential: row.isConfidential,
+    endedAt: row.endedAt?.toISOString() ?? null,
     archivedAt: row.archivedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -846,28 +880,139 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
   const teamScope = (user: AuthenticatedUser) => contractTeamScope(app.db, user);
 
   /**
+   * What each sortable column orders on (DD-019 clause 2).
+   *
+   * A closed registry rather than a column name off the wire: the same
+   * expression has to appear in the ORDER BY and inside the keyset
+   * boundary, and a sort the client could name freely would be a sort
+   * nothing indexes and an ordering the cursor cannot reproduce.
+   *
+   * Three of the expressions are not the column they are named after,
+   * and each departure earns a reader something:
+   *
+   * - **Text sorts fold case.** `lower(...)` on every name, so "acme"
+   *   and "Acme" land together instead of in two alphabets.
+   * - **Status orders by the pipeline, not the alphabet.** CTR-001 gives
+   *   every status a `display_order` an Administrator arranged, and that
+   *   arrangement is what "sort by status" means to somebody working a
+   *   pipeline. Alphabetical would file Draft after Awaiting approval.
+   * - **Risk and priority order by severity.** They are stored as slugs,
+   *   so ordering the text would read critical, high, low, medium —
+   *   DES-018's ramp put them in a sequence, and this reproduces it.
+   */
+  const SORTS: Record<ContractSortKey, { expr: SQL; joined: boolean }> = {
+    number: { expr: sql`${contracts.number}`, joined: false },
+    title: { expr: sql`lower(${contracts.title})`, joined: false },
+    type: { expr: sql`lower(${contractTypes.displayName})`, joined: true },
+    status: { expr: sql`${contractStatuses.displayOrder}`, joined: true },
+    owner: { expr: sql`lower(${users.displayName})`, joined: true },
+    counterparty: { expr: sql`lower(${counterparties.name})`, joined: true },
+    risk: { expr: severityRank(contracts.risk), joined: false },
+    priority: { expr: severityRank(contracts.priority), joined: false },
+    effectiveDate: { expr: sql`${contracts.effectiveDate}`, joined: false },
+    expiryDate: { expr: sql`${contracts.expiryDate}`, joined: false },
+    createdAt: { expr: sql`${contracts.createdAt}`, joined: false },
+    updatedAt: { expr: sql`${contracts.updatedAt}`, joined: false },
+  };
+
+  /**
+   * The order the page reads in.
+   *
+   * The reference number is the last term of every ordering, sorted or
+   * not. It is monotonic and unique, so it breaks every tie the sorted
+   * column leaves — and a keyset cursor over an ordering with unbroken
+   * ties skips and repeats rows, which is the failure this one line
+   * prevents.
+   *
+   * NULLs go last in **both** directions rather than following the
+   * direction. A contract with no expiry is not the earliest expiry
+   * ascending and the latest descending; it is the one the reader did
+   * not ask about, and it belongs under the ones they did.
+   */
+  function listOrder(sort: SortRequest | null): SQL[] {
+    if (!sort) return [sql`${contracts.number} desc`];
+    const { expr } = SORTS[sort.key];
+    return [
+      sql`${expr} ${sql.raw(sort.dir === "asc" ? "asc" : "desc")} nulls last`,
+      sql`${contracts.number} desc`,
+    ];
+  }
+
+  /**
    * The keyset boundary: every contract strictly further down the list
    * than one of them, in the order the list reads (CTR-024).
    *
-   * `number` is monotonic and unique, so the boundary needs no tie-break
-   * — which is the whole reason the cursor works on this table and would
-   * not on a table ordered by a timestamp alone.
+   * Unsorted, `number` is monotonic and unique and the boundary needs no
+   * tie-break — the whole reason the cursor works on this table and
+   * would not on a table ordered by a timestamp alone.
+   *
+   * Sorted, the position is a **pair**: the sorted column's value, then
+   * the reference. So "further down" becomes three ways of being after
+   * the boundary row — a value that sorts later, a value that is NULL
+   * when the boundary's is not (NULLs last), or the same value with a
+   * lower reference. The `case` splits on whether the boundary row's own
+   * value is NULL, because a boundary already in the trailing NULL group
+   * is only followed by more of that group.
    *
    * The boundary's own position is read from the table rather than taken
    * from the client, so nobody can page from a reference that was never
-   * written. It is read **under this viewer's own scope**: a cursor
-   * naming a contract they cannot reach resolves to NULL, the comparison
-   * answers nothing, and they get an empty page — the same nothing the
-   * record itself answers them (DD-014). A boundary that resolved
-   * outside the scope would turn the cursor into an oracle for the
-   * numbers of contracts the viewer is not allowed to know exist.
+   * written, and no sort value ever rides a URL. It is read **under this
+   * viewer's own scope**: a cursor naming a contract they cannot reach
+   * resolves to NULL, every comparison answers nothing, and they get an
+   * empty page — the same nothing the record itself answers them
+   * (DD-014). A boundary that resolved outside the scope would turn the
+   * cursor into an oracle for the numbers of contracts the viewer is not
+   * allowed to know exist.
    */
-  function furtherDownThan(cursor: string, user: AuthenticatedUser): SQL {
+  function furtherDownThan(cursor: string, user: AuthenticatedUser, sort: SortRequest | null): SQL {
     const scope = teamScope(user);
-    return sql`${contracts.number} < (
+    /** The boundary row's reference. Needs no join: the reference and
+     * the scope predicate both live on `contracts`. */
+    const at = sql`(
       select ${contracts.number} from ${contracts}
       where ${and(eq(contracts.id, cursor), scope)}
     )`;
+    if (!sort) return sql`${contracts.number} < ${at}`;
+
+    const { expr, joined } = SORTS[sort.key];
+    /**
+     * The boundary row's sorted value, through the same joins the page
+     * reads so the value is the one the ordering will compare against.
+     * `limit 1` is belt to the braces of the primary-counterparty
+     * uniqueness rule: a second primary row would make this a set, and a
+     * set here is an error rather than a boundary.
+     */
+    const value = joined
+      ? sql`(
+          select ${expr} from ${contracts}
+            inner join ${contractTypes} on ${eq(contracts.contractTypeId, contractTypes.id)}
+            inner join ${contractStatuses} on ${eq(contracts.statusId, contractStatuses.id)}
+            left join ${users} on ${eq(contracts.managerId, users.id)}
+            left join ${contractCounterparties} on ${and(
+              eq(contractCounterparties.contractId, contracts.id),
+              eq(contractCounterparties.isPrimary, true),
+            )}
+            left join ${counterparties} on ${eq(
+              contractCounterparties.counterpartyId,
+              counterparties.id,
+            )}
+          where ${and(eq(contracts.id, cursor), scope)}
+          limit 1
+        )`
+      : sql`(
+          select ${expr} from ${contracts}
+          where ${and(eq(contracts.id, cursor), scope)}
+        )`;
+    const later = sql.raw(sort.dir === "asc" ? ">" : "<");
+    return sql`case
+      when ${value} is null
+        then (${expr} is null and ${contracts.number} < ${at})
+      else (
+        ${expr} is null
+        or ${expr} ${later} ${value}
+        or (${expr} = ${value} and ${contracts.number} < ${at})
+      )
+    end`;
   }
 
   /** The working group on one contract, alphabetical by name so the
@@ -1407,18 +1552,38 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "listContracts",
         summary:
-          "The contract list, newest reference first: number, title, " +
-          "type, and status; archived contracts only with " +
-          "includeArchived=true. Member+ read every contract that is not " +
-          "confidential; a Contributor reads exactly the contracts they " +
-          "hold a contract_team row on, archived ones behind the same " +
-          "flag. A confidential contract is listed only for its named " +
-          "team, its Owner, and Administrators — silently absent for " +
+          "The contract list: number, title, type, and status; " +
+          "newest reference first unless sort names a column, and " +
+          "unknown-valued rows always last (DD-019). Archived " +
+          "contracts only with includeArchived=true; ended contracts " +
+          "only with includeEnded=true (CTR-019). Member+ read every " +
+          "contract that is not confidential; a Contributor reads " +
+          "exactly the contracts they hold a contract_team row on, " +
+          "archived and ended ones behind the same flags. A " +
+          "confidential contract is listed only for its named team, " +
+          "its Owner, and Administrators — silently absent for " +
           "everyone else, so no count can reveal it",
         tags: ["contracts"],
         querystring: z.object({
           includeArchived: z.enum(["true", "false"]).optional(),
-          /** The previous page's `nextCursor`. Omit for the first page. */
+          /** CTR-019: bring ended contracts back into the list. The
+           * default list shows all non-ended stages, because ended is
+           * a signal that the deal is done, not a lock. */
+          includeEnded: z.enum(["true", "false"]).optional(),
+          /**
+           * Which column to order on (DD-019 clause 2). Omit for the
+           * list's natural order, newest reference first. A closed set:
+           * the reference breaks every tie, so the cursor can reproduce
+           * the ordering exactly on the next page.
+           */
+          sort: z.enum(CONTRACT_SORT_KEYS).optional(),
+          /** Which way the sorted column runs; ignored without `sort`,
+           * and ascending when `sort` is given without it. */
+          dir: z.enum(SORT_DIRECTIONS).optional(),
+          /** The previous page's `nextCursor`. Omit for the first page.
+           * Carry the same `sort` and `dir` with it: a cursor is a
+           * position in one ordering, and a page read under a different
+           * one is a page of a different list. */
           cursor: CursorSchema.optional(),
         }),
         response: {
@@ -1433,10 +1598,24 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
+      /** Ascending is what "sort by expiry" means without a direction:
+       * the soonest first is the answer somebody asking for a column
+       * came for. `dir` without `sort` orders nothing, because there is
+       * no column for it to run along. */
+      const sort: SortRequest | null =
+        request.query.sort === undefined
+          ? null
+          : { key: request.query.sort, dir: request.query.dir ?? "asc" };
       const rows = await selectContracts(app.db)
         .where(
           and(
             request.query.includeArchived === "true" ? undefined : isNull(contracts.archivedAt),
+            // CTR-019: the default list hides ended contracts the same
+            // way it hides archived ones — a dead deal drops out of the
+            // working surfaces. The filter is on the column rather than
+            // on the joined stage, because the column is the queryable
+            // summary the stage transition stamps.
+            request.query.includeEnded === "true" ? undefined : isNull(contracts.endedAt),
             // A Contributor's list is the contracts they are on. An
             // empty answer is a real state — the list's own empty
             // state, never a refusal.
@@ -1450,12 +1629,13 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             teamScope(request.user),
             request.query.cursor === undefined
               ? undefined
-              : furtherDownThan(request.query.cursor, request.user),
+              : furtherDownThan(request.query.cursor, request.user, sort),
           ),
         )
-        // The reference is monotonic, so newest-first is the number
-        // descending — no second sort key can tie.
-        .orderBy(desc(contracts.number))
+        // The sorted column, then the reference. Unsorted that is the
+        // reference alone: it is monotonic, so newest-first can tie with
+        // nothing.
+        .orderBy(...listOrder(sort))
         // One past the page, which is how the answer knows whether there
         // is more without counting anything.
         .limit(PAGE_SIZE + 1);
@@ -2408,6 +2588,16 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           };
           statusName = status.displayName;
           stage = status.stage;
+          // CTR-019's side effect: `ended_at` stamped on entering the
+          // ended stage, cleared on leaving it. The column is the
+          // queryable summary the default list and the renewal-pending
+          // predicate read; the activity log is the source of truth for
+          // the transition history.
+          if (status.stage === "ended" && current.stage !== "ended") {
+            patch.endedAt = new Date();
+          } else if (status.stage !== "ended" && current.stage === "ended") {
+            patch.endedAt = null;
+          }
         }
 
         // Nothing changed: answer with the row and write no misleading

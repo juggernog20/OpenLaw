@@ -22,6 +22,18 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root"
 
+# A second loop beside a running one is the confusing failure: the
+# containers restart, then the api dies on EADDRINUSE while the web
+# client of the *first* loop keeps answering on 5173. Stop here instead,
+# and say which loop is already up.
+for port in 3000 5173; do
+  if ss -ltn "sport = :$port" 2>/dev/null | grep -q LISTEN; then
+    echo "error: port $port is already in use — a dev loop is probably already running." >&2
+    echo "       Browse http://localhost:5173, or Ctrl-C that loop before starting this one." >&2
+    exit 1
+  fi
+done
+
 compose=(docker compose -f compose.yml -f compose.dev.yml -f compose.hostdev.yml)
 
 echo "==> starting postgres, doc-engine, mailpit"

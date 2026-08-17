@@ -22,6 +22,7 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { asc, counterparties, ilike, isNull, and, sql } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
+import { escapeLikePattern } from "../../lib/like.js";
 import { problemResponse } from "../../lib/problem.js";
 
 /** The same Member+ floor the contract record stands on. */
@@ -42,16 +43,6 @@ const CounterpartyOptionSchema = z.object({
   name: z.string(),
   jurisdiction: z.string().nullable(),
 });
-
-/**
- * `%` and `_` are LIKE wildcards, so a name typed with one in it must
- * be matched literally — otherwise searching for "50%" offers every
- * counterparty we hold. The backslash is escaped first, because it is
- * the escape character doing the escaping.
- */
-function escapeLikePattern(term: string): string {
-  return term.replace(/[\\%_]/g, "\\$&");
-}
 
 export const counterpartiesRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(

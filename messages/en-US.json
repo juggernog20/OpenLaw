@@ -26,6 +26,9 @@
   "action.reload": {
     "defaultMessage": "Reload"
   },
+  "action.rename": {
+    "defaultMessage": "Rename"
+  },
   "action.save": {
     "defaultMessage": "Save"
   },
@@ -92,6 +95,9 @@
   "activity.contract.created": {
     "defaultMessage": "{actor} created this contract"
   },
+  "activity.contract.parentRemoved": {
+    "defaultMessage": "{actor} took this contract out from under {parent}"
+  },
   "activity.contract.parentSet": {
     "defaultMessage": "{actor} put this contract under {parent}"
   },
@@ -103,6 +109,9 @@
   },
   "activity.contract.relationAdded": {
     "defaultMessage": "{actor} linked this contract — {relationType, select, renews {it renews {related}} amends {it amends {related}} other {related to {related}}}"
+  },
+  "activity.contract.relationRemoved": {
+    "defaultMessage": "{actor} unlinked this contract — {relationType, select, renews {it no longer renews {related}} amends {it no longer amends {related}} other {no longer related to {related}}}"
   },
   "activity.contract.renewalConfirmed": {
     "defaultMessage": "{actor} confirmed the renewal — the term moved from {from} to {to}"
@@ -277,6 +286,24 @@
   },
   "activity.ssoProvider.updated": {
     "defaultMessage": "{actor} changed the identity provider {provider}"
+  },
+  "activity.task.added": {
+    "defaultMessage": "{actor} added the task {title}"
+  },
+  "activity.task.completed": {
+    "defaultMessage": "{actor} completed the task {title}"
+  },
+  "activity.task.edited": {
+    "defaultMessage": "{actor} changed the task {title}"
+  },
+  "activity.task.removed": {
+    "defaultMessage": "{actor} removed the task {title}"
+  },
+  "activity.task.reopened": {
+    "defaultMessage": "{actor} reopened the task {title}"
+  },
+  "activity.task.untitled": {
+    "defaultMessage": "(untitled)"
   },
   "activity.taxonomy.archived": {
     "defaultMessage": "{actor} archived the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
@@ -908,20 +935,56 @@
   "contracts.column.counterparty": {
     "defaultMessage": "Counterparty"
   },
+  "contracts.column.createdAt": {
+    "defaultMessage": "Created"
+  },
+  "contracts.column.daysRemaining": {
+    "defaultMessage": "Term left"
+  },
+  "contracts.column.effectiveDate": {
+    "defaultMessage": "Starts"
+  },
+  "contracts.column.entity": {
+    "defaultMessage": "Our entity"
+  },
+  "contracts.column.expiryDate": {
+    "defaultMessage": "Expires"
+  },
+  "contracts.column.noEnd": {
+    "defaultMessage": "No end"
+  },
+  "contracts.column.none": {
+    "defaultMessage": "—"
+  },
+  "contracts.column.noticeDeadline": {
+    "defaultMessage": "Notice by"
+  },
   "contracts.column.owner": {
     "defaultMessage": "Owner"
+  },
+  "contracts.column.priority": {
+    "defaultMessage": "Priority"
   },
   "contracts.column.reference": {
     "defaultMessage": "Reference"
   },
+  "contracts.column.risk": {
+    "defaultMessage": "Risk"
+  },
   "contracts.column.status": {
     "defaultMessage": "Status"
+  },
+  "contracts.column.termType": {
+    "defaultMessage": "Term"
   },
   "contracts.column.title": {
     "defaultMessage": "Title"
   },
   "contracts.column.type": {
     "defaultMessage": "Type"
+  },
+  "contracts.column.updatedAt": {
+    "defaultMessage": "Updated"
   },
   "contracts.column.value": {
     "defaultMessage": "Value"
@@ -1172,17 +1235,104 @@
   "contracts.record.tab.overview": {
     "defaultMessage": "Overview"
   },
+  "contracts.record.tab.tasks": {
+    "defaultMessage": "Tasks"
+  },
   "contracts.reference": {
     "defaultMessage": "C-{number}"
   },
-  "renewal.banner": {
-    "defaultMessage": "Renewal date passed — pending confirmation. The term does not advance until a human confirms."
+  "contracts.relations.addLink": {
+    "defaultMessage": "Add link"
   },
-  "renewal.bannerRegion": {
-    "defaultMessage": "Renewal pending confirmation"
+  "contracts.relations.addParent": {
+    "defaultMessage": "Set parent"
   },
-  "renewal.review": {
-    "defaultMessage": "Review renewal"
+  "contracts.relations.amendedByLabel": {
+    "defaultMessage": "Amended by"
+  },
+  "contracts.relations.amendsLabel": {
+    "defaultMessage": "Amends"
+  },
+  "contracts.relations.children": {
+    "defaultMessage": "Children"
+  },
+  "contracts.relations.clearSelection": {
+    "defaultMessage": "Clear the picked contract"
+  },
+  "contracts.relations.cycleError": {
+    "defaultMessage": "That contract already sits under this one. Pick another parent."
+  },
+  "contracts.relations.dialogTitle": {
+    "defaultMessage": "Link contract"
+  },
+  "contracts.relations.duplicateError": {
+    "defaultMessage": "These two contracts are already linked that way."
+  },
+  "contracts.relations.empty": {
+    "defaultMessage": "No related contracts."
+  },
+  "contracts.relations.linkError": {
+    "defaultMessage": "Could not link these contracts."
+  },
+  "contracts.relations.nudge.accept": {
+    "defaultMessage": "Flag as confidential"
+  },
+  "contracts.relations.nudge.body": {
+    "defaultMessage": "{reference} is confidential but {otherReference} is not. Flag {otherReference} as confidential too?"
+  },
+  "contracts.relations.nudge.dismiss": {
+    "defaultMessage": "No, leave it open"
+  },
+  "contracts.relations.nudge.error": {
+    "defaultMessage": "Could not flag {reference} as confidential."
+  },
+  "contracts.relations.nudge.title": {
+    "defaultMessage": "Flag as confidential?"
+  },
+  "contracts.relations.parent": {
+    "defaultMessage": "Parent"
+  },
+  "contracts.relations.parentDialogTitle": {
+    "defaultMessage": "Set parent"
+  },
+  "contracts.relations.parentError": {
+    "defaultMessage": "Could not set the parent."
+  },
+  "contracts.relations.pickerPlaceholder": {
+    "defaultMessage": "Search by number or title…"
+  },
+  "contracts.relations.relatedLabel": {
+    "defaultMessage": "Related"
+  },
+  "contracts.relations.removeLink": {
+    "defaultMessage": "Remove link"
+  },
+  "contracts.relations.removeParent": {
+    "defaultMessage": "Remove parent"
+  },
+  "contracts.relations.renewedByLabel": {
+    "defaultMessage": "Renewed by"
+  },
+  "contracts.relations.renewsLabel": {
+    "defaultMessage": "Renews"
+  },
+  "contracts.relations.restricted": {
+    "defaultMessage": "Restricted contract"
+  },
+  "contracts.relations.section": {
+    "defaultMessage": "Related contracts"
+  },
+  "contracts.relations.selfLinkError": {
+    "defaultMessage": "A contract cannot be linked to itself."
+  },
+  "contracts.relations.typeLabel": {
+    "defaultMessage": "Link type"
+  },
+  "contracts.relations.unlinkError": {
+    "defaultMessage": "Could not unlink these contracts."
+  },
+  "contracts.relations.unparentError": {
+    "defaultMessage": "Could not remove the parent."
   },
   "contracts.restoreError": {
     "defaultMessage": "{reference} could not be restored."
@@ -1213,6 +1363,9 @@
   },
   "contracts.showArchived": {
     "defaultMessage": "Show archived"
+  },
+  "contracts.showEnded": {
+    "defaultMessage": "Show ended"
   },
   "contracts.softGate.error": {
     "defaultMessage": "The status could not be changed."
@@ -2102,6 +2255,12 @@
   "renewal.action.successor": {
     "defaultMessage": "Open the successor"
   },
+  "renewal.banner": {
+    "defaultMessage": "Renewal date passed — pending confirmation. The term does not advance until a human confirms."
+  },
+  "renewal.bannerRegion": {
+    "defaultMessage": "Renewal pending confirmation"
+  },
   "renewal.block": {
     "defaultMessage": "Renewals"
   },
@@ -2152,6 +2311,9 @@
   },
   "renewal.renew": {
     "defaultMessage": "Renew"
+  },
+  "renewal.review": {
+    "defaultMessage": "Review renewal"
   },
   "renewal.row.advancedFrom": {
     "defaultMessage": "From {date}"
@@ -3416,6 +3578,78 @@
   "signing.voidTitle": {
     "defaultMessage": "Void envelope"
   },
+  "table.columns": {
+    "defaultMessage": "Columns"
+  },
+  "table.fillWidth": {
+    "defaultMessage": "Fill the width"
+  },
+  "table.fillsWidth": {
+    "defaultMessage": "Fills the remaining width"
+  },
+  "table.moveColumnDown": {
+    "defaultMessage": "Move {column} later"
+  },
+  "table.moveColumnUp": {
+    "defaultMessage": "Move {column} earlier"
+  },
+  "table.noMatchingRows": {
+    "defaultMessage": "No rows match the current filters."
+  },
+  "table.resetColumns": {
+    "defaultMessage": "Reset columns"
+  },
+  "table.resizeColumn": {
+    "defaultMessage": "Width of the {column} column"
+  },
+  "tasks.actionsFor": {
+    "defaultMessage": "Actions for {title}"
+  },
+  "tasks.add": {
+    "defaultMessage": "Add task"
+  },
+  "tasks.addTitle": {
+    "defaultMessage": "Add a task"
+  },
+  "tasks.count.done": {
+    "defaultMessage": "{done} of {total} done"
+  },
+  "tasks.countLabel": {
+    "defaultMessage": "{count, plural, one {# task} other {# tasks}}"
+  },
+  "tasks.dueDate": {
+    "defaultMessage": "Due {date}"
+  },
+  "tasks.edit": {
+    "defaultMessage": "Edit task"
+  },
+  "tasks.editTitle": {
+    "defaultMessage": "Edit task"
+  },
+  "tasks.empty": {
+    "defaultMessage": "No tasks on this contract yet."
+  },
+  "tasks.field.dueDate": {
+    "defaultMessage": "Due date (optional)"
+  },
+  "tasks.field.title": {
+    "defaultMessage": "Title"
+  },
+  "tasks.needTitle": {
+    "defaultMessage": "Name what needs doing."
+  },
+  "tasks.remove": {
+    "defaultMessage": "Remove task"
+  },
+  "tasks.section": {
+    "defaultMessage": "Tasks"
+  },
+  "tasks.toggleLabel": {
+    "defaultMessage": "{isDone, select, true {Reopen task: {title}} other {Complete task: {title}}}"
+  },
+  "tasks.writeFailed": {
+    "defaultMessage": "The change could not be saved. Try again."
+  },
   "theme.dark": {
     "defaultMessage": "Dark"
   },
@@ -3436,6 +3670,57 @@
   },
   "timezone.searchPlaceholder": {
     "defaultMessage": "Search timezones"
+  },
+  "views.builtIn": {
+    "defaultMessage": "Default view"
+  },
+  "views.copyOf": {
+    "defaultMessage": "{name} copy"
+  },
+  "views.defaultMarker": {
+    "defaultMessage": "Opens here"
+  },
+  "views.delete": {
+    "defaultMessage": "Delete…"
+  },
+  "views.delete.body": {
+    "defaultMessage": "{name} is removed. The contracts in it are not touched."
+  },
+  "views.delete.title": {
+    "defaultMessage": "Delete this view?"
+  },
+  "views.discard": {
+    "defaultMessage": "Discard unsaved changes"
+  },
+  "views.error": {
+    "defaultMessage": "The view could not be saved. Try again."
+  },
+  "views.label": {
+    "defaultMessage": "Views"
+  },
+  "views.modified": {
+    "defaultMessage": "Modified"
+  },
+  "views.name": {
+    "defaultMessage": "Name"
+  },
+  "views.rename": {
+    "defaultMessage": "Rename…"
+  },
+  "views.rename.title": {
+    "defaultMessage": "Rename this view"
+  },
+  "views.save": {
+    "defaultMessage": "Save"
+  },
+  "views.saveAs": {
+    "defaultMessage": "Save as…"
+  },
+  "views.saveAs.title": {
+    "defaultMessage": "Save this view"
+  },
+  "views.setDefault": {
+    "defaultMessage": "Set as default"
   },
   "welcome.auth.builtIn": {
     "defaultMessage": "Built-in sign-in"

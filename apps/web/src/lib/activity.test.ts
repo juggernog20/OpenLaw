@@ -228,6 +228,17 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     date: "2027-04-01",
   },
 
+  // ---- The record's tasks (CTR-017) ----
+  "task.added": { taskId: "t-1", title: "Draft the NDA" },
+  "task.edited": {
+    taskId: "t-1",
+    title: "Draft the NDA",
+    changed: { dueDate: { from: null, to: "2027-06-01" } },
+  },
+  "task.completed": { taskId: "t-1", title: "Draft the NDA" },
+  "task.reopened": { taskId: "t-1", title: "Draft the NDA" },
+  "task.removed": { taskId: "t-1", title: "Draft the NDA" },
+
   // ---- The Entities registry ----
   "entity.created": { legalName: "Helix Labs GmbH", entityType: "GmbH", status: "active" },
   "entity.updated": {
@@ -322,6 +333,19 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     relationType: "renews",
     relatedNumber: 12,
     relatedTitle: "Helix master services agreement",
+  },
+  "contract.relation_removed": {
+    number: 41,
+    title: "Helix supply agreement",
+    relationType: "renews",
+    relatedNumber: 12,
+    relatedTitle: "Helix master services agreement",
+  },
+  "contract.parent_removed": {
+    number: 41,
+    title: "Helix supply agreement",
+    parentNumber: 12,
+    parentTitle: "Helix master services agreement",
   },
   "contract.confidentiality_set": { number: 41, title: "Helix supply agreement" },
   "contract.confidentiality_cleared": { number: 41, title: "Helix supply agreement" },

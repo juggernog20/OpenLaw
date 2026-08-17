@@ -100,6 +100,8 @@ function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
     customFields: {},
     // Open by default; the flag is opt-in, per record (DD-014).
     isConfidential: false,
+    // Never moved to an ended status (CTR-019).
+    endedAt: null,
     archivedAt: null,
     createdAt: "2026-08-01T00:00:00.000Z",
     updatedAt: "2026-08-01T00:00:00.000Z",
@@ -110,7 +112,11 @@ function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
 /** The list loader's two reads plus the mutations under test. The list
  * is stateful: creating adds a row, and the archived read answers with
  * the archived rows appended. */
-function listApi(live: Record<string, unknown>[], archived: Record<string, unknown>[] = []) {
+function listApi(
+  live: Record<string, unknown>[],
+  archived: Record<string, unknown>[] = [],
+  ended: Record<string, unknown>[] = [],
+) {
   const rows = [...live];
   const creates: unknown[] = [];
   const restores: string[] = [];
@@ -124,8 +130,12 @@ function listApi(live: Record<string, unknown>[], archived: Record<string, unkno
       return json(200, { entities: [] });
     }
     if (call.url.pathname === "/api/v1/contracts" && call.method === "GET") {
-      const all = call.url.searchParams.get("includeArchived") === "true";
-      return json(200, { contracts: all ? [...rows, ...archived] : rows, nextCursor: null });
+      const withArchived = call.url.searchParams.get("includeArchived") === "true";
+      const withEnded = call.url.searchParams.get("includeEnded") === "true";
+      return json(200, {
+        contracts: [...rows, ...(withEnded ? ended : []), ...(withArchived ? archived : [])],
+        nextCursor: null,
+      });
     }
     if (call.url.pathname === "/api/v1/contracts" && call.method === "POST") {
       creates.push(call.body);
@@ -403,6 +413,40 @@ describe("the /contracts destination", () => {
     expect(
       within(screen.getByRole("row", { name: /Old pilot/ })).queryByText("Archived"),
     ).toBeNull();
+  });
+
+  it("reveals ended contracts behind the Show ended toggle (CTR-019)", async () => {
+    const api = listApi(
+      [contractRow()],
+      [],
+      [
+        contractRow({
+          id: "c3",
+          number: 9,
+          title: "Expired supply deal",
+          statusId: "s-expired",
+          statusName: "Expired",
+          stage: "ended",
+          endedAt: "2026-08-12T00:00:00Z",
+        }),
+      ],
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts");
+    const user = userEvent.setup();
+
+    // The default list hides the dead deal (CTR-019).
+    expect(await screen.findByText("C-42")).toBeInTheDocument();
+    expect(screen.queryByText("C-9")).not.toBeInTheDocument();
+
+    // The toggle re-reads with includeEnded and the deal appears.
+    await user.click(screen.getByRole("switch", { name: "Show ended" }));
+    expect(await screen.findByText("C-9")).toBeInTheDocument();
+
+    // And back: the toggle off re-reads the default list.
+    await user.click(screen.getByRole("switch", { name: "Show ended" }));
+    await waitFor(() => expect(screen.queryByText("C-9")).not.toBeInTheDocument());
+    expect(screen.getByText("C-42")).toBeInTheDocument();
   });
 
   it("reports a failed archived re-read instead of showing a stale list", async () => {
