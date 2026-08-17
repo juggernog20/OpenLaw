@@ -64,6 +64,7 @@ import {
   setContractParent,
   unlinkContracts,
 } from "../../lib/contract-relations.js";
+import { escapeLikePattern } from "../../lib/like.js";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 
 /** The contract read floor (CTR-021): a Contributor on the team reads the
@@ -152,6 +153,107 @@ function toRelative(
   };
 }
 
+/**
+ * The full relations graph for one contract, in the shape the routes
+ * answer with. The GET reads it, and every write re-reads it after the
+ * transaction commits — one builder, so the answer after a write cannot
+ * drift from the answer a plain read gives.
+ */
+async function buildRelationsEnvelope(
+  db: Executor,
+  user: AuthenticatedUser,
+  contractId: string,
+): Promise<z.infer<typeof RelationsEnvelope>> {
+  // -- 1. Parent chain: walk up parentId --------------------------
+
+  const parentIds: string[] = [];
+  let currentId = contractId;
+
+  // Walk up. The depth is bounded by the cycle check the write path
+  // enforces, and by the practical reality that nobody nests twenty
+  // contracts. A guard at 100 stops a corrupted row from looping
+  // forever.
+  for (let depth = 0; depth < 100; depth++) {
+    const [row] = await db
+      .select({ id: contracts.id, parentId: contracts.parentId })
+      .from(contracts)
+      .where(eq(contracts.id, currentId))
+      .limit(1);
+
+    if (!row?.parentId) break;
+    parentIds.push(row.parentId);
+    currentId = row.parentId;
+  }
+
+  // Root-first: the walk collected leaf-to-root, so reverse it.
+  parentIds.reverse();
+
+  // -- 2. Children ------------------------------------------------
+
+  const childRows = await db
+    .select({ id: contracts.id })
+    .from(contracts)
+    .where(and(eq(contracts.parentId, contractId), isNull(contracts.archivedAt)))
+    // By number, so two reads of one record draw one list. A query
+    // with no ORDER BY answers in whatever order the planner walked
+    // the rows, and a list that reshuffles between loads reads as a
+    // change nobody made.
+    .orderBy(asc(contracts.number));
+
+  const childIds = childRows.map((row) => row.id);
+
+  // -- 3. Links ---------------------------------------------------
+
+  const linkRows = await db
+    .select({
+      fromContractId: contractRelations.fromContractId,
+      toContractId: contractRelations.toContractId,
+      relationType: contractRelations.relationType,
+    })
+    .from(contractRelations)
+    .where(
+      or(
+        eq(contractRelations.fromContractId, contractId),
+        eq(contractRelations.toContractId, contractId),
+      ),
+    )
+    // Oldest first, the order the links were made in — deterministic
+    // for the same reason the children are.
+    .orderBy(asc(contractRelations.createdAt), asc(contractRelations.relationType));
+
+  const linkedIds = linkRows.map((row) =>
+    row.fromContractId === contractId ? row.toContractId : row.fromContractId,
+  );
+
+  // -- 4. Reach check in bulk -------------------------------------
+
+  const allIds = [...new Set([...parentIds, ...childIds, ...linkedIds])];
+  const reachable = await reachableRelatives(db, user, allIds);
+
+  // -- 5. Assemble the response -----------------------------------
+
+  const parentChain = parentIds.map((id) => toRelative(reachable, id));
+
+  const children = childIds.map((id) => toRelative(reachable, id));
+
+  const links = linkRows.map((row) => {
+    const isOutgoing = row.fromContractId === contractId;
+    const otherId = isOutgoing ? row.toContractId : row.fromContractId;
+    // `related` is symmetric — one row says it, read from either
+    // end — so direction is always "outgoing" for it.
+    return {
+      relationType: row.relationType,
+      direction:
+        row.relationType === "related" || isOutgoing
+          ? ("outgoing" as const)
+          : ("incoming" as const),
+      contract: toRelative(reachable, otherId),
+    };
+  });
+
+  return { parentChain, children, links };
+}
+
 export const contractRelationsRoutes: FastifyPluginAsyncZod = async (app) => {
   // ------------------------------------------------------------------
   // GET /contracts/:number/relations — the full relations graph
@@ -180,95 +282,7 @@ export const contractRelationsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const contract = await reachedContract(app.db, request.user, request.params.number);
       if (!contract) throw httpError(404, NO_CONTRACT);
-
-      // -- 1. Parent chain: walk up parentId --------------------------
-
-      const parentIds: string[] = [];
-      let currentId = contract.id;
-
-      // Walk up. The depth is bounded by the cycle check the write path
-      // enforces, and by the practical reality that nobody nests twenty
-      // contracts. A guard at 100 stops a corrupted row from looping
-      // forever.
-      for (let depth = 0; depth < 100; depth++) {
-        const [row] = await app.db
-          .select({ id: contracts.id, parentId: contracts.parentId })
-          .from(contracts)
-          .where(eq(contracts.id, currentId))
-          .limit(1);
-
-        if (!row?.parentId) break;
-        parentIds.push(row.parentId);
-        currentId = row.parentId;
-      }
-
-      // Root-first: the walk collected leaf-to-root, so reverse it.
-      parentIds.reverse();
-
-      // -- 2. Children ------------------------------------------------
-
-      const childRows = await app.db
-        .select({ id: contracts.id })
-        .from(contracts)
-        .where(and(eq(contracts.parentId, contract.id), isNull(contracts.archivedAt)))
-        // By number, so two reads of one record draw one list. A query
-        // with no ORDER BY answers in whatever order the planner walked
-        // the rows, and a list that reshuffles between loads reads as a
-        // change nobody made.
-        .orderBy(asc(contracts.number));
-
-      const childIds = childRows.map((row) => row.id);
-
-      // -- 3. Links ---------------------------------------------------
-
-      const linkRows = await app.db
-        .select({
-          fromContractId: contractRelations.fromContractId,
-          toContractId: contractRelations.toContractId,
-          relationType: contractRelations.relationType,
-        })
-        .from(contractRelations)
-        .where(
-          or(
-            eq(contractRelations.fromContractId, contract.id),
-            eq(contractRelations.toContractId, contract.id),
-          ),
-        )
-        // Oldest first, the order the links were made in — deterministic
-        // for the same reason the children are.
-        .orderBy(asc(contractRelations.createdAt), asc(contractRelations.relationType));
-
-      const linkedIds = linkRows.map((row) =>
-        row.fromContractId === contract.id ? row.toContractId : row.fromContractId,
-      );
-
-      // -- 4. Reach check in bulk -------------------------------------
-
-      const allIds = [...new Set([...parentIds, ...childIds, ...linkedIds])];
-      const reachable = await reachableRelatives(app.db, request.user, allIds);
-
-      // -- 5. Assemble the response -----------------------------------
-
-      const parentChain = parentIds.map((id) => toRelative(reachable, id));
-
-      const children = childIds.map((id) => toRelative(reachable, id));
-
-      const links = linkRows.map((row) => {
-        const isOutgoing = row.fromContractId === contract.id;
-        const otherId = isOutgoing ? row.toContractId : row.fromContractId;
-        // `related` is symmetric — one row says it, read from either
-        // end — so direction is always "outgoing" for it.
-        return {
-          relationType: row.relationType,
-          direction:
-            row.relationType === "related" || isOutgoing
-              ? ("outgoing" as const)
-              : ("incoming" as const),
-          contract: toRelative(reachable, otherId),
-        };
-      });
-
-      return { parentChain, children, links };
+      return buildRelationsEnvelope(app.db, request.user, contract.id);
     },
   );
 
@@ -319,9 +333,14 @@ export const contractRelationsRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!anchor) throw httpError(404, NO_CONTRACT);
 
       const { q } = request.query;
-      // Match by number (if the query looks like one) or by title prefix.
-      const numberMatch = /^\d+$/.test(q) ? parseInt(q, 10) : null;
-      const titlePattern = `%${q}%`;
+      // Match by number when the digits fit CTR-003's integer reference
+      // — a longer digit string cannot be a number the column holds, and
+      // handing it to Postgres anyway would error the whole read.
+      const digits = /^\d+$/.test(q) ? Number(q) : null;
+      const numberMatch = digits !== null && digits <= 2_147_483_647 ? digits : null;
+      // Wildcards typed into the query match literally, as every
+      // typeahead here matches (the counterparty search's rule).
+      const titlePattern = `%${escapeLikePattern(q)}%`;
 
       const rows = await app.db
         .select({
@@ -343,10 +362,7 @@ export const contractRelationsRoutes: FastifyPluginAsyncZod = async (app) => {
             contractTeamScope(app.db, request.user),
             // Search filter: number or title
             numberMatch !== null
-              ? or(
-                  eq(contracts.number, numberMatch),
-                  ilike(contracts.title, titlePattern),
-                )
+              ? or(eq(contracts.number, numberMatch), ilike(contracts.title, titlePattern))
               : ilike(contracts.title, titlePattern),
           ),
         )
@@ -381,9 +397,8 @@ export const contractRelationsRoutes: FastifyPluginAsyncZod = async (app) => {
   ) {
     // Lock both in a deterministic order (by number, ascending) to
     // avoid deadlocks when two writers lock the same pair.
-    const [firstNum, secondNum] = fromNumber < toNumber
-      ? [fromNumber, toNumber]
-      : [toNumber, fromNumber];
+    const [firstNum, secondNum] =
+      fromNumber < toNumber ? [fromNumber, toNumber] : [toNumber, fromNumber];
 
     const lockRow = async (number: number) => {
       const [locked] = await tx
@@ -582,8 +597,7 @@ export const contractRelationsRoutes: FastifyPluginAsyncZod = async (app) => {
         response: {
           201: RelationsEnvelope,
           409: problemTypeResponse(
-            "The parent would close a loop. An unnamed 409 is an " +
-              "archived record; print it.",
+            "The parent would close a loop. An unnamed 409 is an " + "archived record; print it.",
             [CONTRACT_PARENT_CYCLE_PROBLEM_TYPE],
           ),
           default: problemResponse,
@@ -653,21 +667,74 @@ export const contractRelationsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       await app.db.transaction(async (tx) => {
-        // Lock the child first, then resolve and lock the parent.
-        const [child] = await tx
-          .select({
-            id: contracts.id,
-            number: contracts.number,
-            title: contracts.title,
-            parentId: contracts.parentId,
-            archivedAt: contracts.archivedAt,
-            managerId: contracts.managerId,
-            isConfidential: contracts.isConfidential,
-          })
+        // Find both ends before taking any row lock, so the two rows
+        // can be locked in the same ascending-number order every other
+        // pair writer uses (`lockedPair`) — two writers meeting over
+        // one pair in opposite orders is a deadlock.
+        const [preread] = await tx
+          .select({ parentId: contracts.parentId })
           .from(contracts)
           .where(eq(contracts.number, request.params.number))
-          .limit(1)
-          .for("update");
+          .limit(1);
+        if (!preread) throw httpError(404, NO_CONTRACT);
+
+        const parentRef = preread.parentId
+          ? (
+              await tx
+                .select({ id: contracts.id, number: contracts.number })
+                .from(contracts)
+                .where(eq(contracts.id, preread.parentId))
+                .limit(1)
+            )[0]
+          : undefined;
+
+        const lockChild = async () => {
+          const [row] = await tx
+            .select({
+              id: contracts.id,
+              number: contracts.number,
+              title: contracts.title,
+              parentId: contracts.parentId,
+              archivedAt: contracts.archivedAt,
+              managerId: contracts.managerId,
+              isConfidential: contracts.isConfidential,
+            })
+            .from(contracts)
+            .where(eq(contracts.number, request.params.number))
+            .limit(1)
+            .for("update");
+          return row;
+        };
+        // No archived check on the parent, on purpose: a contract must
+        // be removable from under a parent that was archived after the
+        // tie was made, or the archive strands it there.
+        const lockParent = async () => {
+          if (!parentRef) return undefined;
+          const [row] = await tx
+            .select({
+              id: contracts.id,
+              number: contracts.number,
+              title: contracts.title,
+              managerId: contracts.managerId,
+              isConfidential: contracts.isConfidential,
+            })
+            .from(contracts)
+            .where(eq(contracts.id, parentRef.id))
+            .limit(1)
+            .for("update");
+          return row;
+        };
+
+        let child: Awaited<ReturnType<typeof lockChild>>;
+        let parent: Awaited<ReturnType<typeof lockParent>>;
+        if (parentRef && parentRef.number < request.params.number) {
+          parent = await lockParent();
+          child = await lockChild();
+        } else {
+          child = await lockChild();
+          parent = await lockParent();
+        }
+
         if (!child) throw httpError(404, NO_CONTRACT);
         if (!(await reachesLockedContract(tx, request.user, child))) {
           throw httpError(404, NO_CONTRACT);
@@ -678,21 +745,12 @@ export const contractRelationsRoutes: FastifyPluginAsyncZod = async (app) => {
         if (!child.parentId) {
           throw httpError(409, "This contract does not have a parent.");
         }
-
-        // Lock and verify reach on the parent.
-        const [parent] = await tx
-          .select({
-            id: contracts.id,
-            number: contracts.number,
-            title: contracts.title,
-            managerId: contracts.managerId,
-            isConfidential: contracts.isConfidential,
-          })
-          .from(contracts)
-          .where(eq(contracts.id, child.parentId))
-          .limit(1)
-          .for("update");
-        if (!parent) throw httpError(404, NO_CONTRACT);
+        if (!parent || child.parentId !== parent.id) {
+          // The tie moved between the unlocked pre-read and the locks —
+          // a concurrent writer re-parented the contract. The remover
+          // must not act on a parent it did not verify reach on.
+          throw httpError(409, "This contract's parent just changed. Reload and try again.");
+        }
         if (!(await reachesLockedContract(tx, request.user, parent))) {
           throw httpError(404, NO_CONTRACT);
         }
@@ -719,78 +777,4 @@ export const contractRelationsRoutes: FastifyPluginAsyncZod = async (app) => {
       return buildRelationsEnvelope(app.db, request.user, contract.id);
     },
   );
-
-  // ------------------------------------------------------------------
-  // Shared: build the relations envelope (same logic as the GET)
-  // ------------------------------------------------------------------
-
-  async function buildRelationsEnvelope(
-    db: Executor,
-    user: AuthenticatedUser,
-    contractId: string,
-  ) {
-    // Parent chain
-    const parentIds: string[] = [];
-    let currentId = contractId;
-    for (let depth = 0; depth < 100; depth++) {
-      const [row] = await db
-        .select({ id: contracts.id, parentId: contracts.parentId })
-        .from(contracts)
-        .where(eq(contracts.id, currentId))
-        .limit(1);
-      if (!row?.parentId) break;
-      parentIds.push(row.parentId);
-      currentId = row.parentId;
-    }
-    parentIds.reverse();
-
-    // Children
-    const childRows = await db
-      .select({ id: contracts.id })
-      .from(contracts)
-      .where(and(eq(contracts.parentId, contractId), isNull(contracts.archivedAt)))
-      .orderBy(asc(contracts.number));
-    const childIds = childRows.map((row) => row.id);
-
-    // Links
-    const linkRows = await db
-      .select({
-        fromContractId: contractRelations.fromContractId,
-        toContractId: contractRelations.toContractId,
-        relationType: contractRelations.relationType,
-      })
-      .from(contractRelations)
-      .where(
-        or(
-          eq(contractRelations.fromContractId, contractId),
-          eq(contractRelations.toContractId, contractId),
-        ),
-      )
-      .orderBy(asc(contractRelations.createdAt), asc(contractRelations.relationType));
-    const linkedIds = linkRows.map((row) =>
-      row.fromContractId === contractId ? row.toContractId : row.fromContractId,
-    );
-
-    // Reach check in bulk
-    const allIds = [...new Set([...parentIds, ...childIds, ...linkedIds])];
-    const reachable = await reachableRelatives(db, user, allIds);
-
-    // Assemble
-    const parentChain = parentIds.map((id) => toRelative(reachable, id));
-    const children = childIds.map((id) => toRelative(reachable, id));
-    const links = linkRows.map((row) => {
-      const isOutgoing = row.fromContractId === contractId;
-      const otherId = isOutgoing ? row.toContractId : row.fromContractId;
-      return {
-        relationType: row.relationType,
-        direction:
-          row.relationType === "related" || isOutgoing
-            ? ("outgoing" as const)
-            : ("incoming" as const),
-        contract: toRelative(reachable, otherId),
-      };
-    });
-
-    return { parentChain, children, links };
-  }
 };

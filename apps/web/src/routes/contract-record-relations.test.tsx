@@ -157,8 +157,20 @@ describe("the record's Related contracts card (CTR-015)", () => {
   it("draws the parent chain root-first, each as a link", async () => {
     const relations: RelationsData = {
       parentChain: [
-        { restricted: false, number: 10, title: "Framework agreement", statusName: "Active", stage: "active" },
-        { restricted: false, number: 20, title: "Sub-agreement", statusName: "Draft", stage: "draft" },
+        {
+          restricted: false,
+          number: 10,
+          title: "Framework agreement",
+          statusName: "Active",
+          stage: "active",
+        },
+        {
+          restricted: false,
+          number: 20,
+          title: "Sub-agreement",
+          statusName: "Draft",
+          stage: "draft",
+        },
       ],
       children: [],
       links: [],
@@ -179,7 +191,13 @@ describe("the record's Related contracts card (CTR-015)", () => {
     const relations: RelationsData = {
       parentChain: [
         { restricted: true },
-        { restricted: false, number: 20, title: "Sub-agreement", statusName: "Draft", stage: "draft" },
+        {
+          restricted: false,
+          number: 20,
+          title: "Sub-agreement",
+          statusName: "Draft",
+          stage: "draft",
+        },
       ],
       children: [],
       links: [],
@@ -199,7 +217,13 @@ describe("the record's Related contracts card (CTR-015)", () => {
     const relations: RelationsData = {
       parentChain: [],
       children: [
-        { restricted: false, number: 100, title: "Child work order", statusName: "Review", stage: "review" },
+        {
+          restricted: false,
+          number: 100,
+          title: "Child work order",
+          statusName: "Review",
+          stage: "review",
+        },
       ],
       links: [],
     };
@@ -219,17 +243,35 @@ describe("the record's Related contracts card (CTR-015)", () => {
         {
           relationType: "renews",
           direction: "outgoing",
-          contract: { restricted: false, number: 5, title: "Old MSA", statusName: "Ended", stage: "ended" },
+          contract: {
+            restricted: false,
+            number: 5,
+            title: "Old MSA",
+            statusName: "Ended",
+            stage: "ended",
+          },
         },
         {
           relationType: "amends",
           direction: "incoming",
-          contract: { restricted: false, number: 99, title: "Amendment 1", statusName: "Active", stage: "active" },
+          contract: {
+            restricted: false,
+            number: 99,
+            title: "Amendment 1",
+            statusName: "Active",
+            stage: "active",
+          },
         },
         {
           relationType: "related",
           direction: "outgoing",
-          contract: { restricted: false, number: 77, title: "Side letter", statusName: "Draft", stage: "draft" },
+          contract: {
+            restricted: false,
+            number: 77,
+            title: "Side letter",
+            statusName: "Draft",
+            stage: "draft",
+          },
         },
       ],
     };
@@ -253,7 +295,13 @@ describe("the record's Related contracts card (CTR-015)", () => {
       parentChain: [],
       children: [
         { restricted: true },
-        { restricted: false, number: 101, title: "Visible child", statusName: "Draft", stage: "draft" },
+        {
+          restricted: false,
+          number: 101,
+          title: "Visible child",
+          statusName: "Draft",
+          stage: "draft",
+        },
       ],
       links: [],
     };
@@ -303,7 +351,13 @@ describe("the breadcrumb's parent chain (CTR-015)", () => {
   it("shows reachable parents as links in the breadcrumb", async () => {
     const relations: RelationsData = {
       parentChain: [
-        { restricted: false, number: 10, title: "Framework agreement", statusName: "Active", stage: "active" },
+        {
+          restricted: false,
+          number: 10,
+          title: "Framework agreement",
+          statusName: "Active",
+          stage: "active",
+        },
       ],
       children: [],
       links: [],
@@ -320,9 +374,7 @@ describe("the breadcrumb's parent chain (CTR-015)", () => {
 
   it("shows restricted parents as an ellipsis in the breadcrumb", async () => {
     const relations: RelationsData = {
-      parentChain: [
-        { restricted: true },
-      ],
+      parentChain: [{ restricted: true }],
       children: [],
       links: [],
     };
@@ -355,7 +407,13 @@ describe("the card's link management actions (M17/4)", () => {
   it("hides Set parent when the contract already has a parent", async () => {
     const relations: RelationsData = {
       parentChain: [
-        { restricted: false, number: 10, title: "Framework", statusName: "Active", stage: "active" },
+        {
+          restricted: false,
+          number: 10,
+          title: "Framework",
+          statusName: "Active",
+          stage: "active",
+        },
       ],
       children: [],
       links: [],
@@ -376,7 +434,13 @@ describe("the card's link management actions (M17/4)", () => {
         {
           relationType: "related",
           direction: "outgoing",
-          contract: { restricted: false, number: 5, title: "Side letter", statusName: "Draft", stage: "draft" },
+          contract: {
+            restricted: false,
+            number: 5,
+            title: "Side letter",
+            statusName: "Draft",
+            stage: "draft",
+          },
         },
         {
           relationType: "renews",
@@ -397,7 +461,13 @@ describe("the card's link management actions (M17/4)", () => {
   it("shows Remove parent on a reachable immediate parent", async () => {
     const relations: RelationsData = {
       parentChain: [
-        { restricted: false, number: 10, title: "Framework", statusName: "Active", stage: "active" },
+        {
+          restricted: false,
+          number: 10,
+          title: "Framework",
+          statusName: "Active",
+          stage: "active",
+        },
       ],
       children: [],
       links: [],
@@ -435,7 +505,13 @@ describe("the card's link management actions (M17/4)", () => {
       if (call.url.pathname === "/api/v1/contracts/42/link-candidates" && call.method === "GET") {
         return json(200, {
           candidates: [
-            { number: 5, title: "Side letter", statusName: "Draft", stage: "draft", isConfidential: false },
+            {
+              number: 5,
+              title: "Side letter",
+              statusName: "Draft",
+              stage: "draft",
+              isConfidential: false,
+            },
           ],
         });
       }
@@ -464,21 +540,122 @@ describe("the card's link management actions (M17/4)", () => {
 
     // The refusal appears as an inline alert.
     await screen.findByRole("alert");
-    expect(screen.getByText("These two contracts are already linked that way.")).toBeInTheDocument();
+    expect(
+      screen.getByText("These two contracts are already linked that way."),
+    ).toBeInTheDocument();
+  });
+
+  it("removes a link through the DELETE and redraws the card", async () => {
+    const relations: RelationsData = {
+      parentChain: [],
+      children: [],
+      links: [
+        {
+          relationType: "related",
+          direction: "outgoing",
+          contract: {
+            restricted: false,
+            number: 5,
+            title: "Side letter",
+            statusName: "Draft",
+            stage: "draft",
+          },
+        },
+      ],
+    };
+    const calls: StubCall[] = [];
+    const base = recordApi(relations);
+    const handler = (call: StubCall) => {
+      calls.push(call);
+      if (call.url.pathname === "/api/v1/contracts/42/relations" && call.method === "DELETE") {
+        return json(200, { parentChain: [], children: [], links: [] });
+      }
+      return base.handler(call);
+    };
+    stubApi({ signedIn: MEMBER, extra: handler });
+    renderAt("/contracts/42");
+
+    const card = await section();
+    const user = userEvent.setup();
+    await user.click(card.getByRole("button", { name: "Remove link" }));
+
+    // The card redraws from the write's answer.
+    await waitFor(() => {
+      expect(screen.getByText("No related contracts.")).toBeInTheDocument();
+    });
+
+    const del = calls.find(
+      (call) => call.method === "DELETE" && call.url.pathname === "/api/v1/contracts/42/relations",
+    );
+    expect(del).toBeDefined();
+    expect(del!.body).toEqual({ relatedContractNumber: 5, relationType: "related" });
+  });
+
+  it("removes the parent through the DELETE and redraws the card", async () => {
+    const relations: RelationsData = {
+      parentChain: [
+        {
+          restricted: false,
+          number: 10,
+          title: "Framework",
+          statusName: "Active",
+          stage: "active",
+        },
+      ],
+      children: [],
+      links: [],
+    };
+    const calls: StubCall[] = [];
+    const base = recordApi(relations);
+    const handler = (call: StubCall) => {
+      calls.push(call);
+      if (call.url.pathname === "/api/v1/contracts/42/parent" && call.method === "DELETE") {
+        return json(200, { parentChain: [], children: [], links: [] });
+      }
+      return base.handler(call);
+    };
+    stubApi({ signedIn: MEMBER, extra: handler });
+    renderAt("/contracts/42");
+
+    const card = await section();
+    const user = userEvent.setup();
+    await user.click(card.getByRole("button", { name: "Remove parent" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("No related contracts.")).toBeInTheDocument();
+    });
+
+    const del = calls.find(
+      (call) => call.method === "DELETE" && call.url.pathname === "/api/v1/contracts/42/parent",
+    );
+    expect(del).toBeDefined();
   });
 });
 
 describe("the CTR-018 confidentiality nudge", () => {
-  it("shows the nudge when exactly one side is confidential after linking", async () => {
+  /**
+   * Drives the dialog to the nudge: this record confidential, the
+   * picked candidate open, the link write answered. Records every API
+   * call so a test can assert what the nudge's buttons did and did
+   * not send. `patchAnswer` is what flagging the open side answers.
+   */
+  async function openNudge(calls: StubCall[], patchAnswer: Response = json(200, {})) {
     const base = recordApi(
       { parentChain: [], children: [], links: [] },
       contractRow({ isConfidential: true }),
     );
     const handler = (call: StubCall) => {
+      calls.push(call);
       if (call.url.pathname === "/api/v1/contracts/42/link-candidates" && call.method === "GET") {
         return json(200, {
           candidates: [
-            { number: 99, title: "Open contract", statusName: "Draft", stage: "draft", isConfidential: false },
+            {
+              number: 99,
+              title: "Open contract",
+              statusName: "Draft",
+              stage: "draft",
+              isConfidential: false,
+            },
           ],
         });
       }
@@ -490,10 +667,19 @@ describe("the CTR-018 confidentiality nudge", () => {
             {
               relationType: "related",
               direction: "outgoing",
-              contract: { restricted: false, number: 99, title: "Open contract", statusName: "Draft", stage: "draft" },
+              contract: {
+                restricted: false,
+                number: 99,
+                title: "Open contract",
+                statusName: "Draft",
+                stage: "draft",
+              },
             },
           ],
         });
+      }
+      if (call.url.pathname === "/api/v1/contracts/99" && call.method === "PATCH") {
+        return patchAnswer;
       }
       return base.handler(call);
     };
@@ -516,12 +702,71 @@ describe("the CTR-018 confidentiality nudge", () => {
     await user.click(candidateButton);
 
     // Submit the link.
-    const submitButton = screen.getByRole("button", { name: "Link contract" });
-    await user.click(submitButton);
+    await user.click(screen.getByRole("button", { name: "Link contract" }));
 
     // The nudge dialog appears.
     await screen.findByRole("heading", { name: "Flag as confidential?" });
+    return user;
+  }
+
+  it("shows the nudge when exactly one side is confidential after linking", async () => {
+    await openNudge([]);
     expect(screen.getByRole("button", { name: "Flag as confidential" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "No, leave it open" })).toBeInTheDocument();
+  });
+
+  it("accepting flags the open side by the ordinary confidentiality write", async () => {
+    const calls: StubCall[] = [];
+    const user = await openNudge(calls);
+
+    await user.click(screen.getByRole("button", { name: "Flag as confidential" }));
+
+    // The nudge closes once the write answers.
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("heading", { name: "Flag as confidential?" }),
+      ).not.toBeInTheDocument();
+    });
+
+    const patch = calls.find(
+      (call) => call.method === "PATCH" && call.url.pathname === "/api/v1/contracts/99",
+    );
+    expect(patch).toBeDefined();
+    expect(patch!.body).toEqual({ isConfidential: true });
+  });
+
+  it("dismissing closes without any confidentiality write", async () => {
+    const calls: StubCall[] = [];
+    const user = await openNudge(calls);
+
+    await user.click(screen.getByRole("button", { name: "No, leave it open" }));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("heading", { name: "Flag as confidential?" }),
+      ).not.toBeInTheDocument();
+    });
+
+    expect(calls.some((call) => call.method === "PATCH")).toBe(false);
+  });
+
+  it("stays open and says so when the confidentiality write is refused", async () => {
+    const calls: StubCall[] = [];
+    const user = await openNudge(
+      calls,
+      json(403, {
+        type: "about:blank",
+        title: "Error",
+        status: 403,
+        detail: "Not yours to change.",
+      }),
+    );
+
+    await user.click(screen.getByRole("button", { name: "Flag as confidential" }));
+
+    // The nudge does not close as if the flag were set.
+    await screen.findByRole("alert");
+    expect(screen.getByRole("heading", { name: "Flag as confidential?" })).toBeInTheDocument();
+    expect(screen.getByText("Could not flag C-99 as confidential.")).toBeInTheDocument();
   });
 });

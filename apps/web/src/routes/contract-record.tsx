@@ -259,61 +259,72 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
   // Contributor anyway; the record read alone carries every name the
   // page has to draw.
   const canEdit = isMemberPlus(user.role);
-  const [record, documents, folders, approvals, signing, keyDates, tasks, relations, options, registry] =
-    await Promise.all([
-      api.GET("/api/v1/contracts/{number}", { params: { path: { number } } }),
-      // The record's paper (M11/2). Read by every viewer who reaches the
-      // page — a Contributor on the team reads and downloads it too
-      // (DD-015) — and answered 404 for anyone the record itself is
-      // hidden from, which is the same refusal the record read gives.
-      //
-      // The record root only (M13/3): the tree draws its folders first and
-      // then the documents filed nowhere, and a folder's own documents
-      // load when it is opened. Reading the record's whole paper here
-      // would draw every filed document twice.
-      api.GET("/api/v1/contracts/{number}/documents", {
-        params: { path: { number }, query: { folder: FOLDER_ROOT } },
-      }),
-      // How that paper is filed (M13/2, DOC-006). One read for the whole
-      // tree, because a record's folder set is small and drawing it a
-      // level at a time would be a round trip per press.
-      api.GET("/api/v1/contracts/{number}/folders", { params: { path: { number } } }),
-      // Who has been asked to sign the record off (M14/3, CTR-012). Read
-      // by every viewer who reaches the page — a Contributor on the team
-      // reads the roster too — and answered 404 for anyone the record
-      // itself is hidden from, which is the same refusal the record read
-      // gives.
-      api.GET("/api/v1/contracts/{number}/approvals", { params: { path: { number } } }),
-      // What paper this record has sent out for signature (M15/2,
-      // CTR-013), read by every viewer who reaches the page for the
-      // roster's reason. It carries two facts beside the envelopes —
-      // whether this install has a connector, and the chain a send would
-      // offer — so the card decides in one condition whether to draw the
-      // send control at all.
-      api.GET("/api/v1/contracts/{number}/envelopes", { params: { path: { number } } }),
-      // Every date on the record (M16/3, CTR-009): its key dates, its
-      // expiry, and its derived notice deadline, as one union the seam has
-      // already ordered and marked. Read by every viewer who reaches the
-      // page for the roster's reason — a Contributor on the team reads the
-      // record's deadlines too.
-      api.GET("/api/v1/contracts/{number}/key-dates", { params: { path: { number } } }),
-      // The record's task checklist (M17/1, CTR-017): lightweight items
-      // with a done flag, an optional assignee, an optional due date, and
-      // a display order. Read by every viewer who reaches the page for
-      // the roster's reason — a Contributor on the team reads the checklist.
-      api.GET("/api/v1/contracts/{number}/tasks", { params: { path: { number } } }),
-      // The contract's relation surface (M17/2, CTR-015): its parent chain,
-      // children, and typed links. Optional — a read failure does not block
-      // the page, it only hides the Related contracts card.
-      api.GET("/api/v1/contracts/{number}/relations", { params: { path: { number } } })
-        .catch(() => ({ data: undefined, error: undefined })),
-      canEdit ? api.GET("/api/v1/contracts/options") : undefined,
-      // The registry's own Member+ list is the signing-entity picker's
-      // source (CTR-011): it is ordered by legal name and already leaves
-      // archived entities out, so the contracts surface needs no read of
-      // its own the way it does for the Administrator-only taxonomies.
-      canEdit ? api.GET("/api/v1/entities") : undefined,
-    ]);
+  const [
+    record,
+    documents,
+    folders,
+    approvals,
+    signing,
+    keyDates,
+    tasks,
+    relations,
+    options,
+    registry,
+  ] = await Promise.all([
+    api.GET("/api/v1/contracts/{number}", { params: { path: { number } } }),
+    // The record's paper (M11/2). Read by every viewer who reaches the
+    // page — a Contributor on the team reads and downloads it too
+    // (DD-015) — and answered 404 for anyone the record itself is
+    // hidden from, which is the same refusal the record read gives.
+    //
+    // The record root only (M13/3): the tree draws its folders first and
+    // then the documents filed nowhere, and a folder's own documents
+    // load when it is opened. Reading the record's whole paper here
+    // would draw every filed document twice.
+    api.GET("/api/v1/contracts/{number}/documents", {
+      params: { path: { number }, query: { folder: FOLDER_ROOT } },
+    }),
+    // How that paper is filed (M13/2, DOC-006). One read for the whole
+    // tree, because a record's folder set is small and drawing it a
+    // level at a time would be a round trip per press.
+    api.GET("/api/v1/contracts/{number}/folders", { params: { path: { number } } }),
+    // Who has been asked to sign the record off (M14/3, CTR-012). Read
+    // by every viewer who reaches the page — a Contributor on the team
+    // reads the roster too — and answered 404 for anyone the record
+    // itself is hidden from, which is the same refusal the record read
+    // gives.
+    api.GET("/api/v1/contracts/{number}/approvals", { params: { path: { number } } }),
+    // What paper this record has sent out for signature (M15/2,
+    // CTR-013), read by every viewer who reaches the page for the
+    // roster's reason. It carries two facts beside the envelopes —
+    // whether this install has a connector, and the chain a send would
+    // offer — so the card decides in one condition whether to draw the
+    // send control at all.
+    api.GET("/api/v1/contracts/{number}/envelopes", { params: { path: { number } } }),
+    // Every date on the record (M16/3, CTR-009): its key dates, its
+    // expiry, and its derived notice deadline, as one union the seam has
+    // already ordered and marked. Read by every viewer who reaches the
+    // page for the roster's reason — a Contributor on the team reads the
+    // record's deadlines too.
+    api.GET("/api/v1/contracts/{number}/key-dates", { params: { path: { number } } }),
+    // The record's task checklist (M17/1, CTR-017): lightweight items
+    // with a done flag, an optional assignee, an optional due date, and
+    // a display order. Read by every viewer who reaches the page for
+    // the roster's reason — a Contributor on the team reads the checklist.
+    api.GET("/api/v1/contracts/{number}/tasks", { params: { path: { number } } }),
+    // The contract's relation surface (M17/2, CTR-015): its parent chain,
+    // children, and typed links. Optional — a read failure does not block
+    // the page, it only hides the Related contracts card.
+    api
+      .GET("/api/v1/contracts/{number}/relations", { params: { path: { number } } })
+      .catch(() => ({ data: undefined, error: undefined })),
+    canEdit ? api.GET("/api/v1/contracts/options") : undefined,
+    // The registry's own Member+ list is the signing-entity picker's
+    // source (CTR-011): it is ordered by legal name and already leaves
+    // archived entities out, so the contracts surface needs no read of
+    // its own the way it does for the Administrator-only taxonomies.
+    canEdit ? api.GET("/api/v1/entities") : undefined,
+  ]);
   // The documents read is required, like the record read: every viewer
   // who reaches this page reads the paper on it (DD-015). A failure
   // here must not render as "No documents on this contract yet" — an
@@ -1247,7 +1258,10 @@ function ContractRecord() {
                   muted placeholder. The chain is root-first, so the
                   topmost ancestor comes right after "Contracts". */}
               {relations?.parentChain.map((entry, i) => (
-                <span key={entry.restricted ? `restricted-${i}` : entry.number} className="flex shrink-0 items-center gap-2">
+                <span
+                  key={entry.restricted ? `restricted-${i}` : entry.number}
+                  className="flex shrink-0 items-center gap-2"
+                >
                   {entry.restricted ? (
                     <span className="text-base text-muted">
                       <span aria-hidden="true">&hellip;</span>

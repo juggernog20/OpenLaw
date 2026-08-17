@@ -25,7 +25,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, and, contracts, eq, users } from "@openlaw/db";
+import { activityLog, and, eq, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -417,10 +417,7 @@ describe("narration (M17/4)", () => {
       })
       .from(activityLog)
       .where(
-        and(
-          eq(activityLog.action, "contract.parent_removed"),
-          eq(activityLog.entityId, child.id),
-        ),
+        and(eq(activityLog.action, "contract.parent_removed"), eq(activityLog.entityId, child.id)),
       );
 
     expect(entries).toHaveLength(1);
@@ -437,10 +434,7 @@ describe("narration (M17/4)", () => {
       .select({ action: activityLog.action })
       .from(activityLog)
       .where(
-        and(
-          eq(activityLog.action, "contract.parent_removed"),
-          eq(activityLog.entityId, parent.id),
-        ),
+        and(eq(activityLog.action, "contract.parent_removed"), eq(activityLog.entityId, parent.id)),
       );
     expect(parentEntries).toHaveLength(0);
   });
@@ -485,6 +479,40 @@ describe("link-candidates picker (CTR-018)", () => {
     const body = res.json() as { candidates: { number: number }[] };
     const found = body.candidates.find((c) => c.number === target.number);
     expect(found).toBeDefined();
+  });
+
+  it("matches a typed wildcard literally, not as a pattern", async () => {
+    const anchor = await create({ title: "Wild anchor" });
+    const literal = await create({ title: "Uptime 99% service level" });
+    const decoy = await create({ title: "Wild decoy" });
+
+    const res = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts/${anchor.number}/link-candidates?q=${encodeURIComponent("99%")}`,
+      cookies: memberCookies,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+
+    const body = res.json() as { candidates: { number: number }[] };
+    expect(body.candidates.find((c) => c.number === literal.number)).toBeDefined();
+    // "%" as a pattern would match every title; matched literally it
+    // must not find the decoy.
+    expect(body.candidates.find((c) => c.number === decoy.number)).toBeUndefined();
+  });
+
+  it("answers a digit string too long for a contract number without erroring", async () => {
+    const anchor = await create({ title: "Overflow anchor" });
+
+    // Larger than any integer contract number can be — a number match
+    // would overflow the column; the query must fall back to a title
+    // match instead of erroring.
+    const res = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts/${anchor.number}/link-candidates?q=99999999999999`,
+      cookies: memberCookies,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect((res.json() as { candidates: unknown[] }).candidates).toEqual([]);
   });
 
   it("excludes confidential contracts the viewer cannot reach", async () => {

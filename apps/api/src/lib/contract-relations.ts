@@ -263,10 +263,7 @@ export async function unlinkContracts(
  * Nothing here narrates, for the same reason the parent write does
  * not.
  */
-export async function removeContractParent(
-  tx: Transaction,
-  contractId: string,
-): Promise<void> {
+export async function removeContractParent(tx: Transaction, contractId: string): Promise<void> {
   await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.contractRelations})`);
 
   const [updated] = await tx

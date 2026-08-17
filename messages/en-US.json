@@ -908,6 +908,9 @@
   "comments.tombstone.redacted": {
     "defaultMessage": "Comment removed by an Administrator."
   },
+  "common.cancel": {
+    "defaultMessage": "Cancel"
+  },
   "confidential.marker": {
     "defaultMessage": "Confidential"
   },
@@ -1199,6 +1202,12 @@
   "contracts.reference": {
     "defaultMessage": "C-{number}"
   },
+  "contracts.relations.addLink": {
+    "defaultMessage": "Add link"
+  },
+  "contracts.relations.addParent": {
+    "defaultMessage": "Set parent"
+  },
   "contracts.relations.amendedByLabel": {
     "defaultMessage": "Amended by"
   },
@@ -1208,14 +1217,56 @@
   "contracts.relations.children": {
     "defaultMessage": "Children"
   },
+  "contracts.relations.cycleError": {
+    "defaultMessage": "That contract already sits under this one. Pick another parent."
+  },
+  "contracts.relations.dialogTitle": {
+    "defaultMessage": "Link contract"
+  },
+  "contracts.relations.duplicateError": {
+    "defaultMessage": "These two contracts are already linked that way."
+  },
   "contracts.relations.empty": {
     "defaultMessage": "No related contracts."
+  },
+  "contracts.relations.linkError": {
+    "defaultMessage": "Could not link these contracts."
+  },
+  "contracts.relations.nudge.accept": {
+    "defaultMessage": "Flag as confidential"
+  },
+  "contracts.relations.nudge.body": {
+    "defaultMessage": "{reference} is confidential but {otherReference} is not. Flag {otherReference} as confidential too?"
+  },
+  "contracts.relations.nudge.dismiss": {
+    "defaultMessage": "No, leave it open"
+  },
+  "contracts.relations.nudge.error": {
+    "defaultMessage": "Could not flag {reference} as confidential."
+  },
+  "contracts.relations.nudge.title": {
+    "defaultMessage": "Flag as confidential?"
   },
   "contracts.relations.parent": {
     "defaultMessage": "Parent"
   },
+  "contracts.relations.parentDialogTitle": {
+    "defaultMessage": "Set parent"
+  },
+  "contracts.relations.parentError": {
+    "defaultMessage": "Could not set the parent."
+  },
+  "contracts.relations.pickerPlaceholder": {
+    "defaultMessage": "Search by number or title…"
+  },
   "contracts.relations.relatedLabel": {
     "defaultMessage": "Related"
+  },
+  "contracts.relations.removeLink": {
+    "defaultMessage": "Remove link"
+  },
+  "contracts.relations.removeParent": {
+    "defaultMessage": "Remove parent"
   },
   "contracts.relations.renewedByLabel": {
     "defaultMessage": "Renewed by"
@@ -1229,62 +1280,17 @@
   "contracts.relations.section": {
     "defaultMessage": "Related contracts"
   },
-  "contracts.relations.addLink": {
-    "defaultMessage": "Add link"
-  },
-  "contracts.relations.addParent": {
-    "defaultMessage": "Set parent"
-  },
-  "contracts.relations.dialogTitle": {
-    "defaultMessage": "Link contract"
-  },
-  "contracts.relations.parentDialogTitle": {
-    "defaultMessage": "Set parent"
-  },
-  "contracts.relations.pickerPlaceholder": {
-    "defaultMessage": "Search by number or title…"
+  "contracts.relations.selfLinkError": {
+    "defaultMessage": "A contract cannot be linked to itself."
   },
   "contracts.relations.typeLabel": {
     "defaultMessage": "Link type"
   },
-  "contracts.relations.linkError": {
-    "defaultMessage": "Could not link these contracts."
-  },
   "contracts.relations.unlinkError": {
     "defaultMessage": "Could not unlink these contracts."
   },
-  "contracts.relations.parentError": {
-    "defaultMessage": "Could not set the parent."
-  },
   "contracts.relations.unparentError": {
     "defaultMessage": "Could not remove the parent."
-  },
-  "contracts.relations.removeLink": {
-    "defaultMessage": "Remove link"
-  },
-  "contracts.relations.removeParent": {
-    "defaultMessage": "Remove parent"
-  },
-  "contracts.relations.nudge.title": {
-    "defaultMessage": "Flag as confidential?"
-  },
-  "contracts.relations.nudge.body": {
-    "defaultMessage": "{reference} is confidential but {otherReference} is not. Flag {otherReference} as confidential too?"
-  },
-  "contracts.relations.nudge.accept": {
-    "defaultMessage": "Flag as confidential"
-  },
-  "contracts.relations.nudge.dismiss": {
-    "defaultMessage": "No, leave it open"
-  },
-  "contracts.relations.duplicateError": {
-    "defaultMessage": "These two contracts are already linked that way."
-  },
-  "contracts.relations.cycleError": {
-    "defaultMessage": "That contract already sits under this one. Pick another parent."
-  },
-  "contracts.relations.selfLinkError": {
-    "defaultMessage": "A contract cannot be linked to itself."
   },
   "contracts.restoreError": {
     "defaultMessage": "{reference} could not be restored."

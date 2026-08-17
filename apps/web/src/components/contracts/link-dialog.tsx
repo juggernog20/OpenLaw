@@ -22,8 +22,6 @@ import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { contractReference, STAGE_PILL } from "../../lib/contracts";
 import {
   addRelation,
-  removeRelation,
-  removeParent,
   searchLinkCandidates,
   setParent,
   type ContractRelations,
@@ -91,6 +89,10 @@ const MESSAGES = defineMessages({
     id: "contracts.relations.nudge.dismiss",
     defaultMessage: "No, leave it open",
   },
+  nudgeError: {
+    id: "contracts.relations.nudge.error",
+    defaultMessage: "Could not flag {reference} as confidential.",
+  },
 });
 
 const RELATION_TYPES: readonly RelationType[] = ["related", "renews", "amends"];
@@ -121,6 +123,7 @@ function ConfidentialityNudge({
   onAccept,
   onDismiss,
   busy,
+  error,
 }: Readonly<{
   thisNumber: number;
   otherNumber: number;
@@ -128,6 +131,7 @@ function ConfidentialityNudge({
   onAccept: () => void;
   onDismiss: () => void;
   busy: boolean;
+  error: string | null;
 }>) {
   const intl = useIntl();
   const confidentialRef = contractReference(intl, thisIsConfidential ? thisNumber : otherNumber);
@@ -145,6 +149,11 @@ function ConfidentialityNudge({
             values={{ reference: confidentialRef, otherReference: openRef }}
           />
         </p>
+        {error && (
+          <p role="alert" className="mt-2 text-xs text-status-danger-fg">
+            {error}
+          </p>
+        )}
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="secondary" onClick={onDismiss} disabled={busy}>
             <FormattedMessage {...MESSAGES.nudgeDismiss} />
@@ -328,15 +337,29 @@ export function LinkDialog({
   const handleNudgeAccept = async () => {
     if (!nudge) return;
     setBusy(true);
+    setError(null);
 
-    // The open side is the one that is not confidential. Flag it.
+    // The open side is the one that is not confidential. Flag it by the
+    // ordinary confidentiality write, under its ordinary actor rule —
+    // and when that rule refuses, say so rather than closing as if the
+    // flag were set (CTR-018: a suggestion, not an outcome).
     const openNumber = nudge.thisIsConfidential ? nudge.otherNumber : nudge.thisNumber;
-    await api.PATCH("/api/v1/contracts/{number}", {
-      params: { path: { number: openNumber } },
-      body: { isConfidential: true },
-    });
+    const { response } = await api
+      .PATCH("/api/v1/contracts/{number}", {
+        params: { path: { number: openNumber } },
+        body: { isConfidential: true },
+      })
+      .catch(() => ({ response: undefined }));
 
     setBusy(false);
+    if (!response?.ok) {
+      setError(
+        intl.formatMessage(MESSAGES.nudgeError, {
+          reference: contractReference(intl, openNumber),
+        }),
+      );
+      return;
+    }
     onRelationsChanged(nudge.relations);
     onClose();
   };
@@ -356,6 +379,7 @@ export function LinkDialog({
         onAccept={() => void handleNudgeAccept()}
         onDismiss={handleNudgeDismiss}
         busy={busy}
+        error={error}
       />
     );
   }
@@ -382,10 +406,14 @@ export function LinkDialog({
             />
             {mode === "link" && (
               <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-subtle">
+                <label
+                  htmlFor="link-relation-type"
+                  className="mb-1 block text-xs font-semibold uppercase tracking-wide text-subtle"
+                >
                   <FormattedMessage {...MESSAGES.typeLabel} />
                 </label>
                 <select
+                  id="link-relation-type"
                   className="w-full rounded-button border border-border-default bg-raised px-3 py-1.5 text-sm text-primary focus:outline-2 focus:outline-offset-2 focus:outline-link"
                   value={relationType}
                   onChange={(event) => setRelationType(event.target.value as RelationType)}
@@ -393,10 +421,19 @@ export function LinkDialog({
                   {RELATION_TYPES.map((type) => (
                     <option key={type} value={type}>
                       {type === "related"
-                        ? intl.formatMessage({ id: "contracts.relations.relatedLabel", defaultMessage: "Related" })
+                        ? intl.formatMessage({
+                            id: "contracts.relations.relatedLabel",
+                            defaultMessage: "Related",
+                          })
                         : type === "renews"
-                          ? intl.formatMessage({ id: "contracts.relations.renewsLabel", defaultMessage: "Renews" })
-                          : intl.formatMessage({ id: "contracts.relations.amendsLabel", defaultMessage: "Amends" })}
+                          ? intl.formatMessage({
+                              id: "contracts.relations.renewsLabel",
+                              defaultMessage: "Renews",
+                            })
+                          : intl.formatMessage({
+                              id: "contracts.relations.amendsLabel",
+                              defaultMessage: "Amends",
+                            })}
                     </option>
                   ))}
                 </select>

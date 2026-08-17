@@ -52,8 +52,14 @@ const LABELS = defineMessages({
   addParent: { id: "contracts.relations.addParent", defaultMessage: "Set parent" },
   removeLink: { id: "contracts.relations.removeLink", defaultMessage: "Remove link" },
   removeParent: { id: "contracts.relations.removeParent", defaultMessage: "Remove parent" },
-  unlinkError: { id: "contracts.relations.unlinkError", defaultMessage: "Could not unlink these contracts." },
-  unparentError: { id: "contracts.relations.unparentError", defaultMessage: "Could not remove the parent." },
+  unlinkError: {
+    id: "contracts.relations.unlinkError",
+    defaultMessage: "Could not unlink these contracts.",
+  },
+  unparentError: {
+    id: "contracts.relations.unparentError",
+    defaultMessage: "Could not remove the parent.",
+  },
 });
 
 /** Every combination of link type and direction the API may answer. */
@@ -230,11 +236,7 @@ export const RelatedContractsCard = memo(function RelatedContractsCard({
   const handleUnlink = useCallback(
     async (link: ContractLink) => {
       if (link.contract.restricted) return;
-      const result = await removeRelation(
-        contractNumber,
-        link.contract.number,
-        link.relationType,
-      );
+      const result = await removeRelation(contractNumber, link.contract.number, link.relationType);
       if (result.ok) {
         setRelations(result.relations);
         setError(null);
@@ -255,10 +257,6 @@ export const RelatedContractsCard = memo(function RelatedContractsCard({
     }
   }, [contractNumber, intl]);
 
-  // The immediate parent is the last entry in the chain (the chain is
-  // root-first). Only the immediate parent can be removed.
-  const immediateParent = hasParent ? relations.parentChain[relations.parentChain.length - 1]! : null;
-
   return (
     <>
       <section
@@ -272,19 +270,11 @@ export const RelatedContractsCard = memo(function RelatedContractsCard({
           {editable && (
             <div className="ml-auto flex gap-1">
               {!hasParent && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setDialog("parent")}
-                >
+                <Button variant="ghost" size="sm" onClick={() => setDialog("parent")}>
                   <FormattedMessage {...LABELS.addParent} />
                 </Button>
               )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setDialog("link")}
-              >
+              <Button variant="ghost" size="sm" onClick={() => setDialog("link")}>
                 <FormattedMessage {...LABELS.addLink} />
               </Button>
             </div>
@@ -312,9 +302,11 @@ export const RelatedContractsCard = memo(function RelatedContractsCard({
                   </h3>
                   <ul>
                     {relations.parentChain.map((entry, i) => {
+                      // The chain is root-first, so the immediate parent
+                      // is the last entry — and only the immediate
+                      // parent can be removed (DES-045).
                       const isImmediate = i === relations.parentChain.length - 1;
-                      const canRemove =
-                        editable && isImmediate && !entry.restricted;
+                      const canRemove = editable && isImmediate && !entry.restricted;
                       return (
                         <RelationRow
                           key={entry.restricted ? `restricted-${i}` : entry.number}

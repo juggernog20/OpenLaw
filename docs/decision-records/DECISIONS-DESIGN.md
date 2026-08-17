@@ -2903,13 +2903,13 @@ The picker follows the mention-candidates precedent (DES-024): a text input that
 
 **3. Remove actions sit inline on each reachable entry.** A "Remove link" text button on each reachable link row; a "Remove parent" text button on the immediate parent only (never on ancestors further up the chain). Restricted entries have no action. Children have no removal action — removal of the parent is the act.
 
-**4. The CTR-018 nudge is a second modal that replaces the link dialog after a link is created when exactly one side is confidential.** It names the confidential side and the open side by contract reference, and offers two buttons: "Flag as confidential" (primary) and "No, leave it open" (secondary). Accepting calls the ordinary confidentiality PATCH. Dismissing does nothing. Unlinking never un-flags. The nudge appears once per link creation and never on unlink.
+**4. The CTR-018 nudge is a second modal that replaces the link dialog after a link is created when exactly one side is confidential.** It names the confidential side and the open side by contract reference, and offers two buttons: "Flag as confidential" (primary) and "No, leave it open" (secondary). Accepting calls the ordinary confidentiality PATCH; when that write is refused — the ordinary actor rule can refuse it — the refusal is said as an inline alert and the nudge stays open rather than closing as if the flag were set. Dismissing does nothing. Unlinking never un-flags. The nudge appears once per link creation and never on unlink.
 
 **5. "Add link" and "Set parent" are ghost buttons in the card header.** "Set parent" hides when a parent already exists. Both are absent when the viewer is not Member+ or the contract is archived.
 
 ### Consequences
 
-One new dialog component (`link-dialog.tsx`), one updated card component (`related-contracts-card.tsx`), and thirty new ICU messages. No new tokens and no new contrast pairs.
+One new dialog component (`link-dialog.tsx`), one updated card component (`related-contracts-card.tsx`), and some two dozen new ICU messages. No new tokens and no new contrast pairs.
 
 The picker reuses the mention-candidates API pattern at a different endpoint (`/link-candidates`), bounded to what the viewer can reach. It searches rather than listing all, so a workspace with thousands of contracts never loads them in one shot. The trade-off is that the actor must know part of the number or title before the candidate appears.
 
