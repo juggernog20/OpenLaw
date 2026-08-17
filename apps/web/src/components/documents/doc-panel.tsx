@@ -8,10 +8,27 @@
  * **It is DES-016's wider sibling layer, not the applet panel.** The
  * activity bar hosts one 320px applet at a time; a contract does not fit
  * in that, so the doc panel takes its own wider column beside it and the
- * two can be open together. Below the docking threshold it overlays the
- * record region, pinned to the inner edge of the activity bar, which
- * never disappears — the same behaviour DES-016 gave the applet panel,
- * at a wider threshold because it is a wider thing.
+ * two can be open together. Docked, it is a flex sibling that pushes the
+ * record content the same way the applet panel does. Below the docking
+ * threshold it overlays the content column instead — a fixed 720px
+ * column has nowhere to go on a narrower window without squeezing
+ * whatever tab is showing into an unusable sliver, which is worse than
+ * covering it (2026-08-18 fix, second pass: "always docks" traded the
+ * overlay's blocked-navigation bug for this one). `onDockedChange`
+ * reports which case applies, and the caller uses it twice: to close
+ * the panel on a section-tab change while it is overlaying, so the tab
+ * strip never again reads as broken with the panel open, and to make
+ * the covered content inert, so a keyboard cannot tab into a section
+ * that is behind an opaque surface (DES-010).
+ *
+ * **The applet always wins the room it needs.** Both the overlay and the
+ * threshold are scoped to the record-content region, which
+ * `RecordApplets` draws with the applet panel and the activity bar
+ * outside it. So a document never covers an open applet — reading a
+ * clause while chatting about it is the case DES-016 names — and opening
+ * an applet takes 320px off this panel rather than off the record. If
+ * that leaves too little for three columns, this one gives up its dock
+ * and overlays, which is the same trade as a narrower window.
  *
  * **Three parts, from the mock.** The 44px header carries the document's
  * name, the version being read, and the close control (K.H1–H3, H6). The
@@ -85,11 +102,28 @@ const EmailPreview = lazy(async () => ({
   default: (await import("./email-preview")).EmailPreview,
 }));
 
+/**
+ * How wide the record-content region has to be before this panel docks
+ * beside the record instead of covering it: this panel's own 720px plus
+ * enough left over that the section behind it is still worth reading.
+ * The activity bar and the applet panel are not in that measurement —
+ * they sit outside the region — so an open applet spends 320px of it,
+ * and a window that fits three columns docks while the same window with
+ * an applet open may not.
+ *
+ * Written twice on purpose. Tailwind scans source text for the class, so
+ * a shared constant would leave `@min-[1400px]/record` ungenerated, and
+ * the `ResizeObserver` below needs the same number in a form JS can
+ * compare against.
+ */
+const DOCK_WIDTH_PX = 1400;
+
 export function DocPanel({
   documentId,
   title,
   version,
   onClose,
+  onDockedChange,
 }: Readonly<{
   documentId: string;
   /** What the record calls this document, which is what the header
@@ -98,6 +132,13 @@ export function DocPanel({
   /** The one version being read. Any round in the chain may be it. */
   version: DocumentVersion;
   onClose: () => void;
+  /** Told whenever the panel crosses the docking threshold. Two things
+   * hang off the answer: a section-tab change closes the panel while it
+   * overlays, and the content underneath goes inert for as long as it
+   * is covered. Only this panel measures the region, so it is the only
+   * place either fact can come from. Absent in tests that do not
+   * care. */
+  onDockedChange?: (docked: boolean) => void;
 }>) {
   const intl = useIntl();
   const panel = useRef<HTMLElement>(null);
@@ -109,6 +150,30 @@ export function DocPanel({
   useEffect(() => {
     panel.current?.focus();
   }, [documentId, version.id]);
+
+  // The docked/overlay call, watched rather than read once: the record
+  // region can cross 1400px from a window resize or a sibling panel
+  // opening, with this one never remounting. A ref carries the latest
+  // callback so the observer itself is only ever set up once — the
+  // caller's callback is an inline function most renders, and that must
+  // not tear the observer down and rebuild it every time.
+  const onDockedChangeRef = useRef(onDockedChange);
+  useEffect(() => {
+    onDockedChangeRef.current = onDockedChange;
+  });
+  useEffect(() => {
+    // The panel's own parent is the `@container/record` element —
+    // `RecordApplets` renders this aside as its direct child (the
+    // `layer` slot) — so there is no ancestor walk to get wrong here.
+    const container = panel.current?.parentElement;
+    if (!container) return;
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width ?? 0;
+      onDockedChangeRef.current?.(width >= DOCK_WIDTH_PX);
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
 
   const previewHref = documentPreviewHref(documentId, version.id);
   return (
@@ -122,7 +187,13 @@ export function DocPanel({
       onKeyDown={(event) => {
         if (event.key === "Escape" && !event.defaultPrevented) onClose();
       }}
-      className="absolute inset-y-0 start-0 end-(--width-activitybar) z-20 flex flex-col border-s border-border-default bg-raised outline-none @min-[1400px]/record:static @min-[1400px]/record:z-auto @min-[1400px]/record:w-(--width-docpanel) @min-[1400px]/record:shrink-0"
+      // `inset-0` is the record-content region, not the whole row:
+      // `RecordApplets` keeps the applet panel and the activity bar
+      // outside this panel's containing block on purpose, so overlaying
+      // covers the section being read and never the applet open beside
+      // it. Above the threshold the same aside stops being positioned
+      // and becomes the 720px column the DOC2 mock draws.
+      className="absolute inset-0 z-20 flex min-h-0 flex-col border-s border-border-default bg-raised outline-none @min-[1400px]/record:static @min-[1400px]/record:z-auto @min-[1400px]/record:w-(--width-docpanel) @min-[1400px]/record:shrink-0"
     >
       <header className="flex h-11 shrink-0 items-center justify-between gap-2 border-b border-border-muted px-4">
         <div className="flex min-w-0 items-center gap-2">

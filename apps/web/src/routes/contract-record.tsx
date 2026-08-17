@@ -691,6 +691,20 @@ function ContractRecord() {
    * DES-010's restore-to-trigger rule, wired by hand because the panel
    * is a plain aside. */
   const readingTrigger = useRef<HTMLElement | null>(null);
+  /** Whether the doc panel is currently docked beside the record
+   * content rather than overlaying it, per `DocPanel`'s own
+   * `ResizeObserver`. A ref, not state — nothing here needs to
+   * re-render on every resize, only to know the current answer at the
+   * moment a section tab changes. Starts `true` (docked): a page that
+   * has not measured yet keeps today's stay-open behavior rather than
+   * guessing narrow. */
+  const readingDocked = useRef(true);
+  /** The same answer again, as state this time, because the record
+   * content has to re-render to go inert underneath a panel that
+   * covers it. The ref above stays: the tab-change effect below reads
+   * the current answer without wanting a render of its own, and a
+   * threshold crossing is rare enough that one render costs nothing. */
+  const [readingCovers, setReadingCovers] = useState(false);
   /** The other side (CTR-011), primary first as the API orders it. */
   const [parties, setParties] = useState<ContractCounterparty[]>(counterparties);
   const [drafts, setDrafts] = useState<Record<TextFieldKey, string>>(() => textDrafts(contract));
@@ -817,6 +831,20 @@ function ContractRecord() {
     }
   }, [reading, open]);
 
+  // A section-tab change while the panel overlays the record closes it
+  // (2026-08-18 fix, second pass): docked, the panel sits beside
+  // whatever section is showing, so a tab change leaves it open on
+  // purpose. Below the docking threshold it covers that section
+  // instead, and a reader who asked for Fields is shown the document
+  // they were already reading rather than Fields — which reads as the
+  // tab strip having stopped working. Keyed on `tab` alone, and it
+  // reads nothing else from this render: it runs when the section
+  // actually changes, never on the resize that keeps `readingDocked`
+  // current, and closing a panel that is already closed is a no-op.
+  useEffect(() => {
+    if (!readingDocked.current) closeReading();
+  }, [tab]);
+
   /** Closes the panel and puts focus back on the control that opened
    * it — DES-010's restore-to-trigger rule, wired by hand because the
    * panel is a plain aside. */
@@ -825,6 +853,11 @@ function ContractRecord() {
     // Before the panel unmounts the element focus is sitting in.
     readingTrigger.current?.focus();
     readingTrigger.current = null;
+    // Nothing is measuring any more. Back to the default the next
+    // panel opens on, so a closed panel's last width cannot decide
+    // what the one after it does.
+    readingDocked.current = true;
+    setReadingCovers(false);
   }
 
   function textDrafts(row: ContractRow): Record<TextFieldKey, string> {
@@ -1461,7 +1494,10 @@ function ContractRecord() {
             : [teamApplet, chatApplet, historyApplet]
         }
         // DES-016's wider sibling layer (M12/2): the document being
-        // read, beside the record rather than instead of it.
+        // read, beside the record rather than instead of it. Which
+        // section is showing changes nothing here — the panel docks
+        // beside the Documents list the same way it docks beside
+        // Fields, and covers either one when there is no room to dock.
         layer={
           open && (
             <DocPanel
@@ -1469,9 +1505,18 @@ function ContractRecord() {
               title={open.document.title}
               version={open.version}
               onClose={closeReading}
+              onDockedChange={(docked) => {
+                readingDocked.current = docked;
+                setReadingCovers(!docked);
+              }}
             />
           )
         }
+        // Covered content is unreachable content: while the panel
+        // overlays the section instead of docking beside it, the
+        // controls behind it leave the tab order and the accessibility
+        // tree, so a keyboard cannot land on a button nobody can see.
+        contentCovered={open !== null && readingCovers}
       >
         <div className="flex flex-col gap-4 overflow-y-auto px-page-x py-page-y">
           {archived && (

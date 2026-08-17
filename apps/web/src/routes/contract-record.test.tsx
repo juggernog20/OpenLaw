@@ -31,7 +31,7 @@
  * Users are bounced home; unauthenticated visitors land on login.
  */
 
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
@@ -224,6 +224,14 @@ async function openTeam(user: ReturnType<typeof userEvent.setup>) {
     await user.click(icon);
   }
   return screen.getByRole("complementary", { name: "Team" });
+}
+
+/** jsdom does not fire the clip's width transitionend, so a close
+ * test that waits for the aside to unmount has to dispatch it. */
+function finishAppletSlide(panel: HTMLElement) {
+  const clip = panel.parentElement;
+  expect(clip).not.toBeNull();
+  fireEvent.transitionEnd(clip!, { propertyName: "width" });
 }
 
 function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
@@ -2207,6 +2215,7 @@ describe("the contract record's comment applet (M9/2)", () => {
     });
 
     await user.click(within(panel).getByRole("button", { name: "Close" }));
+    finishAppletSlide(panel);
     expect(screen.queryByRole("complementary", { name: "Comments" })).not.toBeInTheDocument();
     // DES-010: the panel is not a Radix overlay, so focus is restored
     // by hand — to the bar icon that opened it.
@@ -3461,6 +3470,7 @@ describe("the contract record's history applet (M9/6)", () => {
     expect(activity.cursors).toEqual([null]);
 
     await user.click(within(panel).getByRole("button", { name: "Close" }));
+    finishAppletSlide(panel);
     expect(screen.queryByRole("complementary", { name: "History" })).not.toBeInTheDocument();
     expect(icon).toHaveFocus();
   });
@@ -5685,7 +5695,10 @@ describe("the doc panel (M12/2)", () => {
     // on — this path drops the reference rather than restoring to a
     // control that is no longer there.
     expect(
-      within(list).queryByRole("button", { name: "Orion Cloud — master services agreement" }),
+      within(list).queryByRole("button", {
+        name: "Orion Cloud — master services agreement",
+        hidden: true,
+      }),
     ).toBeNull();
   });
 
@@ -6673,6 +6686,8 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
     expect(
       await screen.findByRole("complementary", { name: "signed.pdf, version 1" }),
     ).toBeVisible();
+    // Beside the list it was opened from, not instead of it (DOC2).
+    expect(screen.getByRole("region", { name: /^Documents/ })).toBeVisible();
   });
 
   it("keeps a filed document's panel open across a section tab round trip", async () => {
@@ -6696,11 +6711,126 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
     await user.click(screen.getByRole("link", { name: "Overview" }));
     await screen.findByLabelText("Title");
     await user.click(screen.getByRole("link", { name: "Documents" }));
-    await documentsSection();
+    // Still reading, and the list it was opened from is back beside it.
+    expect(await documentsSection()).toBeVisible();
 
     expect(
       await screen.findByRole("complementary", { name: "signed.pdf, version 1" }),
     ).toBeVisible();
+  });
+
+  it("keeps the panel open on a tab other than Overview or Documents", async () => {
+    const api = filingApi(
+      [readableFiled("doc-2", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    await user.click(await within(section).findByRole("button", { name: "signed.pdf" }));
+    await screen.findByRole("complementary", { name: "signed.pdf, version 1" });
+
+    await user.click(screen.getByRole("link", { name: "Fields" }));
+    await screen.findByRole("region", { name: "Fields" });
+
+    expect(screen.getByRole("complementary", { name: "signed.pdf, version 1" })).toBeVisible();
+    // Docked above the threshold, it is the 720px column beside the
+    // section rather than the layer over it.
+    expect(screen.getByRole("complementary", { name: "signed.pdf, version 1" })).toHaveClass(
+      "@min-[1400px]/record:w-(--width-docpanel)",
+      "@min-[1400px]/record:shrink-0",
+    );
+  });
+
+  /**
+   * A `ResizeObserver` that hands its callback back, so a test can say
+   * how wide the record-content region is.
+   *
+   * jsdom lays nothing out, so the project's own polyfill never fires
+   * and every panel reads as docked. That is the right default for the
+   * tests above, and useless for the one below — the overlay case only
+   * exists at a width jsdom will never report on its own.
+   */
+  class RecordingResizeObserver implements ResizeObserver {
+    static instances: RecordingResizeObserver[] = [];
+    readonly callback: ResizeObserverCallback;
+    constructor(callback: ResizeObserverCallback) {
+      this.callback = callback;
+      RecordingResizeObserver.instances.push(this);
+    }
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+
+  it("closes the panel on a section tab change while it overlays the record", async () => {
+    // The bug this is here for: below the docking threshold the panel
+    // covers whatever section is showing, so a reader who clicked
+    // Fields was left looking at the document and read the tab strip as
+    // broken. Docked it stays open (the test above); overlaying it gets
+    // out of the way.
+    RecordingResizeObserver.instances = [];
+    vi.stubGlobal("ResizeObserver", RecordingResizeObserver);
+    const api = filingApi(
+      [readableFiled("doc-2", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    await user.click(await within(section).findByRole("button", { name: "signed.pdf" }));
+    await screen.findByRole("complementary", { name: "signed.pdf, version 1" });
+
+    // Narrower than the 1400px the panel needs to dock into.
+    const observer = RecordingResizeObserver.instances.at(-1)!;
+    observer.callback(
+      [{ contentRect: { width: 900 } }] as unknown as ResizeObserverEntry[],
+      observer,
+    );
+
+    await user.click(screen.getByRole("link", { name: "Fields" }));
+    await screen.findByRole("region", { name: "Fields" });
+
+    expect(
+      screen.queryByRole("complementary", { name: "signed.pdf, version 1" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("opens an applet beside the document viewer rather than under it", async () => {
+    // The panel used to overlay the whole row and cover any applet
+    // that opened in it. Its containing block is the record-content
+    // region now, which the applet panel and the activity bar are
+    // outside of, so opening Team while a document is on screen leaves
+    // both complementaries visible whether the panel docks or overlays.
+    const api = filingApi(
+      [readableFiled("doc-2", "signed.pdf", "f-1")],
+      [folder("f-1", "Executed")],
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await user.click(await within(section).findByRole("button", { name: "Expand Executed" }));
+    await user.click(await within(section).findByRole("button", { name: "signed.pdf" }));
+    const doc = await screen.findByRole("complementary", { name: "signed.pdf, version 1" });
+
+    const bar = screen.getByRole("toolbar", { name: "Applets" });
+    await user.click(within(bar).getByRole("button", { name: "Team" }));
+    const applet = await screen.findByRole("complementary", { name: "Team" });
+
+    expect(doc).toBeVisible();
+    expect(applet).toBeVisible();
+    // The applet is a sibling of the region the doc panel is drawn in,
+    // never a child of it — so no z-index of the panel's can put it
+    // underneath.
+    expect(doc.parentElement).not.toContainElement(applet);
   });
 
   /**
