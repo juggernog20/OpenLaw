@@ -292,7 +292,7 @@ describe("the Renew dialog (CTR-007's first vehicle)", () => {
       screen.queryByRole("region", { name: "Renewal pending confirmation" }),
     ).not.toBeInTheDocument();
     // And the record's own expiry box has taken the new date.
-    expect(screen.getByLabelText("Expiry date")).toHaveValue("2027-06-30");
+    expect(screen.getByLabelText("Expiry date")).toHaveTextContent("Jun 30, 2027");
   });
 
   it("commits the date the person entered rather than the proposal", async () => {

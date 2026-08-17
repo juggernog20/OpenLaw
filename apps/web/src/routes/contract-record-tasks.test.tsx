@@ -207,6 +207,10 @@ describe("the record's Tasks section (CTR-017)", () => {
 
     expect(card.getByRole("img", { name: "3 tasks" })).toBeInTheDocument();
     expect(card.getByText("1 of 3 done")).toBeInTheDocument();
+
+    // The tab chip counts open work, not the whole checklist.
+    const strip = within(screen.getByRole("navigation", { name: "Contract sections" }));
+    expect(strip.getByRole("img", { name: "2 open tasks" })).toBeInTheDocument();
   });
 
   it("shows the due date on a task that has one", async () => {

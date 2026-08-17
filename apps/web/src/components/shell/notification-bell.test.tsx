@@ -2,7 +2,7 @@
 
 /**
  * The bell and the notification centre (#317, NOT-001, NOT-005,
- * DES-048).
+ * DES-049).
  *
  * **The badge is the server's number.** It shows what the count read
  * answers, caps its *drawing* at "9+", and says the whole number in the

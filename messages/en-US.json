@@ -5,6 +5,9 @@
   "action.cancel": {
     "defaultMessage": "Cancel"
   },
+  "action.clear": {
+    "defaultMessage": "Clear"
+  },
   "action.continue": {
     "defaultMessage": "Continue"
   },
@@ -1226,6 +1229,9 @@
   "contracts.record.tab.approvals": {
     "defaultMessage": "Approvals"
   },
+  "contracts.record.tab.approvals.open": {
+    "defaultMessage": "{count, plural, one {# open approval} other {# open approvals}}"
+  },
   "contracts.record.tab.documents": {
     "defaultMessage": "Documents"
   },
@@ -1235,11 +1241,17 @@
   "contracts.record.tab.keyDates": {
     "defaultMessage": "Key dates"
   },
+  "contracts.record.tab.keyDates.upcoming": {
+    "defaultMessage": "{count, plural, one {# upcoming date} other {# upcoming dates}}"
+  },
   "contracts.record.tab.overview": {
     "defaultMessage": "Overview"
   },
   "contracts.record.tab.tasks": {
     "defaultMessage": "Tasks"
+  },
+  "contracts.record.tab.tasks.open": {
+    "defaultMessage": "{count, plural, one {# open task} other {# open tasks}}"
   },
   "contracts.reference": {
     "defaultMessage": "C-{number}"
@@ -1520,6 +1532,27 @@
   "counterparty.picker.searching": {
     "defaultMessage": "Searching…"
   },
+  "datePicker.calendar": {
+    "defaultMessage": "Choose a date"
+  },
+  "datePicker.clear": {
+    "defaultMessage": "Clear date"
+  },
+  "datePicker.month": {
+    "defaultMessage": "Month"
+  },
+  "datePicker.nextMonth": {
+    "defaultMessage": "Next month"
+  },
+  "datePicker.placeholder": {
+    "defaultMessage": "Select a date"
+  },
+  "datePicker.previousMonth": {
+    "defaultMessage": "Previous month"
+  },
+  "datePicker.year": {
+    "defaultMessage": "Year"
+  },
   "dialog.close": {
     "defaultMessage": "Close"
   },
@@ -1589,11 +1622,14 @@
   "docPanel.pdf.nextPage": {
     "defaultMessage": "Next page"
   },
+  "docPanel.pdf.page": {
+    "defaultMessage": "{filename}, page {page}"
+  },
   "docPanel.pdf.pageOf": {
     "defaultMessage": "Page {page} of {total}"
   },
   "docPanel.pdf.pages": {
-    "defaultMessage": "{filename}, page {page} of {total}"
+    "defaultMessage": "{filename}, pages"
   },
   "docPanel.pdf.previousPage": {
     "defaultMessage": "Previous page"
@@ -1628,14 +1664,23 @@
   "documents.action.markConfidential": {
     "defaultMessage": "Mark confidential"
   },
+  "documents.action.markExecuted": {
+    "defaultMessage": "Mark as executed copy"
+  },
   "documents.action.moveToFolder": {
     "defaultMessage": "Move to folder"
   },
   "documents.action.restore": {
     "defaultMessage": "Restore"
   },
+  "documents.action.unmarkExecuted": {
+    "defaultMessage": "Unmark as executed copy"
+  },
   "documents.actionsFor": {
     "defaultMessage": "Actions for {title}"
+  },
+  "documents.actionsForVersion": {
+    "defaultMessage": "Actions for version {number} of {title}"
   },
   "documents.archivedPill": {
     "defaultMessage": "Archived"
@@ -1763,9 +1808,6 @@
   "documents.column.name": {
     "defaultMessage": "Name"
   },
-  "documents.column.size": {
-    "defaultMessage": "Size"
-  },
   "documents.column.uploadedBy": {
     "defaultMessage": "Uploaded by"
   },
@@ -1813,9 +1855,6 @@
   },
   "documents.countLabel": {
     "defaultMessage": "{count, plural, one {# document} other {# documents}}"
-  },
-  "documents.current": {
-    "defaultMessage": "Current"
   },
   "documents.delete.body": {
     "defaultMessage": "{title} and its {count, plural, one {# version} other {# versions}} are removed, and the stored files with them. You cannot undo this."
@@ -1960,9 +1999,6 @@
   },
   "documents.notePrefix": {
     "defaultMessage": "Note:"
-  },
-  "documents.pinExecuted": {
-    "defaultMessage": "Pin version {number} of {title} as the executed copy"
   },
   "documents.primary": {
     "defaultMessage": "Primary"

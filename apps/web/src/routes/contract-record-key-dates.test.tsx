@@ -240,6 +240,11 @@ describe("the record's Key dates section (CTR-009)", () => {
     expect(card.getByRole("img", { name: "4 dates" })).toBeInTheDocument();
     expect(card.getByText("3 upcoming")).toBeInTheDocument();
     expect(card.getByText("1 past")).toBeInTheDocument();
+
+    // The tab chip counts upcoming work, not the whole union — a past
+    // date is not news on the strip.
+    const strip = within(screen.getByRole("navigation", { name: "Contract sections" }));
+    expect(strip.getByRole("img", { name: "3 upcoming dates" })).toBeInTheDocument();
   });
 
   it("names the next deadline in words, not only in colour", async () => {
@@ -542,7 +547,7 @@ describe("the record's Key dates section (CTR-009)", () => {
     held[1]!([deadline({ keyDateId: "kd-newest", label: "From the newest read" })]);
     held[0]!([deadline({ keyDateId: "kd-stale", label: "From the stale read" })]);
 
-    await user.click(screen.getByRole("link", { name: "Key dates" }));
+    await user.click(screen.getByRole("link", { name: /^Key dates/ }));
     const card = await section();
     expect(card.getByText("From the newest read")).toBeInTheDocument();
     expect(card.queryByText("From the stale read")).not.toBeInTheDocument();

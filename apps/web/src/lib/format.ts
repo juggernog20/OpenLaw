@@ -239,6 +239,21 @@ export function formatShortDate(value: Date | string, options?: FormatOptions): 
 }
 
 /**
+ * Date-input rule: "May 3, 2026" — always the year. A picker showing
+ * the value it will write cannot elide the year the way a list column
+ * can; "Jan 1" in a form is a guess.
+ */
+export function formatFullDate(value: Date | string, options?: FormatOptions): string {
+  const { date, dateOnly } = parseValue(value);
+  return dateFormatter(resolveLocale(options), {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: dateOnly ? "UTC" : resolveTimeZone(options),
+  }).format(date);
+}
+
+/**
  * The one canonical human-readable absolute time (audit log, file
  * metadata, and every timestamp tooltip): "May 3, 2026, 2:34 PM PDT" —
  * always the year, hours and minutes but no seconds, and the timezone

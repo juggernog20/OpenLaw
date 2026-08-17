@@ -4,8 +4,10 @@
  * The Documents section of the contract record (M11/2, M11/3, M11/4,
  * M11/5), drawn from the C4 mock's list: the section heading with a
  * count of what is on the record, the upload control beside it, and one
- * row per document — name, kind, version, size, when it landed, and who
- * put it there.
+ * row per document — name, kind, version, when it landed, and who put
+ * it there. The mock's own Size column is dropped (2026-08-18): a
+ * legal team reads a contract's paper by what it is and when it moved,
+ * never by how many bytes it takes on disk.
  *
  * **The chain reads as a negotiation, not as a pile of files.** A
  * document's row is the version that matters now (DOC-001), marked
@@ -47,23 +49,26 @@
  * rather than in place on the name cell, because on this surface the
  * name is what opens the file.
  *
- * **The two designations are one click each, and they report where the
- * section already reports.** Neither collects anything, so neither is a
- * form: naming the instrument is a control on the document's row, and
- * pinning the signed copy is a control on the version's own row —
- * including a superseded one, because the signed copy is often not the
- * last round. Each write says saving, then saved or why not, in the
- * header's own micro-state (DES-017).
+ * **The two designations report where the section already reports.**
+ * Neither collects anything, so neither is a form: each write says
+ * saving, then saved or why not, in the header's own micro-state
+ * (DES-017).
  *
- * **Controls are split by what they are about, and the document's own
- * go in one overflow menu** (DES-025's pattern, for its reason). The pin
- * is a fact about a version, so it stays inline on the version's own
- * row. Everything else — the instrument, the next round, the details,
- * and DOC-010's two removals — is about the document, and six unlabelled
- * glyphs on a 13px row have nowhere to sit and no way to tell an archive
- * from an erasure. The menu is the shipped DropdownMenu on a `ghost`
- * `icon` Button, offering what this viewer may do and nothing else —
- * absent, not disabled, the convention the comment row already follows.
+ * **Both designations sit in an overflow menu on the version's own
+ * row** (DES-025's pattern, for its reason). Naming the instrument is a
+ * document-level menu item, on the current-version row; pinning the
+ * signed copy is a menu item too, on whichever row it applies to —
+ * including a superseded one, because the signed copy is often not the
+ * last round. A superseded round has no document-level act, so it gets
+ * a one-item menu of its own (`VersionPinMenu`) rather than borrowing
+ * the current row's `DocumentActions`, which speaks for the document,
+ * not for that round. Six unlabelled glyphs on a 13px row would have
+ * nowhere to sit and no way to tell an archive from an erasure, so
+ * everything about the document — the instrument, the next round, the
+ * details, and DOC-010's two removals — lives in the one menu with it.
+ * The menu is the shipped DropdownMenu on a `ghost` `icon` Button,
+ * offering what this viewer may do and nothing else — absent, not
+ * disabled, the convention the comment row already follows.
  *
  * **Archiving is one click and erasing is not** (DOC-010). Archive
  * destroys nothing, so it takes no confirmation: the row leaves the list
@@ -162,7 +167,7 @@ import { Switch } from "../ui/switch";
 import { StatusNote, type FieldStatus } from "../status-note";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
 import { cn } from "../../lib/utils";
-import { formatFileSize, formatShortDate } from "../../lib/format";
+import { formatShortDate } from "../../lib/format";
 import {
   dragCarriesFiles,
   filesFromDirectoryPicker,
@@ -1353,25 +1358,27 @@ export function DocumentsCard({
         </p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full">
+          {/* Fixed rather than auto: every other column already carries
+              an explicit width, and a truncating Name cell needs a
+              stable width to truncate against — auto layout keeps
+              recomputing column widths from content, which is what let
+              a long file name squeeze the Kind pill into wrapping. */}
+          <table className="w-full table-fixed">
             <thead>
               <tr className="text-start text-sm font-medium text-muted">
                 <th scope="col" className="px-4 py-2 text-start font-medium">
                   <FormattedMessage id="documents.column.name" defaultMessage="Name" />
                 </th>
-                <th scope="col" className="w-40 px-4 py-2 text-start font-medium">
+                <th scope="col" className="w-32 px-4 py-2 text-start font-medium">
                   <FormattedMessage id="documents.column.kind" defaultMessage="Kind" />
                 </th>
-                <th scope="col" className="w-32 px-4 py-2 text-start font-medium">
+                <th scope="col" className="w-24 px-4 py-2 text-start font-medium">
                   <FormattedMessage id="documents.column.version" defaultMessage="Version" />
                 </th>
-                <th scope="col" className="w-28 px-4 py-2 text-start font-medium">
-                  <FormattedMessage id="documents.column.size" defaultMessage="Size" />
-                </th>
-                <th scope="col" className="w-32 px-4 py-2 text-start font-medium">
+                <th scope="col" className="w-24 px-4 py-2 text-start font-medium">
                   <FormattedMessage id="documents.column.modified" defaultMessage="Modified" />
                 </th>
-                <th scope="col" className="w-16 px-4 py-2 text-end font-medium">
+                <th scope="col" className="w-10 px-2 py-2 text-end font-medium">
                   <span className="sr-only">
                     <FormattedMessage
                       id="documents.column.uploadedBy"
@@ -1380,7 +1387,7 @@ export function DocumentsCard({
                   </span>
                 </th>
                 {!frozen && (
-                  <th scope="col" className="w-24 px-4 py-2 text-end font-medium">
+                  <th scope="col" className="w-10 px-2 py-2 text-end font-medium">
                     <span className="sr-only">
                       <FormattedMessage id="documents.column.actions" defaultMessage="Actions" />
                     </span>
@@ -1695,14 +1702,19 @@ function DocumentRows({
                   )}
                   <FileText size={16} aria-hidden="true" className="mt-1 shrink-0 text-muted" />
                   <span className="flex min-w-0 flex-col">
-                    <span className="flex flex-wrap items-center gap-1.5">
+                    <span className="flex items-center gap-1.5">
+                      {/* A long file name truncates to one line
+                          rather than pushing the row's height
+                          around; the full name is still there on
+                          hover and for a screen reader, which
+                          reads the element's own text either way. */}
                       <OpenVersion
                         document={document}
                         version={chain.current}
                         label={document.title}
                         reading={rows.reading}
                         onRead={rows.onRead}
-                        className="font-medium"
+                        className="min-w-0 flex-1 truncate text-base font-medium"
                       />
                       {/* DES-009 Tier 1, beside a document's name
                           rather than a record's: this file is
@@ -1711,7 +1723,7 @@ function DocumentRows({
                           reader can already see — a reader
                           outside the audience is sent no row, so
                           nothing here is ever a placeholder. */}
-                      {document.isConfidential && <ConfidentialMarker />}
+                      {document.isConfidential && <ConfidentialMarker className="shrink-0" />}
                       {/* The instrument the contract is (CTR-014).
                           Marked on the row rather than in a caption
                           over the list, because a caption cannot say
@@ -1720,7 +1732,7 @@ function DocumentRows({
                           designation is a structural fact, not a
                           status. */}
                       {document.isPrimary && (
-                        <span className="rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
+                        <span className="shrink-0 rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
                           <FormattedMessage id="documents.primary" defaultMessage="Primary" />
                         </span>
                       )}
@@ -1730,7 +1742,7 @@ function DocumentRows({
                           marks an archived record with, because
                           it is the same fact one level down. */}
                       {document.archivedAt !== null && (
-                        <span className="rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
+                        <span className="shrink-0 rounded-pill bg-badge-count-bg px-2 py-0.5 text-xs font-medium text-badge-count-fg">
                           <FormattedMessage id="documents.archivedPill" defaultMessage="Archived" />
                         </span>
                       )}
@@ -1763,28 +1775,14 @@ function DocumentRows({
               </td>
               <KindCell version={chain.current} intl={rows.intl} />
               <VersionCell version={chain.current} intl={rows.intl} />
-              <SizeCell version={chain.current} />
               <ModifiedCell version={chain.current} />
               <UploaderCell version={chain.current} intl={rows.intl} />
               {!rows.frozen && (
-                <td className="px-4 py-2.5">
+                <td className="px-2 py-2.5">
                   <span className="flex items-center justify-end gap-1">
-                    {/* The pin is a fact about a version, so it
-                        stays on the version's own row. An archived
-                        document takes no pin — the seam refuses
-                        it — so the control is absent there rather
-                        than dead. */}
-                    {document.archivedAt === null && (
-                      <PinButton
-                        document={document}
-                        version={chain.current}
-                        busy={rows.busy}
-                        intl={rows.intl}
-                        onToggle={rows.onPin}
-                      />
-                    )}
                     <DocumentActions
                       document={document}
+                      version={chain.current}
                       busy={rows.busy}
                       canErase={rows.canErase}
                       canFlag={rows.canFlag(document)}
@@ -1797,6 +1795,7 @@ function DocumentRows({
                       onArchive={() => rows.onArchive(document, true)}
                       onRestore={() => rows.onArchive(document, false)}
                       onDelete={() => rows.onDelete(document)}
+                      onToggleExecuted={() => rows.onPin(document, chain.current)}
                     />
                   </span>
                 </td>
@@ -1825,6 +1824,7 @@ function DocumentRows({
                           label={version.originalFilename}
                           reading={rows.reading}
                           onRead={rows.onRead}
+                          className="min-w-0 truncate text-base"
                         />
                         {version.note && (
                           <span className="text-sm text-muted">
@@ -1842,11 +1842,10 @@ function DocumentRows({
                   </td>
                   <KindCell version={version} intl={rows.intl} />
                   <VersionCell version={version} intl={rows.intl} />
-                  <SizeCell version={version} />
                   <ModifiedCell version={version} />
                   <UploaderCell version={version} intl={rows.intl} />
                   {!rows.frozen && (
-                    <td className="px-4 py-2.5">
+                    <td className="px-2 py-2.5">
                       {/* A superseded round takes the pin as
                           readily as the current one: a contract
                           signed in round two and amended in round
@@ -1855,7 +1854,7 @@ function DocumentRows({
                           for the reason its own row gives. */}
                       <span className="flex items-center justify-end gap-1">
                         {document.archivedAt === null && (
-                          <PinButton
+                          <VersionPinMenu
                             document={document}
                             version={version}
                             busy={rows.busy}
@@ -2034,16 +2033,15 @@ function FolderRows({
                     </span>
                   </span>
                 </td>
-                {/* A folder has no kind, no version, no size and no
-                    modified date, so those four cells are empty rather
-                    than filled with four em dashes. */}
-                <td className="px-4 py-2.5" />
+                {/* A folder has no kind, no version and no modified
+                    date, so those cells are empty rather than filled
+                    with em dashes. */}
                 <td className="px-4 py-2.5" />
                 <td className="px-4 py-2.5" />
                 <td className="px-4 py-2.5" />
                 <td className="px-4 py-2.5" />
                 {!rows.frozen && (
-                  <td className="px-4 py-2.5">
+                  <td className="px-2 py-2.5">
                     <span className="flex items-center justify-end gap-1">
                       <FolderActions
                         folder={folder}
@@ -2118,7 +2116,7 @@ function FolderListingFoot({
 }>) {
   /** Every column of the table, so a foot spans the row it sits in. The
    * actions column is absent for a viewer who may not act. */
-  const columns = rows.frozen ? 6 : 7;
+  const columns = rows.frozen ? 5 : 6;
   const loading = listing === undefined || listing.loading;
   if (!loading && listing.error === null && listing.nextCursor === null) return null;
 
@@ -2709,6 +2707,11 @@ function OpenVersion({
         // response says the same thing in its own headers, so a browser
         // that ignores the attribute still saves the file.
         download={version.originalFilename}
+        // The row's own name may be truncated to one line (a long file
+        // name would otherwise push the row's height around); the
+        // native tooltip is what still answers "what is this called"
+        // without a second, JS-driven tooltip component for one string.
+        title={label}
         className={cn(shared, className)}
       >
         {label}
@@ -2721,6 +2724,7 @@ function OpenVersion({
       type="button"
       aria-current={reading === version.id ? "true" : undefined}
       onClick={(event) => onRead(document, version, event.currentTarget)}
+      title={label}
       className={cn(shared, reading === version.id && "underline", className)}
     >
       {label}
@@ -2755,6 +2759,14 @@ const ACTION_LABEL = {
   archive: defineMessage({ id: "documents.action.archive", defaultMessage: "Archive" }),
   restore: defineMessage({ id: "documents.action.restore", defaultMessage: "Restore" }),
   delete: defineMessage({ id: "documents.action.delete", defaultMessage: "Delete" }),
+  markExecuted: defineMessage({
+    id: "documents.action.markExecuted",
+    defaultMessage: "Mark as executed copy",
+  }),
+  unmarkExecuted: defineMessage({
+    id: "documents.action.unmarkExecuted",
+    defaultMessage: "Unmark as executed copy",
+  }),
 } as const;
 
 /** What a folder's own menu says (DES-033). Its own set rather than
@@ -2787,6 +2799,7 @@ const FOLDER_ACTION_LABEL = {
  */
 function DocumentActions({
   document,
+  version,
   busy,
   canErase,
   canFlag,
@@ -2799,8 +2812,14 @@ function DocumentActions({
   onArchive,
   onRestore,
   onDelete,
+  onToggleExecuted,
 }: Readonly<{
   document: ContractDocument;
+  /** The current version, whose executed pin this menu also offers
+   * (CTR-014). A superseded round gets its own menu — see
+   * `VersionPinMenu` — because it has no document-level act to sit
+   * beside. */
+  version: DocumentVersion;
   busy: boolean;
   canErase: boolean;
   /** Whether this viewer is one of DD-014's three actors for this
@@ -2815,6 +2834,7 @@ function DocumentActions({
   onArchive: () => void;
   onRestore: () => void;
   onDelete: () => void;
+  onToggleExecuted: () => void;
 }>) {
   const archived = document.archivedAt !== null;
   return (
@@ -2846,6 +2866,16 @@ function DocumentActions({
                 <FormattedMessage {...ACTION_LABEL.makePrimary} />
               </DropdownMenuItem>
             )}
+            {/* The other of CTR-014's two designations: which version
+                is the signed copy, as opposed to which document is the
+                instrument. A distinct verb from Make primary, so the
+                two never read as one choice. */}
+            <DropdownMenuItem onSelect={onToggleExecuted}>
+              <Pin size={16} aria-hidden="true" />
+              <FormattedMessage
+                {...(version.isExecuted ? ACTION_LABEL.unmarkExecuted : ACTION_LABEL.markExecuted)}
+              />
+            </DropdownMenuItem>
             <DropdownMenuItem onSelect={onAddVersion}>
               <FilePlus2 size={16} aria-hidden="true" />
               <FormattedMessage {...ACTION_LABEL.addVersion} />
@@ -3018,9 +3048,9 @@ function DeleteDialog({
 
 function KindCell({ version, intl }: Readonly<{ version: DocumentVersion; intl: IntlShape }>) {
   return (
-    <td className="px-4 py-2.5 align-top">
+    <td className="px-4 py-2.5">
       <span
-        className={`inline-flex rounded-pill px-2 py-0.5 text-xs font-medium ${KIND_PILL[version.kind]}`}
+        className={`inline-flex whitespace-nowrap rounded-pill px-2 py-0.5 text-xs font-medium ${KIND_PILL[version.kind]}`}
       >
         {kindLabel(intl, version.kind)}
       </span>
@@ -3029,19 +3059,22 @@ function KindCell({ version, intl }: Readonly<{ version: DocumentVersion; intl: 
 }
 
 /**
- * The version's number, and what the record calls this round: the file
- * that matters now (DOC-001), the signed copy (CTR-014), or both, or
- * neither.
+ * The version's number, and the signed copy (CTR-014), if this is it.
  *
- * Both marks are the API's own, so the section cannot disagree with the
- * record about which version is which. They wear the same quiet
- * treatment because they answer the same kind of question — and because
- * a coloured Executed here would argue with the Executed *kind* pill in
- * the next column, which is a different fact wearing the same word.
+ * No "Current" mark: `chainOf` (lib/documents.ts) defines the row this
+ * cell sits on as the version the API already flagged current — every
+ * head row is current by construction, every superseded row never is,
+ * so the mark could only ever repeat what the row's own position (above
+ * or under "Show earlier versions") already says. The Executed mark is
+ * the API's own, so the section cannot disagree with the record about
+ * which round is the signed copy; it wears the same quiet treatment as
+ * the version chip because a coloured Executed here would argue with
+ * the Executed *kind* pill in the previous column, which is a different
+ * fact wearing the same word.
  */
 function VersionCell({ version, intl }: Readonly<{ version: DocumentVersion; intl: IntlShape }>) {
   return (
-    <td className="px-4 py-2.5 align-top">
+    <td className="px-4 py-2.5">
       <span className="flex flex-wrap items-center gap-1.5">
         <span className="rounded-chip bg-badge-count-bg px-1.5 py-px text-xs font-medium text-badge-count-fg">
           {intl.formatMessage(
@@ -3049,11 +3082,6 @@ function VersionCell({ version, intl }: Readonly<{ version: DocumentVersion; int
             { number: version.versionNumber },
           )}
         </span>
-        {version.isCurrent && (
-          <span className="text-xs font-medium text-muted">
-            <FormattedMessage id="documents.current" defaultMessage="Current" />
-          </span>
-        )}
         {version.isExecuted && (
           <span className="text-xs font-medium text-muted">
             <FormattedMessage id="documents.executed" defaultMessage="Executed" />
@@ -3065,18 +3093,16 @@ function VersionCell({ version, intl }: Readonly<{ version: DocumentVersion; int
 }
 
 /**
- * The executed pin, as one control (CTR-014).
+ * The executed pin's own menu, for a superseded round (CTR-014).
  *
- * One glyph for both directions, for DES-009's reason on the
- * confidentiality mark: an alternate glyph for the clear would be a
- * second icon for one concept.
- *
- * A toggle, named for what it toggles and never for what the next click
- * does. `aria-pressed` is what carries the state, so a reader hears
- * "Pin version 2 of … as the executed copy, pressed" — a name that also
- * changed would announce the state twice, in two different words.
+ * A superseded round has no document-level act — no add version, no
+ * move, no archive — so it earns no document menu of its own. The
+ * pin is the one question that still applies to it, and it applies to
+ * this version alone, so it gets a one-item menu of its own rather
+ * than folding into the current row's `DocumentActions`, which speaks
+ * for a different version.
  */
-function PinButton({
+function VersionPinMenu({
   document,
   version,
   busy,
@@ -3090,42 +3116,43 @@ function PinButton({
   onToggle: (document: ContractDocument, version: DocumentVersion) => void;
 }>) {
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      disabled={busy}
-      aria-pressed={version.isExecuted}
-      onClick={() => onToggle(document, version)}
-      aria-label={intl.formatMessage(
-        {
-          id: "documents.pinExecuted",
-          defaultMessage: "Pin version {number} of {title} as the executed copy",
-        },
-        { number: version.versionNumber, title: document.title },
-      )}
-    >
-      <Pin size={16} aria-hidden="true" />
-    </Button>
-  );
-}
-
-function SizeCell({ version }: Readonly<{ version: DocumentVersion }>) {
-  return (
-    <td className="px-4 py-2.5 align-top text-sm text-muted">{formatFileSize(version.byteSize)}</td>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          disabled={busy}
+          aria-label={intl.formatMessage(
+            {
+              id: "documents.actionsForVersion",
+              defaultMessage: "Actions for version {number} of {title}",
+            },
+            { number: version.versionNumber, title: document.title },
+          )}
+        >
+          <MoreHorizontal size={16} aria-hidden="true" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onSelect={() => onToggle(document, version)}>
+          <Pin size={16} aria-hidden="true" />
+          <FormattedMessage
+            {...(version.isExecuted ? ACTION_LABEL.unmarkExecuted : ACTION_LABEL.markExecuted)}
+          />
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
 function ModifiedCell({ version }: Readonly<{ version: DocumentVersion }>) {
-  return (
-    <td className="px-4 py-2.5 align-top text-sm text-muted">
-      {formatShortDate(version.createdAt)}
-    </td>
-  );
+  return <td className="px-4 py-2.5 text-sm text-muted">{formatShortDate(version.createdAt)}</td>;
 }
 
 function UploaderCell({ version, intl }: Readonly<{ version: DocumentVersion; intl: IntlShape }>) {
   return (
-    <td className="px-4 py-2.5 align-top">
+    <td className="px-2 py-2.5">
       <span className="flex items-center justify-end">
         {/* The face is decorative (DES-018 draws it aria-hidden), so the
             name is here for a reader who cannot see it. */}

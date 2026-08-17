@@ -1,20 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Popover (DES-004: shadcn-shaped, owned source, semantic tokens only).
- * Radix supplies the behavior — anchoring, the focus trap, `Esc` to
- * dismiss (DES-010), and returning focus to the trigger on close.
- *
- * It is a **panel**, not a menu, and that is the whole reason it exists
- * beside `dropdown-menu.tsx`. A menu's contents are a list of commands
- * with roving focus, and every one of them closes the menu when it is
- * chosen. The notification centre is a list with a paging control in its
- * foot and a command in its head: pressing "Show older" has to leave the
- * panel open and tab has to walk the items, which is what a panel does
- * and a menu cannot.
- *
- * The surface is card chrome — `bg-raised` with the default border —
- * matching the dropdown's, so the two read as one family in the header.
+ * Popover (DES-004: shadcn-shaped, owned source, semantic tokens
+ * only). Radix supplies positioning, focus, Esc dismissal, and focus
+ * restoration; only the parts the app uses are kept. The surface
+ * matches the dropdown: bg-raised with the default border. No enter
+ * animation — DES-003 caps motion at hover/focus, ≤200ms.
  */
 
 import * as React from "react";
@@ -26,7 +17,7 @@ const PopoverTrigger = PopoverPrimitive.Trigger;
 
 function PopoverContent({
   className,
-  align = "end",
+  align = "start",
   sideOffset = 6,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
@@ -36,7 +27,7 @@ function PopoverContent({
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          "z-50 rounded-card border border-border-default bg-raised text-base text-primary shadow-md",
+          "z-50 rounded-card border border-border-default bg-raised p-2 text-base text-primary shadow-md outline-none",
           className,
         )}
         {...props}

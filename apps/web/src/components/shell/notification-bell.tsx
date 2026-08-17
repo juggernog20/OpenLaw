@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The bell and the notification centre (NOT-001, NOT-005, DES-048) —
+ * The bell and the notification centre (NOT-001, NOT-005, DES-049) —
  * from the AppHeader component of designs/final-themes.pen, which draws
  * the glyph and its overhanging count badge in the header's trailing
- * cluster. The panel behind it is unmocked; DES-048 is its anatomy.
+ * cluster. The panel behind it is unmocked; DES-049 is its anatomy.
  *
  * **The bell is an ephemeral prompt, and the activity feed is the
  * durable history** (NOT-005). So there is no per-item read ceremony
@@ -253,7 +253,13 @@ export function NotificationBell() {
       </PopoverTrigger>
       <PopoverContent
         aria-label={intl.formatMessage(CENTRE_LABEL)}
-        className="flex max-h-(--radix-popover-content-available-height) w-(--width-panel) max-w-(--radix-popover-content-available-width) flex-col"
+        // Trailing-aligned, because the trigger sits at the trailing
+        // end of the header and a panel hanging off the other side
+        // would leave the screen. `p-0` drops the shared inset the
+        // calendar wants (DES-048): this panel's head and rows carry
+        // their own, and the head's rule has to reach both edges.
+        align="end"
+        className="flex max-h-(--radix-popover-content-available-height) w-(--width-panel) max-w-(--radix-popover-content-available-width) flex-col p-0"
       >
         {/* The applet panel's 44px head, which is this app's one panel
             head (DES-016). */}
@@ -328,7 +334,7 @@ export function NotificationBell() {
 }
 
 /**
- * One item (DES-026's row, DES-048): a 24px medallion carrying the
+ * One item (DES-026's row, DES-049): a 24px medallion carrying the
  * event family's glyph, then the prompt, then the timestamp.
  *
  * **The whole row is the link.** An item exists to be acted on and it
