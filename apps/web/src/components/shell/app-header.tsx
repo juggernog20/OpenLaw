@@ -5,13 +5,16 @@
  * mark and workspace crumb on the leading edge, search in the center,
  * user menu trailing. 62px tall with 16px horizontal padding per
  * DES-007. The mock's ⚖ glyph ships as the Lucide scale icon (DES-008
- * normalization); the mock's bell and create menu wait for the
- * features behind them.
+ * normalization); the mock's create menu waits for the feature behind
+ * it. The bell landed with the notification engine (NOT-001, M18/2) and
+ * sits where the frame draws it — before the avatar in the trailing
+ * cluster.
  */
 
 import { Scale } from "lucide-react";
 import { FormattedMessage } from "react-intl";
 import { NavDrawer } from "./nav-drawer";
+import { NotificationBell } from "./notification-bell";
 import { SearchInput } from "./search-input";
 import { UserMenu, type ShellUser } from "./user-menu";
 
@@ -47,7 +50,10 @@ export function AppHeader({
         </span>
       </div>
       <SearchInput />
-      <div className="flex shrink-0 items-center">
+      {/* 16px between the trailing controls, as the AppHeader frame
+          spaces its own cluster. */}
+      <div className="flex shrink-0 items-center gap-4">
+        <NotificationBell />
         <UserMenu user={user} onSignOut={onSignOut} />
       </div>
     </header>
