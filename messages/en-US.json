@@ -2292,7 +2292,7 @@
     "defaultMessage": "{hasActor, select, yes {{actor} added a version to {contract}} other {A version was added to {contract}}}"
   },
   "notifications.empty": {
-    "defaultMessage": "Nothing to catch up on. Anything that needs you shows up here."
+    "defaultMessage": "Nothing to catch up on. News about your records shows up here."
   },
   "notifications.envelope.ended": {
     "defaultMessage": "Signing ended on {contract}"

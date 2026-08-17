@@ -288,7 +288,7 @@ export function NotificationBell() {
             <p className="px-4 py-3 text-sm text-muted">
               <FormattedMessage
                 id="notifications.empty"
-                defaultMessage="Nothing to catch up on. Anything that needs you shows up here."
+                defaultMessage="Nothing to catch up on. News about your records shows up here."
               />
             </p>
           )}

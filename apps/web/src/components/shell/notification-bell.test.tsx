@@ -212,7 +212,7 @@ describe("the notification centre", () => {
     const centre = await screen.findByRole("dialog", { name: "Notifications" });
 
     expect(
-      within(centre).getByText("Nothing to catch up on. Anything that needs you shows up here."),
+      within(centre).getByText("Nothing to catch up on. News about your records shows up here."),
     ).toBeInTheDocument();
     expect(within(centre).queryByRole("button", { name: "Show older" })).not.toBeInTheDocument();
     expect(within(centre).queryByRole("button", { name: "Mark all read" })).not.toBeInTheDocument();
