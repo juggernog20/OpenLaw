@@ -74,6 +74,9 @@ function bellApi(state: {
   afterRead?: number;
   /** Fails the named page read, so the two failure states can be seen. */
   failCursor?: string | null;
+  /** Fails both writes, so what a refused write does to the badge can
+   * be seen. */
+  failWrites?: boolean;
 }) {
   const writes: { path: string; body: unknown }[] = [];
   const pages = state.pages ?? {
@@ -94,11 +97,13 @@ function bellApi(state: {
       }
       if (call.url.pathname === "/api/v1/notifications/read" && call.method === "POST") {
         writes.push({ path: "read", body: call.body });
-        return json(200, { unread: state.afterRead ?? 0 });
+        return state.failWrites
+          ? problem(500, "Nope.")
+          : json(200, { unread: state.afterRead ?? 0 });
       }
       if (call.url.pathname === "/api/v1/notifications/read-all" && call.method === "POST") {
         writes.push({ path: "read-all", body: call.body });
-        return json(200, { unread: 0 });
+        return state.failWrites ? problem(500, "Nope.") : json(200, { unread: 0 });
       }
       return undefined;
     },
@@ -265,6 +270,28 @@ describe("the notification centre", () => {
     expect(writes.at(-1)?.path).toBe("read-all");
     // Nothing left to clear, so the control goes.
     expect(within(centre).queryByRole("button", { name: "Mark all read" })).not.toBeInTheDocument();
+  });
+
+  it("leaves the badge where it was when a write is refused", async () => {
+    const user = userEvent.setup();
+    // Both writes refused. The badge is the server's number, so a write
+    // that did not land must not move it — and the surface must not
+    // guess at what the count would have been.
+    const writes = bellApi({
+      unread: 3,
+      pages: { first: { notifications: [item(1)], nextCursor: null } },
+      failWrites: true,
+    });
+    renderAt("/");
+
+    await user.click(await bell("3 unread"));
+    const centre = await screen.findByRole("dialog", { name: "Notifications" });
+    expect(writes.map((write) => write.path)).toEqual(["read"]);
+    expect(await bell("3 unread")).toBeVisible();
+
+    await user.click(within(centre).getByRole("button", { name: "Mark all read" }));
+    expect(writes.map((write) => write.path)).toEqual(["read", "read-all"]);
+    expect(await bell("3 unread")).toBeVisible();
   });
 
   it("offers no per-item read control (NOT-005 declined one)", async () => {

@@ -606,6 +606,38 @@ describe("reading is the only ceremony (NOT-005)", () => {
     expect(row?.readAt).toBeNull();
   });
 
+  it("takes one page's worth of ids and no more", async () => {
+    // The bound is the published contract: the centre draws a page at a
+    // time, so a page is what "the visible items" means. A body outside
+    // it is refused before anything is written, rather than silently
+    // half-applied.
+    const tooMany = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/notifications/read",
+      cookies: as(READER),
+      payload: { ids: Array.from({ length: 26 }, (_, index) => `n${index}`) },
+    });
+    expect(tooMany.statusCode, tooMany.body).toBe(400);
+
+    const none = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/notifications/read",
+      cookies: as(READER),
+      payload: { ids: [] },
+    });
+    expect(none.statusCode, none.body).toBe(400);
+
+    // And the page-sized ask is inside it, so the bound cannot be off
+    // by one against the read's own page.
+    const full = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/notifications/read",
+      cookies: as(READER),
+      payload: { ids: Array.from({ length: 25 }, (_, index) => `n${index}`) },
+    });
+    expect(full.statusCode, full.body).toBe(200);
+  });
+
   it("refuses a caller who is not signed in", async () => {
     const read = await harness.app.inject({
       method: "POST",
