@@ -1622,11 +1622,14 @@
   "docPanel.pdf.nextPage": {
     "defaultMessage": "Next page"
   },
+  "docPanel.pdf.page": {
+    "defaultMessage": "{filename}, page {page}"
+  },
   "docPanel.pdf.pageOf": {
     "defaultMessage": "Page {page} of {total}"
   },
   "docPanel.pdf.pages": {
-    "defaultMessage": "{filename}, page {page} of {total}"
+    "defaultMessage": "{filename}, pages"
   },
   "docPanel.pdf.previousPage": {
     "defaultMessage": "Previous page"
