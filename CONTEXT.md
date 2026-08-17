@@ -146,6 +146,14 @@ The per-record narrative of what happened, inheriting the visibility tier of eac
 The Administrator-only, append-only system-wide record, including security events the activity feed omits [DD-017].
 _Avoid_: using "audit log" and "activity feed" interchangeably — they are two surfaces over one table
 
+**Parent contract**:
+The single Contract one level above another in the `parent_id` hierarchy — MSA over SOW, original over substantial amendment. Arbitrarily deep, no cycles, and no inheritance: the parent's status, team, and confidentiality never flow to its children [CTR-015].
+_Avoid_: master contract, umbrella, wrapper
+
+**Contract link type**:
+The kind of typed directional link between two Contracts: `related` (symmetric), `renews` (directional — the linking Contract renews the other), or `amends` (directional — the linking Contract amends the other). One row per pair per type; each link is read from both directions [CTR-015].
+_Avoid_: relation type (use "link type" in prose), connection type
+
 **Restricted contract**:
 The server's answer when a relative on the relations surface is a Contract the viewer cannot reach. The response carries no number and no title — the placeholder is the server's decision, not the client's redaction [CTR-018].
 _Avoid_: hidden contract, redacted contract, inaccessible contract
