@@ -195,6 +195,13 @@ export const MAX_KEY_DATE_LABEL_LENGTH = 200;
 export const MAX_KEY_DATE_NOTE_LENGTH = 2000;
 
 /**
+ * One title constraint for the lightweight checklist (CTR-017). The
+ * database's `btrim` guard and the route's Zod schema both say 200; this
+ * keeps the input's `maxLength` in the same word.
+ */
+export const MAX_TASK_TITLE_LENGTH = 200;
+
+/**
  * How many people one envelope may be sent to (CTR-013).
  *
  * A bound rather than a preference, and a generous one: naming a

@@ -53,6 +53,8 @@ import {
   CalendarPlus,
   CalendarX,
   Check,
+  CircleCheck,
+  CircleDot,
   Clock,
   Download,
   Eraser as EraserIcon,
@@ -66,6 +68,7 @@ import {
   KeyRound,
   Link2,
   ListOrdered,
+  ListPlus,
   Lock,
   LogOut,
   MessageSquare,
@@ -1155,6 +1158,53 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       label: named(intl, payload, "label"),
       date: keyDateOn(intl, payload),
     }),
+  },
+  // The record's task checklist (M17/1, CTR-017). A verb per act, so a
+  // reader can tell a task being added from one being completed, edited,
+  // reopened, or removed without opening a payload.
+  //
+  // Each names the task, not only the act. A removal deletes the row, so
+  // its entry is the only thing left that says the task was ever there.
+  "task.added": {
+    icon: ListPlus,
+    message: defineMessage({
+      id: "activity.task.added",
+      defaultMessage: "{actor} added the task {title}",
+    }),
+    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+  },
+  "task.edited": {
+    icon: PenLine,
+    message: defineMessage({
+      id: "activity.task.edited",
+      defaultMessage: "{actor} changed the task {title}",
+    }),
+    changes: changesFrom,
+    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+  },
+  "task.completed": {
+    icon: CircleCheck,
+    message: defineMessage({
+      id: "activity.task.completed",
+      defaultMessage: "{actor} completed the task {title}",
+    }),
+    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+  },
+  "task.reopened": {
+    icon: CircleDot,
+    message: defineMessage({
+      id: "activity.task.reopened",
+      defaultMessage: "{actor} reopened the task {title}",
+    }),
+    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+  },
+  "task.removed": {
+    icon: Trash2,
+    message: defineMessage({
+      id: "activity.task.removed",
+      defaultMessage: "{actor} removed the task {title}",
+    }),
+    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
   },
   // One round of signature on the record (M15/2, M15/3, CTR-013). A
   // verb per act, so a reader can tell a completed signature from a

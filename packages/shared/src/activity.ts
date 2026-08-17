@@ -279,6 +279,26 @@ type KeyDatePayloads = {
 };
 
 /**
+ * The lightweight checklist on one contract (M17/1, CTR-017). Five verbs,
+ * one per act: add, edit, complete, reopen, remove. Each hangs off the
+ * owning contract at the standing record tier, inside the write's own
+ * transaction — the key-dates precedent.
+ *
+ * **Every payload carries the title**, because a removal deletes the row
+ * and the entry is then the only thing left that says which task went —
+ * the rule `key_date.removed` and every `document.*` payload already
+ * follow.
+ */
+type TaskPayloads = {
+  "task.added": { taskId: string; title: string };
+  /** `changed` holds only what moved — the `key_date.edited` shape. */
+  "task.edited": { taskId: string; title: string; changed: ChangedFields };
+  "task.completed": { taskId: string; title: string };
+  "task.reopened": { taskId: string; title: string };
+  "task.removed": { taskId: string; title: string };
+};
+
+/**
  * The registry record's own feed (M7): create and archive from #98, the
  * record surface's verbs from #99. A status change keeps its own verb —
  * status is the fixed code-branching enum (ENT-001), so the viewer
@@ -728,6 +748,7 @@ export type ActivityPayloadMap = UserPayloads &
   ApproverGroupPayloads &
   ApprovalPayloads &
   KeyDatePayloads &
+  TaskPayloads &
   EntityPayloads &
   ContractPayloads &
   CommentPayloads &

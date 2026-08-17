@@ -197,6 +197,7 @@ import {
 } from "../lib/format";
 import { APPROVAL_PILL, isUnresolved, type ContractApproval } from "../lib/approvals";
 import { readContractKeyDates, type ContractDeadline } from "../lib/key-dates";
+import { type ContractTask } from "../lib/tasks";
 import { confirmContractRenewal, type ConfirmedRenewal } from "../lib/renewals";
 import { FOLDER_ROOT, type ContractDocument } from "../lib/documents";
 import type { ContractFolder } from "../lib/folders";
@@ -218,6 +219,7 @@ import { ConfidentialToggle } from "../components/confidential-toggle";
 import { ConfirmRenewalDialog } from "../components/contracts/confirm-renewal-dialog";
 import { CreateContractDialog } from "../components/contracts/create-contract-dialog";
 import { KeyDatesCard } from "../components/contracts/key-dates-card";
+import { TasksCard } from "../components/contracts/tasks-card";
 import { RenewalBanner } from "../components/contracts/renewal-banner";
 import { TermTimelineCard } from "../components/contracts/term-timeline-card";
 import { CounterpartyPicker, type CounterpartyPick } from "../components/counterparty-picker";
@@ -234,7 +236,7 @@ import { Label } from "../components/ui/label";
 
 /** The record's sections (DES-032), in the order the strip draws them.
  * The Overview is the bare address, so it has no segment of its own. */
-const RECORD_TABS = ["fields", "documents", "approvals", "key-dates"] as const;
+const RECORD_TABS = ["fields", "documents", "approvals", "key-dates", "tasks"] as const;
 type RecordTabName = "overview" | (typeof RECORD_TABS)[number];
 
 export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
@@ -256,7 +258,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
   // Contributor anyway; the record read alone carries every name the
   // page has to draw.
   const canEdit = isMemberPlus(user.role);
-  const [record, documents, folders, approvals, signing, keyDates, options, registry] =
+  const [record, documents, folders, approvals, signing, keyDates, tasks, options, registry] =
     await Promise.all([
       api.GET("/api/v1/contracts/{number}", { params: { path: { number } } }),
       // The record's paper (M11/2). Read by every viewer who reaches the
@@ -294,6 +296,11 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
       // page for the roster's reason — a Contributor on the team reads the
       // record's deadlines too.
       api.GET("/api/v1/contracts/{number}/key-dates", { params: { path: { number } } }),
+      // The record's task checklist (M17/1, CTR-017): lightweight items
+      // with a done flag, an optional assignee, an optional due date, and
+      // a display order. Read by every viewer who reaches the page for
+      // the roster's reason — a Contributor on the team reads the checklist.
+      api.GET("/api/v1/contracts/{number}/tasks", { params: { path: { number } } }),
       canEdit ? api.GET("/api/v1/contracts/options") : undefined,
       // The registry's own Member+ list is the signing-entity picker's
       // source (CTR-011): it is ordered by legal name and already leaves
@@ -313,6 +320,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
     !approvals.data ||
     !signing.data ||
     !keyDates.data ||
+    !tasks.data ||
     (canEdit && !(options?.data && registry?.data))
   ) {
     throw new Error("The contract could not be read.");
@@ -338,6 +346,12 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
      * like the roster: a record with no dates at all is a fact about it,
      * not a fallback for a read that did not happen. */
     deadlines: keyDates.data.deadlines,
+    /** The record's task checklist (M17/1, CTR-017). Required like the
+     * roster: a record with no tasks at all is a fact about it, not a
+     * fallback for a read that did not happen. */
+    tasks: tasks.data.tasks,
+    taskDoneCount: tasks.data.doneCount,
+    taskTotalCount: tasks.data.totalCount,
     /** Every confirmed roll on the record, most recent first (M16/4,
      * CTR-006). It rides the record read because nothing stores a
      * renewal — these are the activity log's own entries read back
@@ -493,6 +507,9 @@ function ContractRecord() {
     approvals: contractApprovals,
     signing: contractSigning,
     deadlines: contractDeadlines,
+    tasks: contractTasks,
+    taskDoneCount: contractTaskDoneCount,
+    taskTotalCount: contractTaskTotalCount,
     renewals: contractRenewals,
     documentsCursor,
     fields,
@@ -627,6 +644,12 @@ function ContractRecord() {
   /** Which re-read of the union above is the newest one in flight. Two
    * term commits in a row race, and only the last answer may land. */
   const deadlinesRead = useRef(0);
+  /** The record's task checklist (M17/1, CTR-017). State rather than
+   * loader data because every task write answers the whole checklist,
+   * and the section replaces what it holds without a page re-read. */
+  const [tasks, setTasks] = useState<ContractTask[]>(contractTasks);
+  const [taskDoneCount, setTaskDoneCount] = useState(contractTaskDoneCount);
+  const [taskTotalCount, setTaskTotalCount] = useState(contractTaskTotalCount);
   /**
    * Which version the doc panel is reading, or none (M12/2).
    *
@@ -1308,6 +1331,10 @@ function ContractRecord() {
                 label: (
                   <FormattedMessage id="contracts.record.tab.keyDates" defaultMessage="Key dates" />
                 ),
+              },
+              {
+                to: `/contracts/${saved.number}/tasks`,
+                label: <FormattedMessage id="contracts.record.tab.tasks" defaultMessage="Tasks" />,
               },
             ]}
           />
@@ -2037,6 +2064,23 @@ function ContractRecord() {
                   noticePeriodDays={saved.noticePeriodDays}
                   frozen={frozen}
                   onDeadlines={setDeadlines}
+                />
+              )}
+              {/* The record's task checklist (M17/1, CTR-017):
+                  lightweight items with a done flag, an optional
+                  assignee, and an optional due date. */}
+              {tab === "tasks" && (
+                <TasksCard
+                  contractNumber={saved.number}
+                  tasks={tasks}
+                  doneCount={taskDoneCount}
+                  totalCount={taskTotalCount}
+                  frozen={frozen}
+                  onTasksChange={(outcome) => {
+                    setTasks(outcome.tasks);
+                    setTaskDoneCount(outcome.doneCount);
+                    setTaskTotalCount(outcome.totalCount);
+                  }}
                 />
               )}
               {tab === "approvals" && (

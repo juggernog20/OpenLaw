@@ -1751,6 +1751,7 @@ describe("the contract record's section tabs (DES-032)", () => {
       "Documents",
       "Approvals",
       "Key dates",
+      "Tasks",
     ]);
     // The Overview is the bare address, so it must not read as active
     // on its siblings — that is what `end` on the link is for.
