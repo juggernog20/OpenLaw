@@ -1296,7 +1296,7 @@ function ContractRecord() {
               ))}
               <FileText size={16} aria-hidden="true" className="shrink-0 text-muted" />
               <span className="shrink-0 text-base font-medium text-muted">{reference}</span>
-              <h1 id="page-title" className="truncate text-lg font-semibold">
+              <h1 id="page-title" className="truncate text-md font-semibold">
                 {saved.title}
               </h1>
               <span

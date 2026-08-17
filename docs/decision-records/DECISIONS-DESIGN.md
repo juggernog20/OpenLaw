@@ -424,6 +424,12 @@ DOC-004 named the doc panel as the surface that would settle the deferred pick, 
 
 Nothing ships from this addendum: no second `@font-face`, no `--font-serif` token. A face nothing renders is weight in the bundle and a token nobody picks.
 
+### Addendum (2026-08-18): a record's own title is `text-md`, not `text-lg` or `text-xl`
+
+The size ramp's "page title (h1)" role names `text-xl` (20px); the contract and entity record headers shipped at `text-lg` (18px) instead — already smaller than the documented role before this addendum, and still too large in practice. Both sit inside a single-line subbar crowded with a breadcrumb link, a reference badge, a status pill, and the stage pipeline, all set at 13px or smaller — a role built for a standalone page heading does not fit a title squeezed among that much other chrome on one row.
+
+**The record-title role is split from the standalone page-title role.** `text-xl` stays the size for a page title that owns its own line with nothing beside it. A record's `<h1 id="page-title">`, which shares its line with breadcrumb, reference, and status chrome, now sets `text-md` (14px, `font-semibold`) — one step above the 13px chrome around it, enough to still read as the heading without dominating the row. Both record headers (`contract-record.tsx`, `entity-record.tsx`) share the same subbar shape and move together for that reason. The `-0.2px` h1 letter-spacing (base-layer rule) still applies; it is a rule about the element, not about which size role that element carries.
+
 ---
 
 ## DES-007: Spacing scale + density target — Tailwind default scale, 5 layout tokens, 4 chrome dimensions, normalized to 48/8/16

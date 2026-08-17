@@ -4488,12 +4488,12 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(
       within(section).getByRole("button", { name: "Orion_MSA_2026_draft.docx" }),
     ).toBeVisible();
-    // The kind, the number, the pin, the size, and when it landed, as
-    // the C4 mock draws them.
+    // The kind, the number, and when it landed. No "Current" mark: this
+    // is the head row, which is current by construction (lib/documents.ts
+    // `chainOf`) — the mark would only repeat what the row's own
+    // position already says.
     expect(within(section).getByText("Draft · ours")).toBeVisible();
     expect(within(section).getByText("v1")).toBeVisible();
-    expect(within(section).getByText("Current")).toBeVisible();
-    expect(within(section).getByText("88 kB")).toBeVisible();
   });
 
   it("says so plainly when the record has no paper on it", async () => {
@@ -4515,7 +4515,6 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     // nothing else: the current round, under the document's own name.
     expect(within(section).getAllByRole("row")).toHaveLength(2); // header + current
     expect(within(section).getByText("v3")).toBeVisible();
-    expect(within(section).getByText("Current")).toBeVisible();
     expect(within(section).getByText("The main instrument. Clause 8 was the fight.")).toBeVisible();
     expect(within(section).getByText("Held the indemnity.")).toBeVisible();
 
@@ -4532,18 +4531,13 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(within(section).getByRole("button", { name: "round_2.docx" })).toBeVisible();
     expect(within(section).getByText("Their first pass. Clause 8 is the fight.")).toBeVisible();
     expect(within(section).getByRole("button", { name: "round_1.docx" })).toBeVisible();
-    // Ordered newest first under the current round, and the pin is on
-    // the round that leads.
+    // Ordered newest first under the current round.
     const rows = within(section).getAllByRole("row").slice(1);
     expect(rows.map((row) => within(row).getByText(/^v\d+$/).textContent)).toEqual([
       "v3",
       "v2",
       "v1",
     ]);
-    expect(within(rows[0]!).getByText("Current")).toBeVisible();
-    for (const row of rows.slice(1)) {
-      expect(within(row).queryByText("Current")).not.toBeInTheDocument();
-    }
   });
 
   it("draws no disclosure for a document with one version", async () => {
@@ -4748,12 +4742,14 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       within(section).getByRole("button", { name: /Show the 2 earlier versions of/ }),
     );
     // The signed copy is often not the last round: this contract was
-    // signed in round two and redlined again in round three.
+    // signed in round two and redlined again in round three. A
+    // superseded round's pin lives in its own row's menu (CTR-014).
     await user.click(
       within(section).getByRole("button", {
-        name: "Pin version 2 of Orion Cloud — master services agreement as the executed copy",
+        name: "Actions for version 2 of Orion Cloud — master services agreement",
       }),
     );
+    await user.click(await screen.findByRole("menuitem", { name: "Mark as executed copy" }));
 
     await waitFor(() => expect(api.writes).toHaveLength(1));
     expect(api.writes[0]).toEqual({
@@ -4761,16 +4757,20 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       body: { versionId: "ver-b" },
     });
     expect(await within(section).findByText("Executed")).toBeVisible();
-    // Current and executed are two marks on two rows, not one fact.
-    expect(within(section).getByText("Current")).toBeVisible();
 
-    // The same control, named for what it toggles: the state is on
-    // `aria-pressed`, not in the name.
-    const pin = within(section).getByRole("button", {
-      name: "Pin version 2 of Orion Cloud — master services agreement as the executed copy",
-    });
-    await waitFor(() => expect(pin).toHaveAttribute("aria-pressed", "true"));
-    await user.click(pin);
+    // The same menu, and the item's own label carries the direction
+    // now — "Unmark" once the round is pinned.
+    await user.click(
+      within(section).getByRole("button", {
+        name: "Actions for version 2 of Orion Cloud — master services agreement",
+      }),
+    );
+    await waitFor(async () =>
+      expect(
+        await screen.findByRole("menuitem", { name: "Unmark as executed copy" }),
+      ).toBeVisible(),
+    );
+    await user.click(screen.getByRole("menuitem", { name: "Unmark as executed copy" }));
 
     await waitFor(() => expect(api.writes).toHaveLength(2));
     expect(api.writes[1]!.url).toBe("/api/v1/documents/doc-3/executed-version:DELETE");
@@ -4789,17 +4789,17 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     };
     stubApi({ signedIn: MEMBER, extra: documentsApi([signed]).handler });
     renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
 
     const section = await documentsSection();
     // The kind is what the uploader called this round; the pin is what
     // the team decided, and nobody has decided yet. One "Executed" on
-    // the row — the kind pill — and none beside the version number.
+    // the row — the kind pill — and the menu still offers to mark it,
+    // not unmark it.
     expect(within(section).getAllByText("Executed")).toHaveLength(1);
-    expect(
-      within(section).getByRole("button", {
-        name: "Pin version 1 of Orion_MSA_2026_signed.pdf as the executed copy",
-      }),
-    ).toBeVisible();
+    expect(await menuVerbs(user, section, "Orion_MSA_2026_signed.pdf")).toContain(
+      "Mark as executed copy",
+    );
   });
 
   it("reports the seam's own refusal when a designation is turned down", async () => {
@@ -4845,7 +4845,6 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     // grid arrives in M23.
     expect(within(section).queryByRole("button", { name: "Upload" })).not.toBeInTheDocument();
     expect(within(section).queryByRole("button", { name: /^Actions for/ })).not.toBeInTheDocument();
-    expect(within(section).queryByRole("button", { name: /^Pin version/ })).not.toBeInTheDocument();
     expect(within(section).queryByRole("switch")).not.toBeInTheDocument();
   });
 
@@ -4863,7 +4862,6 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     const section = await documentsSection();
     expect(within(section).queryByRole("button", { name: "Upload" })).not.toBeInTheDocument();
     expect(within(section).queryByRole("button", { name: /^Actions for/ })).not.toBeInTheDocument();
-    expect(within(section).queryByRole("button", { name: /^Pin version/ })).not.toBeInTheDocument();
     expect(within(section).queryByRole("switch")).not.toBeInTheDocument();
     // Reading it is not editing it: the file opens and the marks stay.
     expect(
@@ -4945,7 +4943,6 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     // erasure is the Administrator's, not theirs.
     expect(await menuVerbs(user, section, "Orion_MSA_2026_draft.docx")).toEqual(["Restore"]);
     await user.keyboard("{Escape}");
-    expect(within(section).queryByRole("button", { name: /^Pin version/ })).not.toBeInTheDocument();
   });
 
   it("keeps the erasure off a Legal Team Member's menu", async () => {
@@ -4959,6 +4956,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     // the typed-confirmation test below.
     const member = await documentsSection();
     expect(await menuVerbs(user, member, "Orion_MSA_2026_draft.docx")).toEqual([
+      "Mark as executed copy",
       "Add version",
       "Edit details",
       // Filing is Member+, like every other write on the record's paper

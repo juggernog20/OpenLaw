@@ -1628,14 +1628,23 @@
   "documents.action.markConfidential": {
     "defaultMessage": "Mark confidential"
   },
+  "documents.action.markExecuted": {
+    "defaultMessage": "Mark as executed copy"
+  },
   "documents.action.moveToFolder": {
     "defaultMessage": "Move to folder"
   },
   "documents.action.restore": {
     "defaultMessage": "Restore"
   },
+  "documents.action.unmarkExecuted": {
+    "defaultMessage": "Unmark as executed copy"
+  },
   "documents.actionsFor": {
     "defaultMessage": "Actions for {title}"
+  },
+  "documents.actionsForVersion": {
+    "defaultMessage": "Actions for version {number} of {title}"
   },
   "documents.archivedPill": {
     "defaultMessage": "Archived"
@@ -1763,9 +1772,6 @@
   "documents.column.name": {
     "defaultMessage": "Name"
   },
-  "documents.column.size": {
-    "defaultMessage": "Size"
-  },
   "documents.column.uploadedBy": {
     "defaultMessage": "Uploaded by"
   },
@@ -1813,9 +1819,6 @@
   },
   "documents.countLabel": {
     "defaultMessage": "{count, plural, one {# document} other {# documents}}"
-  },
-  "documents.current": {
-    "defaultMessage": "Current"
   },
   "documents.delete.body": {
     "defaultMessage": "{title} and its {count, plural, one {# version} other {# versions}} are removed, and the stored files with them. You cannot undo this."
@@ -1960,9 +1963,6 @@
   },
   "documents.notePrefix": {
     "defaultMessage": "Note:"
-  },
-  "documents.pinExecuted": {
-    "defaultMessage": "Pin version {number} of {title} as the executed copy"
   },
   "documents.primary": {
     "defaultMessage": "Primary"
