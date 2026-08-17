@@ -3024,6 +3024,73 @@ The `User` glyph is the one the request named. `Users` would have named the grou
 
 `useTeamApplet` in `apps/web/src/components/contracts/team-applet.tsx` is the slot, mounted first in the contract record's applet set. `PanelApplet` gains an optional `hash` so a fragment can open an applet; the team slot is the first user. DES-016's applet set, DES-032 clause 5, and DES-028's fragment destination are amended above. No new tokens.
 
+## DES-048: The notification centre — the header bell, its counter badge, and the panel behind it (extends DES-026, DES-031, DES-016)
+
+- **Status:** Accepted
+- **Date:** 2026-08-18
+
+### Context
+
+NOT-001 puts one notification system on two surfaces, and the staff surface is a bell in the top nav. NOT-005 settles its semantics — unread count, capped at "9+", opening the centre marks the visible items read, a mark-all-read affordance, items deep-link, no per-item read ceremony. M18/2 (#317) builds it.
+
+**The bell is mocked; the panel behind it is not.** The `AppHeader` component in `designs/final-themes.pen` draws the glyph and an overhanging red count badge in the trailing cluster, between the create menu and the avatar. A sweep of every frame file that carries screens — `contracts.pen` (C1–C29), `matters.pen` (M1–M23), `settings.pen` (ST1–ST19), `intake.pen` (I1–I8), `documents.pen` (DOC1–DOC7), `entities.pen` (EN1–EN8), and `knowledge.pen` (KN1–KN6) — found no frame of the centre open. `settings.pen` **ST3** draws the Notification _preferences_ pane, which is a different surface and a different slice. So the trigger below is the frame's, and the panel below is built from the written pattern, exactly as DES-027 was: DES-016's panel head, DES-026's row and foot, DES-031's focus rule.
+
+Notification-surface UX is feature-level by this record's own scope line, so the anatomy lands here rather than the feature spec carrying it silently in code — the M15/M16/M17 precedent. Two things in it are reusable and are normalized as such: the counter badge on an icon control, and the header popover panel.
+
+### Decision
+
+**1. The trigger is an icon control in the header's trailing cluster**, before the avatar, at the frame's 16px gap. Lucide `Bell` at DES-008's 20px control step, in the chrome's muted foreground, inside a 24×24 target (DES-011's floor). The frame draws the glyph at 18px, which is off DES-008's ramp; 20 is the step it rounds to and the size every other header glyph already uses.
+
+**2. The badge is the existing alert counter, unchanged.** `bg-badge-alert-bg` / `text-badge-alert-fg`, `rounded-pill`, `h-4 min-w-4`, `text-xs` semibold, overhanging the glyph's trailing top corner. That token pair is already the activity bar's unread chat badge (DES-016, CMT-004), and its Light value is `#cf222e` — the exact fill the frame draws. **This is the normalization point:** one counter badge on an icon control, drawn one way, wherever a count sits on a glyph. The frame's 9px numeral is off the type ramp; `text-xs` (11px) is its floor and the only metadata size there is.
+
+**3. The badge is drawn capped and named uncapped.** "9+" above nine, per NOT-005. The numeral is `aria-hidden`; the count lives in the trigger's accessible name — "Notifications, 3 unread" / "Notifications, none unread" — with the **whole** number, never the cap. The cap is a nudge for the eye, and hiding the real count from a screen reader would make it a nudge that costs information. No badge is drawn at zero.
+
+**4. The centre is a popover panel, not a menu.** A menu's rows are commands with roving focus and every one of them closes it; this panel has a paging control in its foot, a command in its head, and a list of links between them. It is `Popover` (Radix, shadcn-shaped, `apps/web/src/components/ui/popover.tsx`), card chrome — `bg-raised`, `border-border-default`, `rounded-card` — aligned to the trigger's trailing edge. **This is the second normalization point:** a header affordance whose contents are a panel takes the popover; one whose contents are commands takes the dropdown menu.
+
+**5. It is one panel width.** `--width-panel` (320px), the applet panel's own token, bounded by Radix's available width and height so a phone gets the panel the viewport leaves rather than one that overflows it (DES-012). The list scrolls inside; the head does not.
+
+**6. The head is DES-016's panel head.** 44px, `border-b border-border-muted`, 16px inset, the title at 13px semibold. "Mark all read" is a ghost `Button` on the trailing edge, **drawn only while something is unread** — a control that can only ever do nothing is chrome, not an affordance.
+
+**7. A row is DES-026's row, and the whole row is the link.** 10px vertical / 16px horizontal padding, `border-muted` between rows and none under the last, a 10px gap after a 24px `rounded-pill` medallion on `bg-control` carrying the event family's Lucide glyph at 16px. Then the sentence at 12px `text-primary`, wrapping rather than truncating, then the timestamp at 11px `text-muted` on DES-014's activity-feed rule with the long absolute in the tooltip. The `<a>` wraps all of it: the item carries exactly one action, so a link inside the row would be a smaller target for the same destination.
+
+**8. Rows carry no unread marker.** Opening the centre reads everything it draws (NOT-005), so a per-item dot would go out while the reader watched it. The badge is where unread is said, and it is the only place.
+
+**9. The item's address is a record section, not a record.** An approval request opens Approvals, a task opens Tasks, paper opens Documents, a date opens Key dates, and everything else opens the record (DES-032's routed tabs). Landing a reader on the overview and making them find the thing they were just told about is one click short of the promise, and the sections are addresses precisely so a prompt can name one.
+
+**10. The foot is DES-026's, and the focus rule is DES-031's.** A secondary "Show older" while a further page exists and nothing when it does not; on press, focus lands on the first row of the page just brought. No live-region count: DES-031 clause 5 exempts a surface where focus lands on the new content, which this one does.
+
+**11. Both failures are DES-026's.** A first page that fails says so and leaves no stale list, with reopening as the way back; a failed "Show older" keeps the list and the control, because the retry is already under the reader's hand.
+
+**12. The empty state is the panel's own line** — "Nothing to catch up on. Anything that needs you shows up here." — in the row's own inset, with no foot and no mark-all-read beside it.
+
+### Recorded normalization points (frame deviations accepted)
+
+1. **The glyph renders at 20px**, not the frame's 18. DES-008's ramp has no 18, and 20 is the header's own control step.
+2. **The numeral renders at 11px**, not the frame's 9. `text-xs` is DES-006's floor and the metadata size; 9px is under the ramp and under legibility.
+3. **The badge takes the shipped alert-counter treatment**, not a bespoke pill. The frame's fill is already the token's Light value, so this is a naming change and not a visual one.
+4. **The panel has no frame at all.** Built from DES-016's head, DES-026's row and foot, and DES-031's focus rule — all of them already ratified against frames. A frame drawn for this panel later governs its chrome; the anatomy above is the decision.
+
+### Rationale
+
+Reusing the activity bar's counter badge rather than drawing a second one is the whole of point 2: two counters in one product that disagree about height, radius, or red is the kind of drift nobody reports and everybody sees. The mock's fill turning out to be the token's own value is the evidence that they were always the same badge.
+
+Point 4 is the one that decides whether the surface works. The dropdown menu was on hand and would have looked identical; it would also have closed itself the moment somebody pressed "Show older", because that is what a menu item does. Reaching for the panel primitive is not a preference — it is the only one of the two that can hold a list and a control at once.
+
+Point 8 is NOT-005 restated where it is easy to forget: the read model has exactly one write per page shown, so anything per-item would be a control for a state the reader can never be in.
+
+### Alternatives considered
+
+- **The bell as a route** (`/notifications`), with the centre as a page. Rejected: it makes the prompt a destination, and NOT-005's read-on-open would then mean "navigating away from your work reads your bell". The activity feed is the durable surface; the bell is a glance.
+- **A dropdown menu instead of a popover.** Rejected — see the Rationale.
+- **An unread dot on each row.** Rejected — see point 8.
+- **A per-item dismiss.** Rejected upstream in NOT-005's rationale, and it would need a write this API deliberately does not have.
+- **Infinite scroll in the panel.** Rejected in DES-026's own words: a scroll sentinel is not keyboard-reachable and DES-010 requires that affordances are.
+- **Showing a total, or "3 of 12".** Rejected for DES-026's reason and M10's: a count over rows the reader cannot see would announce them, and the wall's whole property here is that an omission leaves no gap to notice.
+
+### Consequences
+
+No new tokens: the badge is `badge-alert-*`, the panel is `bg-raised` / `border-border-default`, and the row is DES-026's `bg-control` / `border-muted` / `text-primary` / `text-muted`. One new primitive — `apps/web/src/components/ui/popover.tsx`, shadcn-shaped over `@radix-ui/react-popover`, which is the first popover in the app. The surface is `apps/web/src/components/shell/notification-bell.tsx`, mounted in `AppHeader`; the sentence and the address for each catalog slug are `apps/web/src/lib/notifications.ts`, which is `lib/activity.ts`'s narration layer applied to a second table and takes the same three properties — defensive payload reads, own-key-only lookup, and an explicit fallback arm. The portal bell (M20) renders the same anatomy against the portal's own chrome; if it needs a second popover panel or a second counter badge, points 2 and 4 are already the answer.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -3075,3 +3142,4 @@ The `User` glyph is the one the request named. `Users` would have named the grou
 | DES-045 | The link dialog, the picker, the refusal rendering, and the confidentiality nudge (extends DES-032, DES-024, DES-009)                                                | Accepted |
 | DES-046 | The managed list table — the width floor, the resize handle, the column menu, and the views control (extends DES-031, DES-021, DES-007)                              | Accepted |
 | DES-047 | The Team roster is an activity-bar applet (amends DES-016, DES-032, DES-028)                                                                                         | Accepted |
+| DES-048 | The notification centre — the header bell, its counter badge, and the panel behind it (extends DES-026, DES-031, DES-016)                                            | Accepted |
