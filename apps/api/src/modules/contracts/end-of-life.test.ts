@@ -43,6 +43,7 @@ interface ContractRow {
   id: string;
   number: number;
   title: string;
+  description: string | null;
   stage: string;
   statusId: string;
   statusName: string;
@@ -98,10 +99,7 @@ async function newContract(title: string): Promise<ContractRow> {
   return res.json().contract as ContractRow;
 }
 
-async function patch(
-  number: number,
-  payload: Record<string, unknown>,
-): Promise<ContractRow> {
+async function patch(number: number, payload: Record<string, unknown>): Promise<ContractRow> {
   const res = await harness.app.inject({
     method: "PATCH",
     url: `/api/v1/contracts/${number}`,
@@ -131,7 +129,10 @@ async function read(number: number): Promise<ContractRow> {
   return res.json().contract as ContractRow;
 }
 
-async function listContracts(query: Record<string, string> = {}): Promise<ContractRow[]> {
+/** One page of the list — the bounded read a client makes (CTR-024). */
+async function listPage(
+  query: Record<string, string> = {},
+): Promise<{ contracts: ContractRow[]; nextCursor: string | null }> {
   const params = new URLSearchParams(query).toString();
   const res = await harness.app.inject({
     method: "GET",
@@ -139,7 +140,27 @@ async function listContracts(query: Record<string, string> = {}): Promise<Contra
     cookies: memberCookies,
   });
   expect(res.statusCode, res.body).toBe(200);
-  return res.json().contracts as ContractRow[];
+  return res.json() as { contracts: ContractRow[]; nextCursor: string | null };
+}
+
+async function listContracts(query: Record<string, string> = {}): Promise<ContractRow[]> {
+  return (await listPage(query)).contracts;
+}
+
+/** Every contract number this viewer reaches, walked page by page —
+ * a page is not the table, and some assertions need the table. */
+async function everyNumber(query: Record<string, string> = {}): Promise<number[]> {
+  const all: number[] = [];
+  let cursor: string | null = null;
+  do {
+    const page: { contracts: ContractRow[]; nextCursor: string | null } = await listPage({
+      ...query,
+      ...(cursor === null ? {} : { cursor }),
+    });
+    all.push(...page.contracts.map((row) => row.number));
+    cursor = page.nextCursor;
+  } while (cursor !== null);
+  return all;
 }
 
 /** A civil date `days` from today, in the zone the seam counts in. */
@@ -150,16 +171,43 @@ function daysFromToday(days: number): string {
   return at.toISOString().slice(0, 10);
 }
 
+/** One-file multipart body for the DOC-001 upload seam — the write
+ * pass CTR-019 has to prove still lands on an ended contract. */
+const BOUNDARY = "openlaw-eol-boundary-4d6f636b";
+function uploadBody(filename: string): { payload: Buffer; headers: Record<string, string> } {
+  const payload = Buffer.concat([
+    Buffer.from(`--${BOUNDARY}\r\n`),
+    Buffer.from(
+      `content-disposition: form-data; name="file"; filename="${filename}"\r\n` +
+        `content-type: application/pdf\r\n\r\n`,
+    ),
+    Buffer.from("the paper filed after the deal ended"),
+    Buffer.from(`\r\n--${BOUNDARY}--\r\n`),
+  ]);
+  return {
+    payload,
+    headers: { "content-type": `multipart/form-data; boundary=${BOUNDARY}` },
+  };
+}
+
+function uploadDocument(number: number, filename: string) {
+  const { payload, headers } = uploadBody(filename);
+  return harness.app.inject({
+    method: "POST",
+    url: `/api/v1/contracts/${number}/documents`,
+    cookies: memberCookies,
+    headers,
+    payload,
+  });
+}
+
 /** Status change activity entries on one contract, oldest first. */
 const statusChangesOn = (contractId: string) =>
   harness.db
     .select()
     .from(activityLog)
     .where(
-      and(
-        eq(activityLog.entityId, contractId),
-        eq(activityLog.action, "contract.status_changed"),
-      ),
+      and(eq(activityLog.entityId, contractId), eq(activityLog.action, "contract.status_changed")),
     )
     .orderBy(asc(activityLog.createdAt), asc(activityLog.id));
 
@@ -214,22 +262,32 @@ describe("ended_at stamping (CTR-019)", () => {
 
 describe("the default list excludes ended contracts (CTR-019)", () => {
   it("excludes ended contracts from the default list and includeEnded restores them — scope filters before the limit", async () => {
-    // A live contract and an ended one, both by the same viewer.
+    // The route's page size (CTR-024). A live contract first, then a
+    // whole page of newer ended ones standing between it and the top.
+    const PAGE_SIZE = 50;
     const live = await newContract("EOL list live");
-    const ending = await newContract("EOL list ending");
-    await patch(ending.number, { statusId: expiredStatusId });
+    const endedNumbers: number[] = [];
+    for (let made = 0; made < PAGE_SIZE; made += 1) {
+      const ending = await newContract(`EOL list ending ${made}`);
+      await patch(ending.number, { statusId: expiredStatusId });
+      endedNumbers.push(ending.number);
+    }
 
-    // The default list includes the live one and excludes the ended one.
-    const defaultList = await listContracts();
-    const defaultNumbers = defaultList.map((row) => row.number);
+    // Page one of the default list holds the live contract even though
+    // a full page of newer ended contracts outranks it — the scope
+    // filtered before the limit. Filtering after it would have filled
+    // the page with the ended contracts and dropped every one of them,
+    // leaving the live contract off the page it belongs on.
+    const defaultNumbers = (await listContracts()).map((row) => row.number);
     expect(defaultNumbers).toContain(live.number);
-    expect(defaultNumbers).not.toContain(ending.number);
+    for (const number of endedNumbers) expect(defaultNumbers).not.toContain(number);
 
-    // With includeEnded, the ended one comes back.
-    const endedList = await listContracts({ includeEnded: "true" });
-    const endedNumbers = endedList.map((row) => row.number);
-    expect(endedNumbers).toContain(live.number);
-    expect(endedNumbers).toContain(ending.number);
+    // With includeEnded, the ended ones come back — all fifty on page
+    // one, since they are the newest — and the live contract still
+    // stands in the walk behind them.
+    const restored = await everyNumber({ includeEnded: "true" });
+    for (const number of endedNumbers) expect(restored).toContain(number);
+    expect(restored).toContain(live.number);
   });
 
   it("reopening brings the contract back to the default list", async () => {
@@ -295,7 +353,18 @@ describe("an ended contract stays writable (CTR-019)", () => {
     expect(edited.description).toBe("Post-mortem notes.");
   });
 
-  it("refuses the same field edit on an archived contract", async () => {
+  it("accepts a document upload on an ended contract", async () => {
+    // The second write pass the ticket names: late paper — a signed
+    // copy, a termination letter — lands on the record after the deal
+    // is dead, because the record page is where late work happens.
+    const contract = await newContract("EOL upload");
+    await patch(contract.number, { statusId: expiredStatusId });
+
+    const uploaded = await uploadDocument(contract.number, "termination-letter.pdf");
+    expect(uploaded.statusCode, uploaded.body).toBe(201);
+  });
+
+  it("refuses the same pass — a field edit and a document upload — on an archived contract", async () => {
     const contract = await newContract("EOL archived blocked");
     // Archive it.
     const archiveRes = await harness.app.inject({
@@ -308,6 +377,11 @@ describe("an ended contract stays writable (CTR-019)", () => {
     // A title edit on the archived record is refused.
     const editRes = await patchRaw(contract.number, { title: "Should fail" });
     expect(editRes.statusCode).toBe(409);
+
+    // And so is new paper: archiving freezes the record (MTR-008),
+    // where ending does not.
+    const uploaded = await uploadDocument(contract.number, "late-paper.pdf");
+    expect(uploaded.statusCode, uploaded.body).toBe(409);
   });
 });
 
