@@ -1193,6 +1193,36 @@
   "contracts.reference": {
     "defaultMessage": "C-{number}"
   },
+  "contracts.relations.amendedByLabel": {
+    "defaultMessage": "Amended by"
+  },
+  "contracts.relations.amendsLabel": {
+    "defaultMessage": "Amends"
+  },
+  "contracts.relations.children": {
+    "defaultMessage": "Children"
+  },
+  "contracts.relations.empty": {
+    "defaultMessage": "No related contracts."
+  },
+  "contracts.relations.parent": {
+    "defaultMessage": "Parent"
+  },
+  "contracts.relations.relatedLabel": {
+    "defaultMessage": "Related"
+  },
+  "contracts.relations.renewedByLabel": {
+    "defaultMessage": "Renewed by"
+  },
+  "contracts.relations.renewsLabel": {
+    "defaultMessage": "Renews"
+  },
+  "contracts.relations.restricted": {
+    "defaultMessage": "Restricted contract"
+  },
+  "contracts.relations.section": {
+    "defaultMessage": "Related contracts"
+  },
   "renewal.banner": {
     "defaultMessage": "Renewal date passed — pending confirmation. The term does not advance until a human confirms."
   },
