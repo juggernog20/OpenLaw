@@ -695,9 +695,18 @@ describe("the scheduled shape", () => {
       async () => (await envelopeRow(out.contract.number, out.envelope.id)).status === "signed",
       30_000,
     );
-    expect(
-      harness.jobLog.some((line) => line.message === "the scheduled reconciliation sweep finished"),
-    ).toBe(true);
+    // Waited for, not read once. The status flips part-way through the
+    // round, and the line is written when the handler that flipped it
+    // returns — so reading the log the instant the status lands races the
+    // tail of the handler. Under load the handler loses that race, which
+    // is what made this test flaky (#295).
+    await until(
+      () =>
+        harness.jobLog.some(
+          (line) => line.message === "the scheduled reconciliation sweep finished",
+        ),
+      30_000,
+    );
     await settledFetch(out.contract.number, out.envelope.id);
   }, 90_000);
 });
