@@ -7,7 +7,8 @@
  * time, under a 44px header carrying the applet's title and a close
  * control. The M3 header also shows a count pill — that is applet
  * content (total comments, not the bar badge's unread count) and lands
- * with the chat applet, not here. Esc from inside the panel closes it
+ * with the chat applet, not here. Focus lands on the panel container
+ * when it opens, not on Close; Esc from inside then closes it
  * (DES-010's overlay rule — Radix does not drive this aside).
  *
  * Docking is a container query on the record region, per DES-012. At or
@@ -18,7 +19,7 @@
  * so a variable would leave the utility ungenerated.
  */
 
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { useIntl } from "react-intl";
 
@@ -38,9 +39,21 @@ export function AppletPanel({
   children: ReactNode;
 }>) {
   const intl = useIntl();
+  const panel = useRef<HTMLElement>(null);
+
+  // Focus moves into the panel when it opens, so the next Tab is inside
+  // it and a screen reader reads what just appeared (DES-010). The
+  // container takes it rather than the close button: landing on Close
+  // reads as "you probably want to leave". Same treatment as DocPanel.
+  useEffect(() => {
+    panel.current?.focus();
+  }, [id, label]);
+
   return (
     <aside // NOSONAR — the listener serves DES-010's Esc rule, not interactivity
+      ref={panel}
       id={id}
+      tabIndex={-1}
       aria-label={label}
       // DES-010 says Esc closes the topmost overlay. The panel is a
       // plain aside, so Radix does not handle the key for it; a layer
@@ -49,7 +62,7 @@ export function AppletPanel({
       onKeyDown={(event) => {
         if (event.key === "Escape" && !event.defaultPrevented) onClose();
       }}
-      className="absolute inset-y-0 end-(--width-activitybar) z-10 flex w-(--width-panel) shrink-0 flex-col border-s border-border-default bg-raised @min-[1100px]/record:static @min-[1100px]/record:z-auto"
+      className="absolute inset-y-0 end-(--width-activitybar) z-10 flex w-(--width-panel) shrink-0 flex-col border-s border-border-default bg-raised outline-none @min-[1100px]/record:static @min-[1100px]/record:z-auto"
     >
       <header className="flex h-11 shrink-0 items-center justify-between border-b border-border-muted px-4">
         <div className="flex min-w-0 items-center gap-2">

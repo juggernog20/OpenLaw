@@ -14,7 +14,7 @@
  * record at M8/M9.
  */
 
-import { useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useIntl } from "react-intl";
 import { ActivityBar } from "./activity-bar";
 import { AppletPanel } from "./applet-panel";
@@ -40,9 +40,13 @@ export function RecordApplets({
   children: ReactNode;
 }>) {
   const intl = useIntl();
-  const panelId = useId();
+  const generatedPanelId = useId();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const triggers = useRef(new Map<string, HTMLElement>());
+  const appletsRef = useRef(applets);
+  useEffect(() => {
+    appletsRef.current = applets;
+  });
 
   // Resolved from the current set, never from the last click: a page
   // that drops an applet drops its panel with it.
@@ -50,6 +54,48 @@ export function RecordApplets({
     applets.find(
       (applet): applet is PanelApplet => applet.id === expandedId && applet.href === undefined,
     ) ?? null;
+  // An applet that names a fragment takes that id as the panel's, so
+  // the link that opened it still has a target once the panel is on
+  // screen. Everyone else keeps the generated id.
+  const panelId = expanded?.hash ?? generatedPanelId;
+
+  // DES-047: a hash link whose fragment matches an applet opens that
+  // applet. Native fragment navigation would miss — the panel is not
+  // in the DOM until it is expanded — so this is the whole of the
+  // jump. The click listener covers a second press of the same hash,
+  // which does not fire `hashchange`.
+  useEffect(() => {
+    function openFromHash(raw: string) {
+      if (raw === "") return;
+      const match = appletsRef.current.find(
+        (applet): applet is PanelApplet =>
+          applet.href === undefined && applet.hash === raw,
+      );
+      if (match) setExpandedId(match.id);
+    }
+
+    function onHashChange() {
+      openFromHash(window.location.hash.replace(/^#/, ""));
+    }
+
+    function onClick(event: MouseEvent) {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const anchor = target.closest("a[href^='#']");
+      if (!anchor) return;
+      const href = anchor.getAttribute("href");
+      if (href === null) return;
+      openFromHash(href.replace(/^#/, ""));
+    }
+
+    onHashChange();
+    window.addEventListener("hashchange", onHashChange);
+    document.addEventListener("click", onClick);
+    return () => {
+      window.removeEventListener("hashchange", onHashChange);
+      document.removeEventListener("click", onClick);
+    };
+  }, []);
 
   function toggle(applet: Applet) {
     // Link slots navigate; they never own the panel.
@@ -75,6 +121,7 @@ export function RecordApplets({
       {layer}
       {expanded ? (
         <AppletPanel
+          key={expanded.id}
           id={panelId}
           label={intl.formatMessage(expanded.label)}
           accessory={expanded.accessory?.()}

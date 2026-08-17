@@ -7,15 +7,15 @@
  * one PATCH, Escape commits none), sets the Owner, the signing entity,
  * status, priority, and risk from their selects, records the CTR-010
  * value as one field in three controls — committed, reverted, and
- * cleared as a group — works the Team card,
+ * cleared as a group — works the Team applet,
  * archives the record (every input freezes, the sub-bar action flips),
  * and restores it. The signing-entity picker reads the M7 registry,
  * which never lists an archived entity. The counterparty typeahead
  * searches the book, commits an existing organization by id and an
  * unknown name by name, never offers to create a name the search
  * already answered with, and moves the primary. The activity bar mounts
- * with the applet set that exists at M9/2 — the chat slot and the
- * settings deep-link.
+ * with the applet set that exists at M9/2 — the team slot, the chat slot
+ * and the settings deep-link.
  *
  * The CTR-016 fields are the type's: the card draws the attachments in
  * attachment order, every field type gets its own control, and each
@@ -31,7 +31,7 @@
  * Users are bounced home; unauthenticated visitors land on login.
  */
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
@@ -212,6 +212,18 @@ function person(id: string, role?: string) {
     archived: found.archived,
   };
   return role === undefined ? shape : { ...shape, role };
+}
+
+/** Opens the team applet from the activity bar and answers its panel.
+ * Idempotent: a leftover `#contract-team` hash (DES-028) already expands
+ * it on mount, and clicking the icon then would collapse it. */
+async function openTeam(user: ReturnType<typeof userEvent.setup>) {
+  const bar = await screen.findByRole("toolbar", { name: "Applets" });
+  const icon = within(bar).getByRole("button", { name: "Team" });
+  if (icon.getAttribute("aria-expanded") !== "true") {
+    await user.click(icon);
+  }
+  return screen.getByRole("complementary", { name: "Team" });
 }
 
 function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
@@ -578,7 +590,9 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
 
     const bar = await screen.findByRole("toolbar", { name: "Applets" });
-    // Chat opens a panel (CMT-004); settings navigates (SET-001).
+    // Team opens a panel (DES-047); chat opens a panel (CMT-004);
+    // settings navigates (SET-001).
+    expect(within(bar).getByRole("button", { name: "Team" })).toBeInTheDocument();
     expect(within(bar).getByRole("button", { name: "Comments" })).toBeInTheDocument();
     expect(within(bar).getByRole("link", { name: "Contract settings" })).toHaveAttribute(
       "href",
@@ -863,8 +877,8 @@ describe("the /contracts/:number record page", () => {
     expect(owner).toHaveValue("");
     await user.selectOptions(owner, "u2");
     await waitFor(() => expect(api.patches).toEqual([{ managerId: "u2" }]));
-    // The roster follows: the Owner heads the Team card.
-    const team = screen.getByRole("region", { name: "Team" });
+    // The roster follows: the Owner heads the Team applet.
+    const team = await openTeam(user);
     expect(within(team).getByText("Nadia Counsel")).toBeInTheDocument();
     expect(within(team).getByText("Owner")).toBeInTheDocument();
 
@@ -1202,8 +1216,9 @@ describe("the /contracts/:number record page", () => {
   it("lists the contract team, and names who made the record", async () => {
     stubApi({ signedIn: MEMBER, extra: recordApi(contractRow()).handler });
     renderAt("/contracts/42");
+    const user = userEvent.setup();
 
-    const team = await screen.findByRole("region", { name: "Team" });
+    const team = await openTeam(user);
     expect(within(team).getByText("Ada Admin")).toBeInTheDocument();
     expect(within(team).getByText("Creator")).toBeInTheDocument();
     // Provenance is not membership: the creator has no remove control.
@@ -1218,13 +1233,13 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole("button", { name: "Add team member" }));
+    const team = await openTeam(user);
+    await user.click(within(team).getByRole("button", { name: "Add team member" }));
     await user.selectOptions(screen.getByLabelText("Person"), "u3");
     await user.selectOptions(screen.getByLabelText("Role"), "contributor");
     await user.click(screen.getByRole("button", { name: "Add" }));
 
     await waitFor(() => expect(api.teamCalls).toEqual(["add u3 contributor"]));
-    const team = screen.getByRole("region", { name: "Team" });
     expect(within(team).getByText("Casey Contributor")).toBeInTheDocument();
     expect(within(team).getByText("Contributor")).toBeInTheDocument();
 
@@ -1249,7 +1264,7 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
 
-    const team = await screen.findByRole("region", { name: "Team" });
+    const team = await openTeam(user);
     await user.click(
       within(team).getByRole("button", { name: "Take Nadia Counsel off the team as Watcher" }),
     );
@@ -1287,7 +1302,8 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole("button", { name: "Add team member" }));
+    const team = await openTeam(user);
+    await user.click(within(team).getByRole("button", { name: "Add team member" }));
     await user.selectOptions(screen.getByLabelText("Person"), "u2");
     await user.click(screen.getByRole("button", { name: "Add" }));
     expect(await screen.findByText("This person already holds that role.")).toBeInTheDocument();
@@ -1337,9 +1353,10 @@ describe("the /contracts/:number record page", () => {
       screen.getByRole("switch", { name: "Confidential — restrict to the contract team" }),
     ).toBeDisabled();
     // The team freezes with everything else.
-    expect(screen.getByRole("button", { name: "Add team member" })).toBeDisabled();
+    const team = await openTeam(user);
+    expect(within(team).getByRole("button", { name: "Add team member" })).toBeDisabled();
     expect(
-      screen.queryByRole("button", { name: /Take Nadia Counsel off the team/ }),
+      within(team).queryByRole("button", { name: /Take Nadia Counsel off the team/ }),
     ).not.toBeInTheDocument();
     // The freeze is the record's, not the section's: the type's own
     // fields are behind the Fields tab (DES-032) and freeze there too
@@ -1781,10 +1798,11 @@ describe("the contract record's section tabs (DES-032)", () => {
     expect(screen.queryByRole("region", { name: "Fields" })).not.toBeInTheDocument();
   });
 
-  it("keeps the sub-bar and the Team card beside every section", async () => {
+  it("keeps the sub-bar and the Team applet beside every section", async () => {
     const api = recordApi(contractRow(), [person("u1", "creator")]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
 
     // The breadcrumb, the reference, and the archive action are chrome:
     // they belong to the record, not to one of its sections.
@@ -1797,9 +1815,10 @@ describe("the contract record's section tabs (DES-032)", () => {
     expect(subbar.getByRole("link", { name: "Contracts" })).toBeInTheDocument();
     expect(subbar.getByText("C-42")).toBeInTheDocument();
     expect(subbar.getByRole("button", { name: "Archive" })).toBeInTheDocument();
-    // The roster stands beside all three sections, so the DES-028
-    // banner's "Manage team" fragment resolves from any of them.
-    expect(screen.getByRole("region", { name: "Team" })).toBeInTheDocument();
+    // The roster lives in the activity bar beside all sections, so the
+    // DES-028 banner's "Manage team" fragment resolves from any of them.
+    const team = await openTeam(user);
+    expect(within(team).getByText("Ada Admin")).toBeInTheDocument();
   });
 
   it("lands a section the record does not have on the Overview", async () => {
@@ -1840,13 +1859,15 @@ describe("a Contributor on the contract record (M9/1)", () => {
     );
     stubApi({ signedIn: CONTRIBUTOR, extra: api.handler });
     renderAt("/contracts/42");
+    const user = userEvent.setup();
 
     // The record reads: the title, the status, the parties, the team.
     expect(
       await screen.findByRole("heading", { level: 1, name: /Acme master services agreement/ }),
     ).toBeInTheDocument();
     expect(screen.getByText("Helix Labs GmbH")).toBeInTheDocument();
-    expect(screen.getByText("Casey Contributor")).toBeInTheDocument();
+    const team = await openTeam(user);
+    expect(within(team).getByText("Casey Contributor")).toBeInTheDocument();
     expect(screen.getByText(/This record is read-only/)).toBeInTheDocument();
 
     // Every control is inert, exactly as an archived record renders.
@@ -1878,13 +1899,13 @@ describe("a Contributor on the contract record (M9/1)", () => {
     // The team and party controls freeze the way an archived record
     // freezes them — inert where they stand, gone where the archived
     // record drops them.
-    expect(screen.getByRole("button", { name: "Add team member" })).toBeDisabled();
+    expect(within(team).getByRole("button", { name: "Add team member" })).toBeDisabled();
     expect(screen.queryByRole("button", { name: "Make primary" })).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /Take Helix Labs GmbH off the contract/ }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /Take Casey Contributor off the team/ }),
+      within(team).queryByRole("button", { name: /Take Casey Contributor off the team/ }),
     ).not.toBeInTheDocument();
 
     // No inline commit fires, and the Member+ picker seams are never
@@ -3828,6 +3849,10 @@ describe("the contract record's history applet (M9/6)", () => {
  * answers 404, which the Contributor block above already proves.
  */
 describe("the contract record's confidentiality surfaces (M10/4)", () => {
+  afterEach(() => {
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+  });
+
   const BANNER = "Confidential contract";
   const FLAG = "Confidential — restrict to the contract team";
 
@@ -3867,7 +3892,7 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
     expect(within(strip).queryByRole("button")).not.toBeInTheDocument();
   });
 
-  it("offers Manage team to an Administrator, and lands it on the Team card", async () => {
+  it("offers Manage team to an Administrator, and lands it on the Team applet", async () => {
     // The roster names somebody else as creator and there is no Owner,
     // so the role is the only thing that qualifies this viewer — the
     // default roster's creator is u1, which would let this pass on the
@@ -3877,6 +3902,7 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
       extra: recordApi(contractRow({ isConfidential: true }), [person("u2", "creator")]).handler,
     });
     renderAt("/contracts/42");
+    const user = userEvent.setup();
 
     const strip = await screen.findByRole("region", { name: BANNER });
     const manage = within(strip).getByRole("link", { name: "Manage team" });
@@ -3886,7 +3912,10 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
     // `confidential-bg` is 4.34:1 — under the 4.5 floor the contrast
     // lint holds the banner's own pair to.
     expect(manage).toHaveClass("text-confidential");
-    expect(screen.getByRole("region", { name: "Team" })).toHaveAttribute("id", "contract-team");
+    await user.click(manage);
+    const team = await screen.findByRole("complementary", { name: "Team" });
+    expect(team).toHaveAttribute("id", "contract-team");
+    expect(team).toHaveFocus();
     // The same clause gates the control: an Administrator off the team
     // gets a working switch, not the inert reading.
     expect(screen.getByRole("switch", { name: FLAG })).toBeEnabled();
@@ -3946,8 +3975,9 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
       ]).handler,
     });
     renderAt("/contracts/42");
+    const user = userEvent.setup();
 
-    const team = await screen.findByRole("region", { name: "Team" });
+    const team = await openTeam(user);
     // Inert, not absent: who is on the contract is a fact, and only the
     // deciding is withheld.
     expect(within(team).getByRole("button", { name: "Add team member" })).toBeDisabled();
@@ -3958,7 +3988,7 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
     expect(within(team).getByText("Casey Contributor")).toBeVisible();
   });
 
-  it("leaves the Team card live for an actor, and live on an open record for anybody", async () => {
+  it("leaves the Team applet live for an actor, and live on an open record for anybody", async () => {
     // The creator, on the same walled record.
     const asActor = recordApi(contractRow({ isConfidential: true }), [
       person("u2", "creator"),
@@ -3966,7 +3996,8 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
     ]);
     stubApi({ signedIn: MEMBER, extra: asActor.handler });
     const walled = renderAt("/contracts/42");
-    const team = await screen.findByRole("region", { name: "Team" });
+    const actorUser = userEvent.setup();
+    const team = await openTeam(actorUser);
     expect(within(team).getByRole("button", { name: "Add team member" })).toBeEnabled();
     expect(
       within(team).getByRole("button", { name: "Take Casey Contributor off the team as Member" }),
@@ -3980,7 +4011,8 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
       extra: recordApi(contractRow(), [person("u1", "creator"), person("u3", "member")]).handler,
     });
     renderAt("/contracts/42");
-    const open = await screen.findByRole("region", { name: "Team" });
+    const openUser = userEvent.setup();
+    const open = await openTeam(openUser);
     expect(within(open).getByRole("button", { name: "Add team member" })).toBeEnabled();
     expect(
       within(open).getByRole("button", { name: "Take Casey Contributor off the team as Member" }),

@@ -312,15 +312,12 @@ test.describe.serial("M10 demo path", () => {
       await expect(banner).toBeVisible();
       await expect(banner).toContainText(BANNER_COPY);
       // "Manage team" is offered to the three actors only, and this
-      // viewer is the creator. It is a fragment to the record's own
-      // Team card, because that is where the audience is changed.
+      // viewer is the creator. It is a fragment that opens the Team
+      // applet, because that is where the audience is changed.
       const manageTeam = banner.getByRole("link", { name: "Manage team" });
       await expect(manageTeam).toHaveAttribute("href", "#contract-team");
       await manageTeam.click();
-      // The jump has to land inside the record's own scroll container
-      // (DES-030), not merely render the card somewhere below the fold —
-      // "visible" would pass either way.
-      await expect(creatorPage.getByRole("region", { name: "Team" })).toBeInViewport();
+      await expect(creatorPage.getByRole("complementary", { name: "Team" })).toBeInViewport();
       // Chrome, not a notification: there is no way to close it
       // (DD-014, DES-028).
       await expect(banner.getByRole("button")).toHaveCount(0);

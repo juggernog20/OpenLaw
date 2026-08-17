@@ -923,6 +923,9 @@
   "contracts.applet.settings": {
     "defaultMessage": "Contract settings"
   },
+  "contracts.applet.team": {
+    "defaultMessage": "Team"
+  },
   "contracts.archivedPill": {
     "defaultMessage": "Archived"
   },
@@ -1417,9 +1420,6 @@
   },
   "contracts.team.role": {
     "defaultMessage": "Role"
-  },
-  "contracts.team.section": {
-    "defaultMessage": "Team"
   },
   "contracts.team.submit": {
     "defaultMessage": "Add"

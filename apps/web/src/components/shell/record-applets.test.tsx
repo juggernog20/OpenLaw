@@ -11,7 +11,7 @@
  * mounts the region.
  */
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { IntlProvider, defineMessage } from "react-intl";
@@ -60,6 +60,10 @@ function renderApplets(applets: readonly Applet[] = [CHAT, HISTORY, SETTINGS]) {
 }
 
 describe("record applets (#47)", () => {
+  afterEach(() => {
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+  });
+
   it("lets the open applet put its own content in the panel header", async () => {
     const user = userEvent.setup();
     renderApplets([CHAT_WITH_COUNT]);
@@ -109,6 +113,9 @@ describe("record applets (#47)", () => {
     expect(within(panel).getByText("Chat panel")).toBeInTheDocument();
     expect(chat).toHaveAttribute("aria-expanded", "true");
     expect(chat).toHaveAttribute("aria-controls", panel.id);
+    // DES-016 / DES-010: the container takes focus, not Close.
+    expect(panel).toHaveFocus();
+    expect(within(panel).getByRole("button", { name: "Close" })).not.toHaveFocus();
   });
 
   it("shows one applet at a time: a second icon swaps the panel body", async () => {
@@ -119,7 +126,9 @@ describe("record applets (#47)", () => {
     await user.click(screen.getByRole("button", { name: "History" }));
 
     expect(screen.getAllByRole("complementary")).toHaveLength(1);
-    expect(screen.getByRole("complementary", { name: "History" })).toBeInTheDocument();
+    const history = screen.getByRole("complementary", { name: "History" });
+    expect(history).toBeInTheDocument();
+    expect(history).toHaveFocus();
     expect(screen.queryByText("Chat panel")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Chat (3)" })).toHaveAttribute(
       "aria-expanded",
@@ -153,10 +162,9 @@ describe("record applets (#47)", () => {
     await user.click(chat);
     const panel = screen.getByRole("complementary", { name: "Chat" });
 
-    // Move focus into the panel — its close control is the tab stop
-    // before the toolbar — then dismiss with the DES-010 global key.
-    await user.tab({ shift: true });
-    expect(within(panel).getByRole("button", { name: "Close" })).toHaveFocus();
+    // Open already put focus on the panel container, so Esc is live
+    // without an extra Tab — DES-010's overlay rule.
+    expect(panel).toHaveFocus();
     await user.keyboard("{Escape}");
 
     expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
@@ -210,5 +218,36 @@ describe("record applets (#47)", () => {
     expect(panel).toHaveClass("@min-[1100px]/record:static");
     expect(panel).toHaveClass("w-(--width-panel)");
     expect(screen.getByRole("toolbar", { name: "Applets" })).toHaveClass("w-(--width-activitybar)");
+  });
+
+  it("opens a hashed applet from a fragment link and gives the panel that id", async () => {
+    const user = userEvent.setup();
+    const hashed: Applet = {
+      id: "team",
+      icon: MessageSquare,
+      label: defineMessage({ id: "test.applet.team", defaultMessage: "Team" }),
+      hash: "contract-team",
+      render: () => <p>Team panel</p>,
+    };
+    render(
+      <IntlProvider locale="en-US" defaultLocale="en-US">
+        <>
+          <a href="#contract-team">Manage team</a>
+          <RecordApplets applets={[hashed, HISTORY]}>
+            <p>Record content</p>
+          </RecordApplets>
+        </>
+      </IntlProvider>,
+    );
+
+    await user.click(screen.getByRole("link", { name: "Manage team" }));
+    const panel = screen.getByRole("complementary", { name: "Team" });
+    expect(within(panel).getByText("Team panel")).toBeInTheDocument();
+    expect(panel).toHaveAttribute("id", "contract-team");
+    expect(panel).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Team" })).toHaveAttribute(
+      "aria-controls",
+      "contract-team",
+    );
   });
 });

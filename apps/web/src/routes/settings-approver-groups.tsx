@@ -224,8 +224,10 @@ function GroupEditorDialog({
       onRowChanged(latest);
     }
 
-    const before = [...latest.members.map((member) => member.id)].sort();
-    const after = [...memberIds].sort();
+    const before = [...latest.members.map((member) => member.id)].sort((a, b) =>
+      a.localeCompare(b),
+    );
+    const after = [...memberIds].sort((a, b) => a.localeCompare(b));
     if (before.join(",") === after.join(",")) return true;
 
     const { data, error: problem } = await api

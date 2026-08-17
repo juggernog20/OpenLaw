@@ -2005,7 +2005,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             // Which of the type's fields were answered at birth. The
             // slugs, not the values: the M9 viewer narrates what was
             // filled, and the values are on the record to be read.
-            customFields: Object.keys(customFields).sort(),
+            customFields: Object.keys(customFields).sort((a, b) => a.localeCompare(b)),
           },
         });
         // A record born walled off gets its own entry beside the

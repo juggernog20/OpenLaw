@@ -7,8 +7,8 @@
  * Unlike the top-nav destination registry, there is no global applet
  * list: each record page passes the set it offers, so the bar can never
  * show a tool that page does not have. Contract details opens with
- * chat (CMT-004), history (DD-017), and the settings deep-link
- * (SET-001) grouped below the divider.
+ * team (DES-047), chat (CMT-004), history (DD-017), and the settings
+ * deep-link (SET-001) grouped below the divider.
  *
  * A slot either opens the side panel (`render`) or navigates away
  * (`href`) — the settings slot is a deep link, not a panel.
@@ -47,6 +47,13 @@ export interface PanelApplet extends AppletBase {
    * clarification, point 5). Omit for a plain title.
    */
   accessory?: () => ReactNode;
+  /**
+   * Fragment id (without `#`) that opens this applet. DES-028's
+   * "Manage team" link is the first user: clicking `#contract-team`
+   * expands the team panel rather than scrolling to a card that is
+   * no longer in the page body (DES-047).
+   */
+  hash?: string;
   href?: never;
 }
 

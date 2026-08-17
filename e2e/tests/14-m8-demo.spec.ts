@@ -137,6 +137,14 @@ function sectionTab(page: Page, name: string): Locator {
   return page.getByRole("navigation", { name: "Contract sections" }).getByRole("link", { name });
 }
 
+/** Expands an applet and answers its panel (DES-016, DES-047). */
+async function openApplet(page: Page, label: "Team"): Promise<Locator> {
+  await page.getByRole("toolbar", { name: "Applets" }).getByRole("button", { name: label }).click();
+  const panel = page.getByRole("complementary", { name: label });
+  await expect(panel).toBeVisible();
+  return panel;
+}
+
 async function listContracts(request: APIRequestContext) {
   const listed = await request.get("/api/v1/contracts");
   expect(listed.ok()).toBe(true);
@@ -420,15 +428,15 @@ test.describe.serial("M8 demo path", () => {
       // The DES-017 micro-state, beside the one field that has
       // committed so far — this is the whole page's only "Saved".
       await expect(page.getByText("Saved", { exact: true })).toHaveCount(1);
-      const teamCard = page.getByRole("region", { name: "Team" });
-      await expect(teamCard).toContainText(OWNER_NAME);
-      await expect(teamCard).toContainText("Owner");
+      const team = await openApplet(page, "Team");
+      await expect(team).toContainText(OWNER_NAME);
+      await expect(team).toContainText("Owner");
       // Provenance, written at creation and never again (CTR-004).
-      await expect(teamCard).toContainText("Creator");
+      await expect(team).toContainText("Creator");
 
       // The team: who else is on this, and in which role. Naming two
       // things at once is the compound edit DES-017 gives a dialog.
-      await page.getByRole("button", { name: "Add team member" }).click();
+      await team.getByRole("button", { name: "Add team member" }).click();
       const teamDialog = page.getByRole("dialog");
       await teamDialog.getByLabel("Person").selectOption({ label: ADMIN.displayName });
       await teamDialog.getByLabel("Role").selectOption({ label: "Watcher" });
@@ -440,7 +448,7 @@ test.describe.serial("M8 demo path", () => {
       await teamDialog.getByRole("button", { name: "Add", exact: true }).click();
       expect((await teamAdded).ok()).toBe(true);
       await expect(teamDialog).toBeHidden();
-      await expect(teamCard).toContainText("Watcher");
+      await expect(team).toContainText("Watcher");
 
       // Our side (CTR-011) — and the assertion M7 deferred to this
       // spec: an Entity registered in the M7 registry is offered by the

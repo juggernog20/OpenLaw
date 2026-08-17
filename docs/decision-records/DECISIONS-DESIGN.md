@@ -1107,7 +1107,7 @@ The contract-details mocks carried two competing right-side systems: a module ch
 ### Decision
 
 - **One right-side system: the activity bar** — a persistent 48px vertical icon strip on record pages, VS Code-style. Each icon is an **applet available on that page**; clicking expands the side panel hosting that applet (one applet visible at a time; clicking the active icon collapses).
-- **Applet set is page-scoped.** Contract details: chat (CMT-004 comment panel), history (DD-017 activity feed), settings deep-link (SET-001, below a divider). The document panel (K) opens as a wider sibling layer per the doc-panel spec, not inside the applet panel.
+- **Applet set is page-scoped.** Contract details: team (DES-047, Lucide `User`), chat (CMT-004 comment panel), history (DD-017 activity feed), settings deep-link (SET-001, below a divider). The document panel (K) opens as a wider sibling layer per the doc-panel spec, not inside the applet panel.
 - **The module chip row is removed** from record pages (E.0 remove — chips duplicated applet/section jobs).
 - **DES-007 amendment:** the record-page right side is `--width-activitybar: 48px` + `--width-panel: 320px` (the panel reuses the old rail width; `--width-rail` is renamed/retired in favor of these two tokens). Container-query behavior carries over: below the width threshold the panel overlays instead of docking; the bar remains.
 - Active applet gets the V13 indicator strip (J.0); only chat carries a badge (CMT-004; J.X2).
@@ -1134,7 +1134,7 @@ Take geometry from the ActivityBar and panel frames of the matter-detail screens
 2. **Fill the badge with the new `--badge-alert-bg` / `--badge-alert-fg` pair.** matters.pen fills the chat badge `#CF222E` with white text — Light's danger red — but the badge is an attention count, not a danger status, so do not borrow `status-danger-fg` (in Dark it is too light to carry white text). Per-theme values: Light `#CF222E` on `#FFFFFF` (5.4:1), Warm `#A05540` on `#FBFAF7` (5.2:1, warm's own red), Dark `#DA3633` on `#FFFFFF` (4.6:1). Keep `--badge-count-*` as the neutral counter.
 3. **Set the badge count in `text-xs` (11px) where the frames draw 9px** — DES-006's ramp floors at 11px — making the badge a 16px pill rather than the frames' 14px. Render glyphs at the 20px Lucide step where the frames draw 18px — DES-008's ramp is 16/20/24, and DES-019 already normalized the brand glyph 18→20.
 4. **Mark the active applet with DES-016's accent indicator strip (3×48px, `--width-activitybar-indicator`) and a `text-primary` glyph.** Do not copy matters.pen's active treatment: it draws no strip and tints the glyph `#51B3D6`, but that is the avatar token, not an interactive one, and it reads 2.4:1 on white, under DES-011's 3:1 affordance floor. The strip is what DES-016 decided (J.0); the V13 frame draws it in the accent. Back-port to matters.pen when those mocks next get touched. (The `CONTRACT-DETAILS-INVENTORY.md` J.0 row called the strip a green pill; corrected — the frame draws a square-ended accent bar.)
-5. **Give the panel a 44px header: the applet's title (13px semibold) and a close X (16px glyph), over a `border-muted` rule.** Both M3 and M13 draw it. Keep the close control even though it duplicates the bar toggle — the panel can overlay below the container threshold, where the collapse affordance must not be 320px away on the far side of the panel. Treat the M3 header's count pill ("4", total comments) as applet content, not panel chrome; it lands with the chat applet (M8/M9). Close the panel on `Esc` and return focus to the applet's bar icon on close — DES-010's overlay rules, wired by hand because the panel is a plain `aside`, not a Radix overlay.
+5. **Give the panel a 44px header: the applet's title (13px semibold) and a close X (16px glyph), over a `border-muted` rule.** Both M3 and M13 draw it. Keep the close control even though it duplicates the bar toggle — the panel can overlay below the container threshold, where the collapse affordance must not be 320px away on the far side of the panel. Treat the M3 header's count pill ("4", total comments) as applet content, not panel chrome; it lands with the chat applet (M8/M9). Focus the panel container when it opens — not its close control, which reads as "you probably want to leave" — then close on `Esc` and return focus to the applet's bar icon. DES-010's overlay rules, wired by hand because the panel is a plain `aside`, not a Radix overlay. The same open-focus rule covers a fragment that expands the panel (DES-047): without it, `Esc` does nothing until the user tabs in.
 6. **Type a slot as either a panel or a link.** DES-016 names settings as a deep link, so the applet type is a union: `render` opens the panel, `href` navigates. Only `render` slots own the panel, and only they toggle. Group link slots below the divider.
 
 Dock via a container query at 1100px of record-region width per DES-012. Write the threshold literally into the class list: Tailwind scans source text, and container conditions cannot read a CSS variable.
@@ -1694,7 +1694,7 @@ The mocks predate two decisions that changed what is true about a confidential c
 - A 16px `Lock`, then the statement at 12px medium, left-aligned; the trailing link at 12px semibold, right-aligned.
 - It is a labelled region, so the statement stays reachable from the landmark list after half an hour inside the record — the same persistence the strip gives a sighted reader.
 
-**The trailing link is gated to the three actors** — an Administrator, the `creator` team row, and the Owner (DD-014, CTR-022) — and it is a fragment to the record's own Team card. Changing the audience is changing the roster, so "one step from the reminder" is one anchor, not a route that does not exist.
+**The trailing link is gated to the three actors** — an Administrator, the `creator` team row, and the Owner (DD-014, CTR-022) — and it is a fragment that opens the Team applet (DES-047). Changing the audience is changing the roster, so "one step from the reminder" is one anchor, not a route that does not exist.
 
 **The flag control is a field of the record**, in the Contract card, spanning both columns and closing it: it is the record's audience rather than one of its business facts.
 
@@ -1727,12 +1727,12 @@ Keeping the control visible-but-inert for the viewers who may not use it is the 
 - **The banner as the first element of the page body.** Rejected: it scrolls away, which is the failure mode DES-009 rationale 2 is entirely about.
 - **The flag as a sub-bar action beside Archive.** Rejected: the sub-bar holds record-level lifecycle actions, and the flag is a field with a stored value that the card must be able to state. A toggle in a strip of buttons also has nowhere to put the caption.
 - **Hiding the control from viewers who may not change it.** Rejected: see the Rationale. It would leave the Contract card silent about the record's audience for everyone but three people.
-- **"Manage team" as a route.** Rejected: there is no team-management route; the roster is a card on this page, and inventing a destination for it is a product decision this ticket has no mandate for.
+- **"Manage team" as a route.** Rejected: there is no team-management route; the roster is an applet on this page (DES-047), and inventing a destination for it is a product decision this ticket has no mandate for.
 - **A dismiss control that only hides the banner for the session.** Rejected by DES-009 itself, and worth restating: a banner that can be closed is a banner that is closed.
 
 ### Consequences
 
-`apps/web/src/components/confidential-banner.tsx` is Tier 2, and `confidential-toggle.tsx` is the shared control; DES-009's `<ConfidentialMarker>` (Tier 1) lands beside them with M10/5. `AppShell` gains one optional `banner` slot between the nav and the sub-bar — the only chrome that sits there today. No new tokens: the height and the colour pair were added with DES-009 and are already contrast-linted in all three themes. The record's Team card gains a stable `id`, because the banner's link is a fragment to it.
+`apps/web/src/components/confidential-banner.tsx` is Tier 2, and `confidential-toggle.tsx` is the shared control; DES-009's `<ConfidentialMarker>` (Tier 1) lands beside them with M10/5. `AppShell` gains one optional `banner` slot between the nav and the sub-bar — the only chrome that sits there today. No new tokens: the height and the colour pair were added with DES-009 and are already contrast-linted in all three themes. The Team applet (DES-047) takes a stable `id`, because the banner's link is a fragment that opens it.
 
 ## DES-029: The confidential marker and the composer notice — DES-009's Tier 1 and Tier 3
 
@@ -1927,7 +1927,7 @@ The strip is therefore a `nav` of `NavLink`s, not a Radix `Tabs`. An ARIA tablis
 
 **4. The tab treatment is the settings strip's, verbatim.** 36px-tall links, `px-3`, `text-base`; the active one is `font-semibold text-primary` over a `-mb-px border-b-2 border-accent`; the rest are `text-muted` with a `hover:text-primary`. One tab look in the app. The shared component is `RecordTabs`, a sibling of `RecordApplets` under `components/shell/`.
 
-**5. What is chrome stays chrome, and the side column is not a section.** The breadcrumb, the reference, the title, the status pill, the archived pill, and archive/restore belong to the record and are drawn above the strip on every section. So do DES-028's Tier 2 banner and DES-016's activity bar. The Team card stands beside all three sections rather than living in one: who is on a contract is context for reading any part of it, and DES-028's "Manage team" link is a fragment to that card — a fragment that only resolved on one section would be a link that sometimes goes nowhere. The record-level notices (archived, read-only) sit above the section for the same reason: they explain inert controls wherever the controls are.
+**5. What is chrome stays chrome, and the roster is not a section.** The breadcrumb, the reference, the title, the status pill, the archived pill, and archive/restore belong to the record and are drawn above the strip on every section. So do DES-028's Tier 2 banner and DES-016's activity bar. The Team roster lives in that activity bar (DES-047) rather than in one of the sections: who is on a contract is context for reading any part of it, and DES-028's "Manage team" link is a fragment that opens the applet from any section — a fragment that only resolved on one section would be a link that sometimes goes nowhere. The record-level notices (archived, read-only) sit above the section for the same reason: they explain inert controls wherever the controls are.
 
 **6. The chrome budget takes the 36px, and this is the ceiling.** Header 62 + nav 48 + sub-bar 64 + strip 36 is 210px of fixed chrome, and 246px with DES-009's Tier 2 banner. On a 768px-tall viewport that is 32% — over the 25% guardrail DES-011's reflow reading implies, which the banner already breached at 28%. It is accepted here because the strip buys back far more body than it costs: a reader on the Documents section is no longer scrolling three sections of record to reach the paper. **No further permanent strip may be added to a record page.** A fifth one is a restructure, not an increment, and needs its own record.
 
@@ -1937,7 +1937,7 @@ The tab is what the mock always drew. The build's own note said so, and deferred
 
 Routing the sections rather than holding them in state is the part worth arguing, and the argument is the same one SET-001 made for settings panes: a section that cannot be linked to is a section nobody can point at. It also costs nothing here — the loader already reads the whole record in one round trip, so a section change is a re-render and not a fetch.
 
-Keeping the Team card out of the sections is the other real choice. It could have been a fourth tab, and it is not, because the roster answers a question a reader has _while_ reading something else. A field's Owner, a document's uploader, and a comment's author are all names, and the card is what turns them into people.
+Keeping the Team roster out of the sections is the other real choice. It could have been a fourth tab, and it is not, because the roster answers a question a reader has _while_ reading something else. A field's Owner, a document's uploader, and a comment's author are all names, and the applet is what turns them into people. DES-047 moved that roster from a side column into the activity bar; the reason it is not a tab did not move.
 
 ### Alternatives considered
 
@@ -2987,6 +2987,43 @@ Clause 2 costs the counterparty cell its bespoke `w-44 truncate` span, which exi
 
 The mobile floor is untouched and not improved: DES-012 already parks a stacked-card table rendering for below 768px, and a column strip nobody can see is not the thing that unparks it. Below md the two menus stay in the `actions` slot, which that decision already hides.
 
+## DES-047: The Team roster is an activity-bar applet (amends DES-016, DES-032, DES-028)
+
+- **Status:** Accepted
+- **Date:** 2026-08-17
+
+### Context
+
+DES-032 clause 5 put the Team card in a side column beside every contract section, so who is on a contract stayed in view while reading any part of it, and DES-028's "Manage team" fragment had a stable target. That column cost ~320px on every section — Overview, Fields, Documents, Approvals, Key dates, Tasks — on a page that already docks an applet panel of the same width.
+
+The activity bar is the record's right-side system (DES-016). A persistent side column next to it is a second right-side system, which is the duplication DES-016 already refused for chips.
+
+### Decision
+
+**1. The Team roster is a panel applet**, first in the contract record's bar, with Lucide's `User` glyph at the bar's 20px step. Clicking it expands the side panel. The roster is not a section, not a fourth tab, and not a card in the main column.
+
+**2. The panel is the surface.** The applet label is the title; the add control sits in the header accessory slot (the same slot the chat applet's count pill uses). The body is the Owner row, then one row per `contract_team` role. No nested card chrome — the panel is already `bg-raised`.
+
+**3. DES-028's "Manage team" fragment opens the applet.** The link stays a link (`#contract-team`), not a button, because nothing on the confidentiality banner is a button. The panel takes that id while it is open. `RecordApplets` listens for the hash — native fragment navigation would miss, because the panel is not in the DOM until it is expanded. Opening it — from the bar or from the fragment — moves focus onto the panel container, not its Close control, so `Esc` from the banner path works without an extra Tab (DES-016 / DES-010).
+
+**4. Every section inherits the width.** The main column is the full record region minus the 48px bar (and minus the 320px panel only while an applet is open). Approvals, Documents, and the rest are no longer sharing the page with a second 320px column.
+
+### Rationale
+
+Who is on a contract is still context for reading any part of it — that is why it is not a tab. The activity bar is already that kind of context: comments and history sit beside every section for the same reason. Putting the roster in a fourth slot there answers DES-032's question without a column that every section pays for whether anyone is looking at the roster or not.
+
+The `User` glyph is the one the request named. `Users` would have named the group more literally; the single-person mark is the conventional "people" slot on a VS Code-style bar, and DES-008 has no second size to spend on making the two distinguishable at 20px.
+
+### Alternatives considered
+
+- **Keep the side column.** Rejected: it is a second right-side system, and it is the width every section was short of.
+- **Team as a fourth tab.** Rejected by DES-032; a fragment that only resolved on one section would be a link that sometimes goes nowhere.
+- **Open the team panel by default.** Rejected: DES-016's bar starts collapsed. The roster is one click, not a permanent 320px.
+
+### Consequences
+
+`useTeamApplet` in `apps/web/src/components/contracts/team-applet.tsx` is the slot, mounted first in the contract record's applet set. `PanelApplet` gains an optional `hash` so a fragment can open an applet; the team slot is the first user. DES-016's applet set, DES-032 clause 5, and DES-028's fragment destination are amended above. No new tokens.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -3037,3 +3074,4 @@ The mobile floor is untouched and not improved: DES-012 already parks a stacked-
 | DES-044 | The Renew dialog's four exits, and the prefilled create (extends DES-043, DES-035, DES-033, DES-017)                                                                 | Accepted |
 | DES-045 | The link dialog, the picker, the refusal rendering, and the confidentiality nudge (extends DES-032, DES-024, DES-009)                                                | Accepted |
 | DES-046 | The managed list table — the width floor, the resize handle, the column menu, and the views control (extends DES-031, DES-021, DES-007)                              | Accepted |
+| DES-047 | The Team roster is an activity-bar applet (amends DES-016, DES-032, DES-028)                                                                                         | Accepted |
