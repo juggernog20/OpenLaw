@@ -87,6 +87,22 @@ export const JOB_QUEUES = {
    * against the endpoint DocuSign rate-limits hardest.
    */
   reconciliationSweep: "envelope.reconciliation-sweep",
+  /**
+   * One notification's immediate email (NOT-002 group 1, NOT-003).
+   *
+   * It is a queue of its own for the reason every other one is: it is
+   * different work with a different product and a different failure. A
+   * derivation reads bytes this install holds; this hands a message to
+   * somebody else's relay, and the thing that goes wrong is a relay
+   * that is slow or an install that has configured none. So the bounds
+   * are its own — short, because a person is waiting for the mail — and
+   * so is the terminal question.
+   *
+   * One job per notification, never one per event: the row is the unit
+   * of work owed, and a job that fanned out again at send time would be
+   * making the audience decision twice.
+   */
+  notificationEmail: "notification.email",
 } as const;
 
 /** What the text-extraction queue carries. */
@@ -109,6 +125,20 @@ export interface DisplayConversionJob {
  * job that waited in the queue acts on what is true now. */
 export interface ExecutedCopyFetchJob {
   envelopeId: string;
+}
+
+/**
+ * What the notification-email queue carries: the notification row, and
+ * nothing else.
+ *
+ * Everything the message says — who it is for, what it is about, and
+ * whether an email was owed at all — is on that row, and the record it
+ * is about is read live. So a job that waited in the queue while the
+ * record was walled off acts on what is true now, which is what lets
+ * the wall hold on the one channel that leaves the building.
+ */
+export interface NotificationEmailJob {
+  notificationId: string;
 }
 
 /**
@@ -149,6 +179,18 @@ export interface JobQueue {
    * sweep reads that state and asks again.
    */
   requestExecutedCopyFetch(envelopeId: string): Promise<void>;
+
+  /**
+   * Asks for one notification's immediate email to be sent (NOT-002
+   * group 1).
+   *
+   * Asked by the Notifier **after** the mutation's transaction has
+   * committed, on the terms above and for the same reason: the row it
+   * names carries `email_owed`, so the work is durable and this call is
+   * only the wake-up. A request the queue refuses is not lost — the
+   * scheduled round re-asks for every row still owed and unsent.
+   */
+  requestNotificationEmail(notificationId: string): Promise<void>;
 }
 
 /**
@@ -212,5 +254,6 @@ export function createUnconfiguredJobQueue(): JobQueue {
     requestTextExtraction: refuse,
     requestDisplayConversion: refuse,
     requestExecutedCopyFetch: refuse,
+    requestNotificationEmail: refuse,
   };
 }

@@ -33,6 +33,11 @@ export {
 } from "../lib/signing/config.js";
 export { createSigningResolver, type SigningResolver } from "../lib/signing/resolver.js";
 export { createStorageFromEnv } from "../lib/storage/config.js";
+// The mailer, for the one job that sends one (M18/1). The worker
+// resolves it exactly as the API does — env-else-database, per send —
+// so a relay saved in the wizard reaches the next notification email
+// without a restart of either process (TECH-011).
+export { createMailerResolver, type MailerResolver } from "../lib/mailer.js";
 // The upload ceiling, read here for the same reason the three builders
 // above are: the executed-copy fetch files a third party's answer, and
 // it must not accept what the API would have refused at the door.
@@ -60,8 +65,14 @@ export {
   type DisplayConversionJob,
   type ExecutedCopyFetchJob,
   type JobQueue,
+  type NotificationEmailJob,
   type TextExtractionJob,
 } from "./jobs.js";
+export {
+  handleNotificationEmail,
+  type NotificationEmailAttempt,
+  type NotificationEmailDeps,
+} from "./notification-email.js";
 export { createConsoleLogger, type PipelineLogger } from "./logger.js";
 export {
   runReconciliationSweep,
@@ -76,6 +87,7 @@ export {
   startPipeline,
   DISPLAY_CONVERSION_QUEUE_OPTIONS,
   EXECUTED_COPY_QUEUE_OPTIONS,
+  NOTIFICATION_EMAIL_QUEUE_OPTIONS,
   RECONCILIATION_SWEEP_QUEUE_OPTIONS,
   TEXT_EXTRACTION_QUEUE_OPTIONS,
   type Pipeline,

@@ -23,16 +23,19 @@
  */
 
 import { PgBoss, type JobWithMetadata } from "pg-boss";
+import type { MailerResolver } from "../lib/mailer.js";
 import type { SigningResolver } from "../lib/signing/resolver.js";
 import { runBackfillSweep } from "./backfill.js";
 import type { DerivationDeps } from "./derivations.js";
 import { handleDisplayConversion } from "./display-conversion.js";
 import { handleExecutedCopyFetch } from "./executed-copy.js";
+import { handleNotificationEmail } from "./notification-email.js";
 import {
   JOB_QUEUES,
   type DisplayConversionJob,
   type ExecutedCopyFetchJob,
   type JobQueue,
+  type NotificationEmailJob,
   type TextExtractionJob,
 } from "./jobs.js";
 import { createConsoleLogger, type PipelineLogger } from "./logger.js";
@@ -130,18 +133,52 @@ export const EXECUTED_COPY_QUEUE_OPTIONS = {
 } as const;
 
 /**
+ * The same bounds for one notification's immediate email (M18/1),
+ * stated separately because they bound different work again.
+ *
+ * The job hands one message to somebody else's relay. The transport's
+ * own socket bounds are tens of seconds (see `createSmtpMailer`), so two
+ * minutes is generous for a send and its two small writes, and it
+ * notices a wedged worker quickly — which matters here more than
+ * elsewhere, because somebody has been asked to do something and is
+ * waiting to hear about it.
+ *
+ * Three attempts on the same ladder every other queue uses: half a
+ * minute, then a minute. The failure a retry heals is the same one — a
+ * relay that was unreachable for a moment — and an unconfigured install
+ * is not that failure and is never retried (see the handler).
+ */
+export const NOTIFICATION_EMAIL_QUEUE_OPTIONS = {
+  expireInSeconds: 120,
+  retryLimit: 2,
+  retryDelay: 30,
+  retryBackoff: true,
+} as const;
+
+/**
  * Everything a process that works the queue is built from.
  *
  * The derivation jobs need the database, storage, and the doc engine;
  * the executed-copy fetch needs the signing connector instead of the
- * engine. One type rather than one per queue, because a worker is one
- * process and its dependencies are chosen once at boot.
+ * engine; the notification email needs the mailer and the address this
+ * install answers on. One type rather than one per queue, because a
+ * worker is one process and its dependencies are chosen once at boot.
  */
 export interface PipelineHandlers extends DerivationDeps {
   /** The connector, read live per call (CTR-013). An install with no
    * connector resolves to nothing, and an executed-copy job then
    * records a terminal failure rather than waiting for one. */
   resolveSigningProvider: SigningResolver;
+  /**
+   * The mailer, resolved per send (TECH-011, #37) exactly as the API
+   * resolves it — so a relay saved in the wizard reaches the very next
+   * notification email with no restart, and an install with none
+   * records the skip rather than waiting for one.
+   */
+  resolveMailer: MailerResolver;
+  /** Where this install answers (BASE_URL), so an emailed notification
+   * can deep-link to the record it is about (NOT-005). */
+  baseUrl: string;
   /** The size ceiling the executed-copy fetch files under — the API's
    * upload ceiling, asked of the provider's answer for the same reason.
    * Optional: unset, the job takes the same default the API does. */
@@ -309,6 +346,14 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // envelope leave one job rather than two.
       await boss.send(JOB_QUEUES.executedCopyFetch, job, { singletonKey: envelopeId });
     },
+    async requestNotificationEmail(notificationId: string): Promise<void> {
+      const job: NotificationEmailJob = { notificationId };
+      // The notification row is the collapsing key, for the version's
+      // reason: the Notifier's own wake-up and the round that re-asks
+      // for owed-and-unsent rows can name the same row, and they should
+      // leave one job between them rather than two messages.
+      await boss.send(JOB_QUEUES.notificationEmail, job, { singletonKey: notificationId });
+    },
   };
 
   // Cut short when the process is stopping. Both scheduled sweeps
@@ -363,6 +408,15 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
     await boss.updateQueue(JOB_QUEUES.executedCopyFetch, {
       notify: true,
       ...EXECUTED_COPY_QUEUE_OPTIONS,
+    });
+    await boss.createQueue(JOB_QUEUES.notificationEmail, {
+      policy: "short",
+      notify: true,
+      ...NOTIFICATION_EMAIL_QUEUE_OPTIONS,
+    });
+    await boss.updateQueue(JOB_QUEUES.notificationEmail, {
+      notify: true,
+      ...NOTIFICATION_EMAIL_QUEUE_OPTIONS,
     });
     // `singleton` allows one sweep to be running at a time. Two at once
     // would be correct — the sweep only asks, and the `short` policy
@@ -461,6 +515,27 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
           }
         },
       );
+      await boss.work(
+        JOB_QUEUES.notificationEmail,
+        oneAtATime,
+        async (jobs: JobWithMetadata<NotificationEmailJob>[]) => {
+          for (const job of jobs) {
+            await handleNotificationEmail(
+              {
+                db: handlers.db,
+                resolveMailer: handlers.resolveMailer,
+                baseUrl: handlers.baseUrl,
+                log,
+              },
+              {
+                notificationId: job.data.notificationId,
+                retryCount: job.retryCount,
+                retryLimit: job.retryLimit,
+              },
+            );
+          }
+        },
+      );
       // The sweep gets its own worker rather than sharing the derivation
       // ones, so an hour-long walk of a large library cannot sit in front
       // of the OCR somebody is waiting on. It takes no metadata and no
@@ -500,6 +575,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
             JOB_QUEUES.textExtraction,
             JOB_QUEUES.displayConversion,
             JOB_QUEUES.executedCopyFetch,
+            JOB_QUEUES.notificationEmail,
             JOB_QUEUES.backfillSweep,
             JOB_QUEUES.reconciliationSweep,
           ],

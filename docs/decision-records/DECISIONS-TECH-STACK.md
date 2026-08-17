@@ -253,6 +253,22 @@ The addendum above gave the reconciliation sweep an in-process interval loop on 
 
 **Alternatives considered.** _Document a single worker replica and pin it in `compose.yml`_ — cheaper, and it makes correct scaling a thing an operator can silently break with no error and no sign. _A leader-election flag of our own_ — a second source of the truth pg-boss already holds, and TECH-007's own M12/6 note declines exactly that reasoning for the backfill sweep.
 
+### Addendum (2026-08-18) — settled in M18/1: the first queue that leaves the building
+
+The immediate notification email (NOT-002 group 1) is the pipeline's fifth queue, and it is the first one whose product is a message to a person rather than a row or a blob. It takes a queue of its own on the M12/4 line — **what a job produces, not what it reads** — and it is the clearest case of it so far: nothing else in the pipeline hands anything to a third party's relay.
+
+**Its bounds are its own, and they are short.** Two minutes per attempt, because the work is one send whose transport already bounds its own sockets at tens of seconds, and because somebody has been asked to do something and is waiting to hear. Three attempts on the ladder every other queue uses — half a minute, then a minute — because the failure a retry heals here is the familiar one: a relay that was unreachable for a moment.
+
+**The terminal-or-transient question has a new terminal answer: an install with no relay.** No retry configures SMTP, so three attempts would write the same line three times and settle the row anyway. It records the skip on the row and reports `unconfigured` in as many words, which is TECH-011's posture — a missing relay degrades one channel and hides nothing — said on the one path that has no request to answer it in. A recipient who no longer reaches the record is terminal for the same reason, and everything else stays transient.
+
+**Two dependencies join `PipelineHandlers`**: the mailer resolver and `BASE_URL`. The resolver is the API's own, per send (TECH-011), so a relay saved in the wizard reaches the very next notification email with no restart of either process; the base URL is what lets the message deep-link to the record it is about. The worker reads both from the same variables the API reads, because a worker that linked somewhere else would send mail nobody could act on.
+
+**The row is the record of the work owed, and the queue is only the wake-up** — M12/3's sentence, unchanged, applied to mail. `email_owed` is written in the mutation's own transaction, so a send lost between the commit and the wake-up leaves a row that says an email is still due, and the scheduled round the dates slice brings re-asks from those rows.
+
+**What it costs is a fifth queue and a fifth set of bounds**, and the cost is real: every queue is a declaration at boot, a worker registration, and one more number an operator may have to reason about. The M12/4 rule takes that cost deliberately, on the ground that shared bounds are worse — an install that wants a longer conversion ceiling must not thereby give every notification email fifteen minutes to send.
+
+**Alternatives considered.** _A branch inside an existing queue_ — cheapest, and it would put a relay's fifteen-minute lease beside a document conversion's, which is the exact drift the M12/4 line exists to prevent. _One job per event rather than one per notification_ — it would fan out again at send time, making the audience decision twice, in a place where the wall is harder to apply and the second answer could differ from the first. _No queue at all: send inside the request_ — it is what the invite and magic-link paths do, and it does not survive a group apply that asks fifty people, because the response would then wait on fifty relay round trips. _An outbox table of our own beside the notification row_ — a second record of the same debt, when `email_owed` on the row already is one.
+
 ## TECH-008: Authentication — onboarding-selectable: built-in basic or bring-your-own IdP (OIDC)
 
 - **Status:** Accepted

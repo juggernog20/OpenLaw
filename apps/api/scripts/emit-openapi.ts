@@ -15,22 +15,27 @@ import { buildApp } from "../src/app.js";
 import { createUnconfiguredMailer } from "../src/lib/mailer.js";
 import { createLocalStorage } from "../src/lib/storage/local.js";
 import { createFakeDocEngine } from "../src/lib/doc-engine/fake.js";
+import { createNotifier } from "../src/lib/notifications/notifier.js";
 import { createUnconfiguredJobQueue } from "../src/pipeline/jobs.js";
 import { createUnconfiguredSigningResolver } from "../src/lib/signing/resolver.js";
 
 // Rendering the document only registers routes; nothing connects to the
 // database, sends mail, or stores a file, so inert stand-in dependencies
 // suffice. The local driver creates nothing until something writes.
+const db = createDb("postgres://emit:emit@localhost:5432/never-connected");
+const jobs = createUnconfiguredJobQueue();
+
 const app = await buildApp(
   {
-    db: createDb("postgres://emit:emit@localhost:5432/never-connected"),
+    db,
     config: { secret: "openapi-emit-only-never-a-real-secret-00", baseUrl: "http://localhost" },
     resolveMailer: () =>
       Promise.resolve({ source: "unset", from: null, mailer: createUnconfiguredMailer() }),
     storage: createLocalStorage({ root: join(tmpdir(), "openlaw-openapi-emit-never-written") }),
     docEngine: createFakeDocEngine(),
-    jobs: createUnconfiguredJobQueue(),
+    jobs,
     resolveSigningProvider: createUnconfiguredSigningResolver(),
+    notifier: createNotifier({ db, jobs, log: { error: () => {} } }),
   },
   { logger: false },
 );
