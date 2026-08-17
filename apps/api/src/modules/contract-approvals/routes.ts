@@ -105,6 +105,7 @@ import {
   reachedContract,
   type ReachedContract,
 } from "../../lib/contract-access.js";
+import type { NotifyingTransaction } from "../../lib/notifications/notifier.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
 /** The contract read floor (CTR-021), which is the roster read floor
@@ -373,12 +374,14 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
    * group" rather than making the reader join it up.
    */
   async function createRequests(
-    tx: Executor,
-    contractId: string,
-    actorId: string,
+    tx: NotifyingTransaction,
+    contract: ReachedContract,
+    actor: AuthenticatedUser,
     approvers: readonly ApproverRow[],
     origin: RequestOrigin,
   ): Promise<void> {
+    const contractId = contract.id;
+    const actorId = actor.id;
     const groupId = origin.source === "group" ? origin.group.id : null;
     const created = await tx
       .insert(contractApprovals)
@@ -413,6 +416,24 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       })),
     );
+
+    // Being asked to sign a contract off is done *to* you, so it is
+    // NOT-002's group 1: the bell rings and the email leaves at once.
+    // The route says what happened and nothing else — who hears about
+    // it, through which channel, and when the mail goes are all the
+    // seam's, and this call learns none of them. The bell rows land in
+    // this transaction, so an ask that rolls back tells nobody.
+    await app.notifier.approvalRequested(tx, {
+      contractId,
+      contractNumber: contract.number,
+      contractTitle: contract.title,
+      actorId,
+      actorName: actor.displayName,
+      approvals: approvers.map((approver) => ({
+        approvalId: idByApprover.get(approver.id) ?? null,
+        approverId: approver.id,
+      })),
+    });
   }
 
   app.get(
@@ -488,7 +509,7 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
       // badly, not two requests.
       const approverIds = [...new Set(request.body.approverIds)];
 
-      const roster = await app.db.transaction(async (tx) => {
+      const roster = await app.notifier.notifying(async (tx) => {
         const contract = await reachedContract(tx, request.user, request.params.number, {
           lock: true,
         });
@@ -524,7 +545,7 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
           }
         }
 
-        await createRequests(tx, contract.id, request.user.id, approvers, { source: "manual" });
+        await createRequests(tx, contract, request.user, approvers, { source: "manual" });
 
         return rosterOf(tx, contract.id);
       });
@@ -566,7 +587,7 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const roster = await app.db.transaction(async (tx) => {
+      const roster = await app.notifier.notifying(async (tx) => {
         const contract = await reachedContract(tx, request.user, request.params.number, {
           lock: true,
         });
@@ -627,7 +648,7 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
         );
         await assertInAudience(tx, contract.id, approvers);
 
-        await createRequests(tx, contract.id, request.user.id, approvers, {
+        await createRequests(tx, contract, request.user, approvers, {
           source: "group",
           group: { id: group.id, name: group.name },
         });

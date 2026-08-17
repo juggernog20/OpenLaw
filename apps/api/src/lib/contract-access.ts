@@ -71,7 +71,7 @@ import {
   type Transaction,
   type UserRole,
 } from "@openlaw/db";
-import type { AuthenticatedUser } from "../auth/guards.js";
+import type { AuthenticatedUser } from "../auth/user.js";
 
 /**
  * The `contract_team` role that records who made the contract (CTR-004).

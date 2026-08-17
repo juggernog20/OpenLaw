@@ -68,8 +68,7 @@ export function RecordApplets({
     function openFromHash(raw: string) {
       if (raw === "") return;
       const match = appletsRef.current.find(
-        (applet): applet is PanelApplet =>
-          applet.href === undefined && applet.hash === raw,
+        (applet): applet is PanelApplet => applet.href === undefined && applet.hash === raw,
       );
       if (match) setExpandedId(match.id);
     }

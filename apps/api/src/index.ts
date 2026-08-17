@@ -26,6 +26,8 @@ import {
   readDocuSignBaseUrl,
   SIGNING_STANDIN_VARIABLE,
 } from "./lib/signing/config.js";
+import { createNotifier } from "./lib/notifications/notifier.js";
+import { createConsoleLogger } from "./pipeline/logger.js";
 import { createSigningResolver } from "./lib/signing/resolver.js";
 import { maxUploadBytes } from "./lib/uploads.js";
 import { startPipeline } from "./pipeline/pg-boss.js";
@@ -195,6 +197,16 @@ const webDistPresent = existsSync(join(webDist, "index.html"));
 // queue's upkeep to the process that works it.
 const jobs = await startPipeline({ connectionString: databaseUrl });
 
+// The notification seam (NOT-001), built here for the reason the queue
+// is: it is composed from two things this process already holds, and no
+// route may reach past it to either of them.
+// Its own lines go where the pipeline's do — one structured line per
+// event on stdout — rather than to a bare `console.error`. The Fastify
+// logger does not exist yet at this point (the app is built from this
+// value), and a sink assigned afterwards would be a second thing to
+// keep in step with it.
+const notifier = createNotifier({ db, jobs, log: createConsoleLogger() });
+
 const app = await buildApp(
   {
     db,
@@ -214,6 +226,7 @@ const app = await buildApp(
     docEngine,
     jobs,
     resolveSigningProvider,
+    notifier,
     maxUploadBytes: uploadCeiling,
     webDist: webDistPresent ? webDist : undefined,
   },

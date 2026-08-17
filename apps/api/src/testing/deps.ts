@@ -43,6 +43,7 @@ import type { AppDeps } from "../app.js";
 import { createFakeDocEngine } from "../lib/doc-engine/fake.js";
 import { createLocalStorage } from "../lib/storage/local.js";
 import { createUnconfiguredSigningResolver } from "../lib/signing/resolver.js";
+import { createNotifier } from "../lib/notifications/notifier.js";
 import { createUnconfiguredJobQueue } from "../pipeline/jobs.js";
 import { CapturingMailer, fixedMailerResolver, TEST_AUTH_CONFIG } from "./harness.js";
 
@@ -78,15 +79,38 @@ const UNWRITTEN_STORAGE_ROOT = join(tmpdir(), "openlaw-test-deps-never-written")
  * The two optional members — `maxUploadBytes` and `webDist` — are left
  * unset on purpose. Unset is what the app factory itself defaults, and
  * restating either here would be a second place to keep in step with it.
+ *
+ * **Pass what you care about as `overrides` rather than spreading over
+ * the result**, where the thing you are overriding is `db` or `jobs`.
+ * Two members are *built from* those two — the notifier is one of them
+ * — so a spread that replaced the database left a notifier still
+ * pointed at the one nobody listens on. Handing them in here is what
+ * keeps the assembled app internally consistent; a spread is still
+ * fine for everything else.
  */
-export function testDeps(): AppDeps {
+export function testDeps(overrides: Partial<AppDeps> = {}): AppDeps {
+  const db = overrides.db ?? createDb(UNUSED_DATABASE_URL);
+  const jobs = overrides.jobs ?? createUnconfiguredJobQueue();
   return {
-    db: createDb(UNUSED_DATABASE_URL),
+    db,
     config: TEST_AUTH_CONFIG,
     resolveMailer: fixedMailerResolver(new CapturingMailer()),
     storage: createLocalStorage({ root: UNWRITTEN_STORAGE_ROOT }),
     docEngine: createFakeDocEngine(),
-    jobs: createUnconfiguredJobQueue(),
+    jobs,
     resolveSigningProvider: createUnconfiguredSigningResolver(),
+    // The real seam over whatever database and queue this app ended up
+    // with, rather than a fake of its own: everything it does is a
+    // query and a queue ask. On the defaults both refuse loudly, so a
+    // suite that starts notifying fails on the wiring it forgot rather
+    // than passing over a fan-out that never happened.
+    notifier: createNotifier({
+      db,
+      jobs,
+      log: {
+        error: (fields, message) => console.error(message, fields),
+      },
+    }),
+    ...overrides,
   };
 }

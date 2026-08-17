@@ -36,6 +36,7 @@ import {
 import type { MailerResolver } from "./lib/mailer.js";
 import type { DocEngine } from "./lib/doc-engine/engine.js";
 import type { JobQueue } from "./pipeline/jobs.js";
+import type { Notifier } from "./lib/notifications/notifier.js";
 import type { StorageAdapter } from "./lib/storage/adapter.js";
 import type { SigningResolver } from "./lib/signing/resolver.js";
 import { DEFAULT_MAX_UPLOAD_MB, MEGABYTE } from "./lib/uploads.js";
@@ -63,6 +64,7 @@ import { matterTypesRoutes } from "./modules/matter-types/routes.js";
 import { matterAttachedFieldsRoutes } from "./modules/matter-types/attached-fields.js";
 import { fieldsRoutes } from "./modules/fields/routes.js";
 import { listViewsRoutes } from "./modules/list-views/routes.js";
+import { notificationsRoutes } from "./modules/notifications/routes.js";
 import { onboardingRoutes } from "./modules/onboarding/routes.js";
 import { orgRoutes } from "./modules/org/routes.js";
 import { usersRoutes } from "./modules/users/routes.js";
@@ -115,6 +117,16 @@ export interface AppDeps {
    */
   resolveSigningProvider: SigningResolver;
   /**
+   * The notification seam (NOT-001, NOT-002), injected like the queue
+   * and for the queue's reason: a route names what happened — an
+   * approval was requested — and never learns that channels exist, who
+   * the audience is, or that anything is queued. Behind it the audience
+   * is resolved, the confidentiality predicate is applied, preferences
+   * are read, the bell rows are written in the caller's transaction,
+   * and the email work is queued once that has committed.
+   */
+  notifier: Notifier;
+  /**
    * The largest file one upload may carry, in bytes (story 24). Read
    * from `MAX_UPLOAD_MB` at startup and injected, like the storage root
    * — no module reads the environment for it. Unset here, the default
@@ -139,6 +151,7 @@ declare module "fastify" {
     docEngine: DocEngine;
     jobs: JobQueue;
     resolveSigningProvider: SigningResolver;
+    notifier: Notifier;
     /** The address this install answers on (BASE_URL), so the settings
      * pane can show the webhook URL an Administrator pastes into the
      * provider's console without reading source code. */
@@ -157,6 +170,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   app.decorate("docEngine", deps.docEngine);
   app.decorate("jobs", deps.jobs);
   app.decorate("resolveSigningProvider", deps.resolveSigningProvider);
+  app.decorate("notifier", deps.notifier);
   app.decorate("baseUrl", deps.config.baseUrl);
   const maxUploadBytes = deps.maxUploadBytes ?? DEFAULT_MAX_UPLOAD_MB * MEGABYTE;
   app.decorate("maxUploadBytes", maxUploadBytes);
@@ -391,6 +405,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(entitiesRoutes, { prefix: "/api/v1" });
   await app.register(fieldsRoutes, { prefix: "/api/v1" });
   await app.register(listViewsRoutes, { prefix: "/api/v1" });
+  await app.register(notificationsRoutes, { prefix: "/api/v1" });
 
   return app;
 }

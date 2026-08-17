@@ -42,6 +42,19 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 - **Rationale** — Staff live in the app; requesters live in the portal — each gets events where they already are, with email as the reach-out channel. One system underneath keeps the event catalog and preference model single-sourced.
 - **Alternatives considered** — Email-only (removes the mock's A.4 bell; round-trips staff through mail). Requesters email-only (recommended, declined — the portal bell rounds out the JSM shape). Chat delivery now: re-opens what INT-001 parked.
 - **Consequences** — `notifications` + `notification_preferences` tables in SCHEMA.md. Portal gains a bell + settings surface (INT portal scope grows slightly). A.4 unblocked pending badge semantics (Q5); E.1 resolved by the screen-batch grill plan: the notifications chip is **removed** from contract details — per-record notifications aren't a NOT-002 concept; the global bell (A.4) is the surface.
+- **Addendum (2026-08-18, M18/1, [#316](https://github.com/juggernog20/OpenLaw/issues/316))** — **The engine landed, and the seam is the `Notifier`.** It is injected into the app factory beside the database, the mailer, storage, and the job queue, and it carries **one method per event** rather than a generic `notify(type, payload)` — the `JobQueue` rule (TECH-007), applied to the thing that tells people. A route names what happened and never learns that channels exist, who the audience is, or that anything is queued.
+
+  **Behind the seam there are five steps, and the order is the decision.** Resolve the audience; apply the confidentiality predicate; apply per-user preferences; write the bell rows **inside the caller's transaction**; queue the email work **after** it commits. The wall is applied inside the seam rather than at the call site, which is what makes it a property no event can be added without — and the same is true of "the actor is never told about their own act", which is applied once for every event rather than remembered at each one.
+
+  **The transaction is the seam's, not the route's.** `notifier.notifying(work)` replaces the `app.db.transaction(work)` a notifying route would otherwise open, and only it mints the branded transaction the per-event methods accept. That is the whole reason it exists: there is one call at the route, a rolled-back mutation cannot leave a bell row, and the after-commit half cannot be forgotten because no caller writes it. Handing the route a two-call shape — raise, then deliver — was the alternative, and it was declined for the reason M12 declined sending inside the transaction: the correctness of the pairing must not be a thing each new call site can get wrong.
+
+  **The queue send is logged and never raised** (TECH-007's M12/3 doctrine, said for mail). The row is the record of work owed and the queue is only the wake-up, so a mutation must not fail because the notifier's queue is down — a lost send costs a delay, never the message.
+
+  **Two schema refinements**, both recorded in SCHEMA.md. The row records at write time **whether email was owed**, so "owed and never sent" is distinguishable from "never owed" and a round can re-ask from the rows without emailing everybody who had switched email off. And a date-reminder row carries a **dedup identity** — user, event, entity, the date value, and the offset — held by a partial unique index. It is defined now and first written by the dates slice: it makes a re-ask a no-op and makes a date that _moves_ correctly fire again for its new value, and both have to be in the schema before the first round runs rather than retrofitted around rows with no key.
+
+  **`notification_preferences` is a set of overrides, not a grid.** A person with no row for a pair takes the group's default, and the defaults live in application code rather than being seeded — so a default that changes reaches everybody who never expressed an opinion and nobody who did. The table ships empty; the logic that reads it is complete, so the preferences slice adds a pane and not a rule.
+
+  **The read side re-applies the confidentiality predicate on every read** — the list **and** the count, through one predicate composed from `contractTeamScope`. An item about a record walled off after it was written leaves both, silently: no row, no gap, and no number that says something was left out (M10's answer, on a surface DD-014 was never written about). The row itself stays in the table, so opening the wall again brings the item back.
 
 ## NOT-002 — Event catalog: five groups, defaults by interruptiveness
 
@@ -56,6 +69,15 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 - **Rationale** — Defaults follow interruptiveness: things done _to_ you interrupt; ambient activity doesn't; everything is user-adjustable.
 - **Alternatives considered** — Everything-on defaults: day-one unsubscribe exercise.
 - **Consequences** — `event_type` catalog enumerated per group in the schema notes; `notification_preferences.event_group` takes these five values.
+- **Addendum (2026-08-18, M18/1, [#316](https://github.com/juggernog20/OpenLaw/issues/316))** — Three clarifications, settled while building the engine.
+
+  **A comment mention is group 1, not group 2.** A mention is done _to_ you: somebody has addressed a question to you by name (CMT-007), which is the same kind of act as being assigned a task or asked to approve. So it interrupts — bell on, email immediate — rather than riding the ambient-activity default it would have inherited from "comments on your records". Ordinary comments stay in group 2, unchanged.
+
+  **Groups 4 and 5 ship as slots.** `new_requests` waits for the Inbox (M21) and `requester_events` for the portal (M20), so neither names an event yet. The **group value** ships now regardless, because a person may express a preference about a group before anything in it has ever fired, and because a group added later would be a schema change rather than a line in a table.
+
+  **The catalog is enumerated in full for the three groups this milestone serves**, not event by event as the slices that fire them arrive. That is what makes a later slice an event rather than a mechanism: the group decides the audience rule, the group's defaults decide the channels, and the fan-out reads both. Which events a build actually writes is a fact about the call sites and not about the list.
+
+  **`notifications.event_type` carries no CHECK constraint**, deliberately — `activity_log.action`'s reasoning one table over. A row outlives the build that wrote it, so a closed constraint would be a schema change on every catalog change and a read that could not answer for a slug an older build wrote. The closed union lives in TypeScript, where the compiler can hold both ends of it. The event **group** and the **channel** are constrained, because those are small closed sets that code branches on.
 
 ## NOT-003 — Timing: direct events immediate; date reminders in a daily digest
 
