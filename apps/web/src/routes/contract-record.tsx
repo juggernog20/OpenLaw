@@ -145,7 +145,7 @@ import {
   Settings,
   X,
 } from "lucide-react";
-import { SOFT_GATE_PROBLEM_TYPE } from "@openlaw/shared";
+import { RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE, SOFT_GATE_PROBLEM_TYPE } from "@openlaw/shared";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import {
@@ -845,6 +845,12 @@ function ContractRecord() {
    *
    * A refusal is printed once, in the dialog the act was raised from
    * (DES-035 clause 12), so it is returned rather than noted anywhere.
+   * One refusal is also acted on: a lost race — refused by
+   * `RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE`'s name — means the record moved
+   * under the dialog, so the record is read again and the fresh row
+   * adopted. Without that read, every re-press would carry the same
+   * stale precondition and lose the same race against a record that has
+   * already stopped moving.
    */
   async function confirmRoll(toExpiry: string): Promise<string | null> {
     const failed = () =>
@@ -861,6 +867,25 @@ function ContractRecord() {
     const outcome = await confirmContractRenewal(saved.number, saved.expiryDate, toExpiry);
     if (!outcome.ok) {
       setRenewalStatus("idle");
+      // The one refusal a client acts on rather than prints: the expiry
+      // moved under the dialog — somebody else confirmed the roll or
+      // edited the date — so the record is read again and its fresh row
+      // adopted, the same set a field commit adopts. The dialog then
+      // names the expiry the record now holds, and a re-press carries
+      // it as the precondition rather than looping on the stale one.
+      if (outcome.type === RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE) {
+        const { data } = await api
+          .GET("/api/v1/contracts/{number}", { params: { path: { number: saved.number } } })
+          .catch(() => ({ data: undefined }));
+        if (data) {
+          setSaved(data.contract);
+          setRenewals(data.renewals);
+          setAttached(data.fields);
+          setRefs(data.customFieldRefs);
+          setTermFields(termDrafts(data.contract));
+          refreshDeadlines(data.contract.number);
+        }
+      }
       // Falsy rather than nullish, the two other dialogs on this page
       // already do: a refusal that carried an empty `detail` would put
       // an empty alert in the dialog, which reads as a write that

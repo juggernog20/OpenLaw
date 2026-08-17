@@ -330,6 +330,72 @@ describe("the Renew dialog (CTR-007's first vehicle)", () => {
     expect(screen.getByRole("heading", { name: "Confirm renewal" })).toBeInTheDocument();
     expect(screen.getByLabelText("New expiry date")).toHaveValue("2027-06-30");
   });
+
+  it("reads the record again after a lost race, so a re-press confirms against the moved expiry", async () => {
+    // The race the seam's named 409 reports: another confirm landed
+    // first, so the record now holds the moved expiry and one roll.
+    const moved = contractRow({
+      expiryDate: "2026-09-30",
+      proposedRenewalExpiry: "2027-09-30",
+      renewalPendingConfirmation: false,
+      daysRemaining: 90,
+    });
+    let lost = false;
+    const writes: unknown[] = [];
+    const handler = (call: StubCall) => {
+      if (call.url.pathname === "/api/v1/contracts/options" && call.method === "GET") {
+        return json(200, OPTIONS);
+      }
+      if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
+        return json(200, { entities: [] });
+      }
+      if (call.url.pathname === "/api/v1/contracts/42" && call.method === "GET") {
+        return json(200, {
+          contract: lost ? moved : contractRow(),
+          fields: [],
+          customFieldRefs: { users: [], entities: [] },
+          team: [{ ...PEOPLE[0], role: "creator" }],
+          counterparties: [],
+          renewals: lost ? [renewal({ from: "2026-06-30", to: "2026-09-30" })] : [],
+        });
+      }
+      if (call.url.pathname === "/api/v1/contracts/42/renewal" && call.method === "POST") {
+        writes.push(call.body);
+        lost = true;
+        return problem(
+          409,
+          "This contract's expiry has already moved.",
+          "urn:openlaw:problem:renewal-expiry-moved",
+        );
+      }
+      return undefined;
+    };
+    stubApi({ signedIn: MEMBER, extra: handler });
+    renderAt("/contracts/42");
+
+    await userEvent.click(await screen.findByRole("button", { name: "Review renewal" }));
+    await userEvent.click(screen.getByRole("button", { name: "Confirm renewal" }));
+
+    // The refusal prints in the dialog — and the record is read again,
+    // so the sentence under the box names the expiry the record now
+    // holds rather than the one the race already moved.
+    expect(
+      await screen.findByText("This contract's expiry has already moved."),
+    ).toBeInTheDocument();
+    expect(await screen.findByText("The term currently runs to Sep 30.")).toBeInTheDocument();
+    // The fresh read said nothing is pending — the roll was confirmed,
+    // just not by this viewer — so the banner went with it.
+    expect(
+      screen.queryByRole("region", { name: "Renewal pending confirmation" }),
+    ).not.toBeInTheDocument();
+
+    // A re-press carries the moved expiry as its precondition, instead
+    // of looping on the stale one until somebody reloads the page.
+    await userEvent.click(screen.getByRole("button", { name: "Confirm renewal" }));
+    await waitFor(() =>
+      expect(writes[1]).toEqual({ fromExpiry: "2026-09-30", toExpiry: "2027-06-30" }),
+    );
+  });
 });
 
 describe("the Renew control on the Approvals & signing card", () => {
