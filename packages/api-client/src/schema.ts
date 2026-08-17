@@ -967,7 +967,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The contract list, newest reference first: number, title, type, and status; archived contracts only with includeArchived=true. Member+ read every contract that is not confidential; a Contributor reads exactly the contracts they hold a contract_team row on, archived ones behind the same flag. A confidential contract is listed only for its named team, its Owner, and Administrators — silently absent for everyone else, so no count can reveal it */
+    /** The contract list, newest reference first: number, title, type, and status; archived contracts only with includeArchived=true; ended contracts only with includeEnded=true (CTR-019). Member+ read every contract that is not confidential; a Contributor reads exactly the contracts they hold a contract_team row on, archived and ended ones behind the same flags. A confidential contract is listed only for its named team, its Owner, and Administrators — silently absent for everyone else, so no count can reveal it */
     get: operations["listContracts"];
     put?: never;
     /** Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward — except the Confidential flag (DD-014), which may be set here so a sensitive record is never visible to the wrong audience, even briefly. `renewalOf` routes a renewal into a new record (CTR-007's third and fourth vehicles, M16/5): the successor is born carrying its predecessor's business facts — our entity, the value, the term shape, and the counterparties — and linked to it, as a child by contracts.parent_id or as a standalone successor by a CTR-015 `renews` row. The team, the status, and the Confidential flag are **never** copied: CTR-015's no-inheritance stance, applied at birth. The title and the type are the body's, so whatever the person edited before pressing Create is what the record is born with. Appends the link's own activity action beside contract.created */
@@ -5451,6 +5451,7 @@ export interface operations {
     parameters: {
       query?: {
         includeArchived?: "true" | "false";
+        includeEnded?: "true" | "false";
         cursor?: string;
       };
       header?: never;
@@ -5514,6 +5515,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              endedAt: string | null;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -5615,6 +5617,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              endedAt: string | null;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -5803,6 +5806,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              endedAt: string | null;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -5981,6 +5985,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              endedAt: string | null;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -6157,6 +6162,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              endedAt: string | null;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -6378,6 +6384,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              endedAt: string | null;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -6471,6 +6478,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              endedAt: string | null;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -6564,6 +6572,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              endedAt: string | null;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -6656,6 +6665,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              endedAt: string | null;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;
@@ -6742,6 +6752,7 @@ export interface operations {
                 [key: string]: string | number | boolean | string[];
               };
               isConfidential: boolean;
+              endedAt: string | null;
               archivedAt: string | null;
               /** Format: date-time */
               createdAt: string;

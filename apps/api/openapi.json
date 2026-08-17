@@ -7025,7 +7025,7 @@
     "/api/v1/contracts": {
       "get": {
         "operationId": "listContracts",
-        "summary": "The contract list, newest reference first: number, title, type, and status; archived contracts only with includeArchived=true. Member+ read every contract that is not confidential; a Contributor reads exactly the contracts they hold a contract_team row on, archived ones behind the same flag. A confidential contract is listed only for its named team, its Owner, and Administrators — silently absent for everyone else, so no count can reveal it",
+        "summary": "The contract list, newest reference first: number, title, type, and status; archived contracts only with includeArchived=true; ended contracts only with includeEnded=true (CTR-019). Member+ read every contract that is not confidential; a Contributor reads exactly the contracts they hold a contract_team row on, archived and ended ones behind the same flags. A confidential contract is listed only for its named team, its Owner, and Administrators — silently absent for everyone else, so no count can reveal it",
         "tags": ["contracts"],
         "parameters": [
           {
@@ -7035,6 +7035,15 @@
             },
             "in": "query",
             "name": "includeArchived",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "in": "query",
+            "name": "includeEnded",
             "required": false
           },
           {
@@ -7331,6 +7340,18 @@
                           "isConfidential": {
                             "type": "boolean"
                           },
+                          "endedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "archivedAt": {
                             "anyOf": [
                               {
@@ -7381,6 +7402,7 @@
                           "description",
                           "customFields",
                           "isConfidential",
+                          "endedAt",
                           "archivedAt",
                           "createdAt",
                           "updatedAt"
@@ -7775,6 +7797,18 @@
                         "isConfidential": {
                           "type": "boolean"
                         },
+                        "endedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -7825,6 +7859,7 @@
                         "description",
                         "customFields",
                         "isConfidential",
+                        "endedAt",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -8412,6 +8447,18 @@
                         "isConfidential": {
                           "type": "boolean"
                         },
+                        "endedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -8462,6 +8509,7 @@
                         "description",
                         "customFields",
                         "isConfidential",
+                        "endedAt",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -9225,6 +9273,18 @@
                         "isConfidential": {
                           "type": "boolean"
                         },
+                        "endedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -9275,6 +9335,7 @@
                         "description",
                         "customFields",
                         "isConfidential",
+                        "endedAt",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -9852,6 +9913,18 @@
                         "isConfidential": {
                           "type": "boolean"
                         },
+                        "endedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -9902,6 +9975,7 @@
                         "description",
                         "customFields",
                         "isConfidential",
+                        "endedAt",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -10552,6 +10626,18 @@
                         "isConfidential": {
                           "type": "boolean"
                         },
+                        "endedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -10602,6 +10688,7 @@
                         "description",
                         "customFields",
                         "isConfidential",
+                        "endedAt",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -10963,6 +11050,18 @@
                         "isConfidential": {
                           "type": "boolean"
                         },
+                        "endedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -11013,6 +11112,7 @@
                         "description",
                         "customFields",
                         "isConfidential",
+                        "endedAt",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -11374,6 +11474,18 @@
                         "isConfidential": {
                           "type": "boolean"
                         },
+                        "endedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -11424,6 +11536,7 @@
                         "description",
                         "customFields",
                         "isConfidential",
+                        "endedAt",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -11777,6 +11890,18 @@
                         "isConfidential": {
                           "type": "boolean"
                         },
+                        "endedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -11827,6 +11952,7 @@
                         "description",
                         "customFields",
                         "isConfidential",
+                        "endedAt",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
@@ -12151,6 +12277,18 @@
                         "isConfidential": {
                           "type": "boolean"
                         },
+                        "endedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "archivedAt": {
                           "anyOf": [
                             {
@@ -12201,6 +12339,7 @@
                         "description",
                         "customFields",
                         "isConfidential",
+                        "endedAt",
                         "archivedAt",
                         "createdAt",
                         "updatedAt"
