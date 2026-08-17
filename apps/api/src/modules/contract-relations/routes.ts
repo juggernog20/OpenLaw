@@ -29,6 +29,7 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
   and,
+  asc,
   contracts,
   contractRelations,
   contractStatuses,
@@ -42,11 +43,7 @@ import {
   type Executor,
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
-import {
-  contractTeamScope,
-  NO_CONTRACT,
-  reachedContract,
-} from "../../lib/contract-access.js";
+import { contractTeamScope, NO_CONTRACT, reachedContract } from "../../lib/contract-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
 /** The contract read floor (CTR-021): a Contributor on the team reads the
@@ -190,7 +187,12 @@ export const contractRelationsRoutes: FastifyPluginAsyncZod = async (app) => {
       const childRows = await app.db
         .select({ id: contracts.id })
         .from(contracts)
-        .where(and(eq(contracts.parentId, contract.id), isNull(contracts.archivedAt)));
+        .where(and(eq(contracts.parentId, contract.id), isNull(contracts.archivedAt)))
+        // By number, so two reads of one record draw one list. A query
+        // with no ORDER BY answers in whatever order the planner walked
+        // the rows, and a list that reshuffles between loads reads as a
+        // change nobody made.
+        .orderBy(asc(contracts.number));
 
       const childIds = childRows.map((row) => row.id);
 
@@ -208,7 +210,10 @@ export const contractRelationsRoutes: FastifyPluginAsyncZod = async (app) => {
             eq(contractRelations.fromContractId, contract.id),
             eq(contractRelations.toContractId, contract.id),
           ),
-        );
+        )
+        // Oldest first, the order the links were made in — deterministic
+        // for the same reason the children are.
+        .orderBy(asc(contractRelations.createdAt), asc(contractRelations.relationType));
 
       const linkedIds = linkRows.map((row) =>
         row.fromContractId === contract.id ? row.toContractId : row.fromContractId,
