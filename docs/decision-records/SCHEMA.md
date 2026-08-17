@@ -532,7 +532,7 @@ Known columns so far:
 - `custom_fields` — jsonb keyed by field slug per **CTR-016** (fields attached via `contract_type_fields`; values retained on detach)
 - `ai_unverified` — jsonb, nullable per **CTR-008**: map of field slug → extraction meta (evidence snippet, run info) for AI-written values not yet human-confirmed; entry removed on confirmation.
 - `entity_id` FK → `entities.id`, nullable until known per **CTR-011** — which of our entities signed
-- `parent_id` FK → `contracts.id`, nullable per **CTR-015** — single parent, arbitrary depth, no cycles (application-enforced); no inheritance semantics
+- `parent_id` FK → `contracts.id`, nullable per **CTR-015** — single parent, arbitrary depth, no cycles (application-enforced); no inheritance semantics. Landed in M16/5, migration `0048_contract_relations`, with the routing that first writes it (CTR-007's child-contract vehicle). A `parent_id <> id` check states the shortest cycle as a row rule; the longer ones are the write path's walk. Indexed, because the walk rides it and so will M17's hierarchy surfaces
 - `ended_at` — timestamptz, nullable per **CTR-019**: set on transition into the `ended` stage, cleared on revert (activity log remains source of truth)
 - `is_confidential` boolean per **DD-014**; never cascades to/from linked records per **CTR-018**
 - `matter_id` FK → `matters.id`, nullable per **DD-007** (contracts can stand alone)
@@ -645,6 +645,8 @@ Source: **CTR-015**
 
 Typed, directional links between contracts (beyond the `parent_id` hierarchy). One row per pair per type (application-enforced). No cascade/inheritance semantics; inaccessible relatives render as "restricted contract".
 
+Landed in M16/5, migration `0048_contract_relations`, with CTR-007's successor vehicle — the feature that first needs a renewal to be identified by its link. **M16 writes these rows and draws none of them**: the relations panel, the hierarchy breadcrumb, manual linking, and the restricted-relative rendering are all M17's.
+
 | Column             | Type        | Notes                                                                              |
 | ------------------ | ----------- | ---------------------------------------------------------------------------------- |
 | `from_contract_id` | UUID        | FK → `contracts.id`, not null                                                      |
@@ -652,7 +654,11 @@ Typed, directional links between contracts (beyond the `parent_id` hierarchy). O
 | `relation_type`    | text (enum) | `related` (symmetric) \| `renews` \| `amends` (directional: from renews/amends to) |
 | `created_at`       | timestamptz |                                                                                    |
 
-Compound primary key on (`from_contract_id`, `to_contract_id`, `relation_type`).
+Compound primary key on (`from_contract_id`, `to_contract_id`, `relation_type`) — which is CTR-015's duplicate guard stated as the shape rather than kept as a convention. The type is part of the key, so two contracts may hold two links of different kinds at once. A `from <> to` check refuses a self-link, and `to_contract_id` is indexed for the far half of every relations read. Both foreign keys cascade: a link is a fact about exactly these two records and about nothing else.
+
+**Both writes go through one path** (`apps/api/src/lib/contract-relations.ts`), which asks the two guards before the row does, so a caller reads a named RFC 9457 refusal instead of a constraint violation. Renewal routing cannot itself reach either refusal — a contract born a moment ago has no descendants to loop through and no links to duplicate — and it goes through the guarded path anyway, because the rule belongs to the write and not to the caller that happens to be safe.
+
+**The writes are narrated as their own verbs**: `contract.parent_set` and `contract.relation_added`, both at the record tier, both hung on the record that changed — which is the new one. Nothing is written on the far end, because nothing there moved.
 
 ---
 

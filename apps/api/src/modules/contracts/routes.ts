@@ -173,6 +173,7 @@ import {
   NO_CONTRACT,
   reachesLockedContract,
 } from "../../lib/contract-access.js";
+import { linkContracts, setContractParent } from "../../lib/contract-relations.js";
 import {
   daysRemaining,
   noticeDeadline,
@@ -189,6 +190,8 @@ import {
   type AttachedCustomField,
 } from "../../lib/custom-fields.js";
 import {
+  CONTRACT_PARENT_CYCLE_PROBLEM_TYPE,
+  CONTRACT_RELATION_EXISTS_PROBLEM_TYPE,
   RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE,
   SOFT_GATE_PROBLEM_TYPE,
   TERM_EXPIRY_ON_EVERGREEN_PROBLEM_TYPE,
@@ -291,6 +294,63 @@ const TermTypeSchema = z.enum(TERM_TYPES);
  */
 const RenewalPeriodSchema = z.int().min(1).max(1200);
 const NoticePeriodSchema = z.int().min(0).max(36_500);
+
+/**
+ * CTR-007's two routed vehicles, and which record the renewal is being
+ * routed from (M16/5).
+ *
+ * The other two vehicles are not here, because neither makes a record.
+ * Confirming the roll moves the predecessor's own expiry and has its own
+ * route; papering the renewal as an amendment files a version on the
+ * primary document's chain, which is the M11 write path and needs
+ * nothing from this one.
+ *
+ * `child` and `successor` are separate values rather than a relation
+ * type, because they are two shapes and not two spellings: a child sits
+ * *under* its predecessor in the CTR-015 hierarchy, and a successor
+ * stands beside it holding a `renews` link. Naming the link type here
+ * would make the caller responsible for a choice the vehicle already
+ * makes.
+ */
+const RenewalOfSchema = z.strictObject({
+  /** The predecessor's CTR-003 number — the reference a person speaks,
+   * exactly as every other contract route takes it. */
+  number: z.int().positive(),
+  vehicle: z.enum(["child", "successor"]),
+});
+
+/**
+ * CTR-007's prefill: the business facts a routed renewal is born with.
+ *
+ * **This list is the decision.** The deal is the same deal — our side of
+ * it, what it is worth, and the shape of its term — so re-keying those
+ * onto the successor is work with no judgement in it. Everything else is
+ * a fact about the *record* rather than the deal: the status says where
+ * this paper has got to, the team says who is working it, the Owner says
+ * who is accountable for it, priority and risk are assessments nobody
+ * has made yet, and the Confidential flag is an audience decision. None
+ * of them is inherited (CTR-015), so none of them is here.
+ *
+ * The term is copied as its **shape**, dates and all. A successor whose
+ * dates have not been agreed yet is edited on the record; a successor
+ * that simply continues the same commitment is right already. Copying
+ * the type without the periods would leave an auto-renewing record that
+ * does not know how far it rolls, which is a worse starting point than
+ * either.
+ */
+function businessFactsOf(predecessor: Contract) {
+  return {
+    entityId: predecessor.entityId,
+    valueAmount: predecessor.valueAmount,
+    valueCurrency: predecessor.valueCurrency,
+    valueCadence: predecessor.valueCadence,
+    termType: predecessor.termType,
+    effectiveDate: predecessor.effectiveDate,
+    expiryDate: predecessor.expiryDate,
+    renewalPeriodMonths: predecessor.renewalPeriodMonths,
+    noticePeriodDays: predecessor.noticePeriodDays,
+  };
+}
 
 /** A person as every contract surface renders them: name and face, plus
  * the SET-005 archived flag the shared identity component greys on. */
@@ -1566,7 +1626,18 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           "CTR-003 sequence. Everything else is set inline on the record " +
           "afterward — except the Confidential flag (DD-014), which may " +
           "be set here so a sensitive record is never visible to the " +
-          "wrong audience, even briefly",
+          "wrong audience, even briefly. " +
+          "`renewalOf` routes a renewal into a new record (CTR-007's " +
+          "third and fourth vehicles, M16/5): the successor is born " +
+          "carrying its predecessor's business facts — our entity, the " +
+          "value, the term shape, and the counterparties — and linked " +
+          "to it, as a child by contracts.parent_id or as a standalone " +
+          "successor by a CTR-015 `renews` row. The team, the status, " +
+          "and the Confidential flag are **never** copied: CTR-015's " +
+          "no-inheritance stance, applied at birth. The title and the " +
+          "type are the body's, so whatever the person edited before " +
+          "pressing Create is what the record is born with. Appends the " +
+          "link's own activity action beside contract.created",
         tags: ["contracts"],
         // Strict: the number is the sequence's to give, so a body
         // carrying one is refused rather than silently ignored.
@@ -1582,13 +1653,39 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
            * the creator is one of the three who may set it. Omitted
            * means open, which is the product's default (DD-014). */
           isConfidential: z.boolean().optional(),
+          /** CTR-007's routing (M16/5). Omitted is the ordinary create:
+           * a record that renews nothing and sits under nobody. */
+          renewalOf: RenewalOfSchema.optional(),
         }),
-        response: { 201: ContractEnvelope, default: problemResponse },
+        response: {
+          201: ContractEnvelope,
+          // The two refusals a routed create can give that a client acts
+          // on rather than prints. Neither is reachable through the
+          // routing itself — a newborn contract has no descendants and
+          // no links — but the write path is CTR-015's, and it answers
+          // the same way whichever caller reaches it.
+          409: problemTypeResponse(
+            "The named types are CTR-015's two guards: the link already exists, or " +
+              "the parent would close a loop. An unnamed 409 is an archived predecessor; " +
+              "print it.",
+            [CONTRACT_RELATION_EXISTS_PROBLEM_TYPE, CONTRACT_PARENT_CYCLE_PROBLEM_TYPE],
+          ),
+          default: problemResponse,
+        },
       },
     },
     async (request, reply) => {
-      const { title, contractTypeId } = request.body;
+      const { title, contractTypeId, renewalOf } = request.body;
       const created = await app.db.transaction(async (tx) => {
+        // The predecessor first, and under its own row lock, so the
+        // facts copied onto the successor are the ones the record held
+        // at the moment the renewal was routed. Reach is asked here as
+        // it is everywhere else: a predecessor this viewer cannot reach
+        // answers exactly as one that was never made, and an archived
+        // one routes nothing until it is restored.
+        const predecessor = renewalOf
+          ? await editableContract(tx, renewalOf.number, request.user)
+          : null;
         // Lock the type row so a concurrent archive can't slip between
         // the check and the insert.
         const [contractType] = await tx
@@ -1645,6 +1742,20 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             statusId: draft.id,
             customFields,
             isConfidential,
+            // CTR-007's prefill, and the whole of it: the business facts
+            // of the deal, copied so routing a renewal is not re-keying
+            // a contract. The type and the title are the body's, above,
+            // because those are the two the create dialog draws and the
+            // person may have edited either before pressing.
+            //
+            // What is deliberately absent is the point of the list. The
+            // status is the draft seed for every contract born here, the
+            // Owner is unassigned, the team is the creator's row alone,
+            // and the Confidential flag is the body's — CTR-015's
+            // no-inheritance stance, applied at birth. Priority and risk
+            // are absent for the same reason: they are assessments of a
+            // record, and a new record has not been assessed.
+            ...(predecessor ? businessFactsOf(predecessor.row) : {}),
           })
           .returning();
         // Provenance, written once and never again (CTR-004): who made
@@ -1688,18 +1799,118 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             payload: { number: row!.number, title: row!.title },
           });
         }
-        return {
-          row: row!,
-          contractTypeName: contractType.displayName,
-          statusName: draft.displayName,
-          stage: draft.stage,
-          // A new contract is unassigned, which of ours signs is not
-          // known yet, and nobody is recorded on the other side; all
-          // three are set on the record afterwards.
-          manager: null,
-          entity: null,
-          primaryCounterparty: null,
-        };
+        if (!predecessor || !renewalOf) {
+          return {
+            row: row!,
+            contractTypeName: contractType.displayName,
+            statusName: draft.displayName,
+            stage: draft.stage,
+            // A new contract is unassigned, which of ours signs is not
+            // known yet, and nobody is recorded on the other side; all
+            // three are set on the record afterwards.
+            manager: null,
+            entity: null,
+            primaryCounterparty: null,
+          };
+        }
+
+        // The other side of the deal, copied party for party with the
+        // primary still primary (CTR-011). The rows are copied rather
+        // than the names re-typed, so a renewal of a tripartite
+        // agreement is born with all three and nobody has to find them
+        // again — and the counterparty records themselves are shared,
+        // because they are the same companies.
+        //
+        // **Live parties only.** A party that signed the predecessor is
+        // a fact of that contract and stays on it however the register
+        // changed afterwards; a party nobody may add by hand today must
+        // not arrive on a *new* record through a copy, or routing would
+        // be the way around the rule the add route states (MTR-014's
+        // principle). The primary is carried across and re-seated when
+        // the party holding it is the one that left, so the invariant
+        // "a contract with parties has a primary" holds at birth.
+        const parties = await tx
+          .select({
+            counterpartyId: contractCounterparties.counterpartyId,
+            isPrimary: contractCounterparties.isPrimary,
+          })
+          .from(contractCounterparties)
+          .innerJoin(
+            counterparties,
+            and(
+              eq(contractCounterparties.counterpartyId, counterparties.id),
+              isNull(counterparties.archivedAt),
+            ),
+          )
+          .where(eq(contractCounterparties.contractId, predecessor.row.id))
+          .orderBy(desc(contractCounterparties.isPrimary), asc(sql`lower(${counterparties.name})`));
+        if (parties.length > 0) {
+          const keepsPrimary = parties.some((party) => party.isPrimary);
+          await tx.insert(contractCounterparties).values(
+            parties.map((party, index) => ({
+              contractId: row!.id,
+              counterpartyId: party.counterpartyId,
+              isPrimary: keepsPrimary ? party.isPrimary : index === 0,
+            })),
+          );
+        }
+
+        // The link, through CTR-015's own write path so its two guards
+        // are asked here exactly as they will be asked by M17's manual
+        // linking. Neither can refuse this particular call — a record
+        // born a moment ago has no descendants to loop through and no
+        // links to duplicate — and it goes through the guarded path all
+        // the same, because the rule belongs to the write and not to the
+        // caller that happens to be safe.
+        //
+        // The entry hangs off the record that changed, which is the new
+        // one: nothing was written on the predecessor, and a feed entry
+        // on a record nobody touched would be the log asserting an edit
+        // that never happened. Both ends are named by number and title,
+        // so the sentence survives a rename of either.
+        if (renewalOf.vehicle === "child") {
+          await setContractParent(tx, { childId: row!.id, parentId: predecessor.row.id });
+          await recordActivity(tx, {
+            entityType: "contract",
+            entityId: row!.id,
+            actorId: request.user.id,
+            action: "contract.parent_set",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: {
+              number: row!.number,
+              title: row!.title,
+              parentNumber: predecessor.row.number,
+              parentTitle: predecessor.row.title,
+            },
+          });
+        } else {
+          await linkContracts(tx, {
+            fromId: row!.id,
+            toId: predecessor.row.id,
+            relationType: "renews",
+          });
+          await recordActivity(tx, {
+            entityType: "contract",
+            entityId: row!.id,
+            actorId: request.user.id,
+            action: "contract.relation_added",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: {
+              number: row!.number,
+              title: row!.title,
+              relationType: "renews",
+              relatedNumber: predecessor.row.number,
+              relatedTitle: predecessor.row.title,
+            },
+          });
+        }
+
+        // The copied facts read back off the row that now holds them,
+        // rather than off the predecessor's context: the entity and the
+        // primary party the answer names have to be the ones this record
+        // was born with, and one joined read is what guarantees it.
+        const [born] = await selectContracts(tx).where(eq(contracts.id, row!.id)).limit(1);
+        return born!;
       });
       return reply.status(201).send({ contract: toRow(created) });
     },

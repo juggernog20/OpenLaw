@@ -310,6 +310,19 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     from: "2026-06-30",
     to: "2027-06-30",
   },
+  "contract.parent_set": {
+    number: 41,
+    title: "Helix supply agreement",
+    parentNumber: 12,
+    parentTitle: "Helix master services agreement",
+  },
+  "contract.relation_added": {
+    number: 41,
+    title: "Helix supply agreement",
+    relationType: "renews",
+    relatedNumber: 12,
+    relatedTitle: "Helix master services agreement",
+  },
   "contract.confidentiality_set": { number: 41, title: "Helix supply agreement" },
   "contract.confidentiality_cleared": { number: 41, title: "Helix supply agreement" },
   "contract.archived": { number: 41, title: "Helix supply agreement" },
@@ -599,6 +612,39 @@ describe("the sentences a reader gets", () => {
     expect(narration.changes).toEqual([
       { label: "Role", from: "Contributor", to: "Legal team member" },
     ]);
+  });
+
+  it("names the far record of a relation by reference and title, one arm per type", () => {
+    expect(narrate("contract.parent_set", SAMPLE_PAYLOADS["contract.parent_set"]).sentence).toBe(
+      "Nadia Counsel put this contract under C-12 (Helix master services agreement)",
+    );
+    expect(
+      narrate("contract.relation_added", SAMPLE_PAYLOADS["contract.relation_added"]).sentence,
+    ).toBe("Nadia Counsel linked this contract — it renews C-12 (Helix master services agreement)");
+    const amends = { ...SAMPLE_PAYLOADS["contract.relation_added"], relationType: "amends" };
+    expect(narrate("contract.relation_added", amends).sentence).toBe(
+      "Nadia Counsel linked this contract — it amends C-12 (Helix master services agreement)",
+    );
+    // A type this build has never heard of still reads as a sentence:
+    // the log is append-only, and `related` takes the same arm because
+    // it has no verb of its own.
+    const later = { ...SAMPLE_PAYLOADS["contract.relation_added"], relationType: "supersedes" };
+    expect(narrate("contract.relation_added", later).sentence).toBe(
+      "Nadia Counsel linked this contract — related to C-12 (Helix master services agreement)",
+    );
+  });
+
+  it("reads a relation entry that lost one half of the far record's name", () => {
+    // Both halves answer different questions, so each absence has its
+    // own shape: no title leaves the reference standing alone, and no
+    // reference falls back to a record rather than to a person.
+    const untitled = { ...SAMPLE_PAYLOADS["contract.parent_set"], parentTitle: "" };
+    expect(narrate("contract.parent_set", untitled).sentence).toBe(
+      "Nadia Counsel put this contract under C-12",
+    );
+    expect(
+      narrate("contract.parent_set", { number: 41, title: "Helix supply agreement" }).sentence,
+    ).toBe("Nadia Counsel put this contract under another contract");
   });
 
   it("says OpenLaw when no person is behind the entry", () => {

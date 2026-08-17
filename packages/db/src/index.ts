@@ -18,6 +18,7 @@ import * as contractApprovalsSchema from "./schema/contract-approvals.js";
 import * as contractCounterpartiesSchema from "./schema/contract-counterparties.js";
 import * as contractEnvelopesSchema from "./schema/contract-envelopes.js";
 import * as contractKeyDatesSchema from "./schema/contract-key-dates.js";
+import * as contractRelationsSchema from "./schema/contract-relations.js";
 import * as contractStatusesSchema from "./schema/contract-statuses.js";
 import * as contractTeamSchema from "./schema/contract-team.js";
 import * as contractTypeFieldsSchema from "./schema/contract-type-fields.js";
@@ -45,6 +46,7 @@ export * from "./schema/contract-approvals.js";
 export * from "./schema/contract-counterparties.js";
 export * from "./schema/contract-envelopes.js";
 export * from "./schema/contract-key-dates.js";
+export * from "./schema/contract-relations.js";
 export * from "./schema/contract-statuses.js";
 export * from "./schema/contract-team.js";
 export * from "./schema/contract-type-fields.js";
@@ -73,6 +75,7 @@ export const schema = {
   ...contractCounterpartiesSchema,
   ...contractEnvelopesSchema,
   ...contractKeyDatesSchema,
+  ...contractRelationsSchema,
   ...contractStatusesSchema,
   ...contractTeamSchema,
   ...contractTypeFieldsSchema,

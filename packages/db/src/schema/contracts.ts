@@ -157,6 +157,31 @@ export const contracts = pgTable(
     valueCurrency: char("value_currency", { length: 3 }),
     /** What the amount is per (CTR-010). */
     valueCadence: text("value_cadence", { enum: VALUE_CADENCES }),
+    /**
+     * CTR-015's hierarchy: the one contract this one sits under (M16/5).
+     *
+     * **One parent, arbitrary depth, and no cycles.** A single column is
+     * the one-parent rule stated as a shape, the way
+     * `primary_document_id` states its own. Depth is whatever a team
+     * draws — an MSA over its SOWs, and a SOW over an amendment of it.
+     * Cycles are refused by the write path, which walks up from the
+     * proposed parent before it commits; the column can only say that a
+     * row is not its own parent, and it does.
+     *
+     * **Nothing flows down it** (CTR-015, CTR-018). Status, team,
+     * confidentiality, and the term stay the record's own. The link is
+     * navigational, so a child born under a confidential parent is open
+     * unless somebody says otherwise.
+     *
+     * NULL is the ordinary case: most contracts stand alone. No cascade
+     * — a contract is soft-deleted rather than dropped, so the reference
+     * outlives an archive, and nothing here decides what a hard delete
+     * would mean.
+     */
+    // The return type is written out for `primary_document_id`'s reason:
+    // the reference closes on this same table, and TypeScript cannot
+    // infer a type that depends on itself.
+    parentId: text("parent_id").references((): AnyPgColumn => contracts.id),
     /** DD-014's opt-in gate, and the whole of it: when set, only the
      * named team, the Owner, and Administrators reach the record or
      * anything attached to it. Not null with a `false` default because
@@ -247,6 +272,10 @@ export const contracts = pgTable(
     // check every contract for one naming it as its instrument, and
     // without an index that check is a sequential scan of `contracts`.
     index("contracts_primary_document_idx").on(table.primaryDocumentId),
+    // "What sits under this contract" — the read M17's hierarchy
+    // breadcrumb and relations panel ride, and the walk the cycle guard
+    // already makes on every parent write.
+    index("contracts_parent_idx").on(table.parentId),
     // `entity_id` carries no index yet: nothing in M8 reads contracts by
     // the entity that signs them. The roll-up that will (ENT-007, M27)
     // brings its own, per the incremental-schema doctrine.
@@ -313,6 +342,13 @@ export const contracts = pgTable(
     // or bare string would make `custom_fields ? slug` — the archive
     // guard's own test — an error rather than an answer.
     check("contracts_custom_fields_check", sql`jsonb_typeof(${table.customFields}) = 'object'`),
+    // The shortest cycle CTR-015 forbids, stated where no write path can
+    // get past it. The longer ones need a walk and the walk is the write
+    // path's; this is the one case a single row can decide by itself.
+    check(
+      "contracts_parent_not_self_check",
+      sql`${table.parentId} is null or ${table.parentId} <> ${table.id}`,
+    ),
   ],
 );
 

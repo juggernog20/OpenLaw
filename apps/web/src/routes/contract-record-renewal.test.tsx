@@ -239,14 +239,12 @@ describe("the Renew dialog (CTR-007's first vehicle)", () => {
     expect(screen.getByLabelText("New expiry date")).toHaveValue("2027-06-30");
     expect(screen.getByText("The term currently runs to Jun 30.")).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "C-42 auto-renews in 12-month periods. Confirming the roll advances this record's own expiry date.",
-      ),
+      screen.getByText("C-42 auto-renews in 12-month periods. Choose how to record the new term."),
     ).toBeInTheDocument();
-    // The three vehicles this slice does not build are not drawn at all.
-    expect(screen.queryByText("Paper as amendment")).not.toBeInTheDocument();
-    expect(screen.queryByText("Create child contract")).not.toBeInTheDocument();
-    expect(screen.queryByText("New successor contract")).not.toBeInTheDocument();
+    // The roll is the chosen vehicle when the dialog opens, and the
+    // date box belongs to it (M16/5, DES-044). The other three are on
+    // offer and are covered by the routing suite.
+    expect(screen.getByRole("radio", { name: /Confirm the roll/ })).toBeChecked();
   });
 
   it("confirms the proposal against the expiry the record holds, and clears the banner", async () => {

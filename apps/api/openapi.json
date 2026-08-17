@@ -7419,7 +7419,7 @@
       },
       "post": {
         "operationId": "createContract",
-        "summary": "Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward — except the Confidential flag (DD-014), which may be set here so a sensitive record is never visible to the wrong audience, even briefly",
+        "summary": "Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward — except the Confidential flag (DD-014), which may be set here so a sensitive record is never visible to the wrong audience, even briefly. `renewalOf` routes a renewal into a new record (CTR-007's third and fourth vehicles, M16/5): the successor is born carrying its predecessor's business facts — our entity, the value, the term shape, and the counterparties — and linked to it, as a child by contracts.parent_id or as a standalone successor by a CTR-015 `renews` row. The team, the status, and the Confidential flag are **never** copied: CTR-015's no-inheritance stance, applied at birth. The title and the type are the body's, so whatever the person edited before pressing Create is what the record is born with. Appends the link's own activity action beside contract.created",
         "tags": ["contracts"],
         "requestBody": {
           "required": true,
@@ -7470,6 +7470,22 @@
                   },
                   "isConfidential": {
                     "type": "boolean"
+                  },
+                  "renewalOf": {
+                    "type": "object",
+                    "properties": {
+                      "number": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "vehicle": {
+                        "type": "string",
+                        "enum": ["child", "successor"]
+                      }
+                    },
+                    "required": ["number", "vehicle"],
+                    "additionalProperties": false
                   }
                 },
                 "required": ["title", "contractTypeId"],
@@ -7818,6 +7834,60 @@
                   },
                   "required": ["contract"],
                   "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The named types are CTR-015's two guards: the link already exists, or the parent would close a loop. An unnamed 409 is an archived predecessor; print it.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "urn:openlaw:problem:contract-relation-exists",
+                        "urn:openlaw:problem:contract-parent-cycle",
+                        "about:blank"
+                      ],
+                      "description": "Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it."
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["path", "message"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["type", "title", "status"],
+                  "additionalProperties": false,
+                  "description": "The named types are CTR-015's two guards: the link already exists, or the parent would close a loop. An unnamed 409 is an archived predecessor; print it."
                 }
               }
             }
