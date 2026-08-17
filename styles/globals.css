@@ -38,6 +38,7 @@
    * ------------------------------------------------------------------ */
   --color-border-default: var(--border-default);
   --color-border-muted: var(--border-muted);
+  --color-border-strong: var(--border-strong);
   --color-border-on-inverted: var(--border-on-inverted);
 
   /* ------------------------------------------------------------------ *

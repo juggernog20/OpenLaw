@@ -2917,6 +2917,76 @@ The native `<select>` for link type is the smallest control that covers three va
 
 The nudge is the first instance of a post-write dialog in the product — a second modal that replaces the link dialog. This means the dialog component holds a two-phase state machine (form then nudge). A toast or an inline prompt after close would avoid the two-phase flow, but neither gives the nudge enough weight to match CTR-018's intent.
 
+## DES-046: The managed list table — the width floor, the resize handle, the column menu, and the views control (extends DES-031, DES-021, DES-007)
+
+- **Status:** Accepted
+- **Date:** 2026-08-17
+
+### Context
+
+DD-019 makes a destination list's columns the reader's to choose, and its layout something they can save. Nothing in this document draws a destination list's column strip: DES-021 covers the settings list-editor's table, DES-027 the audit log's, and DES-031 the paging foot under either — but the contracts list was built as a bespoke `<table>` with per-column width hints in the JSX.
+
+That build has a concrete defect worth naming, because the fix is structural rather than a number to tune. Six of its seven `<th>` cells carry a width hint. They sum to 928px. On a 1030px table there is nothing left for the Title column, so the one column that carries the record's name collapses to its own longest word and wraps, while every fixed column sits in slack it cannot give back. A table with width hints, no floor, and no sideways escape has no way to be anything but cramped.
+
+Matters, Documents, and Entities all land the same surface later, so this is one primitive, not a contracts fix.
+
+### Decision
+
+**1. Widths are real, and the table has a floor.** The table renders `table-layout: fixed` with a `<colgroup>`, one `<col>` per shown column carrying the width from the view config in px. The table's `min-width` is the sum of those widths. Below that the card's existing horizontal scroll (DES-031's `overflow-x-auto`, which belongs to the table and not to the card, so the paging foot never slides out of reach) does the rest.
+
+This is the whole cure for the cramp. A column can be narrow because a reader dragged it there, and never because the table ran out of room.
+
+**Where the card's spare width goes is the layout's choice, and every column is resizable.** A fixed-layout table has three places to put spare width, and only one of them is any good. Sharing it out over all the columns proportionally is what a browser does by default, and it is the option that breaks resizing: every stored width becomes a ratio, so dragging one column moves all of them. Giving it to one designated column is what the first draft of this clause did, and it is the option that cannot be resized: a column absorbing the spare width can never be dragged narrower than that width makes it, whichever column it is. So the layout carries a **`flexKey`** — which shown column stretches, or `null` for none — and:
+
+- The catalogue names the column that stretches in the built-in layout: the one whose content is longest and least predictable, Title on contracts. That preserves the cramp fix, because a wide window goes to the record's name rather than to nothing.
+- **Dragging the stretching column pins it**, at the width it was rendering at plus the drag. The spare width then becomes trailing space. This is the one rule that makes every column resizable, and it is the reader saying they want the number instead of the stretch.
+- A trailing **filler column** absorbs the spare width whenever no real column does. It is what lets a pinned column keep exactly the width it says it has, and it is also what gives the last real column something on its trailing side — without it, the last column has no edge to drag. It carries no padding, is `aria-hidden`, and is given a hard `0` while a real column is stretching, because a fixed-layout table splits spare width equally between every column that has none.
+- **"Fill the width"** in the column menu hands the stretch back to the catalogue's column, and is offered only while some other arrangement is in force.
+
+Every column therefore has a real `defaultWidth` in the catalogue, the stretching one included: stretching is a layout's state, not a column's nature, and the number is what the column takes the moment it is pinned. The table's `min-width` counts the stretching column's floor rather than its width, so widening a neighbour scrolls the card rather than crushing the record's name.
+
+**2. Cells truncate; they never wrap.** Every cell is single-line with `truncate`, and any cell whose text can outrun its column carries the full text as a `title`. A row is one line tall at DES-007's density (`py-2.5`), so thirty rows scan as thirty rows. Wrapping is what made one short title look like a defect.
+
+**3. The resize handle is a keyboard control that also takes a drag, and it shows.** On the trailing edge of each resizable header cell sits a 9px-wide, full-height strip with `cursor: col-resize`, straddling the column boundary. It draws a 1px rule on that boundary at rest, in `border-default` — the colour of every other rule in the table — and firms up to `border-strong` under the pointer, on focus, and for the length of a drag. A draggable edge has to look like an edge before anyone reaches for it, and a hover-only affordance in a header strip is one nobody discovers.
+
+**The rule belongs to the boundary, not to the handle**, and since clause 1 makes every column resizable, every column carries both. Only the filler goes without, because the card's own border is its edge.
+
+**The strip straddles its boundary everywhere except the table's own trailing edge.** Straddling puts half the grab area in the next column, which is that column's business and costs nothing. At the table's edge it is nothing's business: the overhang becomes scrollable overflow, and the card grows a sideways scrollbar for a table that fits inside it — which is exactly what "Fill the width" produced, since a stretching column collapses the filler to nothing and puts the last boundary on the table's edge. There the strip takes its 9px from the inner side and carries the rule at its end instead of its centre. The target does not shrink; only the side it takes its width from changes.
+
+A handle on a stretching column reports its pinned number in `aria-valuenow` and overrides the announcement with `aria-valuetext` — "Fills the remaining width" — because that column has no width of its own to report until an adjustment pins it. A drag or a nudge on it starts from the cell's measured width, so the first keypress moves the column by one step rather than snapping it to a number it has not been using.
+
+It is a focusable `role="separator"` with `aria-orientation="vertical"`, an `aria-label` naming its column, and `aria-valuenow` / `aria-valuemin` carrying the width in px. Left and right arrows move the width by 16px, Shift with them by 64px, and Home returns the column to its catalogue default. A drag does the same thing continuously, floored at the column's `minWidth`.
+
+The 9px pointer target is a deliberate, recorded exception to DES-011's 24×24 minimum. A 24px strip would swallow the sort click on the same cell, and the accessible path here is not a bigger target — it is the keyboard control the same element already is.
+
+**4. Show, hide, and reorder live in one menu, off a `Columns3` glyph.** A ghost icon button in the sub-bar's `actions` slot opens a dropdown listing every column in the catalogue in current order. Each is a `menuitemcheckbox`; the catalogue's required columns are checked and disabled, because a contracts list with no Title is not a shorter list, it is a broken one. Each row carries `ChevronUp` / `ChevronDown` 16px icon buttons that move it one place, disabled at the ends. Under them sit "Fill the width" — clause 1's way back to a stretching column, present only while no column is stretching — and "Reset columns", which restores the built-in columns and their stretch while keeping the sort and the filters. Both close the menu. The menu does **not** close on a toggle, so a reader hiding four columns visits once.
+
+Reorder is by menu rather than by dragging a header. A header drag is the familiar affordance and is a reasonable later addition; it is not the one shipped first, because the menu is the version that works from the keyboard without inventing a drag-and-drop keyboard protocol this document has not drawn.
+
+**5. Sorting is on the header cell's own label, and it has three states.** A sortable column's header text is a full-width `button`. Presses cycle ascending → descending → off, and off means the list's natural order — newest reference first on contracts (CTR-024) — which is a meaningful state and so must be reachable. The `<th>` carries `aria-sort`. The glyph is `ArrowUp` or `ArrowDown` at 16px when sorted, and `ChevronsUpDown` at `text-subtle` on hover or focus when sortable and unsorted. Unsortable headers are plain text.
+
+**6. The views control is a labelled ghost button, not an icon.** It sits in the sub-bar's `actions` slot before the column menu, and its label is the active view's name, or "Default view" when none is active, with a trailing `ChevronDown`. When the layout on screen differs from what is stored, the label takes a second line — "Modified" at `text-xs text-muted` — because DD-019 clause 5 makes that difference the thing the reader has to be able to see before they press Save.
+
+The menu holds the person's views as `menuitemradio` rows, then the acts, in this order: Save (present only while modified), Save as…, Rename…, Set as default (absent when it already is), and Delete. Save as, Rename, and Delete each open a small centered dialog; the other two write directly. Delete's dialog names the view and its confirm button is `variant="danger"`.
+
+**7. Both menus are absent, not disabled, when there is nothing to manage.** A list rendering its empty state has no column strip to arrange, so neither control is drawn.
+
+### Consequences
+
+Three new components under `apps/web/src/components/table/` — `managed-table.tsx`, `column-menu.tsx`, `views-menu.tsx` — plus a `DropdownMenuCheckboxItem` added to the owned `dropdown-menu.tsx` primitive, which had only Item and RadioItem. No new radii, no new type sizes.
+
+One new color token: `border-strong`, the rule the handle firms up to. `text-subtle` already existed, but `border-strong` did not — the first draft of this clause named it as though it did, which is how it shipped as a class that resolved to nothing. It is now in the `@theme` registry and in all three themes, one step past `border-default` on each theme's own ramp: `#afb8c1` in Light and `#484f58` in Dark from Primer's grey scale, `#d3c9b6` in Warm from its cream ramp. Being a boundary rule rather than the sole identifier of a control — the handle also carries a focus ring, a `col-resize` cursor, and a name and role — it is held to DES-011's non-text-contrast exemption for decorative separators, the same as the table's row rules.
+
+Each surface adopting this supplies a **column catalogue**: per column a key, a header message, a default width, a floor, whether it is required, whether it sorts and under which API sort key, and a render function. DD-019 clause 7's read-past-unknown-keys rule resolves against that catalogue, which makes the catalogue the surface's contract with its own saved views rather than an incidental ordering of JSX.
+
+Clause 1 changes what a column width means everywhere it appears: the widths in the contracts JSX today are Tailwind `w-*` hints on `<th>` elements that a browser is free to ignore, and they become px numbers in a config that a `<col>` obeys. The contracts list's current seven-column look is preserved as the built-in default layout, with the numbers chosen so the sum clears a 1280px viewport without scrolling.
+
+The layout config gains `flexKey` alongside its columns, so it rides in DD-019's single `jsonb` and is compared by the "Modified" marker like everything else — pinning a column is a change worth saving. The field is optional at the seam and read past when it names a column that is not shown, both under DD-019 clause 7: a config stored before it existed reads as "nothing stretches", which is the reading that cannot surprise anybody by moving a column they did not touch.
+
+Clause 2 costs the counterparty cell its bespoke `w-44 truncate` span, which existed only because an auto-layout cell grows to fit and had nothing to truncate against. With a `<colgroup>` the column is the width, and the span goes.
+
+The mobile floor is untouched and not improved: DES-012 already parks a stacked-card table rendering for below 768px, and a column strip nobody can see is not the thing that unparks it. Below md the two menus stay in the `actions` slot, which that decision already hides.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -2966,3 +3036,4 @@ The nudge is the first instance of a post-write dialog in the product — a seco
 | DES-043 | The renewal-pending banner, the Renew dialog, and the confirmed-renewal row (extends DES-035, DES-040, DES-017, DES-009)                                             | Accepted |
 | DES-044 | The Renew dialog's four exits, and the prefilled create (extends DES-043, DES-035, DES-033, DES-017)                                                                 | Accepted |
 | DES-045 | The link dialog, the picker, the refusal rendering, and the confidentiality nudge (extends DES-032, DES-024, DES-009)                                                | Accepted |
+| DES-046 | The managed list table — the width floor, the resize handle, the column menu, and the views control (extends DES-031, DES-021, DES-007)                              | Accepted |

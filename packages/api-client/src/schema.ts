@@ -967,7 +967,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The contract list, newest reference first: number, title, type, and status; archived contracts only with includeArchived=true; ended contracts only with includeEnded=true (CTR-019). Member+ read every contract that is not confidential; a Contributor reads exactly the contracts they hold a contract_team row on, archived and ended ones behind the same flags. A confidential contract is listed only for its named team, its Owner, and Administrators — silently absent for everyone else, so no count can reveal it */
+    /** The contract list: number, title, type, and status; newest reference first unless sort names a column, and unknown-valued rows always last (DD-019). Archived contracts only with includeArchived=true; ended contracts only with includeEnded=true (CTR-019). Member+ read every contract that is not confidential; a Contributor reads exactly the contracts they hold a contract_team row on, archived and ended ones behind the same flags. A confidential contract is listed only for its named team, its Owner, and Administrators — silently absent for everyone else, so no count can reveal it */
     get: operations["listContracts"];
     put?: never;
     /** Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward — except the Confidential flag (DD-014), which may be set here so a sensitive record is never visible to the wrong audience, even briefly. `renewalOf` routes a renewal into a new record (CTR-007's third and fourth vehicles, M16/5): the successor is born carrying its predecessor's business facts — our entity, the value, the term shape, and the counterparties — and linked to it, as a child by contracts.parent_id or as a standalone successor by a CTR-015 `renews` row. The team, the status, and the Confidential flag are **never** copied: CTR-015's no-inheritance stance, applied at birth. The title and the type are the body's, so whatever the person edited before pressing Create is what the record is born with. Appends the link's own activity action beside contract.created */
@@ -2138,6 +2138,42 @@ export interface paths {
     options?: never;
     head?: never;
     patch?: never;
+    trace?: never;
+  };
+  "/api/v1/list-views": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Your saved views of one list (DD-019), ordered by name. A view is private: this answers only your own, and never reveals that anybody else has one. At most one carries isDefault, which is the view the list opens on; none doing so means the list opens on its built-in layout */
+    get: operations["listSavedViews"];
+    put?: never;
+    /** Save the list you are looking at as a named view (DD-019). The name must be one you are not already using on this list, compared case-insensitively — 409 if it is. Pass isDefault to make this the view the list opens on, which clears whichever view held that. Answers your whole view list, so the menu needs no second read */
+    post: operations["createSavedView"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/list-views/{viewId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Delete one of your saved views (DD-019). A hard delete: a view is a preference, not a record, so there is nothing to keep and no archive to restore from. Deleting the default leaves the surface with none, which opens the built-in layout. Somebody else's view id answers 404 */
+    delete: operations["deleteSavedView"];
+    options?: never;
+    head?: never;
+    /** Change one of your saved views (DD-019): overwrite its config with the list you are looking at, rename it, or make it the view the list opens on. Every field is optional and an omitted one is left alone. Somebody else's view id answers 404, the same as an id that was never issued — a view is private, and access is not advertised. isDefault false on the view that holds it leaves the surface with no default, which opens the built-in layout */
+    patch: operations["updateSavedView"];
     trace?: never;
   };
 }
@@ -5489,6 +5525,20 @@ export interface operations {
       query?: {
         includeArchived?: "true" | "false";
         includeEnded?: "true" | "false";
+        sort?:
+          | "number"
+          | "title"
+          | "type"
+          | "status"
+          | "owner"
+          | "counterparty"
+          | "risk"
+          | "priority"
+          | "effectiveDate"
+          | "expiryDate"
+          | "createdAt"
+          | "updatedAt";
+        dir?: "asc" | "desc";
         cursor?: string;
       };
       header?: never;
@@ -11349,6 +11399,266 @@ export interface operations {
               archivedAt: string | null;
               inUseCount: number;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listSavedViews: {
+    parameters: {
+      query: {
+        surface: "contracts";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            views: {
+              id: string;
+              /** @enum {string} */
+              surface: "contracts";
+              name: string;
+              config: {
+                columns: {
+                  key: string;
+                  width: number | null;
+                }[];
+                flexKey?: string | null;
+                sort: {
+                  key: string;
+                  /** @enum {string} */
+                  dir: "asc" | "desc";
+                } | null;
+                filters: {
+                  [key: string]: boolean | string;
+                };
+              };
+              isDefault: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createSavedView: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          surface: "contracts";
+          name: string;
+          config: {
+            columns: {
+              key: string;
+              width: number | null;
+            }[];
+            flexKey?: string | null;
+            sort: {
+              key: string;
+              /** @enum {string} */
+              dir: "asc" | "desc";
+            } | null;
+            filters: {
+              [key: string]: boolean | string;
+            };
+          };
+          isDefault?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            views: {
+              id: string;
+              /** @enum {string} */
+              surface: "contracts";
+              name: string;
+              config: {
+                columns: {
+                  key: string;
+                  width: number | null;
+                }[];
+                flexKey?: string | null;
+                sort: {
+                  key: string;
+                  /** @enum {string} */
+                  dir: "asc" | "desc";
+                } | null;
+                filters: {
+                  [key: string]: boolean | string;
+                };
+              };
+              isDefault: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteSavedView: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        viewId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            views: {
+              id: string;
+              /** @enum {string} */
+              surface: "contracts";
+              name: string;
+              config: {
+                columns: {
+                  key: string;
+                  width: number | null;
+                }[];
+                flexKey?: string | null;
+                sort: {
+                  key: string;
+                  /** @enum {string} */
+                  dir: "asc" | "desc";
+                } | null;
+                filters: {
+                  [key: string]: boolean | string;
+                };
+              };
+              isDefault: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateSavedView: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        viewId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name?: string;
+          config?: {
+            columns: {
+              key: string;
+              width: number | null;
+            }[];
+            flexKey?: string | null;
+            sort: {
+              key: string;
+              /** @enum {string} */
+              dir: "asc" | "desc";
+            } | null;
+            filters: {
+              [key: string]: boolean | string;
+            };
+          };
+          isDefault?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            views: {
+              id: string;
+              /** @enum {string} */
+              surface: "contracts";
+              name: string;
+              config: {
+                columns: {
+                  key: string;
+                  width: number | null;
+                }[];
+                flexKey?: string | null;
+                sort: {
+                  key: string;
+                  /** @enum {string} */
+                  dir: "asc" | "desc";
+                } | null;
+                filters: {
+                  [key: string]: boolean | string;
+                };
+              };
+              isDefault: boolean;
+            }[];
           };
         };
       };

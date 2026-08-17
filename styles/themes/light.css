@@ -23,6 +23,7 @@
   /* Borders */
   --border-default: #d0d7de;
   --border-muted: #d8dee4;
+  --border-strong: #afb8c1; /* Primer grey one step past default */
   --border-on-inverted: #30363d;
 
   /* Text */

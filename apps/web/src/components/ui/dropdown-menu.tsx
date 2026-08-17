@@ -49,6 +49,32 @@ function DropdownMenuItem({
   );
 }
 
+/** A menuitemcheckbox row: the RadioItem's chrome with an independent
+ * checked state, for a menu where several rows can be on at once — the
+ * column menu's show/hide list (DES-046 clause 4). */
+function DropdownMenuCheckboxItem({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.CheckboxItem>) {
+  return (
+    <DropdownMenuPrimitive.CheckboxItem
+      className={cn(
+        "flex cursor-default select-none items-center gap-2 rounded-chip px-2 py-1.5 outline-none focus:bg-control data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        className,
+      )}
+      {...props}
+    >
+      <span aria-hidden="true" className="flex size-4 shrink-0 items-center justify-center">
+        <DropdownMenuPrimitive.ItemIndicator>
+          <Check size={16} />
+        </DropdownMenuPrimitive.ItemIndicator>
+      </span>
+      {children}
+    </DropdownMenuPrimitive.CheckboxItem>
+  );
+}
+
 const DropdownMenuRadioGroup = DropdownMenuPrimitive.RadioGroup;
 
 /** A menuitemradio row: same chrome as Item, with a fixed-width check
@@ -99,6 +125,7 @@ export {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
+  DropdownMenuCheckboxItem,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,

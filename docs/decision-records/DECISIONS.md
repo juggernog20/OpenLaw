@@ -839,6 +839,61 @@ Matter-only with auto-created wrapper matters (Dazychain): documented ceiling �
 
 Confirms DD-007's layered model, MTR-007's standalone-contracts-with-optional-link, and the CTR grill's contract-workspace investment — no rework. INT-006 implements the triage mechanics. Navigation/IA must make the two-workspace split legible (the LawVu complaint to avoid); the Inbox is the single queue over both. Reporting reads work across both workspace kinds (cross-cutting dashboards per DD-005).
 
+## DD-019: Saved list views — private to one person, one `jsonb` config, saving is an act
+
+- **Status:** Accepted
+- **Date:** 2026-08-17
+
+### Context
+
+The contracts list shipped with a fixed seven-column table (M8). Feedback on the built surface: it is cramped, and the columns are not the reader's to choose. The record already carries far more than seven fields a list could show — risk, priority, the CTR-006 term dates, the derived notice deadline and days remaining, the signing entity, the CTR-016 custom fields — and which of them matter depends entirely on what the reader came to do. A renewals sweep wants expiry and notice deadline. A triage pass wants Owner and status. A portfolio review wants value and counterparty.
+
+Nothing in the decision records covers this. The MTR grill parked the neighbouring question — "first-class views, saved-view presets, or filter-chip-only" (MTR-003's open item) — and no DES draws a destination list's column strip. Matters (M22), Documents (M26), and Entities (M27) all land the same list surface later, so the answer has to be one every destination can adopt rather than a contracts-only affordance.
+
+### Decision
+
+**A saved view is one person's private record of how they want a list to read.** Seven clauses:
+
+**1. Private, full stop.** A view belongs to the user who made it. There is no sharing, no publishing, no Administrator-pinned workspace default, and no `is_shared` column waiting to be turned on. Two people who want the same view make it twice.
+
+**2. A view is the whole list state, not just the columns.** It holds which columns are shown, their order, their widths, the filters in force, and the sort. Half a view — columns saved, filters not — is a view that lies about what the reader was looking at.
+
+**3. Views are server-stored, in one `list_views` table.** Not `localStorage`. A view a reader curated is lost by a cache clear or a second machine, and a lost view is not a saved one. The table is keyed by a **surface** string (`contracts` today), so one table serves every destination and a new list needs no new table.
+
+**4. The state is one `jsonb` config column.** It is read and written whole and never queried into — no report asks "which views sort by expiry". Typed columns would freeze a shape that changes every time a surface gains a column.
+
+**5. Saving is an act.** Dragging a column wider or hiding one changes the list in front of the reader and nothing on the server. The views control marks the view modified and offers Save, which overwrites, and Save as, which forks. This keeps a curated view safe from a fiddle, which auto-save cannot.
+
+**6. One default per person per surface.** The default is the view the list opens on. A person with no views, or none marked default, opens on the built-in layout.
+
+**7. The built-in layout is code, not a seeded row.** No install migration writes views, and no user starts with rows to delete. It follows that a stored config naming a column the build no longer has is **read past, not rejected**: unknown keys are dropped, the rest of the view stands, and the reader sees a view missing one column rather than an error page.
+
+### Rationale
+
+Private-only is the whole reason this stays small. Shared views drag in ownership (who may edit the one everybody uses), an Administrator surface to curate them, a role question on every write, and a migration story for a view whose author left. None of that buys a 2–10 person team (DD-002) anything a second private view does not — at that size "send me your columns" is a sentence, not a feature.
+
+The surface key rather than a per-module table is the same instinct behind `comment_last_read`'s `entity_type` pair (DD-016) and the taxonomy column set (MTR-001): one shape, many readers, so the machinery is written once. It is the cheap half of the polymorphism DD-008 avoids elsewhere, because nothing joins to a view.
+
+Clause 5 is the one place this deliberately costs the reader a click. The alternative — every drag persisting — means a reader who widens a column to read one long title has silently edited the view they open on every morning.
+
+### Alternatives considered
+
+**`localStorage` only.** Zero backend, and the layout follows nobody. Rejected on clause 3's reasoning: the ask was to _save_ views.
+
+**Shared views with an Administrator default.** The structurally richer option, and the one to graduate to if a deployment ever asks. It was declined here because every clause it adds is a permission question, and DD-013's four roles would each need an answer about a preference.
+
+**Filter chips with no persistence** (MTR-003's third option). Does not answer the ask at all: chips are a narrowing, not a remembered way of reading.
+
+### Consequences
+
+One table, `list_views`, and one API module scoped so hard to `request.user.id` that another person's view id is a 404 rather than a 403 — the same not-advertised convention CTR-021 uses for records.
+
+Clause 2 forces the list APIs to accept a sort. The contracts list keysets on the reference number descending with no possible tie (CTR-024); an arbitrary sort has ties and nulls, so the cursor predicate generalizes to a `(sort value, number)` pair with nulls ordered last. The cursor stays a row id, so no sort value ever rides a URL.
+
+Clause 7 means every surface reading a view validates its config against the column catalogue the build actually has, and every surface's catalogue is therefore a first-class thing rather than a JSX ordering.
+
+MTR-003's open item is answered by adoption: matters take this machinery rather than deciding views again. The parked "first-class My matters view" is now a saved view with a filter in it.
+
 ## Index of decisions
 
 | #      | Decision                                                                                  | Status   |
@@ -861,3 +916,4 @@ Confirms DD-007's layered model, MTR-007's standalone-contracts-with-optional-li
 | DD-016 | Comment visibility — three audience tiers (Legal Only / Working Team / Full Thread)       | Accepted |
 | DD-017 | Activity tracking — two-layer model (per-entity activity feed + system-wide audit log)    | Accepted |
 | DD-018 | Work-model doctrine — dual workspaces with the deliverable rule                           | Accepted |
+| DD-019 | Saved list views — private to one person, one `jsonb` config, saving is an act            | Accepted |
