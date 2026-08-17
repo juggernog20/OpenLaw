@@ -943,7 +943,7 @@ DES-013 plumbed the `Intl.*` formatting APIs and locale-on-user. The remaining d
 | **Deadlines / due dates**                                             | Short absolute + relative qualifier when relevant                           | `May 10, 2026 (in 7 days)` / `May 1 (3 days overdue)`                                                        |
 | **Detail-screen authoritative timestamps** (audit log, file metadata) | Long absolute with time + zone, **no seconds**                              | `May 3, 2026, 2:34 PM PDT`                                                                                   |
 | **Tooltip on any displayed time**                                     | Same as detail-screen format (long absolute, hours+minutes, timezone label) | `May 3, 2026, 2:34 PM PDT`                                                                                   |
-| **Date inputs**                                                       | Browser-native `<input type="date">`                                        | (locale-aware by default)                                                                                    |
+| **Date inputs**                                                       | Calendar popover (`DatePicker`); display via `formatFullDate`               | `May 3, 2026`                                                                                                |
 | **Time inputs**                                                       | Browser-native `<input type="time">`                                        | (locale-aware by default)                                                                                    |
 
 Tooltip and authoritative-timestamp formats are intentionally identical — one canonical "human-readable absolute time" and one canonical "compact display." No ISO 8601 in the UI; ISO is for storage and APIs only.
@@ -976,6 +976,7 @@ The `formatDate(date, options?)` / `formatNumber(value, options?)` / `formatCurr
 
 - `formatRelativeOrShort(date)` → activity-feed rule
 - `formatShortDate(date)` → upload-column rule
+- `formatFullDate(date)` → date-input rule (always the year)
 - `formatLongDateTime(date)` → audit-log + tooltip rule (same convention)
 - `formatDeadline(date)` → due-date rule with relative qualifier
 - `formatCount(n)`, `formatPercent(n)`, `formatFileSize(bytes)` → number variants
@@ -2526,7 +2527,7 @@ What the mock has no answer for is the rule between the fields. CTR-006 says an 
 
 ### Decision
 
-**1. The five term fields are ordinary fields of the Contract card, in the order the term is read: type, effective date, expiry, renewal period, notice period.** They take the same anatomy every field on that card takes — a `Label`, the control, and the field's own micro-state beside it — and each commits on its own (DES-017, no carve-out). The type is a select and commits on its own change, exactly as status, priority, and risk do; the two dates and the two counts are `Input`s that commit on blur or Enter and revert on Escape, exactly as the title does. The card grows one group; it grows no new pattern.
+**1. The five term fields are ordinary fields of the Contract card, in the order the term is read: type, effective date, expiry, renewal period, notice period.** They take the same anatomy every field on that card takes — a `Label`, the control, and the field's own micro-state beside it — and each commits on its own (DES-017, no carve-out). The type is a select and commits on its own change, exactly as status, priority, and risk do; the two dates are the shared `DatePicker` and commit when a day is picked (DES-048); the two counts are `Input`s that commit on blur or Enter and revert on Escape, exactly as the title does. The card grows one group; it grows no new pattern.
 
 **2. A field the contract's type cannot hold is drawn as a fact with an em dash, not as a disabled control.** An evergreen contract draws no expiry box, and anything but an auto-renewing one draws no renewal-period box; in each place the label stays and the value is "—". This is DES-035 clause 9's rule read for a field rather than an act: a control whose every commit the seam would refuse is a dead end, and a disabled box invites somebody to work out why it is disabled. The label stays because grill row **X.6** already settled that schema-backed core fields render with an em dash rather than disappearing — the record's shape should not change under a reader when a select moves.
 
@@ -2557,7 +2558,7 @@ Absence is the design question this record actually answers. The three candidate
 
 ### Consequences
 
-`ContractRecord` grows one `TermField` component — a label, a date or number input, and its micro-state — plus one select and two `ReadOnlyField`s. The term's four typed fields hold their own drafts. A term-type commit re-seeds all four, because a type change clears what the new type cannot hold and the answer carries more empty boxes than the request did; a typed field's own commit re-seeds only its own box, so a sibling box's in-progress edit survives the answer landing beside it.
+`ContractRecord` grows one `TermField` component — a label, a date picker or number input, and its micro-state — plus one select and two `ReadOnlyField`s. The term's four typed fields hold their own drafts. A term-type commit re-seeds all four, because a type change clears what the new type cannot hold and the answer carries more empty boxes than the request did; a typed field's own commit re-seeds only its own box, so a sibling box's in-progress edit survives the answer landing beside it.
 
 The activity narrator gains five changed-key labels and renders the term type through its own ICU message, so the feed says "Evergreen" where the column says `evergreen`.
 
@@ -3029,6 +3030,41 @@ The `User` glyph is the one the request named. `Users` would have named the grou
 ### Consequences
 
 `useTeamApplet` in `apps/web/src/components/contracts/team-applet.tsx` is the slot, mounted first in the contract record's applet set. `PanelApplet` gains an optional `hash` so a fragment can open an applet; the team slot is the first user. DES-016's applet set, DES-032 clause 5, and DES-028's fragment destination are amended above. No new tokens.
+
+## DES-048: Date inputs are a calendar popover (amends DES-014, DES-040)
+
+- **Status:** Accepted
+- **Date:** 2026-08-18
+
+### Context
+
+DES-014 originally picked the browser-native `<input type="date">` so locale chrome came for free. In practice that chrome is the empty `dd/mm/yyyy` placeholder, a picker that differs by browser, and a year control that is awkward for contract dates years from now. The Contract card's effective date and expiry are the first fields that make that cost obvious.
+
+### Decision
+
+**1. A date field is the shared `DatePicker`:** a C10-shaped control showing `formatFullDate` (always the year), opening a month calendar in a Popover. Empty shows "Select a date". The value it holds and writes is still a bare `YYYY-MM-DD`.
+
+**2. Month and year are dropdowns,** so a date years out is one pick, not twelve next-month clicks. The range is 1970 through fifty years ahead.
+
+**3. Picking a day commits immediately,** the same DES-017 rule a select already follows. Clearing is a "Clear" verb in the popover. Escape on the closed trigger reverts a refused or uncommitted draft; Escape on the open calendar dismisses it without writing.
+
+**4. First consumers are the two term dates on the Contract card.** Other native date inputs (key dates, the renewal dialog, custom fields, filters) migrate as those surfaces are touched. Time inputs stay native.
+
+**5. Previous and next sit still while the month changes, and the popover stays in view.** The calendar's width is the seven day columns, not the month caption, so a longer name cannot shove the chrome. The grid always draws six weeks, so paging months cannot resize the box either. Collision still places the popover above or below the field — and shifts it if needed — so the whole calendar stays on screen; a short viewport can scroll inside the popover.
+
+### Rationale
+
+The native control answered locale for free and cost no component. It also answered with chrome nobody asked for, and it made a date five years out harder to type than a title. A calendar that jumps by month and year, showing the same `May 3, 2026` the rest of the page already prints, is the control the dates were always going to need. Commit-on-pick keeps DES-017: a day is a decision, not a draft.
+
+### Alternatives considered
+
+- **Keep the native input.** Rejected: the empty `dd/mm/yyyy` chrome is the complaint this decision answers.
+- **A typed text field plus a calendar button.** Rejected for v1: two ways to enter one civil date, and a parse to own. Revisit if people ask to type.
+- **Hand-rolled month grid, no `react-day-picker`.** Rejected: keyboard and screen-reader month navigation is what the library is for; DES-004 already pointed at shadcn's Calendar.
+
+### Consequences
+
+`apps/web/src/components/date-picker.tsx` is the control; `calendar.tsx` and `popover.tsx` are the owned shadcn pieces under `components/ui/`. `formatFullDate` joins the DES-014 helper layer. `react-day-picker` and `@radix-ui/react-popover` are web-app dependencies. DES-014's Date inputs row and DES-040 clause 1 are amended above. The month grid uses `fixedWeeks` so collision can place the popover without a later resize moving previous/next. No new tokens.
 
 ## Index of decisions
 

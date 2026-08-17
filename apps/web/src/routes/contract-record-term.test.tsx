@@ -26,6 +26,7 @@ import { describe, expect, it } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import { clearDate, pickDate } from "../testing/dates";
 
 const MEMBER = {
   id: "u2",
@@ -169,22 +170,21 @@ describe("the term on the contract record", () => {
     renderAt("/contracts/42");
 
     expect(await screen.findByLabelText("Term type")).toHaveValue("auto_renew");
-    expect(screen.getByLabelText("Effective date")).toHaveValue("2026-01-01");
-    expect(screen.getByLabelText("Expiry date")).toHaveValue("2026-12-31");
+    expect(screen.getByLabelText("Effective date")).toHaveTextContent("Jan 1, 2026");
+    expect(screen.getByLabelText("Expiry date")).toHaveTextContent("Dec 31, 2026");
     expect(screen.getByLabelText("Renewal period (months)")).toHaveValue(12);
     expect(screen.getByLabelText("Notice period (days)")).toHaveValue(90);
     // Derived at the seam and drawn here — never counted on this page.
     expect(screen.getByText("45 days left")).toBeInTheDocument();
   });
 
-  it("commits each typed term field on blur, one field per write", async () => {
+  it("commits each typed term field on pick or blur, one field per write", async () => {
     const user = userEvent.setup();
     const api = recordApi();
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42");
 
-    await user.type(await screen.findByLabelText("Effective date"), "2026-03-01");
-    await user.click(screen.getByLabelText("Title"));
+    await pickDate(user, "Effective date", "2026-03-01");
     await waitFor(() => expect(api.patches).toEqual([{ effectiveDate: "2026-03-01" }]));
 
     await user.type(screen.getByLabelText("Notice period (days)"), "60");
@@ -213,9 +213,9 @@ describe("the term on the contract record", () => {
     });
     renderAt("/contracts/42");
 
-    // Blurring the effective date into the notice box starts its
-    // commit; the notice period is typed before the answer lands.
-    await user.type(await screen.findByLabelText("Effective date"), "2026-03-01");
+    // Picking the effective date starts its commit; the notice period
+    // is typed before the answer lands.
+    await pickDate(user, "Effective date", "2026-03-01");
     const notice = screen.getByLabelText("Notice period (days)");
     await user.click(notice);
     await user.type(notice, "60");
@@ -261,8 +261,7 @@ describe("the term on the contract record", () => {
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42");
 
-    await user.clear(await screen.findByLabelText("Expiry date"));
-    await user.click(screen.getByLabelText("Title"));
+    await clearDate(user, "Expiry date");
 
     await waitFor(() => expect(api.patches).toEqual([{ expiryDate: null }]));
   });
@@ -300,7 +299,7 @@ describe("the term on the contract record", () => {
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42");
 
-    expect(await screen.findByLabelText("Expiry date")).toHaveValue("2027-06-30");
+    expect(await screen.findByLabelText("Expiry date")).toHaveTextContent("Jun 30, 2027");
     await user.selectOptions(screen.getByLabelText("Term type"), "evergreen");
 
     // The expiry box is gone with the expiry, because the record now
@@ -331,8 +330,7 @@ describe("the term on the contract record", () => {
     renderAt("/contracts/42");
 
     const expiry = await screen.findByLabelText("Expiry date");
-    await user.type(expiry, "2027-01-01");
-    await user.click(screen.getByLabelText("Title"));
+    await pickDate(user, "Expiry date", "2027-01-01");
 
     expect(
       await screen.findByText("An evergreen contract has no expiry date."),
@@ -340,7 +338,8 @@ describe("the term on the contract record", () => {
 
     // Reverting takes the refusal with the draft it was about: a
     // refusal standing under a saved value would be a lie.
-    await user.type(expiry, "{Escape}");
+    expiry.focus();
+    await user.keyboard("{Escape}");
     await waitFor(() =>
       expect(
         screen.queryByText("An evergreen contract has no expiry date."),

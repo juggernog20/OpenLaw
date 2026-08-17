@@ -5,6 +5,9 @@
   "action.cancel": {
     "defaultMessage": "Cancel"
   },
+  "action.clear": {
+    "defaultMessage": "Clear"
+  },
   "action.continue": {
     "defaultMessage": "Continue"
   },
@@ -1528,6 +1531,27 @@
   },
   "counterparty.picker.searching": {
     "defaultMessage": "Searching…"
+  },
+  "datePicker.calendar": {
+    "defaultMessage": "Choose a date"
+  },
+  "datePicker.clear": {
+    "defaultMessage": "Clear date"
+  },
+  "datePicker.month": {
+    "defaultMessage": "Month"
+  },
+  "datePicker.nextMonth": {
+    "defaultMessage": "Next month"
+  },
+  "datePicker.placeholder": {
+    "defaultMessage": "Select a date"
+  },
+  "datePicker.previousMonth": {
+    "defaultMessage": "Previous month"
+  },
+  "datePicker.year": {
+    "defaultMessage": "Year"
   },
   "dialog.close": {
     "defaultMessage": "Close"

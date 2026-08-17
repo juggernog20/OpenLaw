@@ -17,6 +17,7 @@ import {
   formatCurrency,
   formatDeadline,
   formatFileSize,
+  formatFullDate,
   formatLongDateTime,
   formatPercent,
   formatRelativeOrShort,
@@ -84,6 +85,20 @@ describe("formatShortDate (upload-column rule)", () => {
     const instant = "2025-12-31T23:30:00Z";
     expect(formatShortDate(instant, { ...enUS, timeZone: "Asia/Tokyo" })).toBe("Jan 1");
     expect(formatShortDate(instant, enUS)).toBe("Dec 31, 2025");
+  });
+});
+
+describe("formatFullDate (date-input rule)", () => {
+  it("always includes the year", () => {
+    expect(formatFullDate("2026-05-03", enUS)).toBe("May 3, 2026");
+    expect(formatFullDate("2026-05-03", enGB)).toBe("3 May 2026");
+    expect(formatFullDate("2026-05-03", deDE)).toBe("3. Mai 2026");
+  });
+
+  it("keeps date-only values on their calendar date in every timezone", () => {
+    expect(formatFullDate("2026-05-10", { ...enUS, timeZone: "America/Los_Angeles" })).toBe(
+      "May 10, 2026",
+    );
   });
 });
 

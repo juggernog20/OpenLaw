@@ -230,6 +230,7 @@ import { DocPanel } from "../components/documents/doc-panel";
 import { DocumentsCard } from "../components/documents/documents-card";
 import { PageTitle } from "../components/page-title";
 import { StagePipeline } from "../components/stage-pipeline";
+import { DatePicker } from "../components/date-picker";
 import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
@@ -1005,11 +1006,13 @@ function ContractRecord() {
    * is the answer a custom number field already gives, and the only one
    * that leaves the person able to fix their own typo.
    */
-  function commitTerm(key: TermDraftKey) {
+  function commitTerm(key: TermDraftKey, next?: string) {
     // Enter already committed this draft and the PATCH is in flight —
     // the blur that follows must not send a duplicate.
     if (fieldStatus[key] === "saving") return;
-    const draft = termFields[key].trim();
+    // A date picker commits in the same tick as it writes the draft, so
+    // the value has to ride the call — React has not re-rendered yet.
+    const draft = (next ?? termFields[key]).trim();
     if (draft === termDrafts(saved)[key]) {
       revertTerm(key);
       return;
@@ -1825,7 +1828,7 @@ function ContractRecord() {
                     onDraft={(next) =>
                       setTermFields((current) => ({ ...current, effectiveDate: next }))
                     }
-                    onCommit={() => commitTerm("effectiveDate")}
+                    onCommit={(next) => commitTerm("effectiveDate", next)}
                     onRevert={() => revertTerm("effectiveDate")}
                   />
                   {/* An evergreen contract has no end, so the record
@@ -1857,7 +1860,7 @@ function ContractRecord() {
                       onDraft={(next) =>
                         setTermFields((current) => ({ ...current, expiryDate: next }))
                       }
-                      onCommit={() => commitTerm("expiryDate")}
+                      onCommit={(next) => commitTerm("expiryDate", next)}
                       onRevert={() => revertTerm("expiryDate")}
                     />
                   )}
@@ -3338,11 +3341,12 @@ function RetypeDialog({
  * count of months or days.
  *
  * It is an ordinary inline field and nothing more — DES-017's rule with
- * no carve-out. Blur and Enter commit, Escape reverts, and the field's
- * own micro-state sits beside the box. The rule *between* the term
- * fields is the card's to apply, not this one's: what this draws is
- * whatever it was handed, and the card decides whether the contract's
- * type lets it be drawn at all.
+ * no carve-out. A date commits when a day is picked (DES-048); a count
+ * commits on blur or Enter and reverts on Escape, exactly as the title
+ * does. The field's own micro-state sits beside the control. The rule
+ * *between* the term fields is the card's to apply, not this one's:
+ * what this draws is whatever it was handed, and the card decides
+ * whether the contract's type lets it be drawn at all.
  */
 function TermField({
   id,
@@ -3369,28 +3373,43 @@ function TermField({
   status: FieldStatus;
   error: string | undefined;
   onDraft: (next: string) => void;
-  onCommit: () => void;
+  onCommit: (next?: string) => void;
   onRevert: () => void;
 }>) {
   return (
     <div className="flex flex-col gap-1.5">
       <Label htmlFor={id}>{label}</Label>
       <div className="flex items-center gap-2">
-        <Input
-          id={id}
-          type={type}
-          // A count of months or days is a whole number, and the
-          // keypad a phone offers should say so.
-          {...(type === "number" ? { inputMode: "numeric" as const, min, step: 1 } : {})}
-          value={draft}
-          disabled={frozen}
-          onChange={(event) => onDraft(event.target.value)}
-          onBlur={onCommit}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") onCommit();
-            if (event.key === "Escape") onRevert();
-          }}
-        />
+        {type === "date" ? (
+          <DatePicker
+            id={id}
+            value={draft}
+            disabled={frozen}
+            onChange={(next) => {
+              onDraft(next);
+              onCommit(next);
+            }}
+            onRevert={onRevert}
+          />
+        ) : (
+          <Input
+            id={id}
+            type="number"
+            // A count of months or days is a whole number, and the
+            // keypad a phone offers should say so.
+            inputMode="numeric"
+            min={min}
+            step={1}
+            value={draft}
+            disabled={frozen}
+            onChange={(event) => onDraft(event.target.value)}
+            onBlur={() => onCommit()}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") onCommit();
+              if (event.key === "Escape") onRevert();
+            }}
+          />
+        )}
         <StatusNote status={status} detail={error} />
       </div>
     </div>
