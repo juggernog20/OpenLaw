@@ -264,10 +264,17 @@ function minusDays(date: string, days: number): string {
 }
 
 /** The same civil date shifted by whole months, which is how far a
- * confirmed roll moves the term. */
+ * confirmed roll moves the term. Clamped to the target month's last day,
+ * which is CTR-006's own rule for the shift — so a Feb 29 expiry plus a
+ * year is Feb 28 here too, rather than a March 1 the record would
+ * rightly refuse to agree with once every leap cycle. */
 function plusMonths(date: string, months: number): string {
   const [year, month, day] = date.split("-").map(Number);
-  return new Date(Date.UTC(year!, month! - 1 + months, day!)).toISOString().slice(0, 10);
+  const shifted = new Date(Date.UTC(year!, month! - 1 + months, day!));
+  // A spill leaves the day-of-month different; day zero backs up onto
+  // the target month's last day.
+  if (shifted.getUTCDate() !== day) shifted.setUTCDate(0);
+  return shifted.toISOString().slice(0, 10);
 }
 
 /**
