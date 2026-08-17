@@ -1013,6 +1013,23 @@ export interface paths {
     patch: operations["updateContract"];
     trace?: never;
   };
+  "/api/v1/contracts/{number}/renewal": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Confirm the roll (CTR-007's first renewal vehicle): the same record's term advances, on the say-so of a person. CTR-006's engine is notify-only and never advances a date on its own, so a contract that passed its expiry un-actioned reads as 'renewal pending confirmation' — a predicate over its dates, not a status — and waits for this. The request carries the expiry it was raised against and the expiry to advance to; the record proposes the second as the first plus the renewal period, and the caller may send a different date, because a roll whose dates shifted in negotiation is recorded as it really landed. The comparison is made under the contract's row lock, so two confirms racing for one roll advance the term exactly once and the loser is refused 409 by name rather than rolling it again. Only an auto-renewing contract with an expiry rolls, and a roll must move the term forward. The status and the stage are untouched: this moves one date. Appends one contract.renewal_confirmed entry at the working-team tier (DD-017) — the only record a renewal leaves, and what the record's renewal history reads back. Answers the record and its whole history. Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract rolls nothing until it is restored */
+    post: operations["confirmContractRenewal"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contracts/{number}/team": {
     parameters: {
       query?: never;
@@ -5403,6 +5420,8 @@ export interface operations {
               noticePeriodDays: number | null;
               noticeDeadline: string | null;
               daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -5497,6 +5516,8 @@ export interface operations {
               noticePeriodDays: number | null;
               noticeDeadline: string | null;
               daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -5656,6 +5677,8 @@ export interface operations {
               noticePeriodDays: number | null;
               noticeDeadline: string | null;
               daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -5712,6 +5735,21 @@ export interface operations {
               name: string;
               jurisdiction: string | null;
               isPrimary: boolean;
+            }[];
+            renewals: {
+              id: string;
+              /** Format: date */
+              from: string;
+              /** Format: date */
+              to: string;
+              /** Format: date-time */
+              confirmedAt: string;
+              confirmedBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
             }[];
           };
         };
@@ -5817,6 +5855,8 @@ export interface operations {
               noticePeriodDays: number | null;
               noticeDeadline: string | null;
               daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -5901,6 +5941,139 @@ export interface operations {
              * @enum {string}
              */
             type: "urn:openlaw:problem:approval-soft-gate" | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  confirmContractRenewal: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: date */
+          fromExpiry: string;
+          /** Format: date */
+          toExpiry: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contract: {
+              id: string;
+              number: number;
+              title: string;
+              contractTypeId: string;
+              contractTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              entity: {
+                id: string;
+                legalName: string;
+              } | null;
+              primaryCounterparty: {
+                id: string;
+                name: string;
+              } | null;
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              value: {
+                amount: number;
+                currency: string;
+                /** @enum {string} */
+                cadence: "one_time" | "monthly" | "annually";
+              } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
+              description: string | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              isConfidential: boolean;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            };
+            renewals: {
+              id: string;
+              /** Format: date */
+              from: string;
+              /** Format: date */
+              to: string;
+              /** Format: date-time */
+              confirmedAt: string;
+              confirmedBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+            }[];
+          };
+        };
+      };
+      /** @description The named type says this contract's expiry is no longer the one the roll was raised against (CTR-006) — read the record again and confirm against the expiry it now holds, which is the one refusal here a client acts on rather than prints. An unnamed 409 is an archived record or one that records no expiry to roll; print it. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type: "urn:openlaw:problem:renewal-expiry-moved" | "about:blank";
             title: string;
             status: number;
             detail?: string;
@@ -6079,6 +6252,8 @@ export interface operations {
               noticePeriodDays: number | null;
               noticeDeadline: string | null;
               daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -6170,6 +6345,8 @@ export interface operations {
               noticePeriodDays: number | null;
               noticeDeadline: string | null;
               daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -6261,6 +6438,8 @@ export interface operations {
               noticePeriodDays: number | null;
               noticeDeadline: string | null;
               daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -6351,6 +6530,8 @@ export interface operations {
               noticePeriodDays: number | null;
               noticeDeadline: string | null;
               daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];
@@ -6435,6 +6616,8 @@ export interface operations {
               noticePeriodDays: number | null;
               noticeDeadline: string | null;
               daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
               description: string | null;
               customFields: {
                 [key: string]: string | number | boolean | string[];

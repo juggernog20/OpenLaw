@@ -82,6 +82,8 @@ function contractRow(overrides: Record<string, unknown> = {}) {
     noticePeriodDays: null,
     noticeDeadline: null,
     daysRemaining: null,
+    renewalPendingConfirmation: false,
+    proposedRenewalExpiry: null,
     description: null,
     customFields: {},
     isConfidential: false,
@@ -125,6 +127,7 @@ function recordApi(
         ...envelope(),
         team: [{ ...PEOPLE[0], role: "creator" }],
         counterparties: [],
+        renewals: [],
       });
     }
     if (call.url.pathname === "/api/v1/contracts/42/approvals" && call.method === "GET") {
@@ -275,9 +278,10 @@ describe("the term on the contract record", () => {
     expect(screen.queryByLabelText("Expiry date")).not.toBeInTheDocument();
     // A notice obligation sits on any kind of term, so this one stays.
     expect(screen.getByLabelText("Notice period (days)")).toHaveValue(60);
-    // Expiry, renewal period, and the countdown are all absences, and
-    // all three say so the same way.
-    expect(screen.getAllByText("—")).toHaveLength(3);
+    // Expiry, renewal period, the countdown, and a record that has
+    // never renewed are all absences, and all four say so the same way
+    // (DES-040 clause 5).
+    expect(screen.getAllByText("—")).toHaveLength(4);
   });
 
   it("asks only an auto-renewing contract how far a roll goes", async () => {

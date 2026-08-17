@@ -1690,7 +1690,7 @@ The mocks predate two decisions that changed what is true about a confidential c
 
 **The banner is a slot on the application shell**, between the nav and the sub-bar, filled by the page that knows the record is confidential. It is chrome: the component takes no dismiss prop, so a caller cannot add one, and nothing on the strip is a button.
 
-- Height `--height-confidential-banner`, background `bg-confidential-bg`, foreground `text-confidential`, a bottom rule in `border-default` to match the sub-bar's separation, and `px-page-x` gutters.
+- Height `--height-confidential-banner`, background `bg-confidential-bg`, foreground `text-confidential`, a bottom rule in `border-default` to match the sub-bar's separation, and `px-page-x` gutters. _(The height token was renamed `--height-record-banner` with M16/4, when DES-043 put a second banner in the same strip. Same 36px measure, one name.)_
 - A 16px `Lock`, then the statement at 12px medium, left-aligned; the trailing link at 12px semibold, right-aligned.
 - It is a labelled region, so the statement stays reachable from the landmark list after half an hour inside the record — the same persistence the strip gives a sighted reader.
 
@@ -2708,6 +2708,100 @@ Thirty-four ICU messages, all new — thirty on the card and its dialog, three o
 
 The activity narrator gains three verbs — added, edited, removed — and three changed-key labels (`date`, `label`, `note`). Each sentence names the date it is about, because a removal deletes the row and the entry is then all that is left of it.
 
+## DES-043: The renewal-pending banner, the Renew dialog, and the confirmed-renewal row (extends DES-035, DES-040, DES-017, DES-009)
+
+- **Status:** Accepted
+- **Date:** 2026-08-17
+
+### Context
+
+M16/4 builds CTR-006's one waiting state and CTR-007's first renewal vehicle. An auto-renewing contract that passes its expiry un-actioned says so rather than silently advancing — the engine is notify-only, so the record waits for a person. A Member+ user with reach opens the Renew dialog, confirms the roll, and the same record's expiry moves. What the roll leaves behind is one activity entry, and that entry is the whole of the record's renewal history: the confirmed-renewal row **DES-035 clause 4 reserved for this milestone**, and the "Last renewal" fact grill row **G.R5** has been waiting for since the contracts grill closed.
+
+`designs/contracts.pen` draws it as **C9 — Contract detail · Renewal pending confirmation**: `S9 RenewBanner`, a 36px `status-warning` strip between the top nav and the sub-bar, carrying a `rotate-cw` glyph, the sentence "Renewal date passed — pending confirmation. The term does not advance until a human confirms.", and a trailing "Review renewal"; and `S9 Overlay`, a "Confirm renewal" dialog whose body is a four-option radio list — confirm the roll, paper as amendment, create child contract, new successor contract — over a foot reading "Logged to history. Reminders stop once confirmed."
+
+Three things about the mock do not match what this slice can honestly draw, and one thing the slice needs is not drawn:
+
+1. **Three of the four vehicles do not exist yet.** The routing that builds the amendment, the child contract, and the successor is the next slice.
+2. **Nothing fires.** "Reminders stop once confirmed" describes M18's delivery (NOT-003), which this milestone ships no part of.
+3. **The mock has no way to change the proposed date**, and CTR-007 requires one: a roll whose dates shifted in negotiation is recorded as it really landed.
+4. **A record may carry two banners at once.** DES-009 already owns this strip, and a confidential contract can be pending a roll.
+
+### Decision
+
+**1. The pending state is drawn as a banner and nothing else, because it is a reading of the record's own dates.** CTR-006 says it in as many words: a derived state, not a status. No pill is drawn beside the status, the stage pipeline does not move, and no list column reports it in this slice. The predicate is the seam's — auto-renewing, not archived, expiry behind us — and the record draws the boolean it was given, exactly as DES-040 clause 4 has it draw days remaining. A second copy of the rule on this page would be the copy that drifts the first time either date moved.
+
+**2. The banner takes DES-009's strip and its whole anatomy, in the `warning` family.** The same 36px height, the same `px-page-x` gutters, the same bottom rule, the same leading glyph plus statement and trailing call to action, and the same named region so the statement is reachable from the landmark list after half an hour inside the record. `warning` rather than `danger`: a term that ran out un-actioned is a thing to attend to, not a failure that has already happened, and CTR-006's engine asserts nothing about a lapse. `status-warning-fg` on `status-warning-bg` is a pair the contrast gate already checks at the body floor in all three themes.
+
+**3. There is no dismiss, and the component takes no prop that could add one.** DES-028's rule for the same strip, and it is stronger here: the missed auto-renewal is the failure the whole milestone exists to stop, and a banner that can be closed is a banner that is closed.
+
+**4. Both banners are drawn when a record carries both, and confidentiality leads.** Confidentiality governs who may read the page at all; this one is about one date on it, so it reads second. The strip's height is one token — `--height-record-banner`, renamed from `--height-confidential-banner` — because two banners of one strip must not be able to disagree about how tall it is.
+
+**5. The banner's call to action is the mock's own word, "Review renewal", and it is absent for a viewer who may not write.** "Review" is accurate of what the dialog does even with one exit: it proposes a date, lets the reader change it, and takes a confirmation or a cancel. A read-only viewer gets the statement and no control at all — DES-035 clause 9's rule, and DES-028's for the same strip.
+
+**6. The Renew act is also a control in the Approvals & signing card's head, and that is the record's permanent way in.** A roll writes a renewal row, so the control that raises it sits where those rows land — exactly as "Send for signature" sits beside the envelopes it makes (DES-036 clause 7). It is absent, never disabled, on a record that cannot roll: a contract that does not auto-renew, or records no expiry to advance, has no term for a roll to move. Whether the term has **lapsed** is deliberately not one of those conditions — confirming a roll before the notice deadline is a normal act, and the banner is the reminder rather than the gate.
+
+**7. The dialog lives on the record, not inside that card.** The banner is chrome and is on screen in every section, so the dialog it raises cannot live in a card that only the Approvals section mounts. `SoftGateDialog` already makes this move for the same reason, and it sits beside it.
+
+**8. The mock's radio list is not drawn, and the one vehicle's own sentence is drawn instead.** A group of one radio is a control that decides nothing, and three options that cannot be picked would advertise acts the product does not have (DES-035 clauses 9 and 13). What the selected option says — same record, the expiry advances — becomes the dialog's own statement of what pressing the button does. The list returns with the slice that builds the other three.
+
+**9. The dialog collects one thing the mock does not draw: the new expiry.** A date `Input`, labelled "New expiry date", seeded with the expiry the **seam** proposes and editable before the press. The proposal is answered rather than computed here for DES-040 clause 4's reason, applied to a date instead of a count: the month arithmetic a roll needs — a term ending on the 31st rolled into February lands on the 28th — is one rule, and a dialog holding a second copy of it is the copy that drifts. Under the box, at `text-xs text-muted`, the term as it stands: "The term currently runs to {date}." That is what the person is moving from, said where they are moving it.
+
+**10. The confirm carries the saved expiry beside the new one, and the seam refuses on it.** This is the whole of "exactly once under concurrent confirms": the request states the expiry it was raised against, the seam compares it under the contract's row lock, and the loser of a race is refused by name rather than rolling the term a second time. The dialog therefore sends the record's own saved value and never the draft in any box on the page.
+
+**11. The dialog says what the act does, and only the true half of the mock's foot note.** "Recorded on the record's activity. The contract's status and stage do not change." at `text-xs text-muted` beside a `History` glyph — two facts, and both of them what somebody hesitating actually wants (DES-038 clause 6's pair). The mock's second sentence, that reminders stop once confirmed, describes M18's delivery and stays withheld until that slice exists; DES-035 clause 13's rule holds.
+
+**12. The confirm is the verb, "Confirm renewal", and it is the primary button.** DES-035 clause 10: an assertion that a term renewed should not be pressed by reflex, so the button says what it does rather than "Save". Primary rather than `danger` — a renewal is a normal act, and red would say a mistake was being made (DES-038 clause 7's reading).
+
+**13. A refusal is printed once, in the dialog, and the form keeps what was typed.** DES-035 clause 12. The two checks the dialog makes itself — an empty box, and a date that does not move the term forward — are said before the press so nobody has to press a button to find out a box is empty; everything else is the seam's to refuse, which keeps the rule in one place.
+
+**14. The confirmed-renewal rows are the card's third family, and they are drawn last.** DES-035 clause 4 reserved the slot and DES-036 filled the second. The first two families say where the contract is **going** — who still has to sign it off, and what paper is out — and this one says where it has **been**, so history reads under current state. The card's sub-headings now appear whenever more than one family is on screen, which is the DES-036 clause 2 rule with a third block in it.
+
+**15. The renewal row is three cells — Renewal, Confirmed by, Confirmed — and it has no action cell at all.** The first takes the two-line anatomy the Approver and Signers cells already use: "Term advanced to {date}", and under it "From {date}". The two dates **are** the roll, and the row has to carry both because an adjusted roll landed somewhere other than the record proposed. Confirmed by is the roster's avatar-and-name cell; Confirmed is the Decided column's shape and its short date. No action cell, because **a confirmed roll is a fact and not a thing to change**: nothing undoes an assertion that a term renewed, and a date somebody typed wrong is corrected by editing the expiry on the Contract card, which narrates as the edit it is. DES-035 clause 9's rule — a control for an act that does not exist is not drawn as a disabled one.
+
+**16. A record with no confirmed roll draws no renewal block at all — not an empty line.** DES-041 clause 8 and DES-042 clause 14 both spend an empty line on a surface whose whole job is the thing that is missing. This is not that surface: the roster's own empty line already tells the reader the card holds nothing, and a second line under it would announce the absence of a history most contracts never have.
+
+**17. "Last renewal" closes the Contract card's term group as a fact, never a field** (grill row **G.R5**). It is the newest confirmed roll's own confirmation date — "when did we last renew this" is answered by when somebody said so — read from the same list the rows are drawn from, because nothing stores a renewal. A record where no roll has been confirmed prints the em dash DES-040 clause 5 fixed for every absence on this card. It sits after Days remaining because both are facts derived from the record rather than fields of it, and the two close the group together.
+
+**18. The rolls are still not drawn on the Term timeline card.** DES-041 clause 3 said confirmed rolls join it "with the slice that writes them", and this is that slice — but the card's implied periods and a confirmed roll are two different datums drawn in one plot, and telling them apart needs a fill family, a key entry, and a rule for a record whose log and dates disagree. That is its own decision and its own surface. Grill rows **I.B3**, **I.B4**, and **I.B5** stay open, and the datum they need now exists.
+
+### Rationale
+
+The banner is the milestone's whole argument in one strip. CTR-006 chose notify-only over auto-advance because a legal-state fact must trace to a person, and the visible consequence of that choice is a record that says "this date passed and nobody has said what happened". Everything about the strip follows from it being a **reading**: no dismiss, no status pill, no stored state, and no schedule anywhere behind it.
+
+Shipping the dialog with one exit is the departure worth defending. The alternative was to draw the mock's four options with three of them inert, which is DES-035 clause 13's mistake — a surface explaining a rule it does not apply — with the extra cost that the three inert ones name acts a reader would then go looking for. One exit drawn honestly reads as an early product; four exits with three dead ends reads as a broken one.
+
+The `fromExpiry` precondition is a design decision as much as a seam one, because it is what the dialog is allowed to promise. Without it, two people confirming one roll advance a term two periods, and the record ends up asserting a renewal nobody made. With it, the second confirm is told the record moved and the reader looks again.
+
+### Alternatives considered
+
+- **A pill beside the status, or a stage the pending state moves to.** Rejected: CTR-006 settled it. The contract stays on the status and stage it had, and a pill would put the lifecycle's own vocabulary on a derived reading.
+- **Drawing the mock's four options with three disabled.** Rejected with clause 8, for DES-035 clause 9's reason twice: the three would be dead ends, and each names an act a reader would then hunt for.
+- **A single radio, pre-selected, so the list's shape survives the slice.** Rejected: a control with one option decides nothing, and it would be the only control on the record that cannot change anything.
+- **Proposing the new expiry in the browser.** Rejected with clause 9: the seam already answers it, the month-end clamp is a real rule, and two derivations of one date is one of them drifting.
+- **A dismissable banner, or one that hides once somebody has seen it.** Rejected with clause 3: DD-014's banner made the same call for the same failure mode, and this one guards the failure the milestone was built for.
+- **`danger` for the banner's family.** Rejected: nothing here asserts that a lapse happened, and a record whose renewal is simply due would read as a record in trouble. DES-042 clause 10 refused a `danger` pill on a past date for the same reason.
+- **A confirmation on the confirm.** Rejected: the dialog **is** the confirmation, and it already collects the date rather than only asking "are you sure".
+- **A row action to undo a confirmed roll.** Rejected with clause 15: the record's activity is append-only (DD-017), and the honest correction is an edit of the expiry, which the record already narrates.
+- **Renewal rows in a card of their own.** Rejected: DES-035 clause 4 reserved this card's third slot for exactly them, and a fourth card on the record would make a reader decide which one answers "what has happened to this contract".
+- **"Last renewal" as the date the term rolled to, rather than the date somebody confirmed it.** Rejected: the date the term runs to is the Expiry field three rows above, and printing it twice under two names would be the card's only duplicated fact.
+- **Drawing the pending state on the contracts list as well.** Rejected for this slice: a cross-record view of what is coming up is M18's digest and M29's dashboards, and CTR-006's own out-of-scope list puts it there.
+
+### Consequences
+
+`RenewalBanner` and `ConfirmRenewalDialog` are the two new components, both under `components/contracts/`. The banner mounts in the `AppShell` banner slot beside `ConfidentialBanner`; the dialog mounts on `ContractRecord` beside `SoftGateDialog` and `RetypeDialog`, and both the banner's call to action and the card's head control open it.
+
+`ApprovalsSigningCard` grows a `RenewalRow`, a third block, and a `Renew` control in its head. Its two-block predicate becomes a many-block one, so the sub-headings appear for either conditional family.
+
+`ContractRecord` holds the renewal history as state, because the confirm answers the whole of it, and the Contract card's new "Last renewal" fact reads its first entry. `lib/renewals.ts` carries the row type and the one write, and derives nothing.
+
+`--height-confidential-banner` is renamed `--height-record-banner` in `styles/globals.css`; DES-009's and DES-028's references to the old name read as the same 36px measure under its new name.
+
+Twenty-two ICU messages, all new — five on the banner and the record's new fact, sixteen on the dialog and the renewal block, and one on the activity narrator's new verb. No new tokens and no new contrast pairs: the banner reuses the `warning` family's own paired fg/bg, which the gate already checks at the body floor in all three themes.
+
+The activity narrator gains one verb. It keeps its own sentence rather than reading as an edit of the expiry, because the act is what the record has to prove, and the sentence carries both dates — an adjusted roll moved the term somewhere other than the record proposed.
+
+Grill row **G.R5** is discharged. **I.B3**, **I.B4**, and **I.B5** stay open with clause 18, no longer waiting on a datum.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -2754,3 +2848,4 @@ The activity narrator gains three verbs — added, edited, removed — and three
 | DES-040 | The term on the Contract card — five fields, and the blanks the type forces (extends DES-017, DES-032)                                                               | Accepted |
 | DES-041 | The Term timeline card — the gutter, the two marks, and the open end (extends DES-040, DES-032, DES-012)                                                             | Accepted |
 | DES-042 | The Key dates section — one union, one Source chip, and the next deadline named (extends DES-035, DES-032, DES-040)                                                  | Accepted |
+| DES-043 | The renewal-pending banner, the Renew dialog, and the confirmed-renewal row (extends DES-035, DES-040, DES-017, DES-009)                                             | Accepted |

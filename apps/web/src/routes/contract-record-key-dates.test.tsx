@@ -81,6 +81,8 @@ function contractRow(overrides: Record<string, unknown> = {}) {
     noticePeriodDays: 90,
     noticeDeadline: "2026-10-02",
     daysRemaining: 120,
+    renewalPendingConfirmation: false,
+    proposedRenewalExpiry: null,
     description: null,
     customFields: {},
     isConfidential: false,
@@ -164,6 +166,7 @@ function recordApi(
         customFieldRefs: { users: [], entities: [] },
         team: [{ ...PEOPLE[0], role: "creator" }],
         counterparties: [],
+        renewals: [],
       });
     }
     if (call.url.pathname === "/api/v1/contracts/42/key-dates" && call.method === "GET") {
@@ -435,6 +438,7 @@ describe("the record's Key dates section (CTR-009)", () => {
             customFieldRefs: { users: [], entities: [] },
             team: [{ ...PEOPLE[0], role: "creator" }],
             counterparties: [],
+            renewals: [],
           });
         }
         if (call.url.pathname === "/api/v1/contracts/42" && call.method === "PATCH") {
@@ -495,6 +499,7 @@ describe("the record's Key dates section (CTR-009)", () => {
             customFieldRefs: { users: [], entities: [] },
             team: [{ ...PEOPLE[0], role: "creator" }],
             counterparties: [],
+            renewals: [],
           });
         }
         if (call.url.pathname === "/api/v1/contracts/42" && call.method === "PATCH") {

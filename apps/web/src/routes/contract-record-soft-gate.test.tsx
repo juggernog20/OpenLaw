@@ -96,6 +96,8 @@ function contractRow(overrides: Record<string, unknown> = {}) {
     // expiry to subtract from.
     noticeDeadline: null,
     daysRemaining: null,
+    renewalPendingConfirmation: false,
+    proposedRenewalExpiry: null,
     description: null,
     customFields: {},
     isConfidential: false,
@@ -155,6 +157,7 @@ function recordApi(
         customFieldRefs: { users: [], entities: [] },
         team: [{ ...named("u2"), archived: false, role: "creator" }],
         counterparties: [],
+        renewals: [],
       });
     }
     if (call.url.pathname === "/api/v1/contracts/42/approvals" && call.method === "GET") {

@@ -74,6 +74,7 @@ import {
   PencilLine,
   Pin,
   Plug,
+  RotateCw,
   Send,
   Settings,
   ShieldCheck,
@@ -484,20 +485,23 @@ function folderNarration(intl: IntlShape, payload: Payload): Record<string, stri
 /** What a payload calls somebody or something it names, when it does.
  * A name that is not there is not a reason to render nothing. */
 /**
- * The day a key-date entry is about, drawn through the standing
+ * One civil date an entry carries, drawn through the standing
  * short-date formatter (DES-014) rather than printed as the stored
  * `YYYY-MM-DD`.
  *
  * The log is append-only, so an entry written by a build that carried no
- * date still has to read as a sentence: an unreadable one falls back to
- * the em dash the record already prints where it holds nothing.
+ * such date still has to read as a sentence: an unreadable one falls
+ * back to the em dash the record already prints where it holds nothing.
  */
-function keyDateOn(intl: IntlShape, payload: Payload): string {
-  const value = text(payload, "date");
+function civilDateIn(intl: IntlShape, payload: Payload, key: string): string {
+  const value = text(payload, key);
   return value === null
     ? intl.formatMessage({ id: "contracts.record.notRecorded", defaultMessage: "—" })
     : formatShortDate(value, { locale: intl.locale });
 }
+
+/** The day a key-date entry is about. */
+const keyDateOn = (intl: IntlShape, payload: Payload): string => civilDateIn(intl, payload, "date");
 
 function named(intl: IntlShape, payload: Payload, key: string): string {
   return (
@@ -1014,6 +1018,25 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       defaultMessage: "{actor} cancelled the approval request to {approver}",
     }),
     values: (intl, payload) => ({ approver: named(intl, payload, "approverName") }),
+  },
+  // CTR-007's first renewal vehicle (M16/4). It keeps its own verb
+  // rather than reading as an edit of the expiry, because the act is
+  // what the record has to prove: CTR-006's engine never advances a
+  // term on its own, so "somebody said this rolled" is a legal-state
+  // fact and not a field commit. The sentence carries both dates,
+  // because a roll the person adjusted moved the term somewhere other
+  // than the record proposed, and a reader should not have to work out
+  // where it came from.
+  "contract.renewal_confirmed": {
+    icon: RotateCw,
+    message: defineMessage({
+      id: "activity.contract.renewalConfirmed",
+      defaultMessage: "{actor} confirmed the renewal — the term moved from {from} to {to}",
+    }),
+    values: (intl, payload) => ({
+      from: civilDateIn(intl, payload, "from"),
+      to: civilDateIn(intl, payload, "to"),
+    }),
   },
   // The record's free-form dates (M16/3, CTR-009). A verb per act, so a
   // reader can tell a date being put on the record from one being moved

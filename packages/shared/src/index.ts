@@ -126,6 +126,27 @@ export const TERM_EXPIRY_ON_EVERGREEN_PROBLEM_TYPE = "urn:openlaw:problem:term-e
 export const TERM_RENEWAL_PERIOD_PROBLEM_TYPE = "urn:openlaw:problem:term-renewal-period";
 
 /**
+ * The refusal a confirmed roll branches on (CTR-006, CTR-007, TECH-020).
+ *
+ * A roll is confirmed against the expiry the person was looking at. The
+ * request carries that date, the seam compares it under the contract's
+ * row lock, and a mismatch is refused — so two people confirming the
+ * same roll at the same moment advance the term **once**, and the
+ * second one is told the record moved rather than rolling it a second
+ * time.
+ *
+ * It names itself for `SOFT_GATE_PROBLEM_TYPE`'s reason: both ends of
+ * the wire have to say the same string. The dialog reads it to tell a
+ * lost race — where the answer is "look again, the term has already
+ * advanced" — from every other 400 the same confirm can give, where the
+ * answer is "fix what you typed".
+ *
+ * A client must never tell these apart by reading `detail`. That is
+ * copy, and copy is rewritten.
+ */
+export const RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE = "urn:openlaw:problem:renewal-expiry-moved";
+
+/**
  * The two bounds one key date is held to (CTR-009).
  *
  * A label is a line and a note is a paragraph. Neither is the record's

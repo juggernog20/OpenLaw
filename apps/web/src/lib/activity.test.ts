@@ -304,6 +304,12 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     from: "Helix Labs GmbH",
     to: "Orbit Ltd",
   },
+  "contract.renewal_confirmed": {
+    number: 41,
+    title: "Helix supply agreement",
+    from: "2026-06-30",
+    to: "2027-06-30",
+  },
   "contract.confidentiality_set": { number: 41, title: "Helix supply agreement" },
   "contract.confidentiality_cleared": { number: 41, title: "Helix supply agreement" },
   "contract.archived": { number: 41, title: "Helix supply agreement" },

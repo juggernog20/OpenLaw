@@ -385,6 +385,34 @@ type ContractPayloads = {
   };
   "contract.confidentiality_set": { number: number; title: string };
   "contract.confidentiality_cleared": { number: number; title: string };
+  /**
+   * CTR-007's first renewal vehicle: a person confirmed the roll and the
+   * expiry advanced (M16/4).
+   *
+   * It keeps its own verb rather than riding `contract.updated`, for
+   * `stage_gate_overridden`'s reason twice over. **The act is what the
+   * record has to prove.** CTR-006's engine never advances a date on its
+   * own, so "this term rolled because a human said so" is a legal-state
+   * fact, and a verb an Administrator can filter the audit log on is
+   * what makes that a query rather than a hunt through edit payloads.
+   * And **this entry is the renewal history**: the confirmed-renewal
+   * rows on the record's Approvals & signing card and the "Last
+   * renewal" fact among its facts are both read back from these
+   * entries, per the contracts grill's G.R5 resolution. Nothing stores
+   * a renewal, so nothing but this says one happened.
+   *
+   * `from` and `to` are the expiry either side of the roll. Both,
+   * because a roll the person adjusted commits what they entered rather
+   * than the proposal, and the entry has to say what the term actually
+   * moved from and to rather than leave a reader to recompute it from a
+   * renewal period that may itself have moved since.
+   */
+  "contract.renewal_confirmed": {
+    number: number;
+    title: string;
+    from: string;
+    to: string;
+  };
   "contract.archived": { number: number; title: string };
   "contract.restored": { number: number; title: string };
 };

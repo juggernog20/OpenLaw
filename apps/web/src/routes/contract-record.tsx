@@ -188,9 +188,16 @@ import {
   type CustomFieldValue,
   type CustomFieldValues,
 } from "../lib/custom-fields";
-import { currencyFractionDigits, currencyOptions, toMajorUnits, toMinorUnits } from "../lib/format";
+import {
+  currencyFractionDigits,
+  currencyOptions,
+  formatShortDate,
+  toMajorUnits,
+  toMinorUnits,
+} from "../lib/format";
 import { APPROVAL_PILL, isUnresolved, type ContractApproval } from "../lib/approvals";
 import { readContractKeyDates, type ContractDeadline } from "../lib/key-dates";
+import { confirmContractRenewal, type ConfirmedRenewal } from "../lib/renewals";
 import { FOLDER_ROOT, type ContractDocument } from "../lib/documents";
 import type { ContractFolder } from "../lib/folders";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
@@ -208,7 +215,9 @@ import { ApprovalsSigningCard } from "../components/approvals/approvals-signing-
 import { Avatar } from "../components/avatar";
 import { ConfidentialBanner } from "../components/confidential-banner";
 import { ConfidentialToggle } from "../components/confidential-toggle";
+import { ConfirmRenewalDialog } from "../components/contracts/confirm-renewal-dialog";
 import { KeyDatesCard } from "../components/contracts/key-dates-card";
+import { RenewalBanner } from "../components/contracts/renewal-banner";
 import { TermTimelineCard } from "../components/contracts/term-timeline-card";
 import { CounterpartyPicker, type CounterpartyPick } from "../components/counterparty-picker";
 import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
@@ -328,6 +337,12 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
      * like the roster: a record with no dates at all is a fact about it,
      * not a fallback for a read that did not happen. */
     deadlines: keyDates.data.deadlines,
+    /** Every confirmed roll on the record, most recent first (M16/4,
+     * CTR-006). It rides the record read because nothing stores a
+     * renewal — these are the activity log's own entries read back
+     * (grill row G.R5) — and two surfaces draw them: the card's rows,
+     * and the Contract card's "Last renewal" fact. */
+    renewals: record.data.renewals,
     /** Where the next page of paper starts, or null when the first page
      * is all of it (CTR-024). */
     documentsCursor: documents.data.nextCursor,
@@ -477,6 +492,7 @@ function ContractRecord() {
     approvals: contractApprovals,
     signing: contractSigning,
     deadlines: contractDeadlines,
+    renewals: contractRenewals,
     documentsCursor,
     fields,
     customFieldRefs,
@@ -555,6 +571,25 @@ function ContractRecord() {
    * it — and the section replaces what it holds without a page
    * re-read. */
   const [signing, setSigning] = useState<SigningState>(contractSigning);
+  /**
+   * Every confirmed roll on the record, most recent first (M16/4,
+   * CTR-006). State rather than loader data because confirming a roll
+   * answers the whole history, and the card replaces what it holds
+   * without a page re-read.
+   *
+   * Two surfaces read it and neither derives anything from it: the
+   * card draws the rows, and the Contract card's "Last renewal" fact
+   * reads the first one. Nothing stores a renewal, so this is the
+   * activity log read back (grill row G.R5) and there is no second
+   * copy of it anywhere.
+   */
+  const [renewals, setRenewals] = useState<ConfirmedRenewal[]>(contractRenewals);
+  /** Whether the Renew dialog is open. It lives here rather than in the
+   * card that holds the renewal rows, because the pending banner raises
+   * the same dialog from the page's chrome — where every section can
+   * reach it — which is `SoftGateDialog`'s reason for living here too. */
+  const [renewing, setRenewing] = useState(false);
+  const [renewalStatus, setRenewalStatus] = useState<FieldStatus>("idle");
   /** Every date on the record, as the CTR-009 union (M16/3). State
    * rather than loader data because every key-date write answers the
    * whole union — adding, moving, or removing one date can change which
@@ -797,6 +832,53 @@ function ContractRecord() {
   }
 
   /**
+   * Confirms the roll (M16/4, CTR-007's first vehicle).
+   *
+   * The `fromExpiry` it sends is the **saved** expiry and never a draft
+   * from the Contract card: it is the precondition the seam compares
+   * under the row's lock, and sending a half-typed box would either
+   * refuse a good roll or confirm one against a date nobody committed.
+   *
+   * The answer carries the record and the whole history, so both are
+   * replaced: the roll moved the expiry, which cleared the pending
+   * banner and moved the deadline union under it.
+   *
+   * A refusal is printed once, in the dialog the act was raised from
+   * (DES-035 clause 12), so it is returned rather than noted anywhere.
+   */
+  async function confirmRoll(toExpiry: string): Promise<string | null> {
+    const failed = () =>
+      intl.formatMessage({
+        id: "renewal.confirmFailed",
+        defaultMessage: "The renewal could not be confirmed. Try again.",
+      });
+    // Both triggers and the dialog's own mount are drawn behind this,
+    // so it is unreachable in practice. It answers a refusal rather
+    // than silence because a guard that reported success would close
+    // the dialog on a roll that never happened.
+    if (saved.expiryDate === null) return failed();
+    setRenewalStatus("saving");
+    const outcome = await confirmContractRenewal(saved.number, saved.expiryDate, toExpiry);
+    if (!outcome.ok) {
+      setRenewalStatus("idle");
+      // Falsy rather than nullish, the two other dialogs on this page
+      // already do: a refusal that carried an empty `detail` would put
+      // an empty alert in the dialog, which reads as a write that
+      // failed silently.
+      return outcome.detail || failed();
+    }
+    setSaved(outcome.contract);
+    setRenewals(outcome.renewals);
+    // The expiry moved, so the derived notice deadline moved with it and
+    // the CTR-009 union has to be read again — the same refresh a term
+    // commit already asks for.
+    setTermFields(termDrafts(outcome.contract));
+    refreshDeadlines(outcome.contract.number);
+    setRenewalStatus("saved");
+    return null;
+  }
+
+  /**
    * One of the term's four typed fields, committed on blur or Enter
    * (DES-017). An empty box is `null` — nothing recorded.
    *
@@ -1025,8 +1107,23 @@ function ContractRecord() {
       // included viewer — and only the three actors are pointed at the
       // Team card, which is where the audience is changed.
       banner={
-        saved.isConfidential ? (
-          <ConfidentialBanner manageTeamHref={canFlag ? `#${TEAM_CARD_ID}` : undefined} />
+        saved.isConfidential || saved.renewalPendingConfirmation ? (
+          <>
+            {saved.isConfidential && (
+              <ConfidentialBanner manageTeamHref={canFlag ? `#${TEAM_CARD_ID}` : undefined} />
+            )}
+            {/* CTR-006's pending state, drawn where the C9 mock stacks
+                it — the same strip DES-009 uses, under the
+                confidentiality statement when a record carries both.
+                Confidentiality leads because it governs who may read
+                the page at all, and this one is about one date on it.
+                It is a reading of the record's own expiry, so it goes
+                the moment the roll is confirmed, and only a Member+
+                viewer who may write is offered the way in. */}
+            {saved.renewalPendingConfirmation && (
+              <RenewalBanner onReview={canEdit ? () => setRenewing(true) : undefined} />
+            )}
+          </>
         ) : undefined
       }
       subbar={
@@ -1686,6 +1783,30 @@ function ContractRecord() {
                         }
                         value={daysRemainingLabel(intl, saved.daysRemaining) ?? notRecorded}
                       />
+                      {/* When the term last rolled (grill row G.R5).
+                          Read from the record's renewal history rather
+                          than from a column, because nothing stores a
+                          renewal: the confirmed-roll entries are what
+                          says one happened, and the newest of them is
+                          the first the seam answers. A record where no
+                          roll has been confirmed prints the same em
+                          dash every other absence on this card prints
+                          (X.6, DES-040 clause 5) — most contracts have
+                          never renewed, and that is a fact rather than
+                          a gap. */}
+                      <ReadOnlyField
+                        label={
+                          <FormattedMessage
+                            id="contracts.form.lastRenewal"
+                            defaultMessage="Last renewal"
+                          />
+                        }
+                        value={
+                          renewals[0]
+                            ? formatShortDate(renewals[0].confirmedAt, { locale: intl.locale })
+                            : notRecorded
+                        }
+                      />
                       {/* Who may see the record at all (DD-014). It closes
                       the card because it is the record's audience
                       rather than one of its business facts, and it is
@@ -1864,6 +1985,16 @@ function ContractRecord() {
                   contractNumber={saved.number}
                   approvals={approvals}
                   signing={signing}
+                  renewals={renewals}
+                  // A record rolls when it auto-renews and records an
+                  // expiry to advance — the seam's own two conditions,
+                  // mirrored here so the head draws no control the
+                  // seam would refuse. Whether the term has lapsed is
+                  // deliberately not one of them: confirming a roll
+                  // before the notice deadline is a normal act, and the
+                  // banner is the reminder, not the gate.
+                  canRenew={!frozen && saved.termType === "auto_renew" && saved.expiryDate !== null}
+                  onRenew={() => setRenewing(true)}
                   users={users}
                   approverGroups={approverGroups}
                   // The live roster and the saved row, not the loader's
@@ -1932,6 +2063,28 @@ function ContractRecord() {
             if (!open) setGateTo(null);
           }}
           onConfirm={() => changeStatus(gateTo.id, true)}
+        />
+      )}
+      {/* The Renew dialog (M16/4, CTR-007). It lives on the record
+          rather than in the card that holds the renewal rows, because
+          the pending banner raises it from the page's chrome and the
+          chrome is on screen in every section — `SoftGateDialog`'s own
+          reason for sitting here. The expiry guard is the same one the
+          two triggers are drawn behind, said once more where the write
+          is made: a record with no expiry has no term to roll. */}
+      {renewing && saved.expiryDate !== null && (
+        <ConfirmRenewalDialog
+          reference={contractReference(intl, saved.number)}
+          fromExpiry={saved.expiryDate}
+          proposedExpiry={saved.proposedRenewalExpiry}
+          renewalPeriodMonths={saved.renewalPeriodMonths}
+          busy={renewalStatus === "saving"}
+          onClose={() => setRenewing(false)}
+          onConfirm={async (toExpiry) => {
+            const refusal = await confirmRoll(toExpiry);
+            if (refusal === null) setRenewing(false);
+            return refusal;
+          }}
         />
       )}
     </AppShell>

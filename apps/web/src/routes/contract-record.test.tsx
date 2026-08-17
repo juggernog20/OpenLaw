@@ -246,6 +246,8 @@ function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
     // expiry to subtract from.
     noticeDeadline: null,
     daysRemaining: null,
+    renewalPendingConfirmation: false,
+    proposedRenewalExpiry: null,
     description: "Three-year platform engagement.",
     customFields: {},
     // Open by default; the flag is opt-in, per record (DD-014).
@@ -402,7 +404,13 @@ function recordApi(
       });
     }
     if (call.url.pathname === "/api/v1/contracts/42" && call.method === "GET") {
-      return json(200, { contract: row, ...customEnvelope(), team, counterparties: parties });
+      return json(200, {
+        contract: row,
+        ...customEnvelope(),
+        team,
+        counterparties: parties,
+        renewals: [],
+      });
     }
     if (call.url.pathname === "/api/v1/contracts/42/counterparties" && call.method === "POST") {
       const body = call.body as { counterpartyId?: string; name?: string };
@@ -1119,6 +1127,7 @@ describe("the /contracts/:number record page", () => {
             customFieldRefs: { users: [], entities: [] },
             team: [person("u1", "creator")],
             counterparties: [],
+            renewals: [],
           });
         }
         if (call.url.pathname === "/api/v1/contracts/42/counterparties" && call.method === "POST") {
@@ -1158,6 +1167,7 @@ describe("the /contracts/:number record page", () => {
             customFieldRefs: { users: [], entities: [] },
             team: [person("u1", "creator")],
             counterparties: [],
+            renewals: [],
           });
         }
         if (call.url.pathname === "/api/v1/contracts/42" && call.method === "PATCH") {
@@ -1265,6 +1275,7 @@ describe("the /contracts/:number record page", () => {
             customFieldRefs: { users: [], entities: [] },
             team: [person("u1", "creator")],
             counterparties: [],
+            renewals: [],
           });
         }
         if (call.url.pathname === "/api/v1/contracts/42/team" && call.method === "POST") {
@@ -3850,7 +3861,7 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
     // The existing tokens, not a hand-picked colour or height.
     expect(strip).toHaveClass("bg-confidential-bg");
     expect(strip).toHaveClass("text-confidential");
-    expect(strip).toHaveClass("h-(--height-confidential-banner)");
+    expect(strip).toHaveClass("h-(--height-record-banner)");
     // Chrome, not a notification: nothing in it dismisses it.
     expect(within(strip).queryByRole("button")).not.toBeInTheDocument();
   });
