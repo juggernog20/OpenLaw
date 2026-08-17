@@ -112,13 +112,16 @@ export function shiftMonths(date: string, months: number): string {
 }
 
 /** The term columns the two renewal derivations read. Narrower than the
- * row on purpose: these are functions of four columns and the calendar,
+ * row on purpose: these are functions of five columns and the calendar,
  * and nothing else about a contract can change what they answer. */
 interface RenewableTerm {
   termType: string;
   expiryDate: string | null;
   renewalPeriodMonths: number | null;
   archivedAt: Date | null;
+  /** CTR-019's queryable summary of the ended stage. An ended contract
+   * is a dead deal, and a dead deal stops asking to be rolled. */
+  endedAt: Date | null;
 }
 
 /**
@@ -133,11 +136,14 @@ interface RenewableTerm {
  * says the date has passed and waits for a person.
  *
  * An archived record is out: archiving freezes a record, and a frozen
- * record is not waiting on anybody. A fixed or evergreen term is out
- * because neither rolls — a fixed term that ran out has simply ended.
+ * record is not waiting on anybody. An ended record is out: the deal is
+ * dead, and a dead deal stops asking to be rolled (CTR-019). A fixed or
+ * evergreen term is out because neither rolls — a fixed term that ran
+ * out has simply ended.
  */
 export function renewalPending(term: RenewableTerm, now: Date = new Date()): boolean {
-  if (term.termType !== "auto_renew" || term.archivedAt !== null) return false;
+  if (term.termType !== "auto_renew" || term.archivedAt !== null || term.endedAt !== null)
+    return false;
   if (term.expiryDate === null) return false;
   // Civil dates are zero-padded ISO, so a string compare is a date
   // compare — no parsing, and no timezone to get it wrong.

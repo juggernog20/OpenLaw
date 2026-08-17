@@ -115,6 +115,13 @@ The exception path — converting a mis-routed Request to the other kind, lossle
 Moving a Matter into a `closed`-category status. A signal, not a lock — the record stays writable [MTR-008]. The Contract equivalent is **Ending** [CTR-019].
 _Avoid_: completing, finishing, resolving
 
+**Ending**:
+Moving a Contract into a status whose stage is `ended`. A signal, not a lock — the record stays writable. An ended Contract drops out of the default list and the renewal-pending predicate, but its record page is untouched. Reopening is an ordinary status change that clears the signal [CTR-019].
+_Avoid_: closing (that is the Matter equivalent), terminating, expiring (those are status labels, not the lifecycle act)
+
+**`ended_at`**:
+The queryable summary of whether a Contract has ended: stamped on transition into the `ended` stage, cleared on leaving it. The activity log stays the source of truth for the transition history; this column is what the default list and the renewal-pending predicate filter on [CTR-019].
+
 **Archiving**:
 Soft delete, for mistakes and imports. Separate from Closing and Ending, and never a synonym for them [MTR-008].
 

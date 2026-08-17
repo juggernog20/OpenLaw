@@ -1253,6 +1253,9 @@
   "contracts.showArchived": {
     "defaultMessage": "Show archived"
   },
+  "contracts.showEnded": {
+    "defaultMessage": "Show ended"
+  },
   "contracts.softGate.error": {
     "defaultMessage": "The status could not be changed."
   },
