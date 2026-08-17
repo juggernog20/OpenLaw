@@ -520,11 +520,11 @@ Known columns so far:
 - `manager_id` FK → `users.id`, nullable (null = unassigned/triage), UI label "Owner" per **CTR-004**
 - `priority` — text enum `low|medium|high|critical` (levels renamed per **DES-018**), not null, default `medium` per **CTR-005**
 - `risk` — text enum `low|medium|high|critical`, nullable (null = not yet assessed) per **CTR-005**
-- `term_type` — text enum `fixed|auto_renew|evergreen`, not null per **CTR-006**; renewal engine and calendar branch on this
-- `effective_date` — date, nullable until known per **CTR-006**
-- `expiry_date` — date, nullable (null for evergreen) per **CTR-006**
-- `renewal_period_months` — integer, nullable (auto_renew only) per **CTR-006**
-- `notice_period_days` — integer, nullable per **CTR-006**. **Derived, never stored:** notice deadline = `expiry_date − notice_period_days` (renewal calendar / reminders)
+- `term_type` — text enum `fixed|auto_renew|evergreen`, not null per **CTR-006**, default `fixed`; renewal engine and calendar branch on this. Landed in M16/1
+- `effective_date` — date, nullable until known per **CTR-006**. Landed in M16/1
+- `expiry_date` — date, nullable (null for evergreen) per **CTR-006**. Landed in M16/1
+- `renewal_period_months` — integer, nullable (auto_renew only) per **CTR-006**. Landed in M16/1
+- `notice_period_days` — integer, nullable per **CTR-006**. **Derived, never stored:** notice deadline = `expiry_date − notice_period_days` (renewal calendar / reminders). Landed in M16/1
 - `value_amount` — bigint (integer cents per DES-014), nullable per **CTR-010**
 - `value_currency` — char(3) ISO 4217, nullable (required when amount set) per **CTR-010**
 - `value_cadence` — text enum `one_time|monthly|annually`, nullable per **CTR-010**; total value (annual × term) derived, never stored
@@ -532,7 +532,7 @@ Known columns so far:
 - `custom_fields` — jsonb keyed by field slug per **CTR-016** (fields attached via `contract_type_fields`; values retained on detach)
 - `ai_unverified` — jsonb, nullable per **CTR-008**: map of field slug → extraction meta (evidence snippet, run info) for AI-written values not yet human-confirmed; entry removed on confirmation.
 - `entity_id` FK → `entities.id`, nullable until known per **CTR-011** — which of our entities signed
-- `parent_id` FK → `contracts.id`, nullable per **CTR-015** — single parent, arbitrary depth, no cycles (application-enforced); no inheritance semantics
+- `parent_id` FK → `contracts.id`, nullable per **CTR-015** — single parent, arbitrary depth, no cycles (application-enforced); no inheritance semantics. Landed in M16/5, migration `0048_contract_relations`, with the routing that first writes it (CTR-007's child-contract vehicle). A `parent_id <> id` check states the shortest cycle as a row rule; the longer ones are the write path's walk. Indexed, because the walk rides it and so will M17's hierarchy surfaces
 - `ended_at` — timestamptz, nullable per **CTR-019**: set on transition into the `ended` stage, cleared on revert (activity log remains source of truth)
 - `is_confidential` boolean per **DD-014**; never cascades to/from linked records per **CTR-018**
 - `matter_id` FK → `matters.id`, nullable per **DD-007** (contracts can stand alone)
@@ -541,6 +541,13 @@ Known columns so far:
 Ended behavior per **CTR-019**: signal not lock — record stays writable; drops from default lists, counts, and renewal-calendar surfaces; `archived_at` remains a separate soft-delete (mistakes/imports), not end-of-life.
 
 Engine behavior per **CTR-006**: notify-only — the system never advances `expiry_date` itself; a past-due auto-renew shows "renewal pending confirmation" until a human confirms (then the date advances, activity-logged).
+
+Term shape per **CTR-006**. The five columns landed in M16/1, migration `0046_contract_term`.
+
+- **Constraints.** Five checks, so no write path can get past them. `term_type` is one of the three kinds. An `evergreen` contract holds no `expiry_date`. Only an `auto_renew` contract holds a `renewal_period_months`. A roll is at least one month. A notice period is at least zero days.
+- **Backfill.** Existing rows took `fixed`. That is an assertion about them, not a discovery: `fixed` is the least-asserting of the three kinds. Re-type an evergreen contract by editing it.
+- **Derived.** Four answers the record gives sit in no column, and all four are computed where the answer is assembled. The notice deadline above; days remaining (`expiry_date − today`), which goes negative once the expiry has passed; **renewal pending confirmation** (M16/4) — true when the contract is `auto_renew`, is not archived, and its `expiry_date` is behind today; and the **proposed roll expiry**, `expiry_date` plus `renewal_period_months`, clamped at the target month's last day — null whenever the contract cannot roll, which is any term that is not `auto_renew` and any `auto_renew` term missing either `expiry_date` or `renewal_period_months`. None of the four needs a job, a sweep, or a clock.
+- **A renewal is not a row.** Confirming a roll (**CTR-007**) moves `expiry_date` and appends one `contract.renewal_confirmed` entry to `activity_log`; nothing else records it. The record's renewal history and its "Last renewal" fact are those entries read back. No renewal table exists, and none is planned.
 
 ---
 
@@ -638,6 +645,8 @@ Source: **CTR-015**
 
 Typed, directional links between contracts (beyond the `parent_id` hierarchy). One row per pair per type (application-enforced). No cascade/inheritance semantics; inaccessible relatives render as "restricted contract".
 
+Landed in M16/5, migration `0048_contract_relations`, with CTR-007's successor vehicle — the feature that first needs a renewal to be identified by its link. **M16 writes these rows and draws none of them**: the relations panel, the hierarchy breadcrumb, manual linking, and the restricted-relative rendering are all M17's.
+
 | Column             | Type        | Notes                                                                              |
 | ------------------ | ----------- | ---------------------------------------------------------------------------------- |
 | `from_contract_id` | UUID        | FK → `contracts.id`, not null                                                      |
@@ -645,7 +654,11 @@ Typed, directional links between contracts (beyond the `parent_id` hierarchy). O
 | `relation_type`    | text (enum) | `related` (symmetric) \| `renews` \| `amends` (directional: from renews/amends to) |
 | `created_at`       | timestamptz |                                                                                    |
 
-Compound primary key on (`from_contract_id`, `to_contract_id`, `relation_type`).
+Compound primary key on (`from_contract_id`, `to_contract_id`, `relation_type`) — which is CTR-015's duplicate guard stated as the shape rather than kept as a convention. The type is part of the key, so two contracts may hold two links of different kinds at once. A `from <> to` check refuses a self-link, and `to_contract_id` is indexed for the far half of every relations read. Both foreign keys cascade: a link is a fact about exactly these two records and about nothing else.
+
+**Both writes go through one path** (`apps/api/src/lib/contract-relations.ts`), which asks the two guards before the row does, so a caller reads a named RFC 9457 refusal instead of a constraint violation. The path serializes both writes under one transaction-scoped advisory lock, because neither guard holds in a race a single row cannot see: a cycle can be threaded by two concurrent parent writes, and a symmetric `related` mirror is two different keys to the compound key. Renewal routing cannot itself reach either refusal — a contract born a moment ago has no descendants to loop through and no links to duplicate — and it goes through the guarded path anyway, because the rule belongs to the write and not to the caller that happens to be safe.
+
+**The writes are narrated as their own verbs**: `contract.parent_set` and `contract.relation_added`, both at the record tier, both hung on the record that changed — which is the new one. Nothing is written on the far end, because nothing there moved.
 
 ---
 
@@ -701,14 +714,22 @@ Source: **CTR-009** (mirrors `matter_key_dates`, MTR-004)
 
 Free-form named dates beyond the typed term machinery (price reviews, milestones, option-exercise windows). Deadline surfaces show the union of these, `expiry_date`, and the derived notice deadline.
 
-| Column                     | Type        | Notes                         |
-| -------------------------- | ----------- | ----------------------------- |
-| `id`                       | UUID        | PK                            |
-| `contract_id`              | UUID        | FK → `contracts.id`, not null |
-| `date`                     | date        | not null                      |
-| `label`                    | text        | not null                      |
-| `note`                     | text        | nullable                      |
-| `created_at`, `updated_at` | timestamptz |                               |
+Landed in M16/3, migration `0047_contract_key_dates`, with the columns CTR-009 names and nothing else.
+
+| Column                     | Type        | Notes                                                                                            |
+| -------------------------- | ----------- | ------------------------------------------------------------------------------------------------ |
+| `id`                       | UUID        | PK                                                                                               |
+| `contract_id`              | UUID        | FK → `contracts.id`, not null, cascade — a key date is part of the contract                      |
+| `date`                     | date        | not null; a calendar date, not a timestamp (deadlines are day-granular; display per **DES-014**) |
+| `label`                    | text        | not null, 1–200 trimmed characters                                                               |
+| `note`                     | text        | nullable, 1–2000 trimmed characters; the write path normalizes a blank string to NULL            |
+| `created_at`, `updated_at` | timestamptz |                                                                                                  |
+
+Indexed on (`contract_id`, `date`) — the shape every deadline surface reads. CRUD audit-logged per **DD-017**, one closed-union action per act (`key_date.added`, `key_date.edited`, `key_date.removed`), each at the record tier on the owning contract.
+
+- **Deliberately flat** (CTR-009). No owner column: the matters-side owner question stays a matters question. No per-date reminder schedule: **NOT-004** fixed one global offset list for every tracked date.
+- **No audience of its own.** Access is the owning contract's (DD-014, CTR-021), so confidentiality composes without this table holding a flag, a team, or a tier.
+- **Derived, never stored.** The notice deadline in the union beside these rows is `expiry_date − notice_period_days`, computed where the answer is assembled (**CTR-006**). Which date is next, and how many days away each is, are answered there too — one place, so a surface cannot disagree with the order it was given.
 
 ---
 

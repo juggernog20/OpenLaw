@@ -235,6 +235,19 @@ function contractRow(overrides: Partial<Record<string, unknown>> = {}) {
     // No value is recorded, which is where every contract starts
     // (CTR-010).
     value: null,
+    // CTR-006's term: `fixed` is where every contract starts, and
+    // nothing else about the term is recorded yet.
+    termType: "fixed",
+    effectiveDate: null,
+    expiryDate: null,
+    renewalPeriodMonths: null,
+    noticePeriodDays: null,
+    // Derived at read and stored nowhere — both blank while there is no
+    // expiry to subtract from.
+    noticeDeadline: null,
+    daysRemaining: null,
+    renewalPendingConfirmation: false,
+    proposedRenewalExpiry: null,
     description: "Three-year platform engagement.",
     customFields: {},
     // Open by default; the flag is opt-in, per record (DD-014).
@@ -391,7 +404,13 @@ function recordApi(
       });
     }
     if (call.url.pathname === "/api/v1/contracts/42" && call.method === "GET") {
-      return json(200, { contract: row, ...customEnvelope(), team, counterparties: parties });
+      return json(200, {
+        contract: row,
+        ...customEnvelope(),
+        team,
+        counterparties: parties,
+        renewals: [],
+      });
     }
     if (call.url.pathname === "/api/v1/contracts/42/counterparties" && call.method === "POST") {
       const body = call.body as { counterpartyId?: string; name?: string };
@@ -1108,6 +1127,7 @@ describe("the /contracts/:number record page", () => {
             customFieldRefs: { users: [], entities: [] },
             team: [person("u1", "creator")],
             counterparties: [],
+            renewals: [],
           });
         }
         if (call.url.pathname === "/api/v1/contracts/42/counterparties" && call.method === "POST") {
@@ -1147,6 +1167,7 @@ describe("the /contracts/:number record page", () => {
             customFieldRefs: { users: [], entities: [] },
             team: [person("u1", "creator")],
             counterparties: [],
+            renewals: [],
           });
         }
         if (call.url.pathname === "/api/v1/contracts/42" && call.method === "PATCH") {
@@ -1254,6 +1275,7 @@ describe("the /contracts/:number record page", () => {
             customFieldRefs: { users: [], entities: [] },
             team: [person("u1", "creator")],
             counterparties: [],
+            renewals: [],
           });
         }
         if (call.url.pathname === "/api/v1/contracts/42/team" && call.method === "POST") {
@@ -1717,7 +1739,7 @@ describe("the contract record's stage pipeline (M14/2)", () => {
 });
 
 describe("the contract record's section tabs (DES-032)", () => {
-  it("draws the four sections and lands the bare address on the Overview", async () => {
+  it("draws the five sections and lands the bare address on the Overview", async () => {
     const api = recordApi(contractRow());
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42");
@@ -1728,6 +1750,7 @@ describe("the contract record's section tabs (DES-032)", () => {
       "Fields",
       "Documents",
       "Approvals",
+      "Key dates",
     ]);
     // The Overview is the bare address, so it must not read as active
     // on its siblings — that is what `end` on the link is for.
@@ -3838,7 +3861,7 @@ describe("the contract record's confidentiality surfaces (M10/4)", () => {
     // The existing tokens, not a hand-picked colour or height.
     expect(strip).toHaveClass("bg-confidential-bg");
     expect(strip).toHaveClass("text-confidential");
-    expect(strip).toHaveClass("h-(--height-confidential-banner)");
+    expect(strip).toHaveClass("h-(--height-record-banner)");
     // Chrome, not a notification: nothing in it dismisses it.
     expect(within(strip).queryByRole("button")).not.toBeInTheDocument();
   });

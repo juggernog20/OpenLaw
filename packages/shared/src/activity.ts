@@ -251,6 +251,34 @@ type ApprovalPayloads = {
 };
 
 /**
+ * The free-form dates on one contract (M16/3, CTR-009). These hang off
+ * the contract for `ApprovalPayloads`' reason: a key date is a thing
+ * about the record, and its story belongs in that record's feed at the
+ * standing record tier — so a Contributor on the team reads it exactly
+ * as a Member does, and a confidential contract's audience is the only
+ * audience it has.
+ *
+ * A verb per act. Putting a date on a record, moving one, and taking one
+ * off are three different things that happened, and a reader of the feed
+ * has to be able to tell them apart without opening a payload.
+ *
+ * **Every payload carries the label**, because a removal deletes the row
+ * and the entry is then the only thing left that says which date went —
+ * the rule `approval.cancelled` and every `document.*` payload already
+ * follow. On an edit it is the label as it stands **after** the edit, so
+ * the sentence names the date the reader would go and look at; a rename
+ * carries both sides in `changed`.
+ */
+type KeyDatePayloads = {
+  "key_date.added": { keyDateId: string; label: string; date: string };
+  /** `changed` holds only what moved, keyed `date`, `label`, or `note`
+   * — the `contract.updated` shape, so the narrator reads one kind of
+   * edit payload rather than two. */
+  "key_date.edited": { keyDateId: string; label: string; changed: ChangedFields };
+  "key_date.removed": { keyDateId: string; label: string; date: string };
+};
+
+/**
  * The registry record's own feed (M7): create and archive from #98, the
  * record surface's verbs from #99. A status change keeps its own verb —
  * status is the fixed code-branching enum (ENT-001), so the viewer
@@ -357,6 +385,79 @@ type ContractPayloads = {
   };
   "contract.confidentiality_set": { number: number; title: string };
   "contract.confidentiality_cleared": { number: number; title: string };
+  /**
+   * CTR-007's first renewal vehicle: a person confirmed the roll and the
+   * expiry advanced (M16/4).
+   *
+   * It keeps its own verb rather than riding `contract.updated`, for
+   * `stage_gate_overridden`'s reason twice over. **The act is what the
+   * record has to prove.** CTR-006's engine never advances a date on its
+   * own, so "this term rolled because a human said so" is a legal-state
+   * fact, and a verb an Administrator can filter the audit log on is
+   * what makes that a query rather than a hunt through edit payloads.
+   * And **this entry is the renewal history**: the confirmed-renewal
+   * rows on the record's Approvals & signing card and the "Last
+   * renewal" fact among its facts are both read back from these
+   * entries, per the contracts grill's G.R5 resolution. Nothing stores
+   * a renewal, so nothing but this says one happened.
+   *
+   * `from` and `to` are the expiry either side of the roll. Both,
+   * because a roll the person adjusted commits what they entered rather
+   * than the proposal, and the entry has to say what the term actually
+   * moved from and to rather than leave a reader to recompute it from a
+   * renewal period that may itself have moved since.
+   */
+  "contract.renewal_confirmed": {
+    number: number;
+    title: string;
+    from: string;
+    to: string;
+  };
+  /**
+   * CTR-015's two relation writes, and the two verbs M16/5's renewal
+   * routing puts them on the record with.
+   *
+   * They keep their own verbs rather than riding `contract.updated` for
+   * `team_added`'s reason: putting a record under another one, or
+   * saying that it renews another one, is not an edit of a field. It is
+   * a statement about two records, and a reader of the feed has to be
+   * able to tell "this contract was parented to C-51" from "somebody
+   * changed a date on it" without opening a payload.
+   *
+   * **The entry hangs off the record that changed, which is the new
+   * one.** Nothing is written on the far end — CTR-015's no-cascade
+   * stance is not only about status and confidentiality, and a feed
+   * entry on a record whose row nobody touched would be the log
+   * asserting an edit that never happened. What the far end shows is
+   * M17's relations panel, read from the rows themselves.
+   *
+   * Both payloads name the other record by number **and** title, for
+   * the reason every document payload names its file: the link may
+   * outlive a rename, and the entry has to still say which contract was
+   * meant.
+   */
+  "contract.parent_set": {
+    number: number;
+    title: string;
+    parentNumber: number;
+    parentTitle: string;
+  };
+  /** `relationType` is one of CTR-015's three, so the viewer selects a
+   * sentence on it rather than printing a slug. M16 writes `renews`
+   * alone; `related` and `amends` arrive with M17's manual linking.
+   *
+   * The three are restated here rather than imported, because this
+   * package cannot depend on `@openlaw/db` — the schema keeps its own
+   * copy in `ContractRelationType`. Narrowing them matters: typed as a
+   * string, a mistyped slug compiles, reaches the narrator, and falls
+   * through to the generic sentence instead of failing the build. */
+  "contract.relation_added": {
+    number: number;
+    title: string;
+    relationType: "related" | "renews" | "amends";
+    relatedNumber: number;
+    relatedTitle: string;
+  };
   "contract.archived": { number: number; title: string };
   "contract.restored": { number: number; title: string };
 };
@@ -626,6 +727,7 @@ export type ActivityPayloadMap = UserPayloads &
   FieldCatalogPayloads &
   ApproverGroupPayloads &
   ApprovalPayloads &
+  KeyDatePayloads &
   EntityPayloads &
   ContractPayloads &
   CommentPayloads &

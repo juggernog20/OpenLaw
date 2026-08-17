@@ -17,6 +17,8 @@ import * as commentsSchema from "./schema/comments.js";
 import * as contractApprovalsSchema from "./schema/contract-approvals.js";
 import * as contractCounterpartiesSchema from "./schema/contract-counterparties.js";
 import * as contractEnvelopesSchema from "./schema/contract-envelopes.js";
+import * as contractKeyDatesSchema from "./schema/contract-key-dates.js";
+import * as contractRelationsSchema from "./schema/contract-relations.js";
 import * as contractStatusesSchema from "./schema/contract-statuses.js";
 import * as contractTeamSchema from "./schema/contract-team.js";
 import * as contractTypeFieldsSchema from "./schema/contract-type-fields.js";
@@ -43,6 +45,8 @@ export * from "./schema/comments.js";
 export * from "./schema/contract-approvals.js";
 export * from "./schema/contract-counterparties.js";
 export * from "./schema/contract-envelopes.js";
+export * from "./schema/contract-key-dates.js";
+export * from "./schema/contract-relations.js";
 export * from "./schema/contract-statuses.js";
 export * from "./schema/contract-team.js";
 export * from "./schema/contract-type-fields.js";
@@ -70,6 +74,8 @@ export const schema = {
   ...contractApprovalsSchema,
   ...contractCounterpartiesSchema,
   ...contractEnvelopesSchema,
+  ...contractKeyDatesSchema,
+  ...contractRelationsSchema,
   ...contractStatusesSchema,
   ...contractTeamSchema,
   ...contractTypeFieldsSchema,
@@ -177,6 +183,13 @@ export const ADVISORY_LOCK = {
   ssoProviderUpdate: 4101003,
   /** Held while stored credentials are resealed at boot (TECH-022). */
   secretsRewrap: 4101004,
+  /** Held across a CTR-015 relation write's check-and-write — a parent
+   * set or a typed link — because neither guard is one row's to hold in
+   * a race: a cycle is two parent writes threading past each other, and
+   * a symmetric `related` mirror is two keys the compound key cannot
+   * see as one. Taken as `pg_advisory_xact_lock`, inside the writing
+   * transaction, unlike the session locks above. */
+  contractRelations: 4101005,
 } as const;
 
 /**

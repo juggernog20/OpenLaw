@@ -49,6 +49,9 @@ import {
   Archive,
   ArchiveRestore,
   Building2,
+  CalendarClock,
+  CalendarPlus,
+  CalendarX,
   Check,
   Clock,
   Download,
@@ -66,11 +69,13 @@ import {
   Lock,
   LogOut,
   MessageSquare,
+  Network,
   Palette,
   PenLine,
   PencilLine,
   Pin,
   Plug,
+  RotateCw,
   Send,
   Settings,
   ShieldCheck,
@@ -102,8 +107,10 @@ import {
   formatContractValue,
   riskLabel,
   severityLabel,
+  termTypeLabel,
   type ContractValue,
   type SeverityLevel,
+  type TermType,
 } from "./contracts";
 
 type FeedResponse =
@@ -298,6 +305,10 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "{key, select, title {Title} description {Description} owner {Owner} " +
         "entity {Signing entity} priority {Priority} risk {Risk} " +
         "contractType {Contract type} value {Value} status {Status} " +
+        "termType {Term type} effectiveDate {Effective date} " +
+        "expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} " +
+        "noticePeriodDays {Notice period (days)} " +
+        "date {Date} label {Event} note {Note} " +
         "primaryCounterparty {Primary counterparty} " +
         "primaryDocument {Primary document} " +
         "displayName {Name} display_name {Display name} name {Name} " +
@@ -363,6 +374,10 @@ function changeValue(
   // a level the ramp no longer has still renders rather than throwing.
   if (key === "priority") return severityLabel(intl, value as SeverityLevel);
   if (key === "risk") return riskLabel(intl, value as SeverityLevel);
+  // CTR-006's term type is a stored slug, so the feed says "Evergreen"
+  // where the column says `evergreen`. Its ICU message carries an
+  // `other` arm, so a kind this build no longer has still renders.
+  if (key === "termType") return termTypeLabel(intl, value as TermType);
   if (typeof value === "boolean") {
     return intl.formatMessage(
       {
@@ -470,6 +485,68 @@ function folderNarration(intl: IntlShape, payload: Payload): Record<string, stri
 
 /** What a payload calls somebody or something it names, when it does.
  * A name that is not there is not a reason to render nothing. */
+/**
+ * One civil date an entry carries, drawn through the standing
+ * short-date formatter (DES-014) rather than printed as the stored
+ * `YYYY-MM-DD`.
+ *
+ * The log is append-only, so an entry written by a build that carried no
+ * such date still has to read as a sentence: an unreadable one falls
+ * back to the em dash the record already prints where it holds nothing.
+ */
+function civilDateIn(intl: IntlShape, payload: Payload, key: string): string {
+  const value = text(payload, key);
+  return value === null
+    ? intl.formatMessage({ id: "contracts.record.notRecorded", defaultMessage: "—" })
+    : formatShortDate(value, { locale: intl.locale });
+}
+
+/** The day a key-date entry is about. */
+const keyDateOn = (intl: IntlShape, payload: Payload): string => civilDateIn(intl, payload, "date");
+
+/**
+ * The contract at the far end of a relation entry (CTR-015), named as
+ * "C-51 (Acme master services agreement)".
+ *
+ * Both halves, because they answer two questions: the reference is what
+ * a person types into the address bar, and the title is what tells them
+ * whether they care. `prefix` picks which pair of payload keys to read —
+ * `parentNumber`/`parentTitle` or `relatedNumber`/`relatedTitle` — so
+ * one function serves both verbs.
+ *
+ * The log is append-only, so a payload written without either half still
+ * has to read as a sentence: a missing title collapses to the reference
+ * alone, and a payload with neither falls back to a wording about a
+ * **record**. Not `activity.someone`, which is a person's fallback — "put
+ * this contract under someone" is not a sentence about a hierarchy.
+ */
+function relatedRecord(intl: IntlShape, payload: Payload, prefix: "parent" | "related"): string {
+  const number = payload[`${prefix}Number`];
+  const title = text(payload, `${prefix}Title`);
+  if (typeof number !== "number" || !Number.isInteger(number)) {
+    return (
+      title ??
+      intl.formatMessage({
+        id: "activity.contract.unnamedRecord",
+        defaultMessage: "another contract",
+      })
+    );
+  }
+  const reference = intl.formatMessage(
+    { id: "contracts.reference", defaultMessage: "C-{number}" },
+    { number },
+  );
+  return title === null
+    ? reference
+    : intl.formatMessage(
+        {
+          id: "activity.contract.relatedRecord",
+          defaultMessage: "{reference} ({title})",
+        },
+        { reference, title },
+      );
+}
+
 function named(intl: IntlShape, payload: Payload, key: string): string {
   return (
     text(payload, key) ?? intl.formatMessage({ id: "activity.someone", defaultMessage: "someone" })
@@ -985,6 +1062,99 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       defaultMessage: "{actor} cancelled the approval request to {approver}",
     }),
     values: (intl, payload) => ({ approver: named(intl, payload, "approverName") }),
+  },
+  // CTR-007's first renewal vehicle (M16/4). It keeps its own verb
+  // rather than reading as an edit of the expiry, because the act is
+  // what the record has to prove: CTR-006's engine never advances a
+  // term on its own, so "somebody said this rolled" is a legal-state
+  // fact and not a field commit. The sentence carries both dates,
+  // because a roll the person adjusted moved the term somewhere other
+  // than the record proposed, and a reader should not have to work out
+  // where it came from.
+  "contract.renewal_confirmed": {
+    icon: RotateCw,
+    message: defineMessage({
+      id: "activity.contract.renewalConfirmed",
+      defaultMessage: "{actor} confirmed the renewal — the term moved from {from} to {to}",
+    }),
+    values: (intl, payload) => ({
+      from: civilDateIn(intl, payload, "from"),
+      to: civilDateIn(intl, payload, "to"),
+    }),
+  },
+  // CTR-015's two relation writes (M16/5), which renewal routing is the
+  // first feature to make. Each keeps its own verb rather than reading
+  // as an edit, for `team_added`'s reason: a statement about two records
+  // is not a field commit, and a reader should be able to tell them
+  // apart without opening a payload.
+  //
+  // Both name the far record by its reference **and** its title, because
+  // one of the two answers "which contract" and the other answers "which
+  // deal", and a reader of a feed usually wants the second.
+  "contract.parent_set": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.contract.parentSet",
+      defaultMessage: "{actor} put this contract under {parent}",
+    }),
+    values: (intl, payload) => ({ parent: relatedRecord(intl, payload, "parent") }),
+  },
+  // One sentence with an arm per relation type, rather than three verbs:
+  // the act is the same act — a link was written — and what differs is
+  // the word in the middle of it. `other` is the arm a type this build
+  // does not know falls into; the log is append-only, so a row written
+  // by a later build still has to read as a sentence.
+  "contract.relation_added": {
+    icon: Link2,
+    message: defineMessage({
+      id: "activity.contract.relationAdded",
+      defaultMessage:
+        "{actor} linked this contract — {relationType, select, renews {it renews {related}} " +
+        "amends {it amends {related}} other {related to {related}}}",
+    }),
+    values: (intl, payload) => ({
+      relationType: text(payload, "relationType") ?? "other",
+      related: relatedRecord(intl, payload, "related"),
+    }),
+  },
+  // The record's free-form dates (M16/3, CTR-009). A verb per act, so a
+  // reader can tell a date being put on the record from one being moved
+  // or taken off without opening a payload.
+  //
+  // Each names the date, not only the act. A removal deletes the row, so
+  // its entry is the only thing left that says the date was ever there —
+  // and an added or edited one names it for the same reason the feed
+  // names a document: "changed a key date" sends the reader hunting.
+  "key_date.added": {
+    icon: CalendarPlus,
+    message: defineMessage({
+      id: "activity.keyDate.added",
+      defaultMessage: "{actor} added the key date {label} on {date}",
+    }),
+    values: (intl, payload) => ({
+      label: named(intl, payload, "label"),
+      date: keyDateOn(intl, payload),
+    }),
+  },
+  "key_date.edited": {
+    icon: CalendarClock,
+    message: defineMessage({
+      id: "activity.keyDate.edited",
+      defaultMessage: "{actor} changed the key date {label}",
+    }),
+    changes: changesFrom,
+    values: (intl, payload) => ({ label: named(intl, payload, "label") }),
+  },
+  "key_date.removed": {
+    icon: CalendarX,
+    message: defineMessage({
+      id: "activity.keyDate.removed",
+      defaultMessage: "{actor} removed the key date {label} on {date}",
+    }),
+    values: (intl, payload) => ({
+      label: named(intl, payload, "label"),
+      date: keyDateOn(intl, payload),
+    }),
   },
   // One round of signature on the record (M15/2, M15/3, CTR-013). A
   // verb per act, so a reader can tell a completed signature from a

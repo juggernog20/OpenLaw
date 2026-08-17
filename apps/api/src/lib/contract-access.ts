@@ -203,6 +203,17 @@ export interface ReachedContract {
   primaryDocumentId: string | null;
   /** DD-014's flag, as it stands on this row. */
   isConfidential: boolean;
+  /** CTR-006's end of term, or NULL where none is recorded — and always
+   * NULL on an evergreen contract, which has no end. Two of the three
+   * dates the CTR-009 deadline union is built from are this column and
+   * the one below it, so the reach read carries them for the reason it
+   * carries the rest: they are columns of `contracts`, no join brings
+   * them, and one shape is what keeps the reach read written once. */
+  expiryDate: string | null;
+  /** CTR-006's action window before expiry, in days. The union's third
+   * date — the notice deadline — is this subtracted from the expiry, and
+   * it is stored nowhere. */
+  noticePeriodDays: number | null;
 }
 
 /** The witness a {@link LockedContract} carries. It is `declare`d and
@@ -275,6 +286,8 @@ export async function reachedContract(
       managerId: contracts.managerId,
       primaryDocumentId: contracts.primaryDocumentId,
       isConfidential: contracts.isConfidential,
+      expiryDate: contracts.expiryDate,
+      noticePeriodDays: contracts.noticePeriodDays,
     })
     .from(contracts)
     .where(and(eq(contracts.number, number), contractTeamScope(db, user)))

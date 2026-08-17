@@ -252,9 +252,19 @@ function kindLabel(intl: IntlShape, kind: DocumentVersionKind): string {
   );
 }
 
-/** What a composer is opened for: the record's first file on a document
- * that does not exist yet, or the next round on one that does. */
-type Composer = { document: ContractDocument } | { document: undefined };
+/**
+ * What a composer is opened for: the record's first file on a document
+ * that does not exist yet, or the next round on one that does.
+ *
+ * `kind` is what the round is seeded as, and it is only ever set by a
+ * renewal routed here to be papered as an amendment (M16/5). Everything
+ * else opens the composer on its own default, and the person picks — a
+ * seeded kind is a statement about why the composer was opened, not a
+ * property of the document it was opened on.
+ */
+type Composer = ({ document: ContractDocument } | { document: undefined }) & {
+  kind?: DocumentVersionKind;
+};
 
 /** What the folder dialog is open for. Creating and renaming collect one
  * name and are one form; moving collects a destination; deleting
@@ -344,10 +354,12 @@ export function DocumentsCard({
   viewerId,
   ownerId,
   reading,
+  amending,
   onRead,
   onDocuments,
   onFiled,
   onFolders,
+  onAmendmentOpened,
 }: Readonly<{
   /** CTR-003's reference — the address the upload route takes. */
   contractNumber: number;
@@ -377,6 +389,21 @@ export function DocumentsCard({
    * holds it, because the panel is a layer beside the record and not
    * part of this section. */
   reading: string | null;
+  /**
+   * The record's instrument, when a renewal was routed here to be
+   * papered as an amendment (M16/5, CTR-007's second vehicle), and null
+   * the rest of the time.
+   *
+   * The section opens its version composer on that document with the
+   * kind already set to `amendment`, which is the whole of the routing:
+   * the file, the note, and the write are the M11 upload path,
+   * unchanged. The **id** rather than the flag on a row, because the
+   * designation is the record's answer (CTR-014) and this list is paged
+   * (CTR-024) — an instrument filed below the fold is still the
+   * instrument. It answers `onAmendmentOpened` once it has, so returning
+   * to this section later does not re-open the composer.
+   */
+  amending: string | null;
   /**
    * Open one version in the doc panel.
    *
@@ -410,6 +437,10 @@ export function DocumentsCard({
    * write answers the whole set, because a delete re-files the children
    * it had and more rows move than the one addressed. */
   onFolders: (folders: ContractFolder[]) => void;
+  /** The routed amendment has been taken up: the composer is open, or
+   * there was no chain to open it on. Either way the record clears the
+   * request, so it is answered exactly once. */
+  onAmendmentOpened: () => void;
 }>) {
   const intl = useIntl();
   const [status, setStatus] = useState<FieldStatus>("idle");
@@ -547,6 +578,24 @@ export function DocumentsCard({
   useEffect(() => {
     if (appended) landing.current?.focus();
   }, [appended]);
+
+  /**
+   * A renewal routed here to be papered as an amendment (M16/5,
+   * CTR-007's second vehicle): open the composer on the record's
+   * instrument, seeded with the `amendment` kind.
+   *
+   * The record names which document that is; this section finds it in
+   * the paper it is holding. A record whose instrument is filed below
+   * the fold answers the request anyway rather than leaving it pending,
+   * because a request that outlived its page would open a composer the
+   * next time somebody walked into this section.
+   */
+  useEffect(() => {
+    if (amending === null) return;
+    const primary = documents.find((row) => row.id === amending);
+    if (primary) setComposer({ document: primary, kind: "amendment" });
+    onAmendmentOpened();
+  }, [amending, documents, onAmendmentOpened]);
 
   /** What a listing says when its read did not land. Shared by the
    * record root's foot and every folder's, because it is the same
@@ -1423,6 +1472,7 @@ export function DocumentsCard({
         <UploadDialog
           contractNumber={contractNumber}
           document={composer.document}
+          seedKind={composer.kind}
           onClose={() => setComposer(null)}
           onBatch={(files) => {
             // More than one file is a batch, wherever it came from
@@ -3108,6 +3158,7 @@ function UploaderCell({ version, intl }: Readonly<{ version: DocumentVersion; in
 function UploadDialog({
   contractNumber,
   document,
+  seedKind,
   onClose,
   onBatch,
   onSaved,
@@ -3115,6 +3166,11 @@ function UploadDialog({
   contractNumber: number;
   /** The document being added to, or undefined for a new one. */
   document: ContractDocument | undefined;
+  /** What the kind picker starts on. Only a renewal routed here to be
+   * papered as an amendment sets it (M16/5); every other way in starts
+   * on the draft the negotiation usually opens with. It is a seed and
+   * not a lock — the person may pick another kind before uploading. */
+  seedKind: DocumentVersionKind | undefined;
   onClose: () => void;
   /** Hand several chosen files to the batch confirmation (M13/4,
    * M13/5). This is the drop's pointer-free twin: the picker is where a
@@ -3126,7 +3182,7 @@ function UploadDialog({
 }>) {
   const intl = useIntl();
   const [file, setFile] = useState<File | null>(null);
-  const [kind, setKind] = useState<DocumentVersionKind>("draft_ours");
+  const [kind, setKind] = useState<DocumentVersionKind>(seedKind ?? "draft_ours");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
