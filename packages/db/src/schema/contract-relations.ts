@@ -47,7 +47,7 @@ import { contracts } from "./contracts.js";
  * Code branches on it — renewal reporting reads `renews` and nothing
  * else, and the two directional types draw a different sentence from the
  * symmetric one — so it is a fixed enum rather than an admin-configurable
- * list. Adding a fifth kind of relationship is a decision, not a
+ * list. Adding a fourth kind of relationship is a decision, not a
  * settings row.
  */
 export const CONTRACT_RELATION_TYPES = ["related", "renews", "amends"] as const;

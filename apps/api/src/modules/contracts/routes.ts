@@ -192,6 +192,7 @@ import {
 import {
   CONTRACT_PARENT_CYCLE_PROBLEM_TYPE,
   CONTRACT_RELATION_EXISTS_PROBLEM_TYPE,
+  CONTRACT_SELF_LINK_PROBLEM_TYPE,
   RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE,
   SOFT_GATE_PROBLEM_TYPE,
   TERM_EXPIRY_ON_EVERGREEN_PROBLEM_TYPE,
@@ -228,6 +229,17 @@ const DRAFT_STATUS_SLUG = "draft";
  * not a feed somebody reads.
  */
 const PAGE_SIZE = 50;
+
+/**
+ * How many confirmed rolls the record envelope carries (CTR-006).
+ *
+ * The history is read out of the activity log on every record read, and
+ * a contract that rolls monthly grows it without end. 50 matches the
+ * table page above, because the renewals are drawn as a table too, and
+ * a record that has rolled more than fifty times is asking a question
+ * the feed answers better than the card does.
+ */
+const RENEWAL_HISTORY_LIMIT = 50;
 
 /** A cursor is a contract id, and nothing longer is worth reading. */
 const CursorSchema = z.string().min(1).max(64);
@@ -948,7 +960,13 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       // Newest first, tie-broken on the id: uuidv7 is time-ordered, so
       // two rolls committed in one millisecond still read in the order
       // they were written.
-      .orderBy(desc(activityLog.createdAt), desc(activityLog.id));
+      .orderBy(desc(activityLog.createdAt), desc(activityLog.id))
+      // Bounded, because this rides every record read and a monthly
+      // roll grows it forever. The newest are what the card draws and
+      // what "Last renewal" reads, so the cut is at the old end. A
+      // record that outruns the bound has its whole history in the
+      // feed, which is where a long history belongs.
+      .limit(RENEWAL_HISTORY_LIMIT);
     return rows.map((row) => {
       // Read through the shared vocabulary rather than an inline shape,
       // so a change to what the roll writes fails to compile here
@@ -1665,10 +1683,14 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           // no links — but the write path is CTR-015's, and it answers
           // the same way whichever caller reaches it.
           409: problemTypeResponse(
-            "The named types are CTR-015's two guards: the link already exists, or " +
-              "the parent would close a loop. An unnamed 409 is an archived predecessor; " +
-              "print it.",
-            [CONTRACT_RELATION_EXISTS_PROBLEM_TYPE, CONTRACT_PARENT_CYCLE_PROBLEM_TYPE],
+            "The named types are CTR-015's guards: the link already exists, the parent " +
+              "would close a loop, or both ends are one contract. An unnamed 409 is an " +
+              "archived predecessor; print it.",
+            [
+              CONTRACT_RELATION_EXISTS_PROBLEM_TYPE,
+              CONTRACT_PARENT_CYCLE_PROBLEM_TYPE,
+              CONTRACT_SELF_LINK_PROBLEM_TYPE,
+            ],
           ),
           default: problemResponse,
         },
@@ -1753,12 +1775,18 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // entity that has left the registry — and a copy that carried
         // one onto a *new* record would be the way around that rule.
         // The predecessor keeps what signed it either way (CTR-011).
+        //
+        // The row is locked for the same reason the field write locks
+        // it: an unlocked read lets a concurrent archive commit between
+        // the check and the insert, and the record is then born holding
+        // what this check exists to keep off it.
         if (copied?.entityId) {
           const [signatory] = await tx
             .select({ archivedAt: entities.archivedAt })
             .from(entities)
             .where(eq(entities.id, copied.entityId))
-            .limit(1);
+            .limit(1)
+            .for("update");
           if (!signatory || signatory.archivedAt !== null) copied.entityId = null;
         }
 

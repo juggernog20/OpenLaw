@@ -60,10 +60,15 @@ export async function confirmContractRenewal(
   fromExpiry: string,
   toExpiry: string,
 ): Promise<RenewalOutcome> {
-  const { data, error } = await api.POST("/api/v1/contracts/{number}/renewal", {
-    params: { path: { number: contractNumber } },
-    body: { fromExpiry, toExpiry },
-  });
+  // Settled, never rejected: the dialog holds the control at `saving`
+  // until this answers, so a request that never arrived has to come back
+  // as an ordinary refusal rather than as an escaping rejection.
+  const { data, error } = await api
+    .POST("/api/v1/contracts/{number}/renewal", {
+      params: { path: { number: contractNumber } },
+      body: { fromExpiry, toExpiry },
+    })
+    .catch(() => ({ data: undefined, error: undefined }));
   return data
     ? { ok: true, contract: data.contract, renewals: data.renewals }
     : { ok: false, detail: problemDetail(error), type: problemType(error) };

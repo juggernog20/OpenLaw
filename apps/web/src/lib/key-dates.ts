@@ -73,11 +73,23 @@ export const DEADLINE_PILL = {
 export const isKeyDate = (row: ContractDeadline): row is ContractDeadline & { keyDateId: string } =>
   row.keyDateId !== null;
 
-/** Reads one contract's deadline surface, whole. */
+/**
+ * Reads one contract's deadline surface, whole.
+ *
+ * Every call here settles rather than rejects. A refused answer and a
+ * request that never arrived are the same event to the section that
+ * awaited it — both mean "this did not happen" — and a rejection that
+ * escaped would leave the surface disabled at `saving` with nothing on
+ * screen to say why. The record's own field commit guards its write the
+ * same way, and the caller's fallback sentence is what a caught
+ * rejection ends up printing.
+ */
 export async function readContractKeyDates(contractNumber: number): Promise<DeadlinesOutcome> {
-  const { data, error } = await api.GET("/api/v1/contracts/{number}/key-dates", {
-    params: { path: { number: contractNumber } },
-  });
+  const { data, error } = await api
+    .GET("/api/v1/contracts/{number}/key-dates", {
+      params: { path: { number: contractNumber } },
+    })
+    .catch(() => ({ data: undefined, error: undefined }));
   return data
     ? { ok: true, deadlines: data.deadlines }
     : { ok: false, detail: problemDetail(error) };
@@ -88,10 +100,12 @@ export async function addContractKeyDate(
   contractNumber: number,
   input: KeyDateInput,
 ): Promise<DeadlinesOutcome> {
-  const { data, error } = await api.POST("/api/v1/contracts/{number}/key-dates", {
-    params: { path: { number: contractNumber } },
-    body: { date: input.date, label: input.label, note: input.note },
-  });
+  const { data, error } = await api
+    .POST("/api/v1/contracts/{number}/key-dates", {
+      params: { path: { number: contractNumber } },
+      body: { date: input.date, label: input.label, note: input.note },
+    })
+    .catch(() => ({ data: undefined, error: undefined }));
   return data
     ? { ok: true, deadlines: data.deadlines }
     : { ok: false, detail: problemDetail(error) };
@@ -109,10 +123,12 @@ export async function updateContractKeyDate(
   keyDateId: string,
   input: KeyDateInput,
 ): Promise<DeadlinesOutcome> {
-  const { data, error } = await api.PATCH("/api/v1/key-dates/{keyDateId}", {
-    params: { path: { keyDateId } },
-    body: { date: input.date, label: input.label, note: input.note },
-  });
+  const { data, error } = await api
+    .PATCH("/api/v1/key-dates/{keyDateId}", {
+      params: { path: { keyDateId } },
+      body: { date: input.date, label: input.label, note: input.note },
+    })
+    .catch(() => ({ data: undefined, error: undefined }));
   return data
     ? { ok: true, deadlines: data.deadlines }
     : { ok: false, detail: problemDetail(error) };
@@ -126,9 +142,11 @@ export async function updateContractKeyDate(
  * section replaces what it holds rather than working out which row went.
  */
 export async function removeContractKeyDate(keyDateId: string): Promise<DeadlinesOutcome> {
-  const { data, error } = await api.DELETE("/api/v1/key-dates/{keyDateId}", {
-    params: { path: { keyDateId } },
-  });
+  const { data, error } = await api
+    .DELETE("/api/v1/key-dates/{keyDateId}", {
+      params: { path: { keyDateId } },
+    })
+    .catch(() => ({ data: undefined, error: undefined }));
   return data
     ? { ok: true, deadlines: data.deadlines }
     : { ok: false, detail: problemDetail(error) };
