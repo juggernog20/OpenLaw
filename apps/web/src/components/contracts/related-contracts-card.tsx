@@ -14,7 +14,7 @@
 
 import { memo } from "react";
 import { Link } from "react-router";
-import { FormattedMessage, useIntl } from "react-intl";
+import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { contractReference, STAGE_PILL } from "../../lib/contracts";
 import type {
   ContractRelations,
@@ -25,25 +25,27 @@ import type {
 } from "../../lib/relations";
 
 // ---------------------------------------------------------------------------
-// Direction labels — every combination the API may answer.
+// Labels — every heading the card can draw. Declared through
+// `defineMessages` so `formatjs extract` sees them: a descriptor built
+// inline where it is rendered would be invisible to the extractor, and
+// the next i18n-drift run would drop these ids from the catalog.
 // ---------------------------------------------------------------------------
 
-const LINK_LABELS: Record<
-  RelationType,
-  Record<LinkDirection, { id: string; defaultMessage: string }>
-> = {
-  renews: {
-    outgoing: { id: "contracts.relations.renewsLabel", defaultMessage: "Renews" },
-    incoming: { id: "contracts.relations.renewedByLabel", defaultMessage: "Renewed by" },
-  },
-  amends: {
-    outgoing: { id: "contracts.relations.amendsLabel", defaultMessage: "Amends" },
-    incoming: { id: "contracts.relations.amendedByLabel", defaultMessage: "Amended by" },
-  },
-  related: {
-    outgoing: { id: "contracts.relations.relatedLabel", defaultMessage: "Related" },
-    incoming: { id: "contracts.relations.relatedLabel", defaultMessage: "Related" },
-  },
+const LABELS = defineMessages({
+  parent: { id: "contracts.relations.parent", defaultMessage: "Parent" },
+  children: { id: "contracts.relations.children", defaultMessage: "Children" },
+  renews: { id: "contracts.relations.renewsLabel", defaultMessage: "Renews" },
+  renewedBy: { id: "contracts.relations.renewedByLabel", defaultMessage: "Renewed by" },
+  amends: { id: "contracts.relations.amendsLabel", defaultMessage: "Amends" },
+  amendedBy: { id: "contracts.relations.amendedByLabel", defaultMessage: "Amended by" },
+  related: { id: "contracts.relations.relatedLabel", defaultMessage: "Related" },
+});
+
+/** Every combination of link type and direction the API may answer. */
+const LINK_LABELS: Record<RelationType, Record<LinkDirection, MessageDescriptor>> = {
+  renews: { outgoing: LABELS.renews, incoming: LABELS.renewedBy },
+  amends: { outgoing: LABELS.amends, incoming: LABELS.amendedBy },
+  related: { outgoing: LABELS.related, incoming: LABELS.related },
 };
 
 // ---------------------------------------------------------------------------
@@ -51,11 +53,13 @@ const LINK_LABELS: Record<
 // ---------------------------------------------------------------------------
 
 /** Groups links by their display label (relation type + direction). */
-function groupLinks(links: readonly ContractLink[]): Map<string, { label: { id: string; defaultMessage: string }; entries: ContractLink[] }> {
-  const groups = new Map<string, { label: { id: string; defaultMessage: string }; entries: ContractLink[] }>();
+function groupLinks(
+  links: readonly ContractLink[],
+): Map<string, { label: MessageDescriptor; entries: ContractLink[] }> {
+  const groups = new Map<string, { label: MessageDescriptor; entries: ContractLink[] }>();
   for (const link of links) {
     const label = LINK_LABELS[link.relationType][link.direction];
-    const key = label.id;
+    const key = String(label.id);
     const group = groups.get(key);
     if (group) {
       group.entries.push(link);
@@ -103,11 +107,11 @@ function RelationRow({ entry }: Readonly<{ entry: RelationEntry }>) {
 function Subsection({
   label,
   entries,
-}: Readonly<{ label: { id: string; defaultMessage: string }; entries: readonly RelationEntry[] }>) {
+}: Readonly<{ label: MessageDescriptor; entries: readonly RelationEntry[] }>) {
   return (
     <div>
       <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-subtle">
-        <FormattedMessage id={label.id} defaultMessage={label.defaultMessage} />
+        <FormattedMessage {...label} />
       </h3>
       <ul>
         {entries.map((entry, i) => (
@@ -121,11 +125,11 @@ function Subsection({
 function LinkSubsection({
   label,
   links,
-}: Readonly<{ label: { id: string; defaultMessage: string }; links: readonly ContractLink[] }>) {
+}: Readonly<{ label: MessageDescriptor; links: readonly ContractLink[] }>) {
   return (
     <div>
       <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-subtle">
-        <FormattedMessage id={label.id} defaultMessage={label.defaultMessage} />
+        <FormattedMessage {...label} />
       </h3>
       <ul>
         {links.map((link, i) => (
@@ -145,10 +149,10 @@ function LinkSubsection({
 
 export const RelatedContractsCard = memo(function RelatedContractsCard({
   relations,
-}: Readonly<{ relations: ContractRelations | null }>) {
-  const hasParent = relations !== null && relations.parentChain.length > 0;
-  const hasChildren = relations !== null && relations.children.length > 0;
-  const hasLinks = relations !== null && relations.links.length > 0;
+}: Readonly<{ relations: ContractRelations }>) {
+  const hasParent = relations.parentChain.length > 0;
+  const hasChildren = relations.children.length > 0;
+  const hasLinks = relations.links.length > 0;
   const empty = !hasParent && !hasChildren && !hasLinks;
 
   const grouped = hasLinks ? groupLinks(relations.links) : null;
@@ -160,10 +164,7 @@ export const RelatedContractsCard = memo(function RelatedContractsCard({
     >
       <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
         <h2 id="related-contracts-heading" className="text-base font-semibold">
-          <FormattedMessage
-            id="contracts.relations.section"
-            defaultMessage="Related contracts"
-          />
+          <FormattedMessage id="contracts.relations.section" defaultMessage="Related contracts" />
         </h2>
       </header>
       <div className="p-4">
@@ -176,21 +177,11 @@ export const RelatedContractsCard = memo(function RelatedContractsCard({
           </p>
         ) : (
           <div className="flex flex-col gap-4">
-            {hasParent && (
-              <Subsection
-                label={{ id: "contracts.relations.parent", defaultMessage: "Parent" }}
-                entries={relations.parentChain}
-              />
-            )}
-            {hasChildren && (
-              <Subsection
-                label={{ id: "contracts.relations.children", defaultMessage: "Children" }}
-                entries={relations.children}
-              />
-            )}
+            {hasParent && <Subsection label={LABELS.parent} entries={relations.parentChain} />}
+            {hasChildren && <Subsection label={LABELS.children} entries={relations.children} />}
             {grouped &&
               Array.from(grouped.values()).map(({ label, entries }) => (
-                <LinkSubsection key={label.id} label={label} links={entries} />
+                <LinkSubsection key={String(label.id)} label={label} links={entries} />
               ))}
           </div>
         )}
