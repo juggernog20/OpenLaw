@@ -7,25 +7,16 @@
  * immediately (DD-013).
  */
 
-import { eq, users, type Theme, type UserRole } from "@openlaw/db";
+import { eq, users, type UserRole } from "@openlaw/db";
 import { fromNodeHeaders } from "better-auth/node";
 import type { FastifyRequest } from "fastify";
 import { httpError } from "../lib/problem.js";
+import type { AuthenticatedSession, AuthenticatedUser } from "./user.js";
 
-export interface AuthenticatedUser {
-  id: string;
-  email: string;
-  displayName: string;
-  role: UserRole;
-  theme: Theme;
-  /** IANA zone override; null = use the browser's (DES-014). */
-  timezone: string | null;
-}
-
-export interface AuthenticatedSession {
-  id: string;
-  expiresAt: Date;
-}
+/** Re-exported so every importer keeps asking the guard module for the
+ * shape it guards. The declarations live one file over, where a process
+ * with no Fastify instance can reach them — see `auth/user.ts`. */
+export type { AuthenticatedSession, AuthenticatedUser } from "./user.js";
 
 declare module "fastify" {
   interface FastifyRequest {
