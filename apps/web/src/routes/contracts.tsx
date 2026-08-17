@@ -108,6 +108,9 @@ export function ContractsPage() {
   const [appended, setAppended] = useState<{ count: number; from: number } | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  /** CTR-019: ended contracts drop out of the working list; this brings
+   * them back for a viewer who wants to see dead deals. */
+  const [showEnded, setShowEnded] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
   const [pageError, setPageError] = useState<string | null>(null);
   /** One list-level request at a time: a second toggle or restore
@@ -124,6 +127,17 @@ export function ContractsPage() {
     void navigate("/auth/login", { replace: true });
   }
 
+  /** Build the query flags the list API needs from the current filter
+   * state. Each flag is omitted rather than sent as "false", so the
+   * server sees no key and applies its default — the same wire shape
+   * every other filter on this page follows. */
+  function listQuery(archived: boolean, ended: boolean) {
+    return {
+      ...(archived ? { includeArchived: "true" as const } : {}),
+      ...(ended ? { includeEnded: "true" as const } : {}),
+    };
+  }
+
   /** The toggle re-reads either way: archived rows only exist
    * server-side, and coming back should not trust a stale list either. */
   async function toggleArchived(next: boolean) {
@@ -131,10 +145,7 @@ export function ContractsPage() {
     setListError(null);
     setListBusy(true);
     const { data } = await api
-      .GET(
-        "/api/v1/contracts",
-        next ? { params: { query: { includeArchived: "true" as const } } } : {},
-      )
+      .GET("/api/v1/contracts", { params: { query: listQuery(next, showEnded) } })
       .catch(() => ({ data: undefined }))
       .finally(() => setListBusy(false));
     if (!data) {
@@ -153,6 +164,33 @@ export function ContractsPage() {
     setShowArchived(next);
   }
 
+  /** CTR-019: toggle ended contracts in and out of the list. Re-reads
+   * the same way the archived toggle does, because the server is the
+   * authority on which contracts are ended. */
+  async function toggleEnded(next: boolean) {
+    if (listBusy) return;
+    setListError(null);
+    setListBusy(true);
+    const { data } = await api
+      .GET("/api/v1/contracts", { params: { query: listQuery(showArchived, next) } })
+      .catch(() => ({ data: undefined }))
+      .finally(() => setListBusy(false));
+    if (!data) {
+      setListError(
+        intl.formatMessage({
+          id: "contracts.listError",
+          defaultMessage: "The contract list could not be read. Try again.",
+        }),
+      );
+      return;
+    }
+    setRows(data.contracts);
+    setCursor(data.nextCursor);
+    setAppended(null);
+    setPageError(null);
+    setShowEnded(next);
+  }
+
   /**
    * One more page, appended in place (CTR-024, DES-031).
    *
@@ -169,7 +207,7 @@ export function ContractsPage() {
         params: {
           query: {
             cursor,
-            ...(showArchived ? { includeArchived: "true" as const } : {}),
+            ...listQuery(showArchived, showEnded),
           },
         },
       })
@@ -268,6 +306,15 @@ export function ContractsPage() {
               {listError}
             </p>
           )}
+          <Label htmlFor="contracts-show-ended">
+            <FormattedMessage id="contracts.showEnded" defaultMessage="Show ended" />
+          </Label>
+          <Switch
+            id="contracts-show-ended"
+            checked={showEnded}
+            disabled={listBusy}
+            onCheckedChange={(next) => void toggleEnded(next)}
+          />
           <Label htmlFor="contracts-show-archived">
             <FormattedMessage id="contracts.showArchived" defaultMessage="Show archived" />
           </Label>

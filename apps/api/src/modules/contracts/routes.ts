@@ -511,6 +511,9 @@ const ContractRowSchema = z.object({
    * receives this row already reaches it, and the flag is here to be
    * drawn (DES-009's marker and banner), never to be inferred from. */
   isConfidential: z.boolean(),
+  /** CTR-019's queryable summary: when this contract entered the ended
+   * stage. NULL on every non-ended contract; cleared on reopen. */
+  endedAt: z.iso.datetime().nullable(),
   archivedAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
@@ -789,6 +792,7 @@ function toRow(context: ContractContext) {
     description: row.description,
     customFields: row.customFields,
     isConfidential: row.isConfidential,
+    endedAt: row.endedAt?.toISOString() ?? null,
     archivedAt: row.archivedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -1409,15 +1413,21 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "The contract list, newest reference first: number, title, " +
           "type, and status; archived contracts only with " +
-          "includeArchived=true. Member+ read every contract that is not " +
-          "confidential; a Contributor reads exactly the contracts they " +
-          "hold a contract_team row on, archived ones behind the same " +
-          "flag. A confidential contract is listed only for its named " +
-          "team, its Owner, and Administrators — silently absent for " +
-          "everyone else, so no count can reveal it",
+          "includeArchived=true; ended contracts only with " +
+          "includeEnded=true (CTR-019). Member+ read every contract " +
+          "that is not confidential; a Contributor reads exactly the " +
+          "contracts they hold a contract_team row on, archived and " +
+          "ended ones behind the same flags. A confidential contract " +
+          "is listed only for its named team, its Owner, and " +
+          "Administrators — silently absent for everyone else, so no " +
+          "count can reveal it",
         tags: ["contracts"],
         querystring: z.object({
           includeArchived: z.enum(["true", "false"]).optional(),
+          /** CTR-019: bring ended contracts back into the list. The
+           * default list shows all non-ended stages, because ended is
+           * a signal that the deal is done, not a lock. */
+          includeEnded: z.enum(["true", "false"]).optional(),
           /** The previous page's `nextCursor`. Omit for the first page. */
           cursor: CursorSchema.optional(),
         }),
@@ -1437,6 +1447,12 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(
           and(
             request.query.includeArchived === "true" ? undefined : isNull(contracts.archivedAt),
+            // CTR-019: the default list hides ended contracts the same
+            // way it hides archived ones — a dead deal drops out of the
+            // working surfaces. The filter is on the column rather than
+            // on the joined stage, because the column is the queryable
+            // summary the stage transition stamps.
+            request.query.includeEnded === "true" ? undefined : isNull(contracts.endedAt),
             // A Contributor's list is the contracts they are on. An
             // empty answer is a real state — the list's own empty
             // state, never a refusal.
@@ -2408,6 +2424,16 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           };
           statusName = status.displayName;
           stage = status.stage;
+          // CTR-019's side effect: `ended_at` stamped on entering the
+          // ended stage, cleared on leaving it. The column is the
+          // queryable summary the default list and the renewal-pending
+          // predicate read; the activity log is the source of truth for
+          // the transition history.
+          if (status.stage === "ended" && current.stage !== "ended") {
+            patch.endedAt = new Date();
+          } else if (status.stage !== "ended" && current.stage === "ended") {
+            patch.endedAt = null;
+          }
         }
 
         // Nothing changed: answer with the row and write no misleading

@@ -1,356 +1,363 @@
 {
-    "version": "7",
-    "dialect": "postgresql",
-    "entries": [
-        {
-            "idx": 0,
-            "version": "7",
-            "when": 1786264125825,
-            "tag": "0000_auth",
-            "breakpoints": true
-        },
-        {
-            "idx": 1,
-            "version": "7",
-            "when": 1786296856518,
-            "tag": "0001_onboarding",
-            "breakpoints": true
-        },
-        {
-            "idx": 2,
-            "version": "7",
-            "when": 1786308506881,
-            "tag": "0002_theme",
-            "breakpoints": true
-        },
-        {
-            "idx": 3,
-            "version": "7",
-            "when": 1786394362045,
-            "tag": "0003_smtp",
-            "breakpoints": true
-        },
-        {
-            "idx": 4,
-            "version": "7",
-            "when": 1786397299991,
-            "tag": "0004_activity_log",
-            "breakpoints": true
-        },
-        {
-            "idx": 5,
-            "version": "7",
-            "when": 1786397314294,
-            "tag": "0005_org_general",
-            "breakpoints": true
-        },
-        {
-            "idx": 6,
-            "version": "7",
-            "when": 1786422732354,
-            "tag": "0006_last_active",
-            "breakpoints": true
-        },
-        {
-            "idx": 7,
-            "version": "7",
-            "when": 1786433704100,
-            "tag": "0007_timezone",
-            "breakpoints": true
-        },
-        {
-            "idx": 8,
-            "version": "7",
-            "when": 1786470787772,
-            "tag": "0008_contract_types",
-            "breakpoints": true
-        },
-        {
-            "idx": 9,
-            "version": "7",
-            "when": 1786477894274,
-            "tag": "0009_contract_statuses",
-            "breakpoints": true
-        },
-        {
-            "idx": 10,
-            "version": "7",
-            "when": 1786481436354,
-            "tag": "0010_fields",
-            "breakpoints": true
-        },
-        {
-            "idx": 11,
-            "version": "7",
-            "when": 1786482049932,
-            "tag": "0011_type_editor",
-            "breakpoints": true
-        },
-        {
-            "idx": 12,
-            "version": "7",
-            "when": 1786483851677,
-            "tag": "0012_matter_types",
-            "breakpoints": true
-        },
-        {
-            "idx": 13,
-            "version": "7",
-            "when": 1786530235592,
-            "tag": "0013_type_field_field_id_indexes",
-            "breakpoints": true
-        },
-        {
-            "idx": 14,
-            "version": "7",
-            "when": 1786547744811,
-            "tag": "0014_entity_types",
-            "breakpoints": true
-        },
-        {
-            "idx": 15,
-            "version": "7",
-            "when": 1786550781239,
-            "tag": "0015_entities",
-            "breakpoints": true
-        },
-        {
-            "idx": 16,
-            "version": "7",
-            "when": 1786566014456,
-            "tag": "0016_contracts",
-            "breakpoints": true
-        },
-        {
-            "idx": 17,
-            "version": "7",
-            "when": 1786569621470,
-            "tag": "0017_contract_team",
-            "breakpoints": true
-        },
-        {
-            "idx": 18,
-            "version": "7",
-            "when": 1786572699619,
-            "tag": "0018_contract_signing_entity",
-            "breakpoints": true
-        },
-        {
-            "idx": 19,
-            "version": "7",
-            "when": 1786575433642,
-            "tag": "0019_counterparties",
-            "breakpoints": true
-        },
-        {
-            "idx": 20,
-            "version": "7",
-            "when": 1786578598089,
-            "tag": "0020_contract_value",
-            "breakpoints": true
-        },
-        {
-            "idx": 21,
-            "version": "7",
-            "when": 1786580681348,
-            "tag": "0021_contract_value_bound",
-            "breakpoints": true
-        },
-        {
-            "idx": 22,
-            "version": "7",
-            "when": 1786581450911,
-            "tag": "0022_contract_custom_fields",
-            "breakpoints": true
-        },
-        {
-            "idx": 23,
-            "version": "7",
-            "when": 1786617355311,
-            "tag": "0023_comments",
-            "breakpoints": true
-        },
-        {
-            "idx": 24,
-            "version": "7",
-            "when": 1786621211673,
-            "tag": "0024_comment_mentions",
-            "breakpoints": true
-        },
-        {
-            "idx": 25,
-            "version": "7",
-            "when": 1786626379156,
-            "tag": "0025_comment_revisions",
-            "breakpoints": true
-        },
-        {
-            "idx": 26,
-            "version": "7",
-            "when": 1786629029580,
-            "tag": "0026_comment_last_read",
-            "breakpoints": true
-        },
-        {
-            "idx": 27,
-            "version": "7",
-            "when": 1786640218702,
-            "tag": "0027_audit_log_created_at_idx",
-            "breakpoints": true
-        },
-        {
-            "idx": 28,
-            "version": "7",
-            "when": 1786650506463,
-            "tag": "0028_contract_confidential",
-            "breakpoints": true
-        },
-        {
-            "idx": 29,
-            "version": "7",
-            "when": 1786691613158,
-            "tag": "0029_documents",
-            "breakpoints": true
-        },
-        {
-            "idx": 30,
-            "version": "7",
-            "when": 1786693131336,
-            "tag": "0030_document_description",
-            "breakpoints": true
-        },
-        {
-            "idx": 31,
-            "version": "7",
-            "when": 1786697971001,
-            "tag": "0031_documents_designations",
-            "breakpoints": true
-        },
-        {
-            "idx": 32,
-            "version": "7",
-            "when": 1786700413069,
-            "tag": "0032_document_archive",
-            "breakpoints": true
-        },
-        {
-            "idx": 33,
-            "version": "7",
-            "when": 1786703174841,
-            "tag": "0033_document_confidential",
-            "breakpoints": true
-        },
-        {
-            "idx": 34,
-            "version": "7",
-            "when": 1786740142507,
-            "tag": "0034_document_version_text",
-            "breakpoints": true
-        },
-        {
-            "idx": 35,
-            "version": "7",
-            "when": 1786743755409,
-            "tag": "0035_document_version_rendition",
-            "breakpoints": true
-        },
-        {
-            "idx": 36,
-            "version": "7",
-            "when": 1786747156387,
-            "tag": "0036_document_version_email_body",
-            "breakpoints": true
-        },
-        {
-            "idx": 37,
-            "version": "7",
-            "when": 1786788328611,
-            "tag": "0037_lyrical_madelyne_pryor",
-            "breakpoints": true
-        },
-        {
-            "idx": 38,
-            "version": "7",
-            "when": 1786792119035,
-            "tag": "0038_document_folder_id",
-            "breakpoints": true
-        },
-        {
-            "idx": 39,
-            "version": "7",
-            "when": 1786819496501,
-            "tag": "0039_approver_groups",
-            "breakpoints": true
-        },
-        {
-            "idx": 40,
-            "version": "7",
-            "when": 1786824011634,
-            "tag": "0040_contract_approvals",
-            "breakpoints": true
-        },
-        {
-            "idx": 41,
-            "version": "7",
-            "when": 1786852805859,
-            "tag": "0041_approval_enum_checks",
-            "breakpoints": true
-        },
-        {
-            "idx": 42,
-            "version": "7",
-            "when": 1786859988192,
-            "tag": "0042_signing_connectors",
-            "breakpoints": true
-        },
-        {
-            "idx": 43,
-            "version": "7",
-            "when": 1786863752148,
-            "tag": "0043_contract_envelopes",
-            "breakpoints": true
-        },
-        {
-            "idx": 44,
-            "version": "7",
-            "when": 1786873050250,
-            "tag": "0044_envelope_executed_version",
-            "breakpoints": true
-        },
-        {
-            "idx": 45,
-            "version": "7",
-            "when": 1786889159672,
-            "tag": "0045_signing_connector_disabled_at",
-            "breakpoints": true
-        },
-        {
-            "idx": 46,
-            "version": "7",
-            "when": 1786912509479,
-            "tag": "0046_contract_term",
-            "breakpoints": true
-        },
-        {
-            "idx": 47,
-            "version": "7",
-            "when": 1786918236654,
-            "tag": "0047_contract_key_dates",
-            "breakpoints": true
-        },
-        {
-            "idx": 48,
-            "version": "7",
-            "when": 1786928484229,
-            "tag": "0048_contract_relations",
-            "breakpoints": true
-        },
-        {
-            "idx": 49,
-            "version": "7",
-            "when": 1787130000000,
-            "tag": "0049_contract_tasks",
-            "breakpoints": true
-        }
-    ]
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1786264125825,
+      "tag": "0000_auth",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786296856518,
+      "tag": "0001_onboarding",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786308506881,
+      "tag": "0002_theme",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1786394362045,
+      "tag": "0003_smtp",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1786397299991,
+      "tag": "0004_activity_log",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1786397314294,
+      "tag": "0005_org_general",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786422732354,
+      "tag": "0006_last_active",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1786433704100,
+      "tag": "0007_timezone",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1786470787772,
+      "tag": "0008_contract_types",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1786477894274,
+      "tag": "0009_contract_statuses",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1786481436354,
+      "tag": "0010_fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1786482049932,
+      "tag": "0011_type_editor",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1786483851677,
+      "tag": "0012_matter_types",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1786530235592,
+      "tag": "0013_type_field_field_id_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1786547744811,
+      "tag": "0014_entity_types",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1786550781239,
+      "tag": "0015_entities",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1786566014456,
+      "tag": "0016_contracts",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1786569621470,
+      "tag": "0017_contract_team",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1786572699619,
+      "tag": "0018_contract_signing_entity",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1786575433642,
+      "tag": "0019_counterparties",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1786578598089,
+      "tag": "0020_contract_value",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1786580681348,
+      "tag": "0021_contract_value_bound",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1786581450911,
+      "tag": "0022_contract_custom_fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1786617355311,
+      "tag": "0023_comments",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1786621211673,
+      "tag": "0024_comment_mentions",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1786626379156,
+      "tag": "0025_comment_revisions",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1786629029580,
+      "tag": "0026_comment_last_read",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1786640218702,
+      "tag": "0027_audit_log_created_at_idx",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1786650506463,
+      "tag": "0028_contract_confidential",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1786691613158,
+      "tag": "0029_documents",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1786693131336,
+      "tag": "0030_document_description",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1786697971001,
+      "tag": "0031_documents_designations",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1786700413069,
+      "tag": "0032_document_archive",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1786703174841,
+      "tag": "0033_document_confidential",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1786740142507,
+      "tag": "0034_document_version_text",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1786743755409,
+      "tag": "0035_document_version_rendition",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1786747156387,
+      "tag": "0036_document_version_email_body",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1786788328611,
+      "tag": "0037_lyrical_madelyne_pryor",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1786792119035,
+      "tag": "0038_document_folder_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1786819496501,
+      "tag": "0039_approver_groups",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1786824011634,
+      "tag": "0040_contract_approvals",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1786852805859,
+      "tag": "0041_approval_enum_checks",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1786859988192,
+      "tag": "0042_signing_connectors",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1786863752148,
+      "tag": "0043_contract_envelopes",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1786873050250,
+      "tag": "0044_envelope_executed_version",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1786889159672,
+      "tag": "0045_signing_connector_disabled_at",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1786912509479,
+      "tag": "0046_contract_term",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1786918236654,
+      "tag": "0047_contract_key_dates",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1786928484229,
+      "tag": "0048_contract_relations",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1787130000000,
+      "tag": "0049_contract_tasks",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1786964473410,
+      "tag": "0050_contract_ended_at",
+      "breakpoints": true
+    }
+  ]
 }

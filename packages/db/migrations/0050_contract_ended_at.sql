@@ -1,0 +1,1 @@
+ALTER TABLE "contracts" ADD COLUMN "ended_at" timestamp with time zone;
