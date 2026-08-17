@@ -1733,6 +1733,35 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         );
         assertRequiredCustomFields(attached, customFields);
 
+        // CTR-007's prefill, and the whole of it: the business facts
+        // of the deal, copied so routing a renewal is not re-keying
+        // a contract. The type and the title are the body's, below,
+        // because those are the two the create dialog draws and the
+        // person may have edited either before pressing.
+        //
+        // What is deliberately absent is the point of the list. The
+        // status is the draft seed for every contract born here, the
+        // Owner is unassigned, the team is the creator's row alone,
+        // and the Confidential flag is the body's — CTR-015's
+        // no-inheritance stance, applied at birth. Priority and risk
+        // are absent for the same reason: they are assessments of a
+        // record, and a new record has not been assessed.
+        const copied = predecessor ? businessFactsOf(predecessor.row) : null;
+        // Our entity is copied live or not at all, the counterparties'
+        // rule (below) applied to our own side: the field write refuses
+        // an archived signatory, so nothing new gets signed by an
+        // entity that has left the registry — and a copy that carried
+        // one onto a *new* record would be the way around that rule.
+        // The predecessor keeps what signed it either way (CTR-011).
+        if (copied?.entityId) {
+          const [signatory] = await tx
+            .select({ archivedAt: entities.archivedAt })
+            .from(entities)
+            .where(eq(entities.id, copied.entityId))
+            .limit(1);
+          if (!signatory || signatory.archivedAt !== null) copied.entityId = null;
+        }
+
         const isConfidential = request.body.isConfidential ?? false;
         const [row] = await tx
           .insert(contracts)
@@ -1742,20 +1771,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             statusId: draft.id,
             customFields,
             isConfidential,
-            // CTR-007's prefill, and the whole of it: the business facts
-            // of the deal, copied so routing a renewal is not re-keying
-            // a contract. The type and the title are the body's, above,
-            // because those are the two the create dialog draws and the
-            // person may have edited either before pressing.
-            //
-            // What is deliberately absent is the point of the list. The
-            // status is the draft seed for every contract born here, the
-            // Owner is unassigned, the team is the creator's row alone,
-            // and the Confidential flag is the body's — CTR-015's
-            // no-inheritance stance, applied at birth. Priority and risk
-            // are absent for the same reason: they are assessments of a
-            // record, and a new record has not been assessed.
-            ...(predecessor ? businessFactsOf(predecessor.row) : {}),
+            ...(copied ?? {}),
           })
           .returning();
         // Provenance, written once and never again (CTR-004): who made

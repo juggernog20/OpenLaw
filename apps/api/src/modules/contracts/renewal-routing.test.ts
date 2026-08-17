@@ -44,6 +44,7 @@ import {
   contracts,
   contractTeam,
   counterparties,
+  entities,
   eq,
   sql,
   users,
@@ -520,6 +521,34 @@ describe("the prefill (CTR-007, CTR-015's no-inheritance stance)", () => {
       cookies: memberCookies,
     });
     expect((after.json().counterparties as unknown[]).length).toBe(2);
+  });
+
+  it("leaves an archived entity behind: our side is copied live or not at all", async () => {
+    const original = await predecessor("Routing archived entity");
+    await harness.db
+      .update(entities)
+      .set({ archivedAt: new Date() })
+      .where(eq(entities.id, original.entity!.id));
+
+    const born = await create({
+      title: "Routing archived entity — successor",
+      contractTypeId: msaTypeId,
+      renewalOf: { number: original.number, vehicle: "successor" },
+    });
+
+    // The field write refuses an archived signatory (CTR-011), so a
+    // copy that carried one onto a new record would be the way around
+    // that rule — the archived-counterparty stance, applied to our own
+    // side of the deal.
+    expect(born.entity).toBeNull();
+    // The rest of the facts still came across: one dead reference does
+    // not turn off the copy.
+    expect(born.value).toEqual(original.value);
+    expect(born.expiryDate).toBe("2026-06-30");
+
+    // The predecessor keeps what signed it: archiving an entity never
+    // edits a contract it was on (CTR-011).
+    expect((await read(original.number)).entity?.id).toBe(original.entity!.id);
   });
 
   it("routes from a predecessor holding none of the facts without inventing any", async () => {
