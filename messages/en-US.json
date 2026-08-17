@@ -95,6 +95,9 @@
   "activity.contract.primaryChanged": {
     "defaultMessage": "{actor} changed which counterparty the contract is listed under"
   },
+  "activity.contract.renewalConfirmed": {
+    "defaultMessage": "{actor} confirmed the renewal — the term moved from {from} to {to}"
+  },
   "activity.contract.restored": {
     "defaultMessage": "{actor} restored this contract"
   },
@@ -1031,6 +1034,9 @@
   "contracts.form.fieldMissing": {
     "defaultMessage": "Fill {field} — this contract type requires it."
   },
+  "contracts.form.lastRenewal": {
+    "defaultMessage": "Last renewal"
+  },
   "contracts.form.noticePeriod": {
     "defaultMessage": "Notice period (days)"
   },
@@ -1144,6 +1150,15 @@
   },
   "contracts.reference": {
     "defaultMessage": "C-{number}"
+  },
+  "contracts.renewal.banner": {
+    "defaultMessage": "Renewal date passed — pending confirmation. The term does not advance until a human confirms."
+  },
+  "contracts.renewal.bannerRegion": {
+    "defaultMessage": "Renewal pending confirmation"
+  },
+  "contracts.renewal.review": {
+    "defaultMessage": "Review renewal"
   },
   "contracts.restoreError": {
     "defaultMessage": "{reference} could not be restored."
@@ -2056,6 +2071,57 @@
   },
   "nav.home": {
     "defaultMessage": "Home"
+  },
+  "renewal.block": {
+    "defaultMessage": "Renewals"
+  },
+  "renewal.column.confirmed": {
+    "defaultMessage": "Confirmed"
+  },
+  "renewal.column.confirmedBy": {
+    "defaultMessage": "Confirmed by"
+  },
+  "renewal.column.renewal": {
+    "defaultMessage": "Renewal"
+  },
+  "renewal.confirm": {
+    "defaultMessage": "Confirm renewal"
+  },
+  "renewal.confirmFailed": {
+    "defaultMessage": "The renewal could not be confirmed. Try again."
+  },
+  "renewal.currentExpiry": {
+    "defaultMessage": "The term currently runs to {date}."
+  },
+  "renewal.field.expiry": {
+    "defaultMessage": "New expiry date"
+  },
+  "renewal.intro": {
+    "defaultMessage": "{reference} auto-renews in {months, plural, one {#-month} other {#-month}} periods. Confirming the roll advances this record's own expiry date."
+  },
+  "renewal.introNoPeriod": {
+    "defaultMessage": "{reference} auto-renews, and records no renewal period. Confirming the roll advances this record's own expiry date to the date you enter."
+  },
+  "renewal.mustAdvance": {
+    "defaultMessage": "A roll moves the term forward. Pick a date after the current expiry."
+  },
+  "renewal.needExpiry": {
+    "defaultMessage": "Pick the date the term now runs to."
+  },
+  "renewal.recordedNote": {
+    "defaultMessage": "Recorded on the record's activity. The contract's status and stage do not change."
+  },
+  "renewal.renew": {
+    "defaultMessage": "Renew"
+  },
+  "renewal.row.advancedFrom": {
+    "defaultMessage": "From {date}"
+  },
+  "renewal.row.advancedTo": {
+    "defaultMessage": "Term advanced to {date}"
+  },
+  "renewal.title": {
+    "defaultMessage": "Confirm renewal"
   },
   "role.administrator": {
     "defaultMessage": "Administrator"

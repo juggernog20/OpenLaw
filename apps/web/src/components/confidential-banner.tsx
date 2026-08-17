@@ -46,7 +46,7 @@ export function ConfidentialBanner({
         id: "contracts.confidential.bannerRegion",
         defaultMessage: "Confidential contract",
       })}
-      className="flex h-(--height-confidential-banner) shrink-0 items-center justify-between gap-4 border-b border-border-default bg-confidential-bg px-page-x text-confidential"
+      className="flex h-(--height-record-banner) shrink-0 items-center justify-between gap-4 border-b border-border-default bg-confidential-bg px-page-x text-confidential"
     >
       <p className="flex min-w-0 items-center gap-2">
         <Lock size={LOCK_SIZE} aria-hidden="true" className="shrink-0" />

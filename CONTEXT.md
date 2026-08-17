@@ -156,6 +156,14 @@ _Avoid_: renewal type, contract term (that is the period, not its kind), auto-re
 The date by which somebody must act to stop a Contract renewing: its expiry date minus its notice period. It is **derived and never stored** — it moves the moment either half does — and it exists only where there is an expiry to subtract from, so an evergreen Contract has none [CTR-006].
 _Avoid_: notice date, notice period (that is the count of days this is derived from), cancellation deadline
 
+**Renewal pending confirmation**:
+What an auto-renewing Contract says about itself once its expiry date has passed and nobody has confirmed the roll. It is **derived, never stored** — a reading of the record's own dates, true whenever the Contract auto-renews, is not archived, and its expiry is behind us — so it appears without a job running and clears the moment the expiry advances. It is a banner and never a status: the Contract's status and stage are untouched by it [CTR-006].
+_Avoid_: pending renewal status, lapsed, overdue renewal, expired (a fixed term that ran out has simply ended)
+
+**Confirmed roll**:
+A person's assertion that an auto-renewing Contract renewed on the same paper, which advances its expiry date — the first of CTR-007's four renewal vehicles. Nothing in OpenLaw ever rolls a term on its own: a roll happens because somebody confirmed it, and the person may adjust the proposed new expiry before committing. Nothing stores a confirmed roll either — the activity entry it writes is the whole record of it, and both the Contract's renewal history and its last renewal date are that entry read back [CTR-006, CTR-007].
+_Avoid_: auto-renewal (nothing is automatic), rollover, renewal event, extension
+
 **Key date**:
 A named deadline on a Matter or Contract — a date, a label, and an optional note. Key dates feed deadline surfaces. A key date carries no owner and no reminder schedule of its own [MTR-004, CTR-009, NOT-004].
 _Avoid_: milestone, custom date, important date

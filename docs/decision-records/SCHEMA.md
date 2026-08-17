@@ -546,7 +546,8 @@ Term shape per **CTR-006**. The five columns landed in M16/1, migration `0046_co
 
 - **Constraints.** Five checks, so no write path can get past them. `term_type` is one of the three kinds. An `evergreen` contract holds no `expiry_date`. Only an `auto_renew` contract holds a `renewal_period_months`. A roll is at least one month. A notice period is at least zero days.
 - **Backfill.** Existing rows took `fixed`. That is an assertion about them, not a discovery: `fixed` is the least-asserting of the three kinds. Re-type an evergreen contract by editing it.
-- **Derived.** Two dates the record answers sit in no column: the notice deadline above, and days remaining (`expiry_date − today`). Both are computed where the answer is assembled. Days remaining goes negative once the expiry has passed.
+- **Derived.** Four answers the record gives sit in no column, and all four are computed where the answer is assembled. The notice deadline above; days remaining (`expiry_date − today`), which goes negative once the expiry has passed; **renewal pending confirmation** (M16/4) — true when the contract is `auto_renew`, is not archived, and its `expiry_date` is behind today; and the **proposed roll expiry**, `expiry_date` plus `renewal_period_months`, clamped at the target month's last day — null whenever the contract cannot roll, which is any term that is not `auto_renew` and any `auto_renew` term missing either `expiry_date` or `renewal_period_months`. None of the four needs a job, a sweep, or a clock.
+- **A renewal is not a row.** Confirming a roll (**CTR-007**) moves `expiry_date` and appends one `contract.renewal_confirmed` entry to `activity_log`; nothing else records it. The record's renewal history and its "Last renewal" fact are those entries read back. No renewal table exists, and none is planned.
 
 ---
 

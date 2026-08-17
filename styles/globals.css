@@ -167,7 +167,12 @@
   --width-activitybar-indicator: 3px; /* active-applet strip on the bar's leading edge (DES-016, #47) */
   --width-panel: 320px; /* expanded applet panel per DES-016 */
   --width-docpanel: 720px; /* doc panel — DES-016's wider sibling layer (M12/2) */
-  --height-confidential-banner: 36px; /* per DES-009 */
+  /* The record-page banner strip between the nav and the sub-bar. One
+     token for every banner that sits in it — DES-009's confidentiality
+     strip and DES-043's renewal-pending strip — because two banners of
+     one strip must not be able to disagree about how tall it is, and
+     because both are drawn 36px in the C8 and C9 mocks. */
+  --height-record-banner: 36px; /* per DES-009, DES-043 */
   --height-section-header: 38px; /* settings-card header strip (ST1/ST4 mocks) */
   --width-settings-card: 45rem; /* settings-card max width (ST1/ST4 mocks) */
 

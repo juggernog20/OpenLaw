@@ -7278,6 +7278,21 @@
                               }
                             ]
                           },
+                          "renewalPendingConfirmation": {
+                            "type": "boolean"
+                          },
+                          "proposedRenewalExpiry": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "description": {
                             "anyOf": [
                               {
@@ -7361,6 +7376,8 @@
                           "noticePeriodDays",
                           "noticeDeadline",
                           "daysRemaining",
+                          "renewalPendingConfirmation",
+                          "proposedRenewalExpiry",
                           "description",
                           "customFields",
                           "isConfidential",
@@ -7689,6 +7706,21 @@
                             }
                           ]
                         },
+                        "renewalPendingConfirmation": {
+                          "type": "boolean"
+                        },
+                        "proposedRenewalExpiry": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "description": {
                           "anyOf": [
                             {
@@ -7772,6 +7804,8 @@
                         "noticePeriodDays",
                         "noticeDeadline",
                         "daysRemaining",
+                        "renewalPendingConfirmation",
+                        "proposedRenewalExpiry",
                         "description",
                         "customFields",
                         "isConfidential",
@@ -8254,6 +8288,21 @@
                             }
                           ]
                         },
+                        "renewalPendingConfirmation": {
+                          "type": "boolean"
+                        },
+                        "proposedRenewalExpiry": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "description": {
                           "anyOf": [
                             {
@@ -8337,6 +8386,8 @@
                         "noticePeriodDays",
                         "noticeDeadline",
                         "daysRemaining",
+                        "renewalPendingConfirmation",
+                        "proposedRenewalExpiry",
                         "description",
                         "customFields",
                         "isConfidential",
@@ -8532,9 +8583,77 @@
                         "required": ["id", "name", "jurisdiction", "isPrimary"],
                         "additionalProperties": false
                       }
+                    },
+                    "renewals": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "from": {
+                            "type": "string",
+                            "format": "date",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                          },
+                          "to": {
+                            "type": "string",
+                            "format": "date",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                          },
+                          "confirmedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                          },
+                          "confirmedBy": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "displayName": {
+                                    "type": "string"
+                                  },
+                                  "image": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "archived": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": ["id", "displayName", "image", "archived"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": ["id", "from", "to", "confirmedAt", "confirmedBy"],
+                        "additionalProperties": false
+                      }
                     }
                   },
-                  "required": ["contract", "fields", "customFieldRefs", "team", "counterparties"],
+                  "required": [
+                    "contract",
+                    "fields",
+                    "customFieldRefs",
+                    "team",
+                    "counterparties",
+                    "renewals"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -8982,6 +9101,21 @@
                             }
                           ]
                         },
+                        "renewalPendingConfirmation": {
+                          "type": "boolean"
+                        },
+                        "proposedRenewalExpiry": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "description": {
                           "anyOf": [
                             {
@@ -9065,6 +9199,8 @@
                         "noticePeriodDays",
                         "noticeDeadline",
                         "daysRemaining",
+                        "renewalPendingConfirmation",
+                        "proposedRenewalExpiry",
                         "description",
                         "customFields",
                         "isConfidential",
@@ -9306,6 +9442,515 @@
                   "required": ["type", "title", "status"],
                   "additionalProperties": false,
                   "description": "The status change crosses CTR-012's approval gate with approvals still unresolved. Re-send with `overrideSoftGate` to record it as an override."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contracts/{number}/renewal": {
+      "post": {
+        "operationId": "confirmContractRenewal",
+        "summary": "Confirm the roll (CTR-007's first renewal vehicle): the same record's term advances, on the say-so of a person. CTR-006's engine is notify-only and never advances a date on its own, so a contract that passed its expiry un-actioned reads as 'renewal pending confirmation' — a predicate over its dates, not a status — and waits for this. The request carries the expiry it was raised against and the expiry to advance to; the record proposes the second as the first plus the renewal period, and the caller may send a different date, because a roll whose dates shifted in negotiation is recorded as it really landed. The comparison is made under the contract's row lock, so two confirms racing for one roll advance the term exactly once and the loser is refused 409 by name rather than rolling it again. Only an auto-renewing contract with an expiry rolls, and a roll must move the term forward. The status and the stage are untouched: this moves one date. Appends one contract.renewal_confirmed entry at the working-team tier (DD-017) — the only record a renewal leaves, and what the record's renewal history reads back. Answers the record and its whole history. Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract rolls nothing until it is restored",
+        "tags": ["contracts"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fromExpiry": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "toExpiry": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  }
+                },
+                "required": ["fromExpiry", "toExpiry"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "number",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "contract": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "number": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "contractTypeId": {
+                          "type": "string"
+                        },
+                        "contractTypeName": {
+                          "type": "string"
+                        },
+                        "statusId": {
+                          "type": "string"
+                        },
+                        "statusName": {
+                          "type": "string"
+                        },
+                        "stage": {
+                          "type": "string",
+                          "enum": ["draft", "review", "approval", "signature", "active", "ended"]
+                        },
+                        "manager": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "archived": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": ["id", "displayName", "image", "archived"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "entity": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "legalName": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["id", "legalName"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "primaryCounterparty": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["id", "name"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "priority": {
+                          "type": "string",
+                          "enum": ["low", "medium", "high", "critical"]
+                        },
+                        "risk": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["low", "medium", "high", "critical"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "value": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "amount": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "currency": {
+                                  "type": "string"
+                                },
+                                "cadence": {
+                                  "type": "string",
+                                  "enum": ["one_time", "monthly", "annually"]
+                                }
+                              },
+                              "required": ["amount", "currency", "cadence"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "termType": {
+                          "type": "string",
+                          "enum": ["fixed", "auto_renew", "evergreen"]
+                        },
+                        "effectiveDate": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "expiryDate": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "renewalPeriodMonths": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "noticePeriodDays": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "noticeDeadline": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "daysRemaining": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "renewalPendingConfirmation": {
+                          "type": "boolean"
+                        },
+                        "proposedRenewalExpiry": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "customFields": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "isConfidential": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "number",
+                        "title",
+                        "contractTypeId",
+                        "contractTypeName",
+                        "statusId",
+                        "statusName",
+                        "stage",
+                        "manager",
+                        "entity",
+                        "primaryCounterparty",
+                        "priority",
+                        "risk",
+                        "value",
+                        "termType",
+                        "effectiveDate",
+                        "expiryDate",
+                        "renewalPeriodMonths",
+                        "noticePeriodDays",
+                        "noticeDeadline",
+                        "daysRemaining",
+                        "renewalPendingConfirmation",
+                        "proposedRenewalExpiry",
+                        "description",
+                        "customFields",
+                        "isConfidential",
+                        "archivedAt",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "renewals": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "from": {
+                            "type": "string",
+                            "format": "date",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                          },
+                          "to": {
+                            "type": "string",
+                            "format": "date",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                          },
+                          "confirmedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                          },
+                          "confirmedBy": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "displayName": {
+                                    "type": "string"
+                                  },
+                                  "image": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "archived": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": ["id", "displayName", "image", "archived"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": ["id", "from", "to", "confirmedAt", "confirmedBy"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["contract", "renewals"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The named type says this contract's expiry is no longer the one the roll was raised against (CTR-006) — read the record again and confirm against the expiry it now holds, which is the one refusal here a client acts on rather than prints. An unnamed 409 is an archived record or one that records no expiry to roll; print it.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": ["urn:openlaw:problem:renewal-expiry-moved", "about:blank"],
+                      "description": "Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it."
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["path", "message"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["type", "title", "status"],
+                  "additionalProperties": false,
+                  "description": "The named type says this contract's expiry is no longer the one the roll was raised against (CTR-006) — read the record again and confirm against the expiry it now holds, which is the one refusal here a client acts on rather than prints. An unnamed 409 is an archived record or one that records no expiry to roll; print it."
                 }
               }
             }
@@ -9783,6 +10428,21 @@
                             }
                           ]
                         },
+                        "renewalPendingConfirmation": {
+                          "type": "boolean"
+                        },
+                        "proposedRenewalExpiry": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "description": {
                           "anyOf": [
                             {
@@ -9866,6 +10526,8 @@
                         "noticePeriodDays",
                         "noticeDeadline",
                         "daysRemaining",
+                        "renewalPendingConfirmation",
+                        "proposedRenewalExpiry",
                         "description",
                         "customFields",
                         "isConfidential",
@@ -10177,6 +10839,21 @@
                             }
                           ]
                         },
+                        "renewalPendingConfirmation": {
+                          "type": "boolean"
+                        },
+                        "proposedRenewalExpiry": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "description": {
                           "anyOf": [
                             {
@@ -10260,6 +10937,8 @@
                         "noticePeriodDays",
                         "noticeDeadline",
                         "daysRemaining",
+                        "renewalPendingConfirmation",
+                        "proposedRenewalExpiry",
                         "description",
                         "customFields",
                         "isConfidential",
@@ -10571,6 +11250,21 @@
                             }
                           ]
                         },
+                        "renewalPendingConfirmation": {
+                          "type": "boolean"
+                        },
+                        "proposedRenewalExpiry": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "description": {
                           "anyOf": [
                             {
@@ -10654,6 +11348,8 @@
                         "noticePeriodDays",
                         "noticeDeadline",
                         "daysRemaining",
+                        "renewalPendingConfirmation",
+                        "proposedRenewalExpiry",
                         "description",
                         "customFields",
                         "isConfidential",
@@ -10957,6 +11653,21 @@
                             }
                           ]
                         },
+                        "renewalPendingConfirmation": {
+                          "type": "boolean"
+                        },
+                        "proposedRenewalExpiry": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "description": {
                           "anyOf": [
                             {
@@ -11040,6 +11751,8 @@
                         "noticePeriodDays",
                         "noticeDeadline",
                         "daysRemaining",
+                        "renewalPendingConfirmation",
+                        "proposedRenewalExpiry",
                         "description",
                         "customFields",
                         "isConfidential",
@@ -11314,6 +12027,21 @@
                             }
                           ]
                         },
+                        "renewalPendingConfirmation": {
+                          "type": "boolean"
+                        },
+                        "proposedRenewalExpiry": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "description": {
                           "anyOf": [
                             {
@@ -11397,6 +12125,8 @@
                         "noticePeriodDays",
                         "noticeDeadline",
                         "daysRemaining",
+                        "renewalPendingConfirmation",
+                        "proposedRenewalExpiry",
                         "description",
                         "customFields",
                         "isConfidential",

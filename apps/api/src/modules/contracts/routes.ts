@@ -62,12 +62,25 @@
  * with their own problem types, and a type change clears what the new
  * type cannot hold, each clear narrated as the edit it is.
  *
- * Two dates ride out of every answer that nothing stores: the notice
- * deadline (expiry minus the notice period) and the days remaining
- * (expiry minus today). They are computed where the answer is
- * assembled, so no surface can disagree with another about a date none
- * of them holds, and neither needs a job, a sweep, or a clock — both
- * are functions of one column and the calendar.
+ * Four answers ride out of every read that nothing stores: the notice
+ * deadline (expiry minus the notice period), the days remaining (expiry
+ * minus today), whether a roll is pending confirmation, and where a
+ * confirmed roll would take the expiry. They are computed where the
+ * answer is assembled, so no surface can disagree with another about a
+ * fact none of them holds, and none needs a job, a sweep, or a clock —
+ * all four are functions of the term columns and the calendar.
+ *
+ * The roll itself is CTR-007's first renewal vehicle (M16/4), and it is
+ * the one act on this record that CTR-006's notify-only engine waits
+ * for. Nothing here advances a date on its own; a person confirms, and
+ * `expiry_date` moves under the row's lock. The request carries the
+ * expiry it was raised against, so two confirms racing for one roll
+ * advance the term exactly once and the loser is told the record moved.
+ * The status and the stage are untouched — the pending state is a
+ * reading of the dates, not a transition — and the roll writes its own
+ * activity action, which is the **only** record a renewal leaves: the
+ * record's renewal history and its "Last renewal" fact are that log read
+ * back (grill row G.R5).
  *
  * The custom fields are CTR-016's, and they are the M6 catalog finally
  * doing work. The contract's type attaches fields through
@@ -119,6 +132,7 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
+  activityLog,
   and,
   approverGroupMembers,
   approverGroups,
@@ -159,7 +173,12 @@ import {
   NO_CONTRACT,
   reachesLockedContract,
 } from "../../lib/contract-access.js";
-import { daysRemaining, noticeDeadline } from "../../lib/contract-term.js";
+import {
+  daysRemaining,
+  noticeDeadline,
+  proposedRollExpiry,
+  renewalPending,
+} from "../../lib/contract-term.js";
 import {
   AttachedCustomFieldSchema,
   assertRequiredCustomFields,
@@ -170,9 +189,11 @@ import {
   type AttachedCustomField,
 } from "../../lib/custom-fields.js";
 import {
+  RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE,
   SOFT_GATE_PROBLEM_TYPE,
   TERM_EXPIRY_ON_EVERGREEN_PROBLEM_TYPE,
   TERM_RENEWAL_PERIOD_PROBLEM_TYPE,
+  type ActivityPayloadMap,
 } from "@openlaw/shared";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import { assertApprovalGate, type UnresolvedApproval } from "../../lib/soft-gate.js";
@@ -376,6 +397,34 @@ const ContractRowSchema = z.object({
    * contract.
    */
   daysRemaining: z.int().nullable(),
+  /**
+   * CTR-006's "renewal pending confirmation": this contract auto-renews,
+   * is not archived, and its expiry has gone by with nobody confirming
+   * the roll.
+   *
+   * **A predicate, not a status.** No column holds it and no job sets
+   * it — it is true because the record's own dates say so, and false
+   * again the moment the expiry advances or the term is re-typed. That
+   * is CTR-006's notify-only engine in one boolean: nothing here
+   * advances a date, so the record says the date passed and waits for a
+   * person. The status and the stage are untouched by it.
+   */
+  renewalPendingConfirmation: z.boolean(),
+  /**
+   * Where a confirmed roll would take the expiry: the current expiry
+   * plus the renewal period, **derived at read and never stored**. NULL
+   * whenever the record cannot roll — a term that does not auto-renew,
+   * an expiry nobody recorded, or a renewal period nobody recorded.
+   *
+   * It is a proposal and never a commitment: the person confirming may
+   * enter a different date, because a roll whose dates shifted in
+   * negotiation is recorded as it really landed (CTR-007). It is
+   * answered here rather than computed by the surface for DES-040 clause
+   * 4's reason — one date two places could disagree about is one place's
+   * to own, and the month arithmetic a roll needs is not something a
+   * dialog should keep a second copy of.
+   */
+  proposedRenewalExpiry: z.iso.date().nullable(),
   description: z.string().nullable(),
   /** CTR-016's custom fields, keyed by the catalog field's slug. Which
    * of these the record draws is the type's attachment join to say, not
@@ -396,6 +445,37 @@ const ContractRowSchema = z.object({
 });
 
 const ContractEnvelope = z.object({ contract: ContractRowSchema });
+
+/**
+ * One confirmed roll, as the record reads its own renewal history back
+ * out of the activity log (CTR-006, CTR-007, grill row G.R5).
+ *
+ * **Nothing stores a renewal.** The roll moves one column and appends
+ * one `contract.renewal_confirmed` entry, and that entry is the whole
+ * record of it — so the confirmed-renewal rows on the record's card and
+ * the "Last renewal" fact among its facts are both this, read back. A
+ * renewal table would be a second copy of a history the log already
+ * keeps append-only.
+ *
+ * `from` and `to` are the expiry either side of the roll. Both, because
+ * a roll the person adjusted committed what they entered rather than
+ * the proposal, and the row has to say what the term actually moved
+ * from rather than leave a reader to recompute it.
+ */
+const ConfirmedRenewalSchema = z.object({
+  /** The activity entry's own id — the row's key, and nothing else
+   * addresses it: a confirmed roll is a fact, not a thing to edit. */
+  id: z.string(),
+  /** The expiry the term ran to before the roll. */
+  from: z.iso.date(),
+  /** The expiry it advanced to. */
+  to: z.iso.date(),
+  confirmedAt: z.iso.datetime(),
+  /** Who confirmed it. NULL only where the log holds no actor, which is
+   * a system entry — no path in this build writes one, and the row
+   * still reads rather than disappearing. */
+  confirmedBy: PersonSchema.nullable(),
+});
 
 /**
  * The people and Entities the stored custom-field values name (CTR-016's
@@ -428,6 +508,18 @@ const ContractFieldsEnvelope = ContractEnvelope.extend({
 const ContractRecordEnvelope = ContractFieldsEnvelope.extend({
   team: z.array(TeamMemberSchema),
   counterparties: z.array(CounterpartySchema),
+  /** Every confirmed roll on this record, most recent first (G.R5). It
+   * rides the record read for the team's reason — only the record draws
+   * a renewal history — and most-recent-first so the "Last renewal"
+   * fact is the first row rather than a scan for a maximum. */
+  renewals: z.array(ConfirmedRenewalSchema),
+});
+
+/** What the confirmed roll answers with: the record, because the roll
+ * moved its expiry and cleared its pending state, and the whole history,
+ * because the roll just added to it. */
+const ContractRenewalsEnvelope = ContractEnvelope.extend({
+  renewals: z.array(ConfirmedRenewalSchema),
 });
 const TeamEnvelope = z.object({ team: z.array(TeamMemberSchema) });
 /** What every counterparty write answers with. The contract rides along
@@ -616,6 +708,12 @@ function toRow(context: ContractContext) {
     // none of them stores.
     noticeDeadline: noticeDeadline(row.expiryDate, row.noticePeriodDays),
     daysRemaining: daysRemaining(row.expiryDate),
+    // The pending state and the roll's proposal, from the same module
+    // and for the same reason: neither is a column, neither needs a job,
+    // and a surface that computed either of them itself would be the
+    // copy that drifts.
+    renewalPendingConfirmation: renewalPending(row),
+    proposedRenewalExpiry: proposedRollExpiry(row),
     description: row.description,
     customFields: row.customFields,
     isConfidential: row.isConfidential,
@@ -741,6 +839,72 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       .innerJoin(counterparties, eq(contractCounterparties.counterpartyId, counterparties.id))
       .where(eq(contractCounterparties.contractId, contractId))
       .orderBy(desc(contractCounterparties.isPrimary), asc(sql`lower(${counterparties.name})`));
+
+  /**
+   * One contract's renewal history, read straight out of the activity
+   * log (CTR-006, CTR-007, grill row G.R5).
+   *
+   * **This is the only state a confirmed roll leaves behind.** The roll
+   * advances one column and appends one entry, so the entries *are* the
+   * history — the confirmed-renewal rows on the record's card and the
+   * "Last renewal" fact among its facts both read this. A renewal table
+   * would be a second copy of a history the log already keeps
+   * append-only, and it would need its own erasure and audit rules to
+   * say the same thing twice.
+   *
+   * Most recent first, so the last renewal is the first row: the fact
+   * the record draws is then a read of `[0]` rather than a scan for a
+   * maximum, and the card draws a history newest-first, which is the
+   * order somebody asking "when did we last renew this" reads in.
+   *
+   * The actor is joined out for the same reason the roster joins its
+   * approvers: a row that named an id would make the surface look one
+   * up. An entry with no actor still reads — nothing in this build
+   * writes one, and a row that vanished because a column was null would
+   * lose a roll the record made.
+   */
+  const selectRenewals = async (db: Executor, contractId: string) => {
+    const rows = await db
+      .select({
+        id: activityLog.id,
+        payload: activityLog.payload,
+        createdAt: activityLog.createdAt,
+        actor: {
+          id: users.id,
+          displayName: users.displayName,
+          image: users.image,
+          archivedAt: users.archivedAt,
+        },
+      })
+      .from(activityLog)
+      .leftJoin(users, eq(activityLog.actorId, users.id))
+      .where(
+        and(
+          eq(activityLog.entityType, "contract"),
+          eq(activityLog.entityId, contractId),
+          eq(activityLog.action, "contract.renewal_confirmed"),
+        ),
+      )
+      // Newest first, tie-broken on the id: uuidv7 is time-ordered, so
+      // two rolls committed in one millisecond still read in the order
+      // they were written.
+      .orderBy(desc(activityLog.createdAt), desc(activityLog.id));
+    return rows.map((row) => {
+      // Read through the shared vocabulary rather than an inline shape,
+      // so a change to what the roll writes fails to compile here
+      // instead of quietly answering undefined. The column is jsonb and
+      // the log is append-only, so the cast is unavoidable; naming the
+      // vocabulary entry is what makes it check anything at all.
+      const payload = row.payload as ActivityPayloadMap["contract.renewal_confirmed"];
+      return {
+        id: row.id,
+        from: payload.from,
+        to: payload.to,
+        confirmedAt: row.createdAt.toISOString(),
+        confirmedBy: toPersonOrNull(row.actor),
+      };
+    });
+  };
 
   /** The row's `primaryCounterparty` derived from the party list a write
    * path just produced — the same answer the list query's flag-keyed
@@ -1378,12 +1542,13 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         .where(and(eq(contracts.number, request.params.number), teamScope(request.user)))
         .limit(1);
       if (!row) throw httpError(404, NO_CONTRACT);
-      const [team, parties, custom] = await Promise.all([
+      const [team, parties, custom, renewals] = await Promise.all([
         selectTeam(app.db, row.row.id),
         selectCounterparties(app.db, row.row.id),
         customFieldsEnvelope(app.db, row),
+        selectRenewals(app.db, row.row.id),
       ]);
-      return { contract: toRow(row), ...custom, team, counterparties: parties };
+      return { contract: toRow(row), ...custom, team, counterparties: parties, renewals };
     },
   );
 
@@ -2087,6 +2252,143 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         fields: attached,
         customFieldRefs: await customFieldRefs(app.db, attached, context.row.customFields),
       };
+    },
+  );
+
+  app.post(
+    "/contracts/:number/renewal",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "confirmContractRenewal",
+        summary:
+          "Confirm the roll (CTR-007's first renewal vehicle): the same " +
+          "record's term advances, on the say-so of a person. CTR-006's " +
+          "engine is notify-only and never advances a date on its own, " +
+          "so a contract that passed its expiry un-actioned reads as " +
+          "'renewal pending confirmation' — a predicate over its dates, " +
+          "not a status — and waits for this. The request carries the " +
+          "expiry it was raised against and the expiry to advance to; " +
+          "the record proposes the second as the first plus the renewal " +
+          "period, and the caller may send a different date, because a " +
+          "roll whose dates shifted in negotiation is recorded as it " +
+          "really landed. The comparison is made under the contract's " +
+          "row lock, so two confirms racing for one roll advance the " +
+          "term exactly once and the loser is refused 409 by name " +
+          "rather than rolling it again. Only an auto-renewing contract " +
+          "with an expiry rolls, and a roll must move the term forward. " +
+          "The status and the stage are untouched: this moves one date. " +
+          "Appends one contract.renewal_confirmed entry at the " +
+          "working-team tier (DD-017) — the only record a renewal " +
+          "leaves, and what the record's renewal history reads back. " +
+          "Answers the record and its whole history. Member+: a " +
+          "Contributor who reaches the record is refused 403 rather " +
+          "than 404, because they can already see it. An archived " +
+          "contract rolls nothing until it is restored",
+        tags: ["contracts"],
+        params: NumberParams,
+        // Strict: an unknown key is a client bug, not a silent strip.
+        body: z.strictObject({
+          /** The expiry the person was looking at when they confirmed.
+           * It is the precondition, not a value to write: the seam
+           * refuses the roll when the record no longer holds it, which
+           * is what makes a confirmed roll exactly-once. */
+          fromExpiry: z.iso.date(),
+          /** Where the term now runs to. The record proposes
+           * `proposedRenewalExpiry` and the caller may send another
+           * date, so long as it is later than `fromExpiry`. */
+          toExpiry: z.iso.date(),
+        }),
+        response: {
+          200: ContractRenewalsEnvelope,
+          // The one refusal a client acts on rather than prints: the
+          // record moved under the dialog, so the repair is to read the
+          // new expiry and offer the roll again — which no other 409 on
+          // this route asks for.
+          409: problemTypeResponse(
+            "The named type says this contract's expiry is no longer the one the roll " +
+              "was raised against (CTR-006) — read the record again and confirm against " +
+              "the expiry it now holds, which is the one refusal here a client acts on " +
+              "rather than prints. An unnamed 409 is an archived record or one that " +
+              "records no expiry to roll; print it.",
+            [RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE],
+          ),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => {
+      const { fromExpiry, toExpiry } = request.body;
+      // A roll advances a term. A date on or before the one it starts
+      // from is not a shorter roll, it is a correction — and a
+      // correction is an edit of the expiry, which the record's own
+      // PATCH already does and narrates as the edit it is.
+      if (toExpiry <= fromExpiry) {
+        throw httpError(400, "A confirmed roll must move the expiry date forward.");
+      }
+
+      return await app.db.transaction(async (tx) => {
+        // The lock first, and every question asked under it: a confirm
+        // that raced this one may have archived the record, re-typed
+        // its term, or already advanced the expiry.
+        const current = await editableContract(tx, request.params.number, request.user);
+        const { row } = current;
+
+        if (row.termType !== "auto_renew") {
+          throw httpError(
+            400,
+            "Only an auto-renewing contract rolls. Change the term type, or edit the " +
+              "expiry date directly.",
+          );
+        }
+        if (row.expiryDate === null) {
+          throw httpError(
+            409,
+            "This contract records no expiry date, so there is no term to roll forward.",
+          );
+        }
+        // The precondition, decided on the locked row. Sending the
+        // expiry the person saw is what turns two simultaneous confirms
+        // into one advance: the first moves the column, and the second
+        // no longer matches.
+        if (row.expiryDate !== fromExpiry) {
+          throw httpError(
+            409,
+            "This contract's expiry has already moved. Read the record again before " +
+              "confirming the roll.",
+            { type: RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE },
+          );
+        }
+
+        const [updated] = await tx
+          .update(contracts)
+          // One column, and the timestamp every write moves. Not the
+          // status and not the stage: CTR-006 says the pending state is
+          // a banner rather than a transition, and confirming it is a
+          // move of one date rather than a move through the lifecycle.
+          .set({ expiryDate: toExpiry, updatedAt: new Date() })
+          .where(eq(contracts.id, row.id))
+          .returning();
+
+        // The roll keeps its own verb rather than riding
+        // `contract.updated`: nothing stores a renewal, so this entry is
+        // the whole record that one happened, and it is what the
+        // record's renewal history and its "Last renewal" fact read back
+        // (G.R5).
+        await recordActivity(tx, {
+          entityType: "contract",
+          entityId: row.id,
+          actorId: request.user.id,
+          action: "contract.renewal_confirmed",
+          visibility: RECORD_ACTIVITY_TIER,
+          payload: { number: row.number, title: row.title, from: fromExpiry, to: toExpiry },
+        });
+
+        return {
+          contract: toRow({ ...current, row: updated! }),
+          renewals: await selectRenewals(tx, row.id),
+        };
+      });
     },
   );
 

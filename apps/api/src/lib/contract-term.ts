@@ -3,11 +3,14 @@
 /**
  * CTR-006's derived dates, in the one place that derives them.
  *
- * The term is five stored columns and two dates that are stored nowhere:
- * the **notice deadline** (the expiry minus the notice period) and
- * **days remaining** (the expiry minus today). Both are computed where
- * an answer is assembled, never written, and never seeded — so nothing
- * about them can go stale, and no job has to keep them true.
+ * The term is five stored columns and four answers that are stored
+ * nowhere: the **notice deadline** (the expiry minus the notice period),
+ * **days remaining** (the expiry minus today), whether the record is
+ * **pending confirmation** of a roll (an auto-renewing, unarchived
+ * contract whose expiry has passed), and where a confirmed roll would
+ * take the expiry (M16/4). All four are computed where an answer is
+ * assembled, never written, and never seeded — so nothing about them can
+ * go stale, and no job has to keep them true.
  *
  * They live here rather than inside the contracts module because two
  * surfaces now read them. The record's own row carries both (M16/1), and
@@ -81,4 +84,84 @@ export function daysRemaining(expiryDate: string | null, now: Date = new Date())
  * count a deadline surface orders and splits on. */
 export function daysBetween(from: string, to: string): number {
   return Math.round((civilInstant(to) - civilInstant(from)) / DAY_MS);
+}
+
+/**
+ * A civil date shifted by whole months, clamped to the target month's
+ * last day — `2026-01-31` forward one month is February's 28th, not
+ * March's 3rd.
+ *
+ * A renewal period is counted in months (CTR-006), and a month is not a
+ * fixed number of days, so a roll cannot be day arithmetic. The clamp is
+ * the only honest answer for a term that ends on a month's last day:
+ * rolling it into a shorter month has to land on that month's last day
+ * rather than spill into the next one.
+ */
+export function shiftMonths(date: string, months: number): string {
+  // A civil date is fixed-width `YYYY-MM-DD`, so its three parts are
+  // slices rather than a split whose length nothing guarantees.
+  const year = Number(date.slice(0, 4));
+  const month = Number(date.slice(5, 7));
+  const day = Number(date.slice(8, 10));
+  const target = new Date(Date.UTC(year, month - 1 + months, 1));
+  const lastDay = new Date(
+    Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+  target.setUTCDate(Math.min(day, lastDay));
+  return civilDate(target.getTime());
+}
+
+/** The term columns the two renewal derivations read. Narrower than the
+ * row on purpose: these are functions of four columns and the calendar,
+ * and nothing else about a contract can change what they answer. */
+interface RenewableTerm {
+  termType: string;
+  expiryDate: string | null;
+  renewalPeriodMonths: number | null;
+  archivedAt: Date | null;
+}
+
+/**
+ * CTR-006's "renewal pending confirmation": an auto-renewing contract
+ * that has passed its expiry with nobody confirming the roll.
+ *
+ * **A predicate, not a state.** No column holds it, no job sets it, and
+ * nothing schedules its arrival — it is true because the record's own
+ * dates say so, and it goes false the moment the expiry advances or the
+ * term is re-typed. That is the whole of CTR-006's notify-only promise
+ * said in one function: the system never advances a date, so the record
+ * says the date has passed and waits for a person.
+ *
+ * An archived record is out: archiving freezes a record, and a frozen
+ * record is not waiting on anybody. A fixed or evergreen term is out
+ * because neither rolls — a fixed term that ran out has simply ended.
+ */
+export function renewalPending(term: RenewableTerm, now: Date = new Date()): boolean {
+  if (term.termType !== "auto_renew" || term.archivedAt !== null) return false;
+  if (term.expiryDate === null) return false;
+  // Civil dates are zero-padded ISO, so a string compare is a date
+  // compare — no parsing, and no timezone to get it wrong.
+  return term.expiryDate < civilToday(now);
+}
+
+/**
+ * Where a confirmed roll would take the expiry: the current expiry plus
+ * the renewal period (CTR-006).
+ *
+ * **Derived at read and stored nowhere**, for the reason DES-040 clause
+ * 4 keeps days remaining at the seam: it is one date two places could
+ * disagree about, and the dialog that proposes it and the write that
+ * commits it must not each own a copy of the month arithmetic. Null
+ * whenever the record cannot roll — a term that does not auto-renew, an
+ * expiry nobody recorded, or a renewal period nobody recorded — which is
+ * exactly when the record has nothing to propose.
+ *
+ * It is a proposal and never a commitment. The person confirming may
+ * put a different date in, because a roll whose dates shifted in
+ * negotiation is recorded as it really landed (CTR-007).
+ */
+export function proposedRollExpiry(term: RenewableTerm): string | null {
+  if (term.termType !== "auto_renew") return null;
+  if (term.expiryDate === null || term.renewalPeriodMonths === null) return null;
+  return shiftMonths(term.expiryDate, term.renewalPeriodMonths);
 }
