@@ -1175,13 +1175,13 @@
   "contracts.reference": {
     "defaultMessage": "C-{number}"
   },
-  "contracts.renewal.banner": {
+  "renewal.banner": {
     "defaultMessage": "Renewal date passed — pending confirmation. The term does not advance until a human confirms."
   },
-  "contracts.renewal.bannerRegion": {
+  "renewal.bannerRegion": {
     "defaultMessage": "Renewal pending confirmation"
   },
-  "contracts.renewal.review": {
+  "renewal.review": {
     "defaultMessage": "Review renewal"
   },
   "contracts.restoreError": {
@@ -2032,9 +2032,6 @@
   },
   "keyDates.past": {
     "defaultMessage": "Past"
-  },
-  "keyDates.remindersNote": {
-    "defaultMessage": "Every tracked date uses the same reminder offsets, set once in Settings."
   },
   "keyDates.remove": {
     "defaultMessage": "Remove date"

@@ -7839,7 +7839,7 @@
             }
           },
           "409": {
-            "description": "The named types are CTR-015's two guards: the link already exists, or the parent would close a loop. An unnamed 409 is an archived predecessor; print it.",
+            "description": "The named types are CTR-015's guards: the link already exists, the parent would close a loop, or both ends are one contract. An unnamed 409 is an archived predecessor; print it.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -7850,6 +7850,7 @@
                       "enum": [
                         "urn:openlaw:problem:contract-relation-exists",
                         "urn:openlaw:problem:contract-parent-cycle",
+                        "urn:openlaw:problem:contract-self-link",
                         "about:blank"
                       ],
                       "description": "Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it."
@@ -7887,7 +7888,7 @@
                   },
                   "required": ["type", "title", "status"],
                   "additionalProperties": false,
-                  "description": "The named types are CTR-015's two guards: the link already exists, or the parent would close a loop. An unnamed 409 is an archived predecessor; print it."
+                  "description": "The named types are CTR-015's guards: the link already exists, the parent would close a loop, or both ends are one contract. An unnamed 409 is an archived predecessor; print it."
                 }
               }
             }

@@ -44,7 +44,7 @@
 
 import { useState } from "react";
 import { FormattedMessage, useIntl, defineMessage, type IntlShape } from "react-intl";
-import { CalendarClock, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import { MAX_KEY_DATE_LABEL_LENGTH, MAX_KEY_DATE_NOTE_LENGTH } from "@openlaw/shared";
 import {
   addContractKeyDate,
@@ -584,16 +584,13 @@ function KeyDateDialog({
               onChange={(event) => change({ note: event.target.value })}
             />
           </div>
-          {/* What this surface does not do, said once where somebody
-              might look for it: reminders are one global setting rather
-              than a schedule per date (NOT-004). */}
-          <p className="flex items-start gap-1.5 text-xs text-muted">
-            <CalendarClock size={16} aria-hidden="true" className="mt-px shrink-0" />
-            <FormattedMessage
-              id="keyDates.remindersNote"
-              defaultMessage="Every tracked date uses the same reminder offsets, set once in Settings."
-            />
-          </p>
+          {/* No reminder note here. NOT-004's one global offset list is
+              what this surface will not do per date, but nothing in this
+              build reminds anybody of anything and there is no Settings
+              control to point at — so the note would send a reader to a
+              screen that does not exist. It arrives with the delivery
+              that makes it true (M18), the rule DES-035 clause 13 sets
+              and this milestone already followed twice. */}
           {error && (
             <p id={ERROR_ID} role="alert" className="text-xs text-status-danger-fg">
               {error.message}

@@ -51,7 +51,7 @@ export function RenewalBanner({
     // the strip gives a sighted reader.
     <section
       aria-label={intl.formatMessage({
-        id: "contracts.renewal.bannerRegion",
+        id: "renewal.bannerRegion",
         defaultMessage: "Renewal pending confirmation",
       })}
       className="flex h-(--height-record-banner) shrink-0 items-center justify-between gap-4 border-b border-border-default bg-status-warning-bg px-page-x text-status-warning-fg"
@@ -60,7 +60,7 @@ export function RenewalBanner({
         <RotateCw size={GLYPH_SIZE} aria-hidden="true" className="shrink-0" />
         <span className="truncate text-sm font-medium">
           <FormattedMessage
-            id="contracts.renewal.banner"
+            id="renewal.banner"
             defaultMessage="Renewal date passed — pending confirmation. The term does not advance until a human confirms."
           />
         </span>
@@ -77,7 +77,7 @@ export function RenewalBanner({
           onClick={onReview}
           className="shrink-0 rounded-chip text-sm font-semibold text-status-warning-fg hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
         >
-          <FormattedMessage id="contracts.renewal.review" defaultMessage="Review renewal" />
+          <FormattedMessage id="renewal.review" defaultMessage="Review renewal" />
         </button>
       )}
     </section>

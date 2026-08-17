@@ -5537,7 +5537,7 @@ export interface operations {
           };
         };
       };
-      /** @description The named types are CTR-015's two guards: the link already exists, or the parent would close a loop. An unnamed 409 is an archived predecessor; print it. */
+      /** @description The named types are CTR-015's guards: the link already exists, the parent would close a loop, or both ends are one contract. An unnamed 409 is an archived predecessor; print it. */
       409: {
         headers: {
           [name: string]: unknown;
@@ -5551,6 +5551,7 @@ export interface operations {
             type:
               | "urn:openlaw:problem:contract-relation-exists"
               | "urn:openlaw:problem:contract-parent-cycle"
+              | "urn:openlaw:problem:contract-self-link"
               | "about:blank";
             title: string;
             status: number;

@@ -54,6 +54,7 @@ import type { ContractRelationType } from "@openlaw/db";
 import {
   CONTRACT_PARENT_CYCLE_PROBLEM_TYPE,
   CONTRACT_RELATION_EXISTS_PROBLEM_TYPE,
+  CONTRACT_SELF_LINK_PROBLEM_TYPE,
 } from "@openlaw/shared";
 import { httpError } from "./problem.js";
 
@@ -163,7 +164,9 @@ export async function linkContracts(
 ): Promise<void> {
   const { fromId, toId, relationType } = link;
   if (fromId === toId) {
-    throw httpError(409, "A contract cannot be linked to itself.");
+    throw httpError(409, "A contract cannot be linked to itself.", {
+      type: CONTRACT_SELF_LINK_PROBLEM_TYPE,
+    });
   }
   // One writer at a time, for the symmetric type's sake: the compound
   // key cannot refuse a mirror row — (A, B) and (B, A) are two keys —

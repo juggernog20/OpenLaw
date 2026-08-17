@@ -172,6 +172,11 @@ export const CONTRACT_RELATION_EXISTS_PROBLEM_TYPE = "urn:openlaw:problem:contra
 /** The proposed parent already sits under the contract it was asked to
  * parent, so setting it would close a loop (CTR-015's no-cycles rule). */
 export const CONTRACT_PARENT_CYCLE_PROBLEM_TYPE = "urn:openlaw:problem:contract-parent-cycle";
+/** Both ends of the proposed link are the same contract. Its own type
+ * rather than the cycle's, because the cycle names a *parent* and this
+ * refusal answers every relation type; the repair is to pick another
+ * far end, not another parent. */
+export const CONTRACT_SELF_LINK_PROBLEM_TYPE = "urn:openlaw:problem:contract-self-link";
 
 /**
  * The two bounds one key date is held to (CTR-009).

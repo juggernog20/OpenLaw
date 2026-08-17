@@ -787,7 +787,16 @@ test.describe("M16 demo path", () => {
       expect(union[0]!.isNext).toBe(true);
       expect(union[0]!.label).toBe(KEY_DATE_LABEL);
       expect(union[0]!.keyDateId).not.toBeNull();
-      expect(union[0]!.daysAway).toBe(10);
+      // The gaps rather than the counts, because every count in one
+      // answer is measured from one reading of the seam's own today: the
+      // distance between two of them is the distance between the dates,
+      // however the walk straddles UTC midnight. 50 is the key date to
+      // the notice deadline, 110 is the key date to the expiry.
+      expect(union[1]!.daysAway - union[0]!.daysAway).toBe(50);
+      expect(union[2]!.daysAway - union[0]!.daysAway).toBe(110);
+      // The count itself is the ten days the key date was written at,
+      // one fewer if the run has crossed midnight since it wrote them.
+      expect([9, 10]).toContain(union[0]!.daysAway);
 
       // ---- Story 12: the expiry that has gone by ----
       //
@@ -874,9 +883,6 @@ test.describe("M16 demo path", () => {
         memberPage.getByRole("region", { name: "Renewal pending confirmation" }),
       ).toHaveCount(0);
       await expect(memberPage.getByLabel("Expiry date", { exact: true })).toHaveValue(rolledExpiry);
-      // "Last renewal" reads out of the history rather than out of a
-      // column, because nothing stores a renewal.
-      await expect(lastRenewalFact(memberPage)).toHaveText(shortDate(dayFromToday(0)));
 
       // The seam half: one date moved, and only that one. The status and
       // the stage are where the person put them, because a roll is a
@@ -893,6 +899,14 @@ test.describe("M16 demo path", () => {
       expect(advanced.renewals[0]!.from).toBe(lapsedExpiry);
       expect(advanced.renewals[0]!.to).toBe(rolledExpiry);
       expect(advanced.renewals[0]!.confirmedBy?.displayName).toBe(MEMBER_NAME);
+
+      // "Last renewal" reads out of the history rather than out of a
+      // column, because nothing stores a renewal — so the day it draws
+      // is checked against the day the entry itself carries, not against
+      // the day this file thought it was when it loaded.
+      await expect(lastRenewalFact(memberPage)).toHaveText(
+        shortDate(advanced.renewals[0]!.confirmedAt.slice(0, 10)),
+      );
 
       const confirmedEntries = entriesOf(
         await readFeed(memberPage.request, termed.id),

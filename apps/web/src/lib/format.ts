@@ -309,12 +309,10 @@ export function formatDeadline(value: Date | string, options?: FormatOptions): s
  *
  * The unit steps up as the distance grows, so a date most of a year out
  * does not read as "in 291 days": days inside a week, weeks inside two
- * months, months inside a year and a half, years beyond. `numeric:
- * "auto"` is
- * what turns the small offsets into "today", "tomorrow", and
- * "yesterday". Negative counts read backwards — "8 weeks ago" — and a
- * surface that would rather flatten the past into one word says so in
- * its own copy.
+ * months, months inside a year, years beyond. `numeric: "auto"` is what
+ * turns the small offsets into "today", "tomorrow", and "yesterday".
+ * Negative counts read backwards — "8 weeks ago" — and a surface that
+ * would rather flatten the past into one word says so in its own copy.
  */
 export function formatDayDistance(days: number, options?: FormatOptions): string {
   const relative = relativeFormatter(resolveLocale(options));
@@ -327,8 +325,11 @@ export function formatDayDistance(days: number, options?: FormatOptions): string
   // The step to years is decided on the **rounded** month count rather
   // than on the day count, so no distance can round its way to "in 24
   // months" — a number a reader has to divide before it means anything.
+  // Twelve rather than eighteen, so the year unit can carry the value
+  // one: at eighteen, "next year" was unreachable and a date eighteen
+  // months out rounded straight to "in 2 years".
   const months = Math.round(days / 30.436875);
-  if (Math.abs(months) < 18) return relative.format(months, "month");
+  if (Math.abs(months) < 12) return relative.format(months, "month");
   return relative.format(Math.round(days / 365.25), "year");
 }
 

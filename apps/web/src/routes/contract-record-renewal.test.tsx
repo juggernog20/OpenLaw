@@ -19,24 +19,49 @@
  * **The history is the log, read back.** The confirmed-renewal rows and
  * the "Last renewal" fact are the same list, so a record with no roll
  * draws the standing em dash and no block at all.
+ *
+ * **The clock and the timezone are pinned**, the sibling timeline
+ * suite's move. `formatShortDate` prints the year only when the date
+ * falls outside the current one, so a suite asserting "Jun 30" against a
+ * 2026 fixture starts failing on 1 January 2027 unless today is fixed.
+ * The viewer's timezone is pinned for the same reason the timeline
+ * suite pins it: a runner east or west of UTC would move a rendered
+ * calendar day.
  */
 
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
+
+/** Frozen mid-day so no plausible display timezone moves the calendar
+ * date these surfaces call today. */
+const TODAY = "2026-08-17T12:00:00Z";
+
+beforeEach(() => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  vi.setSystemTime(new Date(TODAY));
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 const MEMBER = {
   id: "u2",
   email: "member@example.com",
   displayName: "Nadia Counsel",
   role: "legal_team_member",
+  // Pins `configureFormatting`, so every date these surfaces print is
+  // the same on a runner in Dubai as on one in UTC.
+  timezone: "UTC",
 };
 const CONTRIBUTOR = {
   id: "u3",
   email: "contributor@example.com",
   displayName: "Casey Contributor",
   role: "contributor",
+  timezone: "UTC",
 };
 
 const PEOPLE = [

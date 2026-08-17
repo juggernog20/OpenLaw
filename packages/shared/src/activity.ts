@@ -444,11 +444,17 @@ type ContractPayloads = {
   };
   /** `relationType` is one of CTR-015's three, so the viewer selects a
    * sentence on it rather than printing a slug. M16 writes `renews`
-   * alone; `related` and `amends` arrive with M17's manual linking. */
+   * alone; `related` and `amends` arrive with M17's manual linking.
+   *
+   * The three are restated here rather than imported, because this
+   * package cannot depend on `@openlaw/db` — the schema keeps its own
+   * copy in `ContractRelationType`. Narrowing them matters: typed as a
+   * string, a mistyped slug compiles, reaches the narrator, and falls
+   * through to the generic sentence instead of failing the build. */
   "contract.relation_added": {
     number: number;
     title: string;
-    relationType: string;
+    relationType: "related" | "renews" | "amends";
     relatedNumber: number;
     relatedTitle: string;
   };
