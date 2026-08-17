@@ -2876,7 +2876,7 @@ The prefill's split is therefore not a compromise but the same rule stated twice
 
 `DocumentsCard` gains an `amending` request and the answer to it, and its composer takes an optional seed kind. `ContractRecord` holds both requests, beside the Renew dialog it already held.
 
-Nineteen new ICU messages — twelve on the dialog's four options and their verbs, three on its foot notes, three on the create dialog's titles and prefill sentences, and one on the activity narrator's two new verbs. No new tokens and no new contrast pairs: the chosen option reuses the `info` family's paired fg/bg and its fg on `bg-raised`, both of which the gate already checks.
+Twenty-three new ICU messages — fourteen on the dialog's four options, its group label, and their verbs, three on its foot notes, four on the create dialog's titles and prefill sentences, and four on the activity narrator's two new verbs and the far record they name. No new tokens and no new contrast pairs: the chosen option reuses the `info` family's paired fg/bg and its fg on `bg-raised`, both of which the gate already checks.
 
 The activity narrator gains two verbs. `contract.relation_added` is one sentence with an arm per relation type rather than three verbs, because the act is the same act and only the word in the middle differs; an unknown type falls into a generic arm, because the log is append-only and a row written by a later build still has to read as a sentence.
 
