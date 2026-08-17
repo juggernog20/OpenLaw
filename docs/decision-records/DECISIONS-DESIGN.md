@@ -2884,6 +2884,39 @@ The activity narrator gains two verbs. `contract.relation_added` is one sentence
 
 DES-043 clause 8 is discharged. Clause 18 is unchanged: confirmed rolls are still not drawn on the Term timeline card.
 
+## DES-045: The link dialog, the picker, the refusal rendering, and the confidentiality nudge (extends DES-032, DES-024, DES-009)
+
+- **Status:** Accepted
+- **Date:** 2026-08-17
+
+### Context
+
+M17/4 adds manual link management to the contract record's Overview section. A Legal Team Member links two contracts by hand, puts a contract under a parent, removes either kind of connection, and encounters the CTR-018 confidentiality nudge when exactly one side of a new link is confidential.
+
+### Decision
+
+**1. The dialog anatomy is a centered modal (DES-012) with three zones: a picker, a type selector (link mode only), and a foot.**
+
+The picker follows the mention-candidates precedent (DES-024): a text input that searches by number or title against only the contracts the viewer can reach, with a bounded dropdown. A selected candidate shows as a compact chip with a dismiss cross; the dropdown dismisses on blur. The link type selector is a native `<select>` among the three values (`related`, `renews`, `amends`); omitted in parent mode.
+
+**2. Refusals are rendered as inline alerts.** The three named problem types — `relation-exists`, `parent-cycle`, `self-link` — each map to a dedicated ICU message. Any unnamed refusal falls through to the generic error. The alert uses `text-status-danger-fg` on the form, the same placement as the renewal dialog's error (DES-043).
+
+**3. Remove actions sit inline on each reachable entry.** A "Remove link" text button on each reachable link row; a "Remove parent" text button on the immediate parent only (never on ancestors further up the chain). Restricted entries have no action. Children have no removal action — removal of the parent is the act.
+
+**4. The CTR-018 nudge is a second modal that replaces the link dialog after a link is created when exactly one side is confidential.** It names the confidential side and the open side by contract reference, and offers two buttons: "Flag as confidential" (primary) and "No, leave it open" (secondary). Accepting calls the ordinary confidentiality PATCH; when that write is refused — the ordinary actor rule can refuse it — the refusal is said as an inline alert and the nudge stays open rather than closing as if the flag were set. Dismissing does nothing. Unlinking never un-flags. The nudge appears once per link creation and never on unlink.
+
+**5. "Add link" and "Set parent" are ghost buttons in the card header.** "Set parent" hides when a parent already exists. Both are absent when the viewer is not Member+ or the contract is archived.
+
+### Consequences
+
+One new dialog component (`link-dialog.tsx`), one updated card component (`related-contracts-card.tsx`), and some two dozen new ICU messages. No new tokens and no new contrast pairs.
+
+The picker reuses the mention-candidates API pattern at a different endpoint (`/link-candidates`), bounded to what the viewer can reach. It searches rather than listing all, so a workspace with thousands of contracts never loads them in one shot. The trade-off is that the actor must know part of the number or title before the candidate appears.
+
+The native `<select>` for link type is the smallest control that covers three values; a radio group or a combobox would add weight the three-item list does not justify.
+
+The nudge is the first instance of a post-write dialog in the product — a second modal that replaces the link dialog. This means the dialog component holds a two-phase state machine (form then nudge). A toast or an inline prompt after close would avoid the two-phase flow, but neither gives the nudge enough weight to match CTR-018's intent.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -2932,3 +2965,4 @@ DES-043 clause 8 is discharged. Clause 18 is unchanged: confirmed rolls are stil
 | DES-042 | The Key dates section — one union, one Source chip, and the next deadline named (extends DES-035, DES-032, DES-040)                                                  | Accepted |
 | DES-043 | The renewal-pending banner, the Renew dialog, and the confirmed-renewal row (extends DES-035, DES-040, DES-017, DES-009)                                             | Accepted |
 | DES-044 | The Renew dialog's four exits, and the prefilled create (extends DES-043, DES-035, DES-033, DES-017)                                                                 | Accepted |
+| DES-045 | The link dialog, the picker, the refusal rendering, and the confidentiality nudge (extends DES-032, DES-024, DES-009)                                                | Accepted |

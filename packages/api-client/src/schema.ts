@@ -1299,8 +1299,45 @@ export interface paths {
     /** The full relations graph for one contract (CTR-015): the parent chain root-first, the children, and the typed links in both directions. Each relative is either reachable — carrying its number, title, status name, and stage — or restricted, carrying only { restricted: true }. Access is inherited from the contract: a Contributor on the team reads the graph, and anyone who cannot reach the contract is answered 404 */
     get: operations["getContractRelations"];
     put?: never;
+    /** Link this contract to another with a chosen type — `related`, `renews`, or `amends` — through CTR-015's shared guarded path. Requires Member+ with reach on both ends. Narrates with `contract.relation_added` on the acted-from record only */
+    post: operations["addContractRelation"];
+    /** Unlink this contract from another — the removal sibling of addContractRelation. Requires Member+ with reach on both ends. Narrates with `contract.relation_removed` on the acted-from record only */
+    delete: operations["removeContractRelation"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/link-candidates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Contracts this viewer can reach that may be linked to the given contract — the mention-candidates precedent applied to relations (CTR-015, CTR-018). Found by number or title; the contract itself and archived contracts are excluded */
+    get: operations["listLinkCandidates"];
+    put?: never;
     post?: never;
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/parent": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Put this contract under another — CTR-015's hierarchy. Requires Member+ with reach on both ends. Narrates with `contract.parent_set` on the acted-from record only */
+    post: operations["setContractParent"];
+    /** Take this contract out from under its parent — the removal sibling of setContractParent. Requires Member+ with reach on both the child and the parent. Narrates with `contract.parent_removed` on the acted-from record only */
+    delete: operations["removeContractParent"];
     options?: never;
     head?: never;
     patch?: never;
@@ -7543,6 +7580,447 @@ export interface operations {
     };
   };
   getContractRelations: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            parentChain: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                }
+            )[];
+            children: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                }
+            )[];
+            links: {
+              /** @enum {string} */
+              relationType: "related" | "renews" | "amends";
+              /** @enum {string} */
+              direction: "outgoing" | "incoming";
+              contract:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    number: number;
+                    title: string;
+                    statusName: string;
+                    /** @enum {string} */
+                    stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                  };
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  addContractRelation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          relatedContractNumber: number;
+          /** @enum {string} */
+          relationType: "related" | "renews" | "amends";
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            parentChain: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                }
+            )[];
+            children: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                }
+            )[];
+            links: {
+              /** @enum {string} */
+              relationType: "related" | "renews" | "amends";
+              /** @enum {string} */
+              direction: "outgoing" | "incoming";
+              contract:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    number: number;
+                    title: string;
+                    statusName: string;
+                    /** @enum {string} */
+                    stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                  };
+            }[];
+          };
+        };
+      };
+      /** @description The link already exists, both ends are one contract, or the pair is already linked this way. An unnamed 409 is an archived record; print it. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type:
+              | "urn:openlaw:problem:contract-relation-exists"
+              | "urn:openlaw:problem:contract-self-link"
+              | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  removeContractRelation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          relatedContractNumber: number;
+          /** @enum {string} */
+          relationType: "related" | "renews" | "amends";
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            parentChain: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                }
+            )[];
+            children: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                }
+            )[];
+            links: {
+              /** @enum {string} */
+              relationType: "related" | "renews" | "amends";
+              /** @enum {string} */
+              direction: "outgoing" | "incoming";
+              contract:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    number: number;
+                    title: string;
+                    statusName: string;
+                    /** @enum {string} */
+                    stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                  };
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listLinkCandidates: {
+    parameters: {
+      query: {
+        q: string;
+      };
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            candidates: {
+              number: number;
+              title: string;
+              statusName: string;
+              /** @enum {string} */
+              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              isConfidential: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setContractParent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          parentContractNumber: number;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            parentChain: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                }
+            )[];
+            children: (
+              | {
+                  /** @enum {boolean} */
+                  restricted: true;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  number: number;
+                  title: string;
+                  statusName: string;
+                  /** @enum {string} */
+                  stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                }
+            )[];
+            links: {
+              /** @enum {string} */
+              relationType: "related" | "renews" | "amends";
+              /** @enum {string} */
+              direction: "outgoing" | "incoming";
+              contract:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    number: number;
+                    title: string;
+                    statusName: string;
+                    /** @enum {string} */
+                    stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+                  };
+            }[];
+          };
+        };
+      };
+      /** @description The parent would close a loop. An unnamed 409 is an archived record; print it. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type: "urn:openlaw:problem:contract-parent-cycle" | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  removeContractParent: {
     parameters: {
       query?: never;
       header?: never;

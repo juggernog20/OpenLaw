@@ -478,6 +478,27 @@ type ContractPayloads = {
     relatedNumber: number;
     relatedTitle: string;
   };
+  /**
+   * A typed link removed by hand (M17/4, CTR-015). The same payload as
+   * `relation_added` so the viewer reads what was taken away.
+   */
+  "contract.relation_removed": {
+    number: number;
+    title: string;
+    relationType: "related" | "renews" | "amends";
+    relatedNumber: number;
+    relatedTitle: string;
+  };
+  /**
+   * A contract taken out from under its parent by hand (M17/4, CTR-015).
+   * The same payload as `parent_set` so the viewer reads what was undone.
+   */
+  "contract.parent_removed": {
+    number: number;
+    title: string;
+    parentNumber: number;
+    parentTitle: string;
+  };
   "contract.archived": { number: number; title: string };
   "contract.restored": { number: number; title: string };
 };
