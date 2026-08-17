@@ -139,6 +139,10 @@ The per-record narrative of what happened, inheriting the visibility tier of eac
 The Administrator-only, append-only system-wide record, including security events the activity feed omits [DD-017].
 _Avoid_: using "audit log" and "activity feed" interchangeably — they are two surfaces over one table
 
+**Restricted contract**:
+The server's answer when a relative on the relations surface is a Contract the viewer cannot reach. The response carries no number and no title — the placeholder is the server's decision, not the client's redaction [CTR-018].
+_Avoid_: hidden contract, redacted contract, inaccessible contract
+
 ### Configuration
 
 **Type**:
@@ -220,6 +224,8 @@ _Avoid_: approval task, sign-off item, approval step, reviewer
 - A **Request** converts to exactly one **Matter** or one **Contract**, or is resolved or declined — never both [INT-007]
 - A **Status** maps to exactly one **Stage** (contracts) or **Category** (matters); the mapping is immutable once set
 - A **Matter** may have one parent **Matter**, arbitrarily deep, with no inheritance semantics [MTR-015]
+- A **Contract** may have one parent **Contract**, arbitrarily deep, with no inheritance semantics [CTR-015]
+- A **Contract** may hold typed links to other **Contracts** — `renews`, `amends`, or the symmetric `related` — each read from both directions, from the same single row [CTR-015]
 - A **Contract** holds many **Approval Requests**, each naming one approver; at most one of them is pending per approver [CTR-012]
 
 ## Example dialogue

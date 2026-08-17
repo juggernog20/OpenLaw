@@ -219,6 +219,12 @@ export function stubApi(state: ApiState) {
     if (/^\/api\/v1\/contracts\/\d+\/tasks$/.test(call.url.pathname) && call.method === "GET") {
       return json(200, { tasks: [], doneCount: 0, totalCount: 0 });
     }
+    // And every relation on it (M17/2, CTR-015). Empty by default for
+    // the roster's reason: a record with no relations is the ordinary
+    // case, and only the suites about the relations surface supply one.
+    if (/^\/api\/v1\/contracts\/\d+\/relations$/.test(call.url.pathname) && call.method === "GET") {
+      return json(200, { parentChain: [], children: [], links: [] });
+    }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
       return json(200, state.onboarding ?? { completed: true, emailConfigured: true });
     }

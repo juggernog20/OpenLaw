@@ -219,6 +219,7 @@ import { ConfidentialToggle } from "../components/confidential-toggle";
 import { ConfirmRenewalDialog } from "../components/contracts/confirm-renewal-dialog";
 import { CreateContractDialog } from "../components/contracts/create-contract-dialog";
 import { KeyDatesCard } from "../components/contracts/key-dates-card";
+import { RelatedContractsCard } from "../components/contracts/related-contracts-card";
 import { TasksCard } from "../components/contracts/tasks-card";
 import { RenewalBanner } from "../components/contracts/renewal-banner";
 import { TermTimelineCard } from "../components/contracts/term-timeline-card";
@@ -258,7 +259,7 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
   // Contributor anyway; the record read alone carries every name the
   // page has to draw.
   const canEdit = isMemberPlus(user.role);
-  const [record, documents, folders, approvals, signing, keyDates, tasks, options, registry] =
+  const [record, documents, folders, approvals, signing, keyDates, tasks, relations, options, registry] =
     await Promise.all([
       api.GET("/api/v1/contracts/{number}", { params: { path: { number } } }),
       // The record's paper (M11/2). Read by every viewer who reaches the
@@ -301,6 +302,11 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
       // a display order. Read by every viewer who reaches the page for
       // the roster's reason — a Contributor on the team reads the checklist.
       api.GET("/api/v1/contracts/{number}/tasks", { params: { path: { number } } }),
+      // The contract's relation surface (M17/2, CTR-015): its parent chain,
+      // children, and typed links. Optional — a read failure does not block
+      // the page, it only hides the Related contracts card.
+      api.GET("/api/v1/contracts/{number}/relations", { params: { path: { number } } })
+        .catch(() => ({ data: undefined, error: undefined })),
       canEdit ? api.GET("/api/v1/contracts/options") : undefined,
       // The registry's own Member+ list is the signing-entity picker's
       // source (CTR-011): it is ordered by legal name and already leaves
@@ -373,6 +379,10 @@ export async function contractRecordLoader({ params }: LoaderFunctionArgs) {
      * the options answer: a read-only viewer applies nothing. */
     approverGroups: options?.data?.approverGroups ?? [],
     entities: registry?.data?.entities ?? [],
+    /** The contract's relation surface (M17/2, CTR-015): parent chain,
+     * children, and typed links. Optional — a read failure hides the
+     * card rather than blocking the page. */
+    relations: relations?.data ?? null,
   };
 }
 
@@ -521,6 +531,7 @@ function ContractRecord() {
     users,
     approverGroups,
     entities,
+    relations,
   } = useLoaderData<typeof contractRecordLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
@@ -1231,6 +1242,33 @@ function ContractRecord() {
                 <FormattedMessage id="contracts.title" defaultMessage="Contracts" />
               </Link>
               <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-subtle" />
+              {/* Parent chain breadcrumb segments (M17/2, CTR-015): each
+                  reachable parent as a link, each restricted one as a
+                  muted placeholder. The chain is root-first, so the
+                  topmost ancestor comes right after "Contracts". */}
+              {relations?.parentChain.map((entry, i) => (
+                <span key={entry.restricted ? `restricted-${i}` : entry.number} className="flex shrink-0 items-center gap-2">
+                  {entry.restricted ? (
+                    <span className="text-base text-muted">
+                      <span aria-hidden="true">&hellip;</span>
+                      <span className="sr-only">
+                        <FormattedMessage
+                          id="contracts.relations.restricted"
+                          defaultMessage="Restricted contract"
+                        />
+                      </span>
+                    </span>
+                  ) : (
+                    <Link
+                      to={`/contracts/${entry.number}`}
+                      className="shrink-0 rounded-chip text-base text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+                    >
+                      {contractReference(intl, entry.number)}
+                    </Link>
+                  )}
+                  <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-subtle" />
+                </span>
+              ))}
               <FileText size={16} aria-hidden="true" className="shrink-0 text-muted" />
               <span className="shrink-0 text-base font-medium text-muted">{reference}</span>
               <h1 id="page-title" className="truncate text-lg font-semibold">
@@ -1971,6 +2009,12 @@ function ContractRecord() {
                       holds nothing of its own: every mark on it is one
                       of the record's dates. */}
                   <TermTimelineCard contract={saved} />
+                  {/* The contract's relation surface (M17/2, CTR-015): the
+                      parent chain, the children, and the typed links this
+                      contract carries. Absent when the read failed — an
+                      empty state is a fact about the record, not a
+                      fallback for a read that did not happen. */}
+                  {relations !== null && <RelatedContractsCard relations={relations} />}
                 </>
               )}
               {/* CTR-016's fields, in the card the C2 mock draws for

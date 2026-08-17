@@ -236,21 +236,6 @@
   "activity.keyDate.removed": {
     "defaultMessage": "{actor} removed the key date {label} on {date}"
   },
-  "activity.task.added": {
-    "defaultMessage": "{actor} added the task {title}"
-  },
-  "activity.task.completed": {
-    "defaultMessage": "{actor} completed the task {title}"
-  },
-  "activity.task.edited": {
-    "defaultMessage": "{actor} changed the task {title}"
-  },
-  "activity.task.removed": {
-    "defaultMessage": "{actor} removed the task {title}"
-  },
-  "activity.task.reopened": {
-    "defaultMessage": "{actor} reopened the task {title}"
-  },
   "activity.loadError": {
     "defaultMessage": "The history could not be read. Reopen the panel to try again."
   },
@@ -292,6 +277,21 @@
   },
   "activity.ssoProvider.updated": {
     "defaultMessage": "{actor} changed the identity provider {provider}"
+  },
+  "activity.task.added": {
+    "defaultMessage": "{actor} added the task {title}"
+  },
+  "activity.task.completed": {
+    "defaultMessage": "{actor} completed the task {title}"
+  },
+  "activity.task.edited": {
+    "defaultMessage": "{actor} changed the task {title}"
+  },
+  "activity.task.removed": {
+    "defaultMessage": "{actor} removed the task {title}"
+  },
+  "activity.task.reopened": {
+    "defaultMessage": "{actor} reopened the task {title}"
   },
   "activity.taxonomy.archived": {
     "defaultMessage": "{actor} archived the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} contract_status {contract status} field {field} approver_group {approver group} other {type}} {name}"
@@ -1193,14 +1193,35 @@
   "contracts.reference": {
     "defaultMessage": "C-{number}"
   },
-  "renewal.banner": {
-    "defaultMessage": "Renewal date passed — pending confirmation. The term does not advance until a human confirms."
+  "contracts.relations.amendedByLabel": {
+    "defaultMessage": "Amended by"
   },
-  "renewal.bannerRegion": {
-    "defaultMessage": "Renewal pending confirmation"
+  "contracts.relations.amendsLabel": {
+    "defaultMessage": "Amends"
   },
-  "renewal.review": {
-    "defaultMessage": "Review renewal"
+  "contracts.relations.children": {
+    "defaultMessage": "Children"
+  },
+  "contracts.relations.empty": {
+    "defaultMessage": "No related contracts."
+  },
+  "contracts.relations.parent": {
+    "defaultMessage": "Parent"
+  },
+  "contracts.relations.relatedLabel": {
+    "defaultMessage": "Related"
+  },
+  "contracts.relations.renewedByLabel": {
+    "defaultMessage": "Renewed by"
+  },
+  "contracts.relations.renewsLabel": {
+    "defaultMessage": "Renews"
+  },
+  "contracts.relations.restricted": {
+    "defaultMessage": "Restricted contract"
+  },
+  "contracts.relations.section": {
+    "defaultMessage": "Related contracts"
   },
   "contracts.restoreError": {
     "defaultMessage": "{reference} could not be restored."
@@ -2066,54 +2087,6 @@
   "keyDates.writeFailed": {
     "defaultMessage": "The change could not be saved. Try again."
   },
-  "tasks.actionsFor": {
-    "defaultMessage": "Actions for {title}"
-  },
-  "tasks.add": {
-    "defaultMessage": "Add task"
-  },
-  "tasks.addTitle": {
-    "defaultMessage": "Add a task"
-  },
-  "tasks.count.done": {
-    "defaultMessage": "{done} of {total} done"
-  },
-  "tasks.countLabel": {
-    "defaultMessage": "{count, plural, one {# task} other {# tasks}}"
-  },
-  "tasks.dueDate": {
-    "defaultMessage": "Due {date}"
-  },
-  "tasks.edit": {
-    "defaultMessage": "Edit task"
-  },
-  "tasks.editTitle": {
-    "defaultMessage": "Edit task"
-  },
-  "tasks.empty": {
-    "defaultMessage": "No tasks on this contract yet."
-  },
-  "tasks.field.dueDate": {
-    "defaultMessage": "Due date (optional)"
-  },
-  "tasks.field.title": {
-    "defaultMessage": "Title"
-  },
-  "tasks.needTitle": {
-    "defaultMessage": "Name what needs doing."
-  },
-  "tasks.remove": {
-    "defaultMessage": "Remove task"
-  },
-  "tasks.section": {
-    "defaultMessage": "Tasks"
-  },
-  "tasks.toggleLabel": {
-    "defaultMessage": "{isDone, select, true {Reopen task: {title}} other {Complete task: {title}}}"
-  },
-  "tasks.writeFailed": {
-    "defaultMessage": "The change could not be saved. Try again."
-  },
   "keys.arrows": {
     "defaultMessage": "Move within menus and lists"
   },
@@ -2168,6 +2141,12 @@
   "renewal.action.successor": {
     "defaultMessage": "Open the successor"
   },
+  "renewal.banner": {
+    "defaultMessage": "Renewal date passed — pending confirmation. The term does not advance until a human confirms."
+  },
+  "renewal.bannerRegion": {
+    "defaultMessage": "Renewal pending confirmation"
+  },
   "renewal.block": {
     "defaultMessage": "Renewals"
   },
@@ -2218,6 +2197,9 @@
   },
   "renewal.renew": {
     "defaultMessage": "Renew"
+  },
+  "renewal.review": {
+    "defaultMessage": "Review renewal"
   },
   "renewal.row.advancedFrom": {
     "defaultMessage": "From {date}"
@@ -3481,6 +3463,54 @@
   },
   "signing.voidTitle": {
     "defaultMessage": "Void envelope"
+  },
+  "tasks.actionsFor": {
+    "defaultMessage": "Actions for {title}"
+  },
+  "tasks.add": {
+    "defaultMessage": "Add task"
+  },
+  "tasks.addTitle": {
+    "defaultMessage": "Add a task"
+  },
+  "tasks.count.done": {
+    "defaultMessage": "{done} of {total} done"
+  },
+  "tasks.countLabel": {
+    "defaultMessage": "{count, plural, one {# task} other {# tasks}}"
+  },
+  "tasks.dueDate": {
+    "defaultMessage": "Due {date}"
+  },
+  "tasks.edit": {
+    "defaultMessage": "Edit task"
+  },
+  "tasks.editTitle": {
+    "defaultMessage": "Edit task"
+  },
+  "tasks.empty": {
+    "defaultMessage": "No tasks on this contract yet."
+  },
+  "tasks.field.dueDate": {
+    "defaultMessage": "Due date (optional)"
+  },
+  "tasks.field.title": {
+    "defaultMessage": "Title"
+  },
+  "tasks.needTitle": {
+    "defaultMessage": "Name what needs doing."
+  },
+  "tasks.remove": {
+    "defaultMessage": "Remove task"
+  },
+  "tasks.section": {
+    "defaultMessage": "Tasks"
+  },
+  "tasks.toggleLabel": {
+    "defaultMessage": "{isDone, select, true {Reopen task: {title}} other {Complete task: {title}}}"
+  },
+  "tasks.writeFailed": {
+    "defaultMessage": "The change could not be saved. Try again."
   },
   "theme.dark": {
     "defaultMessage": "Dark"
