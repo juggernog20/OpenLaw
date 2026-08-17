@@ -10,7 +10,7 @@
  * chrome — with the Owner, the type, status, priority, and risk as
  * selects.
  *
- * Five sections, five addresses. **Overview** (`/contracts/42`) is
+ * Six sections, six addresses. **Overview** (`/contracts/42`) is
  * the record's own columns: the Contract card, the Description card
  * under it, and the Term timeline card that closes the section.
  * **Fields** (`/contracts/42/fields`) is what this contract's
@@ -19,9 +19,11 @@
  * (`/contracts/42/approvals`) is who has been asked to sign it off
  * (CTR-012, DES-035). **Key dates** (`/contracts/42/key-dates`) is
  * every date the record has, as one union — the team's own named dates,
- * the expiry, and the derived notice deadline (CTR-009, DES-042). The
- * Team card is not one of the five — it stands beside all of them,
- * because who is on a contract is context for reading any part of it.
+ * the expiry, and the derived notice deadline (CTR-009, DES-042).
+ * **Tasks** (`/contracts/42/tasks`) is the lightweight checklist
+ * (CTR-017). The Team card is not one of the six — it stands beside
+ * all of them, because who is on a contract is context for reading any
+ * part of it.
  *
  * The custom fields are CTR-016's, and they earn the card the C2 mock
  * draws for them. The contract's type decides which of them appear and
@@ -197,7 +199,7 @@ import {
 } from "../lib/format";
 import { APPROVAL_PILL, isUnresolved, type ContractApproval } from "../lib/approvals";
 import { readContractKeyDates, type ContractDeadline } from "../lib/key-dates";
-import { type ContractTask } from "../lib/tasks";
+import type { ContractTask } from "../lib/tasks";
 import { confirmContractRenewal, type ConfirmedRenewal } from "../lib/renewals";
 import { FOLDER_ROOT, type ContractDocument } from "../lib/documents";
 import type { ContractFolder } from "../lib/folders";
@@ -517,7 +519,7 @@ export function ContractRecordPage() {
 function ContractRecord() {
   // Which section is on screen (DES-032). The loader has already sent
   // an unknown segment to the Overview, so anything that survives to
-  // here is one of the four.
+  // here is one of the five tab segments or "overview".
   const tab = (useParams().tab ?? "overview") as RecordTabName;
   const {
     user,

@@ -2901,7 +2901,7 @@ The picker follows the mention-candidates precedent (DES-024): a text input that
 
 **2. Refusals are rendered as inline alerts.** The three named problem types — `relation-exists`, `parent-cycle`, `self-link` — each map to a dedicated ICU message. Any unnamed refusal falls through to the generic error. The alert uses `text-status-danger-fg` on the form, the same placement as the renewal dialog's error (DES-043).
 
-**3. Remove actions sit inline on each reachable entry.** A "Remove link" text button on each reachable link row; a "Remove parent" text button on the immediate parent only (never on ancestors further up the chain). Restricted entries have no action. Children have no removal action — removal of the parent is the act.
+**3. Remove actions sit inline on each reachable entry.** A "Remove link" text button on each reachable link row; a "Remove parent" text button on the immediate parent only (never on ancestors further up the chain). Restricted contracts carry no action. Children have no removal action — removal of the parent is the act.
 
 **4. The CTR-018 nudge is a second modal that replaces the link dialog after a link is created when exactly one side is confidential.** It names the confidential side and the open side by contract reference, and offers two buttons: "Flag as confidential" (primary) and "No, leave it open" (secondary). Accepting calls the ordinary confidentiality PATCH; when that write is refused — the ordinary actor rule can refuse it — the refusal is said as an inline alert and the nudge stays open rather than closing as if the flag were set. Dismissing does nothing. Unlinking never un-flags. The nudge appears once per link creation and never on unlink.
 

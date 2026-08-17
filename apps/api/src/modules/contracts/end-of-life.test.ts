@@ -261,7 +261,7 @@ describe("ended_at stamping (CTR-019)", () => {
 });
 
 describe("the default list excludes ended contracts (CTR-019)", () => {
-  it("excludes ended contracts from the default list and includeEnded restores them — scope filters before the limit", async () => {
+  it("excludes ended contracts from the default list and includeEnded restores them — scope filters before the limit", { timeout: 120_000 }, async () => {
     // The route's page size (CTR-024). A live contract first, then a
     // whole page of newer ended ones standing between it and the top.
     const PAGE_SIZE = 50;

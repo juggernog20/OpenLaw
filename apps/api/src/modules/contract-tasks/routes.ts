@@ -34,9 +34,9 @@ import {
   asc,
   contractTasks,
   contracts,
-  count,
   eq,
   sql,
+  users,
   type Executor,
   type Transaction,
 } from "@openlaw/db";
@@ -247,6 +247,14 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         assertOpen(contract);
 
+        if (assigneeId) {
+          const [user] = await tx
+            .select({ id: users.id })
+            .from(users)
+            .where(eq(users.id, assigneeId));
+          if (!user) throw httpError(400, "The assignee does not exist.");
+        }
+
         const displayOrder = await nextDisplayOrder(tx, contract.id);
 
         const [created] = await tx
@@ -314,10 +322,19 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         if (!task) throw httpError(404, NO_TASK);
         if (task.contract.archivedAt) throw httpError(409, FROZEN);
 
+        const wantedAssignee =
+          request.body.assigneeId === undefined ? task.assigneeId : request.body.assigneeId;
+        if (wantedAssignee) {
+          const [found] = await tx
+            .select({ id: users.id })
+            .from(users)
+            .where(eq(users.id, wantedAssignee));
+          if (!found) throw httpError(400, "The assignee does not exist.");
+        }
+
         const wanted = {
           title: request.body.title ?? task.title,
-          assigneeId:
-            request.body.assigneeId === undefined ? task.assigneeId : request.body.assigneeId,
+          assigneeId: wantedAssignee,
           dueDate: request.body.dueDate === undefined ? task.dueDate : request.body.dueDate,
         };
         const changed: ChangedFields = {};
@@ -427,12 +444,18 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         assertOpen(contract);
 
-        // Every existing task must appear exactly once.
-        const [existing] = await tx
-          .select({ n: count() })
+        // Every existing task must appear exactly once, and nothing else.
+        const existing = await tx
+          .select({ id: contractTasks.id })
           .from(contractTasks)
           .where(eq(contractTasks.contractId, contract.id));
-        if (existing!.n !== taskIds.length || new Set(taskIds).size !== taskIds.length) {
+        const own = new Set(existing.map((row) => row.id));
+        const named = new Set(taskIds);
+        if (
+          named.size !== taskIds.length ||
+          named.size !== own.size ||
+          taskIds.some((id) => !own.has(id))
+        ) {
           throw httpError(400, "The reorder must name every task on this contract exactly once.");
         }
 

@@ -556,6 +556,16 @@ function named(intl: IntlShape, payload: Payload, key: string): string {
   );
 }
 
+/** What a task entry calls the task it names. Its own fallback rather
+ * than {@link named}'s, because that one is a person's — "added the
+ * task someone" is not a sentence. */
+function taskNamed(intl: IntlShape, payload: Payload): string {
+  return (
+    text(payload, "title") ??
+    intl.formatMessage({ id: "activity.task.untitled", defaultMessage: "(untitled)" })
+  );
+}
+
 /**
  * The people a soft-gate override went past (CTR-012), in the order the
  * payload holds them — the roster's own order, oldest ask first.
@@ -1193,7 +1203,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.task.added",
       defaultMessage: "{actor} added the task {title}",
     }),
-    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+    values: (intl, payload) => ({ title: taskNamed(intl, payload) }),
   },
   "task.edited": {
     icon: PenLine,
@@ -1202,7 +1212,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       defaultMessage: "{actor} changed the task {title}",
     }),
     changes: changesFrom,
-    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+    values: (intl, payload) => ({ title: taskNamed(intl, payload) }),
   },
   "task.completed": {
     icon: CircleCheck,
@@ -1210,7 +1220,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.task.completed",
       defaultMessage: "{actor} completed the task {title}",
     }),
-    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+    values: (intl, payload) => ({ title: taskNamed(intl, payload) }),
   },
   "task.reopened": {
     icon: CircleDot,
@@ -1218,7 +1228,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.task.reopened",
       defaultMessage: "{actor} reopened the task {title}",
     }),
-    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+    values: (intl, payload) => ({ title: taskNamed(intl, payload) }),
   },
   "task.removed": {
     icon: Trash2,
@@ -1226,7 +1236,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.task.removed",
       defaultMessage: "{actor} removed the task {title}",
     }),
-    values: (intl, payload) => ({ title: named(intl, payload, "title") }),
+    values: (intl, payload) => ({ title: taskNamed(intl, payload) }),
   },
   // One round of signature on the record (M15/2, M15/3, CTR-013). A
   // verb per act, so a reader can tell a completed signature from a

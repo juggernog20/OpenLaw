@@ -382,10 +382,9 @@ describe("the breadcrumb's parent chain (CTR-015)", () => {
     renderAt("/contracts/42");
 
     await screen.findByRole("heading", { name: "Acme master services agreement" });
-    // The restricted parent renders as an ellipsis with screen-reader text.
-    // Both the breadcrumb and the card contain "Restricted contract", so
-    // the assertion uses getAllByText to accept both.
-    expect(screen.getAllByText("Restricted contract").length).toBeGreaterThanOrEqual(1);
+    // Two surfaces say it: the breadcrumb's screen-reader text, and the
+    // card's placeholder row. Both are the point.
+    expect(screen.getAllByText("Restricted contract")).toHaveLength(2);
     expect(screen.getByText("…")).toBeInTheDocument();
   });
 });

@@ -17,6 +17,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
+import { X } from "lucide-react";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { contractReference, STAGE_PILL } from "../../lib/contracts";
@@ -92,6 +93,10 @@ const MESSAGES = defineMessages({
   nudgeError: {
     id: "contracts.relations.nudge.error",
     defaultMessage: "Could not flag {reference} as confidential.",
+  },
+  clearSelection: {
+    id: "contracts.relations.clearSelection",
+    defaultMessage: "Clear the picked contract",
   },
 });
 
@@ -185,6 +190,8 @@ function CandidatePicker({
   const [candidates, setCandidates] = useState<LinkCandidate[]>([]);
   const [open, setOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  /** Monotonic ticket so only the newest in-flight read writes state. */
+  const readRef = useRef(0);
 
   const search = useCallback(
     (q: string) => {
@@ -192,7 +199,10 @@ function CandidatePicker({
         setCandidates([]);
         return;
       }
-      void searchLinkCandidates(contractNumber, q).then(setCandidates);
+      const ticket = ++readRef.current;
+      void searchLinkCandidates(contractNumber, q).then((rows) => {
+        if (ticket === readRef.current) setCandidates(rows);
+      });
     },
     [contractNumber],
   );
@@ -214,13 +224,14 @@ function CandidatePicker({
         <span className="truncate">{selected.title}</span>
         <button
           type="button"
+          aria-label={intl.formatMessage(MESSAGES.clearSelection)}
           className="ml-auto text-xs text-link hover:underline"
           onClick={() => {
             onSelect(null);
             setQuery("");
           }}
         >
-          {"×"}
+          <X size={16} aria-hidden="true" />
         </button>
       </div>
     );
@@ -447,7 +458,7 @@ export function LinkDialog({
           </div>
           <div className="mt-6 flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={onClose} disabled={busy}>
-              <FormattedMessage id="common.cancel" defaultMessage="Cancel" />
+              <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
             </Button>
             <Button type="submit" disabled={busy || !selected}>
               <FormattedMessage

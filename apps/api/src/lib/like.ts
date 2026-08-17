@@ -3,8 +3,9 @@
 /**
  * `%` and `_` are LIKE wildcards, so a term typed with one in it must
  * be matched literally — otherwise searching for "50%" offers every row
- * we hold. The backslash is escaped first, because it is the escape
- * character doing the escaping.
+ * we hold. The backslash is in the class too, because it is the escape
+ * character Postgres reads: one pass over `[\\%_]` covers all three, so
+ * a term can never grow an escape that escapes nothing.
  *
  * One copy, because every typeahead that matches a typed term against a
  * column needs the same sentence, and two copies of it would drift.

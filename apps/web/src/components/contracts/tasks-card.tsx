@@ -9,9 +9,10 @@
  * statuses beyond done/not-done, no sub-tasks, no detail page —
  * discussion happens in the record's comment thread (CTR-017).
  *
- * **Adding and editing are dialogs.** A task is a title, an optional
- * assignee, and an optional due date that commit together — the compound
- * edit DES-017 carves out of the inline rule. Toggling and removing are
+ * **Adding and editing are dialogs.** A task is a title and an optional
+ * due date that commit together — the compound edit DES-017 carves out
+ * of the inline rule. The assignee field exists on the model but is not
+ * yet collected from this surface. Toggling and removing are
  * one click each: toggling flips a boolean, and removing destroys
  * nothing that matters — the row goes, the activity entry keeps it
  * (DD-017), and adding it back is one dialog away.
@@ -220,35 +221,19 @@ function TaskRow({
 }>) {
   return (
     <li className="flex items-center gap-3 px-4 py-2.5">
-      {!frozen && (
-        <Checkbox
-          checked={task.isDone}
-          disabled={busy}
-          onCheckedChange={onToggle}
-          aria-label={intl.formatMessage(
-            {
-              id: "tasks.toggleLabel",
-              defaultMessage:
-                "{isDone, select, true {Reopen task: {title}} other {Complete task: {title}}}",
-            },
-            { isDone: String(task.isDone), title: task.title },
-          )}
-        />
-      )}
-      {frozen && (
-        <Checkbox
-          checked={task.isDone}
-          disabled
-          aria-label={intl.formatMessage(
-            {
-              id: "tasks.toggleLabel",
-              defaultMessage:
-                "{isDone, select, true {Reopen task: {title}} other {Complete task: {title}}}",
-            },
-            { isDone: String(task.isDone), title: task.title },
-          )}
-        />
-      )}
+      <Checkbox
+        checked={task.isDone}
+        disabled={frozen || busy}
+        {...(frozen ? {} : { onCheckedChange: onToggle })}
+        aria-label={intl.formatMessage(
+          {
+            id: "tasks.toggleLabel",
+            defaultMessage:
+              "{isDone, select, true {Reopen task: {title}} other {Complete task: {title}}}",
+          },
+          { isDone: String(task.isDone), title: task.title },
+        )}
+      />
       <div className="flex min-w-0 flex-1 flex-col">
         <span className={`text-base ${task.isDone ? "text-muted line-through" : "text-primary"}`}>
           {task.title}

@@ -17,7 +17,7 @@
  * one manages a link into or out of a record they cannot see.
  */
 
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useRef, useState } from "react";
 import { Link } from "react-router";
 import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { Button } from "../ui/button";
@@ -79,7 +79,11 @@ function groupLinks(
 ): Map<string, { label: MessageDescriptor; entries: ContractLink[] }> {
   const groups = new Map<string, { label: MessageDescriptor; entries: ContractLink[] }>();
   for (const link of links) {
-    const label = LINK_LABELS[link.relationType][link.direction];
+    // An unknown relation type reads as a plain relation rather than
+    // taking the card down: the API is append-only, and a row a later
+    // build writes still has to render.
+    const label =
+      LINK_LABELS[link.relationType]?.[link.direction] ?? LINK_LABELS.related.outgoing;
     const key = String(label.id);
     const group = groups.get(key);
     if (group) {
@@ -220,6 +224,9 @@ export const RelatedContractsCard = memo(function RelatedContractsCard({
   const [relations, setRelations] = useState(initialRelations);
   const [dialog, setDialog] = useState<"link" | "parent" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /** One relation write at a time. A ref, not state: two clicks in one
+   * tick read the same pre-render state value and both would pass. */
+  const inFlight = useRef(false);
 
   const hasParent = relations.parentChain.length > 0;
   const hasChildren = relations.children.length > 0;
@@ -236,24 +243,40 @@ export const RelatedContractsCard = memo(function RelatedContractsCard({
   const handleUnlink = useCallback(
     async (link: ContractLink) => {
       if (link.contract.restricted) return;
-      const result = await removeRelation(contractNumber, link.contract.number, link.relationType);
-      if (result.ok) {
-        setRelations(result.relations);
-        setError(null);
-      } else {
-        setError(intl.formatMessage(LABELS.unlinkError));
+      if (inFlight.current) return;
+      inFlight.current = true;
+      try {
+        const result = await removeRelation(
+          contractNumber,
+          link.contract.number,
+          link.relationType,
+        );
+        if (result.ok) {
+          setRelations(result.relations);
+          setError(null);
+        } else {
+          setError(intl.formatMessage(LABELS.unlinkError));
+        }
+      } finally {
+        inFlight.current = false;
       }
     },
     [contractNumber, intl],
   );
 
   const handleUnparent = useCallback(async () => {
-    const result = await removeParent(contractNumber);
-    if (result.ok) {
-      setRelations(result.relations);
-      setError(null);
-    } else {
-      setError(intl.formatMessage(LABELS.unparentError));
+    if (inFlight.current) return;
+    inFlight.current = true;
+    try {
+      const result = await removeParent(contractNumber);
+      if (result.ok) {
+        setRelations(result.relations);
+        setError(null);
+      } else {
+        setError(intl.formatMessage(LABELS.unparentError));
+      }
+    } finally {
+      inFlight.current = false;
     }
   }, [contractNumber, intl]);
 
