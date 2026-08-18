@@ -3302,6 +3302,70 @@ Point 10 looks like a detail and is the reason the row carries `reminder_date` r
 
 DES-015's "Where this register does _not_ apply" loses its email bullet: this record is the separate register it pointed at. The surface is `apps/api/src/lib/notifications/email.ts` — `renderNotificationMail` for the immediate arms and `renderDigestMail` for the briefing — and every future event adds an arm there rather than a second place that knows how an OpenLaw email is laid out. The portal's requester mail (M20, group 5) is written to this register too; if it needs a second digest, points 4 through 12 are already the answer. Localised email and an HTML alternative are the two things this record deliberately leaves open, each with its own reason above.
 
+## DES-052: The value-list editor — the list-editor anatomy for a list of values (extends DES-020, DES-021)
+
+- **Status:** Accepted
+- **Date:** 2026-08-18
+
+### Context
+
+NOT-004 gives an install one reminder-offset list — seeded 7 days / 1 day / day-of, applied to every tracked date — and M18/6 (#321) built the column and the round that reads it live. M18/7 (#322) builds the pane that edits it, in Settings → Organization → Notifications.
+
+**There is no frame for it.** `settings.pen` carries nineteen frames and none of them is this pane; the file's only notification frame is **ST3**, the Personal preferences grid DES-050 already settled. What the file _does_ draw is the rail entry: ST4's Organization group lists **Notifications** between Intake and Integrations, wearing the Lucide `bell-ring` glyph to the Personal entry's `bell`. So the rail is spec'd and the pane body is not.
+
+**The anatomy it should follow is DES-020's, and DES-020 does not quite fit.** The list-editor was written for a _taxonomy_: rows records point at, renamed in place, archived rather than deleted so the records that reference them keep their meaning. A reminder lead time is none of those things. Nothing points at "7 days before"; there is no name to rename, because the number **is** the row; and archiving it would be retaining a value that has no history to retain. DES-020's own consequences clause says a surface that genuinely cannot fit the anatomy gets a record rather than a local deviation, and DES-021 already stretched the one `ListEditor` component once for the fields catalog. This record is the second stretch, written the same way.
+
+### Decision
+
+The `ListEditor` component stays the one implementation of DES-020. A **value list** is a second sanctioned variant beside DES-021's table variant, and these are its parts:
+
+**1. The card, the rows, and the grip are DES-020's, unchanged.** `SettingsCard` at `--width-settings-card`, flush; the `bg-section-header` strip carrying the title, the ICU-plural count caption, the save note, and the Add CTA; 44px rows separated by `border-border-muted`; the 36px grip column with the 16px `grip-vertical` glyph; the help caption below the card. Nothing about the geometry changes, because nothing about it was taxonomy-specific.
+
+**2. A row is a value, and it is not renamed.** The name cell renders as static 13px `font-medium text-primary` text rather than DES-017's click-to-edit button. A value has no display name to correct — changing "7 days before" to "8 days before" is not a rename, it is a different lead time — so the list is edited by adding and removing, and the in-place editor would be an affordance with nothing behind it.
+
+**3. The trailing action is remove, not archive.** A 16px Lucide `x` glyph in the trailing slot, named "Remove [value]". DES-020's archive exists so records pointing at a taxonomy row keep their meaning; nothing points at a value, so there is nothing to retain, nothing to reassign, and no archived tier. The "Show archived" toggle and the archived-row treatment do not render.
+
+**4. A structural minimum wears DES-020's lock.** Where emptying the list would be a state nobody may reach by accident — an offset list with nothing in it is silence for every reminder in the install — the **last remaining row** renders the 16px `lock` glyph in place of remove, with an accessible name saying why ("[value] is the only lead time and can't be removed"). This is DES-020's protection treatment applied to a floor rather than to a seed row: protection is a fact about the state, not a disabled button, and the server refuses regardless of what the pane draws.
+
+**5. The list is the unit of save.** Adding, removing, and rearranging are all one write — the whole list, sent the moment the change is made (SET-003 immediate apply). It follows that there is one save note for the card rather than one per row, in the header strip beside the count: a per-row note would claim a row saved when what saved was the list. It also follows that **one write is in the air at a time**, which is the rule DES-020's grip already follows; the Add CTA and every trailing action stand down while a save is in flight, so a press the pane would refuse cannot be made in the first place.
+
+**6. The order is the reader's, not the machine's.** A value list is ordered because a person reads a ladder in an order and expects to find it where they left it, so the saved order is what the pane draws and what the next reader sees. It carries no behaviour: the round matches each lead time on its own, so no arrangement of the list can change which day fires. Rearranging is still a save, and still narrated, because the stored list is the canonical one.
+
+**7. Reorder is keyboard-operable, per DES-020.** The grip is a real button; Arrow Up / Arrow Down on the focused grip moves the row one position and commits immediately; the move is announced through the polite live region ("[value] moved to position 2 of 3"). Drag is the pointer path, never the only path.
+
+**8. The inline add row is DES-020's, with the unit as the label.** The Add CTA opens a draft row at the end of the list carrying one focused input; Enter creates, Escape discards. Where the value has a unit, the unit is drawn beside the input as visible text **and** is what names the input (`aria-labelledby`), so a reader hears "days before the date, spin button" rather than a bare number box and nobody has to guess what the number counts. A value the list already holds is refused in the draft row without a request, because the list is a set.
+
+### Recorded normalization points
+
+1. **The pane has no frame.** ST3 is the Personal grid; nothing in `settings.pen` draws the Organization pane. It is built from this record and DES-020's geometry, and the file is not redrawn — for the ST7 reason recorded in the M15 inventory amendment: a frame is added when the surface it would draw is settled, and the M19 Intake pass owns the next sweep of this file.
+2. **The rail entry ships as drawn.** Organization → Notifications, `bell-ring`, positioned as ST4 draws it — after the module sections and before Integrations, with Entities taking the place the mock's unshipped Intake entry holds.
+3. **The screen title is not the rail label.** The rail says "Notifications", as the mock draws it; the browser title says "Reminder lead times", because DES-011 commitment 7 asks every screen for a title of its own and the Personal pane is already "Notifications". The URL is `/settings/reminders` for the same reason — two panes cannot share an address.
+4. **Two rail sections now share a label**, so each rail group is an ARIA `group` named by its own heading. The headings were already drawn and already `hidden` in the phone strip; `aria-labelledby` reads a hidden element regardless, so "Organization, Notifications" is what distinguishes the two at every width.
+
+### Rationale
+
+Points 2 and 3 are the record. The alternative was to draw a value list _as_ a taxonomy — a renameable name, an archive glyph, an archived tier — which would have offered three affordances that write nothing and would have taught the next builder that archive is what the trailing slot always holds. Naming the variant is what keeps `ListEditor` one component with two honest shapes instead of one component with a growing set of props nobody can tell apart.
+
+Point 4 is where a settings list usually goes wrong. "Remove the last one and the feature silently stops" is a state a person reaches by pressing a button they had every reason to press. DES-020 already had the right treatment for a row that may not go — the lock, with a name saying why — and a floor is that same fact stated about the list rather than about a seed.
+
+Point 5 is the #320 lesson said once more. That pane's three race conditions all came from one shape: a write that answers more state than it changed. Every write here answers the _whole_ list, so two of them racing would let the slower reply land last and undo the faster press. One at a time, with the controls visibly standing down, is the smaller and more explicable rule — and it is the rule the grip has followed since DES-020.
+
+Point 6 is stated because the honest answer is unusual. It would be easy to imply the order means something and easier still to hide the control because it does not; the truth is that a person tuning a lead-time ladder wants to see it in an order and the round does not care, so the pane keeps the order and the record says plainly that it is presentation.
+
+### Alternatives considered
+
+- **A bespoke pane outside `ListEditor`.** Rejected: a second anatomy to keep aligned by eye, which is the drift DES-021 already declined once.
+- **Reuse the taxonomy shape as-is — rename the value, archive the row.** Rejected: three affordances with nothing behind them, and an "archived lead time" is not a thing NOT-004 has.
+- **Draw the list sorted furthest-first and offer no reorder.** Rejected: #322 asks for reorder, and a saved order is what a person expects to find again. The round still sorts its own read, which is where sorting belongs.
+- **Let the list be emptied, and treat empty as "no reminders".** Rejected upstream: NOT-004's read falls back to the seed on an unusable list, so an empty list could not be told from a corrupt one. Silence is chosen per event group on the DES-050 pane, where it is a choice with a name.
+- **Edit the value in place, DES-017 style.** Rejected: a number typed over another number is a remove and an add, and treating it as a rename would make the audit entry say a lead time was renamed when the schedule changed.
+- **A note per row rather than one for the card.** Rejected — see point 5. The row is not what saved.
+- **Drag-only reorder.** Rejected: DES-011, and DES-020 answered it already.
+
+### Consequences
+
+`apps/web/src/components/list-editor.tsx` gains three optional inputs — the remove pair, and a `busy` flag for a save that covers the whole list — and its rename and archive pairs become optional. Every existing caller passes what it always passed and renders identically. The surface is `apps/web/src/routes/settings-reminders.tsx` behind `/settings/reminders`, and `apps/api/src/modules/org/routes.ts` carries the `GET`/`PUT` pair the pane reads and writes. The next value list — a digest send hour, a retention window, any admin-tuned ladder — builds to this record rather than re-deriving it; if it needs the value to be editable in place rather than removed and re-added, that is a third variant and a fourth record, not a local deviation here.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -3357,3 +3421,4 @@ DES-015's "Where this register does _not_ apply" loses its email bullet: this re
 | DES-049 | The notification centre — the header bell, its counter badge, and the panel behind it (extends DES-026, DES-031, DES-016)                                            | Accepted |
 | DES-050 | The notification preferences pane — one row per event group, two switch columns (extends DES-017, DES-012, DES-011)                                                  | Accepted |
 | DES-051 | The email register, and the morning digest's anatomy (closes DES-015's deferral)                                                                                     | Accepted |
+| DES-052 | The value-list editor — the list-editor anatomy for a list of values (extends DES-020, DES-021)                                                                      | Accepted |
