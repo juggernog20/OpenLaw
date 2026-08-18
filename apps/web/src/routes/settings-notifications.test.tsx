@@ -126,7 +126,7 @@ describe("Personal · Notifications (#320)", () => {
     const user = userEvent.setup();
     const writes: unknown[] = [];
     let groups = DEFAULTS.map((row) => ({ ...row }));
-    let release: (() => void) | null = null;
+    const releases: (() => void)[] = [];
     stubApi({
       signedIn: MEMBER,
       extra: (call: StubCall) => {
@@ -139,14 +139,14 @@ describe("Personal · Notifications (#320)", () => {
             ? { ...row, [body.channel === "in_app" ? "inApp" : "email"]: body.enabled }
             : row,
         );
-        // The first write is held open; the second must not overtake it.
-        if (release === null) {
-          const answer = json(200, { groups });
-          return new Promise<Response>((resolve) => {
-            release = () => resolve(answer);
+        // Every reply is held open, so the test decides when each one
+        // lands — and can look at the pane in the gap between them.
+        const answer = json(200, { groups });
+        return new Promise<Response>((resolve) => {
+          releases.push(() => {
+            resolve(answer);
           });
-        }
-        return json(200, { groups });
+        });
       },
     });
     renderAt("/settings/notifications");
@@ -159,17 +159,24 @@ describe("Personal · Notifications (#320)", () => {
     expect(screen.getByRole("switch", { name: "Dates approaching Email" })).not.toBeChecked();
     expect(writes).toHaveLength(1);
 
-    release!();
+    releases[0]!();
     await waitFor(() => expect(writes).toHaveLength(2));
     expect(writes).toEqual([
       { eventGroup: "assigned_to_you", channel: "email", enabled: false },
       { eventGroup: "dates_approaching", channel: "email", enabled: false },
     ]);
-    // And the grid the first reply carried has not put the second flip
-    // back: the last reply is the last press.
-    await waitFor(() =>
-      expect(screen.getByRole("switch", { name: "Dates approaching Email" })).not.toBeChecked(),
-    );
+    // The second write is still in the air, and the first reply's grid
+    // predates the second press. The pane must not have drawn that
+    // snapshot over the switch that already moved — not even for the
+    // round trip the queued write takes.
+    expect(screen.getByRole("switch", { name: "Dates approaching Email" })).not.toBeChecked();
+    expect(screen.getByRole("switch", { name: "Assigned to you Email" })).not.toBeChecked();
+
+    releases[1]!();
+    // And once the last reply lands, its grid is the state: the last
+    // reply is the last press.
+    expect(await screen.findByText("Saved")).toBeVisible();
+    expect(screen.getByRole("switch", { name: "Dates approaching Email" })).not.toBeChecked();
     expect(screen.getByRole("switch", { name: "Assigned to you Email" })).not.toBeChecked();
   });
 

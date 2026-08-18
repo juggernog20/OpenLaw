@@ -158,6 +158,10 @@ export function SettingsNotificationsPage() {
    */
   const pending = useRef<Promise<void>>(Promise.resolve());
 
+  /** How many presses are in the chain, counting the one in flight.
+   * `1` inside {@link send} means "nothing is queued behind me". */
+  const queued = useRef(0);
+
   async function send(
     group: StaffGroup,
     channel: (typeof CHANNELS)[number],
@@ -179,8 +183,11 @@ export function SettingsNotificationsPage() {
         return;
       }
       // The write answers the whole grid, so the pane takes the server's
-      // state rather than trusting the row it just moved.
-      setGroups(data.groups as GroupPreference[]);
+      // state rather than trusting the row it just moved — but only from
+      // the last reply in the chain. An earlier one predates the presses
+      // still queued behind it, and its snapshot would draw them undone
+      // for as long as the next request is in the air.
+      if (queued.current === 1) setGroups(data.groups as GroupPreference[]);
       setStatus("saved");
     } catch {
       setPair(group, channel.key, !enabled);
@@ -192,7 +199,12 @@ export function SettingsNotificationsPage() {
     // The switch moves at once (SET-003 immediate apply); the write
     // queues behind whatever is already in flight.
     setPair(group, channel.key, enabled);
-    pending.current = pending.current.then(() => send(group, channel, enabled));
+    queued.current += 1;
+    pending.current = pending.current
+      .then(() => send(group, channel, enabled))
+      .finally(() => {
+        queued.current -= 1;
+      });
   }
 
   return (
