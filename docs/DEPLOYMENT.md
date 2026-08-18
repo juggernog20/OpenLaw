@@ -227,6 +227,24 @@ Migrations run automatically when the app container boots (TECH-005); replicas b
 
 This path is exercised on every commit rather than assumed. CI fills a baseline install with Contracts across the lifecycle, Documents, users in several roles and a signing connector, then brings the new version up against that same database and checks every record still reads back (TECH-018). It is not a promise that no upgrade ever needs care — it is a promise that the ordinary one is tested with rows in the tables, not only against an empty install.
 
+### A stranded migration journal
+
+The app applies a migration only when that migration is stamped later than the newest stamp already recorded in your database. A recorded stamp that is _too high_ therefore hides every migration behind it — permanently, and with no error at the time.
+
+One release did ship a stamp like that (`0049_contract_tasks`). If your install applied it before the fix, the app **repairs the recorded stamp for you on the next boot** and logs a line naming what it corrected. Nothing is asked of you.
+
+If the app instead refuses to start with `This database cannot apply the migrations it is missing`, it has found a stamp it does not recognise and will not guess. Read the migrations it lists, then correct the offending row by hand:
+
+```bash
+# What the database thinks it has applied, newest first.
+docker compose exec postgres psql -U openlaw -d openlaw \
+  -c 'select hash, created_at from drizzle.__drizzle_migrations order by created_at desc limit 5;'
+```
+
+Compare the newest `created_at` against `packages/db/migrations/meta/_journal.json`. The row whose stamp is later than migrations that come after it is the bad one; set it to that migration's `when` from the journal, then restart. **Take a backup first** — this is editing the app's own bookkeeping.
+
+The app refuses to start rather than carrying on because a schema several migrations behind is not a degraded install, it is a wrong one: every request it serves writes data against a shape the code does not expect.
+
 ## The Audit log leaves this process, and those copies are yours
 
 Every row OpenLaw appends to `activity_log` — the one table behind both the per-record **Activity feed** and the Administrator-only **Audit log** — is also written to stdout as one line of JSON (DD-017), so you can ship it to Datadog, Loki, Splunk, or whatever else you already run. Nothing is redacted on the way out: the line is a faithful copy of the stored row, because a shipped copy that disagreed with the record would be worse than no copy at all.

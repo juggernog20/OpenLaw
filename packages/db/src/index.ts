@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
+import { guardMigrationJournal } from "./migration-journal.js";
 import * as activitySchema from "./schema/activity.js";
 import * as approverGroupsSchema from "./schema/approver-groups.js";
 import * as authSchema from "./schema/auth.js";
@@ -70,6 +71,7 @@ export * from "./schema/matter-types.js";
 export * from "./schema/notifications.js";
 export * from "./schema/org.js";
 export * from "./schema/signing-connectors.js";
+export * from "./migration-journal.js";
 export * from "./rewrap.js";
 export * from "./secrets.js";
 export const schema = {
@@ -293,11 +295,19 @@ export async function pingDb(db: Db, timeoutMs = 2000): Promise<void> {
 
 /** Applies committed drizzle-kit migrations. Called on API boot (TECH-005). */
 export async function runMigrations(db: Db): Promise<void> {
-  await withAdvisoryLock(db, ADVISORY_LOCK.migrations, () =>
-    migrate(db, {
-      migrationsFolder: fileURLToPath(new URL("../migrations", import.meta.url)),
-    }),
-  );
+  const migrationsFolder = fileURLToPath(new URL("../migrations", import.meta.url));
+  await withAdvisoryLock(db, ADVISORY_LOCK.migrations, async () => {
+    // Inside the lock and before the migrator: the guard reads and may
+    // rewrite the same bookkeeping table `migrate` is about to consult,
+    // so two replicas booting together must not interleave here (#330).
+    const { repaired } = await guardMigrationJournal(db, migrationsFolder);
+    for (const tag of repaired) {
+      console.warn(
+        `migrations: corrected the recorded stamp for ${tag}; migrations it was hiding will now apply`,
+      );
+    }
+    await migrate(db, { migrationsFolder });
+  });
 }
 
 /**
