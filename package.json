@@ -28,11 +28,12 @@
     "upgrade-fidelity": "pnpm --filter @openlaw/e2e upgrade-fidelity",
     "secretlint": "secretlint \"**/*\"",
     "lint:contrast": "node styles/lint-contrast.mjs",
+    "lint:migrations": "node scripts/lint-migration-journal.mjs",
     "openapi": "turbo run build --filter=@openlaw/api... && pnpm --filter @openlaw/api openapi:emit && pnpm --filter @openlaw/api-client generate && prettier --write apps/api/openapi.json packages/api-client/src/schema.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "fix": "pnpm lint:fix && pnpm format && pnpm secretlint && turbo run typecheck --continue",
-    "check": "pnpm format:check && pnpm secretlint && pnpm lint:contrast && turbo run lint typecheck test --continue",
+    "check": "pnpm format:check && pnpm secretlint && pnpm lint:contrast && pnpm lint:migrations && turbo run lint typecheck test --continue",
     "check:security": "pnpm audit --audit-level=high && pnpm licenses list"
   },
   "pnpm": {

@@ -52,6 +52,11 @@ COPY --from=prod-deps /app ./
 COPY --from=build /app/packages/shared/dist packages/shared/dist
 COPY --from=build /app/packages/db/dist packages/db/dist
 COPY --from=build /app/packages/db/migrations packages/db/migrations
+# The journal repair aid (#330): `--hashes` maps a bookkeeping row back
+# to its migration. In the image so an operator can run it against the
+# exact journal this version boots with, no Node on the host — see
+# docs/DEPLOYMENT.md, "A stranded migration journal".
+COPY --from=build /app/scripts/lint-migration-journal.mjs scripts/
 COPY --from=build /app/apps/api/dist apps/api/dist
 COPY --from=build /app/apps/worker/dist apps/worker/dist
 COPY --from=build /app/apps/web/dist apps/web/dist

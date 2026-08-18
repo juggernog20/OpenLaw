@@ -11,6 +11,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   createDb,
+  MigrationJournalError,
   readSecretKeys,
   rewrapSecrets,
   runMigrations,
@@ -68,7 +69,19 @@ useSecretKeys(
 );
 
 const db = createDb(databaseUrl);
-await runMigrations(db);
+// The message is the point (#330). A migration fault used to surface as
+// an unhandled rejection and a raw stack, unlike every other boot step
+// here — and the fault this most often carries now is the journal guard
+// refusing to start, whose whole value is that an operator can read it.
+// Only the guard's own refusals get that treatment: any other failure —
+// a migration's SQL failing against this database, say — keeps its stack
+// and driver detail, which the crafted message deliberately omits.
+try {
+  await runMigrations(db);
+} catch (error) {
+  console.error(error instanceof MigrationJournalError ? error.message : error);
+  process.exit(1);
+}
 
 // Beside the migrations, and for their reason (TECH-005: the API is the
 // one process that changes the database on a deploy). This is what makes
