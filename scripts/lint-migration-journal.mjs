@@ -22,6 +22,7 @@
  * Runs standalone (`pnpm lint:migrations`) and inside `pnpm check`.
  */
 
+import { createHash } from "node:crypto";
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -31,17 +32,43 @@ const migrationsDir = join(repoRoot, "packages", "db", "migrations");
 const journalPath = join(migrationsDir, "meta", "_journal.json");
 
 const journal = JSON.parse(readFileSync(journalPath, "utf8"));
-const entries = [...(journal.entries ?? [])].sort((a, b) => a.idx - b.idx);
+// The array's own order, never sorted: the migrator walks `entries` as
+// serialized and never reads `idx`, so this array *is* the sequence.
+const entries = journal.entries ?? [];
+
+/** Sha256 of a migration's text — the digest recorded in the database. */
+function hashOf(tag) {
+  return createHash("sha256")
+    .update(readFileSync(join(migrationsDir, `${tag}.sql`), "utf8"))
+    .digest("hex");
+}
+
+// `--hashes` prints the tag/stamp/hash table an operator needs to read a
+// `drizzle.__drizzle_migrations` row back to the migration it stands for.
+// Repairing a stranded install means editing one bookkeeping row, and the
+// row only carries a hash — without this mapping, identifying the right
+// one is guesswork. See docs/DEPLOYMENT.md.
+if (process.argv.includes("--hashes")) {
+  console.log("tag\twhen\thash");
+  for (const entry of entries) console.log(`${entry.tag}\t${entry.when}\t${hashOf(entry.tag)}`);
+  process.exit(0);
+}
 
 const failures = [];
 
-for (let i = 1; i < entries.length; i += 1) {
-  const previous = entries[i - 1];
-  const current = entries[i];
-  if (current.when <= previous.when) {
+for (const [position, entry] of entries.entries()) {
+  if (entry.idx !== position) {
     failures.push(
-      `${current.tag} is stamped ${current.when}, not later than ${previous.tag} (${previous.when}) — ` +
-        `an install that applies ${previous.tag} will skip ${current.tag} for ever`,
+      `${entry.tag} sits at position ${position} carrying idx ${entry.idx} — ` +
+        `the migrator applies entries in written order, so the two must agree`,
+    );
+  }
+  const previous = entries[position - 1];
+  if (!previous) continue;
+  if (entry.when <= previous.when) {
+    failures.push(
+      `${entry.tag} is stamped ${entry.when}, not later than ${previous.tag} (${previous.when}) — ` +
+        `an install that applies ${previous.tag} will skip ${entry.tag} for ever`,
     );
   }
 }

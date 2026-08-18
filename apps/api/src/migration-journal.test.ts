@@ -3,6 +3,10 @@
 /**
  * The migration journal guard (#330), against a real database.
  *
+ * Lives in apps/api because that is where the Postgres test harness is
+ * (`secrets.test.ts` is the same pattern: @openlaw/db behavior, asserted
+ * here). packages/db has no test runner.
+ *
  * The failure this guards is invisible by construction: Drizzle compares
  * one number, so a recorded stamp that is too high makes the migrator
  * skip everything behind it and report success. Nothing throws, nothing
@@ -47,7 +51,16 @@ afterAll(async () => {
   await container?.stop();
 });
 
-/** A database of its own per test — this suite writes migration bookkeeping. */
+/**
+ * A database of its own per *scenario* — this suite writes migration
+ * bookkeeping, so scenarios must not share one.
+ *
+ * Within a scenario the tests do run in order and depend on it: repair,
+ * then the migrations the repair unblocks, then the second pass. That is
+ * the lifecycle being asserted rather than an accident, and splitting it
+ * into independent tests would mean re-migrating a fresh database three
+ * times to assert three points on one timeline.
+ */
 async function freshDb(name: string): Promise<Db> {
   const admin = createDb(container.getConnectionUri());
   await admin.execute(sql.raw(`create database "${name}"`));
@@ -99,6 +112,41 @@ describe("the committed journal", () => {
     for (const entry of entries.filter((candidate) => candidate.idx > (contractTasks?.idx ?? 0))) {
       expect(entry.when).toBeGreaterThan(contractTasks?.when ?? 0);
     }
+  });
+});
+
+describe("findJournalDisorder", () => {
+  function entry(idx: number, tag: string, when: number): JournalEntry {
+    return { idx, tag, when, hash: tag };
+  }
+
+  it("accepts stamps that increase with position", () => {
+    expect(findJournalDisorder([entry(0, "a", 1), entry(1, "b", 2)])).toEqual([]);
+  });
+
+  it("names an entry stamped no later than the one before it", () => {
+    const problems = findJournalDisorder([entry(0, "a", 2), entry(1, "b", 2)]);
+    expect(problems).toEqual([
+      "b is stamped 2, which is not later than a (2). An install that applies a will skip b for ever.",
+    ]);
+  });
+
+  it("names an entry whose idx does not match its position", () => {
+    const problems = findJournalDisorder([entry(0, "a", 1), entry(3, "b", 2)]);
+    expect(problems).toEqual([
+      "b sits at position 1 carrying idx 3. The migrator applies entries in the order they are written, so the two must agree.",
+    ]);
+  });
+
+  it("walks the array as written, not sorted by idx", () => {
+    // Sorted by idx this is a(when=10) then b(when=20) — monotonic, and
+    // idx would match position. Drizzle does not sort: it applies b first.
+    const problems = findJournalDisorder([entry(1, "b", 20), entry(0, "a", 10)]);
+    expect(problems).toEqual([
+      "b sits at position 0 carrying idx 1. The migrator applies entries in the order they are written, so the two must agree.",
+      "a sits at position 1 carrying idx 0. The migrator applies entries in the order they are written, so the two must agree.",
+      "a is stamped 10, which is not later than b (20). An install that applies b will skip a for ever.",
+    ]);
   });
 });
 

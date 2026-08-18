@@ -4,6 +4,11 @@
  * The migration journal's integrity, checked before the migrator runs
  * ([#330](https://github.com/juggernog20/OpenLaw/issues/330)).
  *
+ * TECH-005 makes migrations run on container start, so this is the only
+ * moment anybody looks: an operator upgrades, the container boots, and
+ * whatever the migrator decides is what they get. Nothing downstream
+ * re-checks it, which is why a wrong decision here is silent for ever.
+ *
  * Drizzle decides what to apply from **one** number. It reads the newest
  * `created_at` in `drizzle.__drizzle_migrations` and applies a migration
  * only when that migration's journal stamp is *later* than it. The test
@@ -73,20 +78,32 @@ export function readMigrationJournal(migrationsFolder: string): JournalEntry[] {
  * out-of-order stamp fails at the commit that writes it rather than in
  * somebody's database months later.
  *
+ * **Read in the array's own order, not sorted by `idx`.** Drizzle walks
+ * `journal.entries` exactly as serialized and never looks at `idx`, so
+ * the array *is* the sequence — sorting first would check an order the
+ * migrator does not use and could pass a journal it then mis-applies.
+ * `idx` disagreeing with position is itself reported below, because a
+ * journal where the two have diverged is one nobody should be reading
+ * past.
+ *
  * Returns a human-readable line per offending entry, empty when the
  * journal is sound.
  */
 export function findJournalDisorder(entries: JournalEntry[]): string[] {
   const problems: string[] = [];
-  const ordered = [...entries].sort((a, b) => a.idx - b.idx);
-  for (let i = 1; i < ordered.length; i += 1) {
-    const previous = ordered[i - 1];
-    const current = ordered[i];
-    if (!previous || !current) continue;
-    if (current.when <= previous.when) {
+  for (const [position, entry] of entries.entries()) {
+    if (entry.idx !== position) {
       problems.push(
-        `${current.tag} is stamped ${current.when}, which is not later than ${previous.tag} (${previous.when}). ` +
-          `An install that applies ${previous.tag} will skip ${current.tag} for ever.`,
+        `${entry.tag} sits at position ${position} carrying idx ${entry.idx}. ` +
+          `The migrator applies entries in the order they are written, so the two must agree.`,
+      );
+    }
+    const previous = entries[position - 1];
+    if (!previous) continue;
+    if (entry.when <= previous.when) {
+      problems.push(
+        `${entry.tag} is stamped ${entry.when}, which is not later than ${previous.tag} (${previous.when}). ` +
+          `An install that applies ${previous.tag} will skip ${entry.tag} for ever.`,
       );
     }
   }

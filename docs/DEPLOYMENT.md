@@ -229,19 +229,37 @@ This path is exercised on every commit rather than assumed. CI fills a baseline 
 
 ### A stranded migration journal
 
-The app applies a migration only when that migration is stamped later than the newest stamp already recorded in your database. A recorded stamp that is _too high_ therefore hides every migration behind it — permanently, and with no error at the time.
+The app applies a migration only when it is stamped later than the newest stamp recorded in your database. A recorded stamp that is _too high_ hides every migration behind it — permanently, and with no error at the time.
 
-One release did ship a stamp like that (`0049_contract_tasks`). If your install applied it before the fix, the app **repairs the recorded stamp for you on the next boot** and logs a line naming what it corrected. Nothing is asked of you.
+One release shipped a stamp like that (`0049_contract_tasks`). You need do nothing about it: the app corrects that stamp on the next boot and logs `migrations: corrected the recorded stamp for 0049_contract_tasks`.
 
-If the app instead refuses to start with `This database cannot apply the migrations it is missing`, it has found a stamp it does not recognise and will not guess. Read the migrations it lists, then correct the offending row by hand:
+If the app instead refuses to start with `This database cannot apply the migrations it is missing`, it found a stamp it does not recognise and will not guess. Repair it by hand:
 
-```bash
-# What the database thinks it has applied, newest first.
-docker compose exec postgres psql -U openlaw -d openlaw \
-  -c 'select hash, created_at from drizzle.__drizzle_migrations order by created_at desc limit 5;'
-```
+1. **Back up the database.** See [Backups](#backups). You are about to edit the app's own bookkeeping.
 
-Compare the newest `created_at` against `packages/db/migrations/meta/_journal.json`. The row whose stamp is later than migrations that come after it is the bad one; set it to that migration's `when` from the journal, then restart. **Take a backup first** — this is editing the app's own bookkeeping.
+2. **Read the migrations the error lists.** It names each one it would skip, with that migration's stamp.
+
+3. **Map the recorded rows to migrations.** The bookkeeping table stores a hash, not a name:
+
+   ```bash
+   # Recorded rows, newest stamp first.
+   docker compose exec postgres psql -U openlaw -d openlaw \
+     -c 'select hash, created_at from drizzle.__drizzle_migrations order by created_at desc limit 5;'
+
+   # Every migration's tag, stamp and hash — join the two on hash.
+   node scripts/lint-migration-journal.mjs --hashes
+   ```
+
+4. **Find the offending row.** It is the one whose `created_at` is later than the stamp of a migration that comes after it.
+
+5. **Set that row's stamp to the migration's own `when`**, taken from the `--hashes` output. Match on the hash, never on the stamp alone:
+
+   ```bash
+   docker compose exec postgres psql -U openlaw -d openlaw \
+     -c "update drizzle.__drizzle_migrations set created_at = <when> where hash = '<hash>';"
+   ```
+
+6. **Restart.** `docker compose up -d`. The skipped migrations apply on boot.
 
 The app refuses to start rather than carrying on because a schema several migrations behind is not a degraded install, it is a wrong one: every request it serves writes data against a shape the code does not expect.
 
