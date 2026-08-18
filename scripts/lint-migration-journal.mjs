@@ -32,9 +32,15 @@ const migrationsDir = join(repoRoot, "packages", "db", "migrations");
 const journalPath = join(migrationsDir, "meta", "_journal.json");
 
 const journal = JSON.parse(readFileSync(journalPath, "utf8"));
+if (typeof journal !== "object" || journal === null || Array.isArray(journal)) {
+  fail("the journal is not a JSON object");
+}
+if (!Array.isArray(journal.entries)) {
+  fail('"entries" is missing or not an array — a journal with no readable entries applies nothing');
+}
 // The array's own order, never sorted: the migrator walks `entries` as
 // serialized and never reads `idx`, so this array *is* the sequence.
-const entries = journal.entries ?? [];
+const entries = journal.entries;
 
 // Check the shape before comparing anything. An entry missing `when`
 // compares false against every stamp, so a malformed journal would sail
