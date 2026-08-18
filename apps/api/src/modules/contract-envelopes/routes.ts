@@ -1103,14 +1103,16 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       // showing a live round that no signer can sign — a record
       // somebody archived mid-request is still better served by the
       // truth than by a frozen lie.
-      const applied = await applyEnvelopeStatus(app.db, {
+      const applied = await applyEnvelopeStatus(app.notifier, {
         provider: envelope.provider,
         providerEnvelopeId: envelope.providerEnvelopeId,
         status: "voided",
         reason,
         // A person took this act, which is what tells the feed to
-        // narrate it as theirs rather than as the integration's.
+        // narrate it as theirs rather than as the integration's — and
+        // what keeps them off their own bell item (NOT-002).
         actorId: request.user.id,
+        actorName: request.user.displayName,
       });
       // The row went between the read and the move — the record was
       // deleted under this request. It reads as one that never existed.

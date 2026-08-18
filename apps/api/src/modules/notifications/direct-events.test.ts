@@ -474,15 +474,20 @@ describe("being mentioned in a comment (CMT-007)", () => {
     expect(message.text).not.toContain("indemnity");
   });
 
-  it("says nothing about a comment that names nobody", async () => {
+  it("raises no mention for a comment that names nobody", async () => {
     const contract = await newContract("Direct · nobody named");
     await addToTeam(contract.number, idOf(TARGET));
-    const before = (await rowsFor(TARGET)).length;
 
-    // Being on a record is group 2's business (NOT-002), and group 2 is
-    // not this slice: an ordinary comment is not done *to* anybody.
+    // An ordinary comment is not done *to* anybody, so no mention is
+    // raised for it. What the person on the record does hear is the
+    // ambient event beside it — `comment.posted`, NOT-002's group 2,
+    // which is #319's and is pinned by `record-activity.test.ts`. This
+    // case is about the slug that must **not** appear.
     await comment(contract, { body: "Filed the executed copy.", visibility: "working_team" });
-    expect(await rowsFor(TARGET)).toHaveLength(before);
+    const mentions = (await rowsFor(TARGET)).filter(
+      (row) => row.entityId === contract.id && row.eventType === "comment.mentioned",
+    );
+    expect(mentions).toEqual([]);
   });
 
   it("tells the author nothing about naming themselves", async () => {

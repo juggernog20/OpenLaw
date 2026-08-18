@@ -38,6 +38,14 @@
  * **The actor is never told about their own act** (NOT-002). It is
  * applied here, once, for every event: a bell that told you what you had
  * just done would be noise in the one place that must only ever be news.
+ *
+ * **An act with no actor excludes nobody.** A webhook delivery, a
+ * reconciliation round, and the executed-copy fetch are the integration
+ * speaking, not a person (CTR-013) — the same fact the activity feed
+ * records by writing an entry with no actor. So the actor is `null`
+ * there, and the whole team is told, because there is no one person for
+ * the exclusion to be about. Passing the logged-in user of whichever
+ * process happened to be running would silently drop one real recipient.
  */
 
 import {
@@ -48,13 +56,15 @@ import {
   notificationPreferences,
   notifications,
   type CommentVisibility,
+  type ContractStage,
   type Db,
+  type EnvelopeStatus,
   type NotificationEventGroup,
   type NotificationEventType,
   type Transaction,
 } from "@openlaw/db";
 import { boundedQueueAsk, type JobQueue } from "../../pipeline/jobs.js";
-import { CONTRACT_ENTITY, reachedBy } from "./audience.js";
+import { contractRecordAudience, CONTRACT_ENTITY, reachedBy } from "./audience.js";
 import { defaultChoice, emailTimingOf, EVENT_GROUP, type ChannelChoice } from "./catalog.js";
 
 /** Where the seam's own lines go when a wake-up could not be sent. The
@@ -157,6 +167,81 @@ export interface CommentMentionedEvent {
   visibility: CommentVisibility;
 }
 
+/**
+ * What every ambient event on a record carries (NOT-002 group 2).
+ *
+ * Only two facts, and one of them is often nobody. The record is named
+ * by its id alone: the audience read behind the seam already holds the
+ * row, so the number and the title are taken from there rather than
+ * asked of four call sites that would each have to read them.
+ *
+ * **`actorId` is nullable, and null is a real answer.** The integration
+ * files an executed copy and moves an envelope on nobody's behalf
+ * (CTR-013), so there is no person to exclude and the whole team is
+ * told. `actorName` is null with it, and the bell's own arms already
+ * say the actorless sentence.
+ */
+export interface RecordEvent {
+  contractId: string;
+  /** Who caused it, or null where nobody did. */
+  actorId: string | null;
+  actorName: string | null;
+}
+
+/** What a status move tells the record's people (CTR-001). */
+export interface StatusChangedEvent extends RecordEvent {
+  /** The status names either side of the move, as the record's own feed
+   * writes them. Plain strings, because a status is a renameable label
+   * an Administrator chose (CTR-001) and nothing branches on it. */
+  from: string;
+  to: string;
+  /** The stages behind those two statuses — the closed set surfaces
+   * actually branch on, so they are typed as that set rather than as
+   * free text. Derived from the status and never stored, so they ride
+   * along here rather than being re-derived from a snapshot later. */
+  fromStage: ContractStage;
+  toStage: ContractStage;
+}
+
+/** What one ordinary comment tells the record's people (DD-016). */
+export interface CommentPostedEvent extends RecordEvent {
+  commentId: string;
+  /** The comment's DD-016 tier, carried so the fan-out can hold it: a
+   * Legal Only comment never reaches a Contributor. */
+  visibility: CommentVisibility;
+  /**
+   * Who this comment already addressed by name, if anybody.
+   *
+   * They are excluded here because they have just been told, louder:
+   * a mention is group 1 and interrupts (NOT-002's M18/1 addendum). Two
+   * bell rows for one comment would be the same news twice.
+   */
+  mentioned?: readonly string[];
+}
+
+/** What a document landing tells the record's people (DOC-001). */
+export interface DocumentEvent extends RecordEvent {
+  documentId: string;
+  documentTitle: string;
+  /** DD-014's per-document flag as it stands on the row (DOC-008). Set,
+   * the event goes only as far as the file does. */
+  isConfidential: boolean;
+}
+
+/** What one new round on a chain tells the record's people (DOC-001). */
+export interface DocumentVersionEvent extends DocumentEvent {
+  versionId: string;
+  versionNumber: number;
+}
+
+/** What an envelope's ending tells the record's people (CTR-013). */
+export interface EnvelopeEndedEvent extends RecordEvent {
+  envelopeId: string;
+  /** Which ending it was: signed, declined, or voided. Never `sent` —
+   * an envelope is not born by ending. */
+  status: EnvelopeStatus;
+}
+
 export interface Notifier {
   /**
    * Runs one mutation and everything it has to tell people about, in
@@ -219,6 +304,57 @@ export interface Notifier {
    * nobody the tier excludes.
    */
   commentMentioned(tx: NotifyingTransaction, event: CommentMentionedEvent): Promise<void>;
+
+  /**
+   * A contract has moved to another status, and so to another stage
+   * (CTR-001) — group 2, bell on and email opt-in (NOT-002).
+   *
+   * Raised by the record's own PATCH when a person moves it, and by the
+   * executed-copy job when the integration advances it off the signature
+   * stage (CTR-013). The second one has no actor, which is the whole
+   * reason `actorId` is nullable.
+   */
+  statusChanged(tx: NotifyingTransaction, event: StatusChangedEvent): Promise<void>;
+
+  /**
+   * Somebody has said something on a record (DD-016) — group 2, bell on
+   * and email opt-in (NOT-002).
+   *
+   * It carries the comment's tier, so a Legal Only comment never
+   * produces a Contributor's bell item. The people the comment named
+   * are left out here: they have already been told by
+   * {@link commentMentioned}, which interrupts.
+   */
+  commentPosted(tx: NotifyingTransaction, event: CommentPostedEvent): Promise<void>;
+
+  /**
+   * A file has landed on a record (DOC-001) — group 2, bell on and email
+   * opt-in (NOT-002).
+   *
+   * A confidential document's event goes only as far as the document
+   * does (DD-014, DOC-008).
+   */
+  documentAdded(tx: NotifyingTransaction, event: DocumentEvent): Promise<void>;
+
+  /**
+   * A new round has been appended to a chain (DOC-001) — group 2, bell
+   * on and email opt-in (NOT-002).
+   *
+   * Raised by the version upload when a person appends one, and by the
+   * executed-copy job when the integration files the signed PDF back
+   * onto the record (CTR-014). The second one has no actor.
+   */
+  documentVersionAdded(tx: NotifyingTransaction, event: DocumentVersionEvent): Promise<void>;
+
+  /**
+   * An envelope has ended — signed, declined, or voided (CTR-013) —
+   * group 2, bell on and email opt-in (NOT-002).
+   *
+   * Almost always actorless: the provider reports the ending, and a
+   * webhook is nobody. A void somebody took on the record carries the
+   * person who took it, exactly as the activity entry beside it does.
+   */
+  envelopeEnded(tx: NotifyingTransaction, event: EnvelopeEndedEvent): Promise<void>;
 }
 
 /**
@@ -304,24 +440,28 @@ async function fanOut(
   tx: NotifyingTransaction,
   eventType: NotificationEventType,
   contractId: string,
-  actorId: string,
+  /** Who caused it, or null where nobody did — an integration's own act
+   * (CTR-013). Null excludes nobody, because there is no one person for
+   * the exclusion to be about. */
+  actorId: string | null,
   people: readonly PendingNotification[],
-  /** The DD-016 tier an event about a comment inherits, where it has
-   * one. The wall narrows to the record's audience; this narrows further
-   * to the room the thing was said in. */
-  tier?: CommentVisibility,
+  /** How far this particular event may go, beyond the record's own wall.
+   * The tier is the room something was said in (DD-016); the document
+   * flag is the file it was said about (DOC-008). Both narrow; neither
+   * widens. */
+  narrowing: { tier?: CommentVisibility; confidentialDocument?: boolean } = {},
 ): Promise<void> {
   // 1. The audience, minus the person who caused it. Deduplicated: one
   // event tells one person once, however many rows named them.
   const byUser = new Map<string, PendingNotification>();
   for (const person of people) {
-    if (person.userId === actorId) continue;
+    if (actorId !== null && person.userId === actorId) continue;
     if (!byUser.has(person.userId)) byUser.set(person.userId, person);
   }
   if (byUser.size === 0) return;
 
   // 2. The wall (DD-014). Applied here so no event can skip it.
-  const reachable = await reachedBy(tx, contractId, [...byUser.keys()], tier);
+  const reachable = await reachedBy(tx, contractId, [...byUser.keys()], narrowing);
 
   // 3. The preferences, over the group's defaults (NOT-001/002).
   const recipients = [...byUser.keys()].filter((id) => reachable.has(id));
@@ -370,6 +510,58 @@ async function fanOut(
   if (timing !== "immediate") return;
   const wakeUps = wakeUpsOf(tx);
   for (const row of written) if (row.emailOwed) wakeUps.push(row.id);
+}
+
+/**
+ * The whole of NOT-002's group 2, for one event on one record.
+ *
+ * Every ambient event is the same three steps — find the record and the
+ * people it is about, drop the ones this event has already told or must
+ * not tell, hand the rest to {@link fanOut} with one payload — so they
+ * are written once here and each event supplies a slug, a payload, and
+ * how far it may go.
+ *
+ * The record's number and title are read here rather than at the call
+ * site, and they are **added** to the payload rather than taken from it:
+ * every group-2 item and email names the record the same way, and the
+ * bell's arms read exactly these two keys.
+ */
+async function fanOutToRecord(
+  tx: NotifyingTransaction,
+  eventType: NotificationEventType,
+  event: RecordEvent,
+  payload: Record<string, unknown>,
+  options: {
+    /** People this event must not tell, beyond the actor. Only the
+     * comment has any: the mention already interrupted them. */
+    except?: readonly string[];
+    narrowing?: { tier?: CommentVisibility; confidentialDocument?: boolean };
+  } = {},
+): Promise<void> {
+  const audience = await contractRecordAudience(tx, event.contractId);
+  // A record that is not there is about nobody. Unreachable from a route
+  // that has just written to it, and the honest answer for a job whose
+  // record went while it was running.
+  if (!audience) return;
+  const except = new Set(options.except ?? []);
+  const recipients = audience.userIds.filter((userId) => !except.has(userId));
+  await fanOut(
+    tx,
+    eventType,
+    event.contractId,
+    event.actorId,
+    recipients.map((userId) => ({
+      userId,
+      payload: {
+        ...payload,
+        contractNumber: audience.contractNumber,
+        contractTitle: audience.contractTitle,
+        actorId: event.actorId,
+        actorName: event.actorName,
+      },
+    })),
+    options.narrowing ?? {},
+  );
 }
 
 /** The production seam. */
@@ -497,8 +689,68 @@ export function createNotifier(deps: NotifierDeps): Notifier {
             commentId: event.commentId,
           },
         })),
-        event.visibility,
+        { tier: event.visibility },
       );
+    },
+
+    async statusChanged(tx: NotifyingTransaction, event: StatusChangedEvent): Promise<void> {
+      await fanOutToRecord(tx, "contract.status_changed", event, {
+        from: event.from,
+        to: event.to,
+        fromStage: event.fromStage,
+        toStage: event.toStage,
+      });
+    },
+
+    async commentPosted(tx: NotifyingTransaction, event: CommentPostedEvent): Promise<void> {
+      await fanOutToRecord(
+        tx,
+        "comment.posted",
+        event,
+        // The words are not here, for the mention's reason: the thread
+        // is where DD-016 is enforced and where a redact can still reach
+        // the text (CMT-006). The item is a prompt to go and read it.
+        { commentId: event.commentId },
+        {
+          ...(event.mentioned && event.mentioned.length > 0 ? { except: event.mentioned } : {}),
+          narrowing: { tier: event.visibility },
+        },
+      );
+    },
+
+    async documentAdded(tx: NotifyingTransaction, event: DocumentEvent): Promise<void> {
+      await fanOutToRecord(
+        tx,
+        "document.added",
+        event,
+        { documentId: event.documentId, documentTitle: event.documentTitle },
+        { narrowing: { confidentialDocument: event.isConfidential } },
+      );
+    },
+
+    async documentVersionAdded(
+      tx: NotifyingTransaction,
+      event: DocumentVersionEvent,
+    ): Promise<void> {
+      await fanOutToRecord(
+        tx,
+        "document.version_added",
+        event,
+        {
+          documentId: event.documentId,
+          documentTitle: event.documentTitle,
+          versionId: event.versionId,
+          versionNumber: event.versionNumber,
+        },
+        { narrowing: { confidentialDocument: event.isConfidential } },
+      );
+    },
+
+    async envelopeEnded(tx: NotifyingTransaction, event: EnvelopeEndedEvent): Promise<void> {
+      await fanOutToRecord(tx, "envelope.ended", event, {
+        envelopeId: event.envelopeId,
+        status: event.status,
+      });
     },
   };
 }

@@ -9,6 +9,12 @@
  * items this person holds, which ones are about a record they can still
  * reach?
  *
+ * A third question joins them for NOT-002's group 2: **who is a record
+ * about**. That is not a reach question — it is the Owner and the
+ * contract team, the people who put themselves on the record — and it is
+ * answered by {@link contractRecordAudience} below, before the reach
+ * predicate narrows it.
+ *
  * Both are `contract-access`'s rule and neither is a second copy of it.
  * The person direction is `contractMentionCandidates`, which is the
  * reach predicate already turned around; the row direction composes
@@ -29,6 +35,7 @@
 import {
   and,
   contracts,
+  contractTeam,
   eq,
   inArray,
   notifications,
@@ -63,6 +70,16 @@ export const CONTRACT_ENTITY = "contract" as const;
  * one no future call site can forget — the wall's own posture, applied to
  * the second boundary.
  *
+ * **`confidentialDocument` is how an event about a file holds DOC-008.**
+ * A notification naming a document is a sentence about that document, so
+ * it may go exactly as far as the document does: the audience narrows to
+ * the record's named people, which is what a confidential document's own
+ * scope answers. Today that set and the group-2 audience below coincide
+ * — a document has no team of its own, so its audience is the contract's
+ * named team, its Owner, and Administrators — and the gate is asked
+ * anyway, because "only the document's audience" has to be a property of
+ * the code rather than of the two rules happening to agree.
+ *
  * Order is not preserved and does not matter: the caller writes one row
  * per person, and the bell orders by time.
  */
@@ -70,15 +87,91 @@ export async function reachedBy(
   db: Executor,
   contractId: string,
   userIds: readonly string[],
-  tier?: CommentVisibility,
+  narrowing: { tier?: CommentVisibility; confidentialDocument?: boolean } = {},
 ): Promise<Set<string>> {
   if (userIds.length === 0) return new Set();
-  const candidates = await contractMentionCandidates(db, contractId, userIds);
+  const candidates = await contractMentionCandidates(db, contractId, userIds, {
+    ...(narrowing.confidentialDocument !== undefined
+      ? { confidentialDocument: narrowing.confidentialDocument }
+      : {}),
+  });
+  const { tier } = narrowing;
   return new Set(
     candidates
       .filter((person) => tier === undefined || person.tiers.includes(tier))
       .map((person) => person.id),
   );
+}
+
+/** One record, and the people NOT-002's group 2 is about. */
+export interface RecordAudience {
+  /** CTR-003's number — the record's address, and what every item and
+   * email deep-links by. */
+  contractNumber: number;
+  contractTitle: string;
+  /**
+   * The Owner and everybody holding a `contract_team` row, in no
+   * particular order and each named once.
+   *
+   * **This is the whole of NOT-002's "watchers"** — the decision says
+   * so in its own words: watchers are the existing team roles, and there
+   * is no separate subscribe mechanism. So `creator`, `member`,
+   * `watcher`, and `contributor` all count, because each of them is a
+   * row somebody put on the record on purpose.
+   *
+   * An Administrator is **not** here by role. They reach every contract
+   * (DD-014), which is why the wall lets them through, but reaching a
+   * record is not the same as being on it — and a bell that told every
+   * Administrator about every status change on every contract would be
+   * the ambient noise NOT-002's defaults exist to avoid.
+   */
+  userIds: readonly string[];
+}
+
+/**
+ * The record an ambient event is about, and the people it concerns
+ * (NOT-002 group 2).
+ *
+ * `null` for a contract that is not there, which reaches nobody — the
+ * same answer its own 404 gives.
+ *
+ * The number and the title ride along because this read already holds
+ * the row. Group 1's events are handed them by the route, which knows
+ * them: it has just written the record. Group 2's are raised from places
+ * that do not — a document route holds a document, the executed-copy job
+ * holds an envelope — so asking each of them for two columns would be
+ * the same query written at four call sites with four chances to drift.
+ *
+ * The audience is **resolved** here and **narrowed** by the wall
+ * afterwards, in the fan-out, like every other event. This answers who
+ * the event is about; `reachedBy` answers which of them the record
+ * still reaches.
+ */
+export async function contractRecordAudience(
+  db: Executor,
+  contractId: string,
+): Promise<RecordAudience | null> {
+  const [record] = await db
+    .select({
+      number: contracts.number,
+      title: contracts.title,
+      managerId: contracts.managerId,
+    })
+    .from(contracts)
+    .where(eq(contracts.id, contractId))
+    .limit(1);
+  if (!record) return null;
+  const team = await db
+    .select({ userId: contractTeam.userId })
+    .from(contractTeam)
+    .where(eq(contractTeam.contractId, contractId));
+  const userIds = new Set(team.map((row) => row.userId));
+  if (record.managerId) userIds.add(record.managerId);
+  return {
+    contractNumber: record.number,
+    contractTitle: record.title,
+    userIds: [...userIds],
+  };
 }
 
 /**

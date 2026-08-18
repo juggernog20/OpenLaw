@@ -66,7 +66,6 @@ import {
   gt,
   isNull,
   type Db,
-  type Transaction,
 } from "@openlaw/db";
 import { uuidv7 } from "uuidv7";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../lib/activity.js";
@@ -76,6 +75,7 @@ import {
   requestDerivations,
   versionStorageKey,
 } from "../lib/document-versions.js";
+import type { Notifier, NotifyingTransaction } from "../lib/notifications/notifier.js";
 import { isTerminalSigningError, SigningConfigError } from "../lib/signing/provider.js";
 import type { SigningResolver } from "../lib/signing/resolver.js";
 import type { StorageAdapter } from "../lib/storage/adapter.js";
@@ -89,6 +89,17 @@ import type { PipelineLogger } from "./logger.js";
  * a finished PDF, and the job files it. */
 export interface ExecutedCopyDeps {
   db: Db;
+  /**
+   * The notification seam (NOT-001), which owns the transaction this
+   * job files in.
+   *
+   * Filing an executed copy is two things the record's people are owed
+   * (NOT-002 group 2): a new round landed on the chain, and the record
+   * moved off the signature stage. Both are raised **with no actor** —
+   * the integration filed the paper, and there is no person to leave
+   * out.
+   */
+  notifier: Notifier;
   storage: StorageAdapter;
   log: PipelineLogger;
   /** The connector, read live per call (CTR-013's mailer-resolver
@@ -284,7 +295,7 @@ export async function fileExecutedCopy(deps: ExecutedCopyDeps, envelopeId: strin
   // kept it.
   let filed = false;
   try {
-    await deps.db.transaction(async (tx) => {
+    await deps.notifier.notifying(async (tx) => {
       // The owning contract's row, held for everything below it. It is
       // the lock the version number is assigned under — the upload
       // path's lock, so an upload and this job racing on one chain take
@@ -315,7 +326,7 @@ export async function fileExecutedCopy(deps: ExecutedCopyDeps, envelopeId: strin
       if (envelope?.executedFetch !== "pending") return;
 
       const [document] = await tx
-        .select({ title: documents.title })
+        .select({ title: documents.title, isConfidential: documents.isConfidential })
         .from(documents)
         .where(and(eq(documents.id, documentId), eq(documents.contractId, owed.contractId)))
         .limit(1);
@@ -386,8 +397,24 @@ export async function fileExecutedCopy(deps: ExecutedCopyDeps, envelopeId: strin
         payload: { documentId, title: document.title, versionId, versionNumber },
       });
 
+      // Two events beside the two entries, and both actorless: the
+      // whole team hears that the signed copy landed, and nobody is
+      // excluded because nobody did it (CTR-013). The document's own
+      // flag rides along, so a round filed onto a confidential document
+      // goes exactly as far as that document does (DOC-008).
+      await deps.notifier.documentVersionAdded(tx, {
+        contractId: owed.contractId,
+        actorId: null,
+        actorName: null,
+        documentId,
+        documentTitle: document.title,
+        isConfidential: document.isConfidential,
+        versionId,
+        versionNumber,
+      });
+
       filed = true;
-      await advanceFromSignature(tx, contract);
+      await advanceFromSignature(deps.notifier, tx, contract);
     });
   } catch (error) {
     await discardStoredCopy(deps, owed.envelopeId, stored.fileRef);
@@ -454,7 +481,8 @@ async function discardStoredCopy(
  * signature is a better answer than a status id nobody could pick.
  */
 async function advanceFromSignature(
-  tx: Transaction,
+  notifier: Notifier,
+  tx: NotifyingTransaction,
   contract: Readonly<{ id: string; number: number; title: string; statusId: string }>,
 ): Promise<void> {
   const [current] = await tx
@@ -495,6 +523,17 @@ async function advanceFromSignature(
       fromStage: SIGNATURE_STAGE,
       toStage: ACTIVE_STAGE,
     },
+  });
+  // And the record's people hear that it moved (NOT-002 group 2), with
+  // no actor for the entry's reason: the integration advanced it.
+  await notifier.statusChanged(tx, {
+    contractId: contract.id,
+    actorId: null,
+    actorName: null,
+    from: current.displayName,
+    to: target.displayName,
+    fromStage: SIGNATURE_STAGE,
+    toStage: ACTIVE_STAGE,
   });
 }
 
