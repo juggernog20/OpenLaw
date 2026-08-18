@@ -36,12 +36,12 @@ document is the map, not the territory.
 
 ## Where we are
 
-**Arc 3, milestone 17 done** — tasks, relations, and end of life. Arc 1 is done: the monorepo and CI, the
+**Arc 3 done, through milestone 18** — background jobs and notifications. Arc 1 is done: the monorepo and CI, the
 authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
 `/settings` destination with its Personal and Organization rails. Arc 2 is done too: the
 configurable types and statuses, the Entities registry, the contract record, the conversation on a
 record with the two read surfaces over the activity log, and the confidentiality gate that takes a
-walled-off contract out of the reach of everyone outside its team. Arc 3 runs to M17, with M18 still ahead: M11 puts the
+walled-off contract out of the reach of everyone outside its team. Arc 3 is now complete: M11 puts the
 paper on the record — the version chain, the storage adapter, and the two drivers behind it — M12
 makes that paper readable, with the doc panel over five families, the doc-engine sidecar, and the
 background pipeline that extracts every version's text, M13 organizes it, with folders inside
@@ -54,9 +54,12 @@ PDF that files and pins itself when everybody has signed — the manual hand-off
 configuration at all — M16 gives the record a term: the five typed columns, the notice deadline
 and the pending-confirmation state that derive themselves out of them, the key dates that join both
 in one deadline surface, and the Renew dialog that routes a renewal to whichever of the four vehicles
-the team actually used — and M17 adds the task checklist, the relations panel with parent hierarchy
-and typed directional links, and end of life as a signal that leaves the record writable. Nothing in
-it advances a date on its own; the notifier that fires on these dates is M18's.
+the team actually used — M17 adds the task checklist, the relations panel with parent hierarchy
+and typed directional links, and end of life as a signal that leaves the record writable — and M18
+finally makes the system speak: the Notifier seam, the bell with its 9+ badge, immediate email for a
+direct ask, and one morning briefing for the dates coming up, on a scheduled round that serves each
+reader at their own eight o'clock. Next is Arc 4, the front door: request types and forms (M19), the
+requester portal (M20), and the Inbox that turns a request into a record (M21).
 
 ---
 
@@ -321,7 +324,7 @@ makes OpenLaw a CLM rather than a database with a form on it.
   - Ending as a signal, not a lock; archiving kept separate
   - _Decisions:_ CTR-015, CTR-017, CTR-019
 
-- [ ] **M18 — Background jobs and notifications**
+- [x] **M18 — Background jobs and notifications**
       _Demo:_ An approaching notice deadline produces a bell item and a morning digest email, while an
       approval request emails the approver immediately.
   - pg-boss on Postgres as the job pipeline; SMTP with a provider adapter for delivery
@@ -330,7 +333,10 @@ makes OpenLaw a CLM rather than a database with a form on it.
     events that actually fire
   - Immediate email for direct events, a daily digest for dates; the admin-configurable 7/1/0 offsets
   - Bell with a 9+ capped unread badge, read-on-open
-  - _Decisions:_ TECH-007, TECH-011, NOT-001 to NOT-005
+  - One new seam, the **Notifier**: a route names what happened and never learns that channels exist,
+    who the audience is, or that anything is queued
+  - Groups 1 to 3 fire; groups 4 and 5 ship as catalog slots for the Inbox (M21) and the portal (M20)
+  - _Decisions:_ TECH-007, TECH-011, NOT-001 to NOT-005, DES-049 to DES-052 · _Issues:_ #315–#323
 
 ---
 

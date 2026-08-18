@@ -14,7 +14,7 @@ ActivityBar, Pill, Avatar) live in this file as local copies per the designs con
 | ----- | -------- | ---------------------------------------- | -------- |
 | ST1   | `t5FyJK` | Personal · Profile                       | M5       |
 | ST2   | `vVsIu`  | Personal · Appearance                    | M5       |
-| ST3   | `QQ3PT`  | Personal · Notification preferences      | M18      |
+| ST3   | `QQ3PT`  | Personal · Notification preferences      | M18 ✓    |
 | ST4   | `b3rJp`  | Organization · General                   | M5       |
 | ST5   | `vij2O`  | Organization · Users                     | M5       |
 | ST6   | `TRZzk`  | Matters settings · Types                 | M6       |
@@ -154,3 +154,16 @@ the shipped pane:
 
 Because two rail sections now carry the label "Notifications", each rail group renders as an ARIA
 `group` named by its own heading — DES-052 normalization 4. Nothing about the rail's drawing changes.
+
+## Amendment (2026-08-18, M18 close, #323) — ST3 has shipped
+
+The milestone the ST3 row has been waiting on since M5 is done, so the row now carries a **✓** beside
+its milestone: `M18 ✓`. Personal · Notification preferences is live at `/settings/notifications`, on
+the anatomy **DES-050** settles, with amendment 5 above closed by #320 and its two frame deviations
+recorded there — group 2 as one row rather than a header plus four sub-rows, and an interactive
+In-app column. **ST3 is not redrawn**, for the reason ST7 was left as drawn: the deviations are
+recorded in a decision, and decisions win over the mocks.
+
+The tick is on this row alone, and that is a gap rather than a convention: every other frame whose
+milestone has landed is equally shipped and says only its number. Marking the rest belongs to a sweep
+of the whole table — the M19 Intake pass owns the next one, and it can mark them all at once.

@@ -56,6 +56,12 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 
   **The read side re-applies the confidentiality predicate on every read** — the list **and** the count, through one predicate composed from `contractTeamScope`. An item about a record walled off after it was written leaves both, silently: no row, no gap, and no number that says something was left out (M10's answer, on a surface DD-014 was never written about). The row itself stays in the table, so opening the wall again brings the item back.
 
+- **Addendum (2026-08-18, M18/8, [#323](https://github.com/juggernog20/OpenLaw/issues/323))** — **The dedup identity names the record, not the date row, and that is a product answer as well as a schema one.** The identity is user, event, entity, the date value, and the offset (M18/1), and `entity` is the contract. So several named key dates that fall on **one record on one day** are **one** bell item and **one** briefing line, not one each — the second insert conflicts with the first and is dropped, and the line the reader gets carries whichever label was written first.
+
+  It is stated here because the milestone close is where anybody found out. The bell's own sentence is already written at that grain — "A key date on {contract} is coming up" — so the item is true either way; the **briefing** is where the difference shows, because a digest line names the date. The alternative is to widen the identity with `key_date_id`, which would give a reader one line per named date and give an install with a busy record a briefing several lines longer for one day. Neither is obviously right, and nothing decided it: this addendum records what shipped so the choice can be made deliberately rather than discovered again.
+
+  **Nothing else collapses.** Two approval requests for one person on one record are still two rows — the partial index only covers rows that carry a reminder date (M18/6) — and a date that **moves** carries a different value and is a different identity, so it fires again.
+
 ## NOT-002 — Event catalog: five groups, defaults by interruptiveness
 
 - **Status** — Accepted
@@ -121,6 +127,12 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 
   **Every write narrates, not only every change of effect.** `user.notification_preference_changed` carries the group, the channel, and the new value, and it carries no `old` side — the table holds overrides, so the value before a first save is a default read out of application code and not a stored fact the writer could report. Re-affirming an opinion against a default that may later move is a real act, so it is written down.
 
+- **Addendum (2026-08-18, M18/8, [#323](https://github.com/juggernog20/OpenLaw/issues/323))** — **The tier gates at write time; the wall gates continuously.** M18/3 recorded that DD-016's comment tier narrows a mention's audience beside DD-014's wall. What it did not say is that the two are re-asked on different schedules, and the asymmetry is deliberate rather than a gap.
+
+  The wall is re-applied **every time**: on both bell reads, on both bell writes, when the immediate send job resolves a message, and when the morning round assembles a briefing. The tier is applied **once**, when the fan-out writes the row. So somebody moved out of the Legal Only room between the write and the send still receives the mention email, and still holds the bell item.
+
+  That is coherent because of what each message carries. **No mention email carries the comment's words** (M18/3), and the bell item carries none either — both say who named you and where to go. The read side re-applies only the wall, so the row that person still holds and the mail they receive agree with each other; a tier re-check on one and not the other is what would produce a disagreement. A tier that gated continuously would also mean a bell item vanishing because a thread was re-tiered, which is a fact about the conversation and not about the reader's reach.
+
 ## NOT-003 — Timing: direct events immediate; date reminders in a daily digest
 
 - **Status** — Accepted
@@ -167,6 +179,10 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
   **The list can never be emptied.** The route refuses an empty list and the pane locks the last remaining row. No lead times would mean no reminders at all — and because the read falls back to the seed on an unusable list, an empty list could not be told apart from a corrupt one. Silence is chosen per event group on the NOT-002 preferences pane, where it is a choice with a name; it does not fall out of a settings row.
 
   **Bounded, and the bounds are the round's.** A saved lead time is a whole number of days from 0 to 730, and a list holds at most twenty of them — the same numbers the live read already enforces, so the pane cannot save something the round would then drop. A duplicate collapses to its first position, because two copies of `7` are one lead time.
+
+- **Addendum (2026-08-18, M18/8, [#323](https://github.com/juggernog20/OpenLaw/issues/323))** — **A day with no round at all is a day of dates nobody hears about, and that bound is the price of equality matching.** The addendum above says an offset names one day and the comparison is equality. The consequence was left unwritten: the reminders owed on a given local date are only ever raised by a round that runs on that date. The `>= 08:00` gate covers an install whose worker was down at somebody's eight o'clock — they are served at nine, or at noon — and it covers nothing wider. A worker down from one midnight to the next skips that day's dates outright, and the next day's round asks about the next day's dates.
+
+  It is recorded rather than closed. Widening the match to "on or before today, and not already fired" would heal the outage and would also fire every past offset the moment an install lengthens its list, which is precisely what M18/6 declined. The honest statement is that reminders are best-effort against a running install, while the deadline surfaces on the record (CTR-006, CTR-009) are always true — the record is the source, and the briefing is a prompt.
 
 ## NOT-005 — Badge: unread count, 9+ cap, read-on-open
 
