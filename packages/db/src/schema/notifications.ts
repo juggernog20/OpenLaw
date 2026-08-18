@@ -215,6 +215,7 @@ export const notifications = pgTable(
       .on(
         table.userId,
         table.eventType,
+        table.entityType,
         table.entityId,
         table.reminderDate,
         table.reminderOffsetDays,
@@ -222,7 +223,7 @@ export const notifications = pgTable(
       .where(sql`reminder_date is not null`),
     check(
       "notifications_entity_type_check",
-      sql`${table.entityType} in ('matter', 'contract', 'document', 'request')`,
+      sql`${table.entityType} in (${sql.raw(NOTIFICATION_ENTITY_TYPES.map((t) => `'${t}'`).join(", "))})`,
     ),
     /** A reminder carries both halves of its identity or neither. Half
      * a key is a row the unique index above cannot hold. */
@@ -280,9 +281,12 @@ export const notificationPreferences = pgTable(
     }),
     check(
       "notification_preferences_group_check",
-      sql`${table.eventGroup} in ('assigned_to_you', 'activity_on_your_records', 'dates_approaching', 'new_requests', 'requester_events')`,
+      sql`${table.eventGroup} in (${sql.raw(NOTIFICATION_EVENT_GROUPS.map((g) => `'${g}'`).join(", "))})`,
     ),
-    check("notification_preferences_channel_check", sql`${table.channel} in ('in_app', 'email')`),
+    check(
+      "notification_preferences_channel_check",
+      sql`${table.channel} in (${sql.raw(NOTIFICATION_CHANNELS.map((c) => `'${c}'`).join(", "))})`,
+    ),
   ],
 );
 
