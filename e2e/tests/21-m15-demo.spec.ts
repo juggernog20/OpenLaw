@@ -784,14 +784,18 @@ test.describe("M15 demo path", () => {
 
       // The pin is its own act, on the version's own row (CTR-014): a
       // round tagged `executed` is what its uploader called it, and the
-      // pin is what names the signed copy.
+      // pin is what names the signed copy. It is a row-menu item rather
+      // than an inline toggle since 2026-08-18 — an icon-only pin told
+      // nobody what it did — so the act is: open the row's menu, pick
+      // the verb.
       const pinned = memberPage.waitForResponse(
         (response) =>
           response.url().includes("/executed-version") && response.request().method() === "POST",
       );
       await documentsSection(memberPage)
-        .getByRole("button", { name: /^Pin version 2 of .* as the executed copy$/ })
+        .getByRole("button", { name: `Actions for ${draft.name}` })
         .click();
+      await memberPage.getByRole("menuitem", { name: "Mark as executed copy" }).click();
       expect((await pinned).status(), await (await pinned).text()).toBe(200);
 
       // The screen half: the round that matters now, and the round the
@@ -801,10 +805,24 @@ test.describe("M15 demo path", () => {
         .filter({ hasText: executed.note });
       await expect(executedRow).toHaveCount(1);
       await expect(executedRow).toContainText("v2");
-      await expect(executedRow).toContainText("Current");
+      // The head of the chain, said by position: this row owns the
+      // disclosure the earlier round is folded under. The "Current"
+      // badge that used to say it was dropped on 2026-08-18 as a
+      // restatement of exactly this.
       await expect(
-        executedRow.getByRole("button", { name: /^Pin version 2 of .* as the executed copy$/ }),
-      ).toHaveAttribute("aria-pressed", "true");
+        executedRow.getByRole("button", { name: /^Show the 1 earlier version of / }),
+      ).toHaveCount(1);
+      // The pin itself, read where it now lives. The menu names what a
+      // second pick would do, so "Unmark" is the pinned state — and it
+      // is the pin talking, not the kind: a row drawn from the kind
+      // would still offer "Mark".
+      await documentsSection(memberPage)
+        .getByRole("button", { name: `Actions for ${draft.name}` })
+        .click();
+      await expect(
+        memberPage.getByRole("menuitem", { name: "Unmark as executed copy" }),
+      ).toBeVisible();
+      await memberPage.keyboard.press("Escape");
 
       // The seam half: two rounds, the pin on the second, and it is a
       // column of its own rather than a reading of the kind.
@@ -1183,13 +1201,23 @@ test.describe("M15 demo path", () => {
         .filter({ hasText: draft.name });
       await expect(executedRow).toHaveCount(1);
       await expect(executedRow).toContainText("v3");
-      await expect(executedRow).toContainText("Current");
-      // The pin itself, on the version it names: the toggle carries the
-      // state, so a section that drew "Executed" off the kind would
-      // leave this control unpressed.
+      // The head of the chain, said by position rather than by a badge
+      // (2026-08-18): this row owns the disclosure the two earlier
+      // rounds are folded under.
       await expect(
-        executedRow.getByRole("button", { name: /^Pin version 3 of .* as the executed copy$/ }),
-      ).toHaveAttribute("aria-pressed", "true");
+        executedRow.getByRole("button", { name: /^Show the 2 earlier versions of / }),
+      ).toHaveCount(1);
+      // The pin itself, on the version it names. It is a row-menu item
+      // now, and the menu names what a second pick would do — so
+      // "Unmark" is the pinned state, and a section that drew
+      // "Executed" off the kind would still be offering "Mark".
+      await documentsSection(senderPage)
+        .getByRole("button", { name: `Actions for ${draft.name}` })
+        .click();
+      await expect(
+        senderPage.getByRole("menuitem", { name: "Unmark as executed copy" }),
+      ).toBeVisible();
+      await senderPage.keyboard.press("Escape");
 
       // ---- Story 20: the signing story, in order, on the record ----
 
