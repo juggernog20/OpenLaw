@@ -247,7 +247,10 @@ If the app instead refuses to start with `This database cannot apply the migrati
      -c 'select hash, created_at from drizzle.__drizzle_migrations order by created_at desc limit 5;'
 
    # Every migration's tag, stamp and hash — join the two on hash.
-   node scripts/lint-migration-journal.mjs --hashes
+   # `run`, not `exec`: the app container is refusing to boot right now.
+   # The image carries this script, so the mapping is the exact journal
+   # your version boots with.
+   docker compose run --rm --no-deps app node scripts/lint-migration-journal.mjs --hashes
    ```
 
 4. **Find the offending row.** It is the one whose `created_at` is later than the stamp of a migration that comes after it.
