@@ -254,6 +254,12 @@
   "activity.notSet": {
     "defaultMessage": "Not set"
   },
+  "activity.notificationPreference.unknownChannel": {
+    "defaultMessage": "a channel"
+  },
+  "activity.notificationPreference.unknownGroup": {
+    "defaultMessage": "an event group"
+  },
   "activity.older": {
     "defaultMessage": "Show older"
   },

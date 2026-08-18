@@ -1699,8 +1699,21 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
         "requester_events {requester events} other {{group}}}",
     }),
     values: (intl, payload) => ({
-      channel: named(intl, payload, "channel"),
-      group: named(intl, payload, "eventGroup"),
+      // Their own fallbacks rather than {@link named}'s, because that
+      // one is a person's — "turned someone off for someone" is not a
+      // sentence. Either fallback lands in the select's `other` arm.
+      channel:
+        text(payload, "channel") ??
+        intl.formatMessage({
+          id: "activity.notificationPreference.unknownChannel",
+          defaultMessage: "a channel",
+        }),
+      group:
+        text(payload, "eventGroup") ??
+        intl.formatMessage({
+          id: "activity.notificationPreference.unknownGroup",
+          defaultMessage: "an event group",
+        }),
       state: payload.enabled === true ? "on" : "off",
     }),
   },
