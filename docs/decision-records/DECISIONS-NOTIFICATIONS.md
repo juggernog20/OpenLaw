@@ -270,13 +270,13 @@ The row is the record of work owed, the queue is only the wake-up, and a lost wa
 
 ### Why not a lease
 
-A claim-with-expiry (mark claimed, send, settle; dead worker's lease expires and the row returns to owed) gets both properties — no duplicate, no drop — at the cost of a new column, a recovery path, and a second timeout to reason about. It is the only option that removes the duplicate without risking a drop. It is declined for now because:
+A claim-with-expiry (mark claimed, send, settle; dead worker's lease expires and the row returns to owed) reduces concurrent duplicates while preserving recovery, but it can still duplicate if a worker dies after sending and before settlement. It is the closest to eliminating the duplicate without risking a drop. It is declined for now because:
 
 - The window is small: three attempts over roughly 90 seconds against a 120-second queue expiry.
 - Nothing here affects a single-worker install, which is the default self-hosted shape.
 - A duplicate notification email is mild; a dropped one is not recoverable.
 
-A lease is the right answer if the duplicate rate ever becomes a real complaint under multi-replica deploys. This decision is revisable without a schema migration if the lease column is added then.
+A lease is the right answer if the duplicate rate ever becomes a real complaint under multi-replica deploys. Adding it later requires a schema migration, recovery behaviour, and tests for the failure-after-send boundary.
 
 ### Why not queue tightening
 
