@@ -51,15 +51,61 @@ export interface JournalEntry {
   hash: string;
 }
 
-interface RawJournal {
-  entries?: { idx: number; tag: string; when: number }[];
+interface RawEntry {
+  idx: number;
+  tag: string;
+  when: number;
+}
+
+/**
+ * Reads the journal's entries, checking the shape rather than trusting it.
+ *
+ * The journal is committed to this repo, so it is not hostile input. It
+ * is still worth checking, because the way it goes wrong is quiet: a bad
+ * merge or a hand edit leaves an entry short of a field, and an entry
+ * whose `when` is `undefined` compares false against every stamp it is
+ * held up to. The guard below would then find nothing wrong and let the
+ * boot through — the exact silent pass it exists to prevent. A journal
+ * this code cannot make sense of has to stop the boot, not be read past.
+ */
+function readJournalEntries(parsed: unknown, journalPath: string): RawEntry[] {
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    throw new Error(`${journalPath} is not a JSON object.`);
+  }
+  const { entries } = parsed as { entries?: unknown };
+  if (entries === undefined) return [];
+  if (!Array.isArray(entries)) {
+    throw new Error(`${journalPath} has an "entries" field that is not an array.`);
+  }
+  return entries.map((entry: unknown, position) => {
+    const where = `${journalPath}, entry at position ${position}`;
+    if (typeof entry !== "object" || entry === null) {
+      throw new Error(`${where}: expected an object.`);
+    }
+    const { idx, tag, when } = entry as { idx?: unknown; tag?: unknown; when?: unknown };
+    if (typeof idx !== "number" || !Number.isInteger(idx)) {
+      throw new Error(`${where}: "idx" must be a whole number.`);
+    }
+    if (typeof tag !== "string" || tag.length === 0) {
+      throw new Error(`${where}: "tag" must be a non-empty string.`);
+    }
+    if (typeof when !== "number" || !Number.isFinite(when)) {
+      throw new Error(`${where}: "when" must be a number — it is the stamp the migrator compares.`);
+    }
+    return { idx, tag, when };
+  });
 }
 
 /** Reads `meta/_journal.json` and hashes each migration file beside it. */
 export function readMigrationJournal(migrationsFolder: string): JournalEntry[] {
   const journalPath = join(migrationsFolder, "meta", "_journal.json");
-  const journal = JSON.parse(readFileSync(journalPath, "utf8")) as RawJournal;
-  return (journal.entries ?? []).map((entry) => ({
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(readFileSync(journalPath, "utf8"));
+  } catch (cause) {
+    throw new Error(`${journalPath} is not valid JSON.`, { cause });
+  }
+  return readJournalEntries(parsed, journalPath).map((entry) => ({
     idx: entry.idx,
     tag: entry.tag,
     when: entry.when,

@@ -36,6 +36,27 @@ const journal = JSON.parse(readFileSync(journalPath, "utf8"));
 // serialized and never reads `idx`, so this array *is* the sequence.
 const entries = journal.entries ?? [];
 
+// Check the shape before comparing anything. An entry missing `when`
+// compares false against every stamp, so a malformed journal would sail
+// through the checks below and report itself in order.
+for (const [position, entry] of entries.entries()) {
+  const where = `entry at position ${position}`;
+  if (typeof entry !== "object" || entry === null) fail(`${where}: expected an object`);
+  if (!Number.isInteger(entry.idx)) fail(`${where}: "idx" must be a whole number`);
+  if (typeof entry.tag !== "string" || entry.tag.length === 0) {
+    fail(`${where}: "tag" must be a non-empty string`);
+  }
+  if (!Number.isFinite(entry.when)) {
+    fail(`${where}: "when" must be a number — it is the stamp the migrator compares`);
+  }
+}
+
+function fail(message) {
+  console.error(`migration journal: ${journalPath} is malformed`);
+  console.error(`  ${message}`);
+  process.exit(1);
+}
+
 /** Sha256 of a migration's text — the digest recorded in the database. */
 function hashOf(tag) {
   return createHash("sha256")

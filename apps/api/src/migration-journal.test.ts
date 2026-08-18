@@ -3,9 +3,13 @@
 /**
  * The migration journal guard (#330), against a real database.
  *
- * Lives in apps/api because that is where the Postgres test harness is
- * (`secrets.test.ts` is the same pattern: @openlaw/db behavior, asserted
- * here). packages/db has no test runner.
+ * Lives in apps/api because that is where the Postgres test harness is.
+ * `src/lib/secrets.test.ts` is the same pattern and the precedent for it:
+ * @openlaw/db behaviour (`readSecretKeys`, `rewrapSecrets`) asserted from
+ * here against a real database. packages/db has no test runner, and
+ * standing one up for one file would add vitest and testcontainers to a
+ * package nothing else tests. The "assert at the HTTP seam" rule is about
+ * route tests — there is no route here to assert against.
  *
  * The failure this guards is invisible by construction: Drizzle compares
  * one number, so a recorded stamp that is too high makes the migrator
@@ -147,6 +151,43 @@ describe("findJournalDisorder", () => {
       "a sits at position 1 carrying idx 0. The migrator applies entries in the order they are written, so the two must agree.",
       "a is stamped 10, which is not later than b (20). An install that applies b will skip a for ever.",
     ]);
+  });
+});
+
+describe("a journal that cannot be read", () => {
+  /** Writes `meta/_journal.json` into a throwaway folder and returns the folder. */
+  async function journalFolder(contents: string): Promise<string> {
+    const { mkdtemp, mkdir, writeFile } = await import("node:fs/promises");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const folder = await mkdtemp(join(tmpdir(), "openlaw-journal-"));
+    await mkdir(join(folder, "meta"), { recursive: true });
+    await writeFile(join(folder, "meta", "_journal.json"), contents);
+    return folder;
+  }
+
+  it("refuses an entry with no stamp, rather than comparing undefined", async () => {
+    // The quiet failure this closes: `undefined <= n` is false, so an
+    // entry missing `when` looks in order to every check downstream.
+    const folder = await journalFolder(JSON.stringify({ entries: [{ idx: 0, tag: "0000_x" }] }));
+    expect(() => readMigrationJournal(folder)).toThrow(
+      /entry at position 0: "when" must be a number/,
+    );
+  });
+
+  it("refuses an entry with no tag", async () => {
+    const folder = await journalFolder(JSON.stringify({ entries: [{ idx: 0, when: 1 }] }));
+    expect(() => readMigrationJournal(folder)).toThrow(/"tag" must be a non-empty string/);
+  });
+
+  it("refuses entries that are not an array", async () => {
+    const folder = await journalFolder(JSON.stringify({ entries: { idx: 0 } }));
+    expect(() => readMigrationJournal(folder)).toThrow(/"entries" field that is not an array/);
+  });
+
+  it("refuses a file that is not valid JSON, naming it", async () => {
+    const folder = await journalFolder("{ entries: [ ");
+    expect(() => readMigrationJournal(folder)).toThrow(/_journal\.json is not valid JSON/);
   });
 });
 
