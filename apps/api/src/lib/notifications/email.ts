@@ -56,9 +56,17 @@ export interface NotificationMail {
 }
 
 /** This install's address, with any trailing slashes taken off, so every
- * link below is built by joining rather than by hoping. */
+ * link below is built by joining rather than by hoping.
+ *
+ * Trimmed by hand rather than by `/\/+$/`, which backtracks polynomially
+ * on an address that is mostly slashes. `BASE_URL` is an operator's own
+ * setting and not a caller's, so nobody can reach this from outside —
+ * but a scan cannot know that, and the loop is plainer than the argument
+ * for keeping the regex would have been. */
 function origin(baseUrl: string): string {
-  return baseUrl.replace(/\/+$/, "");
+  let end = baseUrl.length;
+  while (end > 0 && baseUrl[end - 1] === "/") end -= 1;
+  return baseUrl.slice(0, end);
 }
 
 /** The deep link one notification points at: the record itself. */
