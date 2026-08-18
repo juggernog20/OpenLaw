@@ -53,6 +53,7 @@ import {
   commentMentions,
   eq,
   notifications,
+  sql,
   type CommentVisibility,
   type ContractStage,
   type Db,
@@ -240,6 +241,53 @@ export interface EnvelopeEndedEvent extends RecordEvent {
   status: EnvelopeStatus;
 }
 
+/**
+ * What one approaching date tells the people the round is serving
+ * (NOT-002 group 3, NOT-004).
+ *
+ * **There is no actor**, and the field is absent rather than null: a
+ * date arriving is nobody's act. The round is the calendar speaking, in
+ * the same way the reconciliation round is the integration speaking.
+ *
+ * **The people are the caller's**, as they are for every group-1 event.
+ * The round has already decided *whose morning it is* — a fact about
+ * clocks that the seam has no business knowing — so it names them, and
+ * the seam still decides whether the record lets them be told.
+ *
+ * **The record names itself through the caller**, as group 1's does: the
+ * round has just read the contract's row to find the date on it, so
+ * asking the seam to read it again would be the same query twice.
+ */
+export interface DateReminderEvent {
+  contractId: string;
+  contractNumber: number;
+  contractTitle: string;
+  /**
+   * The date this reminder is about, as a civil date. Half of the dedup
+   * identity: a date that **moves** is a different value, so it fires
+   * again for the new one and the row about the old one stays where it
+   * is.
+   */
+  reminderDate: string;
+  /** Which NOT-004 offset fired it — the other half of the identity, so
+   * one date reminds at seven days, at one day, and on the day, and
+   * never twice at the same distance. */
+  offsetDays: number;
+  /** The people this round is serving about this record. */
+  userIds: readonly string[];
+}
+
+/** What one approaching key date carries beyond the rest (CTR-009). */
+export interface KeyDateReminderEvent extends DateReminderEvent {
+  /** The row the date is on, so the item can address the record's Key
+   * dates section (DES-049 clause 9) and a reader can tell two dates on
+   * one record apart. */
+  keyDateId: string;
+  /** What somebody called it. A key date with no name is refused at the
+   * door (CTR-009), so this is always a real label. */
+  label: string;
+}
+
 export interface Notifier {
   /**
    * Runs one mutation and everything it has to tell people about, in
@@ -353,6 +401,38 @@ export interface Notifier {
    * person who took it, exactly as the activity entry beside it does.
    */
   envelopeEnded(tx: NotifyingTransaction, event: EnvelopeEndedEvent): Promise<void>;
+
+  /**
+   * A named date on a record is approaching (CTR-009) — group 3, bell on
+   * and email in the morning digest (NOT-003).
+   *
+   * Raised only by the morning round, which is what decides that this
+   * date is due at one of NOT-004's offsets and whose morning it is.
+   *
+   * Answers **how many rows it wrote**, which every group-3 method does
+   * and no other method needs to. The round is the only caller and it is
+   * a sweep: its log has to say what a round did, and "told nobody,
+   * because the identity was already held" is the ordinary outcome of
+   * every round after the first.
+   */
+  keyDateApproaching(tx: NotifyingTransaction, event: KeyDateReminderEvent): Promise<number>;
+
+  /**
+   * A record's notice deadline is approaching (CTR-006) — group 3, bell
+   * on and email in the morning digest (NOT-003).
+   *
+   * The date is the expiry minus the notice period, **computed by the
+   * round's own query and stored nowhere** (M16's doctrine). It arrives
+   * here as a value like any other; nothing behind this seam knows it was
+   * derived.
+   */
+  noticeDeadlineApproaching(tx: NotifyingTransaction, event: DateReminderEvent): Promise<number>;
+
+  /**
+   * A record's term is running out (CTR-006) — group 3, bell on and
+   * email in the morning digest (NOT-003).
+   */
+  expiryApproaching(tx: NotifyingTransaction, event: DateReminderEvent): Promise<number>;
 }
 
 /**
@@ -406,7 +486,19 @@ async function fanOut(
    * flag is the file it was said about (DOC-008). Both narrow; neither
    * widens. */
   narrowing: { tier?: CommentVisibility; confidentialDocument?: boolean } = {},
-): Promise<void> {
+  /**
+   * The dedup identity of a date reminder (NOT-003/004), on the events
+   * that have one and absent on every other.
+   *
+   * Present, it does two things: it fills the two columns the partial
+   * unique index is built on, and it makes the insert ignore a conflict
+   * on that index. Those are the same decision — the identity is only
+   * worth writing because a second round writing it again has to be a
+   * no-op, and a date that has **moved** has a different identity and so
+   * is not a conflict at all.
+   */
+  reminder?: { date: string; offsetDays: number },
+): Promise<number> {
   // 1. The audience, minus the person who caused it. Deduplicated: one
   // event tells one person once, however many rows named them.
   const byUser = new Map<string, PendingNotification>();
@@ -414,7 +506,7 @@ async function fanOut(
     if (actorId !== null && person.userId === actorId) continue;
     if (!byUser.has(person.userId)) byUser.set(person.userId, person);
   }
-  if (byUser.size === 0) return;
+  if (byUser.size === 0) return 0;
 
   // 2. The wall (DD-014). Applied here so no event can skip it.
   const reachable = await reachedBy(tx, contractId, [...byUser.keys()], narrowing);
@@ -449,23 +541,47 @@ async function fanOut(
         // preference row says — otherwise the row would claim a debt
         // nothing in the system could ever pay.
         emailOwed: choice.email && timing !== "none",
+        // Both halves or neither — the table's own check. A reminder
+        // that carried one of them would be a row the unique index
+        // cannot hold.
+        ...(reminder
+          ? { reminderDate: reminder.date, reminderOffsetDays: reminder.offsetDays }
+          : {}),
       },
     ];
   });
-  if (rows.length === 0) return;
+  if (rows.length === 0) return 0;
 
   // 4. The rows, inside the caller's transaction.
-  const written = await tx
-    .insert(notifications)
-    .values(rows)
-    .returning({ id: notifications.id, emailOwed: notifications.emailOwed });
+  const insert = tx.insert(notifications).values(rows);
+  const written = await (
+    reminder
+      ? insert.onConflictDoNothing({
+          // The partial unique index, named by its own columns and its
+          // own predicate so Postgres infers *that* index rather than
+          // ignoring every conflict there could ever be. Two approval
+          // requests for one person on one record are two real
+          // notifications, and this must never quietly swallow the
+          // second of them.
+          target: [
+            notifications.userId,
+            notifications.eventType,
+            notifications.entityId,
+            notifications.reminderDate,
+            notifications.reminderOffsetDays,
+          ],
+          where: sql`reminder_date is not null`,
+        })
+      : insert
+  ).returning({ id: notifications.id, emailOwed: notifications.emailOwed });
 
   // 5. The wake-ups, collected for after the commit — only for the
   // rows whose email leaves at once. A digest row owes its email to the
   // scheduled round, which reads the rows rather than the queue.
-  if (timing !== "immediate") return;
+  if (timing !== "immediate") return written.length;
   const wakeUps = wakeUpsOf(tx);
   for (const row of written) if (row.emailOwed) wakeUps.push(row.id);
+  return written.length;
 }
 
 /**
@@ -517,6 +633,57 @@ async function fanOutToRecord(
       },
     })),
     options.narrowing ?? {},
+  );
+}
+
+/**
+ * The whole of NOT-002's group 3, for one date on one record.
+ *
+ * The three date events differ by a slug and by whether the date has a
+ * name of its own, so they are one function here and three one-line
+ * methods below — the shape group 2 already has, for its reason: what
+ * they share is the decision, and what they differ by is a payload key.
+ *
+ * **Every one of them carries the dedup identity**, which is what makes
+ * a second round a no-op and a **moved** date a new reminder rather than
+ * a suppressed one. It is passed here rather than left to each method,
+ * so a fourth kind of date added later cannot be the one that forgets.
+ *
+ * **The actor is nobody.** A date arriving is not somebody's act, so
+ * nobody is excluded and the whole audience is told — including the
+ * person who typed the date in.
+ */
+function dateReminder(
+  tx: NotifyingTransaction,
+  eventType: NotificationEventType,
+  event: DateReminderEvent,
+  extra: Record<string, unknown>,
+): Promise<number> {
+  return fanOut(
+    tx,
+    eventType,
+    event.contractId,
+    null,
+    event.userIds.map((userId) => ({
+      userId,
+      payload: {
+        ...extra,
+        contractNumber: event.contractNumber,
+        contractTitle: event.contractTitle,
+        // Null rather than absent, so the bell's narrator and the mail's
+        // template read the same two keys on every event in the catalog
+        // and never have to ask whether this one has an actor.
+        actorId: null,
+        actorName: null,
+        // Snapshotted with the row, as every payload is: the digest that
+        // renders this row reads the date from here, so a date edited
+        // after the reminder fired cannot rewrite what the reminder said.
+        reminderDate: event.reminderDate,
+        offsetDays: event.offsetDays,
+      },
+    })),
+    {},
+    { date: event.reminderDate, offsetDays: event.offsetDays },
   );
 }
 
@@ -707,6 +874,21 @@ export function createNotifier(deps: NotifierDeps): Notifier {
         envelopeId: event.envelopeId,
         status: event.status,
       });
+    },
+
+    keyDateApproaching(tx: NotifyingTransaction, event: KeyDateReminderEvent): Promise<number> {
+      return dateReminder(tx, "date.key_date_approaching", event, {
+        keyDateId: event.keyDateId,
+        label: event.label,
+      });
+    },
+
+    noticeDeadlineApproaching(tx: NotifyingTransaction, event: DateReminderEvent): Promise<number> {
+      return dateReminder(tx, "date.notice_deadline_approaching", event, {});
+    },
+
+    expiryApproaching(tx: NotifyingTransaction, event: DateReminderEvent): Promise<number> {
+      return dateReminder(tx, "date.expiry_approaching", event, {});
     },
   };
 }

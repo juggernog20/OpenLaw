@@ -191,6 +191,17 @@ export interface TestHarness {
    * like production, with sends still captured when configured.
    */
   smtpEnv: { url: string; from: string } | null;
+  /**
+   * The production mailer resolver over that capturing mailer — the same
+   * value the app and the pipeline are built with (#37, TECH-011).
+   *
+   * A suite needs it to run the morning round (M18/6) in process, which
+   * the worker starts with exactly this dependency. Handing over the
+   * resolver rather than the mailer is the point: resolution is
+   * env-else-database and happens per send, so a suite that clears
+   * `smtpEnv` changes what the next briefing resolves.
+   */
+  resolveMailer: MailerResolver;
   /** The injected storage adapter — the local driver over a temporary root. */
   storage: StorageAdapter;
   /** That temporary root, so a suite can read what the driver is
@@ -418,6 +429,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       app,
       db,
       mailer,
+      resolveMailer,
       storage,
       storageRoot,
       docEngine,
