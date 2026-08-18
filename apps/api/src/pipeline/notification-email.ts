@@ -219,6 +219,11 @@ async function sendNotificationEmail(
       contractTitle,
       actorName: typeof payload.actorName === "string" ? payload.actorName : null,
       recipientName: row.recipientName,
+      // The rest of the snapshot, for the arms that name something
+      // inside the record. The template layer reads it defensively; the
+      // two keys above are lifted out because every arm needs them and
+      // a row without them has no address at all.
+      details: payload,
     },
     row.recipientEmail,
     deps.baseUrl,

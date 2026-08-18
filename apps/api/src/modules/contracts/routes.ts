@@ -2258,7 +2258,10 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const body = request.body;
-      const updated = await app.db.transaction(async (tx) => {
+      // The seam's transaction rather than the database's: this PATCH is
+      // the one that can hand a record to somebody (CTR-004), and the
+      // bell row for it belongs inside the same commit as the column.
+      const updated = await app.notifier.notifying(async (tx) => {
         const current = await lockedContract(tx, request.params.number, request.user);
         // Reach was answered above, for this patch and every other one,
         // whatever the body carries. What is left is the flag's own
@@ -2656,6 +2659,23 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
                 status: approval.status,
               })),
             },
+          });
+        }
+        // Being handed a contract is done *to* you, so it is NOT-002's
+        // group 1: the bell rings and the email leaves at once. Raised
+        // **after** the UPDATE, because a confidential record reaches
+        // its Owner by them being its Owner (CTR-022) — before the
+        // write, the wall is still answering about the previous one.
+        // Clearing the Owner raises nothing: unassigned is a real state
+        // (triage), and it hands the record to nobody.
+        if (patch.managerId) {
+          await app.notifier.ownerAssigned(tx, {
+            contractId: target.id,
+            contractNumber: row!.number,
+            contractTitle: row!.title,
+            actorId: request.user.id,
+            actorName: request.user.displayName,
+            ownerId: patch.managerId,
           });
         }
         if (confidentialityChange !== undefined) {

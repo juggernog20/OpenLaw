@@ -26,7 +26,16 @@
  * with it.
  */
 
-import { and, contracts, eq, inArray, notifications, type Executor, type SQL } from "@openlaw/db";
+import {
+  and,
+  contracts,
+  eq,
+  inArray,
+  notifications,
+  type CommentVisibility,
+  type Executor,
+  type SQL,
+} from "@openlaw/db";
 import type { AuthenticatedUser } from "../../auth/user.js";
 import { contractMentionCandidates, contractTeamScope } from "../contract-access.js";
 
@@ -35,13 +44,24 @@ import { contractMentionCandidates, contractTeamScope } from "../contract-access
 export const CONTRACT_ENTITY = "contract" as const;
 
 /**
- * Of the people an event named, the ones the record reaches.
+ * Of the people an event named, the ones the record reaches — and, where
+ * the event is about something said at a tier, the ones that tier reaches
+ * too.
  *
  * `contractMentionCandidates` is asked rather than a rule of this
  * module's own, for the reason the approvals route asks it: it is the
  * reach predicate said over people, so "who may be told" can never
  * disagree with "who may open it". Archived people are out by the same
- * call (SET-005) — telling somebody who has left reaches nobody.
+ * call (SET-005) — telling somebody who has left reaches nobody. And the
+ * same call already answers each person's DD-016 rooms, so the tier is a
+ * narrowing of the one predicate rather than a second one beside it.
+ *
+ * **`tier` is how a mention holds DD-016** (CMT-007). A notification
+ * about a comment is a sentence about that comment, so it may go exactly
+ * as far as the comment does: a Legal Only mention reaches nobody the
+ * tier excludes. The composer's refusal is the first gate and this is the
+ * one no future call site can forget — the wall's own posture, applied to
+ * the second boundary.
  *
  * Order is not preserved and does not matter: the caller writes one row
  * per person, and the bell orders by time.
@@ -50,10 +70,15 @@ export async function reachedBy(
   db: Executor,
   contractId: string,
   userIds: readonly string[],
+  tier?: CommentVisibility,
 ): Promise<Set<string>> {
   if (userIds.length === 0) return new Set();
   const candidates = await contractMentionCandidates(db, contractId, userIds);
-  return new Set(candidates.map((person) => person.id));
+  return new Set(
+    candidates
+      .filter((person) => tier === undefined || person.tiers.includes(tier))
+      .map((person) => person.id),
+  );
 }
 
 /**

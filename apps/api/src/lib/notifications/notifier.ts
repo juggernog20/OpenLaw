@@ -42,10 +42,12 @@
 
 import {
   and,
+  commentMentions,
   eq,
   inArray,
   notificationPreferences,
   notifications,
+  type CommentVisibility,
   type Db,
   type NotificationEventGroup,
   type NotificationEventType,
@@ -108,6 +110,53 @@ export interface ApprovalRequestedEvent {
   approvals: readonly { approvalId: string | null; approverId: string }[];
 }
 
+/** What one hand-over tells the person it was handed to (CTR-004). */
+export interface OwnerAssignedEvent {
+  contractId: string;
+  contractNumber: number;
+  contractTitle: string;
+  /** Who handed it over. They are excluded from their own event, which
+   * is what makes taking a record yourself silent. */
+  actorId: string;
+  actorName: string;
+  /** The new Owner — the whole audience of this event. Clearing the
+   * Owner hands the record to nobody, so the route raises nothing. */
+  ownerId: string;
+}
+
+/** What one task assignment tells its assignee (CTR-017). */
+export interface TaskAssignedEvent {
+  contractId: string;
+  contractNumber: number;
+  contractTitle: string;
+  actorId: string;
+  actorName: string;
+  /** The task's own id and title. The item and the email name the thing
+   * that was assigned, not only the record it sits on. */
+  taskId: string;
+  taskTitle: string;
+  /** Who it was given to — the whole audience of this event. */
+  assigneeId: string;
+}
+
+/** What one comment tells the people it addresses (CMT-007). */
+export interface CommentMentionedEvent {
+  contractId: string;
+  contractNumber: number;
+  contractTitle: string;
+  actorId: string;
+  actorName: string;
+  /**
+   * The comment that named them. The seam reads its audience from
+   * `comment_mentions` rather than taking a list of people from the
+   * route: who a comment addresses is a queryable list, and the table is
+   * the only thing that knows it.
+   */
+  commentId: string;
+  /** The comment's DD-016 tier, carried so the fan-out can hold it. */
+  visibility: CommentVisibility;
+}
+
 export interface Notifier {
   /**
    * Runs one mutation and everything it has to tell people about, in
@@ -133,6 +182,43 @@ export interface Notifier {
    * when they asked themselves, which CTR-012 permits.
    */
   approvalRequested(tx: NotifyingTransaction, event: ApprovalRequestedEvent): Promise<void>;
+
+  /**
+   * A contract has been handed to somebody as its Owner (CTR-004) —
+   * group 1, bell on and email immediate (NOT-002).
+   *
+   * The new Owner is the whole audience. Raise it **after** the row has
+   * been updated: a confidential record reaches its Owner by them being
+   * its Owner (CTR-022), so the wall would still be answering about the
+   * previous one.
+   */
+  ownerAssigned(tx: NotifyingTransaction, event: OwnerAssignedEvent): Promise<void>;
+
+  /**
+   * A task on a contract has been given to somebody (CTR-017) — group 1,
+   * bell on and email immediate (NOT-002).
+   *
+   * The assignee is the whole audience. The checklist takes any live
+   * person as an assignee, and the wall behind the seam is what decides
+   * whether they may be told.
+   */
+  taskAssigned(tx: NotifyingTransaction, event: TaskAssignedEvent): Promise<void>;
+
+  /**
+   * A comment has addressed somebody by name (CMT-007) — group 1, bell
+   * on and email immediate (NOT-002).
+   *
+   * A mention is done *to* you: somebody has asked you a question by
+   * name, which is the same kind of act as being handed a record. So it
+   * interrupts, rather than riding the ambient default an ordinary
+   * comment takes (NOT-002's M18/1 addendum).
+   *
+   * The audience is read from `comment_mentions` **here**, inside the
+   * transaction that wrote it — a body is never parsed — and it is
+   * narrowed by the comment's own tier, so a Legal Only mention reaches
+   * nobody the tier excludes.
+   */
+  commentMentioned(tx: NotifyingTransaction, event: CommentMentionedEvent): Promise<void>;
 }
 
 /**
@@ -220,6 +306,10 @@ async function fanOut(
   contractId: string,
   actorId: string,
   people: readonly PendingNotification[],
+  /** The DD-016 tier an event about a comment inherits, where it has
+   * one. The wall narrows to the record's audience; this narrows further
+   * to the room the thing was said in. */
+  tier?: CommentVisibility,
 ): Promise<void> {
   // 1. The audience, minus the person who caused it. Deduplicated: one
   // event tells one person once, however many rows named them.
@@ -231,7 +321,7 @@ async function fanOut(
   if (byUser.size === 0) return;
 
   // 2. The wall (DD-014). Applied here so no event can skip it.
-  const reachable = await reachedBy(tx, contractId, [...byUser.keys()]);
+  const reachable = await reachedBy(tx, contractId, [...byUser.keys()], tier);
 
   // 3. The preferences, over the group's defaults (NOT-001/002).
   const recipients = [...byUser.keys()].filter((id) => reachable.has(id));
@@ -346,6 +436,68 @@ export function createNotifier(deps: NotifierDeps): Notifier {
             actorName: event.actorName,
           },
         })),
+      );
+    },
+
+    async ownerAssigned(tx: NotifyingTransaction, event: OwnerAssignedEvent): Promise<void> {
+      await fanOut(tx, "contract.owner_assigned", event.contractId, event.actorId, [
+        {
+          userId: event.ownerId,
+          payload: {
+            contractNumber: event.contractNumber,
+            contractTitle: event.contractTitle,
+            actorId: event.actorId,
+            actorName: event.actorName,
+          },
+        },
+      ]);
+    },
+
+    async taskAssigned(tx: NotifyingTransaction, event: TaskAssignedEvent): Promise<void> {
+      await fanOut(tx, "contract.task_assigned", event.contractId, event.actorId, [
+        {
+          userId: event.assigneeId,
+          payload: {
+            contractNumber: event.contractNumber,
+            contractTitle: event.contractTitle,
+            actorId: event.actorId,
+            actorName: event.actorName,
+            taskId: event.taskId,
+            taskTitle: event.taskTitle,
+          },
+        },
+      ]);
+    },
+
+    async commentMentioned(tx: NotifyingTransaction, event: CommentMentionedEvent): Promise<void> {
+      // Read from the table, in the transaction that wrote it. Who a
+      // comment addresses is a list somebody chose from a typeahead
+      // (CMT-007), and the body is never parsed for it — that is the
+      // whole reason `comment_mentions` exists.
+      const named = await tx
+        .select({ userId: commentMentions.userId })
+        .from(commentMentions)
+        .where(eq(commentMentions.commentId, event.commentId));
+      await fanOut(
+        tx,
+        "comment.mentioned",
+        event.contractId,
+        event.actorId,
+        named.map((row) => ({
+          userId: row.userId,
+          // The comment's own words are not here, and never will be. A
+          // mention is a prompt to go and read the thread, where the
+          // tier is enforced and a redact can still reach the text
+          // (CMT-006) — a payload could not be redacted out of.
+          payload: {
+            contractNumber: event.contractNumber,
+            contractTitle: event.contractTitle,
+            actorId: event.actorId,
+            actorName: event.actorName,
+            commentId: event.commentId,
+          },
+        })),
+        event.visibility,
       );
     },
   };
