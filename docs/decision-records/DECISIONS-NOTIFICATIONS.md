@@ -253,6 +253,63 @@ The surface is `renderDigestMail` in `apps/api/src/lib/notifications/email.ts`, 
 
 **Known wording gap.** Clause 2's framing line says "nearest first", which is true of the rows still ahead and not of the overdue rows behind them. It only shows on a briefing that missed its morning. Recorded rather than fixed: the sentence has shipped, and changing it is an amendment to this clause.
 
+## NOT-008 — The daily briefing: one cross-module morning email replaces the date digest
+
+- **Status:** Accepted
+- **Date:** 2026-08-18
+
+### Context
+
+M18 shipped a morning digest that carries one thing: contract dates — key dates, notice deadlines, and expiries at the configured offsets, as plain text. That is what NOT-003 asked for. It is less than the message could be.
+
+The daily email is the one surface that reaches somebody who has not opened the app. Sending it with a single module's reminders spends that reach on a fraction of what the system knows. Three sources are already live and need no new machinery: approvals waiting on you (CTR-012, M14), tasks assigned to you and due or overdue (CTR-017, M17), and contract dates approaching (M18). Three more arrive with their modules: entity obligations (ENT-006, M27), knowledge items (M28), and intake requests (M21, group 4's first event).
+
+Raised as [#344](https://github.com/juggernog20/OpenLaw/issues/344). Eight product questions were settled before anything is built.
+
+### Decision
+
+**1. The date digest is subsumed, not sat beside.** One daily briefing replaces the date-only digest. NOT-003 and NOT-006 are amended rather than paralleled — the round, the once-a-day rule, the timezone gate, the dedup identity, and the re-ask for lost mail all carry forward as the engine for a richer message. There is one morning email, not two.
+
+**2. Each section has its own preference toggle, independent of the event-group grid.** A briefing spanning NOT-002's groups cannot be tuned by a group toggle. New preference rows per briefing section (approvals, tasks, dates, entities, knowledge) give a person per-section control without coupling to the event-group model. The section toggles are separate from the NOT-002 channel toggles — a person can turn off dates in the briefing while keeping the bell on for `dates_approaching`.
+
+**3. One briefing, not several.** NOT-003's argument — noise is the unsubscribe trigger — gets stronger with more sources, not weaker. Everything in a single daily email: one subject line, one scan, one message to keep or discard.
+
+**4. Empty sections are omitted.** Only sections with items appear. A day with no approvals waiting shows no approvals section. NOT-006 clause 9's rule — no empty briefing ever leaves — extends to the section level: the briefing changes shape daily but stays compact. Present sections always appear in the same order, so the reader's eye can learn the layout even though the set of sections varies.
+
+**5. The bell gets one daily summary notification.** The bell remains an event feed (NOT-005). The briefing adds one notification per day — "Your daily briefing is ready" — and tapping it opens an in-app daily summary view. The summary view is the briefing's content rendered for the screen rather than for mail: a state summary ("what is waiting on you") alongside the event feed ("what happened").
+
+**6. Both HTML and text parts are first-class.** DES-051's register — warm, direct, short sentences — applies to both. The text part is a peer, not a tag-stripped afterthought. A reader on a plain-text client gets a crafted reading experience, not a degraded one.
+
+**7. Briefing copy lives in a template file, English only.** The briefing has two parts (HTML and text) that must stay in sync across multiple sections. Keeping all of that inline at the call site would make the worker file unreadable. A dedicated template file separates visual structure from assembly logic. Localisation is deferred until SET-006 gains a per-user locale — there is nothing to key on today.
+
+**8. Daily cadence only.** NOT-003 declined a weekly digest and per-user send hours for v1. That decline stands. A richer briefing is exactly the thing somebody would want weekly instead of daily, and the question is worth re-reading when the briefing has shipped and usage data exists — but shipping with one cadence keeps the preference model and the scheduling simple.
+
+### Rationale
+
+The date digest is the seed, not the ceiling. The round that computes it — the timezone gate, the once-a-day rule, the dedup identity, the re-ask for lost mail — is the hard part, and every section of a richer briefing rides on that machinery. Subsuming rather than paralleling avoids two morning emails competing for the same attention, and keeps one engine rather than two.
+
+Per-section toggles were chosen over honouring each section's event-group toggle because the briefing is a different question from the bell. A person who turned off `dates_approaching` email may have done so because nine offset emails were noise — not because they never want to see dates in a morning summary. Coupling the briefing to the event-group grid would produce surprises in both directions.
+
+### Alternatives considered
+
+- **New surface alongside the date digest.** Rejected: two morning emails split attention and invite "why am I getting two?". Subsuming is cleaner.
+- **Honour each group's event-group toggle.** Rejected: couples two surfaces that answer different questions. Most work to reason about and hardest to explain to the reader.
+- **Own single preference row for the whole briefing.** Rejected: too coarse. A person who wants approvals but not dates in the briefing has no way to say so.
+- **Show empty sections with placeholder text.** Rejected: a consistent shape is a small benefit against a longer message every day.
+- **Bell gains a summary card.** Decided differently: a single bell notification that opens a summary view, rather than a card living inside the feed.
+- **Template file with i18n keys from day one.** Rejected: SET-006 has no per-user locale, so the keys have nothing to resolve against.
+- **Weekly or per-user cadence.** Deferred: NOT-003's v1 decline stands until the briefing has shipped and usage data exists.
+
+### Consequences
+
+NOT-003 and NOT-006 are amended when the briefing is built. The date digest's existing rendering surface (`renderDigestMail` in `apps/api/src/lib/notifications/email.ts`) and its round (`apps/api/src/pipeline/morning-round.ts`) are replaced rather than wrapped. The template file is a new artifact. The `notification_preferences` table gains section-level preference rows with a new vocabulary that is not the event-group vocabulary.
+
+The in-app daily summary view is a new screen behind the bell notification. Its scope and design are deferred to the milestone that builds it.
+
+Sequencing this after M28 would make the briefing complete on arrival. Building it at three sections (approvals, tasks, dates) and extending it as modules land would make it useful sooner — and means the section contract (what a section provides, how it queries, how it renders in both parts) has to be right early.
+
+---
+
 ## Index of decisions
 
 | #       | Decision                                                          | Status   |
@@ -263,3 +320,4 @@ The surface is `renderDigestMail` in `apps/api/src/lib/notifications/email.ts`, 
 | NOT-004 | Reminder lead times: admin-configurable offsets, seeded 7/1/0     | Accepted |
 | NOT-005 | Badge: unread count, 9+ cap, read-on-open                         | Accepted |
 | NOT-006 | The morning digest's anatomy and its delivery rules               | Accepted |
+| NOT-008 | The daily briefing: cross-module morning email replaces the digest | Accepted |
