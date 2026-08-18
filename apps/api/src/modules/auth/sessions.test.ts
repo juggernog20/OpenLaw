@@ -87,7 +87,7 @@ describe("requireRole", () => {
   beforeAll(async () => {
     // The harness's database, so a session minted there verifies here.
     // Nothing else about this app matters: it serves two test routes.
-    guarded = await buildApp({ ...testDeps(), db: harness.db });
+    guarded = await buildApp(testDeps({ db: harness.db }));
     guarded.get(
       "/api/v1/admin-only",
       { schema: { hide: true }, preHandler: requireRole("administrator") },

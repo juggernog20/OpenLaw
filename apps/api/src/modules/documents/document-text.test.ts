@@ -497,13 +497,14 @@ describe("when the queue cannot be reached", () => {
     // survives a send that never happened and M12/6's sweep is what
     // picks it up.
     const detached = await buildApp({
-      ...testDeps(),
-      db: harness.db,
-      storage: harness.storage,
-      docEngine: harness.docEngine,
-      // Named rather than left to the default: the queue that rejects
-      // everything is what this test is about.
-      jobs: createUnconfiguredJobQueue(),
+      ...testDeps({
+        db: harness.db,
+        storage: harness.storage,
+        docEngine: harness.docEngine,
+        // Named rather than left to the default: the queue that rejects
+        // everything is what this test is about.
+        jobs: createUnconfiguredJobQueue(),
+      }),
     });
     await detached.ready();
     try {
