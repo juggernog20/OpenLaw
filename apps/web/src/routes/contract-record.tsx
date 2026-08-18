@@ -829,11 +829,22 @@ function ContractRecord() {
   // A document that stopped resolving is one that left the list —
   // archived out of the live view, or erased. The panel is already
   // gone; this drops what is left of the reference so a later restore
-  // does not reopen a panel nobody asked for.
+  // does not reopen a panel nobody asked for — and resets the same
+  // bookkeeping `closeReading` resets, minus the focus restore. Left
+  // stale, `readingDocked` would say a panel still covers the record:
+  // the next tab change would then call `closeReading` with no panel
+  // open, set `readingClosed` with no close for the layout effect
+  // below to consume, and the *next* vanished document would wrongly
+  // take focus back to its trigger. Stale `readingCovers` would mark
+  // the record content covered the moment the next panel opens, before
+  // that panel has measured anything.
   useEffect(() => {
     if (reading && !open) {
       setReading(null);
       readingTrigger.current = null;
+      readingClosed.current = false;
+      readingDocked.current = true;
+      setReadingCovers(false);
     }
   }, [reading, open]);
 
