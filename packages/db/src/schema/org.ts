@@ -37,6 +37,31 @@ export const orgSettings = pgTable(
     /** IANA zone name; the display timezone until a user sets their own (DES-014). */
     defaultTimezone: text("default_timezone").notNull().default("UTC"),
     /**
+     * NOT-004's one reminder-offset list: how many days ahead of a
+     * tracked date the morning round fires, seeded `7 / 1 / day-of`.
+     *
+     * **One list for every tracked date** — key dates, notice deadlines,
+     * and expiries alike — and one list for the whole install. It is
+     * admin-tunable rather than fixed because nothing branches on the
+     * numbers (the configurable-over-fixed rule), and it is not per-user
+     * or per-date because that would be config sprawl for a team of ten
+     * (NOT-004's own alternatives).
+     *
+     * Day-granular whole numbers, because a deadline is a day and not a
+     * moment (SCHEMA.md, DES-014): the round compares civil dates, and a
+     * fractional offset would have nothing to compare against.
+     *
+     * **`jsonb` rather than a table**, which is the shape
+     * `allowed_email_domains` above already takes and for the same
+     * reason: this column is an ordered list of scalars, read whole on
+     * every round and written whole by one pane, with nothing hanging
+     * off any one of its entries.
+     */
+    reminderOffsetDays: jsonb("reminder_offset_days")
+      .$type<number[]>()
+      .notNull()
+      .default([7, 1, 0]),
+    /**
      * When the first-run onboarding wizard (SET-004) was finished or
      * skipped through. NULL routes the Administrator into the wizard on
      * login; set once, never cleared — the wizard is first-run only.
