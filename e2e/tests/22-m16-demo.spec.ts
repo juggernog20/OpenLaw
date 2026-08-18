@@ -72,7 +72,7 @@
  */
 
 import { test, expect, type Locator, type Page } from "@playwright/test";
-import type { APIRequestContext } from "@playwright/test";
+import type { APIRequestContext, Response } from "@playwright/test";
 import { z } from "zod";
 import {
   ADMIN,
@@ -428,11 +428,18 @@ async function createContract(page: Page, title: string, typeName: string): Prom
  * Crosses from one record section to another, the way a reader does it
  * (DES-032). The strip is a nav of routed links, so the move is a click
  * and the address is the proof it landed.
+ *
+ * Matched on the label as a **prefix**, not exactly. A tab with work
+ * waiting carries a count chip since 2026-08-18, and the chip's own
+ * accessible name folds into the link's — so once this walk sets a term,
+ * Key dates answers to "Key dates 2 upcoming dates" and an exact match
+ * finds nothing. The prefix is anchored, so one tab's label can never
+ * match another's.
  */
 async function openSection(page: Page, number: number, name: string, path: string): Promise<void> {
   await page
     .getByRole("navigation", { name: "Contract sections" })
-    .getByRole("link", { name, exact: true })
+    .getByRole("link", { name: new RegExp(`^${name}\\b`) })
     .click();
   await expect(page).toHaveURL(new RegExp(`/contracts/${number}${path}$`));
 }
@@ -450,13 +457,31 @@ async function pickStatus(page: Page, number: number, status: StatusOption): Pro
   expect(settled.status(), await settled.text()).toBe(200);
 }
 
+/** The record's own PATCH, waited for rather than assumed, so the next
+ * leg cannot read the record before the write it depends on has
+ * landed. */
+function termSaved(page: Page, number: number): Promise<Response> {
+  return page.waitForResponse(
+    (response) =>
+      response.url().endsWith(`/api/v1/contracts/${number}`) &&
+      response.request().method() === "PATCH",
+  );
+}
+
+async function committedTerm(saved: Promise<Response>): Promise<Contract> {
+  const answered = await saved;
+  expect(answered.status(), await answered.text()).toBe(200);
+  return z.object({ contract: ContractSchema }).parse(await answered.json()).contract;
+}
+
 /**
- * Commits one term field on the Contract card, the way a person does it:
- * type, then leave the box (DES-017's per-field commit — Enter is the
- * keyboard's way of leaving it).
+ * Commits one typed term field on the Contract card, the way a person
+ * does it: type, then leave the box (DES-017's per-field commit — Enter
+ * is the keyboard's way of leaving it).
  *
- * The PATCH is waited for rather than assumed, so the next leg cannot
- * read the record before the write it depends on has landed.
+ * The two month/day counts are the only typed term fields left. The two
+ * dates went to `commitDate` when DES-048 replaced the native date input
+ * with a calendar popover.
  */
 async function commitTerm(
   page: Page,
@@ -466,15 +491,90 @@ async function commitTerm(
 ): Promise<Contract> {
   const box = page.getByLabel(label, { exact: true });
   await box.fill(value);
-  const saved = page.waitForResponse(
-    (response) =>
-      response.url().endsWith(`/api/v1/contracts/${number}`) &&
-      response.request().method() === "PATCH",
-  );
+  const saved = termSaved(page, number);
   await box.press("Enter");
-  const answered = await saved;
-  expect(answered.status(), await answered.text()).toBe(200);
-  return z.object({ contract: ContractSchema }).parse(await answered.json()).contract;
+  return committedTerm(saved);
+}
+
+/** The month names the calendar's own dropdown offers, under en-US. */
+const CALENDAR_MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
+
+/** A civil date as the picker's own trigger prints it — `formatFullDate`
+ * (DES-014), which is always the year and a short month. Built here
+ * rather than imported: the suite runs against built images and shares
+ * no module with the web app. */
+function fullDate(civil: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${civil}T00:00:00Z`));
+}
+
+/** The ordinal React DayPicker gives each day button its name from. */
+function ordinal(day: number): string {
+  const teens = day % 100;
+  if (teens >= 11 && teens <= 13) return `${day}th`;
+  switch (day % 10) {
+    case 1:
+      return `${day}st`;
+    case 2:
+      return `${day}nd`;
+    case 3:
+      return `${day}rd`;
+    default:
+      return `${day}th`;
+  }
+}
+
+/**
+ * Commits one term **date** on the Contract card (DES-048): open the
+ * labelled trigger, jump the month and year dropdowns, pick the day.
+ *
+ * A date is no longer a box a person types into. Since 2026-08-18 the
+ * Contract card's effective date and expiry are the shared `DatePicker`
+ * — a button showing `formatFullDate`, opening a month calendar in a
+ * popover — so there is nothing to `fill` and no blur to commit on.
+ * Picking the day **is** the commit, so the PATCH is armed before the
+ * click rather than before an Enter that never comes.
+ *
+ * This is the unit-test `pickDate` helper (`apps/web/src/testing/dates.ts`)
+ * against a real browser, and it carries the same limit: every name here
+ * is English by construction, which is what the suite renders.
+ */
+async function commitDate(
+  page: Page,
+  number: number,
+  label: string,
+  civil: string,
+): Promise<Contract> {
+  await page.getByLabel(label, { exact: true }).click();
+  const calendar = page.getByRole("dialog", { name: "Choose a date" });
+  const month = CALENDAR_MONTHS[Number(civil.slice(5, 7)) - 1]!;
+  const year = civil.slice(0, 4);
+  await calendar.getByRole("combobox", { name: "Month" }).selectOption({ label: month });
+  await calendar.getByRole("combobox", { name: "Year" }).selectOption({ label: year });
+  const saved = termSaved(page, number);
+  await calendar
+    .getByRole("button", {
+      name: new RegExp(`${month} ${ordinal(Number(civil.slice(8, 10)))}, ${year}`),
+    })
+    .click();
+  return committedTerm(saved);
 }
 
 /** The record's Term type picker, which decides which of the other four
@@ -623,8 +723,8 @@ test.describe("M16 demo path", () => {
       // ---- Stories 1 to 6: the term, typed field by field ----
 
       await pickTermType(memberPage, number, "auto_renew");
-      await commitTerm(memberPage, number, "Effective date", effective);
-      await commitTerm(memberPage, number, "Expiry date", expiry);
+      await commitDate(memberPage, number, "Effective date", effective);
+      await commitDate(memberPage, number, "Expiry date", expiry);
       await commitTerm(
         memberPage,
         number,
@@ -654,8 +754,15 @@ test.describe("M16 demo path", () => {
       // page is still holding — and the two facts the card derives read
       // beside them.
       await memberPage.reload();
-      await expect(memberPage.getByLabel("Effective date", { exact: true })).toHaveValue(effective);
-      await expect(memberPage.getByLabel("Expiry date", { exact: true })).toHaveValue(expiry);
+      // The two dates are pickers rather than boxes since 2026-08-18
+      // (DES-048), so what they hold is read off the trigger's own text
+      // — `formatFullDate`, always the year — instead of an input value.
+      await expect(memberPage.getByLabel("Effective date", { exact: true })).toHaveText(
+        fullDate(effective),
+      );
+      await expect(memberPage.getByLabel("Expiry date", { exact: true })).toHaveText(
+        fullDate(expiry),
+      );
       await expect(memberPage.getByLabel("Renewal period (months)", { exact: true })).toHaveValue(
         String(RENEWAL_PERIOD_MONTHS),
       );
@@ -805,7 +912,7 @@ test.describe("M16 demo path", () => {
       // record says the renewal is pending and then does nothing.
       await openSection(memberPage, number, "Overview", "");
       const beforeLapse = await readContract(memberPage.request, number);
-      const lapsed = await commitTerm(memberPage, number, "Expiry date", lapsedExpiry);
+      const lapsed = await commitDate(memberPage, number, "Expiry date", lapsedExpiry);
 
       // The screen half: the banner appears the moment the date commits,
       // with nobody reloading and nothing else on the record moving. It
@@ -882,7 +989,11 @@ test.describe("M16 demo path", () => {
       await expect(
         memberPage.getByRole("region", { name: "Renewal pending confirmation" }),
       ).toHaveCount(0);
-      await expect(memberPage.getByLabel("Expiry date", { exact: true })).toHaveValue(rolledExpiry);
+      // Read off the picker trigger's text, not an input value
+      // (DES-048).
+      await expect(memberPage.getByLabel("Expiry date", { exact: true })).toHaveText(
+        fullDate(rolledExpiry),
+      );
 
       // The seam half: one date moved, and only that one. The status and
       // the stage are where the person put them, because a roll is a
@@ -972,8 +1083,12 @@ test.describe("M16 demo path", () => {
 
       // The screen half, on the record that was just born: it holds the
       // predecessor's term, which is what "prefilled" means here.
-      await expect(memberPage.getByLabel("Effective date", { exact: true })).toHaveValue(effective);
-      await expect(memberPage.getByLabel("Expiry date", { exact: true })).toHaveValue(rolledExpiry);
+      await expect(memberPage.getByLabel("Effective date", { exact: true })).toHaveText(
+        fullDate(effective),
+      );
+      await expect(memberPage.getByLabel("Expiry date", { exact: true })).toHaveText(
+        fullDate(rolledExpiry),
+      );
       await expect(memberPage.getByLabel("Renewal period (months)", { exact: true })).toHaveValue(
         String(RENEWAL_PERIOD_MONTHS),
       );

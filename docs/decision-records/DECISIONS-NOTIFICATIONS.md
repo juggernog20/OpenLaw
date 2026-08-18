@@ -8,20 +8,20 @@ Decisions are numbered `NOT-###`.
 
 Commitments accumulated across the module grills that this capability must deliver:
 
-| Source                | Commitment                                                                                                                                                                      |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **CTR-006**           | Renewal reminders at the derived notice deadline and at expiry; "renewal pending confirmation" prompting. Reminder surfaces show the unverified-AI badge (CTR-008 tension note) |
-| **CTR-012**           | Approval requested → pending approvers notified; decisions visible to the owner                                                                                                 |
-| **CTR-013**           | Envelope status changes (signed / declined / voided)                                                                                                                            |
-| **MTR-004 / CTR-009** | Approaching named key dates ("no bespoke reminder system" — plugs in here)                                                                                                      |
-| **MTR-005 / CTR-017** | Task assignment; task due dates do NOT feed deadline surfaces (but assignees may still want nudges)                                                                             |
-| **MTR-003 / CTR-004** | Manager assignment (matter/contract handed to you)                                                                                                                              |
-| **INT-001/003**       | Requester email notifications: request created, status changes, thread replies, declined-with-reason; deep-link to portal; host-configurable; no login ever required            |
-| **INT-006**           | New request → Inbox (the queue itself is the surface; does it also notify?)                                                                                                     |
-| **DD-016**            | Comment replies / thread activity on records you're on                                                                                                                          |
-| **A.4 (mock)**        | Bell + badge in the top nav; badge cap decided here                                                                                                                             |
-| **E.1 (mock)**        | Notifications module chip on contract details                                                                                                                                   |
-| **DES (deferred)**    | Email digest copy register — lands when this ships                                                                                                                              |
+| Source                | Commitment                                                                                                                                                                                      |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **CTR-006**           | Renewal reminders at the derived notice deadline and at expiry; "renewal pending confirmation" prompting. Reminder surfaces show the unverified-AI badge (CTR-008 tension note)                 |
+| **CTR-012**           | Approval requested → pending approvers notified; decisions visible to the owner                                                                                                                 |
+| **CTR-013**           | Envelope status changes (signed / declined / voided)                                                                                                                                            |
+| **MTR-004 / CTR-009** | Approaching named key dates ("no bespoke reminder system" — plugs in here)                                                                                                                      |
+| **MTR-005 / CTR-017** | Task assignment; task due dates do NOT feed deadline surfaces (but assignees may still want nudges)                                                                                             |
+| **MTR-003 / CTR-004** | Manager assignment (matter/contract handed to you)                                                                                                                                              |
+| **INT-001/003**       | Requester email notifications: request created, status changes, thread replies, declined-with-reason; deep-link to portal; host-configurable; no login ever required                            |
+| **INT-006**           | New request → Inbox (the queue itself is the surface; does it also notify?)                                                                                                                     |
+| **DD-016**            | Comment replies / thread activity on records you're on                                                                                                                                          |
+| **A.4 (mock)**        | Bell + badge in the top nav; badge cap decided here                                                                                                                                             |
+| **E.1 (mock)**        | Notifications module chip on contract details                                                                                                                                                   |
+| **DES (deferred)**    | ~~Email digest copy register — lands when this ships~~ — discharged 2026-08-18 by **DES-051** (M18/6), which closed DES-015's deferral for every message this system sends, not only the digest |
 
 ## Open questions queued for the next grill-me session
 
@@ -42,6 +42,25 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 - **Rationale** — Staff live in the app; requesters live in the portal — each gets events where they already are, with email as the reach-out channel. One system underneath keeps the event catalog and preference model single-sourced.
 - **Alternatives considered** — Email-only (removes the mock's A.4 bell; round-trips staff through mail). Requesters email-only (recommended, declined — the portal bell rounds out the JSM shape). Chat delivery now: re-opens what INT-001 parked.
 - **Consequences** — `notifications` + `notification_preferences` tables in SCHEMA.md. Portal gains a bell + settings surface (INT portal scope grows slightly). A.4 unblocked pending badge semantics (Q5); E.1 resolved by the screen-batch grill plan: the notifications chip is **removed** from contract details — per-record notifications aren't a NOT-002 concept; the global bell (A.4) is the surface.
+- **Addendum (2026-08-18, M18/1, [#316](https://github.com/juggernog20/OpenLaw/issues/316))** — **The engine landed, and the seam is the `Notifier`.** It is injected into the app factory beside the database, the mailer, storage, and the job queue, and it carries **one method per event** rather than a generic `notify(type, payload)` — the `JobQueue` rule (TECH-007), applied to the thing that tells people. A route names what happened and never learns that channels exist, who the audience is, or that anything is queued.
+
+  **Behind the seam there are five steps, and the order is the decision.** Resolve the audience; apply the confidentiality predicate; apply per-user preferences; write the bell rows **inside the caller's transaction**; queue the email work **after** it commits. The wall is applied inside the seam rather than at the call site, which is what makes it a property no event can be added without — and the same is true of "the actor is never told about their own act", which is applied once for every event rather than remembered at each one.
+
+  **The transaction is the seam's, not the route's.** `notifier.notifying(work)` replaces the `app.db.transaction(work)` a notifying route would otherwise open, and only it mints the branded transaction the per-event methods accept. That is the whole reason it exists: there is one call at the route, a rolled-back mutation cannot leave a bell row, and the after-commit half cannot be forgotten because no caller writes it. Handing the route a two-call shape — raise, then deliver — was the alternative, and it was declined for the reason M12 declined sending inside the transaction: the correctness of the pairing must not be a thing each new call site can get wrong.
+
+  **The queue send is logged and never raised** (TECH-007's M12/3 doctrine, said for mail). The row is the record of work owed and the queue is only the wake-up, so a mutation must not fail because the notifier's queue is down — a lost send costs a delay, never the message.
+
+  **Two schema refinements**, both recorded in SCHEMA.md. The row records at write time **whether email was owed**, so "owed and never sent" is distinguishable from "never owed" and a round can re-ask from the rows without emailing everybody who had switched email off. And a date-reminder row carries a **dedup identity** — user, event, entity, the date value, and the offset — held by a partial unique index. It is defined now and first written by the dates slice: it makes a re-ask a no-op and makes a date that _moves_ correctly fire again for its new value, and both have to be in the schema before the first round runs rather than retrofitted around rows with no key.
+
+  **`notification_preferences` is a set of overrides, not a grid.** A person with no row for a pair takes the group's default, and the defaults live in application code rather than being seeded — so a default that changes reaches everybody who never expressed an opinion and nobody who did. The table ships empty; the logic that reads it is complete, so the preferences slice adds a pane and not a rule.
+
+  **The read side re-applies the confidentiality predicate on every read** — the list **and** the count, through one predicate composed from `contractTeamScope`. An item about a record walled off after it was written leaves both, silently: no row, no gap, and no number that says something was left out (M10's answer, on a surface DD-014 was never written about). The row itself stays in the table, so opening the wall again brings the item back.
+
+- **Addendum (2026-08-18, M18/8, [#323](https://github.com/juggernog20/OpenLaw/issues/323))** — **The dedup identity names the record, not the date row, and that is a product answer as well as a schema one.** The identity is user, event, entity, the date value, and the offset (M18/1), and `entity` is the contract. So several named key dates that fall on **one record on one day** are **one** bell item and **one** briefing line, not one each — the second insert conflicts with the first and is dropped, and the line the reader gets carries whichever label was written first.
+
+  It is stated here because the milestone close is where anybody found out. The bell's own sentence is already written at that grain — "A key date on {contract} is coming up" — so the item is true either way; the **briefing** is where the difference shows, because a digest line names the date. The alternative is to widen the identity with `key_date_id`, which would give a reader one line per named date and give an install with a busy record a briefing several lines longer for one day. Neither is obviously right, and nothing decided it: this addendum records what shipped so the choice can be made deliberately rather than discovered again.
+
+  **Nothing else collapses.** Two approval requests for one person on one record are still two rows — the partial index only covers rows that carry a reminder date (M18/6) — and a date that **moves** carries a different value and is a different identity, so it fires again.
 
 ## NOT-002 — Event catalog: five groups, defaults by interruptiveness
 
@@ -56,6 +75,63 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 - **Rationale** — Defaults follow interruptiveness: things done _to_ you interrupt; ambient activity doesn't; everything is user-adjustable.
 - **Alternatives considered** — Everything-on defaults: day-one unsubscribe exercise.
 - **Consequences** — `event_type` catalog enumerated per group in the schema notes; `notification_preferences.event_group` takes these five values.
+- **Addendum (2026-08-18, M18/1, [#316](https://github.com/juggernog20/OpenLaw/issues/316))** — Three clarifications, settled while building the engine.
+
+  **A comment mention is group 1, not group 2.** A mention is done _to_ you: somebody has addressed a question to you by name (CMT-007), which is the same kind of act as being assigned a task or asked to approve. So it interrupts — bell on, email immediate — rather than riding the ambient-activity default it would have inherited from "comments on your records". Ordinary comments stay in group 2, unchanged.
+
+  **Groups 4 and 5 ship as slots.** `new_requests` waits for the Inbox (M21) and `requester_events` for the portal (M20), so neither names an event yet. The **group value** ships now regardless, because a person may express a preference about a group before anything in it has ever fired, and because a group added later would be a schema change rather than a line in a table.
+
+  **The catalog is enumerated in full for the three groups this milestone serves**, not event by event as the slices that fire them arrive. That is what makes a later slice an event rather than a mechanism: the group decides the audience rule, the group's defaults decide the channels, and the fan-out reads both. Which events a build actually writes is a fact about the call sites and not about the list.
+
+  **`notifications.event_type` carries no CHECK constraint**, deliberately — `activity_log.action`'s reasoning one table over. A row outlives the build that wrote it, so a closed constraint would be a schema change on every catalog change and a read that could not answer for a slug an older build wrote. The closed union lives in TypeScript, where the compiler can hold both ends of it. The event **group** and the **channel** are constrained, because those are small closed sets that code branches on.
+
+- **Addendum (2026-08-18, M18/3, [#318](https://github.com/juggernog20/OpenLaw/issues/318))** — **The rest of group 1 fires, and the mention is the one with a rule of its own.** Owner assignment (CTR-004), task assignment (CTR-017), and the comment mention (CMT-007) each became one Notifier call inside the mutation that causes them, joining the approval request that shipped with the engine. Nothing about the machinery moved: the audience, the wall, the actor exclusion, the preferences, and the after-commit wake-up are all still the seam's, and a slice that fires an event now writes a call and a line of email copy.
+
+  **A mention's audience is `comment_mentions`, read behind the seam.** The route names the comment and its tier; the fan-out reads who that comment addressed out of the table, inside the transaction that wrote it. A body is never parsed — that is what `comment_mentions` is for (CMT-007) — and the route cannot hand the seam a different list from the one the record kept.
+
+  **The mention carries the comment's tier, so DD-016 narrows the audience beside DD-014.** The wall answers "which people does this record reach"; the tier answers "which of them were in the room for what was said". A Legal Only mention therefore reaches nobody the tier excludes, and it is the same predicate asked with one more argument rather than a second rule beside it. The composer's refusal (CMT-007) is the first gate and this is the one no later call site can forget — the wall's own posture, applied to the second boundary.
+
+  **No mention email carries the comment.** It says who named you, on which record, and where to go. The tier is enforced on the thread and a redact (CMT-006) cannot reach mail that has already left, so the words stay where both of those still hold.
+
+  **Silence is decided at the call site, and the rule is "was this done _to_ somebody".** Clearing a contract's Owner hands it to nobody, so it raises nothing — unassigned is a real state (triage). Renaming a task, moving its due date, or re-sending the assignee it already had are edits to something that person already holds. A comment that names nobody is ambient movement, which is group 2's business and not this slice's.
+
+  **A re-request after a rejection tells the approver again.** CTR-012 already made it a new row rather than a reopened one, so it was already a second `approval.requested` through the same seam; it is recorded here because "a renewed ask is never silent" is a promise about notifications and had nowhere else to be written down.
+
+- **Addendum (2026-08-18, M18/4, [#319](https://github.com/juggernog20/OpenLaw/issues/319))** — **Group 2 fires: status changes, comments, documents and versions, and envelope endings.** As with group 1, no machinery moved — the events are emissions through the seam that already existed, and the bell needed no change at all, because #317 narrated the whole catalogue.
+
+  **The audience is "who is this record about", and that is a different question from "who reaches it".** It is the Owner (`manager_id`) plus everybody holding a `contract_team` row of any role — `creator`, `member`, `watcher`, and `contributor` — which is this decision's own "watchers are the existing team roles, no separate subscribe mechanism". A Legal Team Member who is on no team reaches every contract that is not confidential (CTR-021) and hears nothing about any of them, and an Administrator is not in the audience by role either: a bell that told every Administrator about every status change on every contract would be exactly the ambient noise this group's defaults exist to avoid. The audience is **resolved** first and the DD-014 wall then **narrows** it, in that order, like every other event.
+
+  **The record names itself.** Group 2's methods take a contract id and no more; the seam reads the number and the title in the same query that resolves the audience. Group 1's routes pass them, because they have just written the row — group 2's callers have not: a document route holds a document, the executed-copy job holds an envelope, and asking each of them for two columns would have been one query written at four call sites.
+
+  **A sentence goes exactly as far as the thing it is about.** A comment event carries its DD-016 tier, so a Legal Only comment produces no bell item for a Contributor — the mention's rule, applied to the ambient event beside it. A document event carries the file's DD-014 flag, so a confidential document's events reach only the document's audience. That second gate narrows nothing today, and it is asked anyway: a document has no team of its own (DOC-008), so its audience and this group's audience are the same set of people — and "only the document's audience" has to be a property of the code rather than of two rules happening to agree.
+
+  **One comment tells one person once.** Somebody the comment named gets the mention (group 1, which interrupts) and not the ambient event beside it. Two rows on one bell for one comment would be the same news twice, at two volumes.
+
+  **Only a status move rings, not every edit.** A retitle, a description, a term date are on the record's own feed (DD-017); a bell item per field would be the noise this group is defaulted quiet for. The status is what surfaces branch on (CTR-001) and it is what "my contract moved" means.
+
+  **The actor of a webhook is nobody, and nobody is excluded.** `actorId` is nullable on every group-2 event and null is a real answer, not a missing one: the Connect delivery, the reconciliation round, and the executed-copy fetch are the integration speaking (CTR-013), which the activity feed already records by writing an entry with no actor. So the whole team is told — **including the person who sent the envelope**, who is the one recipient a wrongly-guessed actor would have dropped. A void somebody took on the record does carry them, and does exclude them.
+
+  **The envelope's notification hangs off the one status funnel.** `applyEnvelopeStatus` now runs in the seam's transaction rather than the database's, so the bell rows commit with the move and all three feeds — webhook, reconciliation round, void route — get the event by going through the funnel instead of each remembering to raise it. A replay is a no-op there already, so it notifies nobody twice.
+
+  **Email is opt-in and nothing has opted in yet.** Group 2's timing is `none`, so every row it writes records no debt and no message leaves, whatever a preference says. Making the opt-in real is the preferences slice's, and it is one catalogue line plus the email copy the arms would need.
+
+- **Addendum (2026-08-18, M18/5, [#320](https://github.com/juggernog20/OpenLaw/issues/320))** — **Group 2's opt-in is real, and it took the one line the addendum above named.** `activity_on_your_records` moves from `emailTiming: "none"` to `"immediate"`, and the five arms of the template layer that had no words gained them. **The default did not move**: `email: false` is what makes the group opt-in, and the timing only says what happens once somebody has said yes. A person who has never opened the pane is in exactly the state M18/4 left them in — the same rows, the same `email_owed = false`, the same silence — and the difference is that saying yes now means something.
+
+  **The timing shipped as `none` on purpose and not by omission.** Nothing could opt in, so an opted-in row would have claimed a debt the system had no way to pay, and `email_owed` is readable as the record of work owed precisely because no row is ever allowed to say that. The column's honesty is what made the flip a one-line change rather than a migration.
+
+  **A preference is expressed about a group, and the pane is the proof.** The frame drew four switches under group 2 — one each for status changes, comments, documents, and signatures — and the pane draws one row, because this decision's unit is the group and a per-event switch would write nothing. What the frame was communicating survives in the group's own sentence (DES-050 normalization 1).
+
+  **Both channels are the person's**, which NOT-001 already said and this slice is the first to be able to honour. In-app off silences a group entirely, because the bell row is what the email hangs off — that is the engine's shape (M18/1) rather than a rule the pane invents, and the pane says so rather than offering a state nothing behind it can hold.
+
+  **Groups 4 and 5 are slots on the surface too.** The staff pane draws `new_requests` — dormant until the Inbox (M21) — and does not draw `requester_events`, which is the portal audience's own group and belongs on the portal's own settings surface (M20). The API answers all five either way: the model is the model, and which of it a surface draws is the surface's business.
+
+  **Every write narrates, not only every change of effect.** `user.notification_preference_changed` carries the group, the channel, and the new value, and it carries no `old` side — the table holds overrides, so the value before a first save is a default read out of application code and not a stored fact the writer could report. Re-affirming an opinion against a default that may later move is a real act, so it is written down.
+
+- **Addendum (2026-08-18, M18/8, [#323](https://github.com/juggernog20/OpenLaw/issues/323))** — **The tier gates at write time; the wall gates continuously.** M18/3 recorded that DD-016's comment tier narrows a mention's audience beside DD-014's wall. What it did not say is that the two are re-asked on different schedules, and the asymmetry is deliberate rather than a gap.
+
+  The wall is re-applied **every time**: on both bell reads, on both bell writes, when the immediate send job resolves a message, and when the morning round assembles a briefing. The tier is applied **once**, when the fan-out writes the row. So somebody moved out of the Legal Only room between the write and the send still receives the mention email, and still holds the bell item.
+
+  That is coherent because of what each message carries. **No mention email carries the comment's words** (M18/3), and the bell item carries none either — both say who named you and where to go. The read side re-applies only the wall, so the row that person still holds and the mail they receive agree with each other; a tier re-check on one and not the other is what would produce a disagreement. A tier that gated continuously would also mean a bell item vanishing because a thread was re-tiered, which is a fact about the conversation and not about the reader's reach.
 
 ## NOT-003 — Timing: direct events immediate; date reminders in a daily digest
 
@@ -64,6 +140,17 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 - **Decision** — Groups 1 and 5 email immediately. Group 3 (dates) batches into one daily morning digest email — the renewal calendar as a briefing — alongside individual bell items. No weekly digest or per-user schedule configuration in v1.
 - **Rationale** — Date noise is the likeliest unsubscribe trigger; one briefing beats nine offset emails.
 - **Consequences** — Digest rendering job on the background pipeline (DOC-009's worker). Email digest copy register — the deferred DES note — is now actionable when the digest is designed.
+- **Addendum (2026-08-18, M18/6, [#321](https://github.com/juggernog20/OpenLaw/issues/321))** — **The clock arrived, and it is the only thing in this system that starts a conversation nobody asked for.** Every other event fires because somebody did something; a date arriving is nobody's act. So there is one scheduled job — `notification.morning-round`, a pg-boss cron, `singleton`, one round per install however many replicas boot. That is the boot-versus-schedule rule the reconciliation sweep settled (#277), and it binds harder here: two rounds at once would not merely duplicate work, they would put two briefings in one person's post on one day.
+
+  **The round is hourly and a person is served once a day.** Those are two different periods and both are the decision. "One morning digest" means 08:00 **where the reader is**, and a daily tick could only ever be 08:00 in one zone — so the round ticks every hour and each one serves the people whose own clock has reached eight. The gate is "has **reached** 08:00", not "is 08:00": an install whose worker was down at somebody's eight o'clock serves them at nine rather than skipping their day. The zone is the person's profile timezone (SET-006) and UTC for the great majority who never set one, and every conversion is `Intl`'s rather than a stored offset's — which is what makes a spring-forward unable to skip anybody and a fall-back unable to serve them twice, because a 25-hour day is still one local date.
+
+  **The once-a-day promise is kept by the rows, not by a marker column.** The newest `emailed_at` on a person's own reminder rows, read as a date on **their** calendar, is the proof that today's briefing has gone. A reminder written after it — a key date added at eleven in the morning — is not lost and does not force a second message: it stays owed, and tomorrow's briefing carries it. That is the M12 doctrine one more time, and it is why the digest's distances are counted at **send** time against the reader's own today rather than taken from the offset the reminder fired at.
+
+  **The wall is re-applied at send time, per record.** The audience was decided when the reminder was written; a record can be walled off between then and the mail, and a briefing carries record titles out of the building. A row its reader can no longer open is settled as **skipped** rather than sent — the immediate send job's own posture (M18/1), said for a message about several records at once.
+
+  **The same round re-asks for owed-and-unsent immediate emails past fifteen minutes.** That bound is past the immediate queue's own three attempts and its two-minute expiry, so nothing still in flight is asked for twice; the queue's `short` policy would collapse it anyway. This is what finally makes the Notifier's quiet queue-ask honest: the mutation commits, the row says an email is owed, and a wake-up lost between the two costs a delay rather than the message. Digest rows are deliberately **not** in that set — they are the round's own business, and handing one to the immediate job would settle it as "no copy for this event" and silence the briefing it was waiting for.
+
+  **The digest's copy and its anatomy are DES-051**, which closed DES-015's deferred email-copy exception. It turned out to be owed for every message this system sends rather than only for the digest, so the register covers all of them and the exception is gone rather than narrowed.
 
 ## NOT-004 — Reminder lead times: one admin-configurable offset list, seeded 7/1/0
 
@@ -73,6 +160,29 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 - **Rationale** — Configurable-over-fixed applies (nothing branches on the numbers); per-date schedules are config sprawl.
 - **Alternatives considered** — Fixed offsets; per-date custom schedules.
 - **Consequences** — Settings inventory row. Long notice windows may warrant a larger seeded offset later — tune via settings, not code.
+- **Addendum (2026-08-18, M18/6, [#321](https://github.com/juggernog20/OpenLaw/issues/321))** — **The list was born with the round that reads it**, as `org_settings.reminder_offset_days`, seeded `[7, 1, 0]`: one `jsonb` column on the singleton row, for the reason `allowed_email_domains` is one — an ordered list of scalars, read whole every round and written whole by one pane. The pane is its own slice (#322); this one is what makes the numbers mean something.
+
+  **It is read live, on every round** — the read-on-every-decision pattern the mailer resolver and the signing connector already follow. An Administrator who shortens the list at 09:00 has shortened it for the 10:00 round, with no restart and no cache to invalidate. It is read **once per round** rather than once per person, because a list that changed mid-round would leave two people in one cohort reminded on different schedules, which is a difference nobody could explain from the outside.
+
+  **What comes back is sanitised, not trusted.** A `jsonb` column's shape is the application's to hold: whole days, never negative, deduplicated, and bounded at two years of lead time, with anything else dropped. An empty **usable** list falls back to the seed rather than to silence — a hand-edited row or a restored backup must not be able to switch every reminder off without anybody choosing to.
+
+  **One offset names one day, and the comparison is equality.** A date six days out is not the seven-day reminder arriving early; it is the seven-day reminder that already went. That is what makes the dedup identity's offset half meaningful, and it is why an install that lengthens its list does not retroactively fire for dates already past.
+
+  **The three sources are one union, read from the other end** (CTR-009). The key dates are rows, the expiry is a column, and the notice deadline is `expiry_date − notice_period_days` **subtracted in the round's own query and stored nowhere** — M16's doctrine, and the reason this milestone adds no materialised column and no job keeping one true. An ended contract is skipped, because a dead deal does not clutter a briefing; so is an archived one, on `renewalPending`'s reading of the same two columns — a frozen record is not waiting on anybody.
+
+- **Addendum (2026-08-18, M18/7, [#322](https://github.com/juggernog20/OpenLaw/issues/322))** — **The pane shipped**, in Settings → Organization → Notifications, on the DES-052 value-list anatomy: one card of lead times, added, removed, and rearranged in place. It is Administrator-only (SET-002), immediate on save (SET-003), and narrated in the audit log like every settings mutation since M5.
+
+  **One write, three verbs.** `PUT /org/reminder-offsets` carries the whole list, because adding, removing, and rearranging are the same change to the same list — the shape `PUT /auth/allowed-domains` already takes, for the reason the column takes `allowed_email_domains`' shape. The round reads the column live, so the next round fires on the saved list with nothing restarted and no cache to clear; the end-to-end assertion runs the round's own handler over a list saved through the route.
+
+  **The saved order is the reader's order.** M18/6 shipped the live read sorted furthest-first, and its doc (`usableOffsets`, in `apps/api/src/lib/notifications/offsets.ts`) called that "the order the pane draws"; that half is superseded now the pane exists. The pane draws the order the Administrator arranged and saves it, because a person expects to find a ladder where they left it. The round still sorts its own read, and the order carries no behaviour either way: one offset names one day and the comparison is equality, so no arrangement of the list can change which day fires.
+
+  **The list can never be emptied.** The route refuses an empty list and the pane locks the last remaining row. No lead times would mean no reminders at all — and because the read falls back to the seed on an unusable list, an empty list could not be told apart from a corrupt one. Silence is chosen per event group on the NOT-002 preferences pane, where it is a choice with a name; it does not fall out of a settings row.
+
+  **Bounded, and the bounds are the round's.** A saved lead time is a whole number of days from 0 to 730, and a list holds at most twenty of them — the same numbers the live read already enforces, so the pane cannot save something the round would then drop. A duplicate collapses to its first position, because two copies of `7` are one lead time.
+
+- **Addendum (2026-08-18, M18/8, [#323](https://github.com/juggernog20/OpenLaw/issues/323))** — **A day with no round at all is a day of dates nobody hears about, and that bound is the price of equality matching.** The addendum above says an offset names one day and the comparison is equality. The consequence was left unwritten: the reminders owed on a given local date are only ever raised by a round that runs on that date. The `>= 08:00` gate covers an install whose worker was down at somebody's eight o'clock — they are served at nine, or at noon — and it covers nothing wider. A worker down from one midnight to the next skips that day's dates outright, and the next day's round asks about the next day's dates.
+
+  It is recorded rather than closed. Widening the match to "on or before today, and not already fired" would heal the outage and would also fire every past offset the moment an install lengthens its list, which is precisely what M18/6 declined. The honest statement is that reminders are best-effort against a running install, while the deadline surfaces on the record (CTR-006, CTR-009) are always true — the record is the source, and the briefing is a prompt.
 
 ## NOT-005 — Badge: unread count, 9+ cap, read-on-open
 
@@ -81,6 +191,67 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 - **Decision** — Bell badge shows unread count capped at "9+". Opening the center marks visible items read; mark-all-read affordance; items deep-link to their records. Identical semantics on the portal bell.
 - **Rationale** — The activity feed (DD-017) is the durable history; notifications are ephemeral prompts — per-item read ceremony fights that.
 - **Consequences** — Grill-plan A.4 fully unblocked (bell + badge, cap 9+). `notifications.read_at` supports it.
+- **Addendum (2026-08-18, M18/2, [#317](https://github.com/juggernog20/OpenLaw/issues/317))** — **The bell shipped, and the read model is one write per page shown.** `POST /notifications/read` takes the ids of the page the centre just drew; `POST /notifications/read-all` takes nothing. There is no third write, because there is no per-item ceremony to serve.
+
+  **Both writes answer the unread count that remains**, which is `POST /comments/read`'s shape (CMT-004) and its reason: the badge takes the server's number rather than assuming its own request cleared what it sent. The surface never decrements locally, so a badge and a list cannot drift apart.
+
+  **The wall applies to the writes, not only to the reads.** An item about a record walled off after it was written is already outside the list and the count; the writes leave it unread too, because marking it read would be a write about a record the person can no longer see. The row keeps its state, so opening the wall again brings the item back exactly as it was — the same property the read side has.
+
+  **An id that is not this person's is not refused.** It matches nothing and the answer is the caller's own badge. A 404 would answer the question "does this id exist", which is the one thing a bell addressed to one person must not do.
+
+  **The page is the unit.** The mark-read write is bounded to one page's worth of ids, because a page is what the centre draws and what "the visible items" means on a list that arrives a page at a time. A second draw of the same page sends nothing: an already-read item keeps the stamp from its first sighting, and the surface filters the read ones out before it asks.
+
+## NOT-006 — The morning digest's anatomy and its delivery rules
+
+- **Status:** Accepted
+- **Date:** 2026-08-18
+- **Moved:** 2026-08-18 — clauses 4 to 12 of **DES-051**, which recorded them when the digest was written (M18/6, #321). They are delivery rules rather than front-end design, so they live here. DES-051 keeps the register: the voice, where the copy lives, and how a date prints.
+
+### Context
+
+NOT-003 decided that group 3's mail is one morning briefing rather than one message per reminder. M18/6 (#321) built the round that sends it, and DES-051 — written to close DES-015's copy-register deferral — carried the digest's whole shape as well, because both were settled in the same pass.
+
+That put a rule about _when the round may send_ and _which rows it orders first_ inside a record whose own scope line restricts it to front-end design. This record takes those clauses back.
+
+### Decision
+
+**1. The digest's subject is a count, and nothing else.** "3 dates on your contracts" / "1 date on your contracts". Sentence case, digits, no full stop, no record name — a subject naming one of five records would make the other four look like they were not in it, and a subject naming a date would go stale in the reader's inbox.
+
+**2. The body is one greeting, one framing line, one block per date, and one way out.** The framing line is "These dates are coming up on your contracts, nearest first." — it names the order, because the order is the information.
+
+**3. A date's block is two lines: the sentence, then its address.** `In 7 days (Mar 19, 2026) — Notice deadline: Meridian Bio supply agreement (#14)`, then the link. Relative first because "in 7 days" is what the reader is deciding on; the absolute date in brackets because a briefing read three days late must still be readable. `Today`, `Tomorrow`, and `Yesterday` are named; everything else is `In N days` / `N days ago`.
+
+**4. The kind of date is what a key date is called, or what the term calls it.** A key date prints its own label (CTR-009); the two the term derives print `Notice deadline` and `Expiry`, because no person named them.
+
+**5. The order is the deadline union's, exactly** (CTR-009, M16/3): what is still ahead nearest first, then what has gone by, most recently first; ties broken by the notice deadline, then the expiry, then the record's own dates. A reader who follows a link lands on the same order they were just reading.
+
+**6. The address is the record's Key dates section**, not the record's front page — DES-049 clause 9, said on the second channel.
+
+**7. Every date's distance is counted at send time, against the reader's own today.** Not against the offset the reminder fired at. A briefing that missed its morning rides the next one (NOT-003), and "in 1 day" about yesterday would be worse than no briefing.
+
+**8. The digest closes with the way out.** "Change what reaches you in your notification settings:" and a link to the pane DES-050 built. A recurring message with no way to turn it down is what trains a reader to filter the sender, and the pane already exists.
+
+**9. No empty briefing ever leaves.** A day with nothing due sends nothing. A daily message that says nothing happened is exactly the noise NOT-003 exists to prevent.
+
+Every sentence these clauses order is written to **DES-051**'s register.
+
+### Rationale
+
+Clause 1 is the digest's whole difference from every other message here. Every immediate mail is about one record and can name it; the digest is about a person's morning, and the moment it names a record it starts implying a priority the round did not compute.
+
+Clause 7 looks like a detail and is the reason the row carries `reminder_date` rather than only its offset. The offset is what the reminder fired at; the distance is what the reader needs. Storing one and printing the other is what makes a delayed briefing honest instead of confusing.
+
+### Alternatives considered
+
+- **Group the digest by record rather than by date.** Rejected: NOT-003's briefing is a calendar, and a calendar is ordered by time. A reader with nine dates on one record wants them in the order they arrive, not gathered under a title.
+- **Name the nearest date in the subject** ("Meridian Bio expires today, and 2 more"). Rejected — see the Rationale for clause 1.
+- **A per-user send hour, or a weekly digest.** Rejected upstream: NOT-003 declined both in v1 in as many words.
+
+### Consequences
+
+The surface is `renderDigestMail` in `apps/api/src/lib/notifications/email.ts`, ordered by the round in `apps/api/src/pipeline/morning-round.ts`. A change to what the briefing carries, or in what order, is an amendment here. The portal's requester mail (M20, group 5) inherits these clauses if it ever needs a digest of its own.
+
+**Known wording gap.** Clause 2's framing line says "nearest first", which is true of the rows still ahead and not of the overdue rows behind them. It only shows on a briefing that missed its morning. Recorded rather than fixed: the sentence has shipped, and changing it is an amendment to this clause.
 
 ## Index of decisions
 
@@ -91,3 +262,4 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 | NOT-003 | Timing: direct events immediate; date reminders in a daily digest | Accepted |
 | NOT-004 | Reminder lead times: admin-configurable offsets, seeded 7/1/0     | Accepted |
 | NOT-005 | Badge: unread count, 9+ cap, read-on-open                         | Accepted |
+| NOT-006 | The morning digest's anatomy and its delivery rules               | Accepted |

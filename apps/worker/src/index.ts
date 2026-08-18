@@ -41,6 +41,7 @@ import {
   createConsoleLogger,
   createDocEngineFromEnv,
   createDocuSignDriverFactory,
+  createMailerResolver,
   createSigningResolver,
   createStorageFromEnv,
   maxUploadBytes,
@@ -124,9 +125,44 @@ const resolveSigningProvider = createSigningResolver(
 // A database that cannot be reached is fatal here, as it is in the API.
 // Caught rather than left to the runtime so the operator reads one line
 // saying what failed, not a stack trace from inside pg-boss.
+// Mail, resolved per send exactly as the API resolves it (TECH-011,
+// #37): the environment wins, and an install that saved a relay in the
+// wizard has it read live on the next send. The notification email
+// (M18/1) is the first job that sends anything, and it is why this
+// process needs a mailer at all.
+const resolveMailer = createMailerResolver(db, {
+  url: process.env.SMTP_URL,
+  from: process.env.SMTP_FROM,
+});
+// Where this install answers, so an emailed notification deep-links to
+// the record it is about (NOT-005). The same variable and the same
+// fallback the API reads, because a worker that linked somewhere else
+// would send mail nobody could act on.
+const baseUrl = process.env.BASE_URL || "http://localhost:3000";
+
+// The API warns about this too, and until M18 that was enough: the app
+// was the only process that sent mail. It is not any more — every
+// notification email and every morning digest is rendered here — so an
+// operator who set BASE_URL on the app alone would get briefings whose
+// every link points at localhost, with nothing anywhere saying why.
+if (!process.env.BASE_URL && process.env.NODE_ENV === "production") {
+  console.warn(
+    "BASE_URL is not set; links in notification emails and the morning digest will point at http://localhost:3000.",
+  );
+}
+
 const pipeline = await startPipeline({
   connectionString: databaseUrl,
-  handlers: { db, storage, docEngine, resolveSigningProvider, log, maxUploadBytes: uploadCeiling },
+  handlers: {
+    db,
+    storage,
+    docEngine,
+    resolveSigningProvider,
+    resolveMailer,
+    baseUrl,
+    log,
+    maxUploadBytes: uploadCeiling,
+  },
   log,
 }).catch((error: unknown) => {
   log.error({ reason: reasonOf(error) }, "the worker could not start the job queue");

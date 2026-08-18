@@ -127,13 +127,14 @@ beforeAll(async () => {
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
 
   m11 = await buildApp({
-    ...testDeps(),
-    db: harness.db,
-    storage: harness.storage,
-    docEngine: harness.docEngine,
-    // Named rather than left to the default: a queue that refuses
-    // everything is the point of this app, not an incidental stand-in.
-    jobs: createUnconfiguredJobQueue(),
+    ...testDeps({
+      db: harness.db,
+      storage: harness.storage,
+      docEngine: harness.docEngine,
+      // Named rather than left to the default: a queue that refuses
+      // everything is the point of this app, not an incidental stand-in.
+      jobs: createUnconfiguredJobQueue(),
+    }),
   });
   await m11.ready();
 }, 120_000);

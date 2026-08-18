@@ -14,7 +14,7 @@ ActivityBar, Pill, Avatar) live in this file as local copies per the designs con
 | ----- | -------- | ---------------------------------------- | -------- |
 | ST1   | `t5FyJK` | Personal · Profile                       | M5       |
 | ST2   | `vVsIu`  | Personal · Appearance                    | M5       |
-| ST3   | `QQ3PT`  | Personal · Notification preferences      | M18      |
+| ST3   | `QQ3PT`  | Personal · Notification preferences      | M18 ✓    |
 | ST4   | `b3rJp`  | Organization · General                   | M5       |
 | ST5   | `vij2O`  | Organization · Users                     | M5       |
 | ST6   | `TRZzk`  | Matters settings · Types                 | M6       |
@@ -77,7 +77,14 @@ ActivityBar, Pill, Avatar) live in this file as local copies per the designs con
 5. ~~**ST3 ships in M18**, not M5 — the toggles wait for the notification engine.~~ _Confirmed
    (2026-08-11, #68): the shipped rail's Personal group carries Profile and Appearance only — no
    Notifications entry, omitted rather than disabled — and the M5 acceptance journey asserts the
-   absence. ST3 stays in the file untouched, waiting for M18._
+   absence. ST3 stays in the file untouched, waiting for M18._ **Closed (2026-08-18, #320):** the
+   pane shipped, the rail's Personal group gained its Notifications entry, and the M5 journey now
+   asserts its presence. Two frame deviations are recorded in **DES-050** and ST3 is not redrawn:
+   group 2 renders as **one row** rather than the frame's group header plus four sub-rows (NOT-002
+   keys a preference on the group, never on one verb), and the **In-app column is interactive**
+   rather than the frame's 55%-opacity locked treatment (M18 story 18: the feed is the person's to
+   tune). The pane also carries a caption the frame does not draw, and the stacked narrow layout
+   has no frame — both recorded in DES-050.
 
 ## Amendments (2026-08-12, M6 acceptance sweep, #86)
 
@@ -127,3 +134,36 @@ between the frame and the shipped pane:
 
 The **placement** the frame assumes is now a recorded decision rather than only a mock: **SET-007**
 supersedes CTR-013's "Settings → Contracts → E-signature" sentence, and Integrations is the home.
+
+## Amendment (2026-08-18, M18 — Organization · Notifications, #322)
+
+The NOT-004 reminder-offset list shipped as an Organization section. Two deltas between the file and
+the shipped pane:
+
+1. **The rail entry shipped as drawn; the pane body had no frame.** ST4's Organization group lists
+   **Notifications** between Intake and Integrations with the `bell-ring` glyph, and that is exactly
+   where and how the entry shipped — Entities takes the place the mock's unshipped Intake entry
+   holds. No frame in this file draws the pane behind it: ST3 is the **Personal** preferences grid
+   (DES-050), which is a different pane for a different reader. The body is therefore built from
+   **DES-052** on DES-020's geometry, and no frame is added in this pass — the M19 Intake sweep owns
+   the next pass over this file and can draw the pane against a settled surface.
+2. **The screen title and the URL are not the rail label.** The rail says "Notifications", as drawn.
+   The browser title says "Reminder lead times" and the address is `/settings/reminders`, because
+   DES-011 asks every screen for a title of its own and the Personal pane already holds both the
+   label and `/settings/notifications`. Recorded as DES-052 normalization 3.
+
+Because two rail sections now carry the label "Notifications", each rail group renders as an ARIA
+`group` named by its own heading — DES-052 normalization 4. Nothing about the rail's drawing changes.
+
+## Amendment (2026-08-18, M18 close, #323) — ST3 has shipped
+
+The milestone the ST3 row has been waiting on since M5 is done, so the row now carries a **✓** beside
+its milestone: `M18 ✓`. Personal · Notification preferences is live at `/settings/notifications`, on
+the anatomy **DES-050** settles, with amendment 5 above closed by #320 and its two frame deviations
+recorded there — group 2 as one row rather than a header plus four sub-rows, and an interactive
+In-app column. **ST3 is not redrawn**, for the reason ST7 was left as drawn: the deviations are
+recorded in a decision, and decisions win over the mocks.
+
+The tick is on this row alone, and that is a gap rather than a convention: every other frame whose
+milestone has landed is equally shipped and says only its number. Marking the rest belongs to a sweep
+of the whole table — the M19 Intake pass owns the next one, and it can mark them all at once.

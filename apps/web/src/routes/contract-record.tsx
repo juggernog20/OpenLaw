@@ -129,7 +129,7 @@
  * Users are bounced home, and the API's 403 is the real refusal.
  */
 
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   Link,
   redirect,
@@ -691,6 +691,12 @@ function ContractRecord() {
    * DES-010's restore-to-trigger rule, wired by hand because the panel
    * is a plain aside. */
   const readingTrigger = useRef<HTMLElement | null>(null);
+  /** Whether the panel's last close was asked for — Esc, the close
+   * control, or a section tab change over an overlaying panel — rather
+   * than the document simply leaving the list. Only an asked-for close
+   * takes focus back to the trigger; a document erased out from under a
+   * reader must not yank the caret somewhere they did not go. */
+  const readingClosed = useRef(false);
   /** Whether the doc panel is currently docked beside the record
    * content rather than overlaying it, per `DocPanel`'s own
    * `ResizeObserver`. A ref, not state — nothing here needs to
@@ -823,11 +829,22 @@ function ContractRecord() {
   // A document that stopped resolving is one that left the list —
   // archived out of the live view, or erased. The panel is already
   // gone; this drops what is left of the reference so a later restore
-  // does not reopen a panel nobody asked for.
+  // does not reopen a panel nobody asked for — and resets the same
+  // bookkeeping `closeReading` resets, minus the focus restore. Left
+  // stale, `readingDocked` would say a panel still covers the record:
+  // the next tab change would then call `closeReading` with no panel
+  // open, set `readingClosed` with no close for the layout effect
+  // below to consume, and the *next* vanished document would wrongly
+  // take focus back to its trigger. Stale `readingCovers` would mark
+  // the record content covered the moment the next panel opens, before
+  // that panel has measured anything.
   useEffect(() => {
     if (reading && !open) {
       setReading(null);
       readingTrigger.current = null;
+      readingClosed.current = false;
+      readingDocked.current = true;
+      setReadingCovers(false);
     }
   }, [reading, open]);
 
@@ -845,20 +862,38 @@ function ContractRecord() {
     if (!readingDocked.current) closeReading();
   }, [tab]);
 
-  /** Closes the panel and puts focus back on the control that opened
-   * it — DES-010's restore-to-trigger rule, wired by hand because the
-   * panel is a plain aside. */
+  /** Closes the panel. Focus goes back to the control that opened it —
+   * DES-010's restore-to-trigger rule, wired by hand because the panel
+   * is a plain aside — but one render later, in the layout effect
+   * below. */
   function closeReading() {
     setReading(null);
-    // Before the panel unmounts the element focus is sitting in.
-    readingTrigger.current?.focus();
-    readingTrigger.current = null;
+    // Somebody closed this one, so the focus goes back (below). A
+    // document that stops resolving takes its panel with it and never
+    // sets this, because nobody asked for that close.
+    readingClosed.current = true;
     // Nothing is measuring any more. Back to the default the next
     // panel opens on, so a closed panel's last width cannot decide
     // what the one after it does.
     readingDocked.current = true;
     setReadingCovers(false);
   }
+
+  // DES-010's restore-to-trigger rule, deferred by one render on
+  // purpose. While the panel overlays the record, the content the
+  // trigger lives in is `inert` — and `focus()` on an element inside an
+  // inert subtree does nothing at all. The attribute only comes off on
+  // the render that drops the panel, so restoring inside `closeReading`
+  // would aim at a control the browser is still refusing to focus and
+  // leave focus on the body. Keyed on the panel being gone, and a
+  // layout effect rather than a plain one so the ring is back before
+  // the frame that drops the panel is painted.
+  useLayoutEffect(() => {
+    if (open !== null || !readingClosed.current) return;
+    readingClosed.current = false;
+    readingTrigger.current?.focus();
+    readingTrigger.current = null;
+  }, [open]);
 
   function textDrafts(row: ContractRow): Record<TextFieldKey, string> {
     return { title: row.title, description: row.description ?? "" };

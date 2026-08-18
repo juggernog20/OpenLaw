@@ -71,7 +71,7 @@ import {
   type Transaction,
   type UserRole,
 } from "@openlaw/db";
-import type { AuthenticatedUser } from "../auth/guards.js";
+import type { AuthenticatedUser } from "../auth/user.js";
 
 /**
  * The `contract_team` role that records who made the contract (CTR-004).
@@ -787,11 +787,20 @@ export interface MentionCandidate {
  * whole list; a post that names three people wants three rows, not the
  * directory. Both take the same answer, which is the point — one rule
  * decides who the list offers and who a post may name.
+ *
+ * `confidentialDocument` narrows it once more, to the audience of a
+ * **confidential document** on this record (DD-014, DOC-008). It is
+ * asked by the notification fan-out, which has to say who may be told
+ * that a file landed — a sentence about a document may go exactly as far
+ * as the document does. It is the same `inNamedAudience` the document
+ * row scope is built from, asked with the flag already known to be set,
+ * so the answer cannot disagree with the document list's own.
  */
 export async function contractMentionCandidates(
   db: Executor,
   contractId: string,
   only?: readonly string[],
+  options: { confidentialDocument?: boolean } = {},
 ): Promise<MentionCandidate[]> {
   // The two facts about the record the reach rule turns on. A record
   // that is not there reaches nobody, which is the same answer its own
@@ -822,6 +831,11 @@ export async function contractMentionCandidates(
   return rows.flatMap((row) => {
     const standing = { role: row.role, onTeam: row.onTeam, isOwner: row.id === record.managerId };
     if (!inNamedAudience(standing, record.isConfidential)) return [];
+    // The second level of the flag, when the caller is asking about one
+    // (DOC-008). It narrows and never widens: a document has no team of
+    // its own, so this is the record's own audience read with the flag
+    // set rather than a different set of people.
+    if (options.confidentialDocument && !inNamedAudience(standing, true)) return [];
     const tiers = readableTiers(row.role, row.onTeam);
     if (tiers.length === 0) return [];
     return [{ id: row.id, displayName: row.displayName, image: row.image, tiers }];

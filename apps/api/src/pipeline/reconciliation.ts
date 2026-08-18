@@ -78,6 +78,7 @@ import {
   type EnvelopeState,
 } from "../lib/signing/provider.js";
 import type { SigningResolver } from "../lib/signing/resolver.js";
+import type { Notifier } from "../lib/notifications/notifier.js";
 import { applyEnvelopeStatus } from "../lib/signing/transitions.js";
 import { reasonOf } from "./derivations.js";
 import type { JobQueue } from "./jobs.js";
@@ -130,6 +131,11 @@ export interface ReconciliationDeps {
    * pattern), so a key an Administrator rotated during a round is the
    * key the round's next page uses. */
   resolveSigningProvider: SigningResolver;
+  /** The notification seam (NOT-001), which owns the transaction the
+   * status funnel writes in. A round that converges an envelope tells
+   * the record's people the outcome, with no actor — this round is the
+   * integration speaking. */
+  notifier: Notifier;
 }
 
 /** What a caller may vary about one round. */
@@ -355,7 +361,7 @@ export async function runReconciliationSweep(
       // One funnel, its own transaction, no wrapper around it — and no
       // actor, which is what attributes the entry to the integration
       // rather than to somebody who happened to be logged in.
-      const applied = await applyEnvelopeStatus(deps.db, {
+      const applied = await applyEnvelopeStatus(deps.notifier, {
         provider: envelope.provider,
         providerEnvelopeId: envelope.providerEnvelopeId,
         status: state.status,

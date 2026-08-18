@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 #
 # Development / E2E overlay (TECH-017, TECH-018): adds Mailpit as the
-# SMTP sink and points the app at it, and points signing at a stand-in
-# on the host. Both are the same rule — an outbound side that must never
-# reach a real account from a test run — and neither may ship in
-# compose.yml, where a mail catcher would silently swallow real invites
-# and a signing stand-in would swallow real envelopes.
+# SMTP sink and points both processes at it, and points signing at a
+# stand-in on the host. Both are the same rule — an outbound side that
+# must never reach a real account from a test run — and neither may ship
+# in compose.yml, where a mail catcher would silently swallow real
+# invites and a signing stand-in would swallow real envelopes.
 #
 #   docker compose -f compose.yml -f compose.dev.yml up
 #
@@ -13,11 +13,12 @@
 
 # What both processes need to reach the same stand-ins. The app and the
 # worker are the same image running two commands, and both resolve the
-# signing connector for themselves — the app to send and to verify a
-# delivery, the worker to fetch an executed copy — so a variable set on
-# one and forgotten on the other is a send that works and a signed PDF
-# that never lands.
-x-openlaw-dev-signing: &openlaw-dev-signing
+# signing connector and the mail relay for themselves — the app to send
+# an envelope and to verify a delivery, the worker to fetch an executed
+# copy and to send every notification email (M18/1) — so a variable set
+# on one and forgotten on the other is a send that works and a signed PDF
+# that never lands, or a bell item that rings and an email nobody gets.
+x-openlaw-dev-outbound: &openlaw-dev-outbound
   # Where the DocuSign driver dials, unset on every real install. The
   # E2E suite listens on this port on the host and answers DocuSign's
   # shapes (21-m15-demo.spec.ts); SIGNING_STUB_PORT moves it so a second
@@ -30,6 +31,14 @@ x-openlaw-dev-signing: &openlaw-dev-signing
   # to send a real install's paper elsewhere. Both processes refuse to
   # boot on either variable without the other.
   SIGNING_STANDIN: "true"
+  # The mail sink, on both processes for the signing address's reason.
+  # A real install sets SMTP_URL in `.env`, which compose.yml passes to
+  # the app and the worker alike; this overlay sets it here, and setting
+  # it on the app alone left the worker resolving an unconfigured mailer
+  # — so every immediate notification email and every morning digest was
+  # recorded as skipped instead of delivered.
+  SMTP_URL: smtp://mailpit:1025
+  SMTP_FROM: OpenLaw <openlaw@localhost>
 
 # host-gateway gives Linux engines the name Docker Desktop defines out
 # of the box, which is how both processes reach the suite's own servers
@@ -41,16 +50,20 @@ x-openlaw-dev-hosts: &openlaw-dev-hosts
 services:
   app:
     environment:
-      <<: *openlaw-dev-signing
-      SMTP_URL: smtp://mailpit:1025
-      SMTP_FROM: OpenLaw <openlaw@localhost>
+      <<: *openlaw-dev-outbound
       # The E2E suite replays sign-in flows from one IP far faster than
       # any human; production keeps better-auth's limits.
       AUTH_RATE_LIMIT: "off"
+      # Mounts POST /api/v1/notifications/morning-round, which no real
+      # install carries (TECH-018). The morning round is a cron on the
+      # hour, and the M18 demo cannot wait an hour for a tick; the round
+      # itself is unchanged and still decides for itself whose morning it
+      # is. Administrator-only even here.
+      MORNING_ROUND_TRIGGER: "on"
     extra_hosts: *openlaw-dev-hosts
 
   worker:
-    environment: *openlaw-dev-signing
+    environment: *openlaw-dev-outbound
     extra_hosts: *openlaw-dev-hosts
 
   mailpit:
@@ -58,9 +71,10 @@ services:
     # behaviour between E2E runs without a repository change.
     image: axllent/mailpit:v1.30
     networks:
-      # The app's network, because the app is what delivers to it. Not
-      # the doc-engine one — a mail catcher has no business being
-      # reachable from the container that opens counterparty files.
+      # The app's network, because the app and the worker are what
+      # deliver to it. Not the doc-engine one — a mail catcher has no
+      # business being reachable from the container that opens
+      # counterparty files.
       - openlaw-backend
     ports:
       # Loopback only — the UI and REST API are unauthenticated and show

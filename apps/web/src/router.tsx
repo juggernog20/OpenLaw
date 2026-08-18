@@ -21,6 +21,11 @@ import { SetPasswordPage } from "./routes/set-password";
 import { SettingsLayout, settingsIndexLoader, settingsLoader } from "./routes/settings";
 import { SettingsAppearancePage } from "./routes/settings-appearance";
 import {
+  SettingsNotificationsPage,
+  settingsNotificationsLoader,
+} from "./routes/settings-notifications";
+import { SettingsRemindersPage, settingsRemindersLoader } from "./routes/settings-reminders";
+import {
   SettingsApproverGroupsPage,
   settingsApproverGroupsLoader,
 } from "./routes/settings-approver-groups";
@@ -144,6 +149,14 @@ export const routes: RouteObject[] = [
       { index: true, loader: settingsIndexLoader, element: <></> },
       { path: "profile", loader: settingsProfileLoader, element: <SettingsProfilePage /> },
       { path: "appearance", element: <SettingsAppearancePage /> },
+      {
+        // #320: the ST3 pane, every signed-in person's own. No role
+        // gate — a preference is addressed to one person, and the
+        // API answers only for the signed-in one.
+        path: "notifications",
+        loader: settingsNotificationsLoader,
+        element: <SettingsNotificationsPage />,
+      },
       // SET-002: the loaders bounce non-Administrators; the API's own
       // role gate stands behind them.
       { path: "general", loader: settingsGeneralLoader, element: <SettingsGeneralPage /> },
@@ -209,6 +222,14 @@ export const routes: RouteObject[] = [
         path: "entities/types",
         loader: settingsEntityTypesLoader,
         element: <SettingsEntityTypesPage />,
+      },
+      {
+        // #322: Organization · Notifications — the NOT-004 reminder
+        // lead times. Named for what it holds, because the Personal
+        // pane above already owns /settings/notifications.
+        path: "reminders",
+        loader: settingsRemindersLoader,
+        element: <SettingsRemindersPage />,
       },
       // #245: the Integrations section, E-signature its first pane
       // (SET-007, superseding CTR-013's Contracts-tab placement).

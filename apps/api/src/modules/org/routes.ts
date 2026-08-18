@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Organization settings routes (SET-001 General pane, #63). Everything
- * here sits behind SET-002's single role gate — Administrators only —
- * and every write appends to the activity log (SET-003 / DD-017) inside
- * the same transaction, so no change can land unrecorded.
+ * Organization settings routes (SET-001 General pane, #63; the
+ * Notifications pane's reminder-offset list, #322). Everything here sits
+ * behind SET-002's single role gate — Administrators only — and every
+ * write appends to the activity log (SET-003 / DD-017) inside the same
+ * transaction, so no change can land unrecorded.
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -12,6 +13,7 @@ import { z } from "zod";
 import { eq, orgSettings } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
+import { MAX_REMINDER_OFFSET_DAYS, savedOffsets } from "../../lib/notifications/offsets.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { TimezoneSchema } from "../../lib/timezones.js";
 
@@ -52,6 +54,29 @@ const GeneralPatchSchema = z
   .partial();
 
 type GeneralField = keyof z.infer<typeof GeneralPatchSchema>;
+
+/**
+ * How many lead times one install may hold (NOT-004).
+ *
+ * A reminder schedule is a handful of numbers — a week out, the day
+ * before, the day itself. Twenty is far past any real ladder and still
+ * small enough that the round reads the whole column without thinking
+ * about it. The bound exists so a scripted caller cannot turn one
+ * settings row into a thousand reminders a day.
+ */
+const MAX_REMINDER_OFFSETS = 20;
+
+/**
+ * What both offset routes answer.
+ *
+ * Bounded to the range `savedOffsets` can actually return, so the
+ * emitted contract says what a caller will get rather than advertising
+ * every safe integer — a generated client typed wider than the answer is
+ * a client that compiles against cases the API cannot produce.
+ */
+const OffsetsEnvelope = z.object({
+  offsets: z.array(z.number().int().min(0).max(MAX_REMINDER_OFFSET_DAYS)),
+});
 
 export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
@@ -148,6 +173,96 @@ export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
           defaultTimezone: updated.defaultTimezone,
         },
       };
+    },
+  );
+
+  app.get(
+    "/org/reminder-offsets",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "getReminderOffsets",
+        summary:
+          "The install's reminder lead times in days (NOT-004): one " +
+          "list, applied to every tracked date — key dates, notice " +
+          "deadlines, and expiries alike. Answered in the order it was " +
+          "saved, which is the order the pane draws. A stored value the " +
+          "round could not fire on is dropped rather than answered, so " +
+          "the pane can never draw a lead time that will not arrive",
+        tags: ["org"],
+        response: { 200: OffsetsEnvelope, default: problemResponse },
+      },
+    },
+    async () => {
+      const [row] = await app.db
+        .select({ offsets: orgSettings.reminderOffsetDays })
+        .from(orgSettings)
+        .limit(1);
+      if (!row) throw httpError(500, "org_settings has no row to read.");
+      return { offsets: savedOffsets(row.offsets) };
+    },
+  );
+
+  app.put(
+    "/org/reminder-offsets",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "setReminderOffsets",
+        summary:
+          "Replace the reminder lead times (NOT-004). The whole list " +
+          "goes in one request, because adding, removing, and " +
+          "rearranging are all the same write and each of them applies " +
+          "the moment it is made (SET-003). The morning round reads the " +
+          "column live, so the next round uses the new list with " +
+          "nothing else touched. The list can never be emptied: no " +
+          "lead times means no reminders, and silence has to be chosen " +
+          "per event group rather than fall out of an empty settings " +
+          "row",
+        tags: ["org"],
+        body: z.object({
+          offsets: z
+            .array(z.number().int().min(0).max(MAX_REMINDER_OFFSET_DAYS))
+            .min(1)
+            .max(MAX_REMINDER_OFFSETS),
+        }),
+        response: { 200: OffsetsEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => {
+      // Duplicates collapse to their first position: two copies of `7`
+      // are one lead time, and the round would dedup them anyway.
+      const offsets = [...new Set(request.body.offsets)];
+      const stored = await app.db.transaction(async (tx) => {
+        const [current] = await tx
+          .select({ id: orgSettings.id, offsets: orgSettings.reminderOffsetDays })
+          .from(orgSettings)
+          .limit(1)
+          .for("update");
+        if (!current) throw httpError(500, "org_settings has no row to update.");
+        const before = savedOffsets(current.offsets);
+        // Order counts as change: the stored list is the canonical one,
+        // and rearranging it is a save like any other.
+        if (JSON.stringify(before) === JSON.stringify(offsets)) return before;
+        const [row] = await tx
+          .update(orgSettings)
+          .set({ reminderOffsetDays: offsets, updatedAt: new Date() })
+          .where(eq(orgSettings.id, current.id))
+          .returning({ offsets: orgSettings.reminderOffsetDays });
+        if (!row) throw httpError(500, "org_settings has no row to update.");
+        await recordActivity(tx, {
+          entityType: "system",
+          actorId: request.user.id,
+          action: "org_settings.updated",
+          visibility: "admin_only",
+          // The old list is the one the round was firing on, not the raw
+          // column: an unreadable value was never a lead time, so
+          // narrating it as one lost would be a false record.
+          payload: { field: "reminderOffsetDays", old: before, new: savedOffsets(row.offsets) },
+        });
+        return savedOffsets(row.offsets);
+      });
+      return { offsets: stored };
     },
   );
 };

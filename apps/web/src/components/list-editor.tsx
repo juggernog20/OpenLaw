@@ -14,11 +14,20 @@
  * (DES-021). Archived rows sit greyed behind the toggle in the ST5
  * treatment. The panes own their data, API calls, and guard dialogs —
  * this component owns the anatomy.
+ *
+ * **The value-list variant (DES-052).** A pane whose rows are values
+ * rather than named things — the NOT-004 reminder lead times — keeps the
+ * card, the row geometry, the grip, and the inline add, and drops the
+ * two parts that only mean something for a taxonomy: the row is not
+ * renamed in place, and it is **removed** rather than archived, because
+ * nothing points at a value and there is no history to keep. Such a pane
+ * passes `removeLabel`/`onRemove` in place of the archive pair and no
+ * rename pair at all.
  */
 
 import { useRef, useState, type DragEvent, type ReactNode, type RefObject } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { Archive, ArchiveRestore, GripVertical, Lock, Plus } from "lucide-react";
+import { Archive, ArchiveRestore, GripVertical, Lock, Plus, X } from "lucide-react";
 import { SettingsCard } from "./settings-card";
 import { StatusNote, type FieldStatus } from "./status-note";
 import { Button } from "./ui/button";
@@ -45,8 +54,9 @@ export interface ListEditorReorder {
 export interface ListEditorProps<Row extends ListEditorRow> {
   /** Live rows, in render order. */
   rows: Row[];
-  /** Archived rows, revealed by the Show-archived toggle. */
-  archivedRows: Row[];
+  /** Archived rows, revealed by the Show-archived toggle. A value list
+   * archives nothing, so it leaves this out. */
+  archivedRows?: Row[];
   title: ReactNode;
   /** The row-count caption content (ICU plural, pane vocabulary). */
   count: ReactNode;
@@ -62,9 +72,11 @@ export interface ListEditorProps<Row extends ListEditorRow> {
   /** Per-row save state, keyed by row id; drives the row's StatusNote. */
   rowStatus: Record<string, FieldStatus>;
   rowError: Record<string, string | undefined>;
-  renameLabel: (row: Row) => string;
+  /** In-place rename (DES-017). A value list omits the pair: a lead time
+   * is not renamed, it is removed and another one added. */
+  renameLabel?: (row: Row) => string;
   /** Commits an in-place rename; the trimmed draft is never empty. */
-  onRename: (row: Row, displayName: string) => void;
+  onRename?: (row: Row, displayName: string) => void;
   /** Content beside the name: qualifier pills, table columns. */
   rowDetails?: (row: Row) => ReactNode;
   /** Wraps the name cell (e.g. `min-w-0 flex-1` so fixed-width detail
@@ -76,11 +88,18 @@ export interface ListEditorProps<Row extends ListEditorRow> {
   rowActions?: (row: Row) => ReactNode;
   /** The lock's accessible name for protected rows; null renders archive. */
   protectedLabel?: (row: Row) => string | null;
-  archiveLabel: (row: Row) => string;
+  /** Archive and restore, for a taxonomy whose rows records point at
+   * (DES-020). A value list passes the remove pair below instead. */
+  archiveLabel?: (row: Row) => string;
   /** Opens the pane's SET-003 archive guard. */
-  onArchive: (row: Row) => void;
-  restoreLabel: (row: Row) => string;
-  onRestore: (row: Row) => void;
+  onArchive?: (row: Row) => void;
+  restoreLabel?: (row: Row) => string;
+  onRestore?: (row: Row) => void;
+  /** Outright removal, for a value list (DES-052): nothing points at the
+   * row, so there is nothing to retain and nothing to reassign. Never
+   * passed together with the archive pair. */
+  removeLabel?: (row: Row) => string;
+  onRemove?: (row: Row) => void;
   /** Drag/arrow-key reorder for ordered taxonomies; omit for catalogs. */
   reorder?: ListEditorReorder;
   /** The inline draft row's content, rendered while `adding` (DES-020's
@@ -89,6 +108,10 @@ export interface ListEditorProps<Row extends ListEditorRow> {
   adding?: boolean;
   /** Live-region text for keyboard reorder announcements (WCAG 4.1.3). */
   announcement?: string;
+  /** A save that covers the whole list is in the air (DES-052): the Add
+   * CTA and the trailing actions stand down until it lands, so a press
+   * the pane would refuse cannot be made in the first place. */
+  busy?: boolean;
   /** The list element, for parking focus when a dialog closes over a
    * row that has left the list. */
   listRef?: RefObject<HTMLUListElement | null>;
@@ -96,7 +119,7 @@ export interface ListEditorProps<Row extends ListEditorRow> {
 
 export function ListEditor<Row extends ListEditorRow>({
   rows,
-  archivedRows,
+  archivedRows = [],
   title,
   count,
   headerCaption,
@@ -117,10 +140,13 @@ export function ListEditor<Row extends ListEditorRow>({
   onArchive,
   restoreLabel,
   onRestore,
+  removeLabel,
+  onRemove,
   reorder,
   addRow,
   adding = false,
   announcement = "",
+  busy = false,
   listRef,
 }: Readonly<ListEditorProps<Row>>) {
   const intl = useIntl();
@@ -134,7 +160,7 @@ export function ListEditor<Row extends ListEditorRow>({
     const displayName = draft.trim();
     // Nothing to save (or nothing valid): revert per DES-017.
     if (displayName === "" || displayName === row.displayName) return;
-    onRename(row, displayName);
+    onRename?.(row, displayName);
   }
 
   function drop(event: DragEvent, targetIndex: number) {
@@ -153,6 +179,10 @@ export function ListEditor<Row extends ListEditorRow>({
   }
 
   function nameCell(row: Row) {
+    // A value list has no rename: the row reads as what it is.
+    if (!onRename || !renameLabel) {
+      return <span className="text-base font-medium text-primary">{row.displayName}</span>;
+    }
     if (editing?.id === row.id) {
       return (
         <Input
@@ -183,13 +213,13 @@ export function ListEditor<Row extends ListEditorRow>({
   }
 
   function trailingAction(row: Row) {
-    if (row.archivedAt) {
+    if (row.archivedAt && onRestore && restoreLabel) {
       return (
         <Button
           variant="ghost"
           size="sm"
           className="px-1.5"
-          disabled={rowStatus[row.id] === "saving"}
+          disabled={busy || rowStatus[row.id] === "saving"}
           aria-label={restoreLabel(row)}
           onClick={() => onRestore(row)}
         >
@@ -207,12 +237,28 @@ export function ListEditor<Row extends ListEditorRow>({
         </span>
       );
     }
+    // A value list removes outright (DES-052); a taxonomy archives.
+    if (onRemove && removeLabel) {
+      return (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="px-1.5"
+          disabled={busy || rowStatus[row.id] === "saving"}
+          aria-label={removeLabel(row)}
+          onClick={() => onRemove(row)}
+        >
+          <X size={16} aria-hidden="true" className="text-muted" />
+        </Button>
+      );
+    }
+    if (!onArchive || !archiveLabel) return null;
     return (
       <Button
         variant="ghost"
         size="sm"
         className="px-1.5"
-        disabled={rowStatus[row.id] === "saving"}
+        disabled={busy || rowStatus[row.id] === "saving"}
         aria-label={archiveLabel(row)}
         onClick={() => onArchive(row)}
       >
@@ -246,7 +292,7 @@ export function ListEditor<Row extends ListEditorRow>({
             )}
             <span className="text-sm whitespace-nowrap text-muted">{count}</span>
             {reorder && <StatusNote status={reorder.status} detail={reorder.detail} />}
-            <Button size="sm" className="px-3 whitespace-nowrap" onClick={onAdd}>
+            <Button size="sm" className="px-3 whitespace-nowrap" disabled={busy} onClick={onAdd}>
               <Plus size={16} aria-hidden="true" />
               {addLabel}
             </Button>

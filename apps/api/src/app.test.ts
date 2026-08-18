@@ -20,7 +20,7 @@ beforeAll(async () => {
   // These suites never touch the database; pg pools connect lazily, so a
   // placeholder URL keeps them container-free.
   db = createDb(UNUSED_DATABASE_URL);
-  app = await buildApp({ ...testDeps(), db });
+  app = await buildApp(testDeps({ db }));
   // Test-only route exercising the validation → problem+json path.
   app.get(
     "/api/v1/echo",

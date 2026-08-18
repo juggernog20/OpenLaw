@@ -1063,7 +1063,7 @@ The voice register for all component-default and system-generated copy is **ters
 
 - **User-generated content** (comments, request descriptions, document titles) — users write however they write.
 - **Feature-level marketing copy** (landing page, docs site if/when produced) — different audience, register decided per-surface.
-- **Email digest copy** (deferred with the notifications-surface decision) — separate register decision when that ships.
+- ~~**Email digest copy** (deferred with the notifications-surface decision) — separate register decision when that ships.~~ _Closed 2026-08-18 by **DES-051**, which is that separate decision. It turned out to be owed for **every** message this system sends and not only the digest, so DES-051 states the register for all of them: this one, plus a message names its reader and points somewhere, and a message is a sentence rather than a summary. Email copy is therefore **in scope** for this register from here on — the exception is gone, not narrowed._
 - **Pre-login chrome** (login screen tagline, signup screen) — narrow exception where first-person plural ("We help legal teams...") may be appropriate; revisit if it becomes a pattern, not a one-off.
 
 #### Reference exemplars and anti-exemplars
@@ -3104,6 +3104,249 @@ The native control answered locale for free and cost no component. It also answe
 
 `apps/web/src/components/date-picker.tsx` is the control; `calendar.tsx` and `popover.tsx` are the owned shadcn pieces under `components/ui/`. `formatFullDate` joins the DES-014 helper layer. `react-day-picker` and `@radix-ui/react-popover` are web-app dependencies. DES-014's Date inputs row and DES-040 clause 1 are amended above. The month grid uses `fixedWeeks` so collision can place the popover without a later resize moving previous/next. No new tokens.
 
+## DES-049: The notification centre — the header bell, its counter badge, and the panel behind it (extends DES-026, DES-031, DES-016)
+
+- **Status:** Accepted
+- **Date:** 2026-08-18
+
+### Context
+
+NOT-001 puts one notification system on two surfaces, and the staff surface is a bell in the top nav. NOT-005 settles its semantics — unread count, capped at "9+", opening the centre marks the visible items read, a mark-all-read affordance, items deep-link, no per-item read ceremony. M18/2 (#317) builds it.
+
+**The bell is mocked; the panel behind it is not.** The `AppHeader` component in `designs/final-themes.pen` draws the glyph and an overhanging red count badge in the trailing cluster, between the create menu and the avatar. A sweep of every frame file that carries screens — `contracts.pen` (C1–C29), `matters.pen` (M1–M23), `settings.pen` (ST1–ST19), `intake.pen` (I1–I8), `documents.pen` (DOC1–DOC7), `entities.pen` (EN1–EN8), and `knowledge.pen` (KN1–KN6) — found no frame of the centre open. `settings.pen` **ST3** draws the Notification _preferences_ pane, which is a different surface and a different slice. So the trigger below is the frame's, and the panel below is built from the written pattern, exactly as DES-027 was: DES-016's panel head, DES-026's row and foot, DES-031's focus rule.
+
+Notification-surface UX is feature-level by this record's own scope line, so the anatomy lands here rather than the feature spec carrying it silently in code — the M15/M16/M17 precedent. Two things in it are reusable and are normalized as such: the counter badge on an icon control, and the header popover panel.
+
+### Decision
+
+**1. The trigger is an icon control in the header's trailing cluster**, before the avatar, at the frame's 16px gap. Lucide `Bell` at DES-008's 20px control step, in the chrome's muted foreground, inside a 24×24 target (DES-011's floor). The frame draws the glyph at 18px, which is off DES-008's ramp; 20 is the step it rounds to and the size every other header glyph already uses.
+
+**2. The badge is the existing alert counter, unchanged.** `bg-badge-alert-bg` / `text-badge-alert-fg`, `rounded-pill`, `h-4 min-w-4`, `text-xs` semibold, overhanging the glyph's trailing top corner. That token pair is already the activity bar's unread chat badge (DES-016, CMT-004), and its Light value is `#cf222e` — the exact fill the frame draws. **This is the normalization point:** one counter badge on an icon control, drawn one way, wherever a count sits on a glyph. The frame's 9px numeral is off the type ramp; `text-xs` (11px) is its floor and the only metadata size there is.
+
+**3. The badge is drawn capped and named uncapped.** "9+" above nine, per NOT-005. The numeral is `aria-hidden`; the count lives in the trigger's accessible name — "Notifications, 3 unread" / "Notifications, none unread" — with the **whole** number, never the cap. The cap is a nudge for the eye, and hiding the real count from a screen reader would make it a nudge that costs information. No badge is drawn at zero.
+
+**4. The centre is a popover panel, not a menu.** A menu's rows are commands with roving focus and every one of them closes it; this panel has a paging control in its foot, a command in its head, and a list of links between them. It is the shared `Popover` DES-048 landed for the calendar (`apps/web/src/components/ui/popover.tsx`), unforked — card chrome, `bg-raised`, `border-border-default`, `rounded-card` — aligned to the trigger's trailing edge and with the shared inset dropped, because this panel's head and rows carry their own and the head's rule has to reach both edges. **This is the second normalization point:** a header affordance whose contents are a panel takes the popover; one whose contents are commands takes the dropdown menu.
+
+**5. It is one panel width.** `--width-panel` (320px), the applet panel's own token, bounded by Radix's available width and height so a phone gets the panel the viewport leaves rather than one that overflows it (DES-012). The list scrolls inside; the head does not.
+
+**6. The head is DES-016's panel head.** 44px, `border-b border-border-muted`, 16px inset, the title at 13px semibold. "Mark all read" is a ghost `Button` on the trailing edge, **drawn only while something is unread** — a control that can only ever do nothing is chrome, not an affordance.
+
+**7. A row is DES-026's row, and the whole row is the link.** 10px vertical / 16px horizontal padding, `border-muted` between rows and none under the last, a 10px gap after a 24px `rounded-pill` medallion on `bg-control` carrying the event family's Lucide glyph at 16px. Then the sentence at 12px `text-primary`, wrapping rather than truncating, then the timestamp at 11px `text-muted` on DES-014's activity-feed rule with the long absolute in the tooltip. The `<a>` wraps all of it: the item carries exactly one action, so a link inside the row would be a smaller target for the same destination.
+
+**8. Rows carry no unread marker.** Opening the centre reads everything it draws (NOT-005), so a per-item dot would go out while the reader watched it. The badge is where unread is said, and it is the only place.
+
+**9. The item's address is a record section, not a record.** An approval request opens Approvals, a task opens Tasks, paper opens Documents, a date opens Key dates, and everything else opens the record (DES-032's routed tabs). Landing a reader on the overview and making them find the thing they were just told about is one click short of the promise, and the sections are addresses precisely so a prompt can name one.
+
+**10. The foot is DES-026's, and the focus rule is DES-031's.** A secondary "Show older" while a further page exists and nothing when it does not; on press, focus lands on the first row of the page just brought. No live-region count: DES-031 clause 5 exempts a surface where focus lands on the new content, which this one does.
+
+**11. Both failures are DES-026's.** A first page that fails says so and leaves no stale list, with reopening as the way back; a failed "Show older" keeps the list and the control, because the retry is already under the reader's hand.
+
+**12. The empty state is the panel's own line** — "Nothing to catch up on. News about your records shows up here." — in the row's own inset, with no foot and no mark-all-read beside it. It says "news", not "anything that needs you": NOT-002's ambient group is here too, and a comment posted on your record is news that needs nothing from you.
+
+### Recorded normalization points (frame deviations accepted)
+
+1. **The glyph renders at 20px**, not the frame's 18. DES-008's ramp has no 18, and 20 is the header's own control step.
+2. **The numeral renders at 11px**, not the frame's 9. `text-xs` is DES-006's floor and the metadata size; 9px is under the ramp and under legibility.
+3. **The badge takes the shipped alert-counter treatment**, not a bespoke pill. The frame's fill is already the token's Light value, so this is a naming change and not a visual one.
+4. **The panel has no frame at all.** Built from DES-016's head, DES-026's row and foot, and DES-031's focus rule — all of them already ratified against frames. A frame drawn for this panel later governs its chrome; the anatomy above is the decision.
+
+### Rationale
+
+Reusing the activity bar's counter badge rather than drawing a second one is the whole of point 2: two counters in one product that disagree about height, radius, or red is the kind of drift nobody reports and everybody sees. The mock's fill turning out to be the token's own value is the evidence that they were always the same badge.
+
+Point 4 is the one that decides whether the surface works. The dropdown menu was on hand and would have looked identical; it would also have closed itself the moment somebody pressed "Show older", because that is what a menu item does. Reaching for the panel primitive is not a preference — it is the only one of the two that can hold a list and a control at once.
+
+Point 8 is NOT-005 restated where it is easy to forget: the read model has exactly one write per page shown, so anything per-item would be a control for a state the reader can never be in.
+
+### Alternatives considered
+
+- **The bell as a route** (`/notifications`), with the centre as a page. Rejected: it makes the prompt a destination, and NOT-005's read-on-open would then mean "navigating away from your work reads your bell". The activity feed is the durable surface; the bell is a glance.
+- **A dropdown menu instead of a popover.** Rejected — see the Rationale.
+- **An unread dot on each row.** Rejected — see point 8.
+- **A per-item dismiss.** Rejected upstream in NOT-005's rationale, and it would need a write this API deliberately does not have.
+- **Infinite scroll in the panel.** Rejected in DES-026's own words: a scroll sentinel is not keyboard-reachable and DES-010 requires that affordances are.
+- **Showing a total, or "3 of 12".** Rejected for DES-026's reason and M10's: a count over rows the reader cannot see would announce them, and the wall's whole property here is that an omission leaves no gap to notice.
+
+### Consequences
+
+No new tokens and no new primitive: the badge is `badge-alert-*`, the panel is `bg-raised` / `border-border-default`, the row is DES-026's `bg-control` / `border-muted` / `text-primary` / `text-muted`, and `ui/popover.tsx` is DES-048's, reused as it stands. The surface is `apps/web/src/components/shell/notification-bell.tsx`, mounted in `AppHeader`; the sentence and the address for each catalog slug are `apps/web/src/lib/notifications.ts`, which is `lib/activity.ts`'s narration layer applied to a second table and takes the same three properties — defensive payload reads, own-key-only lookup, and an explicit fallback arm. The portal bell (M20) renders the same anatomy against the portal's own chrome; if it needs a second popover panel or a second counter badge, points 2 and 4 are already the answer.
+
+## DES-050: The notification preferences pane — one row per event group, two switch columns (extends DES-017, DES-012, DES-011)
+
+- **Status:** Accepted
+- **Date:** 2026-08-18
+
+### Context
+
+NOT-001 gives every person channel toggles over NOT-002's event groups, and the settings inventory has carried the pane as row **ST3** since M5, where it was deferred because the engine behind it did not exist. M18/5 (#320) builds it.
+
+**The frame exists, and it disagrees with the decision it draws.** `settings.pen` **ST3** draws a 720px card titled "Notification preferences" over a three-column table — Event group, In-app, Email — with a 34px column head and 56px rows. Between the head and the rows it draws **seven** rows for **four** groups: "Assigned to you" as one row, then a group header for "Activity on your records" with four indented sub-rows under it (Status changes, Comments, Documents, Signatures), then "Dates approaching" and "New requests" as one row each. NOT-002 keys a preference on the **group** — "a person turns email off for activity on my records, never for one verb" — so four of the frame's rows are controls for a state the model cannot hold.
+
+The frame also draws every In-app switch at 55% opacity, which reads as a locked column. M18's own spec asks for the opposite in its own words: "_As a user, I want to turn bell items on or off per event group, so that even the feed is mine to tune._"
+
+This record settles the pane's anatomy and both deviations. It is a settings pane, so most of it is already decided — DES-017's per-field micro-states, the settings card, the switch DES-004 landed. What is new is the **grid**: a row of controls repeated down a list, which no settings pane before this one has had.
+
+### Decision
+
+**1. The pane is one settings card, flush.** `SettingsCard` at `--width-settings-card` (720px, the frame's own width), the section-header strip carrying "Notification preferences", and an edge-to-edge body — the table owns its gutters, as every flush settings body does.
+
+**2. A row is an event group.** Four rows, in NOT-002's order: Assigned to you, Activity on your records, Dates approaching, New requests. The group's name at 13px `font-medium text-primary`, its coverage under it at 12px `text-muted`, `border-border-muted` between rows and none under the last. The frame's group-header-plus-sub-rows treatment is not built (normalization 1).
+
+**3. The staff pane draws the staff groups.** `requester_events` is the portal audience's own group (NOT-001) and is not drawn here; the API answers all five, so M20 renders it against the portal's chrome. `new_requests` **is** drawn, dormant: nothing fires it until the Inbox lands (M21), and an opinion can be held about a group before anything in it has happened — which is why the group value shipped with the engine.
+
+**4. Two switch columns, both live.** `In-app` then `Email`, 90px each, the shared `Switch` unforked. Neither column is locked (normalization 2). Turning **email** off leaves the group's bell items flowing; turning **in-app** off silences the group entirely, because the email hangs off the bell row — that is the engine's shape, and the pane says so in a caption rather than pretending otherwise.
+
+**5. The state is the effective answer, and there is no third state.** `notification_preferences` holds overrides, so somebody who has never opened the pane has no rows; the API answers what they effectively get and the switches draw it. A switch is on or off — never indeterminate, never "default" as a visible third value. A default a person can see but not name is a state they cannot reason about, and every switch here is theirs to set anyway.
+
+**6. Saving is DES-017's immediate-on-save, with one status for the card.** The switch moves at once, the write goes, and one `StatusNote` in the card's header strip says saving / saved / the refusal — the Appearance pane's arrangement, for its reason: a note per switch would put eight live regions on one card. A refused save snaps the switch back to the server's answer, and the write answers the whole grid so the pane can never drift from what the fan-out will honour.
+
+**7. Below `@lg` of the card's own container, the row stacks** (DES-012 — the card's container, not the viewport). The group and its description on top, the two switches in a row under it. The column heads are for a state where the switches are in columns, so they are `aria-hidden` chrome and drawn only at the wide state.
+
+**8. Every switch is named by its group and its channel.** `aria-labelledby` points at the row's group label and the cell's own channel label, so the control announces "Activity on your records, Email, switch"; `aria-describedby` points at the group's description. The channel label is **visible** in the stacked state and `sr-only` in the columned one — the same element in both, so the accessible name does not change with the width. The column heads are `aria-hidden` precisely because that name already carries the column.
+
+### Recorded normalization points (frame deviations accepted)
+
+1. **Group 2 is one row, not a header and four sub-rows.** NOT-002 keys a preference on the group; a per-event switch would be a control with nothing behind it. The four families are named in the group's description instead, so the frame's information survives without its four controls.
+2. **The In-app column is interactive**, not the frame's 55%-opacity locked treatment. M18's story 18 says the feed is the person's to tune, and `notification_preferences` has always held an `in_app` row.
+3. **The pane carries a caption the frame does not draw**, under the table: email off keeps the bell items, in-app off turns the group off entirely. Point 4's asymmetry is real, and a switch that silently changes what another switch means has to say so.
+4. **The stacked layout has no frame.** ST3 is drawn at 1440×940 only, like every frame in the file. Point 7 is built from DES-012's rule, as every other settings pane's narrow state is.
+
+### Rationale
+
+Point 2 is the whole record. The frame is a faithful drawing of a plausible pane, and it was drawn before NOT-002 fixed the unit a preference is expressed in; building it as drawn would have meant either four rows that write nothing or a fifth preference key nothing reads. Folding the four families into the group's sentence keeps what the frame was communicating — _what does this group actually cover_ — and drops only the controls the model cannot honour.
+
+Point 5 is where a preferences grid usually goes wrong. A tri-state switch that distinguishes "default on" from "explicitly on" is honest about the table and useless to the reader: the difference only shows itself the day somebody changes a default, and the person setting the toggle is not thinking about that day.
+
+Point 8 is the accessibility floor doing real work. A grid of unlabelled switches is the classic screen-reader failure — eight controls all announcing "switch, on" — and the fix is not a `title`, it is naming each control by the two things that identify it.
+
+### Alternatives considered
+
+- **Build ST3 as drawn, with per-event rows.** Rejected: it needs a preference key NOT-002 does not have, and it would ship four switches whose saves nothing reads.
+- **Keep the In-app column locked on, as the frame draws it.** Rejected: M18 story 18 and the `in_app` column both say otherwise, and a locked control that looks like a switch is worse than no control.
+- **A checkbox grid rather than switches.** Rejected: checkboxes propose and a form disposes; this pane saves on the flip (DES-017), which is exactly what a switch means.
+- **One `StatusNote` per switch.** Rejected — see point 6.
+- **A "reset to defaults" affordance.** Rejected for now: the defaults are visible as the state of a pane with four rows, and re-flipping four switches is not a workflow worth a control. It becomes worth revisiting if the group list grows.
+- **A tri-state switch showing "default".** Rejected — see the Rationale.
+
+### Consequences
+
+No new tokens and no new primitive: the card is `SettingsCard`, the control is `ui/switch.tsx` as DES-004 landed it, the micro-state is `StatusNote`. The surface is `apps/web/src/routes/settings-notifications.tsx`, behind `/settings/notifications`, and the rail entry it needs is the one the M5 close recorded as _omitted rather than disabled_ — SETTINGS-INVENTORY amendment 5, now closed. The portal's own preferences surface (M20) renders group 5 on this anatomy; if it needs a second grid of switches, points 2, 4, and 8 are already the answer.
+
+## DES-051: The email copy register (closes DES-015's deferral)
+
+- **Status:** Accepted
+- **Date:** 2026-08-18
+- **Amended:** 2026-08-18 — the digest's anatomy and its delivery rules moved to **NOT-006**. This record keeps the register: the voice every message is written in, where that copy lives, and how it prints a date.
+
+### Context
+
+DES-015 fixed the voice for every string this product renders and named one exception it could not settle: **"Email digest copy (deferred with the notifications-surface decision) — separate register decision when that ships."** NOT-003 then decided that group 3's mail is one morning briefing rather than one message per reminder, and M18/6 (#321) writes it. That is the deferral's own trigger, so this record closes it.
+
+**It closes more than the digest.** Five slices of M18 had already written email copy — the approval request, the three other group-1 events, and group 2's five arms — all of them in `apps/api/src/lib/notifications/email.ts`, all of them composed against no stated register at all. The deferral was written when the only mail this product sent was a set-password link and a magic link, and "email digest copy" was the whole of what was foreseen. What was actually owed is a register for **every message this system sends**.
+
+**Email is the one surface DES-013 and DES-014 do not reach.** The message catalog lives in the web app (DES-013) and the date helpers live beside it (DES-014); a scheduled job in the API has neither, and it has no browser to take a locale or a timezone from. So this record has to say what the API does instead, rather than pointing at two decisions that cannot apply.
+
+### Decision
+
+**1. The register is DES-015's, with two additions email forces.** Terse, second-person, sentence case, digits, no apologies, no "please", no emoji, no celebration. The two additions:
+
+- **A message opens by naming its reader and closes by pointing somewhere.** `Hello {name},` then the sentence, then the link. In the app a person already knows where they are; in an inbox they do not, and an unaddressed message from a system is what a spam filter is shaped like.
+- **A sentence, not a summary.** One line says what happened, and the record says the rest. This is why no arm carries a comment's words, a document's bytes, or an approval's note: mail leaves the building, and DD-016's tier and CMT-006's redact both stop at the door.
+
+**2. The copy is authored in English at the call site, not in the message catalog.** DES-013 governs what a browser renders; this is server-composed copy in a process the catalog does not run in, and it is the same class of string as the invite email that predates all of this. Localised email is a real want and it is a **separate** decision, because it needs a per-user locale that SET-006 does not yet store.
+
+**3. Dates in email are formatted by the message, in UTC, in `en-US`.** `Mar 12, 2026`. DES-014's helpers are the browser's and take the reader's own zone from it; a scheduled round has no browser. Every date this layer prints is a **civil date** (CTR-006, CTR-009) — a day and not a moment — so rendering it in UTC is what stops it moving a day, and shifting it into any zone at all would be the bug.
+
+**4. What a message _says_ is this record's; what the round _sends_ is NOT-006's.** The morning digest's anatomy — its subject, its blocks, its order, when a distance is counted, and the rule that no empty briefing leaves — is a delivery decision and lives in `DECISIONS-NOTIFICATIONS.md` as **NOT-006**. Both records govern the same file; this one says how a sentence is written, that one says which sentences go and in what order.
+
+### Recorded normalization points (frame deviations accepted)
+
+1. **There is no frame, and there will not be one.** No `.pen` file draws an email, because an email is not a screen this product renders. The register above is the decision, and it is DES-015's voice plus the two additions an inbox forces.
+2. **The body is plain text.** `MailMessage` carries `text` alone; an HTML alternative is TECH-011's to add, and adding it now would put two copies of every sentence in one file.
+3. **`→` and other decorative glyphs are not used**, even though a plain-text message has no Lucide to reach for. DES-008's substance is that glyphs are a system, and a message with no glyph system uses words.
+
+### Rationale
+
+Point 1's second addition is the one that matters most. Five of the six sentences this layer already writes end with a version of "the rest is on the record", and that reads like restraint until you notice it is the only thing holding two other decisions up: DD-016's tier is enforced on the thread, and CMT-006's redact cannot reach an inbox. A register that let one arm quote a comment would quietly repeal both.
+
+Point 4 is why this record was split. DECISIONS-DESIGN.md is front-end design — visual system, layout, interaction, formatting — and a rule about _when_ a round may send, or which rows it orders first, is none of those. Left here, the next reader looking for what the morning round sends would read the notifications record and not find it, and a change to a send rule would land in a design file.
+
+### Alternatives considered
+
+- **Leave the deferral open and record only the digest.** Rejected: five slices had already written email copy against no register, which is the drift DES-015 exists to prevent. The exception has to close, not narrow.
+- **Put the email strings in `messages/en-US.json`.** Rejected — see point 2. The catalog is loaded by the web app; the sender is a worker process.
+- **Render the date in the reader's profile zone.** Rejected: a civil date has no zone, and shifting it into one is what moves "1 March" onto 28 February for half the world.
+- **An HTML digest with a table.** Rejected for now — see normalization 2. It is TECH-011's to add, and the copy is the same copy either way.
+- **Keep the anatomy here, as one record.** Rejected — see the Rationale for point 4. One record was easier to write and puts delivery rules where nobody would look for them.
+
+### Consequences
+
+DES-015's "Where this register does _not_ apply" loses its email bullet: this record is the separate register it pointed at. The surface is `apps/api/src/lib/notifications/email.ts` — `renderNotificationMail` for the immediate arms and `renderDigestMail` for the briefing — and every future event adds an arm there rather than a second place that knows how an OpenLaw email is laid out. The portal's requester mail (M20, group 5) is written to this register too. Localised email and an HTML alternative are the two things this record deliberately leaves open, each with its own reason above. **The digest's own shape is NOT-006's**, and a change to what the round sends belongs there.
+
+## DES-052: The value-list editor — the list-editor anatomy for a list of values (extends DES-020, DES-021)
+
+- **Status:** Accepted
+- **Date:** 2026-08-18
+
+### Context
+
+NOT-004 gives an install one reminder-offset list — seeded 7 days / 1 day / day-of, applied to every tracked date — and M18/6 (#321) built the column and the round that reads it live. M18/7 (#322) builds the pane that edits it, in Settings → Organization → Notifications.
+
+**There is no frame for it.** `settings.pen` carries nineteen frames and none of them is this pane; the file's only notification frame is **ST3**, the Personal preferences grid DES-050 already settled. What the file _does_ draw is the rail entry: ST4's Organization group lists **Notifications** between Intake and Integrations, wearing the Lucide `bell-ring` glyph to the Personal entry's `bell`. So the rail is spec'd and the pane body is not.
+
+**The anatomy it should follow is DES-020's, and DES-020 does not quite fit.** The list-editor was written for a _taxonomy_: rows records point at, renamed in place, archived rather than deleted so the records that reference them keep their meaning. A reminder lead time is none of those things. Nothing points at "7 days before"; there is no name to rename, because the number **is** the row; and archiving it would be retaining a value that has no history to retain. DES-020's own consequences clause says a surface that genuinely cannot fit the anatomy gets a record rather than a local deviation, and DES-021 already stretched the one `ListEditor` component once for the fields catalog. This record is the second stretch, written the same way.
+
+### Decision
+
+The `ListEditor` component stays the one implementation of DES-020. A **value list** is a second sanctioned variant beside DES-021's table variant, and these are its parts:
+
+**1. The card, the rows, and the grip are DES-020's, unchanged.** `SettingsCard` at `--width-settings-card`, flush; the `bg-section-header` strip carrying the title, the ICU-plural count caption, the save note, and the Add CTA; 44px rows separated by `border-border-muted`; the 36px grip column with the 16px `grip-vertical` glyph; the help caption below the card. Nothing about the geometry changes, because nothing about it was taxonomy-specific.
+
+**2. A row is a value, and it is not renamed.** The name cell renders as static 13px `font-medium text-primary` text rather than DES-017's click-to-edit button. A value has no display name to correct — changing "7 days before" to "8 days before" is not a rename, it is a different lead time — so the list is edited by adding and removing, and the in-place editor would be an affordance with nothing behind it.
+
+**3. The trailing action is remove, not archive.** A 16px Lucide `x` glyph in the trailing slot, named "Remove [value]". DES-020's archive exists so records pointing at a taxonomy row keep their meaning; nothing points at a value, so there is nothing to retain, nothing to reassign, and no archived tier. The "Show archived" toggle and the archived-row treatment do not render.
+
+**4. A structural minimum wears DES-020's lock.** Where emptying the list would be a state nobody may reach by accident — an offset list with nothing in it is silence for every reminder in the install — the **last remaining row** renders the 16px `lock` glyph in place of remove, with an accessible name saying why ("[value] is the only lead time and can't be removed"). This is DES-020's protection treatment applied to a floor rather than to a seed row: protection is a fact about the state, not a disabled button, and the server refuses regardless of what the pane draws.
+
+**5. The list is the unit of save.** Adding, removing, and rearranging are all one write — the whole list, sent the moment the change is made (SET-003 immediate apply). It follows that there is one save note for the card rather than one per row, in the header strip beside the count: a per-row note would claim a row saved when what saved was the list. It also follows that **one write is in the air at a time**, which is the rule DES-020's grip already follows; the Add CTA and every trailing action stand down while a save is in flight, so a press the pane would refuse cannot be made in the first place.
+
+**6. The order is the reader's, not the machine's.** A value list is ordered because a person reads a ladder in an order and expects to find it where they left it, so the saved order is what the pane draws and what the next reader sees. It carries no behaviour: the round matches each lead time on its own, so no arrangement of the list can change which day fires. Rearranging is still a save, and still narrated, because the stored list is the canonical one.
+
+**7. Reorder is keyboard-operable, per DES-020.** The grip is a real button; Arrow Up / Arrow Down on the focused grip moves the row one position and commits immediately; the move is announced through the polite live region ("[value] moved to position 2 of 3"). Drag is the pointer path, never the only path.
+
+**8. The inline add row is DES-020's, with the unit as the label.** The Add CTA opens a draft row at the end of the list carrying one focused input; Enter creates, Escape discards. Where the value has a unit, the unit is drawn beside the input as visible text **and** is what names the input (`aria-labelledby`), so a reader hears "days before the date, spin button" rather than a bare number box and nobody has to guess what the number counts. A value the list already holds is refused in the draft row without a request, because the list is a set.
+
+### Recorded normalization points
+
+1. **The pane has no frame.** ST3 is the Personal grid; nothing in `settings.pen` draws the Organization pane. It is built from this record and DES-020's geometry, and the file is not redrawn — for the ST7 reason recorded in the M15 inventory amendment: a frame is added when the surface it would draw is settled, and the M19 Intake pass owns the next sweep of this file.
+2. **The rail entry ships as drawn.** Organization → Notifications, `bell-ring`, positioned as ST4 draws it — after the module sections and before Integrations, with Entities taking the place the mock's unshipped Intake entry holds.
+3. **The screen title is not the rail label.** The rail says "Notifications", as the mock draws it; the browser title says "Reminder lead times", because DES-011 commitment 7 asks every screen for a title of its own and the Personal pane is already "Notifications". The URL is `/settings/reminders` for the same reason — two panes cannot share an address.
+4. **Two rail sections now share a label**, so each rail group is an ARIA `group` named by its own heading. The headings were already drawn and already `hidden` in the phone strip; `aria-labelledby` reads a hidden element regardless, so "Organization, Notifications" is what distinguishes the two at every width.
+
+### Rationale
+
+Points 2 and 3 are the record. The alternative was to draw a value list _as_ a taxonomy — a renameable name, an archive glyph, an archived tier — which would have offered three affordances that write nothing and would have taught the next builder that archive is what the trailing slot always holds. Naming the variant is what keeps `ListEditor` one component with two honest shapes instead of one component with a growing set of props nobody can tell apart.
+
+Point 4 is where a settings list usually goes wrong. "Remove the last one and the feature silently stops" is a state a person reaches by pressing a button they had every reason to press. DES-020 already had the right treatment for a row that may not go — the lock, with a name saying why — and a floor is that same fact stated about the list rather than about a seed.
+
+Point 5 is the #320 lesson said once more. That pane's three race conditions all came from one shape: a write that answers more state than it changed. Every write here answers the _whole_ list, so two of them racing would let the slower reply land last and undo the faster press. One at a time, with the controls visibly standing down, is the smaller and more explicable rule — and it is the rule the grip has followed since DES-020.
+
+Point 6 is stated because the honest answer is unusual. It would be easy to imply the order means something and easier still to hide the control because it does not; the truth is that a person tuning a lead-time ladder wants to see it in an order and the round does not care, so the pane keeps the order and the record says plainly that it is presentation.
+
+### Alternatives considered
+
+- **A bespoke pane outside `ListEditor`.** Rejected: a second anatomy to keep aligned by eye, which is the drift DES-021 already declined once.
+- **Reuse the taxonomy shape as-is — rename the value, archive the row.** Rejected: three affordances with nothing behind them, and an "archived lead time" is not a thing NOT-004 has.
+- **Draw the list sorted furthest-first and offer no reorder.** Rejected: #322 asks for reorder, and a saved order is what a person expects to find again. The round still sorts its own read, which is where sorting belongs.
+- **Let the list be emptied, and treat empty as "no reminders".** Rejected upstream: NOT-004's read falls back to the seed on an unusable list, so an empty list could not be told from a corrupt one. Silence is chosen per event group on the DES-050 pane, where it is a choice with a name.
+- **Edit the value in place, DES-017 style.** Rejected: a number typed over another number is a remove and an add, and treating it as a rename would make the audit entry say a lead time was renamed when the schedule changed.
+- **A note per row rather than one for the card.** Rejected — see point 5. The row is not what saved.
+- **Drag-only reorder.** Rejected: DES-011, and DES-020 answered it already.
+
+### Consequences
+
+`apps/web/src/components/list-editor.tsx` gains three optional inputs — the remove pair, and a `busy` flag for a save that covers the whole list — and its rename and archive pairs become optional. Every existing caller passes what it always passed and renders identically. The surface is `apps/web/src/routes/settings-reminders.tsx` behind `/settings/reminders`, and `apps/api/src/modules/org/routes.ts` carries the `GET`/`PUT` pair the pane reads and writes. The next value list — a digest send hour, a retention window, any admin-tuned ladder — builds to this record rather than re-deriving it; if it needs the value to be editable in place rather than removed and re-added, that is a third variant and a fourth record, not a local deviation here.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -3155,3 +3398,8 @@ The native control answered locale for free and cost no component. It also answe
 | DES-045 | The link dialog, the picker, the refusal rendering, and the confidentiality nudge (extends DES-032, DES-024, DES-009)                                                | Accepted |
 | DES-046 | The managed list table — the width floor, the resize handle, the column menu, and the views control (extends DES-031, DES-021, DES-007)                              | Accepted |
 | DES-047 | The Team roster is an activity-bar applet (amends DES-016, DES-032, DES-028)                                                                                         | Accepted |
+| DES-048 | Date inputs are a calendar popover (amends DES-014, DES-040)                                                                                                         | Accepted |
+| DES-049 | The notification centre — the header bell, its counter badge, and the panel behind it (extends DES-026, DES-031, DES-016)                                            | Accepted |
+| DES-050 | The notification preferences pane — one row per event group, two switch columns (extends DES-017, DES-012, DES-011)                                                  | Accepted |
+| DES-051 | The email copy register (closes DES-015's deferral)                                                                                                                  | Accepted |
+| DES-052 | The value-list editor — the list-editor anatomy for a list of values (extends DES-020, DES-021)                                                                      | Accepted |

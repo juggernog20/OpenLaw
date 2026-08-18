@@ -6,13 +6,26 @@
  * URL per pane. The Organization group renders for Administrators only
  * (SET-002) and carries General (#63) and Users (#65, #66) plus the
  * collapsible Security group with Authentication (#64) and the audit
- * log (#133), and the Integrations section (#245, SET-007) — rail
- * entries for unshipped panes are omitted, not disabled.
+ * log (#133), and the Integrations section (#245, SET-007). The
+ * Personal group carries Profile (#67), Appearance (#62), and
+ * Notifications (#320 — the pane M5 deferred until the engine existed).
+ * The Organization group has a Notifications section of its own (#322):
+ * the NOT-004 reminder-offset list, which is org policy rather than
+ * anybody's preference. Rail entries for unshipped panes are omitted,
+ * not disabled.
+ *
+ * **Each group is an ARIA group named by its heading**, because two
+ * sections now share the label "Notifications" and only the group tells
+ * them apart. The heading is hidden in the phone strip; `aria-labelledby`
+ * reads it regardless, so the two are distinguishable at every width.
+ *
  * Visual spec: designs/settings.pen per SETTINGS-INVENTORY.md.
  */
 
 import { useState } from "react";
 import {
+  Bell,
+  BellRing,
   Briefcase,
   Building2,
   ChevronDown,
@@ -92,6 +105,18 @@ const PERSONAL_GROUP: SettingsGroup = {
       icon: Palette,
       label: defineMessage({ id: "settings.section.appearance", defaultMessage: "Appearance" }),
     },
+    // The pane M5 deferred (inventory row ST3). It was omitted rather
+    // than disabled while the notification engine did not exist; it
+    // joins the rail now that it does (#320).
+    {
+      id: "notifications",
+      path: "/settings/notifications",
+      icon: Bell,
+      label: defineMessage({
+        id: "settings.section.notifications",
+        defaultMessage: "Notifications",
+      }),
+    },
   ],
 };
 
@@ -168,6 +193,22 @@ const ORGANIZATION_GROUP: SettingsGroup = {
       path: "/settings/entities/types",
       icon: Landmark,
       label: defineMessage({ id: "settings.section.entities", defaultMessage: "Entities" }),
+    },
+    // The Organization half of Notifications (#322, NOT-004): the one
+    // reminder-offset list, which is org policy rather than anybody's
+    // own preference. It sits where the mock's rail draws it — after
+    // the module sections, before Integrations — and wears `bell-ring`
+    // to the Personal entry's `bell`, as the mock draws them. The URL
+    // says what the pane holds, because the Personal pane already owns
+    // /settings/notifications and two panes cannot share an address.
+    {
+      id: "reminders",
+      path: "/settings/reminders",
+      icon: BellRing,
+      label: defineMessage({
+        id: "settings.section.notifications",
+        defaultMessage: "Notifications",
+      }),
     },
     // The Integrations section (SET-007), born with the E-signature
     // pane in M15. It sits last in the Organization group, as the ST7
@@ -277,9 +318,14 @@ function SettingsRail({ isAdministrator }: { isAdministrator: boolean }) {
         // every entry flows into the one scrollable strip.
         <div
           key={group.id}
+          role="group"
+          aria-labelledby={`settings-rail-group-${group.id}`}
           className="contents @3xl/page:flex @3xl/page:flex-col @3xl/page:gap-0.5"
         >
-          <h2 className="hidden px-2.5 pt-2.5 pb-1 text-xs font-semibold text-muted @3xl/page:block">
+          <h2
+            id={`settings-rail-group-${group.id}`}
+            className="hidden px-2.5 pt-2.5 pb-1 text-xs font-semibold text-muted @3xl/page:block"
+          >
             <FormattedMessage {...group.label} />
           </h2>
           {group.entries.map((entry) =>

@@ -374,7 +374,12 @@ function recordingLog(): { lines: JobLogLine[]; log: ReconciliationDeps["log"] }
 async function sweep(): Promise<{ summary: ReconciliationSummary; lines: JobLogLine[] }> {
   const { lines, log } = recordingLog();
   const summary = await runReconciliationSweep(
-    { db: harness.db, log, resolveSigningProvider: harness.resolveSigningProvider },
+    {
+      db: harness.db,
+      log,
+      resolveSigningProvider: harness.resolveSigningProvider,
+      notifier: harness.notifier,
+    },
     harness.pipeline,
   );
   return { summary, lines };
@@ -646,6 +651,9 @@ describe("the scheduled shape", () => {
         storage: harness.storage,
         docEngine: harness.docEngine,
         resolveSigningProvider: harness.resolveSigningProvider,
+        resolveMailer: () =>
+          Promise.resolve({ source: "unset" as const, from: null, mailer: harness.mailer }),
+        baseUrl: "http://localhost",
         log: recordingLog().log,
       },
       log: recordingLog().log,

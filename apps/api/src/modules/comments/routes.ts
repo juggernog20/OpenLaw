@@ -84,6 +84,7 @@ import {
   commentMentions,
   commentRevisions,
   comments,
+  contracts,
   COMMENT_VISIBILITIES,
   count,
   desc,
@@ -632,7 +633,11 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       // compound key says so too.
       const named = [...new Set(request.body.mentions ?? [])];
 
-      const comment = await app.db.transaction(async (tx) => {
+      // The seam's transaction rather than the database's: a comment
+      // that names somebody is done *to* them (CMT-007, NOT-002 group
+      // 1), and the bell row for it belongs inside the same commit as
+      // the `comment_mentions` row it is read from.
+      const comment = await app.notifier.notifying(async (tx) => {
         // Read on the same snapshot the rows are written on: a team row
         // dropped between the check and the insert must not authorize a
         // post onto a record the author no longer reaches. A refusal
@@ -697,6 +702,50 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           action: "comment.posted",
           visibility,
           payload: { commentId: created!.id },
+        });
+        // Being named in a comment is done *to* you, so it is NOT-002's
+        // group 1: the bell rings and the email leaves at once. The
+        // route says which comment it was and at which tier; the seam
+        // reads who it addressed out of `comment_mentions` and holds
+        // both the wall and the tier.
+        if (named.length > 0) {
+          // The record's own address (CTR-003) and its title, for the
+          // item and the email to name it by. Read here rather than
+          // carried on the audience answer: this module is entity-generic
+          // (CMT-001), and only the notification needs a contract's
+          // columns.
+          const [record] = await tx
+            .select({ number: contracts.number, title: contracts.title })
+            .from(contracts)
+            .where(eq(contracts.id, audience.contractId))
+            .limit(1);
+          if (record) {
+            await app.notifier.commentMentioned(tx, {
+              contractId: audience.contractId,
+              contractNumber: record.number,
+              contractTitle: record.title,
+              actorId: request.user.id,
+              actorName: request.user.displayName,
+              commentId: created!.id,
+              visibility,
+            });
+          }
+        }
+        // And the comment itself is ambient movement on the record, so
+        // it is NOT-002's group 2 as well: the Owner and the team get a
+        // bell item, and no email is owed under the default. It carries
+        // the tier, so a Legal Only comment never reaches a Contributor
+        // — the same narrowing the mention takes, on the same predicate.
+        //
+        // The people this comment named are left out: they have just
+        // been told, louder. One comment tells one person once.
+        await app.notifier.commentPosted(tx, {
+          contractId: audience.contractId,
+          actorId: request.user.id,
+          actorName: request.user.displayName,
+          commentId: created!.id,
+          visibility,
+          mentioned: named,
         });
         // Read back through the same projection the thread uses, so the
         // row the poster gets is the row they will see on the next load.

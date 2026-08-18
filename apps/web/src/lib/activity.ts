@@ -48,6 +48,7 @@ import {
   Activity,
   Archive,
   ArchiveRestore,
+  Bell,
   Building2,
   CalendarClock,
   CalendarPlus,
@@ -320,6 +321,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} " +
         "defaultLocale {Default language} defaultTimezone {Default timezone} " +
         "authMode {Sign-in method} allowedEmailDomains {Allowed email domains} " +
+        "reminderOffsetDays {Reminder lead times} " +
         "smtpUrl {SMTP server} smtpFrom {From address} " +
         "issuer {Issuer} domain {Email domain} clientId {Client ID} " +
         "clientSecret {Client secret} " +
@@ -388,6 +390,18 @@ function changeValue(
         defaultMessage: "{value, select, true {Yes} other {No}}",
       },
       { value },
+    );
+  }
+  // NOT-004's lead times are days, and the list is narrated whole. A
+  // bare "7, 1, and 0" says nothing about what the numbers count —
+  // least of all the day-of offset, which reads as nothing at all.
+  if (key === "reminderOffsetDays" && typeof value === "number") {
+    return intl.formatMessage(
+      {
+        id: "activity.reminderOffset",
+        defaultMessage: "{days, plural, =0 {day of} one {# day} other {# days}}",
+      },
+      { days: value },
     );
   }
   if (typeof value === "number") return intl.formatNumber(value);
@@ -1675,6 +1689,59 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       defaultMessage: "{actor} changed their timezone",
     }),
     changes: fieldChange,
+  },
+  // One notification preference (NOT-001, #320). No old→new pair: the
+  // table holds overrides, so the value before a first save is a
+  // default read out of application code and not a stored fact the
+  // writer could have reported.
+  "user.notification_preference_changed": {
+    icon: Bell,
+    message: defineMessage({
+      id: "activity.user.notificationPreferenceChanged",
+      // Whole clauses per case rather than an interpolated noun: a
+      // language that inflects around the channel or the group cannot
+      // be served by dropping words into one frame. The `other` arms
+      // echo the slug, because the log is append-only and a group this
+      // build no longer has is still in a payload.
+      defaultMessage:
+        "{actor} turned {channel, select, in_app {bell items} email {emails} other {{channel}}} " +
+        "{state, select, on {on} off {off} other {{state}}} for " +
+        "{group, select, assigned_to_you {direct asks} " +
+        "activity_on_your_records {activity on their records} " +
+        "dates_approaching {approaching dates} new_requests {new requests} " +
+        "requester_events {requester events} other {{group}}}",
+    }),
+    values: (intl, payload) => ({
+      // Their own fallbacks rather than {@link named}'s, because that
+      // one is a person's — "turned someone off for someone" is not a
+      // sentence. Either fallback lands in the select's `other` arm.
+      channel:
+        text(payload, "channel") ??
+        intl.formatMessage({
+          id: "activity.notificationPreference.unknownChannel",
+          defaultMessage: "a channel",
+        }),
+      group:
+        text(payload, "eventGroup") ??
+        intl.formatMessage({
+          id: "activity.notificationPreference.unknownGroup",
+          defaultMessage: "an event group",
+        }),
+      // Same reasoning one line up, applied to the direction: anything
+      // that is not a boolean is a payload this build did not write, and
+      // "turned emails off" about a person who turned them on is a
+      // sentence the append-only log can never take back. Saying which
+      // way is unknown costs one clause; guessing costs the record.
+      state:
+        typeof payload.enabled === "boolean"
+          ? payload.enabled
+            ? "on"
+            : "off"
+          : intl.formatMessage({
+              id: "activity.notificationPreference.unknownState",
+              defaultMessage: "on or off",
+            }),
+    }),
   },
   "user.display_name_changed": {
     icon: PencilLine,

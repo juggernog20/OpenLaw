@@ -733,6 +733,7 @@ describe("an executed copy larger than this install accepts", () => {
         log: sweepLog(),
         resolveSigningProvider: harness.resolveSigningProvider,
         jobs: harness.pipeline,
+        notifier: harness.notifier,
         maxUploadBytes: CEILING,
       },
       // First attempt of several. A retry bound that has not run out is

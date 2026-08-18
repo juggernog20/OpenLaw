@@ -1291,8 +1291,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       // untouched, because what the caller is owed is the reason, not
       // the cleanup. The key is never written again — the retry mints
       // its own.
+      // The seam's transaction rather than the database's: paper landing
+      // on a record is ambient movement on it (NOT-002 group 2), and the
+      // bell rows for it belong inside the same commit as the rows they
+      // are about.
       const created = await withStoredFile(request, file, () =>
-        app.db.transaction(async (tx) => {
+        app.notifier.notifying(async (tx) => {
           // The contract row is held for the write, and reach is asked
           // again on the same snapshot: a team row dropped between the
           // first check and the insert must not leave a file on a record
@@ -1383,6 +1387,21 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             });
           }
 
+          // The team hears that the paper moved (NOT-002 group 2): bell
+          // on, no email owed under the default. A document is born with
+          // the flag clear, so this one always goes as far as the record
+          // does — the flag is asked anyway, because the rule belongs to
+          // the event rather than to what today's write path happens to
+          // set.
+          await app.notifier.documentAdded(tx, {
+            contractId: locked.id,
+            actorId: request.user.id,
+            actorName: request.user.displayName,
+            documentId,
+            documentTitle: file.filename,
+            isConfidential: false,
+          });
+
           // Read back through the list's own projection, so the row the
           // uploader gets is the row the next load will draw.
           return documentWithChain(tx, documentId, primaryDocumentId);
@@ -1429,7 +1448,10 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       const versionId = uuidv7();
       const file = await receiveUpload(request, versionStorageKey(documentId, versionId));
 
-      const updated = await app.db.transaction(async (tx) => {
+      // The seam's transaction, for the create path's reason: a new
+      // round on a chain is ambient movement on the record (NOT-002
+      // group 2).
+      const updated = await app.notifier.notifying(async (tx) => {
         // The owning contract's row is held here, and this is the lock
         // the version number is assigned under: two uploaders reading
         // the chain's high-water mark at the same moment would both see
@@ -1461,6 +1483,20 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
             versionNumber,
             kind: file.kind,
           },
+        });
+        // The team hears that the paper moved (NOT-002 group 2). This is
+        // the door where the document flag bites: a round appended to a
+        // confidential document goes exactly as far as that document
+        // does (DD-014, DOC-008).
+        await app.notifier.documentVersionAdded(tx, {
+          contractId: locked.contractId,
+          actorId: request.user.id,
+          actorName: request.user.displayName,
+          documentId,
+          documentTitle: locked.title,
+          isConfidential: locked.isConfidential,
+          versionId,
+          versionNumber,
         });
         return documentWithChain(tx, documentId, locked.primaryDocumentId);
       });

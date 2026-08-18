@@ -902,11 +902,17 @@ test.describe.serial("M13 demo path", () => {
       });
       await expect(panel).toBeVisible();
       await expect(panel.getByText("v1", { exact: true })).toBeVisible();
-      await expect(
-        panel.getByRole("region", {
-          name: new RegExp(`^${escapeForRegExp("november-thread.pdf")}, page \\d+ of \\d+$`),
-        }),
-      ).toBeVisible({ timeout: SURFACE_TIMEOUT_MS });
+      // The well is named for the file alone (2026-08-18): it scrolls
+      // through the whole document now, so a name carrying the page
+      // number would change under every scroll tick. Where the reader
+      // is went to the toolbar above it, and that is where the count
+      // still proves pdf.js read the file rather than failed on it.
+      await expect(panel.getByRole("region", { name: "november-thread.pdf, pages" })).toBeVisible({
+        timeout: SURFACE_TIMEOUT_MS,
+      });
+      await expect(panel.getByText(/^Page \d+ of \d+$/)).toBeVisible({
+        timeout: SURFACE_TIMEOUT_MS,
+      });
       // The words are waited for rather than read once: the surface
       // appears as soon as pdf.js has the file, and the page's text runs
       // are laid over it a moment later.

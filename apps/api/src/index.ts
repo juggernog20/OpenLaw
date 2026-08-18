@@ -26,6 +26,8 @@ import {
   readDocuSignBaseUrl,
   SIGNING_STANDIN_VARIABLE,
 } from "./lib/signing/config.js";
+import { createNotifier } from "./lib/notifications/notifier.js";
+import { createConsoleLogger } from "./pipeline/logger.js";
 import { createSigningResolver } from "./lib/signing/resolver.js";
 import { maxUploadBytes } from "./lib/uploads.js";
 import { startPipeline } from "./pipeline/pg-boss.js";
@@ -176,6 +178,20 @@ if (process.env.AUTH_RATE_LIMIT === "off") {
   );
 }
 
+// The E2E gate's one seam (TECH-018): the morning round is a cron on
+// the hour, and a browser suite driving the built images has no way to
+// reach a scheduled handler and no hour to wait for the next tick. Read
+// here for the storage root's reason — startup reads the environment,
+// and no module below does — and warned about for AUTH_RATE_LIMIT's:
+// the image always runs NODE_ENV=production, so the variable is the only
+// signal and this line is the guard rail.
+const morningRoundTrigger = process.env.MORNING_ROUND_TRIGGER === "on";
+if (morningRoundTrigger) {
+  console.warn(
+    "The morning round can be triggered over HTTP (MORNING_ROUND_TRIGGER=on). This belongs to the dev/E2E overlay only — never run a real deployment this way.",
+  );
+}
+
 if (!process.env.BASE_URL && process.env.NODE_ENV === "production") {
   console.warn(
     "BASE_URL is not set; emailed links and OIDC callbacks will point at http://localhost:3000.",
@@ -194,6 +210,16 @@ const webDistPresent = existsSync(join(webDist, "index.html"));
 // by the worker container — so it registers no handlers and leaves the
 // queue's upkeep to the process that works it.
 const jobs = await startPipeline({ connectionString: databaseUrl });
+
+// The notification seam (NOT-001), built here for the reason the queue
+// is: it is composed from two things this process already holds, and no
+// route may reach past it to either of them.
+// Its own lines go where the pipeline's do — one structured line per
+// event on stdout — rather than to a bare `console.error`. The Fastify
+// logger does not exist yet at this point (the app is built from this
+// value), and a sink assigned afterwards would be a second thing to
+// keep in step with it.
+const notifier = createNotifier({ db, jobs, log: createConsoleLogger() });
 
 const app = await buildApp(
   {
@@ -214,7 +240,9 @@ const app = await buildApp(
     docEngine,
     jobs,
     resolveSigningProvider,
+    notifier,
     maxUploadBytes: uploadCeiling,
+    morningRoundTrigger,
     webDist: webDistPresent ? webDist : undefined,
   },
   { logger: true },

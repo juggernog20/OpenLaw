@@ -216,7 +216,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -254,6 +254,15 @@
   "activity.notSet": {
     "defaultMessage": "Not set"
   },
+  "activity.notificationPreference.unknownChannel": {
+    "defaultMessage": "a channel"
+  },
+  "activity.notificationPreference.unknownGroup": {
+    "defaultMessage": "an event group"
+  },
+  "activity.notificationPreference.unknownState": {
+    "defaultMessage": "on or off"
+  },
   "activity.older": {
     "defaultMessage": "Show older"
   },
@@ -262,6 +271,9 @@
   },
   "activity.orgSettings.updated": {
     "defaultMessage": "{actor} changed the organization settings"
+  },
+  "activity.reminderOffset": {
+    "defaultMessage": "{days, plural, =0 {day of} one {# day} other {# days}}"
   },
   "activity.signer.erased": {
     "defaultMessage": "{actor} erased an external signer's name and address from {entriesRedacted, plural, =0 {no entries} one {# entry} other {# entries}}"
@@ -367,6 +379,9 @@
   },
   "activity.user.invited": {
     "defaultMessage": "{actor} invited {email} as {role}"
+  },
+  "activity.user.notificationPreferenceChanged": {
+    "defaultMessage": "{actor} turned {channel, select, in_app {bell items} email {emails} other {{channel}}} {state, select, on {on} off {off} other {{state}}} for {group, select, assigned_to_you {direct asks} activity_on_your_records {activity on their records} dates_approaching {approaching dates} new_requests {new requests} requester_events {requester events} other {{group}}}"
   },
   "activity.user.otherSessionsRevoked": {
     "defaultMessage": "{actor} signed out their other sessions"
@@ -2282,6 +2297,75 @@
   "nav.home": {
     "defaultMessage": "Home"
   },
+  "notifications.approval.requested": {
+    "defaultMessage": "{hasActor, select, yes {{actor} asked you to approve {contract}} other {You were asked to approve {contract}}}"
+  },
+  "notifications.badgeCapped": {
+    "defaultMessage": "{cap}+"
+  },
+  "notifications.bell": {
+    "defaultMessage": "Notifications, {count, plural, =0 {none unread} one {# unread} other {# unread}}"
+  },
+  "notifications.centre": {
+    "defaultMessage": "Notifications"
+  },
+  "notifications.comment.mentioned": {
+    "defaultMessage": "{hasActor, select, yes {{actor} mentioned you on {contract}} other {You were mentioned on {contract}}}"
+  },
+  "notifications.comment.posted": {
+    "defaultMessage": "{hasActor, select, yes {{actor} commented on {contract}} other {A comment was posted on {contract}}}"
+  },
+  "notifications.contract.ownerAssigned": {
+    "defaultMessage": "{hasActor, select, yes {{actor} made you the Owner of {contract}} other {You were made the Owner of {contract}}}"
+  },
+  "notifications.contract.statusChanged": {
+    "defaultMessage": "{hasActor, select, yes {{actor} changed the status of {contract}} other {The status of {contract} changed}}"
+  },
+  "notifications.contract.taskAssigned": {
+    "defaultMessage": "{hasActor, select, yes {{actor} assigned you a task on {contract}} other {You were assigned a task on {contract}}}"
+  },
+  "notifications.contractNumber": {
+    "defaultMessage": "contract {number}"
+  },
+  "notifications.date.expiry": {
+    "defaultMessage": "{contract} is expiring"
+  },
+  "notifications.date.keyDate": {
+    "defaultMessage": "A key date on {contract} is coming up"
+  },
+  "notifications.date.noticeDeadline": {
+    "defaultMessage": "The notice deadline on {contract} is coming up"
+  },
+  "notifications.document.added": {
+    "defaultMessage": "{hasActor, select, yes {{actor} added a document to {contract}} other {A document was added to {contract}}}"
+  },
+  "notifications.document.versionAdded": {
+    "defaultMessage": "{hasActor, select, yes {{actor} added a version to {contract}} other {A version was added to {contract}}}"
+  },
+  "notifications.empty": {
+    "defaultMessage": "Nothing to catch up on. News about your records shows up here."
+  },
+  "notifications.envelope.ended": {
+    "defaultMessage": "Signing ended on {contract}"
+  },
+  "notifications.loadError": {
+    "defaultMessage": "Notifications could not be read. Close this and open it again."
+  },
+  "notifications.markAllRead": {
+    "defaultMessage": "Mark all read"
+  },
+  "notifications.older": {
+    "defaultMessage": "Show older"
+  },
+  "notifications.olderError": {
+    "defaultMessage": "The older notifications could not be read. Try again."
+  },
+  "notifications.unknown": {
+    "defaultMessage": "{contract} — {event}"
+  },
+  "notifications.unnamedRecord": {
+    "defaultMessage": "a record"
+  },
   "renewal.action.amendment": {
     "defaultMessage": "File the amendment"
   },
@@ -3281,6 +3365,45 @@
   "settings.matters.title": {
     "defaultMessage": "Matters"
   },
+  "settings.notifications.caption": {
+    "defaultMessage": "Email off keeps the bell items coming. In-app off turns the group off entirely, email included."
+  },
+  "settings.notifications.channel.email": {
+    "defaultMessage": "Email"
+  },
+  "settings.notifications.channel.inApp": {
+    "defaultMessage": "In-app"
+  },
+  "settings.notifications.column.group": {
+    "defaultMessage": "Event group"
+  },
+  "settings.notifications.group.activity": {
+    "defaultMessage": "Activity on your records"
+  },
+  "settings.notifications.group.activity.detail": {
+    "defaultMessage": "Status changes, comments, documents, and signatures on records where you're the Owner, on the team, or a watcher."
+  },
+  "settings.notifications.group.assigned": {
+    "defaultMessage": "Assigned to you"
+  },
+  "settings.notifications.group.assigned.detail": {
+    "defaultMessage": "Assignments, tasks, mentions, and approval requests addressed to you."
+  },
+  "settings.notifications.group.dates": {
+    "defaultMessage": "Dates approaching"
+  },
+  "settings.notifications.group.dates.detail": {
+    "defaultMessage": "Key dates, notice deadlines, and expiries — emailed as one daily digest."
+  },
+  "settings.notifications.group.requests": {
+    "defaultMessage": "New requests"
+  },
+  "settings.notifications.group.requests.detail": {
+    "defaultMessage": "New intake requests arriving in the Inbox."
+  },
+  "settings.notifications.title": {
+    "defaultMessage": "Notification preferences"
+  },
   "settings.profile.changePassword": {
     "defaultMessage": "Change password"
   },
@@ -3359,6 +3482,48 @@
   "settings.rail.label": {
     "defaultMessage": "Settings sections"
   },
+  "settings.reminders.add": {
+    "defaultMessage": "Add lead time"
+  },
+  "settings.reminders.addDuplicate": {
+    "defaultMessage": "{label} is already on the list."
+  },
+  "settings.reminders.addFull": {
+    "defaultMessage": "The list holds at most {max} lead times. Remove one first."
+  },
+  "settings.reminders.addInvalid": {
+    "defaultMessage": "Enter a whole number of days between 0 and {max}."
+  },
+  "settings.reminders.addUnit": {
+    "defaultMessage": "days before the date"
+  },
+  "settings.reminders.count": {
+    "defaultMessage": "{count, plural, one {# lead time} other {# lead times}}"
+  },
+  "settings.reminders.help": {
+    "defaultMessage": "Drag a row, or focus its handle and use the arrow keys, to reorder. One list covers every tracked date — key dates, notice deadlines, and expiries — and the reminders arrive in the daily digest. Keep at least one lead time."
+  },
+  "settings.reminders.lastOne": {
+    "defaultMessage": "{label} is the only lead time and can't be removed"
+  },
+  "settings.reminders.moved": {
+    "defaultMessage": "{label} moved to position {position} of {total}."
+  },
+  "settings.reminders.offset": {
+    "defaultMessage": "{days, plural, =0 {On the day} one {# day before} other {# days before}}"
+  },
+  "settings.reminders.pageTitle": {
+    "defaultMessage": "Reminder lead times"
+  },
+  "settings.reminders.remove": {
+    "defaultMessage": "Remove {label}"
+  },
+  "settings.reminders.reorder": {
+    "defaultMessage": "Reorder {label}, position {position} of {total}. Use the arrow keys to move it."
+  },
+  "settings.reminders.title": {
+    "defaultMessage": "Reminder lead times"
+  },
   "settings.section.appearance": {
     "defaultMessage": "Appearance"
   },
@@ -3382,6 +3547,9 @@
   },
   "settings.section.matters": {
     "defaultMessage": "Matters"
+  },
+  "settings.section.notifications": {
+    "defaultMessage": "Notifications"
   },
   "settings.section.profile": {
     "defaultMessage": "Profile"

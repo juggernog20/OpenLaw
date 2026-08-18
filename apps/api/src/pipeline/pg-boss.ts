@@ -23,19 +23,24 @@
  */
 
 import { PgBoss, type JobWithMetadata } from "pg-boss";
+import type { MailerResolver } from "../lib/mailer.js";
 import type { SigningResolver } from "../lib/signing/resolver.js";
 import { runBackfillSweep } from "./backfill.js";
 import type { DerivationDeps } from "./derivations.js";
 import { handleDisplayConversion } from "./display-conversion.js";
+import { createNotifier } from "../lib/notifications/notifier.js";
 import { handleExecutedCopyFetch } from "./executed-copy.js";
+import { handleNotificationEmail } from "./notification-email.js";
 import {
   JOB_QUEUES,
   type DisplayConversionJob,
   type ExecutedCopyFetchJob,
   type JobQueue,
+  type NotificationEmailJob,
   type TextExtractionJob,
 } from "./jobs.js";
 import { createConsoleLogger, type PipelineLogger } from "./logger.js";
+import { MORNING_ROUND_CRON, runMorningRound } from "./morning-round.js";
 import { RECONCILIATION_SWEEP_CRON, runReconciliationSweep } from "./reconciliation.js";
 import { handleTextExtraction } from "./text-extraction.js";
 
@@ -130,18 +135,52 @@ export const EXECUTED_COPY_QUEUE_OPTIONS = {
 } as const;
 
 /**
+ * The same bounds for one notification's immediate email (M18/1),
+ * stated separately because they bound different work again.
+ *
+ * The job hands one message to somebody else's relay. The transport's
+ * own socket bounds are tens of seconds (see `createSmtpMailer`), so two
+ * minutes is generous for a send and its two small writes, and it
+ * notices a wedged worker quickly — which matters here more than
+ * elsewhere, because somebody has been asked to do something and is
+ * waiting to hear about it.
+ *
+ * Three attempts on the same ladder every other queue uses: half a
+ * minute, then a minute. The failure a retry heals is the same one — a
+ * relay that was unreachable for a moment — and an unconfigured install
+ * is not that failure and is never retried (see the handler).
+ */
+export const NOTIFICATION_EMAIL_QUEUE_OPTIONS = {
+  expireInSeconds: 120,
+  retryLimit: 2,
+  retryDelay: 30,
+  retryBackoff: true,
+} as const;
+
+/**
  * Everything a process that works the queue is built from.
  *
  * The derivation jobs need the database, storage, and the doc engine;
  * the executed-copy fetch needs the signing connector instead of the
- * engine. One type rather than one per queue, because a worker is one
- * process and its dependencies are chosen once at boot.
+ * engine; the notification email needs the mailer and the address this
+ * install answers on. One type rather than one per queue, because a
+ * worker is one process and its dependencies are chosen once at boot.
  */
 export interface PipelineHandlers extends DerivationDeps {
   /** The connector, read live per call (CTR-013). An install with no
    * connector resolves to nothing, and an executed-copy job then
    * records a terminal failure rather than waiting for one. */
   resolveSigningProvider: SigningResolver;
+  /**
+   * The mailer, resolved per send (TECH-011, #37) exactly as the API
+   * resolves it — so a relay saved in the wizard reaches the very next
+   * notification email with no restart, and an install with none
+   * records the skip rather than waiting for one.
+   */
+  resolveMailer: MailerResolver;
+  /** Where this install answers (BASE_URL), so an emailed notification
+   * can deep-link to the record it is about (NOT-005). */
+  baseUrl: string;
   /** The size ceiling the executed-copy fetch files under — the API's
    * upload ceiling, asked of the provider's answer for the same reason.
    * Optional: unset, the job takes the same default the API does. */
@@ -197,6 +236,25 @@ export const RECONCILIATION_SWEEP_QUEUE_OPTIONS = {
    * — so the next tick picks it up. A retry would only bring the same
    * failure forward, and this sweep's usual failure is a provider that
    * is down, which a retry cannot heal.
+   */
+  retryLimit: 0,
+} as const;
+
+/** Bounds on one scheduled morning round. */
+export const MORNING_ROUND_QUEUE_OPTIONS = {
+  /**
+   * Ten minutes, the reconciliation round's ceiling and for a similar
+   * shape of work: the cost is the people being served and the dates due
+   * for them, both small sets, plus one message each handed to somebody
+   * else's relay. Ten minutes is generous for that and still notices a
+   * wedged worker well inside the hour before the next tick.
+   */
+  expireInSeconds: 600,
+  /**
+   * Never retried, for the other two sweeps' reason. A round that failed
+   * part way through wrote some of the reminders and sent some of the
+   * briefings, and the rows say what the rest is — so the next tick
+   * picks it up, and a retry would only bring the same failure forward.
    */
   retryLimit: 0,
 } as const;
@@ -309,6 +367,14 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // envelope leave one job rather than two.
       await boss.send(JOB_QUEUES.executedCopyFetch, job, { singletonKey: envelopeId });
     },
+    async requestNotificationEmail(notificationId: string): Promise<void> {
+      const job: NotificationEmailJob = { notificationId };
+      // The notification row is the collapsing key, for the version's
+      // reason: the Notifier's own wake-up and the round that re-asks
+      // for owed-and-unsent rows can name the same row, and they should
+      // leave one job between them rather than two messages.
+      await boss.send(JOB_QUEUES.notificationEmail, job, { singletonKey: notificationId });
+    },
   };
 
   // Cut short when the process is stopping. Both scheduled sweeps
@@ -364,6 +430,15 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       notify: true,
       ...EXECUTED_COPY_QUEUE_OPTIONS,
     });
+    await boss.createQueue(JOB_QUEUES.notificationEmail, {
+      policy: "short",
+      notify: true,
+      ...NOTIFICATION_EMAIL_QUEUE_OPTIONS,
+    });
+    await boss.updateQueue(JOB_QUEUES.notificationEmail, {
+      notify: true,
+      ...NOTIFICATION_EMAIL_QUEUE_OPTIONS,
+    });
     // `singleton` allows one sweep to be running at a time. Two at once
     // would be correct — the sweep only asks, and the `short` policy
     // above collapses whatever they both asked for — but it would be two
@@ -385,8 +460,34 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       ...RECONCILIATION_SWEEP_QUEUE_OPTIONS,
     });
     await boss.updateQueue(JOB_QUEUES.reconciliationSweep, RECONCILIATION_SWEEP_QUEUE_OPTIONS);
+    // The same singleton, for a stronger reason again. The other two
+    // rounds are idempotent asks, so two at once would be wasteful and
+    // correct; this one sends a person a briefing, and NOT-003 promises
+    // exactly one of those a day.
+    await boss.createQueue(JOB_QUEUES.morningRound, {
+      policy: "singleton",
+      ...MORNING_ROUND_QUEUE_OPTIONS,
+    });
+    await boss.updateQueue(JOB_QUEUES.morningRound, MORNING_ROUND_QUEUE_OPTIONS);
 
     if (handlers) {
+      /**
+       * The notification seam, for the two handlers whose work the
+       * record's people are owed a word about (NOT-002 group 2): the
+       * executed-copy fetch files paper, and the reconciliation round
+       * ends envelopes.
+       *
+       * It is built **here**, from the same `queue` the handlers send
+       * on, rather than being passed in beside them. That is what
+       * breaks the circle the sending half above breaks for its own
+       * callers: the notifier needs a `JobQueue` to wake email work
+       * with, and the only queue this process has is the one being
+       * assembled. The API builds its own the same way — from the
+       * pipeline it has already started — so the two processes hold the
+       * same seam over the same queue.
+       */
+      const notifier = createNotifier({ db: handlers.db, jobs: queue, log });
+
       // One at a time, with the job's own counters. The counters are
       // what let a handler tell "try again" from "this was the last
       // try", which is the difference between a derivation that is still
@@ -451,9 +552,30 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
         async (jobs: JobWithMetadata<ExecutedCopyFetchJob>[]) => {
           for (const job of jobs) {
             await handleExecutedCopyFetch(
-              { ...handlers, jobs: queue },
+              { ...handlers, jobs: queue, notifier },
               {
                 envelopeId: job.data.envelopeId,
+                retryCount: job.retryCount,
+                retryLimit: job.retryLimit,
+              },
+            );
+          }
+        },
+      );
+      await boss.work(
+        JOB_QUEUES.notificationEmail,
+        oneAtATime,
+        async (jobs: JobWithMetadata<NotificationEmailJob>[]) => {
+          for (const job of jobs) {
+            await handleNotificationEmail(
+              {
+                db: handlers.db,
+                resolveMailer: handlers.resolveMailer,
+                baseUrl: handlers.baseUrl,
+                log,
+              },
+              {
+                notificationId: job.data.notificationId,
                 retryCount: job.retryCount,
                 retryLimit: job.retryLimit,
               },
@@ -479,11 +601,36 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // handler here rather than a timer in the worker entrypoint.
       await boss.work(JOB_QUEUES.reconciliationSweep, { batchSize: 1 }, async () => {
         const summary = await runReconciliationSweep(
-          { db: handlers.db, log, resolveSigningProvider: handlers.resolveSigningProvider },
+          {
+            db: handlers.db,
+            log,
+            resolveSigningProvider: handlers.resolveSigningProvider,
+            notifier,
+          },
           queue,
           { signal: sweeping.signal },
         );
         log.info({ ...summary }, "the scheduled reconciliation sweep finished");
+      });
+      // The morning round gets its own worker for the two sweeps'
+      // reason: it spends its time on the relay's network, and a slow
+      // relay must not sit in front of the executed copy or the
+      // reconciliation round. It takes the notification seam and the
+      // mailer resolver, which is what makes it a handler here rather
+      // than a timer in the worker entrypoint.
+      await boss.work(JOB_QUEUES.morningRound, { batchSize: 1 }, async () => {
+        const summary = await runMorningRound(
+          {
+            db: handlers.db,
+            log,
+            notifier,
+            resolveMailer: handlers.resolveMailer,
+            baseUrl: handlers.baseUrl,
+          },
+          queue,
+          { signal: sweeping.signal },
+        );
+        log.info({ ...summary }, "the scheduled morning round finished");
       });
       // Registering the schedule is an upsert keyed on the queue name, so
       // every worker that boots declares the same one and an install
@@ -494,17 +641,24 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // in-process timer ran a full round per replica, and this round
       // asks a third party about every live envelope.
       await boss.schedule(JOB_QUEUES.reconciliationSweep, RECONCILIATION_SWEEP_CRON);
+      // The same upsert, and the reason it is here at all: one round per
+      // install, however many workers boot (NOT-003's one briefing a
+      // day).
+      await boss.schedule(JOB_QUEUES.morningRound, MORNING_ROUND_CRON);
       log.info(
         {
           queues: [
             JOB_QUEUES.textExtraction,
             JOB_QUEUES.displayConversion,
             JOB_QUEUES.executedCopyFetch,
+            JOB_QUEUES.notificationEmail,
             JOB_QUEUES.backfillSweep,
             JOB_QUEUES.reconciliationSweep,
+            JOB_QUEUES.morningRound,
           ],
           backfillSweepCron: BACKFILL_SWEEP_CRON,
           reconciliationSweepCron: RECONCILIATION_SWEEP_CRON,
+          morningRoundCron: MORNING_ROUND_CRON,
         },
         "working the job queue",
       );

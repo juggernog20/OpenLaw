@@ -62,9 +62,7 @@ const CONVERT_FILTERS: Readonly<Record<string, string>> = {
 };
 
 /** The formats `convert` accepts, in the order they are documented. */
-export const CONVERTIBLE_FORMATS = Object.keys(CONVERT_FILTERS).sort((a, b) =>
-  a.localeCompare(b),
-);
+export const CONVERTIBLE_FORMATS = Object.keys(CONVERT_FILTERS).sort((a, b) => a.localeCompare(b));
 
 /** Whether `format` is one this engine converts. */
 export function isConvertibleFormat(format: string): boolean {

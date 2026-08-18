@@ -36,6 +36,7 @@ import type { DocEngine } from "../lib/doc-engine/engine.js";
 import { createFakeDocEngine } from "../lib/doc-engine/fake.js";
 import { createFakeSigningProvider, type FakeSigningProvider } from "../lib/signing/fake.js";
 import { createSigningResolver, type SigningResolver } from "../lib/signing/resolver.js";
+import { createNotifier, type Notifier } from "../lib/notifications/notifier.js";
 import { startPipeline, type Pipeline } from "../pipeline/pg-boss.js";
 import type { PipelineLogger } from "../pipeline/logger.js";
 
@@ -190,6 +191,17 @@ export interface TestHarness {
    * like production, with sends still captured when configured.
    */
   smtpEnv: { url: string; from: string } | null;
+  /**
+   * The production mailer resolver over that capturing mailer — the same
+   * value the app and the pipeline are built with (#37, TECH-011).
+   *
+   * A suite needs it to run the morning round (M18/6) in process, which
+   * the worker starts with exactly this dependency. Handing over the
+   * resolver rather than the mailer is the point: resolution is
+   * env-else-database and happens per send, so a suite that clears
+   * `smtpEnv` changes what the next briefing resolves.
+   */
+  resolveMailer: MailerResolver;
   /** The injected storage adapter — the local driver over a temporary root. */
   storage: StorageAdapter;
   /** That temporary root, so a suite can read what the driver is
@@ -218,6 +230,16 @@ export interface TestHarness {
    * for every API suite would buy nothing an API test can assert.
    */
   pipeline: Pipeline;
+  /**
+   * The real notification seam (NOT-001), over this harness's database
+   * and this harness's queue — the same object the app is built with.
+   *
+   * It is not a double, for the pipeline's reason: everything behind it
+   * is a query and a queue ask, and both of those are real here. A
+   * suite asserts what a person can observe — the bell reads and the
+   * captured mail — and never that this was called.
+   */
+  notifier: Notifier;
   /** Lines the pipeline wrote, oldest first. A failed derivation says
    * so in its own row; why it failed is here. */
   jobLog: JobLogLine[];
@@ -287,6 +309,13 @@ export interface HarnessOptions {
    * than with a hundred megabytes of them.
    */
   maxUploadBytes?: number;
+  /**
+   * Mounts the dev/E2E overlay's on-demand morning round (TECH-018).
+   * Off by default, exactly as every deployment has it, so a suite that
+   * does not ask for it sees the route the way a real install does —
+   * absent.
+   */
+  morningRoundTrigger?: boolean;
 }
 
 export async function startHarness(options: HarnessOptions = {}): Promise<TestHarness> {
@@ -376,9 +405,19 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
         storage,
         docEngine,
         resolveSigningProvider,
+        resolveMailer,
+        baseUrl: TEST_AUTH_CONFIG.baseUrl,
         log: capturingLogger(jobLog),
       },
       log: capturingLogger(jobLog),
+    });
+    // The seam's own lines join the pipeline's, so a suite reads why a
+    // wake-up was never sent in the same place it reads why a job
+    // failed.
+    const notifier = createNotifier({
+      db,
+      jobs: pipeline,
+      log: { error: (fields, message) => jobLog.push({ level: "error", message, fields }) },
     });
     const app = await buildApp({
       db,
@@ -388,7 +427,9 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       docEngine,
       jobs: pipeline,
       resolveSigningProvider,
+      notifier,
       maxUploadBytes: options.maxUploadBytes,
+      morningRoundTrigger: options.morningRoundTrigger,
     });
     await app.ready();
     const runningPipeline = pipeline;
@@ -396,10 +437,12 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       app,
       db,
       mailer,
+      resolveMailer,
       storage,
       storageRoot,
       docEngine,
       pipeline: runningPipeline,
+      notifier,
       jobLog,
       resolveSigningProvider,
       databaseUrl: container.getConnectionUri(),
