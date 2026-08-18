@@ -368,6 +368,9 @@
   "activity.user.invited": {
     "defaultMessage": "{actor} invited {email} as {role}"
   },
+  "activity.user.notificationPreferenceChanged": {
+    "defaultMessage": "{actor} turned {channel, select, in_app {bell items} email {emails} other {{channel}}} {state, select, on {on} off {off} other {{state}}} for {group, select, assigned_to_you {direct asks} activity_on_your_records {activity on their records} dates_approaching {approaching dates} new_requests {new requests} requester_events {requester events} other {{group}}}"
+  },
   "activity.user.otherSessionsRevoked": {
     "defaultMessage": "{actor} signed out their other sessions"
   },
@@ -3350,6 +3353,45 @@
   "settings.matters.title": {
     "defaultMessage": "Matters"
   },
+  "settings.notifications.caption": {
+    "defaultMessage": "Email off keeps the bell items coming. In-app off turns the group off entirely, email included."
+  },
+  "settings.notifications.channel.email": {
+    "defaultMessage": "Email"
+  },
+  "settings.notifications.channel.inApp": {
+    "defaultMessage": "In-app"
+  },
+  "settings.notifications.column.group": {
+    "defaultMessage": "Event group"
+  },
+  "settings.notifications.group.activity": {
+    "defaultMessage": "Activity on your records"
+  },
+  "settings.notifications.group.activity.detail": {
+    "defaultMessage": "Status changes, comments, documents, and signatures on records where you're the owner, on the team, or a watcher."
+  },
+  "settings.notifications.group.assigned": {
+    "defaultMessage": "Assigned to you"
+  },
+  "settings.notifications.group.assigned.detail": {
+    "defaultMessage": "Assignments, tasks, mentions, and approval requests addressed to you."
+  },
+  "settings.notifications.group.dates": {
+    "defaultMessage": "Dates approaching"
+  },
+  "settings.notifications.group.dates.detail": {
+    "defaultMessage": "Key dates, notice deadlines, and expiries — emailed as one daily digest."
+  },
+  "settings.notifications.group.requests": {
+    "defaultMessage": "New requests"
+  },
+  "settings.notifications.group.requests.detail": {
+    "defaultMessage": "New intake requests arriving in the Inbox."
+  },
+  "settings.notifications.title": {
+    "defaultMessage": "Notification preferences"
+  },
   "settings.profile.changePassword": {
     "defaultMessage": "Change password"
   },
@@ -3451,6 +3493,9 @@
   },
   "settings.section.matters": {
     "defaultMessage": "Matters"
+  },
+  "settings.section.notifications": {
+    "defaultMessage": "Notifications"
   },
   "settings.section.profile": {
     "defaultMessage": "Profile"
