@@ -271,12 +271,13 @@ Raised as [#344](https://github.com/juggernog20/OpenLaw/issues/344). Eight produ
 **1. The date digest is subsumed, not sat beside.** One daily briefing replaces the date-only digest. NOT-003 and NOT-006 are amended rather than paralleled — the round, the once-a-day rule, the timezone gate, the dedup identity, and the re-ask for lost mail all carry forward as the engine for a richer message. There is one morning email, not two.
 
 **2. Each section has its own preference toggle, independent of the event-group grid.** A briefing spanning NOT-002's groups cannot be tuned by a group toggle. New preference rows per briefing section give a person per-section control without coupling to the event-group model. The section toggles control the email only — the bell is a single notification (clause 5), not per-section. The section toggles are separate from the NOT-002 channel toggles — a person can turn off dates in the briefing while keeping the bell on for `dates_approaching`. The section vocabulary and its stable render order:
-  1. Approvals waiting on you (CTR-012)
-  2. Tasks assigned to you, due or overdue (CTR-017)
-  3. Contract dates approaching (NOT-003/004)
-  4. Entity obligations (ENT-006, M27 — deferred until that module ships)
-  5. Knowledge items (M28 — deferred until that module ships)
-  6. Intake requests (INT-006, M21 — deferred until group 4's first event ships)
+
+1. Approvals waiting on you (CTR-012)
+2. Tasks assigned to you, due or overdue (CTR-017)
+3. Contract dates approaching (NOT-003/004)
+4. Entity obligations (ENT-006, M27 — deferred until that module ships)
+5. Knowledge items (M28 — deferred until that module ships)
+6. Intake requests (INT-006, M21 — deferred until group 4's first event ships)
 
 **3. One briefing, not several.** NOT-003's argument — noise is the unsubscribe trigger — gets stronger with more sources, not weaker. Everything in a single daily email: one subject line, one scan, one message to keep or discard.
 
@@ -318,13 +319,13 @@ Sequencing this after M28 would make the briefing complete on arrival. Building 
 
 ## Index of decisions
 
-| #       | Decision                                                          | Status   |
-| ------- | ----------------------------------------------------------------- | -------- |
-| NOT-001 | One system, two surfaces: bell + email for staff and portal users | Accepted |
-| NOT-002 | Event catalog: five groups, defaults by interruptiveness          | Accepted |
-| NOT-003 | Timing: direct events immediate; date reminders in a daily digest | Accepted |
-| NOT-004 | Reminder lead times: admin-configurable offsets, seeded 7/1/0     | Accepted |
-| NOT-005 | Badge: unread count, 9+ cap, read-on-open                         | Accepted |
-| NOT-006 | The morning digest's anatomy and its delivery rules               | Accepted |
-| NOT-007 | At-least-once email delivery is a deliberate trade (PR #346)      | Accepted |
+| #       | Decision                                                           | Status   |
+| ------- | ------------------------------------------------------------------ | -------- |
+| NOT-001 | One system, two surfaces: bell + email for staff and portal users  | Accepted |
+| NOT-002 | Event catalog: five groups, defaults by interruptiveness           | Accepted |
+| NOT-003 | Timing: direct events immediate; date reminders in a daily digest  | Accepted |
+| NOT-004 | Reminder lead times: admin-configurable offsets, seeded 7/1/0      | Accepted |
+| NOT-005 | Badge: unread count, 9+ cap, read-on-open                          | Accepted |
+| NOT-006 | The morning digest's anatomy and its delivery rules                | Accepted |
+| NOT-007 | At-least-once email delivery is a deliberate trade (PR #346)       | Accepted |
 | NOT-008 | The daily briefing: cross-module morning email replaces the digest | Accepted |
