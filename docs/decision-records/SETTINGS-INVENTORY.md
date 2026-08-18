@@ -77,7 +77,14 @@ ActivityBar, Pill, Avatar) live in this file as local copies per the designs con
 5. ~~**ST3 ships in M18**, not M5 — the toggles wait for the notification engine.~~ _Confirmed
    (2026-08-11, #68): the shipped rail's Personal group carries Profile and Appearance only — no
    Notifications entry, omitted rather than disabled — and the M5 acceptance journey asserts the
-   absence. ST3 stays in the file untouched, waiting for M18._
+   absence. ST3 stays in the file untouched, waiting for M18._ **Closed (2026-08-18, #320):** the
+   pane shipped, the rail's Personal group gained its Notifications entry, and the M5 journey now
+   asserts its presence. Two frame deviations are recorded in **DES-050** and ST3 is not redrawn:
+   group 2 renders as **one row** rather than the frame's group header plus four sub-rows (NOT-002
+   keys a preference on the group, never on one verb), and the **In-app column is interactive**
+   rather than the frame's 55%-opacity locked treatment (M18 story 18: the feed is the person's to
+   tune). The pane also carries a caption the frame does not draw, and the stacked narrow layout
+   has no frame — both recorded in DES-050.
 
 ## Amendments (2026-08-12, M6 acceptance sweep, #86)
 

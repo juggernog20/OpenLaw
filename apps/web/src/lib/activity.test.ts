@@ -78,6 +78,11 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   // ---- The profile and user administration ----
   "user.theme_changed": { field: "theme", old: "light", new: "dark" },
   "user.timezone_changed": { field: "timezone", old: "UTC", new: "Asia/Dubai" },
+  "user.notification_preference_changed": {
+    eventGroup: "activity_on_your_records",
+    channel: "email",
+    enabled: true,
+  },
   "user.display_name_changed": { field: "display_name", old: "N. Counsel", new: "Nadia Counsel" },
   "user.avatar_changed": { field: "avatar", old: null, new: "[image]" },
   "user.invited": { email: "sam@example.com", role: "legal_team_member" },

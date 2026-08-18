@@ -21,9 +21,10 @@
  * Three rules every event in the group inherits, each of them pinned
  * below:
  *
- * - **No email is owed.** Group 2 is bell-on, email-opt-in, and the
- *   opt-in is the preferences slice's to make real. Under the default
- *   the row records no debt and no message leaves.
+ * - **No email is owed.** Group 2 is bell-on, email-opt-in, and nobody
+ *   in this suite has opted in. Under the default the row records no
+ *   debt and no message leaves. The other arm — somebody who opts in is
+ *   mailed — is `preferences.test.ts`'s.
  * - **The actor hears nothing about their own act** — and where the act
  *   has no actor, **nobody is excluded**. A webhook is not a person, so
  *   the whole team is told, including the one who sent the envelope.
@@ -323,11 +324,15 @@ const recordRowsFor = async (
 /**
  * The whole of group 2's email promise, asserted in both directions.
  *
- * No row owes an email — which is what the preferences slice will flip —
- * and no message about this record has reached this person. The row half
- * is the load-bearing one: an owed-and-unsent row would look exactly
- * like a never-owed one from the mailer's side until the round that
- * re-asks ran.
+ * No row owes an email and no message about this record has reached this
+ * person. The row half is the load-bearing one: an owed-and-unsent row
+ * would look exactly like a never-owed one from the mailer's side until
+ * the round that re-asks ran.
+ *
+ * What holds it is the group's **default** (NOT-002: bell on, email
+ * opt-in), not the absence of machinery — nobody in this suite has
+ * opened the preferences pane. `preferences.test.ts` asserts the other
+ * arm: somebody who opts in is mailed.
  */
 async function owesNoEmail(fixture: { email: string }, contract: ContractRow): Promise<void> {
   const rows = await recordRowsFor(fixture, contract);

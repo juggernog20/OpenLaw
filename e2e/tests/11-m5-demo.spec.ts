@@ -177,9 +177,10 @@ test.describe.serial("M5 demo path", () => {
       const rail = memberPage.getByRole("navigation", { name: "Settings sections" });
       await expect(rail.getByRole("link", { name: "Profile" })).toBeVisible();
       await expect(rail.getByRole("link", { name: "Appearance" })).toBeVisible();
-      // No Notifications entry either — ST3 waits for the M18 engine;
-      // unshipped panes are omitted from the rail, not disabled.
-      await expect(rail.getByRole("link", { name: "Notifications" })).toHaveCount(0);
+      // Notifications joined the Personal group in M18 (#320), which is
+      // what "omitted rather than disabled" was waiting for: the rail
+      // grew the entry when the pane behind it existed.
+      await expect(rail.getByRole("link", { name: "Notifications" })).toBeVisible();
       await expect(rail.getByText("Organization")).toHaveCount(0);
       await expect(rail.getByRole("link", { name: "General" })).toHaveCount(0);
       await expect(rail.getByRole("link", { name: "Users" })).toHaveCount(0);

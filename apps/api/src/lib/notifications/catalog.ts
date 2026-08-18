@@ -63,9 +63,18 @@ export interface EventGroupPolicy {
 export const EVENT_GROUP_POLICY: Record<NotificationEventGroup, EventGroupPolicy> = {
   /** Group 1 — done *to* you: it interrupts. */
   assigned_to_you: { inApp: true, email: true, emailTiming: "immediate" },
-  /** Group 2 — ambient movement: the feed, and email only if asked
-   * for. */
-  activity_on_your_records: { inApp: true, email: false, emailTiming: "none" },
+  /**
+   * Group 2 — ambient movement: the feed, and email only if asked for.
+   *
+   * `immediate` is the **timing**, not the default: `email: false` is
+   * what makes it opt-in, and the timing says what happens once
+   * somebody has opted in. It shipped as `none` in M18/4, when nothing
+   * could opt in yet and a `true` row would have claimed a debt the
+   * system could not pay; the preferences pane is what makes the
+   * opt-in real, so the timing is real with it (NOT-002's M18/4
+   * addendum).
+   */
+  activity_on_your_records: { inApp: true, email: false, emailTiming: "immediate" },
   /** Group 3 — dates: the bell per date, and one briefing a day
    * (NOT-003). */
   dates_approaching: { inApp: true, email: true, emailTiming: "digest" },

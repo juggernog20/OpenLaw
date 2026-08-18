@@ -48,6 +48,7 @@ import {
   Activity,
   Archive,
   ArchiveRestore,
+  Bell,
   Building2,
   CalendarClock,
   CalendarPlus,
@@ -1675,6 +1676,46 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       defaultMessage: "{actor} changed their timezone",
     }),
     changes: fieldChange,
+  },
+  // One notification preference (NOT-001, #320). No old→new pair: the
+  // table holds overrides, so the value before a first save is a
+  // default read out of application code and not a stored fact the
+  // writer could have reported.
+  "user.notification_preference_changed": {
+    icon: Bell,
+    message: defineMessage({
+      id: "activity.user.notificationPreferenceChanged",
+      // Whole clauses per case rather than an interpolated noun: a
+      // language that inflects around the channel or the group cannot
+      // be served by dropping words into one frame. The `other` arms
+      // echo the slug, because the log is append-only and a group this
+      // build no longer has is still in a payload.
+      defaultMessage:
+        "{actor} turned {channel, select, in_app {bell items} email {emails} other {{channel}}} " +
+        "{state, select, on {on} off {off} other {{state}}} for " +
+        "{group, select, assigned_to_you {direct asks} " +
+        "activity_on_your_records {activity on their records} " +
+        "dates_approaching {approaching dates} new_requests {new requests} " +
+        "requester_events {requester events} other {{group}}}",
+    }),
+    values: (intl, payload) => ({
+      // Their own fallbacks rather than {@link named}'s, because that
+      // one is a person's — "turned someone off for someone" is not a
+      // sentence. Either fallback lands in the select's `other` arm.
+      channel:
+        text(payload, "channel") ??
+        intl.formatMessage({
+          id: "activity.notificationPreference.unknownChannel",
+          defaultMessage: "a channel",
+        }),
+      group:
+        text(payload, "eventGroup") ??
+        intl.formatMessage({
+          id: "activity.notificationPreference.unknownGroup",
+          defaultMessage: "an event group",
+        }),
+      state: payload.enabled === true ? "on" : "off",
+    }),
   },
   "user.display_name_changed": {
     icon: PencilLine,

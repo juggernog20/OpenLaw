@@ -6,13 +6,16 @@
  * URL per pane. The Organization group renders for Administrators only
  * (SET-002) and carries General (#63) and Users (#65, #66) plus the
  * collapsible Security group with Authentication (#64) and the audit
- * log (#133), and the Integrations section (#245, SET-007) — rail
- * entries for unshipped panes are omitted, not disabled.
+ * log (#133), and the Integrations section (#245, SET-007). The
+ * Personal group carries Profile (#67), Appearance (#62), and
+ * Notifications (#320 — the pane M5 deferred until the engine existed)
+ * — rail entries for unshipped panes are omitted, not disabled.
  * Visual spec: designs/settings.pen per SETTINGS-INVENTORY.md.
  */
 
 import { useState } from "react";
 import {
+  Bell,
   Briefcase,
   Building2,
   ChevronDown,
@@ -91,6 +94,18 @@ const PERSONAL_GROUP: SettingsGroup = {
       path: "/settings/appearance",
       icon: Palette,
       label: defineMessage({ id: "settings.section.appearance", defaultMessage: "Appearance" }),
+    },
+    // The pane M5 deferred (inventory row ST3). It was omitted rather
+    // than disabled while the notification engine did not exist; it
+    // joins the rail now that it does (#320).
+    {
+      id: "notifications",
+      path: "/settings/notifications",
+      icon: Bell,
+      label: defineMessage({
+        id: "settings.section.notifications",
+        defaultMessage: "Notifications",
+      }),
     },
   ],
 };

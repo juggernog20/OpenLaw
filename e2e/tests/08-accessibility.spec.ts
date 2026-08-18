@@ -56,6 +56,11 @@ test.describe("accessibility floor", () => {
     await expect(page).toHaveTitle("Appearance · OpenLaw");
     await reportAxeViolations(page, testInfo, "settings-appearance");
 
+    // The Notifications pane (#320), the toggle grid M5 deferred.
+    await page.goto("/settings/notifications");
+    await expect(page).toHaveTitle("Notifications · OpenLaw");
+    await reportAxeViolations(page, testInfo, "settings-notifications");
+
     // The Organization · General form (#63), as the Administrator.
     await page.goto("/settings/general");
     await expect(page).toHaveTitle("General · OpenLaw");

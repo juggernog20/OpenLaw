@@ -2244,6 +2244,24 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/me/notification-preferences": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** What the signed-in person gets on each of NOT-002's five event groups, per channel. It is the **effective** answer — their own saved rows over the group's defaults — because the table holds overrides rather than a grid, and a person who has never opened the pane has no rows at all. Every group is answered, including the two whose first events wait for the Inbox (M21) and the portal (M20): an opinion can be held about a group before anything in it has fired. There is no user parameter — a preference is one person's, and the signed-in person is the whole scope */
+    get: operations["getMyNotificationPreferences"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Save one channel's answer for one event group, for the signed-in person (NOT-001). One pair per request, because a toggle is what the pane saves and it saves the moment it is flipped (SET-003 immediate apply). The write lands in `notification_preferences` as an override, so the very next event honours it with no other wiring — and turning email off leaves the group's bell items flowing, which is the point of the two channels being separate rows. Recorded in the activity log like every settings mutation. Answers the whole grid back, so the pane can never drift from what the fan-out will honour */
+    patch: operations["updateMyNotificationPreferences"];
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -11871,6 +11889,103 @@ export interface operations {
         content: {
           "application/json": {
             unread: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getMyNotificationPreferences: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            groups: {
+              /** @enum {string} */
+              eventGroup:
+                | "assigned_to_you"
+                | "activity_on_your_records"
+                | "dates_approaching"
+                | "new_requests"
+                | "requester_events";
+              inApp: boolean;
+              email: boolean;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateMyNotificationPreferences: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          eventGroup:
+            | "assigned_to_you"
+            | "activity_on_your_records"
+            | "dates_approaching"
+            | "new_requests"
+            | "requester_events";
+          /** @enum {string} */
+          channel: "in_app" | "email";
+          enabled: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            groups: {
+              /** @enum {string} */
+              eventGroup:
+                | "assigned_to_you"
+                | "activity_on_your_records"
+                | "dates_approaching"
+                | "new_requests"
+                | "requester_events";
+              inApp: boolean;
+              email: boolean;
+            }[];
           };
         };
       };
