@@ -441,9 +441,10 @@ test.describe("M17 demo path", () => {
       // would title-match any leftover row whose stamp carries the same
       // digits, and the picker pages at twenty.
       await linkDialog.getByLabel("Search by number or title…").fill(parentTitle);
-      // The candidates render as buttons carrying the reference, the
-      // title, and the status; the title picks the parent out.
-      const parentOption = linkDialog.getByRole("button").filter({ hasText: parentTitle });
+      // The candidates are the combobox's options, each carrying the
+      // reference, the title, and the status; the title picks the
+      // parent out.
+      const parentOption = linkDialog.getByRole("option").filter({ hasText: parentTitle });
       await expect(parentOption).toBeVisible();
       await parentOption.click();
 

@@ -34,6 +34,12 @@ globalThis.ResizeObserver ??= class {
   disconnect() {}
 } as unknown as typeof ResizeObserver;
 
+// And no scrollIntoView, because jsdom lays nothing out. A combobox
+// keeping its active row in view calls it on every arrow press (the
+// link picker is the first), so a no-op stands in for the scroll a
+// layout-free tree could not perform anyway.
+Element.prototype.scrollIntoView ??= () => {};
+
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();

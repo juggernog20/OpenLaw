@@ -17,6 +17,12 @@
  * M17/4 adds link management: "Add link", "Set parent", per-row
  * "Remove link" / "Remove parent" buttons, the link dialog with its
  * picker, refusal rendering, and the CTR-018 confidentiality nudge.
+ *
+ * The breadcrumb and the card read one relations state (#312), so a
+ * write in the card moves both surfaces at once. The picker is the app's
+ * hand-rolled combobox (#311, DES-024): Arrow keys walk the candidates,
+ * Enter commits the active one, Escape closes the list without closing
+ * the dialog around it.
  */
 
 import { describe, expect, it } from "vitest";
@@ -531,10 +537,9 @@ describe("the card's link management actions (M17/4)", () => {
     await screen.findByRole("heading", { name: "Link contract" });
 
     // Pick a candidate and submit.
-    const input = screen.getByRole("textbox", { name: "Search by number or title…" });
+    const input = screen.getByRole("combobox", { name: "Search by number or title…" });
     await user.type(input, "Side");
-    const candidateButton = await screen.findByRole("button", { name: /C-5/ });
-    await user.click(candidateButton);
+    await user.click(await screen.findByRole("option", { name: /C-5/ }));
     await user.click(screen.getByRole("button", { name: "Link contract" }));
 
     // The refusal appears as an inline alert.
@@ -631,6 +636,257 @@ describe("the card's link management actions (M17/4)", () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// #312: one relations state behind both surfaces
+// ---------------------------------------------------------------------------
+
+/** The parent the two tests below put a contract under and take it out
+ * from under again. */
+const FRAMEWORK = {
+  restricted: false,
+  number: 10,
+  title: "Framework",
+  statusName: "Active",
+  stage: "active",
+};
+
+/** The breadcrumb's segment for a parent, told apart from the card's row
+ * for the same contract by its accessible name: the breadcrumb carries
+ * the reference alone, the card carries the reference and the title. */
+const breadcrumbSegment = (reference: string) => screen.queryByRole("link", { name: reference });
+
+describe("the breadcrumb and the card read one relations state (#312)", () => {
+  it("drops the parent from the breadcrumb when the card removes it", async () => {
+    const base = recordApi({ parentChain: [FRAMEWORK], children: [], links: [] });
+    const handler = (call: StubCall) => {
+      if (call.url.pathname === "/api/v1/contracts/42/parent" && call.method === "DELETE") {
+        return json(200, { parentChain: [], children: [], links: [] });
+      }
+      return base.handler(call);
+    };
+    stubApi({ signedIn: MEMBER, extra: handler });
+    renderAt("/contracts/42");
+
+    const card = await section();
+    expect(breadcrumbSegment("C-10")).toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.click(card.getByRole("button", { name: "Remove parent" }));
+
+    // Both surfaces move: the card empties, and the breadcrumb loses the
+    // segment rather than holding the loader's answer until a reload.
+    await waitFor(() => {
+      expect(screen.getByText("No related contracts.")).toBeInTheDocument();
+    });
+    expect(breadcrumbSegment("C-10")).not.toBeInTheDocument();
+  });
+
+  it("puts a new parent in the breadcrumb when the card sets one", async () => {
+    const base = recordApi();
+    const handler = (call: StubCall) => {
+      if (call.url.pathname === "/api/v1/contracts/42/link-candidates" && call.method === "GET") {
+        return json(200, {
+          candidates: [
+            {
+              number: 10,
+              title: "Framework",
+              statusName: "Active",
+              stage: "active",
+              isConfidential: false,
+            },
+          ],
+        });
+      }
+      if (call.url.pathname === "/api/v1/contracts/42/parent" && call.method === "POST") {
+        return json(201, { parentChain: [FRAMEWORK], children: [], links: [] });
+      }
+      return base.handler(call);
+    };
+    stubApi({ signedIn: MEMBER, extra: handler });
+    renderAt("/contracts/42");
+
+    const card = await section();
+    expect(breadcrumbSegment("C-10")).not.toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.click(card.getByRole("button", { name: "Set parent" }));
+    await screen.findByRole("heading", { name: "Set parent" });
+    await user.type(
+      screen.getByRole("combobox", { name: "Search by number or title…" }),
+      "Framework",
+    );
+    await user.click(await screen.findByRole("option", { name: /C-10/ }));
+    await user.click(screen.getByRole("button", { name: "Set parent" }));
+
+    await waitFor(() => {
+      expect(breadcrumbSegment("C-10")).toBeInTheDocument();
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// #311: the picker is a combobox
+// ---------------------------------------------------------------------------
+
+describe("the link picker's combobox (#311, DES-024)", () => {
+  /** Two candidates the picker can offer, so the arrow keys have
+   * somewhere to walk to. */
+  const CANDIDATES = [
+    {
+      number: 5,
+      title: "Side letter",
+      statusName: "Draft",
+      stage: "draft",
+      isConfidential: false,
+    },
+    {
+      number: 6,
+      title: "Side agreement",
+      statusName: "Active",
+      stage: "active",
+      isConfidential: false,
+    },
+  ];
+
+  /** Opens the link dialog with both candidates on offer, and answers
+   * every link write with the relation it created. */
+  async function openDialog() {
+    const base = recordApi();
+    const handler = (call: StubCall) => {
+      if (call.url.pathname === "/api/v1/contracts/42/link-candidates" && call.method === "GET") {
+        return json(200, { candidates: CANDIDATES });
+      }
+      if (call.url.pathname === "/api/v1/contracts/42/relations" && call.method === "POST") {
+        return json(201, { parentChain: [], children: [], links: [] });
+      }
+      return base.handler(call);
+    };
+    stubApi({ signedIn: MEMBER, extra: handler });
+    renderAt("/contracts/42");
+
+    const card = await section();
+    const user = userEvent.setup();
+    await user.click(card.getByRole("button", { name: "Add link" }));
+    await screen.findByRole("heading", { name: "Link contract" });
+    return { user, input: screen.getByRole("combobox", { name: "Search by number or title…" }) };
+  }
+
+  /**
+   * The list once the debounced search has answered.
+   *
+   * The listbox is in the tree from the first keystroke — it has to be,
+   * for `aria-controls` to point at something — so waiting on the box
+   * alone would read it while it still says "Searching…".
+   */
+  async function searched(user: ReturnType<typeof userEvent.setup>, input: HTMLElement) {
+    await user.type(input, "Side");
+    const list = await screen.findByRole("listbox", { name: "Contract matches" });
+    await waitFor(() => {
+      expect(within(list).getAllByRole("option")).toHaveLength(2);
+    });
+    const [first, second] = within(list).getAllByRole("option");
+    if (!first || !second) throw new Error("The picker did not offer both candidates.");
+    return { list, first, second };
+  }
+
+  it("wears the combobox roles and points at the list it controls", async () => {
+    const { user, input } = await openDialog();
+    expect(input).toHaveAttribute("aria-expanded", "false");
+    expect(input).toHaveAttribute("aria-autocomplete", "list");
+
+    const { list, first, second } = await searched(user, input);
+
+    expect(input).toHaveAttribute("aria-expanded", "true");
+    expect(input).toHaveAttribute("aria-controls", list.id);
+    expect(first).toHaveTextContent("C-5");
+    expect(second).toHaveTextContent("C-6");
+  });
+
+  it("walks the list with the arrow keys and commits the active row with Enter", async () => {
+    const { user, input } = await openDialog();
+    const { first, second } = await searched(user, input);
+
+    // The first row is active as soon as the list has anything on it.
+    expect(input).toHaveAttribute("aria-activedescendant", first.id);
+    expect(first).toHaveAttribute("aria-selected", "true");
+
+    await user.keyboard("{ArrowDown}");
+    expect(input).toHaveAttribute("aria-activedescendant", second.id);
+    expect(second).toHaveAttribute("aria-selected", "true");
+    expect(first).toHaveAttribute("aria-selected", "false");
+
+    // Enter commits the active row rather than submitting the form.
+    await user.keyboard("{Enter}");
+    expect(screen.getByText("Side agreement")).toBeInTheDocument();
+    // The dialog is still open, waiting for the actual submit: picking
+    // the contract and linking it are two acts.
+    expect(screen.getByRole("heading", { name: "Link contract" })).toBeInTheDocument();
+  });
+
+  it("wraps the active row at both ends of the list", async () => {
+    const { user, input } = await openDialog();
+    const { first, second } = await searched(user, input);
+
+    await user.keyboard("{ArrowUp}");
+    expect(input).toHaveAttribute("aria-activedescendant", second.id);
+    await user.keyboard("{ArrowDown}");
+    expect(input).toHaveAttribute("aria-activedescendant", first.id);
+  });
+
+  it("closes the list on Escape without closing the dialog", async () => {
+    const { user, input } = await openDialog();
+    const { list } = await searched(user, input);
+
+    await user.keyboard("{Escape}");
+
+    expect(input).toHaveAttribute("aria-expanded", "false");
+    expect(input).not.toHaveAttribute("aria-activedescendant");
+    expect(list).toHaveClass("hidden");
+    // DES-010 gives Escape to the innermost dismissable thing, so the
+    // dialog around the picker stays where it is.
+    expect(screen.getByRole("heading", { name: "Link contract" })).toBeInTheDocument();
+  });
+
+  it("says the list is empty rather than drawing nothing at all", async () => {
+    const base = recordApi();
+    const handler = (call: StubCall) => {
+      if (call.url.pathname === "/api/v1/contracts/42/link-candidates" && call.method === "GET") {
+        return json(200, { candidates: [] });
+      }
+      return base.handler(call);
+    };
+    stubApi({ signedIn: MEMBER, extra: handler });
+    renderAt("/contracts/42");
+
+    const card = await section();
+    const user = userEvent.setup();
+    await user.click(card.getByRole("button", { name: "Add link" }));
+    await screen.findByRole("heading", { name: "Link contract" });
+    await user.type(
+      screen.getByRole("combobox", { name: "Search by number or title…" }),
+      "nothing",
+    );
+
+    const list = await screen.findByRole("listbox", { name: "Contract matches" });
+    await waitFor(() => {
+      expect(within(list).getByText("No contracts to link.")).toBeInTheDocument();
+    });
+  });
+
+  it("moves the focus onto the pick, and back to the box when it is cleared", async () => {
+    const { user, input } = await openDialog();
+    await user.type(input, "Side");
+    await user.click(await screen.findByRole("option", { name: /C-5/ }));
+
+    // The box is gone, so the focus has to land somewhere deliberate.
+    const clear = screen.getByRole("button", { name: "Clear the picked contract" });
+    expect(clear).toHaveFocus();
+
+    await user.click(clear);
+    expect(screen.getByRole("combobox", { name: "Search by number or title…" })).toHaveFocus();
+  });
+});
+
 describe("the CTR-018 confidentiality nudge", () => {
   /**
    * Drives the dialog to the nudge: this record confidential, the
@@ -693,12 +949,11 @@ describe("the CTR-018 confidentiality nudge", () => {
     await screen.findByRole("heading", { name: "Link contract" });
 
     // Type into the picker and select the candidate.
-    const input = screen.getByRole("textbox", { name: "Search by number or title…" });
+    const input = screen.getByRole("combobox", { name: "Search by number or title…" });
     await user.type(input, "Open");
 
     // Wait for the candidate to appear and click it.
-    const candidateButton = await screen.findByRole("button", { name: /C-99/ });
-    await user.click(candidateButton);
+    await user.click(await screen.findByRole("option", { name: /C-99/ }));
 
     // Submit the link.
     await user.click(screen.getByRole("button", { name: "Link contract" }));

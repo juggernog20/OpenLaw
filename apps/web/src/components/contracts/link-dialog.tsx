@@ -13,13 +13,22 @@
  * one side is confidential. Accepting flags the other side by the
  * ordinary confidentiality PATCH; dismissing does nothing. It is a
  * suggestion, never enforcement, and unlinking never un-flags.
+ *
+ * **The picker is a combobox** on the WAI-ARIA pattern, as the
+ * counterparty and timezone pickers already are (DES-024): shadcn's
+ * combobox brings cmdk, a dependency DES-004 does not admit, and Radix
+ * has no combobox primitive. Typing searches, Arrow keys walk the
+ * candidates, Enter commits the active one, Escape closes the list —
+ * and only the list, because the dialog around it is what Escape would
+ * otherwise take.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { X } from "lucide-react";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
+import { cn } from "../../lib/utils";
 import { contractReference, STAGE_PILL } from "../../lib/contracts";
 import {
   addRelation,
@@ -98,7 +107,29 @@ const MESSAGES = defineMessages({
     id: "contracts.relations.clearSelection",
     defaultMessage: "Clear the picked contract",
   },
+  // Not "Contracts": the box above this list is already named for what
+  // it searches, and two things named the same is a reader having to
+  // work out which one they landed on.
+  pickerListLabel: {
+    id: "contracts.relations.pickerListLabel",
+    defaultMessage: "Contract matches",
+  },
+  pickerSearching: {
+    id: "contracts.relations.pickerSearching",
+    defaultMessage: "Searching…",
+  },
+  pickerNoMatches: {
+    id: "contracts.relations.pickerNoMatches",
+    defaultMessage: "No contracts to link.",
+  },
 });
+
+/**
+ * How long a pause in typing means "search now". Short enough that the
+ * list feels like it is keeping up, long enough that typing a title
+ * straight through is one request and not fifteen.
+ */
+const SEARCH_DEBOUNCE_MS = 200;
 
 const RELATION_TYPES: readonly RelationType[] = ["related", "renews", "amends"];
 
@@ -180,42 +211,97 @@ function CandidatePicker({
   contractNumber,
   selected,
   onSelect,
+  onListOpenChange,
 }: Readonly<{
   contractNumber: number;
   selected: LinkCandidate | null;
   onSelect: (candidate: LinkCandidate | null) => void;
+  /** Fires whenever the candidate list opens or closes. The dialog
+   * around this control needs it for Escape: Radix listens for that key
+   * on the document, so no amount of stopping the React event keeps the
+   * modal from taking it. Must be stable across renders. */
+  onListOpenChange: (open: boolean) => void;
 }>) {
   const intl = useIntl();
   const [query, setQuery] = useState("");
   const [candidates, setCandidates] = useState<LinkCandidate[]>([]);
   const [open, setOpen] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  /** Monotonic ticket so only the newest in-flight read writes state. */
-  const readRef = useRef(0);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [searching, setSearching] = useState(false);
+  const listboxId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const clearRef = useRef<HTMLButtonElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  /** Whether the pick that just changed was made here, so the focus
+   * follows it. The box and the chip never exist at the same time, so
+   * whichever one arrives has to be given the focus the other lost. */
+  const pickedHere = useRef(false);
 
-  const search = useCallback(
-    (q: string) => {
-      if (q.trim().length === 0) {
-        setCandidates([]);
-        return;
-      }
-      const ticket = ++readRef.current;
-      void searchLinkCandidates(contractNumber, q).then((rows) => {
-        if (ticket === readRef.current) setCandidates(rows);
-      });
-    },
-    [contractNumber],
-  );
+  const trimmed = query.trim();
 
+  // The search runs only while the list is open, and only after typing
+  // pauses. A closed picker is not a reason to ask the server anything,
+  // and an empty box has nothing to ask about — the endpoint matches on
+  // a term rather than listing every contract the viewer can reach.
   useEffect(() => {
-    clearTimeout(debounceRef.current);
-    if (query.trim().length === 0) {
-      setCandidates([]);
+    if (!open || trimmed.length === 0) {
+      setSearching(false);
       return;
     }
-    debounceRef.current = setTimeout(() => search(query), 200);
-    return () => clearTimeout(debounceRef.current);
-  }, [query, search]);
+    let live = true;
+    setSearching(true);
+    const timer = setTimeout(() => {
+      void searchLinkCandidates(contractNumber, trimmed).then((rows) => {
+        // A slower earlier answer must never overwrite a later one.
+        if (!live) return;
+        setCandidates(rows);
+        setSearching(false);
+      });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
+  }, [open, trimmed, contractNumber]);
+
+  useEffect(() => {
+    if (!pickedHere.current) return;
+    pickedHere.current = false;
+    if (selected) clearRef.current?.focus();
+    else inputRef.current?.focus();
+  }, [selected]);
+
+  /** The list is drawn once there is a term to have searched for.
+   * Before that it would be an empty box saying nothing was found,
+   * about a search nobody ran. */
+  const listOpen = open && trimmed.length > 0;
+
+  useEffect(() => {
+    onListOpenChange(listOpen);
+  }, [listOpen, onListOpenChange]);
+
+  const rowCount = candidates.length;
+  const active = Math.min(activeIndex, Math.max(rowCount - 1, 0));
+  const rowId = (index: number) => `${listboxId}-row-${index}`;
+
+  // The list scrolls, and the arrow keys can walk past its foot. A
+  // screen reader follows `aria-activedescendant` wherever it goes; a
+  // sighted keyboard user has to be able to see the row it names.
+  useEffect(() => {
+    if (!listOpen || rowCount === 0) return;
+    listRef.current?.children[active]?.scrollIntoView({ block: "nearest" });
+  }, [listOpen, rowCount, active]);
+
+  function commit(index: number) {
+    const candidate = candidates[index];
+    if (!candidate) return;
+    pickedHere.current = true;
+    onSelect(candidate);
+    setOpen(false);
+    setQuery("");
+    setActiveIndex(0);
+    setCandidates([]);
+  }
 
   if (selected) {
     return (
@@ -223,10 +309,12 @@ function CandidatePicker({
         <span className="font-medium">{contractReference(intl, selected.number)}</span>
         <span className="truncate">{selected.title}</span>
         <button
+          ref={clearRef}
           type="button"
           aria-label={intl.formatMessage(MESSAGES.clearSelection)}
-          className="ml-auto text-xs text-link hover:underline"
+          className="ms-auto rounded-chip p-1 text-link hover:bg-control focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
           onClick={() => {
+            pickedHere.current = true;
             onSelect(null);
             setQuery("");
           }}
@@ -240,44 +328,107 @@ function CandidatePicker({
   return (
     <div className="relative">
       <input
+        ref={inputRef}
         type="text"
-        className="w-full rounded-button border border-border-default bg-raised px-3 py-1.5 text-sm text-primary placeholder:text-muted focus:outline-2 focus:outline-offset-2 focus:outline-link"
+        role="combobox"
+        aria-expanded={listOpen}
+        aria-controls={listboxId}
+        aria-activedescendant={listOpen && rowCount > 0 ? rowId(active) : undefined}
+        aria-autocomplete="list"
+        aria-busy={searching}
+        autoComplete="off"
+        spellCheck={false}
+        className="w-full rounded-button border border-border-default bg-raised px-3 py-1.5 text-sm text-primary placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
         aria-label={intl.formatMessage(MESSAGES.pickerPlaceholder)}
         placeholder={intl.formatMessage(MESSAGES.pickerPlaceholder)}
         value={query}
         onChange={(event) => {
           setQuery(event.target.value);
+          setActiveIndex(0);
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        // Candidates commit on pointerdown, ahead of this blur.
+        onBlur={() => setOpen(false)}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+            event.preventDefault();
+            setOpen(true);
+            if (rowCount === 0) return;
+            const delta = event.key === "ArrowDown" ? 1 : -1;
+            setActiveIndex((active + delta + rowCount) % rowCount);
+            return;
+          }
+          if (event.key === "Enter") {
+            if (listOpen && rowCount > 0) {
+              // A picked row must not also submit the dialog around it:
+              // picking the contract and linking it are two acts.
+              event.preventDefault();
+              commit(active);
+            }
+            return;
+          }
+          if (event.key === "Escape") {
+            // Local dismiss, as DES-010 reserves the key for. The stop
+            // is what keeps the dialog open: without it the modal takes
+            // the key and the whole form goes with the list.
+            event.preventDefault();
+            event.stopPropagation();
+            setOpen(false);
+          }
+        }}
       />
-      {open && candidates.length > 0 && (
-        <ul className="absolute z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-card border border-border-default bg-raised shadow-md">
-          {candidates.map((candidate) => (
-            <li key={candidate.number}>
-              <button
-                type="button"
-                className="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-control"
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() => {
-                  onSelect(candidate);
-                  setOpen(false);
-                  setQuery("");
-                }}
-              >
-                <span className="font-medium">{contractReference(intl, candidate.number)}</span>
-                <span className="truncate">{candidate.title}</span>
-                <span
-                  className={`ml-auto inline-flex shrink-0 rounded-pill px-2 py-0.5 text-xs font-medium ${STAGE_PILL[candidate.stage]}`}
-                >
-                  {candidate.statusName}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul // NOSONAR — a select cannot search-narrow against the server
+        ref={listRef}
+        id={listboxId}
+        role="listbox"
+        aria-label={intl.formatMessage(MESSAGES.pickerListLabel)}
+        className={cn(
+          "absolute top-full z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-card border border-border-default bg-raised py-1 shadow-md",
+          !listOpen && "hidden",
+        )}
+      >
+        {candidates.map((candidate, index) => (
+          <li
+            key={candidate.number}
+            id={rowId(index)}
+            role="option"
+            aria-selected={index === active}
+            className={cn(
+              "flex cursor-default items-center gap-2 px-3 py-1.5 text-sm text-primary",
+              index === active && "bg-control",
+            )}
+            onPointerDown={(event) => {
+              event.preventDefault();
+              commit(index);
+            }}
+            onMouseMove={() => setActiveIndex(index)}
+          >
+            <span className="font-medium">{contractReference(intl, candidate.number)}</span>
+            <span className="truncate">{candidate.title}</span>
+            <span
+              className={`ms-auto inline-flex shrink-0 rounded-pill px-2 py-0.5 text-xs font-medium ${STAGE_PILL[candidate.stage]}`}
+            >
+              {candidate.statusName}
+            </span>
+          </li>
+        ))}
+        {/* A disabled option, not a bare list item: non-option children
+            of a listbox are not reliably exposed, so an empty answer
+            would read as silence to assistive technology. */}
+        {rowCount === 0 && (
+          <li
+            className="px-3 py-1.5 text-sm text-muted"
+            role="option"
+            aria-disabled="true"
+            aria-selected={false}
+          >
+            <FormattedMessage
+              {...(searching ? MESSAGES.pickerSearching : MESSAGES.pickerNoMatches)}
+            />
+          </li>
+        )}
+      </ul>
     </div>
   );
 }
@@ -310,6 +461,14 @@ export function LinkDialog({
     thisIsConfidential: boolean;
     relations: ContractRelations;
   } | null>(null);
+  /** Whether the picker's candidate list is showing. A ref rather than
+   * state because the modal's Escape handler reads it inside the same
+   * key event that closes the list, before React has flushed the render
+   * that closed it. */
+  const pickerListOpen = useRef(false);
+  const handleListOpenChange = useCallback((open: boolean) => {
+    pickerListOpen.current = open;
+  }, []);
 
   const submit = async () => {
     if (!selected) return;
@@ -397,7 +556,15 @@ export function LinkDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
+      <DialogContent
+        // Escape belongs to the innermost dismissable thing (DES-010).
+        // While the picker's list is showing, that is the list, and the
+        // picker's own handler is closing it — so the modal lets this
+        // one go by.
+        onEscapeKeyDown={(event) => {
+          if (pickerListOpen.current) event.preventDefault();
+        }}
+      >
         <DialogTitle>
           <FormattedMessage
             {...(mode === "parent" ? MESSAGES.parentDialogTitle : MESSAGES.dialogTitle)}
@@ -414,6 +581,7 @@ export function LinkDialog({
               contractNumber={contractNumber}
               selected={selected}
               onSelect={setSelected}
+              onListOpenChange={handleListOpenChange}
             />
             {mode === "link" && (
               <div>
