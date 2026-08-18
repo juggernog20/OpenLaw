@@ -30,6 +30,7 @@ import {
   createDb,
   findJournalDisorder,
   guardMigrationJournal,
+  MigrationJournalError,
   readMigrationJournal,
   runMigrations,
   sql,
@@ -211,14 +212,22 @@ describe("an install that upgraded before the correction", () => {
     await db?.$client.end();
   });
 
-  it("would skip every later migration if nothing intervened", async () => {
+  it("would skip the migrations behind the bad stamp if nothing intervened", async () => {
     // The state the guard exists to catch, asserted before it runs: the
-    // newest recorded stamp is later than migrations still pending.
+    // newest recorded stamp is later than migrations still pending. Not
+    // *every* pending migration — the bad stamp is a moment in real time
+    // (2026-08-19), and a migration created after it lands stamped later
+    // and escapes the skip. Asserting on the three known casualties keeps
+    // this true after that day.
     const stamps = await recordedStamps(db);
     const newest = Math.max(...stamps.values());
-    const pending = entries.filter((entry) => !stamps.has(entry.hash));
-    expect(pending.length).toBeGreaterThan(0);
-    expect(pending.every((entry) => entry.when <= newest)).toBe(true);
+    expect(newest).toBe(BAD_STAMP);
+    const skipped = entries
+      .filter((entry) => !stamps.has(entry.hash) && entry.when <= newest)
+      .map((entry) => entry.tag);
+    expect(skipped).toEqual(
+      expect.arrayContaining(["0050_contract_ended_at", "0051_list_views", "0052_notifications"]),
+    );
   });
 
   it("is repaired by the guard, which names what it corrected", async () => {
@@ -270,6 +279,11 @@ describe("a stranding the guard does not recognise", () => {
       /cannot apply the migrations it is missing/,
     );
     await expect(guardMigrationJournal(db, MIGRATIONS)).rejects.toThrow(/0048_contract_relations/);
+    // The class is the boot path's signal to print the message alone
+    // (crafted for the operator) instead of a stack.
+    await expect(guardMigrationJournal(db, MIGRATIONS)).rejects.toBeInstanceOf(
+      MigrationJournalError,
+    );
   });
 
   it("leaves the recorded stamp alone rather than guessing", async () => {
