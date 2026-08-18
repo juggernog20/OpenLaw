@@ -201,6 +201,58 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 
   **The page is the unit.** The mark-read write is bounded to one page's worth of ids, because a page is what the centre draws and what "the visible items" means on a list that arrives a page at a time. A second draw of the same page sends nothing: an already-read item keeps the stamp from its first sighting, and the surface filters the read ones out before it asks.
 
+## NOT-006 — The morning digest's anatomy and its delivery rules
+
+- **Status:** Accepted
+- **Date:** 2026-08-18
+- **Moved:** 2026-08-18 — clauses 4 to 12 of **DES-051**, which recorded them when the digest was written (M18/6, #321). They are delivery rules rather than front-end design, so they live here. DES-051 keeps the register: the voice, where the copy lives, and how a date prints.
+
+### Context
+
+NOT-003 decided that group 3's mail is one morning briefing rather than one message per reminder. M18/6 (#321) built the round that sends it, and DES-051 — written to close DES-015's copy-register deferral — carried the digest's whole shape as well, because both were settled in the same pass.
+
+That put a rule about _when the round may send_ and _which rows it orders first_ inside a record whose own scope line restricts it to front-end design. This record takes those clauses back.
+
+### Decision
+
+**1. The digest's subject is a count, and nothing else.** "3 dates on your contracts" / "1 date on your contracts". Sentence case, digits, no full stop, no record name — a subject naming one of five records would make the other four look like they were not in it, and a subject naming a date would go stale in the reader's inbox.
+
+**2. The body is one greeting, one framing line, one block per date, and one way out.** The framing line is "These dates are coming up on your contracts, nearest first." — it names the order, because the order is the information.
+
+**3. A date's block is two lines: the sentence, then its address.** `In 7 days (Mar 19, 2026) — Notice deadline: Meridian Bio supply agreement (#14)`, then the link. Relative first because "in 7 days" is what the reader is deciding on; the absolute date in brackets because a briefing read three days late must still be readable. `Today`, `Tomorrow`, and `Yesterday` are named; everything else is `In N days` / `N days ago`.
+
+**4. The kind of date is what a key date is called, or what the term calls it.** A key date prints its own label (CTR-009); the two the term derives print `Notice deadline` and `Expiry`, because no person named them.
+
+**5. The order is the deadline union's, exactly** (CTR-009, M16/3): what is still ahead nearest first, then what has gone by, most recently first; ties broken by the notice deadline, then the expiry, then the record's own dates. A reader who follows a link lands on the same order they were just reading.
+
+**6. The address is the record's Key dates section**, not the record's front page — DES-049 clause 9, said on the second channel.
+
+**7. Every date's distance is counted at send time, against the reader's own today.** Not against the offset the reminder fired at. A briefing that missed its morning rides the next one (NOT-003), and "in 1 day" about yesterday would be worse than no briefing.
+
+**8. The digest closes with the way out.** "Change what reaches you in your notification settings:" and a link to the pane DES-050 built. A recurring message with no way to turn it down is what trains a reader to filter the sender, and the pane already exists.
+
+**9. No empty briefing ever leaves.** A day with nothing due sends nothing. A daily message that says nothing happened is exactly the noise NOT-003 exists to prevent.
+
+Every sentence these clauses order is written to **DES-051**'s register.
+
+### Rationale
+
+Clause 1 is the digest's whole difference from every other message here. Every immediate mail is about one record and can name it; the digest is about a person's morning, and the moment it names a record it starts implying a priority the round did not compute.
+
+Clause 7 looks like a detail and is the reason the row carries `reminder_date` rather than only its offset. The offset is what the reminder fired at; the distance is what the reader needs. Storing one and printing the other is what makes a delayed briefing honest instead of confusing.
+
+### Alternatives considered
+
+- **Group the digest by record rather than by date.** Rejected: NOT-003's briefing is a calendar, and a calendar is ordered by time. A reader with nine dates on one record wants them in the order they arrive, not gathered under a title.
+- **Name the nearest date in the subject** ("Meridian Bio expires today, and 2 more"). Rejected — see the Rationale for clause 1.
+- **A per-user send hour, or a weekly digest.** Rejected upstream: NOT-003 declined both in v1 in as many words.
+
+### Consequences
+
+The surface is `renderDigestMail` in `apps/api/src/lib/notifications/email.ts`, ordered by the round in `apps/api/src/pipeline/morning-round.ts`. A change to what the briefing carries, or in what order, is an amendment here. The portal's requester mail (M20, group 5) inherits these clauses if it ever needs a digest of its own.
+
+**Known wording gap.** Clause 2's framing line says "nearest first", which is true of the rows still ahead and not of the overdue rows behind them. It only shows on a briefing that missed its morning. Recorded rather than fixed: the sentence has shipped, and changing it is an amendment to this clause.
+
 ## Index of decisions
 
 | #       | Decision                                                          | Status   |
@@ -210,3 +262,4 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 | NOT-003 | Timing: direct events immediate; date reminders in a daily digest | Accepted |
 | NOT-004 | Reminder lead times: admin-configurable offsets, seeded 7/1/0     | Accepted |
 | NOT-005 | Badge: unread count, 9+ cap, read-on-open                         | Accepted |
+| NOT-006 | The morning digest's anatomy and its delivery rules               | Accepted |

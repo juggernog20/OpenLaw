@@ -3232,16 +3232,17 @@ Point 8 is the accessibility floor doing real work. A grid of unlabelled switche
 
 No new tokens and no new primitive: the card is `SettingsCard`, the control is `ui/switch.tsx` as DES-004 landed it, the micro-state is `StatusNote`. The surface is `apps/web/src/routes/settings-notifications.tsx`, behind `/settings/notifications`, and the rail entry it needs is the one the M5 close recorded as _omitted rather than disabled_ — SETTINGS-INVENTORY amendment 5, now closed. The portal's own preferences surface (M20) renders group 5 on this anatomy; if it needs a second grid of switches, points 2, 4, and 8 are already the answer.
 
-## DES-051: The email register, and the morning digest's anatomy (closes DES-015's deferral)
+## DES-051: The email copy register (closes DES-015's deferral)
 
 - **Status:** Accepted
 - **Date:** 2026-08-18
+- **Amended:** 2026-08-18 — the digest's anatomy and its delivery rules moved to **NOT-006**. This record keeps the register: the voice every message is written in, where that copy lives, and how it prints a date.
 
 ### Context
 
 DES-015 fixed the voice for every string this product renders and named one exception it could not settle: **"Email digest copy (deferred with the notifications-surface decision) — separate register decision when that ships."** NOT-003 then decided that group 3's mail is one morning briefing rather than one message per reminder, and M18/6 (#321) writes it. That is the deferral's own trigger, so this record closes it.
 
-**It closes more than the digest.** Five slices of M18 have already written email copy — the approval request, the three other group-1 events, and group 2's five arms — all of them in `apps/api/src/lib/notifications/email.ts`, all of them composed against no stated register at all. The deferral was written when the only mail this product sent was a set-password link and a magic link, and "email digest copy" was the whole of what was foreseen. What is actually owed is a register for **every message this system sends**, with the digest as the one message that also needs an anatomy.
+**It closes more than the digest.** Five slices of M18 had already written email copy — the approval request, the three other group-1 events, and group 2's five arms — all of them in `apps/api/src/lib/notifications/email.ts`, all of them composed against no stated register at all. The deferral was written when the only mail this product sent was a set-password link and a magic link, and "email digest copy" was the whole of what was foreseen. What was actually owed is a register for **every message this system sends**.
 
 **Email is the one surface DES-013 and DES-014 do not reach.** The message catalog lives in the web app (DES-013) and the date helpers live beside it (DES-014); a scheduled job in the API has neither, and it has no browser to take a locale or a timezone from. So this record has to say what the API does instead, rather than pointing at two decisions that cannot apply.
 
@@ -3256,27 +3257,11 @@ DES-015 fixed the voice for every string this product renders and named one exce
 
 **3. Dates in email are formatted by the message, in UTC, in `en-US`.** `Mar 12, 2026`. DES-014's helpers are the browser's and take the reader's own zone from it; a scheduled round has no browser. Every date this layer prints is a **civil date** (CTR-006, CTR-009) — a day and not a moment — so rendering it in UTC is what stops it moving a day, and shifting it into any zone at all would be the bug.
 
-**4. The digest's subject is a count, and nothing else.** "3 dates on your contracts" / "1 date on your contracts". Sentence case, digits, no full stop, no record name — a subject naming one of five records would make the other four look like they were not in it, and a subject naming a date would go stale in the reader's inbox.
-
-**5. The body is one greeting, one framing line, one block per date, and one way out.** The framing line is "These dates are coming up on your contracts, nearest first." — it names the order, because the order is the information.
-
-**6. A date's block is two lines: the sentence, then its address.** `In 7 days (Mar 19, 2026) — Notice deadline: Meridian Bio supply agreement (#14)`, then the link. Relative first because "in 7 days" is what the reader is deciding on; the absolute date in brackets because a briefing read three days late must still be readable. `Today`, `Tomorrow`, and `Yesterday` are named; everything else is `In N days` / `N days ago`.
-
-**7. The kind of date is what a key date is called, or what the term calls it.** A key date prints its own label (CTR-009); the two the term derives print `Notice deadline` and `Expiry`, because no person named them.
-
-**8. The order is the deadline union's, exactly** (CTR-009, M16/3): what is still ahead nearest first, then what has gone by, most recently first; ties broken by the notice deadline, then the expiry, then the record's own dates. A reader who follows a link lands on the same order they were just reading.
-
-**9. The address is the record's Key dates section**, not the record's front page — DES-049 clause 9, said on the second channel.
-
-**10. Every date's distance is counted at send time, against the reader's own today.** Not against the offset the reminder fired at. A briefing that missed its morning rides the next one (NOT-003), and "in 1 day" about yesterday would be worse than no briefing.
-
-**11. The digest closes with the way out.** "Change what reaches you in your notification settings:" and a link to the pane DES-050 built. A recurring message with no way to turn it down is what trains a reader to filter the sender, and the pane already exists.
-
-**12. No empty briefing ever leaves.** A day with nothing due sends nothing. A daily message that says nothing happened is exactly the noise NOT-003 exists to prevent.
+**4. What a message _says_ is this record's; what the round _sends_ is NOT-006's.** The morning digest's anatomy — its subject, its blocks, its order, when a distance is counted, and the rule that no empty briefing leaves — is a delivery decision and lives in `DECISIONS-NOTIFICATIONS.md` as **NOT-006**. Both records govern the same file; this one says how a sentence is written, that one says which sentences go and in what order.
 
 ### Recorded normalization points (frame deviations accepted)
 
-1. **There is no frame, and there will not be one.** No `.pen` file draws an email, because an email is not a screen this product renders. The anatomy above is the decision, and it is built from DES-015's register plus the deadline union's own order.
+1. **There is no frame, and there will not be one.** No `.pen` file draws an email, because an email is not a screen this product renders. The register above is the decision, and it is DES-015's voice plus the two additions an inbox forces.
 2. **The body is plain text.** `MailMessage` carries `text` alone; an HTML alternative is TECH-011's to add, and adding it now would put two copies of every sentence in one file.
 3. **`→` and other decorative glyphs are not used**, even though a plain-text message has no Lucide to reach for. DES-008's substance is that glyphs are a system, and a message with no glyph system uses words.
 
@@ -3284,23 +3269,19 @@ DES-015 fixed the voice for every string this product renders and named one exce
 
 Point 1's second addition is the one that matters most. Five of the six sentences this layer already writes end with a version of "the rest is on the record", and that reads like restraint until you notice it is the only thing holding two other decisions up: DD-016's tier is enforced on the thread, and CMT-006's redact cannot reach an inbox. A register that let one arm quote a comment would quietly repeal both.
 
-Point 4 is the digest's whole difference from every other message here. Every immediate mail is about one record and can name it; the digest is about a person's morning, and the moment it names a record it starts implying a priority the round did not compute.
-
-Point 10 looks like a detail and is the reason the row carries `reminder_date` rather than only its offset. The offset is what the reminder fired at; the distance is what the reader needs. Storing one and printing the other is what makes a delayed briefing honest instead of confusing.
+Point 4 is why this record was split. DECISIONS-DESIGN.md is front-end design — visual system, layout, interaction, formatting — and a rule about _when_ a round may send, or which rows it orders first, is none of those. Left here, the next reader looking for what the morning round sends would read the notifications record and not find it, and a change to a send rule would land in a design file.
 
 ### Alternatives considered
 
 - **Leave the deferral open and record only the digest.** Rejected: five slices had already written email copy against no register, which is the drift DES-015 exists to prevent. The exception has to close, not narrow.
 - **Put the email strings in `messages/en-US.json`.** Rejected — see point 2. The catalog is loaded by the web app; the sender is a worker process.
 - **Render the date in the reader's profile zone.** Rejected: a civil date has no zone, and shifting it into one is what moves "1 March" onto 28 February for half the world.
-- **Group the digest by record rather than by date.** Rejected: NOT-003's briefing is a calendar, and a calendar is ordered by time. A reader with nine dates on one record wants them in the order they arrive, not gathered under a title.
-- **Name the nearest date in the subject** ("Meridian Bio expires today, and 2 more"). Rejected — see the Rationale for point 4.
-- **An HTML digest with a table.** Rejected for now — see normalization 2. It is TECH-011's to add, and the copy above is the same copy either way.
-- **A per-user send hour, or a weekly digest.** Rejected upstream: NOT-003 declined both in v1 in as many words.
+- **An HTML digest with a table.** Rejected for now — see normalization 2. It is TECH-011's to add, and the copy is the same copy either way.
+- **Keep the anatomy here, as one record.** Rejected — see the Rationale for point 4. One record was easier to write and puts delivery rules where nobody would look for them.
 
 ### Consequences
 
-DES-015's "Where this register does _not_ apply" loses its email bullet: this record is the separate register it pointed at. The surface is `apps/api/src/lib/notifications/email.ts` — `renderNotificationMail` for the immediate arms and `renderDigestMail` for the briefing — and every future event adds an arm there rather than a second place that knows how an OpenLaw email is laid out. The portal's requester mail (M20, group 5) is written to this register too; if it needs a second digest, points 4 through 12 are already the answer. Localised email and an HTML alternative are the two things this record deliberately leaves open, each with its own reason above.
+DES-015's "Where this register does _not_ apply" loses its email bullet: this record is the separate register it pointed at. The surface is `apps/api/src/lib/notifications/email.ts` — `renderNotificationMail` for the immediate arms and `renderDigestMail` for the briefing — and every future event adds an arm there rather than a second place that knows how an OpenLaw email is laid out. The portal's requester mail (M20, group 5) is written to this register too. Localised email and an HTML alternative are the two things this record deliberately leaves open, each with its own reason above. **The digest's own shape is NOT-006's**, and a change to what the round sends belongs there.
 
 ## DES-052: The value-list editor — the list-editor anatomy for a list of values (extends DES-020, DES-021)
 
@@ -3420,5 +3401,5 @@ Point 6 is stated because the honest answer is unusual. It would be easy to impl
 | DES-048 | Date inputs are a calendar popover (amends DES-014, DES-040)                                                                                                         | Accepted |
 | DES-049 | The notification centre — the header bell, its counter badge, and the panel behind it (extends DES-026, DES-031, DES-016)                                            | Accepted |
 | DES-050 | The notification preferences pane — one row per event group, two switch columns (extends DES-017, DES-012, DES-011)                                                  | Accepted |
-| DES-051 | The email register, and the morning digest's anatomy (closes DES-015's deferral)                                                                                     | Accepted |
+| DES-051 | The email copy register (closes DES-015's deferral)                                                                                                                  | Accepted |
 | DES-052 | The value-list editor — the list-editor anatomy for a list of values (extends DES-020, DES-021)                                                                      | Accepted |
