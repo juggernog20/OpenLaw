@@ -309,6 +309,13 @@ export interface HarnessOptions {
    * than with a hundred megabytes of them.
    */
   maxUploadBytes?: number;
+  /**
+   * Mounts the dev/E2E overlay's on-demand morning round (TECH-018).
+   * Off by default, exactly as every deployment has it, so a suite that
+   * does not ask for it sees the route the way a real install does —
+   * absent.
+   */
+  morningRoundTrigger?: boolean;
 }
 
 export async function startHarness(options: HarnessOptions = {}): Promise<TestHarness> {
@@ -422,6 +429,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       resolveSigningProvider,
       notifier,
       maxUploadBytes: options.maxUploadBytes,
+      morningRoundTrigger: options.morningRoundTrigger,
     });
     await app.ready();
     const runningPipeline = pipeline;

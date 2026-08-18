@@ -178,6 +178,20 @@ if (process.env.AUTH_RATE_LIMIT === "off") {
   );
 }
 
+// The E2E gate's one seam (TECH-018): the morning round is a cron on
+// the hour, and a browser suite driving the built images has no way to
+// reach a scheduled handler and no hour to wait for the next tick. Read
+// here for the storage root's reason — startup reads the environment,
+// and no module below does — and warned about for AUTH_RATE_LIMIT's:
+// the image always runs NODE_ENV=production, so the variable is the only
+// signal and this line is the guard rail.
+const morningRoundTrigger = process.env.MORNING_ROUND_TRIGGER === "on";
+if (morningRoundTrigger) {
+  console.warn(
+    "The morning round can be triggered over HTTP (MORNING_ROUND_TRIGGER=on). This belongs to the dev/E2E overlay only — never run a real deployment this way.",
+  );
+}
+
 if (!process.env.BASE_URL && process.env.NODE_ENV === "production") {
   console.warn(
     "BASE_URL is not set; emailed links and OIDC callbacks will point at http://localhost:3000.",
@@ -228,6 +242,7 @@ const app = await buildApp(
     resolveSigningProvider,
     notifier,
     maxUploadBytes: uploadCeiling,
+    morningRoundTrigger,
     webDist: webDistPresent ? webDist : undefined,
   },
   { logger: true },

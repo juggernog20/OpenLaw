@@ -13,7 +13,9 @@ import { z } from "zod";
 
 const MAILPIT_URL = process.env.E2E_MAILPIT_URL ?? "http://localhost:8025";
 
-const MailpitSearch = z.object({ messages: z.array(z.object({ ID: z.string() })) });
+const MailpitSearch = z.object({
+  messages: z.array(z.object({ ID: z.string(), Subject: z.string() })),
+});
 
 const MailpitMessage = z.object({ Subject: z.string(), Text: z.string() });
 
@@ -41,20 +43,38 @@ export async function mailCountTo(request: APIRequestContext, address: string): 
 /**
  * Polls Mailpit until a message addressed to `address` exists and
  * returns the newest one's subject and plain-text body.
+ *
+ * `subject` narrows the wait to the message actually being waited for.
+ * An address that has already received something — anybody who was
+ * invited, which is every per-run person — already satisfies "a message
+ * exists", so a bare wait would answer with the invite the moment it is
+ * asked. A suite expecting the *next* message names it (M18's demo waits
+ * for an approval request and for a morning briefing on addresses whose
+ * set-password mail arrived minutes earlier).
  */
 export async function waitForMailTo(
   request: APIRequestContext,
   address: string,
+  subject?: RegExp,
 ): Promise<{ subject: string; text: string }> {
   let newestId: string | undefined;
   await expect
     .poll(
       async () => {
         const body = await searchMailTo(request, address);
-        newestId = body.messages[0]?.ID;
-        return body.messages.length;
+        // Newest first, which is the order Mailpit answers in.
+        const wanted = subject
+          ? body.messages.filter((message) => subject.test(message.Subject))
+          : body.messages;
+        newestId = wanted[0]?.ID;
+        return wanted.length;
       },
-      { message: `an email to ${address} in Mailpit at ${MAILPIT_URL}`, timeout: 15_000 },
+      {
+        message: subject
+          ? `an email to ${address} matching ${String(subject)} in Mailpit at ${MAILPIT_URL}`
+          : `an email to ${address} in Mailpit at ${MAILPIT_URL}`,
+        timeout: 15_000,
+      },
     )
     .toBeGreaterThan(0);
 
