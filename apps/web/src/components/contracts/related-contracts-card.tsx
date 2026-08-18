@@ -15,6 +15,12 @@
  * link", "Set parent", and per-row removal buttons for links and the
  * parent. A restricted relative's row never offers actions, because no
  * one manages a link into or out of a record they cannot see.
+ *
+ * **The record owns the relations, not this card.** The breadcrumb draws
+ * the same parent chain, so a copy held here would leave the two
+ * surfaces saying different things the moment somebody unlinked (#312).
+ * Every write answers the whole surface; the card hands that answer up
+ * and redraws from what comes back down.
  */
 
 import { memo, useCallback, useRef, useState } from "react";
@@ -210,17 +216,21 @@ function LinkSubsection({
 export const RelatedContractsCard = memo(function RelatedContractsCard({
   contractNumber,
   contractIsConfidential,
-  relations: initialRelations,
+  relations,
   editable,
+  onRelationsChanged,
 }: Readonly<{
   contractNumber: number;
   contractIsConfidential: boolean;
   relations: ContractRelations;
   /** Whether the viewer is Member+ and the card should offer actions. */
   editable: boolean;
+  /** Fires with the whole surface every write answers. The record holds
+   * it, because the breadcrumb draws the parent chain too (#312). Must
+   * be stable across renders, or the `memo` above buys nothing. */
+  onRelationsChanged: (next: ContractRelations) => void;
 }>) {
   const intl = useIntl();
-  const [relations, setRelations] = useState(initialRelations);
   const [dialog, setDialog] = useState<"link" | "parent" | null>(null);
   const [error, setError] = useState<string | null>(null);
   /** One relation write at a time. A ref, not state: two clicks in one
@@ -234,10 +244,13 @@ export const RelatedContractsCard = memo(function RelatedContractsCard({
 
   const grouped = hasLinks ? groupLinks(relations.links) : null;
 
-  const handleRelationsChanged = useCallback((next: ContractRelations) => {
-    setRelations(next);
-    setError(null);
-  }, []);
+  const handleRelationsChanged = useCallback(
+    (next: ContractRelations) => {
+      onRelationsChanged(next);
+      setError(null);
+    },
+    [onRelationsChanged],
+  );
 
   const handleUnlink = useCallback(
     async (link: ContractLink) => {
@@ -251,8 +264,7 @@ export const RelatedContractsCard = memo(function RelatedContractsCard({
           link.relationType,
         );
         if (result.ok) {
-          setRelations(result.relations);
-          setError(null);
+          handleRelationsChanged(result.relations);
         } else {
           setError(intl.formatMessage(LABELS.unlinkError));
         }
@@ -260,7 +272,7 @@ export const RelatedContractsCard = memo(function RelatedContractsCard({
         inFlight.current = false;
       }
     },
-    [contractNumber, intl],
+    [contractNumber, intl, handleRelationsChanged],
   );
 
   const handleUnparent = useCallback(async () => {
@@ -269,15 +281,14 @@ export const RelatedContractsCard = memo(function RelatedContractsCard({
     try {
       const result = await removeParent(contractNumber);
       if (result.ok) {
-        setRelations(result.relations);
-        setError(null);
+        handleRelationsChanged(result.relations);
       } else {
         setError(intl.formatMessage(LABELS.unparentError));
       }
     } finally {
       inFlight.current = false;
     }
-  }, [contractNumber, intl]);
+  }, [contractNumber, intl, handleRelationsChanged]);
 
   return (
     <>

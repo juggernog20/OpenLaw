@@ -220,6 +220,7 @@ import { ConfirmRenewalDialog } from "../components/contracts/confirm-renewal-di
 import { CreateContractDialog } from "../components/contracts/create-contract-dialog";
 import { KeyDatesCard } from "../components/contracts/key-dates-card";
 import { RelatedContractsCard } from "../components/contracts/related-contracts-card";
+import type { ContractRelations } from "../lib/relations";
 import { TasksCard } from "../components/contracts/tasks-card";
 import { RenewalBanner } from "../components/contracts/renewal-banner";
 import { TEAM_CARD_ID, useTeamApplet } from "../components/contracts/team-applet";
@@ -539,7 +540,7 @@ function ContractRecord() {
     users,
     approverGroups,
     entities,
-    relations,
+    relations: loadedRelations,
   } = useLoaderData<typeof contractRecordLoader>();
   const intl = useIntl();
   const navigate = useNavigate();
@@ -669,6 +670,22 @@ function ContractRecord() {
   const [tasks, setTasks] = useState<ContractTask[]>(contractTasks);
   const [taskDoneCount, setTaskDoneCount] = useState(contractTaskDoneCount);
   const [taskTotalCount, setTaskTotalCount] = useState(contractTaskTotalCount);
+  /**
+   * The record's relation surface (M17/2, M17/4, CTR-015). State rather
+   * than loader data because every relation write answers the whole
+   * surface, and the record replaces what it holds without a page
+   * re-read.
+   *
+   * The record holds it rather than the card, because two surfaces draw
+   * it: the Related contracts card, and the breadcrumb's parent chain.
+   * A copy inside the card left the breadcrumb naming a parent the
+   * record no longer had until somebody reloaded the page (#312).
+   *
+   * Null when the read failed, which is what hides the card — and the
+   * breadcrumb draws no parent segments, which is what it draws for a
+   * contract that has none.
+   */
+  const [relations, setRelations] = useState<ContractRelations | null>(loadedRelations);
   /**
    * Which version the doc panel is reading, or none (M12/2).
    *
@@ -2137,6 +2154,7 @@ function ContractRecord() {
                   contractIsConfidential={saved.isConfidential}
                   relations={relations}
                   editable={canEdit && !archived}
+                  onRelationsChanged={setRelations}
                 />
               )}
             </>

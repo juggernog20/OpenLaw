@@ -1328,8 +1328,17 @@
   "contracts.relations.parentError": {
     "defaultMessage": "Could not set the parent."
   },
+  "contracts.relations.pickerListLabel": {
+    "defaultMessage": "Contract matches"
+  },
+  "contracts.relations.pickerNoMatches": {
+    "defaultMessage": "No contracts to link."
+  },
   "contracts.relations.pickerPlaceholder": {
     "defaultMessage": "Search by number or title…"
+  },
+  "contracts.relations.pickerSearching": {
+    "defaultMessage": "Searching…"
   },
   "contracts.relations.relatedLabel": {
     "defaultMessage": "Related"
