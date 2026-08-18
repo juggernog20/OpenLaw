@@ -241,7 +241,10 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       const assigneeId = request.body.assigneeId ?? null;
       const dueDate = request.body.dueDate ?? null;
 
-      const answer = await app.db.transaction(async (tx) => {
+      // The seam's transaction rather than the database's: a task added
+      // with a name on it is an assignment (CTR-017), and the bell row
+      // for it belongs inside the same commit as the task.
+      const answer = await app.notifier.notifying(async (tx) => {
         const contract = await reachedContract(tx, request.user, request.params.number, {
           lock: true,
         });
@@ -277,6 +280,23 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
           visibility: RECORD_ACTIVITY_TIER,
           payload: { taskId: created!.id, title },
         });
+
+        // Being given a task is done *to* you, so it is NOT-002's group
+        // 1: the bell rings and the email leaves at once. The route says
+        // what happened; who hears about it, through which channel, and
+        // whether the record even reaches them are all the seam's.
+        if (assigneeId) {
+          await app.notifier.taskAssigned(tx, {
+            contractId: contract.id,
+            contractNumber: contract.number,
+            contractTitle: contract.title,
+            actorId: request.user.id,
+            actorName: request.user.displayName,
+            taskId: created!.id,
+            taskTitle: title,
+            assigneeId,
+          });
+        }
 
         return checklistOf(tx, contract.id);
       });
@@ -317,7 +337,9 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
-      return await app.db.transaction(async (tx) => {
+      // The seam's transaction, for the reason the add route opens one:
+      // this is the other way a task gets a name on it.
+      return await app.notifier.notifying(async (tx) => {
         const task = await reachedTask(tx, request.user, request.params.taskId);
         if (!task) throw httpError(404, NO_TASK);
         if (task.contract.archivedAt) throw httpError(409, FROZEN);
@@ -356,6 +378,24 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
             action: "task.edited",
             visibility: RECORD_ACTIVITY_TIER,
             payload: { taskId: task.id, title: wanted.title, changed },
+          });
+        }
+
+        // Only a hand-over tells anybody: renaming a task, moving its
+        // due date, or re-sending the assignee it already had are edits
+        // to something that person already holds, and being told again
+        // that it is theirs would be noise. Taking an assignee *off*
+        // tells nobody either — the task was given to no one.
+        if (changed.assigneeId && wanted.assigneeId) {
+          await app.notifier.taskAssigned(tx, {
+            contractId: task.contract.id,
+            contractNumber: task.contract.number,
+            contractTitle: task.contract.title,
+            actorId: request.user.id,
+            actorName: request.user.displayName,
+            taskId: task.id,
+            taskTitle: wanted.title,
+            assigneeId: wanted.assigneeId,
           });
         }
 

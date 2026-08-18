@@ -84,6 +84,7 @@ import {
   commentMentions,
   commentRevisions,
   comments,
+  contracts,
   COMMENT_VISIBILITIES,
   count,
   desc,
@@ -632,7 +633,11 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       // compound key says so too.
       const named = [...new Set(request.body.mentions ?? [])];
 
-      const comment = await app.db.transaction(async (tx) => {
+      // The seam's transaction rather than the database's: a comment
+      // that names somebody is done *to* them (CMT-007, NOT-002 group
+      // 1), and the bell row for it belongs inside the same commit as
+      // the `comment_mentions` row it is read from.
+      const comment = await app.notifier.notifying(async (tx) => {
         // Read on the same snapshot the rows are written on: a team row
         // dropped between the check and the insert must not authorize a
         // post onto a record the author no longer reaches. A refusal
@@ -698,6 +703,36 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           visibility,
           payload: { commentId: created!.id },
         });
+        // Being named in a comment is done *to* you, so it is NOT-002's
+        // group 1: the bell rings and the email leaves at once. The
+        // route says which comment it was and at which tier; the seam
+        // reads who it addressed out of `comment_mentions` and holds
+        // both the wall and the tier. Nothing is raised for a comment
+        // that names nobody — an ordinary comment is group 2's, and
+        // group 2 is not this slice.
+        if (named.length > 0) {
+          // The record's own address (CTR-003) and its title, for the
+          // item and the email to name it by. Read here rather than
+          // carried on the audience answer: this module is entity-generic
+          // (CMT-001), and only the notification needs a contract's
+          // columns.
+          const [record] = await tx
+            .select({ number: contracts.number, title: contracts.title })
+            .from(contracts)
+            .where(eq(contracts.id, audience.contractId))
+            .limit(1);
+          if (record) {
+            await app.notifier.commentMentioned(tx, {
+              contractId: audience.contractId,
+              contractNumber: record.number,
+              contractTitle: record.title,
+              actorId: request.user.id,
+              actorName: request.user.displayName,
+              commentId: created!.id,
+              visibility,
+            });
+          }
+        }
         // Read back through the same projection the thread uses, so the
         // row the poster gets is the row they will see on the next load.
         const [posted] = await selectComments(tx).where(eq(comments.id, created!.id));

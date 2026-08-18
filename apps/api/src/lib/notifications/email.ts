@@ -42,11 +42,28 @@ export interface NotificationMail {
   actorName: string | null;
   /** Who is being written to. */
   recipientName: string;
+  /**
+   * The rest of the row's payload, for the arms that name something
+   * inside the record — the task that was assigned, say.
+   *
+   * It is read through {@link detail} and never indexed directly: the
+   * payload is a snapshot taken by whichever build wrote the row, so an
+   * arm asking for a key an older build never wrote must get nothing
+   * rather than `undefined` spliced into a sentence.
+   */
+  details?: Record<string, unknown>;
 }
 
 /** The deep link one notification points at: the record itself. */
 function recordLink(baseUrl: string, contractNumber: number): string {
   return `${baseUrl.replace(/\/+$/, "")}/contracts/${contractNumber}`;
+}
+
+/** One payload key as a non-empty string, or null. The bell narrator's
+ * own defensive read, said on this side of the wire. */
+function detail(notification: NotificationMail, key: string): string | null {
+  const value = notification.details?.[key];
+  return typeof value === "string" && value.length > 0 ? value : null;
 }
 
 /**
@@ -81,6 +98,60 @@ export function renderNotificationMail(
           link,
           "",
           "You can approve or reject it, with a note, on the record.",
+        ].join("\n"),
+      };
+    case "contract.owner_assigned":
+      return {
+        to,
+        subject: `You are now the owner of ${notification.contractTitle}`,
+        text: [
+          `Hello ${notification.recipientName},`,
+          "",
+          `${who} has made you the owner of ${notification.contractTitle}.`,
+          "",
+          link,
+          "",
+          "The owner is the accountable person on a contract.",
+        ].join("\n"),
+      };
+    case "contract.task_assigned": {
+      // The task's own title, where the row carries it. A row written
+      // by a build that did not is still a real prompt about a real
+      // record, so it says "a task" rather than nothing at all.
+      const task = detail(notification, "taskTitle");
+      return {
+        to,
+        subject: task
+          ? `Task assigned: ${task} (${notification.contractTitle})`
+          : `Task assigned on ${notification.contractTitle}`,
+        text: [
+          `Hello ${notification.recipientName},`,
+          "",
+          task
+            ? `${who} has given you a task on ${notification.contractTitle}: ${task}.`
+            : `${who} has given you a task on ${notification.contractTitle}.`,
+          "",
+          link,
+          "",
+          "The checklist is on the record.",
+        ].join("\n"),
+      };
+    }
+    case "comment.mentioned":
+      return {
+        to,
+        subject: `You were mentioned on ${notification.contractTitle}`,
+        text: [
+          `Hello ${notification.recipientName},`,
+          "",
+          `${who} mentioned you in a comment on ${notification.contractTitle}.`,
+          "",
+          link,
+          "",
+          // The comment itself is deliberately not here. The tier
+          // (DD-016) is enforced on the thread, and a redact (CMT-006)
+          // cannot reach an email that has already left.
+          "The comment is on the record.",
         ].join("\n"),
       };
     default:
