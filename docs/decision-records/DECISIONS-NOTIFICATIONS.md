@@ -91,6 +91,24 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 
   **A re-request after a rejection tells the approver again.** CTR-012 already made it a new row rather than a reopened one, so it was already a second `approval.requested` through the same seam; it is recorded here because "a renewed ask is never silent" is a promise about notifications and had nowhere else to be written down.
 
+- **Addendum (2026-08-18, M18/4, [#319](https://github.com/juggernog20/OpenLaw/issues/319))** — **Group 2 fires: status changes, comments, documents and versions, and envelope endings.** As with group 1, no machinery moved — the events are emissions through the seam that already existed, and the bell needed no change at all, because #317 narrated the whole catalogue.
+
+  **The audience is "who is this record about", and that is a different question from "who reaches it".** It is the Owner (`manager_id`) plus everybody holding a `contract_team` row of any role — `creator`, `member`, `watcher`, and `contributor` — which is this decision's own "watchers are the existing team roles, no separate subscribe mechanism". A Legal Team Member who is on no team reaches every contract that is not confidential (CTR-021) and hears nothing about any of them, and an Administrator is not in the audience by role either: a bell that told every Administrator about every status change on every contract would be exactly the ambient noise this group's defaults exist to avoid. The audience is **resolved** first and the DD-014 wall then **narrows** it, in that order, like every other event.
+
+  **The record names itself.** Group 2's methods take a contract id and no more; the seam reads the number and the title in the same query that resolves the audience. Group 1's routes pass them, because they have just written the row — group 2's callers have not: a document route holds a document, the executed-copy job holds an envelope, and asking each of them for two columns would have been one query written at four call sites.
+
+  **A sentence goes exactly as far as the thing it is about.** A comment event carries its DD-016 tier, so a Legal Only comment produces no bell item for a Contributor — the mention's rule, applied to the ambient event beside it. A document event carries the file's DD-014 flag, so a confidential document's events reach only the document's audience. That second gate narrows nothing today, and it is asked anyway: a document has no team of its own (DOC-008), so its audience and this group's audience are the same set of people — and "only the document's audience" has to be a property of the code rather than of two rules happening to agree.
+
+  **One comment tells one person once.** Somebody the comment named gets the mention (group 1, which interrupts) and not the ambient event beside it. Two rows on one bell for one comment would be the same news twice, at two volumes.
+
+  **Only a status move rings, not every edit.** A retitle, a description, a term date are on the record's own feed (DD-017); a bell item per field would be the noise this group is defaulted quiet for. The status is what surfaces branch on (CTR-001) and it is what "my contract moved" means.
+
+  **The actor of a webhook is nobody, and nobody is excluded.** `actorId` is nullable on every group-2 event and null is a real answer, not a missing one: the Connect delivery, the reconciliation round, and the executed-copy fetch are the integration speaking (CTR-013), which the activity feed already records by writing an entry with no actor. So the whole team is told — **including the person who sent the envelope**, who is the one recipient a wrongly-guessed actor would have dropped. A void somebody took on the record does carry them, and does exclude them.
+
+  **The envelope's notification hangs off the one status funnel.** `applyEnvelopeStatus` now runs in the seam's transaction rather than the database's, so the bell rows commit with the move and all three feeds — webhook, reconciliation round, void route — get the event by going through the funnel instead of each remembering to raise it. A replay is a no-op there already, so it notifies nobody twice.
+
+  **Email is opt-in and nothing has opted in yet.** Group 2's timing is `none`, so every row it writes records no debt and no message leaves, whatever a preference says. Making the opt-in real is the preferences slice's, and it is one catalogue line plus the email copy the arms would need.
+
 ## NOT-003 — Timing: direct events immediate; date reminders in a daily digest
 
 - **Status** — Accepted
