@@ -79,6 +79,18 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 
   **`notifications.event_type` carries no CHECK constraint**, deliberately — `activity_log.action`'s reasoning one table over. A row outlives the build that wrote it, so a closed constraint would be a schema change on every catalog change and a read that could not answer for a slug an older build wrote. The closed union lives in TypeScript, where the compiler can hold both ends of it. The event **group** and the **channel** are constrained, because those are small closed sets that code branches on.
 
+- **Addendum (2026-08-18, M18/3, [#318](https://github.com/juggernog20/OpenLaw/issues/318))** — **The rest of group 1 fires, and the mention is the one with a rule of its own.** Owner assignment (CTR-004), task assignment (CTR-017), and the comment mention (CMT-007) each became one Notifier call inside the mutation that causes them, joining the approval request that shipped with the engine. Nothing about the machinery moved: the audience, the wall, the actor exclusion, the preferences, and the after-commit wake-up are all still the seam's, and a slice that fires an event now writes a call and a line of email copy.
+
+  **A mention's audience is `comment_mentions`, read behind the seam.** The route names the comment and its tier; the fan-out reads who that comment addressed out of the table, inside the transaction that wrote it. A body is never parsed — that is what `comment_mentions` is for (CMT-007) — and the route cannot hand the seam a different list from the one the record kept.
+
+  **The mention carries the comment's tier, so DD-016 narrows the audience beside DD-014.** The wall answers "which people does this record reach"; the tier answers "which of them were in the room for what was said". A Legal Only mention therefore reaches nobody the tier excludes, and it is the same predicate asked with one more argument rather than a second rule beside it. The composer's refusal (CMT-007) is the first gate and this is the one no later call site can forget — the wall's own posture, applied to the second boundary.
+
+  **No mention email carries the comment.** It says who named you, on which record, and where to go. The tier is enforced on the thread and a redact (CMT-006) cannot reach mail that has already left, so the words stay where both of those still hold.
+
+  **Silence is decided at the call site, and the rule is "was this done _to_ somebody".** Clearing a contract's Owner hands it to nobody, so it raises nothing — unassigned is a real state (triage). Renaming a task, moving its due date, or re-sending the assignee it already had are edits to something that person already holds. A comment that names nobody is ambient movement, which is group 2's business and not this slice's.
+
+  **A re-request after a rejection tells the approver again.** CTR-012 already made it a new row rather than a reopened one, so it was already a second `approval.requested` through the same seam; it is recorded here because "a renewed ask is never silent" is a promise about notifications and had nowhere else to be written down.
+
 ## NOT-003 — Timing: direct events immediate; date reminders in a daily digest
 
 - **Status** — Accepted
