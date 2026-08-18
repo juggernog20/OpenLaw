@@ -17068,6 +17068,7 @@
                                   "type": "string",
                                   "enum": [
                                     "draft_ours",
+                                    "draft_theirs",
                                     "redline_theirs",
                                     "redline_ours",
                                     "executed",
@@ -17285,6 +17286,7 @@
                     "type": "string",
                     "enum": [
                       "draft_ours",
+                      "draft_theirs",
                       "redline_theirs",
                       "redline_ours",
                       "executed",
@@ -17372,6 +17374,7 @@
                                 "type": "string",
                                 "enum": [
                                   "draft_ours",
+                                  "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
                                   "executed",
@@ -17580,6 +17583,7 @@
                     "type": "string",
                     "enum": [
                       "draft_ours",
+                      "draft_theirs",
                       "redline_theirs",
                       "redline_ours",
                       "executed",
@@ -17657,6 +17661,7 @@
                                 "type": "string",
                                 "enum": [
                                   "draft_ours",
+                                  "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
                                   "executed",
@@ -17951,6 +17956,7 @@
                                 "type": "string",
                                 "enum": [
                                   "draft_ours",
+                                  "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
                                   "executed",
@@ -18220,6 +18226,7 @@
                                   "type": "string",
                                   "enum": [
                                     "draft_ours",
+                                    "draft_theirs",
                                     "redline_theirs",
                                     "redline_ours",
                                     "executed",
@@ -18484,6 +18491,7 @@
                                   "type": "string",
                                   "enum": [
                                     "draft_ours",
+                                    "draft_theirs",
                                     "redline_theirs",
                                     "redline_ours",
                                     "executed",
@@ -18764,6 +18772,7 @@
                                 "type": "string",
                                 "enum": [
                                   "draft_ours",
+                                  "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
                                   "executed",
@@ -19013,6 +19022,7 @@
                                 "type": "string",
                                 "enum": [
                                   "draft_ours",
+                                  "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
                                   "executed",
@@ -19264,6 +19274,7 @@
                                 "type": "string",
                                 "enum": [
                                   "draft_ours",
+                                  "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
                                   "executed",
@@ -19515,6 +19526,7 @@
                                 "type": "string",
                                 "enum": [
                                   "draft_ours",
+                                  "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
                                   "executed",

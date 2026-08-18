@@ -4544,6 +4544,32 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(within(section).getByText("v1")).toBeVisible();
   });
 
+  it("names the counterparty's own first draft as a draft, not a redline (#326)", async () => {
+    // CTR-014's sixth kind. Before it, this round had to wear
+    // `redline_theirs`, which claims a markup of a round that does not
+    // exist yet, or `draft_ours`, which names the wrong author.
+    const theirDraft = {
+      ...DRAFT,
+      id: "doc-6",
+      title: "Orion_MSA_2026_their_paper.docx",
+      versions: [
+        version({
+          id: "ver-6",
+          kind: "draft_theirs",
+          originalFilename: "Orion_MSA_2026_their_paper.docx",
+        }),
+      ],
+    };
+    stubApi({ signedIn: MEMBER, extra: documentsApi([theirDraft]).handler });
+    renderAt("/contracts/42/documents");
+
+    const section = await documentsSection();
+    expect(within(section).getByText("Draft · theirs")).toBeVisible();
+    // And it is not read as either kind it used to have to borrow.
+    expect(within(section).queryByText("Redline · theirs")).not.toBeInTheDocument();
+    expect(within(section).queryByText("Draft · ours")).not.toBeInTheDocument();
+  });
+
   it("says so plainly when the record has no paper on it", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([]).handler });
     renderAt("/contracts/42/documents");
@@ -4629,6 +4655,28 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       await within(section).findByRole("button", { name: "counter_redline.docx" }),
     ).toBeInTheDocument();
     expect(countBadge(section, "2 documents")).toBeVisible();
+  });
+
+  it("offers the six kinds in the order a negotiation walks them (#326)", async () => {
+    // The order is a decision, not an accident: the two drafts are the
+    // two ways a negotiation can open, so `draft_theirs` sits beside
+    // `draft_ours` rather than beside the redlines it is not one of.
+    stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT]).handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    const dialog = await compose(user, section, "Upload");
+
+    const kind = within(dialog).getByLabelText("Kind");
+    expect([...within(kind).getAllByRole("option")].map((option) => option.textContent)).toEqual([
+      "Draft · ours",
+      "Draft · theirs",
+      "Redline · theirs",
+      "Redline · ours",
+      "Amendment",
+      "Executed",
+    ]);
   });
 
   it("refuses to send a composer with no file on it", async () => {

@@ -147,10 +147,16 @@ export async function readRenditionState(
   }
 }
 
-/** The five CTR-014 kinds, in the order a negotiation walks them — the
- * order the composer offers and the order the chain usually reads in. */
+/** The six CTR-014 kinds, in the order a negotiation walks them — the
+ * order the composer offers and the order the chain usually reads in.
+ *
+ * `draft_theirs` sits beside `draft_ours` rather than beside the
+ * redlines, because the two drafts are the two ways a negotiation can
+ * open (#326): whichever side's paper it is, the round starts there and
+ * the markups follow. */
 export const DOCUMENT_VERSION_KINDS = [
   "draft_ours",
+  "draft_theirs",
   "redline_theirs",
   "redline_ours",
   "amendment",

@@ -535,7 +535,21 @@ describe("uploading a draft", () => {
     expect(currentOf(document).note).toBe("Their first pass. Clause 8 is the fight.");
   });
 
-  it("refuses a kind that is not one of the five", async () => {
+  it("takes the counterparty's own first draft as its own kind", async () => {
+    // The round they authored and nobody has marked up yet (#326). It is
+    // an originating round like `draft_ours`, not a markup of one, so
+    // neither of the kinds either side of it says what it is.
+    const contract = await newContract("Orion Cloud — their first draft");
+
+    const document = await uploaded(adminCookies, contract.number, {
+      kind: "draft_theirs",
+      note: "Their paper, off their template.",
+    });
+
+    expect(currentOf(document).kind).toBe("draft_theirs");
+  });
+
+  it("refuses a kind that is not one of the six", async () => {
     const contract = await newContract("Orion Cloud — bad kind");
 
     const res = await upload(adminCookies, contract.number, { kind: "generated_redline" });
@@ -669,9 +683,15 @@ describe("appending the next version", () => {
   });
 
   it("runs the chain 1..n with the highest number current", async () => {
-    const contract = await newContract("Orion Cloud — five rounds");
+    const contract = await newContract("Orion Cloud — six rounds");
     const document = await uploaded(adminCookies, contract.number, { filename: "v1.docx" });
-    for (const kind of ["redline_theirs", "redline_ours", "amendment", "executed"] as const) {
+    for (const kind of [
+      "draft_theirs",
+      "redline_theirs",
+      "redline_ours",
+      "amendment",
+      "executed",
+    ] as const) {
       await versionAdded(adminCookies, document.id, { kind });
     }
 
@@ -679,16 +699,17 @@ describe("appending the next version", () => {
 
     expect(res.statusCode, res.body).toBe(200);
     const [row] = res.json().documents as DocumentRow[];
-    expect(row!.versions.map((version) => version.versionNumber)).toEqual([1, 2, 3, 4, 5]);
-    // The five CTR-014 kinds, each on the round it belongs to.
+    expect(row!.versions.map((version) => version.versionNumber)).toEqual([1, 2, 3, 4, 5, 6]);
+    // The six CTR-014 kinds, each on the round it belongs to.
     expect(row!.versions.map((version) => version.kind)).toEqual([
       "draft_ours",
+      "draft_theirs",
       "redline_theirs",
       "redline_ours",
       "amendment",
       "executed",
     ]);
-    expect(currentOf(row!).versionNumber).toBe(5);
+    expect(currentOf(row!).versionNumber).toBe(6);
     expect(row!.versions.filter((version) => version.isCurrent).length).toBe(1);
   });
 
@@ -712,7 +733,7 @@ describe("appending the next version", () => {
     );
   });
 
-  it("refuses a kind that is not one of the five", async () => {
+  it("refuses a kind that is not one of the six", async () => {
     const contract = await newContract("Orion Cloud — round two, bad kind");
     const document = await uploaded(adminCookies, contract.number);
 
