@@ -2282,6 +2282,75 @@
   "nav.home": {
     "defaultMessage": "Home"
   },
+  "notifications.approval.requested": {
+    "defaultMessage": "{hasActor, select, yes {{actor} asked you to approve {contract}} other {You were asked to approve {contract}}}"
+  },
+  "notifications.badgeCapped": {
+    "defaultMessage": "{cap}+"
+  },
+  "notifications.bell": {
+    "defaultMessage": "Notifications, {count, plural, =0 {none unread} one {# unread} other {# unread}}"
+  },
+  "notifications.centre": {
+    "defaultMessage": "Notifications"
+  },
+  "notifications.comment.mentioned": {
+    "defaultMessage": "{hasActor, select, yes {{actor} mentioned you on {contract}} other {You were mentioned on {contract}}}"
+  },
+  "notifications.comment.posted": {
+    "defaultMessage": "{hasActor, select, yes {{actor} commented on {contract}} other {A comment was posted on {contract}}}"
+  },
+  "notifications.contract.ownerAssigned": {
+    "defaultMessage": "{hasActor, select, yes {{actor} made you the owner of {contract}} other {You were made the owner of {contract}}}"
+  },
+  "notifications.contract.statusChanged": {
+    "defaultMessage": "{hasActor, select, yes {{actor} changed the status of {contract}} other {The status of {contract} changed}}"
+  },
+  "notifications.contract.taskAssigned": {
+    "defaultMessage": "{hasActor, select, yes {{actor} assigned you a task on {contract}} other {You were assigned a task on {contract}}}"
+  },
+  "notifications.contractNumber": {
+    "defaultMessage": "contract {number}"
+  },
+  "notifications.date.expiry": {
+    "defaultMessage": "{contract} is expiring"
+  },
+  "notifications.date.keyDate": {
+    "defaultMessage": "A key date on {contract} is coming up"
+  },
+  "notifications.date.noticeDeadline": {
+    "defaultMessage": "The notice deadline on {contract} is coming up"
+  },
+  "notifications.document.added": {
+    "defaultMessage": "{hasActor, select, yes {{actor} added a document to {contract}} other {A document was added to {contract}}}"
+  },
+  "notifications.document.versionAdded": {
+    "defaultMessage": "{hasActor, select, yes {{actor} added a version to {contract}} other {A version was added to {contract}}}"
+  },
+  "notifications.empty": {
+    "defaultMessage": "Nothing to catch up on. News about your records shows up here."
+  },
+  "notifications.envelope.ended": {
+    "defaultMessage": "Signing ended on {contract}"
+  },
+  "notifications.loadError": {
+    "defaultMessage": "Notifications could not be read. Close this and open it again."
+  },
+  "notifications.markAllRead": {
+    "defaultMessage": "Mark all read"
+  },
+  "notifications.older": {
+    "defaultMessage": "Show older"
+  },
+  "notifications.olderError": {
+    "defaultMessage": "The older notifications could not be read. Try again."
+  },
+  "notifications.unknown": {
+    "defaultMessage": "{contract} — {event}"
+  },
+  "notifications.unnamedRecord": {
+    "defaultMessage": "a record"
+  },
   "renewal.action.amendment": {
     "defaultMessage": "File the amendment"
   },

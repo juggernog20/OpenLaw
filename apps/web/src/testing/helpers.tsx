@@ -233,6 +233,18 @@ export function stubApi(state: ApiState) {
     if (call.url.pathname === "/api/v1/list-views" && call.method === "GET") {
       return json(200, { views: [] });
     }
+    // The shell's bell reads its badge on mount and on every navigation
+    // (NOT-005, M18/2), so every authenticated route hits this. Zero by
+    // default, which is what a fresh install answers; only the bell's
+    // own suite supplies a number, through `extra`.
+    if (call.url.pathname === "/api/v1/notifications/unread-count" && call.method === "GET") {
+      return json(200, { unread: 0 });
+    }
+    // And the centre's first page when it opens. Empty by default for
+    // the badge's reason.
+    if (call.url.pathname === "/api/v1/notifications" && call.method === "GET") {
+      return json(200, { notifications: [], nextCursor: null });
+    }
     if (call.url.pathname === "/api/v1/onboarding" && call.method === "GET") {
       return json(200, state.onboarding ?? { completed: true, emailConfigured: true });
     }

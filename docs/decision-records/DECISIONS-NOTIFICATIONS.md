@@ -103,6 +103,15 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 - **Decision** — Bell badge shows unread count capped at "9+". Opening the center marks visible items read; mark-all-read affordance; items deep-link to their records. Identical semantics on the portal bell.
 - **Rationale** — The activity feed (DD-017) is the durable history; notifications are ephemeral prompts — per-item read ceremony fights that.
 - **Consequences** — Grill-plan A.4 fully unblocked (bell + badge, cap 9+). `notifications.read_at` supports it.
+- **Addendum (2026-08-18, M18/2, [#317](https://github.com/juggernog20/OpenLaw/issues/317))** — **The bell shipped, and the read model is one write per page shown.** `POST /notifications/read` takes the ids of the page the centre just drew; `POST /notifications/read-all` takes nothing. There is no third write, because there is no per-item ceremony to serve.
+
+  **Both writes answer the unread count that remains**, which is `POST /comments/read`'s shape (CMT-004) and its reason: the badge takes the server's number rather than assuming its own request cleared what it sent. The surface never decrements locally, so a badge and a list cannot drift apart.
+
+  **The wall applies to the writes, not only to the reads.** An item about a record walled off after it was written is already outside the list and the count; the writes leave it unread too, because marking it read would be a write about a record the person can no longer see. The row keeps its state, so opening the wall again brings the item back exactly as it was — the same property the read side has.
+
+  **An id that is not this person's is not refused.** It matches nothing and the answer is the caller's own badge. A 404 would answer the question "does this id exist", which is the one thing a bell addressed to one person must not do.
+
+  **The page is the unit.** The mark-read write is bounded to one page's worth of ids, because a page is what the centre draws and what "the visible items" means on a list that arrives a page at a time. A second draw of the same page sends nothing: an already-read item keeps the stamp from its first sighting, and the surface filters the read ones out before it asks.
 
 ## Index of decisions
 

@@ -2210,6 +2210,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/notifications/read": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Mark the named items read — what opening the notification centre does with the page it just drew (NOT-005). There is no per-item read ceremony, so being shown an item is the only thing that reads it. One page's worth of ids at a time, because the centre draws a page at a time. Ids that are not this person's, are already read, or are about a record they can no longer reach match nothing and are not refused — a refusal would answer whether an id exists. Answers the unread count that remains: normally what the page did not cover, plus whatever landed while it was being read */
+    post: operations["markNotificationsRead"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/notifications/read-all": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Mark every unread item read — the affordance that zeroes the badge after a holiday (NOT-005). It covers exactly what the badge counts, so an item about a record the reader can no longer reach is left alone: it is already outside the count, and clearing it would be a write on a record they cannot see. Answers the unread count that remains, which is zero unless something landed while the request was in flight */
+    post: operations["markAllNotificationsRead"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -11753,6 +11787,74 @@ export interface operations {
     };
   };
   unreadNotificationCount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            unread: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  markNotificationsRead: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          ids: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            unread: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  markAllNotificationsRead: {
     parameters: {
       query?: never;
       header?: never;
