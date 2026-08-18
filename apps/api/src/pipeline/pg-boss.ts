@@ -40,6 +40,7 @@ import {
   type TextExtractionJob,
 } from "./jobs.js";
 import { createConsoleLogger, type PipelineLogger } from "./logger.js";
+import { MORNING_ROUND_CRON, runMorningRound } from "./morning-round.js";
 import { RECONCILIATION_SWEEP_CRON, runReconciliationSweep } from "./reconciliation.js";
 import { handleTextExtraction } from "./text-extraction.js";
 
@@ -235,6 +236,25 @@ export const RECONCILIATION_SWEEP_QUEUE_OPTIONS = {
    * — so the next tick picks it up. A retry would only bring the same
    * failure forward, and this sweep's usual failure is a provider that
    * is down, which a retry cannot heal.
+   */
+  retryLimit: 0,
+} as const;
+
+/** Bounds on one scheduled morning round. */
+export const MORNING_ROUND_QUEUE_OPTIONS = {
+  /**
+   * Ten minutes, the reconciliation round's ceiling and for a similar
+   * shape of work: the cost is the people being served and the dates due
+   * for them, both small sets, plus one message each handed to somebody
+   * else's relay. Ten minutes is generous for that and still notices a
+   * wedged worker well inside the hour before the next tick.
+   */
+  expireInSeconds: 600,
+  /**
+   * Never retried, for the other two sweeps' reason. A round that failed
+   * part way through wrote some of the reminders and sent some of the
+   * briefings, and the rows say what the rest is — so the next tick
+   * picks it up, and a retry would only bring the same failure forward.
    */
   retryLimit: 0,
 } as const;
@@ -440,6 +460,15 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       ...RECONCILIATION_SWEEP_QUEUE_OPTIONS,
     });
     await boss.updateQueue(JOB_QUEUES.reconciliationSweep, RECONCILIATION_SWEEP_QUEUE_OPTIONS);
+    // The same singleton, for a stronger reason again. The other two
+    // rounds are idempotent asks, so two at once would be wasteful and
+    // correct; this one sends a person a briefing, and NOT-003 promises
+    // exactly one of those a day.
+    await boss.createQueue(JOB_QUEUES.morningRound, {
+      policy: "singleton",
+      ...MORNING_ROUND_QUEUE_OPTIONS,
+    });
+    await boss.updateQueue(JOB_QUEUES.morningRound, MORNING_ROUND_QUEUE_OPTIONS);
 
     if (handlers) {
       /**
@@ -583,6 +612,26 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
         );
         log.info({ ...summary }, "the scheduled reconciliation sweep finished");
       });
+      // The morning round gets its own worker for the two sweeps'
+      // reason: it spends its time on the relay's network, and a slow
+      // relay must not sit in front of the executed copy or the
+      // reconciliation round. It takes the notification seam and the
+      // mailer resolver, which is what makes it a handler here rather
+      // than a timer in the worker entrypoint.
+      await boss.work(JOB_QUEUES.morningRound, { batchSize: 1 }, async () => {
+        const summary = await runMorningRound(
+          {
+            db: handlers.db,
+            log,
+            notifier,
+            resolveMailer: handlers.resolveMailer,
+            baseUrl: handlers.baseUrl,
+          },
+          queue,
+          { signal: sweeping.signal },
+        );
+        log.info({ ...summary }, "the scheduled morning round finished");
+      });
       // Registering the schedule is an upsert keyed on the queue name, so
       // every worker that boots declares the same one and an install
       // running two of them still sweeps once — pg-boss elects a single
@@ -592,6 +641,10 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // in-process timer ran a full round per replica, and this round
       // asks a third party about every live envelope.
       await boss.schedule(JOB_QUEUES.reconciliationSweep, RECONCILIATION_SWEEP_CRON);
+      // The same upsert, and the reason it is here at all: one round per
+      // install, however many workers boot (NOT-003's one briefing a
+      // day).
+      await boss.schedule(JOB_QUEUES.morningRound, MORNING_ROUND_CRON);
       log.info(
         {
           queues: [
@@ -601,9 +654,11 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
             JOB_QUEUES.notificationEmail,
             JOB_QUEUES.backfillSweep,
             JOB_QUEUES.reconciliationSweep,
+            JOB_QUEUES.morningRound,
           ],
           backfillSweepCron: BACKFILL_SWEEP_CRON,
           reconciliationSweepCron: RECONCILIATION_SWEEP_CRON,
+          morningRoundCron: MORNING_ROUND_CRON,
         },
         "working the job queue",
       );

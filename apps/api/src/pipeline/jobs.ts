@@ -103,6 +103,21 @@ export const JOB_QUEUES = {
    * making the audience decision twice.
    */
   notificationEmail: "notification.email",
+  /**
+   * The morning round (M18/6, NOT-003, NOT-004): the date reminders and
+   * the daily digest.
+   *
+   * It carries no payload, for the two sweeps' reason: the round asks
+   * the records what is due and the notification rows what is owed, and
+   * those are the only inputs it has ever had. It is a queue rather than
+   * a timer because it **repeats** — the reconciliation sweep's reason,
+   * and it applies harder here. A second replica running its own round
+   * would not merely duplicate work: the dedup identity makes the bell
+   * rows a no-op, but the briefing is one message per person per day,
+   * and two rounds racing on one person could put two of them in the
+   * post.
+   */
+  morningRound: "notification.morning-round",
 } as const;
 
 /** What the text-extraction queue carries. */

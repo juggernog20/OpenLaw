@@ -75,6 +75,17 @@ export {
 } from "./notification-email.js";
 export { createConsoleLogger, type PipelineLogger } from "./logger.js";
 export {
+  runMorningRound,
+  DIGEST_ROW_LIMIT,
+  LOST_EMAIL_PAGE_SIZE,
+  LOST_EMAIL_REASK_AFTER_MS,
+  LOST_EMAIL_REFUSAL_LIMIT,
+  MORNING_ROUND_CRON,
+  type MorningRoundDeps,
+  type MorningRoundOptions,
+  type MorningRoundSummary,
+} from "./morning-round.js";
+export {
   runReconciliationSweep,
   RECONCILIATION_PAGE_SIZE,
   RECONCILIATION_REFUSAL_LIMIT,
@@ -87,6 +98,7 @@ export {
   startPipeline,
   DISPLAY_CONVERSION_QUEUE_OPTIONS,
   EXECUTED_COPY_QUEUE_OPTIONS,
+  MORNING_ROUND_QUEUE_OPTIONS,
   NOTIFICATION_EMAIL_QUEUE_OPTIONS,
   RECONCILIATION_SWEEP_QUEUE_OPTIONS,
   TEXT_EXTRACTION_QUEUE_OPTIONS,

@@ -8,20 +8,20 @@ Decisions are numbered `NOT-###`.
 
 Commitments accumulated across the module grills that this capability must deliver:
 
-| Source                | Commitment                                                                                                                                                                      |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **CTR-006**           | Renewal reminders at the derived notice deadline and at expiry; "renewal pending confirmation" prompting. Reminder surfaces show the unverified-AI badge (CTR-008 tension note) |
-| **CTR-012**           | Approval requested → pending approvers notified; decisions visible to the owner                                                                                                 |
-| **CTR-013**           | Envelope status changes (signed / declined / voided)                                                                                                                            |
-| **MTR-004 / CTR-009** | Approaching named key dates ("no bespoke reminder system" — plugs in here)                                                                                                      |
-| **MTR-005 / CTR-017** | Task assignment; task due dates do NOT feed deadline surfaces (but assignees may still want nudges)                                                                             |
-| **MTR-003 / CTR-004** | Manager assignment (matter/contract handed to you)                                                                                                                              |
-| **INT-001/003**       | Requester email notifications: request created, status changes, thread replies, declined-with-reason; deep-link to portal; host-configurable; no login ever required            |
-| **INT-006**           | New request → Inbox (the queue itself is the surface; does it also notify?)                                                                                                     |
-| **DD-016**            | Comment replies / thread activity on records you're on                                                                                                                          |
-| **A.4 (mock)**        | Bell + badge in the top nav; badge cap decided here                                                                                                                             |
-| **E.1 (mock)**        | Notifications module chip on contract details                                                                                                                                   |
-| **DES (deferred)**    | Email digest copy register — lands when this ships                                                                                                                              |
+| Source                | Commitment                                                                                                                                                                                      |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **CTR-006**           | Renewal reminders at the derived notice deadline and at expiry; "renewal pending confirmation" prompting. Reminder surfaces show the unverified-AI badge (CTR-008 tension note)                 |
+| **CTR-012**           | Approval requested → pending approvers notified; decisions visible to the owner                                                                                                                 |
+| **CTR-013**           | Envelope status changes (signed / declined / voided)                                                                                                                                            |
+| **MTR-004 / CTR-009** | Approaching named key dates ("no bespoke reminder system" — plugs in here)                                                                                                                      |
+| **MTR-005 / CTR-017** | Task assignment; task due dates do NOT feed deadline surfaces (but assignees may still want nudges)                                                                                             |
+| **MTR-003 / CTR-004** | Manager assignment (matter/contract handed to you)                                                                                                                                              |
+| **INT-001/003**       | Requester email notifications: request created, status changes, thread replies, declined-with-reason; deep-link to portal; host-configurable; no login ever required                            |
+| **INT-006**           | New request → Inbox (the queue itself is the surface; does it also notify?)                                                                                                                     |
+| **DD-016**            | Comment replies / thread activity on records you're on                                                                                                                                          |
+| **A.4 (mock)**        | Bell + badge in the top nav; badge cap decided here                                                                                                                                             |
+| **E.1 (mock)**        | Notifications module chip on contract details                                                                                                                                                   |
+| **DES (deferred)**    | ~~Email digest copy register — lands when this ships~~ — discharged 2026-08-18 by **DES-051** (M18/6), which closed DES-015's deferral for every message this system sends, not only the digest |
 
 ## Open questions queued for the next grill-me session
 
@@ -128,6 +128,17 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 - **Decision** — Groups 1 and 5 email immediately. Group 3 (dates) batches into one daily morning digest email — the renewal calendar as a briefing — alongside individual bell items. No weekly digest or per-user schedule configuration in v1.
 - **Rationale** — Date noise is the likeliest unsubscribe trigger; one briefing beats nine offset emails.
 - **Consequences** — Digest rendering job on the background pipeline (DOC-009's worker). Email digest copy register — the deferred DES note — is now actionable when the digest is designed.
+- **Addendum (2026-08-18, M18/6, [#321](https://github.com/juggernog20/OpenLaw/issues/321))** — **The clock arrived, and it is the only thing in this system that starts a conversation nobody asked for.** Every other event fires because somebody did something; a date arriving is nobody's act. So there is one scheduled job — `notification.morning-round`, a pg-boss cron, `singleton`, one round per install however many replicas boot. That is the boot-versus-schedule rule the reconciliation sweep settled (#277), and it binds harder here: two rounds at once would not merely duplicate work, they would put two briefings in one person's post on one day.
+
+  **The round is hourly and a person is served once a day.** Those are two different periods and both are the decision. "One morning digest" means 08:00 **where the reader is**, and a daily tick could only ever be 08:00 in one zone — so the round ticks every hour and each one serves the people whose own clock has reached eight. The gate is "has **reached** 08:00", not "is 08:00": an install whose worker was down at somebody's eight o'clock serves them at nine rather than skipping their day. The zone is the person's profile timezone (SET-006) and UTC for the great majority who never set one, and every conversion is `Intl`'s rather than a stored offset's — which is what makes a spring-forward unable to skip anybody and a fall-back unable to serve them twice, because a 25-hour day is still one local date.
+
+  **The once-a-day promise is kept by the rows, not by a marker column.** The newest `emailed_at` on a person's own reminder rows, read as a date on **their** calendar, is the proof that today's briefing has gone. A reminder written after it — a key date added at eleven in the morning — is not lost and does not force a second message: it stays owed, and tomorrow's briefing carries it. That is the M12 doctrine one more time, and it is why the digest's distances are counted at **send** time against the reader's own today rather than taken from the offset the reminder fired at.
+
+  **The wall is re-applied at send time, per record.** The audience was decided when the reminder was written; a record can be walled off between then and the mail, and a briefing carries record titles out of the building. A row its reader can no longer open is settled as **skipped** rather than sent — the immediate send job's own posture (M18/1), said for a message about several records at once.
+
+  **The same round re-asks for owed-and-unsent immediate emails past fifteen minutes.** That bound is past the immediate queue's own three attempts and its two-minute expiry, so nothing still in flight is asked for twice; the queue's `short` policy would collapse it anyway. This is what finally makes the Notifier's quiet queue-ask honest: the mutation commits, the row says an email is owed, and a wake-up lost between the two costs a delay rather than the message. Digest rows are deliberately **not** in that set — they are the round's own business, and handing one to the immediate job would settle it as "no copy for this event" and silence the briefing it was waiting for.
+
+  **The digest's copy and its anatomy are DES-051**, which closed DES-015's deferred email-copy exception. It turned out to be owed for every message this system sends rather than only for the digest, so the register covers all of them and the exception is gone rather than narrowed.
 
 ## NOT-004 — Reminder lead times: one admin-configurable offset list, seeded 7/1/0
 
@@ -137,6 +148,15 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 - **Rationale** — Configurable-over-fixed applies (nothing branches on the numbers); per-date schedules are config sprawl.
 - **Alternatives considered** — Fixed offsets; per-date custom schedules.
 - **Consequences** — Settings inventory row. Long notice windows may warrant a larger seeded offset later — tune via settings, not code.
+- **Addendum (2026-08-18, M18/6, [#321](https://github.com/juggernog20/OpenLaw/issues/321))** — **The list was born with the round that reads it**, as `org_settings.reminder_offset_days`, seeded `[7, 1, 0]`: one `jsonb` column on the singleton row, for the reason `allowed_email_domains` is one — an ordered list of scalars, read whole every round and written whole by one pane. The pane is its own slice (#322); this one is what makes the numbers mean something.
+
+  **It is read live, on every round** — the read-on-every-decision pattern the mailer resolver and the signing connector already follow. An Administrator who shortens the list at 09:00 has shortened it for the 10:00 round, with no restart and no cache to invalidate. It is read **once per round** rather than once per person, because a list that changed mid-round would leave two people in one cohort reminded on different schedules, which is a difference nobody could explain from the outside.
+
+  **What comes back is sanitised, not trusted.** A `jsonb` column's shape is the application's to hold: whole days, never negative, deduplicated, and bounded at two years of lead time, with anything else dropped. An empty **usable** list falls back to the seed rather than to silence — a hand-edited row or a restored backup must not be able to switch every reminder off without anybody choosing to.
+
+  **One offset names one day, and the comparison is equality.** A date six days out is not the seven-day reminder arriving early; it is the seven-day reminder that already went. That is what makes the dedup identity's offset half meaningful, and it is why an install that lengthens its list does not retroactively fire for dates already past.
+
+  **The three sources are one union, read from the other end** (CTR-009). The key dates are rows, the expiry is a column, and the notice deadline is `expiry_date − notice_period_days` **subtracted in the round's own query and stored nowhere** — M16's doctrine, and the reason this milestone adds no materialised column and no job keeping one true. An ended contract is skipped, because a dead deal does not clutter a briefing; so is an archived one, on `renewalPending`'s reading of the same two columns — a frozen record is not waiting on anybody.
 
 ## NOT-005 — Badge: unread count, 9+ cap, read-on-open
 

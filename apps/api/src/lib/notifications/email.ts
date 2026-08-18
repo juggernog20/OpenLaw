@@ -29,6 +29,7 @@
 
 import type { NotificationEventType } from "@openlaw/db";
 import type { MailMessage } from "../mailer.js";
+import { civilInstant } from "../contract-term.js";
 
 /** One notification, as the template layer needs it described. */
 export interface NotificationMail {
@@ -54,9 +55,15 @@ export interface NotificationMail {
   details?: Record<string, unknown>;
 }
 
+/** This install's address, with any trailing slashes taken off, so every
+ * link below is built by joining rather than by hoping. */
+function origin(baseUrl: string): string {
+  return baseUrl.replace(/\/+$/, "");
+}
+
 /** The deep link one notification points at: the record itself. */
 function recordLink(baseUrl: string, contractNumber: number): string {
-  return `${baseUrl.replace(/\/+$/, "")}/contracts/${contractNumber}`;
+  return `${origin(baseUrl)}/contracts/${contractNumber}`;
 }
 
 /** One payload key as a non-empty string, or null. The bell narrator's
@@ -279,7 +286,160 @@ export function renderNotificationMail(
         ].join("\n"),
       };
     }
+    // Group 3 has no arm here on purpose, and `null` is the right answer
+    // for it rather than an oversight: a date reminder's email is one
+    // morning briefing for the whole day's dates (NOT-003), rendered by
+    // {@link renderDigestMail} below. A row that somehow reached the
+    // immediate send job is a row whose email is owed to a round that
+    // has not run yet, and answering `null` settles it as skipped rather
+    // than sending a reminder the digest is about to send again.
     default:
       return null;
   }
+}
+
+// -------------------------------------------------------------------
+// The morning digest (NOT-003, NOT-004) — DES-051.
+//
+// **One message a day, not one per date.** NOT-003's whole argument is
+// that date noise is the likeliest unsubscribe trigger, so the renewal
+// calendar arrives as a briefing: the reader scans a list, and the nine
+// separate mails the naive design would have sent are the thing this
+// layer exists to prevent.
+//
+// **The order is the deadline union's** (CTR-009, M16/3): outward from
+// today — what is still ahead nearest first, then what has gone by, most
+// recently first. It is the order the record's own Key dates section
+// draws, so a reader who follows a link is not re-sorting in their head.
+//
+// **The register is DES-051's**: a briefing states, it does not urge.
+// -------------------------------------------------------------------
+
+/** One line of the briefing, as the round hands it over. */
+export interface DigestRow {
+  /** Which of the three tracked dates this is (NOT-002 group 3). */
+  eventType: NotificationEventType;
+  contractNumber: number;
+  contractTitle: string;
+  /** The date itself, as a civil date. */
+  date: string;
+  /**
+   * Whole days from the **reader's own** today, negative once the date
+   * has gone by.
+   *
+   * Counted at send time rather than taken from the row's offset: a row
+   * whose digest was missed rides the next one, and a briefing that said
+   * "in 1 day" about yesterday would be worse than no briefing.
+   */
+  daysAway: number;
+  /** What somebody called this date (CTR-009), or null on the two the
+   * term derives — they are named by their kind, not by a person. */
+  label: string | null;
+}
+
+/** What the round hands the template layer for one person. */
+export interface DigestMail {
+  recipientName: string;
+  rows: readonly DigestRow[];
+}
+
+/** Which of the three sources leads when two dates fall on one day —
+ * the deadline union's own rank (M16/3): the deadline that warns of the
+ * expiry, then the expiry, then the record's own dates. */
+const DIGEST_RANK: Record<string, number> = {
+  "date.notice_deadline_approaching": 0,
+  "date.expiry_approaching": 1,
+  "date.key_date_approaching": 2,
+};
+
+/** What each kind of date is called when it has no name of its own. */
+const DIGEST_KIND: Record<string, string> = {
+  "date.notice_deadline_approaching": "Notice deadline",
+  "date.expiry_approaching": "Expiry",
+  "date.key_date_approaching": "Key date",
+};
+
+/** One date as a reader reads it: `Mar 12, 2026`. Rendered in UTC
+ * because the value is a civil date and not a moment — shifting it into
+ * a zone is what would move it a day. */
+const DIGEST_DATE = new Intl.DateTimeFormat("en-US", {
+  timeZone: "UTC",
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+});
+
+/** How far away one date is, in the words a briefing uses. Digits rather
+ * than words (DES-015 rule 9), and the two days either side of today are
+ * named because that is how people say them. */
+function whenIs(daysAway: number): string {
+  if (daysAway === 0) return "Today";
+  if (daysAway === 1) return "Tomorrow";
+  if (daysAway === -1) return "Yesterday";
+  return daysAway > 0 ? `In ${daysAway} days` : `${-daysAway} days ago`;
+}
+
+/** One row's own headline: when, what kind of date, and which record. */
+function digestLine(row: DigestRow): string {
+  const kind = row.label ?? DIGEST_KIND[row.eventType] ?? "Date";
+  const on = DIGEST_DATE.format(civilInstant(row.date));
+  return `${whenIs(row.daysAway)} (${on}) — ${kind}: ${row.contractTitle} (#${row.contractNumber})`;
+}
+
+/**
+ * The morning briefing one person is owed, or `null` when they are owed
+ * none.
+ *
+ * `null` for an empty list is what lets the round call this
+ * unconditionally: "nothing is due" and "a message went" are then one
+ * branch at the caller rather than two, and no empty briefing can ever
+ * leave — a daily email that says nothing happened is the noise NOT-003
+ * exists to avoid.
+ */
+export function renderDigestMail(
+  digest: DigestMail,
+  to: string,
+  baseUrl: string,
+): MailMessage | null {
+  if (digest.rows.length === 0) return null;
+  const rows = [...digest.rows].sort((left, right) => {
+    const leftPast = left.daysAway < 0;
+    const rightPast = right.daysAway < 0;
+    if (leftPast !== rightPast) return leftPast ? 1 : -1;
+    if (left.date !== right.date) {
+      const ascending = left.date < right.date ? -1 : 1;
+      return leftPast ? -ascending : ascending;
+    }
+    const byRank = (DIGEST_RANK[left.eventType] ?? 9) - (DIGEST_RANK[right.eventType] ?? 9);
+    if (byRank !== 0) return byRank;
+    const byTitle = left.contractTitle.localeCompare(right.contractTitle);
+    return byTitle !== 0 ? byTitle : left.contractNumber - right.contractNumber;
+  });
+  const count = rows.length;
+  return {
+    to,
+    // Digits, sentence case, no full stop — a subject is a fragment
+    // (DES-015 rules 6, 7, 9).
+    subject: count === 1 ? "1 date on your contracts" : `${count} dates on your contracts`,
+    text: [
+      `Hello ${digest.recipientName},`,
+      "",
+      "These dates are coming up on your contracts, nearest first.",
+      "",
+      // One record per pair of lines: the sentence, then where to act on
+      // it. The Key dates section is the address (DES-049 clause 9) —
+      // landing a reader on the overview and making them find the date
+      // they were just told about is one click short of the promise.
+      ...rows.flatMap((row) => [
+        digestLine(row),
+        `${recordLink(baseUrl, row.contractNumber)}/key-dates`,
+        "",
+      ]),
+      // The way out, on the one channel where the reader is not already
+      // in the app. A digest with no way to turn it down is what trains
+      // people to filter the sender.
+      "Change what reaches you in your notification settings:",
+      `${origin(baseUrl)}/settings/notifications`,
+    ].join("\n"),
+  };
 }

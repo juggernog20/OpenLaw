@@ -1,0 +1,1 @@
+ALTER TABLE "org_settings" ADD COLUMN "reminder_offset_days" jsonb DEFAULT '[7,1,0]'::jsonb NOT NULL;
