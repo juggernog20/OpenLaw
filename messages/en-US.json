@@ -260,6 +260,9 @@
   "activity.notificationPreference.unknownGroup": {
     "defaultMessage": "an event group"
   },
+  "activity.notificationPreference.unknownState": {
+    "defaultMessage": "on or off"
+  },
   "activity.older": {
     "defaultMessage": "Show older"
   },
@@ -2313,7 +2316,7 @@
     "defaultMessage": "{hasActor, select, yes {{actor} commented on {contract}} other {A comment was posted on {contract}}}"
   },
   "notifications.contract.ownerAssigned": {
-    "defaultMessage": "{hasActor, select, yes {{actor} made you the owner of {contract}} other {You were made the owner of {contract}}}"
+    "defaultMessage": "{hasActor, select, yes {{actor} made you the Owner of {contract}} other {You were made the Owner of {contract}}}"
   },
   "notifications.contract.statusChanged": {
     "defaultMessage": "{hasActor, select, yes {{actor} changed the status of {contract}} other {The status of {contract} changed}}"
@@ -3378,7 +3381,7 @@
     "defaultMessage": "Activity on your records"
   },
   "settings.notifications.group.activity.detail": {
-    "defaultMessage": "Status changes, comments, documents, and signatures on records where you're the owner, on the team, or a watcher."
+    "defaultMessage": "Status changes, comments, documents, and signatures on records where you're the Owner, on the team, or a watcher."
   },
   "settings.notifications.group.assigned": {
     "defaultMessage": "Assigned to you"

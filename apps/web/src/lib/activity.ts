@@ -1727,7 +1727,20 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
           id: "activity.notificationPreference.unknownGroup",
           defaultMessage: "an event group",
         }),
-      state: payload.enabled === true ? "on" : "off",
+      // Same reasoning one line up, applied to the direction: anything
+      // that is not a boolean is a payload this build did not write, and
+      // "turned emails off" about a person who turned them on is a
+      // sentence the append-only log can never take back. Saying which
+      // way is unknown costs one clause; guessing costs the record.
+      state:
+        typeof payload.enabled === "boolean"
+          ? payload.enabled
+            ? "on"
+            : "off"
+          : intl.formatMessage({
+              id: "activity.notificationPreference.unknownState",
+              defaultMessage: "on or off",
+            }),
     }),
   },
   "user.display_name_changed": {

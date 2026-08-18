@@ -140,6 +140,17 @@ const resolveMailer = createMailerResolver(db, {
 // would send mail nobody could act on.
 const baseUrl = process.env.BASE_URL || "http://localhost:3000";
 
+// The API warns about this too, and until M18 that was enough: the app
+// was the only process that sent mail. It is not any more — every
+// notification email and every morning digest is rendered here — so an
+// operator who set BASE_URL on the app alone would get briefings whose
+// every link points at localhost, with nothing anywhere saying why.
+if (!process.env.BASE_URL && process.env.NODE_ENV === "production") {
+  console.warn(
+    "BASE_URL is not set; links in notification emails and the morning digest will point at http://localhost:3000.",
+  );
+}
+
 const pipeline = await startPipeline({
   connectionString: databaseUrl,
   handlers: {

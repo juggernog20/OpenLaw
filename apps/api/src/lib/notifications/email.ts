@@ -307,7 +307,9 @@ export function renderNotificationMail(
 }
 
 // -------------------------------------------------------------------
-// The morning digest (NOT-003, NOT-004) — DES-051.
+// The morning digest (NOT-003, NOT-004) — anatomy in NOT-006, register
+// in DES-051. Two records, one file: NOT-006 says which lines go and in
+// what order, DES-051 says how each one is written.
 //
 // **One message a day, not one per date.** NOT-003's whole argument is
 // that date noise is the likeliest unsubscribe trigger, so the renewal

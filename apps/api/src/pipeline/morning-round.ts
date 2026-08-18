@@ -226,17 +226,39 @@ interface Served {
 
 /** One date that has come due for one cohort, before anybody has been
  * told about it. */
-interface DueDate {
+interface DueDateFields {
   contractId: string;
-  eventType: NotificationEventType;
   /** The date itself, as a civil date. */
   date: string;
   /** Which NOT-004 offset brought it up. */
   offsetDays: number;
-  /** The key date's own row and name, on the one source that has them. */
-  keyDateId?: string;
-  label?: string;
 }
+
+/** One of the two the term derives. Neither has a row or a name of its
+ * own, because no person named it (NOT-006 clause 4). */
+interface DueTermDate extends DueDateFields {
+  eventType: "date.expiry_approaching" | "date.notice_deadline_approaching";
+}
+
+/** A date somebody put on the record, which carries both. `label` is
+ * `NOT NULL` on the table (CTR-009), so it is a value and never a
+ * guess. */
+interface DueKeyDate extends DueDateFields {
+  eventType: "date.key_date_approaching";
+  keyDateId: string;
+  label: string;
+}
+
+/**
+ * One date this round found, split by which query produced it.
+ *
+ * Split rather than made optional so the key-date branch carries its row
+ * and its name **in the type**. Optional fields plus assertions at the
+ * call site would let a third producer of `date.key_date_approaching`
+ * write `undefined` into the payload, and the digest line would lose its
+ * address; this way that producer fails to compile instead.
+ */
+type DueDate = DueTermDate | DueKeyDate;
 
 /**
  * Runs one round: reminders, briefings, and the re-ask for lost mail.
@@ -400,8 +422,8 @@ async function raiseReminders(
           if (date.eventType === "date.key_date_approaching") {
             rows += await deps.notifier.keyDateApproaching(tx, {
               ...event,
-              keyDateId: date.keyDateId!,
-              label: date.label!,
+              keyDateId: date.keyDateId,
+              label: date.label,
             });
           } else if (date.eventType === "date.notice_deadline_approaching") {
             rows += await deps.notifier.noticeDeadlineApproaching(tx, event);

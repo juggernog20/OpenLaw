@@ -66,7 +66,17 @@ type GeneralField = keyof z.infer<typeof GeneralPatchSchema>;
  */
 const MAX_REMINDER_OFFSETS = 20;
 
-const OffsetsEnvelope = z.object({ offsets: z.array(z.number().int()) });
+/**
+ * What both offset routes answer.
+ *
+ * Bounded to the range `savedOffsets` can actually return, so the
+ * emitted contract says what a caller will get rather than advertising
+ * every safe integer — a generated client typed wider than the answer is
+ * a client that compiles against cases the API cannot produce.
+ */
+const OffsetsEnvelope = z.object({
+  offsets: z.array(z.number().int().min(0).max(MAX_REMINDER_OFFSET_DAYS)),
+});
 
 export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(

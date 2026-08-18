@@ -130,12 +130,29 @@ export function SettingsRemindersPage() {
     }
   }
 
+  /**
+   * Closes the draft row and parks focus on the list.
+   *
+   * Every way out of the Add row unmounts the input that holds focus —
+   * Escape, Enter on an empty draft, and a saved addition alike — so
+   * without this a keyboard reader is dropped on the document body and
+   * loses their place in the pane. The list is the same parking place
+   * {@link remove} uses (DES-020's `listRef`).
+   *
+   * Focus moves before the state change is drawn, so the input is still
+   * mounted when it hands focus over and its unmount takes nothing.
+   */
+  function closeAdd() {
+    listRef.current?.focus();
+    setAdding(false);
+  }
+
   /** Adds the drafted lead time, keeping the list's own order: a new one
    * joins at the end, where the Add row drew it. */
   async function add() {
     const typed = draft.trim();
     if (typed === "") {
-      setAdding(false);
+      closeAdd();
       return;
     }
     const days = Number(typed);
@@ -181,7 +198,7 @@ export function SettingsRemindersPage() {
     setAddStatus("saving");
     setAddError(undefined);
     if (await save([...offsets, days])) {
-      setAdding(false);
+      closeAdd();
       setDraft("");
       setAddStatus("saved");
     } else {
@@ -336,7 +353,7 @@ export function SettingsRemindersPage() {
                 }}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") void add();
-                  if (event.key === "Escape") setAdding(false);
+                  if (event.key === "Escape") closeAdd();
                 }}
               />
               {/* The unit names the input, so a reader hears "days before

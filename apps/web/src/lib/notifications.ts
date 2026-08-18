@@ -141,8 +141,8 @@ const ARMS: Readonly<Record<string, Arm>> = {
     message: defineMessage({
       id: "notifications.contract.ownerAssigned",
       defaultMessage:
-        "{hasActor, select, yes {{actor} made you the owner of {contract}} " +
-        "other {You were made the owner of {contract}}}",
+        "{hasActor, select, yes {{actor} made you the Owner of {contract}} " +
+        "other {You were made the Owner of {contract}}}",
     }),
   },
   "contract.task_assigned": {

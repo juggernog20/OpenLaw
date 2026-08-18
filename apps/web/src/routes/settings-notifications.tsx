@@ -19,6 +19,7 @@
 import { useRef, useState } from "react";
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, defineMessage, useIntl, type MessageDescriptor } from "react-intl";
+import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { problemDetail } from "../lib/messages";
 import { currentUser, needsSetup } from "../lib/session";
@@ -27,12 +28,17 @@ import { SettingsCard } from "../components/settings-card";
 import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Switch } from "../components/ui/switch";
 
-/** One group's answer, as the API sends it. */
-interface GroupPreference {
-  eventGroup: string;
-  inApp: boolean;
-  email: boolean;
-}
+/**
+ * One group's answer, taken from the generated contract rather than
+ * restated here.
+ *
+ * A hand-written copy would widen `eventGroup` to `string` and then need
+ * a cast at every read — which is exactly how a pane goes on compiling
+ * after the API stops answering what it draws. Derived, a group added or
+ * renamed upstream is a type error in this file.
+ */
+type GroupPreference =
+  paths["/api/v1/me/notification-preferences"]["get"]["responses"]["200"]["content"]["application/json"]["groups"][number];
 
 export async function settingsNotificationsLoader() {
   const user = await currentUser();
@@ -41,7 +47,7 @@ export async function settingsNotificationsLoader() {
   // A failed read must fail the pane. Drawing the catalog's defaults off
   // a network error would show somebody a grid that is not theirs.
   if (!data) throw new Error("The notification preferences could not be read.");
-  return { groups: data.groups as GroupPreference[] };
+  return { groups: data.groups };
 }
 
 /**
@@ -88,7 +94,7 @@ const GROUP_COPY: Record<StaffGroup, { label: MessageDescriptor; detail: Message
     detail: defineMessage({
       id: "settings.notifications.group.activity.detail",
       defaultMessage:
-        "Status changes, comments, documents, and signatures on records where you're the owner, on the team, or a watcher.",
+        "Status changes, comments, documents, and signatures on records where you're the Owner, on the team, or a watcher.",
     }),
   },
   dates_approaching: {
@@ -187,7 +193,7 @@ export function SettingsNotificationsPage() {
       // the last reply in the chain. An earlier one predates the presses
       // still queued behind it, and its snapshot would draw them undone
       // for as long as the next request is in the air.
-      if (queued.current === 1) setGroups(data.groups as GroupPreference[]);
+      if (queued.current === 1) setGroups(data.groups);
       setStatus("saved");
     } catch {
       setPair(group, channel.key, !enabled);

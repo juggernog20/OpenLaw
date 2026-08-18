@@ -681,8 +681,18 @@ describe("an unconfigured relay", () => {
 
       // And the operator is told, in the pipeline's own log, that mail
       // is unconfigured rather than merely that something failed.
+      //
+      // Pinned to *this* row's id. Taking the relay away is an
+      // install-wide change, and `ask()` waits for the enqueue rather
+      // than the send — so a job from an earlier case still in flight
+      // resolves the mailer after the change and logs its own
+      // `unconfigured`. Matching on the word alone would let this case
+      // pass on somebody else's skip.
       const loud = harness.jobLog.filter(
-        (line) => line.level === "error" && JSON.stringify(line).includes("unconfigured"),
+        (line) =>
+          line.level === "error" &&
+          JSON.stringify(line).includes("unconfigured") &&
+          JSON.stringify(line).includes(row!.id),
       );
       expect(loud.length, JSON.stringify(harness.jobLog)).toBeGreaterThanOrEqual(1);
 
@@ -699,5 +709,9 @@ describe("an unconfigured relay", () => {
     } finally {
       harness.smtpEnv = previous;
     }
-  });
+    // The settle above is bounded at SETTLE_TIMEOUT_MS, which is 20s.
+    // Vitest's own default is 5s, so without a timeout here the case
+    // could only pass while the queue happened to be quick, and a slow
+    // one would report a timeout rather than the assertion that failed.
+  }, 60_000);
 });
