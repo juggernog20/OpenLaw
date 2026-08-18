@@ -1,0 +1,2 @@
+DROP INDEX "notifications_reminder_idx";--> statement-breakpoint
+CREATE UNIQUE INDEX "notifications_reminder_idx" ON "notifications" USING btree ("user_id","event_type","entity_type","entity_id","reminder_date","reminder_offset_days") WHERE reminder_date is not null;
