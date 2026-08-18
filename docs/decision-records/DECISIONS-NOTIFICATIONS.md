@@ -158,6 +158,16 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 
   **The three sources are one union, read from the other end** (CTR-009). The key dates are rows, the expiry is a column, and the notice deadline is `expiry_date − notice_period_days` **subtracted in the round's own query and stored nowhere** — M16's doctrine, and the reason this milestone adds no materialised column and no job keeping one true. An ended contract is skipped, because a dead deal does not clutter a briefing; so is an archived one, on `renewalPending`'s reading of the same two columns — a frozen record is not waiting on anybody.
 
+- **Addendum (2026-08-18, M18/7, [#322](https://github.com/juggernog20/OpenLaw/issues/322))** — **The pane shipped**, in Settings → Organization → Notifications, on the DES-052 value-list anatomy: one card of lead times, added, removed, and rearranged in place. It is Administrator-only (SET-002), immediate on save (SET-003), and narrated in the audit log like every settings mutation since M5.
+
+  **One write, three verbs.** `PUT /org/reminder-offsets` carries the whole list, because adding, removing, and rearranging are the same change to the same list — the shape `PUT /auth/allowed-domains` already takes, for the reason the column takes `allowed_email_domains`' shape. The round reads the column live, so the next round fires on the saved list with nothing restarted and no cache to clear; the end-to-end assertion runs the round's own handler over a list saved through the route.
+
+  **The saved order is the reader's order.** M18/6 shipped the live read sorted furthest-first, and its doc (`usableOffsets`, in `apps/api/src/lib/notifications/offsets.ts`) called that "the order the pane draws"; that half is superseded now the pane exists. The pane draws the order the Administrator arranged and saves it, because a person expects to find a ladder where they left it. The round still sorts its own read, and the order carries no behaviour either way: one offset names one day and the comparison is equality, so no arrangement of the list can change which day fires.
+
+  **The list can never be emptied.** The route refuses an empty list and the pane locks the last remaining row. No lead times would mean no reminders at all — and because the read falls back to the seed on an unusable list, an empty list could not be told apart from a corrupt one. Silence is chosen per event group on the NOT-002 preferences pane, where it is a choice with a name; it does not fall out of a settings row.
+
+  **Bounded, and the bounds are the round's.** A saved lead time is a whole number of days from 0 to 730, and a list holds at most twenty of them — the same numbers the live read already enforces, so the pane cannot save something the round would then drop. A duplicate collapses to its first position, because two copies of `7` are one lead time.
+
 ## NOT-005 — Badge: unread count, 9+ cap, read-on-open
 
 - **Status** — Accepted

@@ -298,6 +298,24 @@ export interface paths {
     patch: operations["updateOrgGeneral"];
     trace?: never;
   };
+  "/api/v1/org/reminder-offsets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The install's reminder lead times in days (NOT-004): one list, applied to every tracked date — key dates, notice deadlines, and expiries alike. Answered in the order it was saved, which is the order the pane draws. A stored value the round could not fire on is dropped rather than answered, so the pane can never draw a lead time that will not arrive */
+    get: operations["getReminderOffsets"];
+    /** Replace the reminder lead times (NOT-004). The whole list goes in one request, because adding, removing, and rearranging are all the same write and each of them applies the moment it is made (SET-003). The morning round reads the column live, so the next round uses the new list with nothing else touched. The list can never be emptied: no lead times means no reminders, and silence has to be chosen per event group rather than fall out of an empty settings row */
+    put: operations["setReminderOffsets"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/users": {
     parameters: {
       query?: never;
@@ -3175,6 +3193,74 @@ export interface operations {
               defaultLocale: "en-US";
               defaultTimezone: string;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getReminderOffsets: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            offsets: number[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setReminderOffsets: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          offsets: number[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            offsets: number[];
           };
         };
       };

@@ -216,7 +216,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
+    "defaultMessage": "{key, select, title {Title} description {Description} owner {Owner} entity {Signing entity} priority {Priority} risk {Risk} contractType {Contract type} value {Value} status {Status} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} webhookSecret {Connect HMAC secret} legalName {Legal name} entityType {Entity type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} narrowed the field {name} to one module"
@@ -268,6 +268,9 @@
   },
   "activity.orgSettings.updated": {
     "defaultMessage": "{actor} changed the organization settings"
+  },
+  "activity.reminderOffset": {
+    "defaultMessage": "{days, plural, =0 {day of} one {# day} other {# days}}"
   },
   "activity.signer.erased": {
     "defaultMessage": "{actor} erased an external signer's name and address from {entriesRedacted, plural, =0 {no entries} one {# entry} other {# entries}}"
@@ -3475,6 +3478,48 @@
   },
   "settings.rail.label": {
     "defaultMessage": "Settings sections"
+  },
+  "settings.reminders.add": {
+    "defaultMessage": "Add lead time"
+  },
+  "settings.reminders.addDuplicate": {
+    "defaultMessage": "{label} is already on the list."
+  },
+  "settings.reminders.addFull": {
+    "defaultMessage": "The list holds at most {max} lead times. Remove one first."
+  },
+  "settings.reminders.addInvalid": {
+    "defaultMessage": "Enter a whole number of days between 0 and {max}."
+  },
+  "settings.reminders.addUnit": {
+    "defaultMessage": "days before the date"
+  },
+  "settings.reminders.count": {
+    "defaultMessage": "{count, plural, one {# lead time} other {# lead times}}"
+  },
+  "settings.reminders.help": {
+    "defaultMessage": "Drag a row, or focus its handle and use the arrow keys, to reorder. One list covers every tracked date — key dates, notice deadlines, and expiries — and the reminders arrive in the daily digest. Keep at least one lead time."
+  },
+  "settings.reminders.lastOne": {
+    "defaultMessage": "{label} is the only lead time and can't be removed"
+  },
+  "settings.reminders.moved": {
+    "defaultMessage": "{label} moved to position {position} of {total}."
+  },
+  "settings.reminders.offset": {
+    "defaultMessage": "{days, plural, =0 {On the day} one {# day before} other {# days before}}"
+  },
+  "settings.reminders.pageTitle": {
+    "defaultMessage": "Reminder lead times"
+  },
+  "settings.reminders.remove": {
+    "defaultMessage": "Remove {label}"
+  },
+  "settings.reminders.reorder": {
+    "defaultMessage": "Reorder {label}, position {position} of {total}. Use the arrow keys to move it."
+  },
+  "settings.reminders.title": {
+    "defaultMessage": "Reminder lead times"
   },
   "settings.section.appearance": {
     "defaultMessage": "Appearance"

@@ -134,3 +134,23 @@ between the frame and the shipped pane:
 
 The **placement** the frame assumes is now a recorded decision rather than only a mock: **SET-007**
 supersedes CTR-013's "Settings → Contracts → E-signature" sentence, and Integrations is the home.
+
+## Amendment (2026-08-18, M18 — Organization · Notifications, #322)
+
+The NOT-004 reminder-offset list shipped as an Organization section. Two deltas between the file and
+the shipped pane:
+
+1. **The rail entry shipped as drawn; the pane body had no frame.** ST4's Organization group lists
+   **Notifications** between Intake and Integrations with the `bell-ring` glyph, and that is exactly
+   where and how the entry shipped — Entities takes the place the mock's unshipped Intake entry
+   holds. No frame in this file draws the pane behind it: ST3 is the **Personal** preferences grid
+   (DES-050), which is a different pane for a different reader. The body is therefore built from
+   **DES-052** on DES-020's geometry, and no frame is added in this pass — the M19 Intake sweep owns
+   the next pass over this file and can draw the pane against a settled surface.
+2. **The screen title and the URL are not the rail label.** The rail says "Notifications", as drawn.
+   The browser title says "Reminder lead times" and the address is `/settings/reminders`, because
+   DES-011 asks every screen for a title of its own and the Personal pane already holds both the
+   label and `/settings/notifications`. Recorded as DES-052 normalization 3.
+
+Because two rail sections now carry the label "Notifications", each rail group renders as an ARIA
+`group` named by its own heading — DES-052 normalization 4. Nothing about the rail's drawing changes.

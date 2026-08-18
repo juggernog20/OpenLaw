@@ -24,6 +24,7 @@ import {
   SettingsNotificationsPage,
   settingsNotificationsLoader,
 } from "./routes/settings-notifications";
+import { SettingsRemindersPage, settingsRemindersLoader } from "./routes/settings-reminders";
 import {
   SettingsApproverGroupsPage,
   settingsApproverGroupsLoader,
@@ -221,6 +222,14 @@ export const routes: RouteObject[] = [
         path: "entities/types",
         loader: settingsEntityTypesLoader,
         element: <SettingsEntityTypesPage />,
+      },
+      {
+        // #322: Organization · Notifications — the NOT-004 reminder
+        // lead times. Named for what it holds, because the Personal
+        // pane above already owns /settings/notifications.
+        path: "reminders",
+        loader: settingsRemindersLoader,
+        element: <SettingsRemindersPage />,
       },
       // #245: the Integrations section, E-signature its first pane
       // (SET-007, superseding CTR-013's Contracts-tab placement).
