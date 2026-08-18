@@ -841,7 +841,9 @@ describe("the link picker's combobox (#311, DES-024)", () => {
 
     expect(input).toHaveAttribute("aria-expanded", "false");
     expect(input).not.toHaveAttribute("aria-activedescendant");
-    expect(list).toHaveClass("hidden");
+    expect(list).not.toBeVisible();
+    // Gone from the accessibility tree too, not merely off the screen.
+    expect(screen.queryByRole("listbox", { name: "Contract matches" })).not.toBeInTheDocument();
     // DES-010 gives Escape to the innermost dismissable thing, so the
     // dialog around the picker stays where it is.
     expect(screen.getByRole("heading", { name: "Link contract" })).toBeInTheDocument();

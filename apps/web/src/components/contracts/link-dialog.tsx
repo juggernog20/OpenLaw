@@ -383,10 +383,12 @@ function CandidatePicker({
         id={listboxId}
         role="listbox"
         aria-label={intl.formatMessage(MESSAGES.pickerListLabel)}
-        className={cn(
-          "absolute top-full z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-card border border-border-default bg-raised py-1 shadow-md",
-          !listOpen && "hidden",
-        )}
+        // The attribute rather than the `hidden` utility: it takes the
+        // list out of the accessibility tree as well as off the screen,
+        // and Tailwind's preflight gives it `display: none !important`,
+        // so no display utility added later can leave it showing.
+        hidden={!listOpen}
+        className="absolute top-full z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-card border border-border-default bg-raised py-1 shadow-md"
       >
         {candidates.map((candidate, index) => (
           <li
