@@ -587,6 +587,19 @@ describe("the sentences a reader gets", () => {
     expect(several.sentence).toBe("Nadia Counsel changed 2 fields");
   });
 
+  it("counts each reminder lead time in days, day-of in words (#322)", () => {
+    // A bare "7, 1, and 0" says nothing about what the numbers count.
+    const narration = narrate("org_settings.updated", {
+      field: "reminderOffsetDays",
+      old: [7, 1, 0],
+      new: [90, 7],
+    });
+    expect(narration.sentence).toBe("Nadia Counsel changed the organization settings");
+    expect(narration.changes).toEqual([
+      { label: "Reminder lead times", from: "7 days, 1 day, and day of", to: "90 days and 7 days" },
+    ]);
+  });
+
   it("says where a folder was made, and says when it was made at the root", () => {
     expect(narrate("folder.created", SAMPLE_PAYLOADS["folder.created"]).sentence).toBe(
       "Nadia Counsel made the Exhibits folder in Drafts",
