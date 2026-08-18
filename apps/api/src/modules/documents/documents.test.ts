@@ -2041,11 +2041,12 @@ describe("the upload ceiling", () => {
 
   beforeAll(async () => {
     small = await buildApp({
-      ...testDeps(),
-      db: harness.db,
-      storage: harness.storage,
-      docEngine: harness.docEngine,
-      jobs: harness.pipeline,
+      ...testDeps({
+        db: harness.db,
+        storage: harness.storage,
+        docEngine: harness.docEngine,
+        jobs: harness.pipeline,
+      }),
       maxUploadBytes: LIMIT,
     });
     await small.ready();

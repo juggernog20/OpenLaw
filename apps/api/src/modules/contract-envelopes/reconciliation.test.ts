@@ -374,7 +374,12 @@ function recordingLog(): { lines: JobLogLine[]; log: ReconciliationDeps["log"] }
 async function sweep(): Promise<{ summary: ReconciliationSummary; lines: JobLogLine[] }> {
   const { lines, log } = recordingLog();
   const summary = await runReconciliationSweep(
-    { db: harness.db, log, resolveSigningProvider: harness.resolveSigningProvider },
+    {
+      db: harness.db,
+      log,
+      resolveSigningProvider: harness.resolveSigningProvider,
+      notifier: harness.notifier,
+    },
     harness.pipeline,
   );
   return { summary, lines };

@@ -28,6 +28,7 @@ import type { SigningResolver } from "../lib/signing/resolver.js";
 import { runBackfillSweep } from "./backfill.js";
 import type { DerivationDeps } from "./derivations.js";
 import { handleDisplayConversion } from "./display-conversion.js";
+import { createNotifier } from "../lib/notifications/notifier.js";
 import { handleExecutedCopyFetch } from "./executed-copy.js";
 import { handleNotificationEmail } from "./notification-email.js";
 import {
@@ -441,6 +442,23 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
     await boss.updateQueue(JOB_QUEUES.reconciliationSweep, RECONCILIATION_SWEEP_QUEUE_OPTIONS);
 
     if (handlers) {
+      /**
+       * The notification seam, for the two handlers whose work the
+       * record's people are owed a word about (NOT-002 group 2): the
+       * executed-copy fetch files paper, and the reconciliation round
+       * ends envelopes.
+       *
+       * It is built **here**, from the same `queue` the handlers send
+       * on, rather than being passed in beside them. That is what
+       * breaks the circle the sending half above breaks for its own
+       * callers: the notifier needs a `JobQueue` to wake email work
+       * with, and the only queue this process has is the one being
+       * assembled. The API builds its own the same way — from the
+       * pipeline it has already started — so the two processes hold the
+       * same seam over the same queue.
+       */
+      const notifier = createNotifier({ db: handlers.db, jobs: queue, log });
+
       // One at a time, with the job's own counters. The counters are
       // what let a handler tell "try again" from "this was the last
       // try", which is the difference between a derivation that is still
@@ -505,7 +523,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
         async (jobs: JobWithMetadata<ExecutedCopyFetchJob>[]) => {
           for (const job of jobs) {
             await handleExecutedCopyFetch(
-              { ...handlers, jobs: queue },
+              { ...handlers, jobs: queue, notifier },
               {
                 envelopeId: job.data.envelopeId,
                 retryCount: job.retryCount,
@@ -554,7 +572,12 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // handler here rather than a timer in the worker entrypoint.
       await boss.work(JOB_QUEUES.reconciliationSweep, { batchSize: 1 }, async () => {
         const summary = await runReconciliationSweep(
-          { db: handlers.db, log, resolveSigningProvider: handlers.resolveSigningProvider },
+          {
+            db: handlers.db,
+            log,
+            resolveSigningProvider: handlers.resolveSigningProvider,
+            notifier,
+          },
           queue,
           { signal: sweeping.signal },
         );

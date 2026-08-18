@@ -160,6 +160,7 @@ import {
   VALUE_CADENCES,
   type AnyPgColumn,
   type Contract,
+  type ContractStage,
   type CustomFieldValue,
   type Executor,
   type SQL,
@@ -2542,8 +2543,13 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // The status keeps its own audit verb — surfaces branch on the
         // stage behind it (CTR-001) — so it rides the same UPDATE but
         // stays out of the changed map.
+        // The two status names are free text — a status is a renameable
+        // label (CTR-001) — and the two stages are the closed set
+        // surfaces branch on, so they carry that type rather than
+        // widening to string on the way to the seam.
         let statusChange:
-          { from: string; to: string; fromStage: string; toStage: string } | undefined;
+          | { from: string; to: string; fromStage: ContractStage; toStage: ContractStage }
+          | undefined;
         /** CTR-012's soft gate, pressed through: the asks that were
          * still open when the move committed, so the override entry can
          * name them. `null` whenever the gate had nothing to say. */
@@ -2668,6 +2674,22 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         // write, the wall is still answering about the previous one.
         // Clearing the Owner raises nothing: unassigned is a real state
         // (triage), and it hands the record to nobody.
+        // A record moving is ambient movement on it, so it is NOT-002's
+        // group 2: the bell rings for the Owner and the team, and no
+        // email is owed under the default. Nothing is raised for the
+        // rest of this PATCH — a title, a description, a term date are
+        // edits the feed already narrates on the record, and a bell item
+        // per field would be the noise the group's defaults exist to
+        // avoid. The status is what surfaces branch on (CTR-001), and it
+        // is what "my contract moved" means.
+        if (statusChange) {
+          await app.notifier.statusChanged(tx, {
+            contractId: target.id,
+            actorId: request.user.id,
+            actorName: request.user.displayName,
+            ...statusChange,
+          });
+        }
         if (patch.managerId) {
           await app.notifier.ownerAssigned(tx, {
             contractId: target.id,

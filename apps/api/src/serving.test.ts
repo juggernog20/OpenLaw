@@ -34,7 +34,7 @@ describe("SPA serving", () => {
 
     // pg pools connect lazily; these suites never touch the database.
     db = createDb(UNUSED_DATABASE_URL);
-    app = await buildApp({ ...testDeps(), db, webDist });
+    app = await buildApp({ ...testDeps({ db }), webDist });
     await app.ready();
   });
 
@@ -121,7 +121,7 @@ describe("readiness", () => {
     beforeAll(async () => {
       // A port nothing listens on: connection attempts fail fast.
       db = createDb("postgresql://unused:unused@127.0.0.1:59999/unused");
-      app = await buildApp({ ...testDeps(), db });
+      app = await buildApp(testDeps({ db }));
       await app.ready();
     });
 

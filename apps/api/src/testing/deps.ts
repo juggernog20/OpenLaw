@@ -16,8 +16,13 @@
  * about:
  *
  * ```ts
- * const app = await buildApp({ ...testDeps(), db: harness.db, jobs: harness.pipeline });
+ * const app = await buildApp(testDeps({ db: harness.db, jobs: harness.pipeline }));
  * ```
+ *
+ * **`db` and `jobs` go in the argument, never in a spread over the
+ * result.** Two members are built from them — the notifier is one — so a
+ * spread that replaced the database left a notifier still pointed at the
+ * one nobody listens on. Everything else spreads freely.
  *
  * **A new dependency is one edit here.** The return type is `AppDeps`,
  * so a member added to the app factory stops compiling in this file and

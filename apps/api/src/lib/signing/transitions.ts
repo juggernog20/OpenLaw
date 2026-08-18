@@ -45,12 +45,12 @@ import {
   and,
   contractEnvelopes,
   eq,
-  type Db,
   type EnvelopeStatus,
   type SigningProviderKey,
 } from "@openlaw/db";
 import { MAX_ENVELOPE_REASON_LENGTH } from "@openlaw/shared";
 import { recordActivity, RECORD_ACTIVITY_TIER, type ActivityAction } from "../activity.js";
+import type { Notifier } from "../notifications/notifier.js";
 
 /** One envelope, as a caller of this module sees it after the move. */
 export interface TransitionedEnvelope {
@@ -84,6 +84,10 @@ export interface EnvelopeStatusChange {
    * provider's own feeds, which is what attributes the entry to the
    * integration rather than to somebody who happened to be logged in. */
   actorId?: string;
+  /** That person's display name, for the bell item and the email to
+   * name them by (NOT-005). Omitted with `actorId`, and for the same
+   * reason: a webhook is nobody. */
+  actorName?: string;
 }
 
 /**
@@ -165,12 +169,19 @@ function keptReason(status: EnvelopeStatus, reason: string | undefined): string 
  * lock, the move, and the narration are one indivisible act, and a
  * caller that opened the transaction could hold it across a call to
  * somebody else's network.
+ *
+ * **It is the seam's transaction rather than the database's** (NOT-001),
+ * because the ending is also something the record's people are owed —
+ * an envelope event is NOT-002's group 2. The bell rows commit with the
+ * status, so a move that rolled back tells nobody it happened, and the
+ * three feeds that reach here get the notification by going through the
+ * one funnel rather than by each remembering to raise it.
  */
 export async function applyEnvelopeStatus(
-  db: Db,
+  notifier: Notifier,
   change: EnvelopeStatusChange,
 ): Promise<EnvelopeTransition> {
-  return db.transaction(async (tx) => {
+  return notifier.notifying(async (tx) => {
     // Locked before it is read, so a replay arriving at the same moment
     // waits and then reads what the first one wrote.
     const [row] = await tx
@@ -239,6 +250,19 @@ export async function applyEnvelopeStatus(
         status: change.status,
         ...(reason !== null ? { reason } : {}),
       },
+    });
+
+    // The record's people hear the outcome the moment the integration
+    // does (CTR-013) — NOT-002's group 2: bell on, no email owed under
+    // the default. **The actor is whoever the entry named, which is
+    // usually nobody**: a provider reported the ending, and a webhook is
+    // not a person, so no one is excluded and the whole team is told.
+    await notifier.envelopeEnded(tx, {
+      contractId: row.contractId,
+      actorId: change.actorId ?? null,
+      actorName: change.actorName ?? null,
+      envelopeId: row.id,
+      status: change.status,
     });
 
     return {

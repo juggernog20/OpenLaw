@@ -165,7 +165,7 @@ export const signingWebhookRoutes: FastifyPluginAsync = async (app) => {
         throw error;
       }
 
-      const result = await applyEnvelopeStatus(app.db, {
+      const result = await applyEnvelopeStatus(app.notifier, {
         provider,
         providerEnvelopeId: delivery.providerEnvelopeId,
         status: delivery.status,
@@ -173,7 +173,9 @@ export const signingWebhookRoutes: FastifyPluginAsync = async (app) => {
         ...(delivery.completedAt !== undefined ? { completedAt: delivery.completedAt } : {}),
         // No actor: nobody here signed or declined anything. The entry
         // with no actor is what makes the feed read it as the
-        // integration speaking rather than as a person.
+        // integration speaking rather than as a person — and it is what
+        // makes the bell items excuse nobody, because there is no one
+        // person for the exclusion to be about (NOT-002).
       });
       if (result.outcome === "unknown") {
         request.log.info(

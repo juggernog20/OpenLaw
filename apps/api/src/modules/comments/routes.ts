@@ -707,9 +707,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
         // group 1: the bell rings and the email leaves at once. The
         // route says which comment it was and at which tier; the seam
         // reads who it addressed out of `comment_mentions` and holds
-        // both the wall and the tier. Nothing is raised for a comment
-        // that names nobody — an ordinary comment is group 2's, and
-        // group 2 is not this slice.
+        // both the wall and the tier.
         if (named.length > 0) {
           // The record's own address (CTR-003) and its title, for the
           // item and the email to name it by. Read here rather than
@@ -733,6 +731,22 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
             });
           }
         }
+        // And the comment itself is ambient movement on the record, so
+        // it is NOT-002's group 2 as well: the Owner and the team get a
+        // bell item, and no email is owed under the default. It carries
+        // the tier, so a Legal Only comment never reaches a Contributor
+        // — the same narrowing the mention takes, on the same predicate.
+        //
+        // The people this comment named are left out: they have just
+        // been told, louder. One comment tells one person once.
+        await app.notifier.commentPosted(tx, {
+          contractId: audience.contractId,
+          actorId: request.user.id,
+          actorName: request.user.displayName,
+          commentId: created!.id,
+          visibility,
+          mentioned: named,
+        });
         // Read back through the same projection the thread uses, so the
         // row the poster gets is the row they will see on the next load.
         const [posted] = await selectComments(tx).where(eq(comments.id, created!.id));
