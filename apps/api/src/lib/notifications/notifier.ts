@@ -18,9 +18,10 @@
  *    applied here rather than at the call site, so no route can forget
  *    it and no event can be added that skips it.
  * 3. **Apply per-user preferences** (NOT-001/002): the person's own rows
- *    where they exist, the group defaults where they do not. The table
- *    is empty until the preferences slice; the logic is complete now, so
- *    that slice adds a pane and not a rule.
+ *    where they exist, the group defaults where they do not. Read
+ *    through `preferences.ts`, which the Personal → Notifications pane
+ *    reads through too — the pane draws what the fan-out honours
+ *    because both start from the same defaults and apply the same rows.
  * 4. **Write the bell rows inside the caller's transaction.** A mutation
  *    that rolls back tells nobody anything — the notification and the
  *    thing it is about are one act.
@@ -49,23 +50,20 @@
  */
 
 import {
-  and,
   commentMentions,
   eq,
-  inArray,
-  notificationPreferences,
   notifications,
   type CommentVisibility,
   type ContractStage,
   type Db,
   type EnvelopeStatus,
-  type NotificationEventGroup,
   type NotificationEventType,
   type Transaction,
 } from "@openlaw/db";
 import { boundedQueueAsk, type JobQueue } from "../../pipeline/jobs.js";
 import { contractRecordAudience, CONTRACT_ENTITY, reachedBy } from "./audience.js";
-import { defaultChoice, emailTimingOf, EVENT_GROUP, type ChannelChoice } from "./catalog.js";
+import { emailTimingOf, EVENT_GROUP } from "./catalog.js";
+import { channelChoices } from "./preferences.js";
 
 /** Where the seam's own lines go when a wake-up could not be sent. The
  * `document-versions` shape, so a Fastify logger and the pipeline's
@@ -378,48 +376,6 @@ function wakeUpsOf(tx: NotifyingTransaction): string[] {
     throw new Error("This transaction is not collecting notifications.");
   }
   return wakeUps;
-}
-
-/**
- * One person's answer for one event group: their own rows over the
- * group's defaults (NOT-001).
- *
- * The table holds **overrides**, not a grid, so a missing row is not a
- * missing answer — it is the default, read from the catalog. That is
- * what lets the preferences pane ship later without a backfill, and
- * what makes a changed default reach everybody who never expressed an
- * opinion.
- */
-async function channelChoices(
-  tx: NotifyingTransaction,
-  userIds: readonly string[],
-  group: NotificationEventGroup,
-): Promise<Map<string, ChannelChoice>> {
-  const fallback = defaultChoice(group);
-  const choices = new Map<string, ChannelChoice>(
-    userIds.map((id) => [id, { ...fallback }] as const),
-  );
-  if (userIds.length === 0) return choices;
-  const rows = await tx
-    .select({
-      userId: notificationPreferences.userId,
-      channel: notificationPreferences.channel,
-      enabled: notificationPreferences.enabled,
-    })
-    .from(notificationPreferences)
-    .where(
-      and(
-        inArray(notificationPreferences.userId, [...userIds]),
-        eq(notificationPreferences.eventGroup, group),
-      ),
-    );
-  for (const row of rows) {
-    const choice = choices.get(row.userId);
-    if (!choice) continue;
-    if (row.channel === "in_app") choice.inApp = row.enabled;
-    else choice.email = row.enabled;
-  }
-  return choices;
 }
 
 /** One bell row about to be written. */

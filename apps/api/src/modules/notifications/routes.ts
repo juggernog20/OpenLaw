@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The bell, as the API answers it (NOT-001, NOT-005).
+ * The bell and its preferences, as the API answers them (NOT-001,
+ * NOT-005).
  *
- * Two reads and two writes. **The list** is this person's items, newest
+ * Two reads and two writes for the bell, and a read/write pair for the
+ * preferences behind it. **The list** is this person's items, newest
  * first, paged. **The count** is their unread badge, which NOT-005 caps
  * at "9+" for display — the cap is the badge's, not the number's, so
  * this answers the count and the surface decides how to draw it.
@@ -16,12 +18,18 @@
  * reason `POST /comments/read` does: the badge takes the server's
  * number rather than assuming its own write cleared it.
  *
+ * **The preferences pair is the pane behind the bell** (inventory row
+ * ST3): what each of NOT-002's five groups does for this person, and a
+ * save of one group on one channel. The write is an override on a table
+ * the fan-out already reads, so a saved toggle changes the very next
+ * event with nothing else wired to it.
+ *
  * **Every route here is the signed-in person's, and only theirs.** There
  * is no user parameter and no way to ask for — or to write on — somebody
- * else's bell: a notification is addressed to one person, and the
- * address is the whole scope. An id naming another person's item is not
- * refused, because a refusal would answer the question "does this id
- * exist"; it simply matches nothing.
+ * else's bell or somebody else's preferences: both are addressed to one
+ * person, and the address is the whole scope. An id naming another
+ * person's item is not refused, because a refusal would answer the
+ * question "does this id exist"; it simply matches nothing.
  *
  * **All four re-apply the confidentiality predicate** (DD-014, M10). An item
  * written while a record was open is an item about a record that may
@@ -47,11 +55,24 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { and, count, desc, eq, inArray, isNull, notifications, sql } from "@openlaw/db";
+import {
+  and,
+  count,
+  desc,
+  eq,
+  inArray,
+  isNull,
+  notifications,
+  NOTIFICATION_CHANNELS,
+  NOTIFICATION_EVENT_GROUPS,
+  sql,
+} from "@openlaw/db";
 import type { Executor } from "@openlaw/db";
 import { requireAuth } from "../../auth/guards.js";
 import type { AuthenticatedUser } from "../../auth/user.js";
+import { recordActivity } from "../../lib/activity.js";
 import { notificationScope } from "../../lib/notifications/audience.js";
+import { myChannelChoices, saveChannelChoice } from "../../lib/notifications/preferences.js";
 import { problemResponse } from "../../lib/problem.js";
 
 /**
@@ -117,6 +138,27 @@ const NotificationSchema = z.object({
   readAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
 });
+
+/**
+ * One event group's answer for one person, per channel (NOT-001/002).
+ *
+ * The **effective** answer, not the stored one: the table holds
+ * overrides, so a group with no row reads as its default and the pane
+ * has no way — and no need — to tell the two apart. `in_app` is the
+ * bell, `email` is the mail; a person with the bell off for a group
+ * hears nothing from it at all, because the row the email hangs off is
+ * the bell row.
+ */
+const PreferenceSchema = z.object({
+  eventGroup: z.enum(NOTIFICATION_EVENT_GROUPS),
+  inApp: z.boolean(),
+  email: z.boolean(),
+});
+
+/** All five groups, in NOT-002's order. The read and the write answer
+ * the same envelope, so a save needs no second request to be sure of
+ * what it left behind. */
+const PreferencesEnvelope = z.object({ groups: z.array(PreferenceSchema) });
 
 export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
@@ -309,6 +351,83 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
             ),
           );
         return { unread: await unreadCount(tx, request.user) };
+      }),
+  );
+
+  app.get(
+    "/me/notification-preferences",
+    {
+      preHandler: requireAuth,
+      schema: {
+        operationId: "getMyNotificationPreferences",
+        summary:
+          "What the signed-in person gets on each of NOT-002's five " +
+          "event groups, per channel. It is the **effective** answer — " +
+          "their own saved rows over the group's defaults — because the " +
+          "table holds overrides rather than a grid, and a person who " +
+          "has never opened the pane has no rows at all. Every group is " +
+          "answered, including the two whose first events wait for the " +
+          "Inbox (M21) and the portal (M20): an opinion can be held " +
+          "about a group before anything in it has fired. There is no " +
+          "user parameter — a preference is one person's, and the " +
+          "signed-in person is the whole scope",
+        tags: ["notifications"],
+        response: { 200: PreferencesEnvelope, default: problemResponse },
+      },
+    },
+    async (request) => ({ groups: await myChannelChoices(app.db, request.user.id) }),
+  );
+
+  app.patch(
+    "/me/notification-preferences",
+    {
+      preHandler: requireAuth,
+      schema: {
+        operationId: "updateMyNotificationPreferences",
+        summary:
+          "Save one channel's answer for one event group, for the " +
+          "signed-in person (NOT-001). One pair per request, because a " +
+          "toggle is what the pane saves and it saves the moment it is " +
+          "flipped (SET-003 immediate apply). The write lands in " +
+          "`notification_preferences` as an override, so the very next " +
+          "event honours it with no other wiring — and turning email " +
+          "off leaves the group's bell items flowing, which is the " +
+          "point of the two channels being separate rows. Recorded in " +
+          "the activity log like every settings mutation. Answers the " +
+          "whole grid back, so the pane can never drift from what the " +
+          "fan-out will honour",
+        tags: ["notifications"],
+        body: z.strictObject({
+          eventGroup: z.enum(NOTIFICATION_EVENT_GROUPS),
+          channel: z.enum(NOTIFICATION_CHANNELS),
+          enabled: z.boolean(),
+        }),
+        response: { 200: PreferencesEnvelope, default: problemResponse },
+      },
+    },
+    async (request) =>
+      // The row and its narration commit together (SET-003/DD-017):
+      // every settings change is recorded, or it does not land. The
+      // grid is read back on the same snapshot, so the answer is what
+      // the write actually left behind.
+      await app.db.transaction(async (tx) => {
+        const { eventGroup, channel, enabled } = request.body;
+        await saveChannelChoice(tx, request.user.id, eventGroup, channel, enabled);
+        // Narrated on every write, not only on a change of effect. The
+        // table records that somebody expressed an opinion, and
+        // re-affirming one against a default that may later move is a
+        // real act — there is no stored "before" for it to be compared
+        // with, because a person with no row has a default and not a
+        // value.
+        await recordActivity(tx, {
+          entityType: "user",
+          entityId: request.user.id,
+          actorId: request.user.id,
+          action: "user.notification_preference_changed",
+          visibility: "admin_only",
+          payload: { eventGroup, channel, enabled },
+        });
+        return { groups: await myChannelChoices(tx, request.user.id) };
       }),
   );
 };
