@@ -109,6 +109,18 @@ _None — queue cleared 2026-08-05 (NOT-001 through NOT-005)._
 
   **Email is opt-in and nothing has opted in yet.** Group 2's timing is `none`, so every row it writes records no debt and no message leaves, whatever a preference says. Making the opt-in real is the preferences slice's, and it is one catalogue line plus the email copy the arms would need.
 
+- **Addendum (2026-08-18, M18/5, [#320](https://github.com/juggernog20/OpenLaw/issues/320))** — **Group 2's opt-in is real, and it took the one line the addendum above named.** `activity_on_your_records` moves from `emailTiming: "none"` to `"immediate"`, and the five arms of the template layer that had no words gained them. **The default did not move**: `email: false` is what makes the group opt-in, and the timing only says what happens once somebody has said yes. A person who has never opened the pane is in exactly the state M18/4 left them in — the same rows, the same `email_owed = false`, the same silence — and the difference is that saying yes now means something.
+
+  **The timing shipped as `none` on purpose and not by omission.** Nothing could opt in, so an opted-in row would have claimed a debt the system had no way to pay, and `email_owed` is readable as the record of work owed precisely because no row is ever allowed to say that. The column's honesty is what made the flip a one-line change rather than a migration.
+
+  **A preference is expressed about a group, and the pane is the proof.** The frame drew four switches under group 2 — one each for status changes, comments, documents, and signatures — and the pane draws one row, because this decision's unit is the group and a per-event switch would write nothing. What the frame was communicating survives in the group's own sentence (DES-050 normalization 1).
+
+  **Both channels are the person's**, which NOT-001 already said and this slice is the first to be able to honour. In-app off silences a group entirely, because the bell row is what the email hangs off — that is the engine's shape (M18/1) rather than a rule the pane invents, and the pane says so rather than offering a state nothing behind it can hold.
+
+  **Groups 4 and 5 are slots on the surface too.** The staff pane draws `new_requests` — dormant until the Inbox (M21) — and does not draw `requester_events`, which is the portal audience's own group and belongs on the portal's own settings surface (M20). The API answers all five either way: the model is the model, and which of it a surface draws is the surface's business.
+
+  **Every write narrates, not only every change of effect.** `user.notification_preference_changed` carries the group, the channel, and the new value, and it carries no `old` side — the table holds overrides, so the value before a first save is a default read out of application code and not a stored fact the writer could report. Re-affirming an opinion against a default that may later move is a real act, so it is written down.
+
 ## NOT-003 — Timing: direct events immediate; date reminders in a daily digest
 
 - **Status** — Accepted

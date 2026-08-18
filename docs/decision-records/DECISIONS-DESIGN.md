@@ -3171,6 +3171,67 @@ Point 8 is NOT-005 restated where it is easy to forget: the read model has exact
 
 No new tokens and no new primitive: the badge is `badge-alert-*`, the panel is `bg-raised` / `border-border-default`, the row is DES-026's `bg-control` / `border-muted` / `text-primary` / `text-muted`, and `ui/popover.tsx` is DES-048's, reused as it stands. The surface is `apps/web/src/components/shell/notification-bell.tsx`, mounted in `AppHeader`; the sentence and the address for each catalog slug are `apps/web/src/lib/notifications.ts`, which is `lib/activity.ts`'s narration layer applied to a second table and takes the same three properties — defensive payload reads, own-key-only lookup, and an explicit fallback arm. The portal bell (M20) renders the same anatomy against the portal's own chrome; if it needs a second popover panel or a second counter badge, points 2 and 4 are already the answer.
 
+## DES-050: The notification preferences pane — one row per event group, two switch columns (extends DES-017, DES-012, DES-011)
+
+- **Status:** Accepted
+- **Date:** 2026-08-18
+
+### Context
+
+NOT-001 gives every person channel toggles over NOT-002's event groups, and the settings inventory has carried the pane as row **ST3** since M5, where it was deferred because the engine behind it did not exist. M18/5 (#320) builds it.
+
+**The frame exists, and it disagrees with the decision it draws.** `settings.pen` **ST3** draws a 720px card titled "Notification preferences" over a three-column table — Event group, In-app, Email — with a 34px column head and 56px rows. Between the head and the rows it draws **seven** rows for **four** groups: "Assigned to you" as one row, then a group header for "Activity on your records" with four indented sub-rows under it (Status changes, Comments, Documents, Signatures), then "Dates approaching" and "New requests" as one row each. NOT-002 keys a preference on the **group** — "a person turns email off for activity on my records, never for one verb" — so four of the frame's rows are controls for a state the model cannot hold.
+
+The frame also draws every In-app switch at 55% opacity, which reads as a locked column. M18's own spec asks for the opposite in its own words: "_As a user, I want to turn bell items on or off per event group, so that even the feed is mine to tune._"
+
+This record settles the pane's anatomy and both deviations. It is a settings pane, so most of it is already decided — DES-017's per-field micro-states, the settings card, the switch DES-004 landed. What is new is the **grid**: a row of controls repeated down a list, which no settings pane before this one has had.
+
+### Decision
+
+**1. The pane is one settings card, flush.** `SettingsCard` at `--width-settings-card` (720px, the frame's own width), the section-header strip carrying "Notification preferences", and an edge-to-edge body — the table owns its gutters, as every flush settings body does.
+
+**2. A row is an event group.** Four rows, in NOT-002's order: Assigned to you, Activity on your records, Dates approaching, New requests. The group's name at 13px `font-medium text-primary`, its coverage under it at 12px `text-muted`, `border-border-muted` between rows and none under the last. The frame's group-header-plus-sub-rows treatment is not built (normalization 1).
+
+**3. The staff pane draws the staff groups.** `requester_events` is the portal audience's own group (NOT-001) and is not drawn here; the API answers all five, so M20 renders it against the portal's chrome. `new_requests` **is** drawn, dormant: nothing fires it until the Inbox lands (M21), and an opinion can be held about a group before anything in it has happened — which is why the group value shipped with the engine.
+
+**4. Two switch columns, both live.** `In-app` then `Email`, 90px each, the shared `Switch` unforked. Neither column is locked (normalization 2). Turning **email** off leaves the group's bell items flowing; turning **in-app** off silences the group entirely, because the email hangs off the bell row — that is the engine's shape, and the pane says so in a caption rather than pretending otherwise.
+
+**5. The state is the effective answer, and there is no third state.** `notification_preferences` holds overrides, so somebody who has never opened the pane has no rows; the API answers what they effectively get and the switches draw it. A switch is on or off — never indeterminate, never "default" as a visible third value. A default a person can see but not name is a state they cannot reason about, and every switch here is theirs to set anyway.
+
+**6. Saving is DES-017's immediate-on-save, with one status for the card.** The switch moves at once, the write goes, and one `StatusNote` in the card's header strip says saving / saved / the refusal — the Appearance pane's arrangement, for its reason: a note per switch would put eight live regions on one card. A refused save snaps the switch back to the server's answer, and the write answers the whole grid so the pane can never drift from what the fan-out will honour.
+
+**7. Below `@lg` of the card's own container, the row stacks** (DES-012 — the card's container, not the viewport). The group and its description on top, the two switches in a row under it. The column heads are for a state where the switches are in columns, so they are `aria-hidden` chrome and drawn only at the wide state.
+
+**8. Every switch is named by its group and its channel.** `aria-labelledby` points at the row's group label and the cell's own channel label, so the control announces "Activity on your records, Email, switch"; `aria-describedby` points at the group's description. The channel label is **visible** in the stacked state and `sr-only` in the columned one — the same element in both, so the accessible name does not change with the width. The column heads are `aria-hidden` precisely because that name already carries the column.
+
+### Recorded normalization points (frame deviations accepted)
+
+1. **Group 2 is one row, not a header and four sub-rows.** NOT-002 keys a preference on the group; a per-event switch would be a control with nothing behind it. The four families are named in the group's description instead, so the frame's information survives without its four controls.
+2. **The In-app column is interactive**, not the frame's 55%-opacity locked treatment. M18's story 18 says the feed is the person's to tune, and `notification_preferences` has always held an `in_app` row.
+3. **The pane carries a caption the frame does not draw**, under the table: email off keeps the bell items, in-app off turns the group off entirely. Point 4's asymmetry is real, and a switch that silently changes what another switch means has to say so.
+4. **The stacked layout has no frame.** ST3 is drawn at 1440×940 only, like every frame in the file. Point 7 is built from DES-012's rule, as every other settings pane's narrow state is.
+
+### Rationale
+
+Point 2 is the whole record. The frame is a faithful drawing of a plausible pane, and it was drawn before NOT-002 fixed the unit a preference is expressed in; building it as drawn would have meant either four rows that write nothing or a fifth preference key nothing reads. Folding the four families into the group's sentence keeps what the frame was communicating — _what does this group actually cover_ — and drops only the controls the model cannot honour.
+
+Point 5 is where a preferences grid usually goes wrong. A tri-state switch that distinguishes "default on" from "explicitly on" is honest about the table and useless to the reader: the difference only shows itself the day somebody changes a default, and the person setting the toggle is not thinking about that day.
+
+Point 8 is the accessibility floor doing real work. A grid of unlabelled switches is the classic screen-reader failure — eight controls all announcing "switch, on" — and the fix is not a `title`, it is naming each control by the two things that identify it.
+
+### Alternatives considered
+
+- **Build ST3 as drawn, with per-event rows.** Rejected: it needs a preference key NOT-002 does not have, and it would ship four switches whose saves nothing reads.
+- **Keep the In-app column locked on, as the frame draws it.** Rejected: M18 story 18 and the `in_app` column both say otherwise, and a locked control that looks like a switch is worse than no control.
+- **A checkbox grid rather than switches.** Rejected: checkboxes propose and a form disposes; this pane saves on the flip (DES-017), which is exactly what a switch means.
+- **One `StatusNote` per switch.** Rejected — see point 6.
+- **A "reset to defaults" affordance.** Rejected for now: the defaults are visible as the state of a pane with four rows, and re-flipping four switches is not a workflow worth a control. It becomes worth revisiting if the group list grows.
+- **A tri-state switch showing "default".** Rejected — see the Rationale.
+
+### Consequences
+
+No new tokens and no new primitive: the card is `SettingsCard`, the control is `ui/switch.tsx` as DES-004 landed it, the micro-state is `StatusNote`. The surface is `apps/web/src/routes/settings-notifications.tsx`, behind `/settings/notifications`, and the rail entry it needs is the one the M5 close recorded as _omitted rather than disabled_ — SETTINGS-INVENTORY amendment 5, now closed. The portal's own preferences surface (M20) renders group 5 on this anatomy; if it needs a second grid of switches, points 2, 4, and 8 are already the answer.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status   |
@@ -3224,3 +3285,4 @@ No new tokens and no new primitive: the badge is `badge-alert-*`, the panel is `
 | DES-047 | The Team roster is an activity-bar applet (amends DES-016, DES-032, DES-028)                                                                                         | Accepted |
 | DES-048 | Date inputs are a calendar popover (amends DES-014, DES-040)                                                                                                         | Accepted |
 | DES-049 | The notification centre — the header bell, its counter badge, and the panel behind it (extends DES-026, DES-031, DES-016)                                            | Accepted |
+| DES-050 | The notification preferences pane — one row per event group, two switch columns (extends DES-017, DES-012, DES-011)                                                  | Accepted |
