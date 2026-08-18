@@ -321,6 +321,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} " +
         "defaultLocale {Default language} defaultTimezone {Default timezone} " +
         "authMode {Sign-in method} allowedEmailDomains {Allowed email domains} " +
+        "reminderOffsetDays {Reminder lead times} " +
         "smtpUrl {SMTP server} smtpFrom {From address} " +
         "issuer {Issuer} domain {Email domain} clientId {Client ID} " +
         "clientSecret {Client secret} " +
@@ -389,6 +390,18 @@ function changeValue(
         defaultMessage: "{value, select, true {Yes} other {No}}",
       },
       { value },
+    );
+  }
+  // NOT-004's lead times are days, and the list is narrated whole. A
+  // bare "7, 1, and 0" says nothing about what the numbers count —
+  // least of all the day-of offset, which reads as nothing at all.
+  if (key === "reminderOffsetDays" && typeof value === "number") {
+    return intl.formatMessage(
+      {
+        id: "activity.reminderOffset",
+        defaultMessage: "{days, plural, =0 {day of} one {# day} other {# days}}",
+      },
+      { days: value },
     );
   }
   if (typeof value === "number") return intl.formatNumber(value);

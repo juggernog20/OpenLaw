@@ -187,7 +187,15 @@ test.describe.serial("M5 demo path", () => {
       await expect(rail.getByRole("button", { name: "Security" })).toHaveCount(0);
 
       // Every Organization URL bounces them to their own settings home.
-      for (const path of ["/settings/general", "/settings/users", "/settings/authentication"]) {
+      for (const path of [
+        "/settings/general",
+        "/settings/users",
+        "/settings/authentication",
+        // Organization · Notifications, which joined the group in M18
+        // (#322) — the reminder lead times are org policy, not a
+        // preference, so a Member is bounced like everywhere else here.
+        "/settings/reminders",
+      ]) {
         await memberPage.goto(path);
         await expect(memberPage).toHaveURL(/\/settings\/profile$/);
       }

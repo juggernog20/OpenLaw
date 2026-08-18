@@ -61,6 +61,14 @@ test.describe("accessibility floor", () => {
     await expect(page).toHaveTitle("Notifications · OpenLaw");
     await reportAxeViolations(page, testInfo, "settings-notifications");
 
+    // The Organization · Notifications pane (#322): the NOT-004 lead
+    // times in the DES-052 value-list anatomy. The rail entry is called
+    // Notifications like the Personal one; the screen title is the
+    // pane's own, because DES-011 asks every screen for a unique title.
+    await page.goto("/settings/reminders");
+    await expect(page).toHaveTitle("Reminder lead times · OpenLaw");
+    await reportAxeViolations(page, testInfo, "settings-reminders");
+
     // The Organization · General form (#63), as the Administrator.
     await page.goto("/settings/general");
     await expect(page).toHaveTitle("General · OpenLaw");
