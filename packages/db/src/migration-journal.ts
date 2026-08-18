@@ -36,6 +36,20 @@ import { sql } from "drizzle-orm";
 import type { Db } from "./index.js";
 
 /**
+ * Every throw in this module is one of these, and its message is the
+ * whole story — written for the operator reading the boot log, complete
+ * without a stack. Boot prints the message alone for this class and the
+ * full error for anything else, so a failing migration's stack and
+ * driver detail still surface.
+ */
+export class MigrationJournalError extends Error {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
+    this.name = "MigrationJournalError";
+  }
+}
+
+/**
  * One journal entry, with the hash Drizzle identifies it by.
  *
  * `hash` is sha256 of the migration file's text — the same digest
@@ -70,27 +84,29 @@ interface RawEntry {
  */
 function readJournalEntries(parsed: unknown, journalPath: string): RawEntry[] {
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-    throw new Error(`${journalPath} is not a JSON object.`);
+    throw new MigrationJournalError(`${journalPath} is not a JSON object.`);
   }
   const { entries } = parsed as { entries?: unknown };
   if (entries === undefined) return [];
   if (!Array.isArray(entries)) {
-    throw new Error(`${journalPath} has an "entries" field that is not an array.`);
+    throw new MigrationJournalError(`${journalPath} has an "entries" field that is not an array.`);
   }
   return entries.map((entry: unknown, position) => {
     const where = `${journalPath}, entry at position ${position}`;
     if (typeof entry !== "object" || entry === null) {
-      throw new Error(`${where}: expected an object.`);
+      throw new MigrationJournalError(`${where}: expected an object.`);
     }
     const { idx, tag, when } = entry as { idx?: unknown; tag?: unknown; when?: unknown };
     if (typeof idx !== "number" || !Number.isInteger(idx)) {
-      throw new Error(`${where}: "idx" must be a whole number.`);
+      throw new MigrationJournalError(`${where}: "idx" must be a whole number.`);
     }
     if (typeof tag !== "string" || tag.length === 0) {
-      throw new Error(`${where}: "tag" must be a non-empty string.`);
+      throw new MigrationJournalError(`${where}: "tag" must be a non-empty string.`);
     }
     if (typeof when !== "number" || !Number.isFinite(when)) {
-      throw new Error(`${where}: "when" must be a number — it is the stamp the migrator compares.`);
+      throw new MigrationJournalError(
+        `${where}: "when" must be a number — it is the stamp the migrator compares.`,
+      );
     }
     return { idx, tag, when };
   });
@@ -103,7 +119,7 @@ export function readMigrationJournal(migrationsFolder: string): JournalEntry[] {
   try {
     parsed = JSON.parse(readFileSync(journalPath, "utf8"));
   } catch (cause) {
-    throw new Error(`${journalPath} is not valid JSON.`, { cause });
+    throw new MigrationJournalError(`${journalPath} is not valid JSON.`, { cause });
   }
   return readJournalEntries(parsed, journalPath).map((entry) => ({
     idx: entry.idx,
@@ -253,7 +269,7 @@ export async function guardMigrationJournal(
   );
   if (stranded.length === 0) return outcome;
 
-  throw new Error(
+  throw new MigrationJournalError(
     [
       "This database cannot apply the migrations it is missing.",
       "",
