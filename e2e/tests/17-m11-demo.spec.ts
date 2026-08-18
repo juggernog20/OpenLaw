@@ -11,15 +11,23 @@
  * redline on the same document rather than beside it — which is what the
  * chain is for: the new round supersedes the old one without destroying
  * it (DOC-001). The section then has to answer the question the
- * milestone exists for, "which file matters now", with one mark. Version
- * 2 is Current, version 1 is still there under it, and both still
+ * milestone exists for, "which file matters now". Version 2 is the head
+ * of the chain, version 1 is still there under it, and both still
  * download.
+ *
+ * **How the head row says it is the head** (2026-08-18). The section
+ * used to draw a "Current" badge beside the newest round. It does not
+ * any more: `chainOf` defines the head row as the version the API
+ * already flagged current, so the badge could only repeat what the
+ * row's own position — above rather than under "Show earlier versions"
+ * — already says. This spec asserts that position instead: the head row
+ * is the one carrying the chain disclosure, and its name link
+ * downloads the round the API pinned.
  *
  * Each leg is proved twice, on the M9 and M10 specs' rule: once on what
  * the screen draws, and once on what the seam answers. A section that
- * merely drew "Current" beside its newest row would pass the first check
- * and fail the second, because the pin is the server's answer and not
- * the list's own arithmetic.
+ * put its newest row on top by its own arithmetic would pass the first
+ * check and fail the second, because the pin is the server's answer.
  *
  * "Immutable" is asserted rather than described. No route edits or
  * deletes one version — corrections append — so the version's own
@@ -576,12 +584,13 @@ test.describe.serial("M11 demo path", () => {
       // The badge draws "1" and says what the 1 counts, so a reader who
       // never sees the heading beside it still learns what it is.
       await expect(documentCount(uploaderPage)).toHaveAccessibleName("1 document");
-      // What the row says: the file, this round of the negotiation, its
-      // number, and that it is the one that matters now.
+      // What the row says: the file, this round of the negotiation, and
+      // its number. One round in, there is nothing under it to be the
+      // head of, so the chain disclosure is absent and the row is the
+      // document.
       await expect(firstRound).toContainText(draft.name);
       await expect(firstRound).toContainText(DRAFT_KIND_LABEL);
       await expect(firstRound).toContainText("v1");
-      await expect(firstRound).toContainText("Current");
       // The record's first document is its instrument (CTR-014).
       await expect(firstRound).toContainText("Primary");
       await expect(firstRound.getByText(`Uploaded by ${UPLOADER_NAME}`)).toBeAttached();
@@ -605,7 +614,14 @@ test.describe.serial("M11 demo path", () => {
       await expect(currentRound).toHaveCount(1);
       await expect(currentRound).toContainText(REDLINE_KIND_LABEL);
       await expect(currentRound).toContainText("v2");
-      await expect(currentRound).toContainText("Current");
+      // The screen half of "which file matters now": this row is the
+      // head of the chain, and the section says so by putting the
+      // earlier round underneath it behind a disclosure this row owns.
+      await expect(
+        currentRound.getByRole("button", {
+          name: `Show the 1 earlier version of ${draft.name}`,
+        }),
+      ).toHaveAttribute("aria-expanded", "false");
       // The document is still one document, so the count is still one:
       // a round is not a second file on the record.
       await expect(documentCount(uploaderPage)).toHaveText("1");
@@ -633,7 +649,8 @@ test.describe.serial("M11 demo path", () => {
 
       // The earlier round is one click away, not gone. It keeps its own
       // number, its own kind, and the note its uploader wrote about it —
-      // and it is not the one marked Current.
+      // and it stays underneath the head row rather than becoming one,
+      // which is the section's whole answer to "which round is this".
       await currentRound
         .getByRole("button", { name: `Show the 1 earlier version of ${draft.name}` })
         .click();
@@ -641,7 +658,10 @@ test.describe.serial("M11 demo path", () => {
       await expect(supersededRound).toHaveCount(1);
       await expect(supersededRound).toContainText("v1");
       await expect(supersededRound).toContainText(DRAFT_KIND_LABEL);
-      await expect(supersededRound).not.toContainText("Current");
+      // A superseded round owns no chain disclosure: it is under one.
+      await expect(
+        supersededRound.getByRole("button", { name: /^(Show|Hide) the .* earlier version/ }),
+      ).toHaveCount(0);
       await expect(supersededRound.getByRole("link", { name: draft.name })).toHaveAttribute(
         "href",
         downloadAddress(document.id, versions[0]!.id),
@@ -730,7 +750,14 @@ test.describe.serial("M11 demo path", () => {
       await uploaderPage.goto(`/contracts/${contract.number}/documents`);
       const afterRestart = roundRow(uploaderPage, REDLINE_NOTE);
       await expect(afterRestart).toContainText("v2");
-      await expect(afterRestart).toContainText("Current");
+      // Still the head of the chain, with the earlier round still
+      // folded underneath it — a fresh page load collapses the
+      // disclosure, so this is the closed one again.
+      await expect(
+        afterRestart.getByRole("button", {
+          name: `Show the 1 earlier version of ${draft.name}`,
+        }),
+      ).toHaveAttribute("aria-expanded", "false");
       await expect(documentCount(uploaderPage)).toHaveText("1");
     } catch (error) {
       // A cleanup that throws here would replace the failure that caused

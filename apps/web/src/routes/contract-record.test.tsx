@@ -6797,9 +6797,18 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
     await user.click(screen.getByRole("link", { name: "Fields" }));
     await screen.findByRole("region", { name: "Fields" });
 
-    expect(
-      screen.queryByRole("complementary", { name: "signed.pdf, version 1" }),
-    ).not.toBeInTheDocument();
+    // Waited for, not read once: the section swap and the close are two
+    // separate renders. Routing draws Fields, and only the effect that
+    // runs after that commit reads `readingDocked` and closes the panel
+    // — so the Fields region above resolves one render before the close
+    // lands. Waiting on the panel's own absence is waiting on the state
+    // change this case is about, and it still fails inside the default
+    // timeout if the panel never closes at all.
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("complementary", { name: "signed.pdf, version 1" }),
+      ).not.toBeInTheDocument(),
+    );
   });
 
   it("opens an applet beside the document viewer rather than under it", async () => {

@@ -654,10 +654,18 @@ test.describe.serial("M12 demo path", () => {
       // broken preview — and what lands is a PDF surface with page
       // controls, because a rendition is a PDF and reads exactly like
       // one.
-      const pdfSurface = panel.getByRole("region", {
-        name: new RegExp(`^${escapeForRegExp(redline.name)}, page \\d+ of \\d+$`),
-      });
+      const pdfSurface = panel.getByRole("region", { name: `${redline.name}, pages` });
       await expect(pdfSurface).toBeVisible({ timeout: DERIVATION_TIMEOUT_MS });
+      // Where the reader is moved off the well and onto the toolbar
+      // above it (2026-08-18): the well scrolls through the whole
+      // document now, so a name carrying the page number would change
+      // under every scroll tick and a screen reader would announce the
+      // region again on each one. The count is still the proof pdf.js
+      // read the file rather than failed on it — the same spot says
+      // "Opening…" until it has.
+      await expect(panel.getByText(/^Page \d+ of \d+$/)).toBeVisible({
+        timeout: SURFACE_TIMEOUT_MS,
+      });
       await expect(panel.getByRole("button", { name: "Next page" })).toBeVisible();
 
       // DOC-004's promise, on screen: the counterparty's deletion, their
@@ -805,10 +813,15 @@ test.describe.serial("M12 demo path", () => {
       await expect(scanPanel).toBeVisible();
       // The page count is the proof pdf.js read the file rather than
       // failed on it: a surface that could not open the PDF says so
-      // instead, and one still opening says "of 0".
-      await expect(
-        scanPanel.getByRole("region", { name: `${scan.name}, page 1 of 1` }),
-      ).toBeVisible({ timeout: SURFACE_TIMEOUT_MS });
+      // instead, and one still opening says "Opening…". It reads off
+      // the toolbar rather than off the well's own name, which carries
+      // the file alone since 2026-08-18.
+      await expect(scanPanel.getByRole("region", { name: `${scan.name}, pages` })).toBeVisible({
+        timeout: SURFACE_TIMEOUT_MS,
+      });
+      await expect(scanPanel.getByText("Page 1 of 1")).toBeVisible({
+        timeout: SURFACE_TIMEOUT_MS,
+      });
 
       // ---- The seam half: OCR made the text available ----
 
@@ -907,12 +920,6 @@ test.describe.serial("M12 demo path", () => {
  * form. */
 function flat(text: string): string {
   return text.replaceAll(/\s+/g, " ").trim();
-}
-
-/** A literal, safe to put inside a regular expression. Filenames carry a
- * per-run stamp and a dot before their extension. */
-function escapeForRegExp(literal: string): string {
-  return literal.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 }
 
 /**
