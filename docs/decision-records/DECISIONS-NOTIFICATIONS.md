@@ -253,6 +253,41 @@ The surface is `renderDigestMail` in `apps/api/src/lib/notifications/email.ts`, 
 
 **Known wording gap.** Clause 2's framing line says "nearest first", which is true of the rows still ahead and not of the overdue rows behind them. It only shows on a briefing that missed its morning. Recorded rather than fixed: the sentence has shipped, and changing it is an amendment to this clause.
 
+## NOT-007 — Email delivery is at-least-once; a duplicate is accepted over a drop
+
+- **Status:** Accepted
+- **Date:** 2026-08-18
+
+### Context
+
+Raised by CodeRabbit on PR #338 and tracked as [#342](https://github.com/juggernog20/OpenLaw/issues/342). The `notification.email` handlers read a row that owes mail, send it, and then settle it. `batchSize: 1` bounds one worker's concurrency, not concurrency across workers — so two handlers on two replicas can both read the same owed row, both send, and only then race on the conditional settle. The result is a duplicate email, not a lost one.
+
+### Decision
+
+**Accept the duplicate. The at-least-once trade is deliberate and the safer half of a real choice.**
+
+The row is the record of work owed, the queue is only the wake-up, and a lost wake-up costs a delay rather than the message (NOT-001 addendum, M18/1). Claiming a row before the send inverts the trade: a worker that dies between the claim and the relay leaves a row marked sent that never went, which is the failure this design was built to avoid. The morning round's re-ask for owed-and-unsent mail (NOT-003 addendum, M18/6) exists for exactly that reason.
+
+### Why not a lease
+
+A claim-with-expiry (mark claimed, send, settle; dead worker's lease expires and the row returns to owed) gets both properties — no duplicate, no drop — at the cost of a new column, a recovery path, and a second timeout to reason about. It is the only option that removes the duplicate without risking a drop. It is declined for now because:
+
+- The window is small: three attempts over roughly 90 seconds against a 120-second queue expiry.
+- Nothing here affects a single-worker install, which is the default self-hosted shape.
+- A duplicate notification email is mild; a dropped one is not recoverable.
+
+A lease is the right answer if the duplicate rate ever becomes a real complaint under multi-replica deploys. This decision is revisable without a schema migration if the lease column is added then.
+
+### Why not queue tightening
+
+Tightening pg-boss's policy so one row cannot be handed to two handlers at once couples correctness to queue configuration, which is harder to reason about across pg-boss upgrades and harder to test than the row-level trade recorded here.
+
+### Consequences
+
+No code change. The immediate queue's `batchSize: 1` and `short` retry policy stay as they are. The morning round's re-ask deliberately excludes digest rows (`reminder_date IS NULL`), so this question is about immediate mail only. If the duplicate rate under multi-replica deploys becomes a real complaint, the lease option is the path forward.
+
+---
+
 ## Index of decisions
 
 | #       | Decision                                                          | Status   |
@@ -263,3 +298,4 @@ The surface is `renderDigestMail` in `apps/api/src/lib/notifications/email.ts`, 
 | NOT-004 | Reminder lead times: admin-configurable offsets, seeded 7/1/0     | Accepted |
 | NOT-005 | Badge: unread count, 9+ cap, read-on-open                         | Accepted |
 | NOT-006 | The morning digest's anatomy and its delivery rules               | Accepted |
+| NOT-007 | Email delivery is at-least-once; duplicate accepted over drop     | Accepted |
