@@ -66,13 +66,20 @@ function detail(notification: NotificationMail, key: string): string | null {
   return typeof value === "string" && value.length > 0 ? value : null;
 }
 
+/** One payload key as a whole number, or null. The version number's own
+ * read: a round is `v3`, never `v[object Object]`. */
+function count(notification: NotificationMail, key: string): number | null {
+  const value = notification.details?.[key];
+  return typeof value === "number" && Number.isSafeInteger(value) && value > 0 ? value : null;
+}
+
 /**
  * The subject and body one notification is sent as.
  *
- * `null` for a slug this layer has no words for yet. Most of the
- * catalog is in that state in M18/1: their groups send no immediate
- * email at all (NOT-002/NOT-003), and the digest that renders group 3
- * arrives with the dates slice. Answering `null` rather than improvising
+ * `null` for a slug this layer has no words for yet. Group 3 is in that
+ * state: its email is one morning briefing rather than one message per
+ * reminder (NOT-003), and the digest that renders it arrives with the
+ * dates slice. Answering `null` rather than improvising
  * is the `createUnconfiguredMailer` posture — a stub that sent would be
  * a real message nobody wrote — and answering it rather than **throwing**
  * is what lets the send job treat it as terminal: no retry writes copy,
@@ -154,6 +161,124 @@ export function renderNotificationMail(
           "The comment is on the record.",
         ].join("\n"),
       };
+    // ---------------------------------------------------------------
+    // Group 2 — activity on your records (NOT-002).
+    //
+    // These arms exist because the preferences pane makes the group's
+    // email opt-in real (M18/5). Nobody receives one without having
+    // asked for it, which is the whole reason the copy can be as short
+    // as it is: an opted-in reader already knows why the message is
+    // there, and the record is one click away.
+    // ---------------------------------------------------------------
+    case "contract.status_changed": {
+      // The status the record moved *to*. Named `status` rather than
+      // `to`, which is the recipient's address in this scope.
+      const status = detail(notification, "to");
+      return {
+        to,
+        subject: `${notification.contractTitle} moved${status ? ` to ${status}` : ""}`,
+        text: [
+          `Hello ${notification.recipientName},`,
+          "",
+          status
+            ? `${who} moved ${notification.contractTitle} to ${status}.`
+            : `${who} moved ${notification.contractTitle} to another status.`,
+          "",
+          link,
+          "",
+          "The record's own feed has the full history.",
+        ].join("\n"),
+      };
+    }
+    case "comment.posted":
+      return {
+        to,
+        subject: `New comment on ${notification.contractTitle}`,
+        text: [
+          `Hello ${notification.recipientName},`,
+          "",
+          `${who} commented on ${notification.contractTitle}.`,
+          "",
+          link,
+          "",
+          // The words stay on the thread, for the mention arm's reason:
+          // DD-016 is enforced there, and a redact (CMT-006) cannot
+          // reach an email that has already left.
+          "The comment is on the record.",
+        ].join("\n"),
+      };
+    case "document.added": {
+      const document = detail(notification, "documentTitle");
+      return {
+        to,
+        subject: document
+          ? `New document: ${document} (${notification.contractTitle})`
+          : `New document on ${notification.contractTitle}`,
+        text: [
+          `Hello ${notification.recipientName},`,
+          "",
+          document
+            ? `${who} added ${document} to ${notification.contractTitle}.`
+            : `${who} added a document to ${notification.contractTitle}.`,
+          "",
+          link,
+          "",
+          // The file is never attached, and never linked directly: a
+          // download URL in mail would be a way past the wall the
+          // record enforces on every read (DD-014).
+          "The document list is on the record.",
+        ].join("\n"),
+      };
+    }
+    case "document.version_added": {
+      const document = detail(notification, "documentTitle");
+      const version = count(notification, "versionNumber");
+      const round = version ? `v${version}` : "a new version";
+      return {
+        to,
+        subject: document
+          ? `New version of ${document} (${notification.contractTitle})`
+          : `New document version on ${notification.contractTitle}`,
+        text: [
+          `Hello ${notification.recipientName},`,
+          "",
+          document
+            ? `${who} added ${round} of ${document} on ${notification.contractTitle}.`
+            : `${who} added ${round} of a document on ${notification.contractTitle}.`,
+          "",
+          link,
+          "",
+          "The version history is on the record.",
+        ].join("\n"),
+      };
+    }
+    case "envelope.ended": {
+      // No actor sentence. An envelope almost always ends because the
+      // provider said so (CTR-013), and "Somebody signed it" would
+      // name a person nobody can look up. The record is the subject.
+      const status = detail(notification, "status");
+      const ending =
+        status === "signed"
+          ? "has been signed"
+          : status === "declined"
+            ? "was declined"
+            : status === "voided"
+              ? "was voided"
+              : "has ended";
+      return {
+        to,
+        subject: `Signature ${status === "signed" ? "complete" : "update"}: ${notification.contractTitle}`,
+        text: [
+          `Hello ${notification.recipientName},`,
+          "",
+          `The signature envelope on ${notification.contractTitle} ${ending}.`,
+          "",
+          link,
+          "",
+          "The signature panel on the record has the detail.",
+        ].join("\n"),
+      };
+    }
     default:
       return null;
   }
