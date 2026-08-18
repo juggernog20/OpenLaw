@@ -76,6 +76,7 @@ export {
 export { createConsoleLogger, type PipelineLogger } from "./logger.js";
 export {
   runMorningRound,
+  DIGEST_ROW_LIMIT,
   LOST_EMAIL_PAGE_SIZE,
   LOST_EMAIL_REASK_AFTER_MS,
   LOST_EMAIL_REFUSAL_LIMIT,

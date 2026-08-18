@@ -137,6 +137,19 @@ export const LOST_EMAIL_PAGE_SIZE = 200;
  */
 export const LOST_EMAIL_REFUSAL_LIMIT = 5;
 
+/**
+ * How many dates one briefing carries.
+ *
+ * A day's own reminders never come near it: they are the dates due at
+ * three offsets on the records one person is on. The bound is for the
+ * install whose relay was down for a month — every briefing threw, so
+ * every row stayed owed, and the morning the relay comes back a person
+ * would otherwise be sent a thousand-line message. Oldest dates first,
+ * and whatever is left over rides the next briefing, so the backlog
+ * drains a day at a time instead of arriving at once.
+ */
+export const DIGEST_ROW_LIMIT = 100;
+
 /** What the round is built from: the rows, the seam that writes bell
  * items, the relay, and somewhere to say what it did. */
 export interface MorningRoundDeps {
@@ -567,7 +580,8 @@ async function sendBriefing(
         isNull(notifications.emailSkippedAt),
       ),
     )
-    .orderBy(asc(notifications.reminderDate), asc(notifications.id));
+    .orderBy(asc(notifications.reminderDate), asc(notifications.id))
+    .limit(DIGEST_ROW_LIMIT);
   if (owed.length === 0) return NOTHING;
 
   const [lastSent] = await deps.db
