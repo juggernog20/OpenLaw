@@ -54,6 +54,12 @@ services:
       # The E2E suite replays sign-in flows from one IP far faster than
       # any human; production keeps better-auth's limits.
       AUTH_RATE_LIMIT: "off"
+      # Mounts POST /api/v1/notifications/morning-round, which no real
+      # install carries (TECH-018). The morning round is a cron on the
+      # hour, and the M18 demo cannot wait an hour for a tick; the round
+      # itself is unchanged and still decides for itself whose morning it
+      # is. Administrator-only even here.
+      MORNING_ROUND_TRIGGER: "on"
     extra_hosts: *openlaw-dev-hosts
 
   worker:

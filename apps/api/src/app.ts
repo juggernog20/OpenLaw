@@ -65,6 +65,7 @@ import { matterAttachedFieldsRoutes } from "./modules/matter-types/attached-fiel
 import { fieldsRoutes } from "./modules/fields/routes.js";
 import { listViewsRoutes } from "./modules/list-views/routes.js";
 import { notificationsRoutes } from "./modules/notifications/routes.js";
+import { morningRoundTriggerRoutes } from "./modules/notifications/round-trigger.js";
 import { onboardingRoutes } from "./modules/onboarding/routes.js";
 import { orgRoutes } from "./modules/org/routes.js";
 import { usersRoutes } from "./modules/users/routes.js";
@@ -140,6 +141,14 @@ export interface AppDeps {
    * non-API path a JSON 404.
    */
   webDist?: string;
+  /**
+   * Mounts the on-demand morning round (TECH-018's harness seam), which
+   * no deployment sets. The entrypoint reads the overlay's variable and
+   * passes the answer here, for the reason every other environment fact
+   * is read there: no module below the entrypoint reads `process.env`.
+   * Left unset, the route does not exist at all.
+   */
+  morningRoundTrigger?: boolean;
 }
 
 declare module "fastify" {
@@ -406,6 +415,12 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(fieldsRoutes, { prefix: "/api/v1" });
   await app.register(listViewsRoutes, { prefix: "/api/v1" });
   await app.register(notificationsRoutes, { prefix: "/api/v1" });
+  // The dev/E2E overlay's only route (TECH-018). Registered rather than
+  // guarded inside, so an install that never set the variable answers
+  // the ordinary 404 for an unknown path and admits nothing.
+  if (deps.morningRoundTrigger) {
+    await app.register(morningRoundTriggerRoutes, { prefix: "/api/v1" });
+  }
 
   return app;
 }
