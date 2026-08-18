@@ -566,6 +566,7 @@ async function fanOut(
           target: [
             notifications.userId,
             notifications.eventType,
+            notifications.entityType,
             notifications.entityId,
             notifications.reminderDate,
             notifications.reminderOffsetDays,

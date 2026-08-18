@@ -484,6 +484,43 @@ describe("a date that moves, and a contract that ends", () => {
   });
 });
 
+describe("entity_type is part of the dedup identity", () => {
+  it("two entity types sharing an id string produce two rows", async () => {
+    const shared = { reminderDate: "2026-07-01", reminderOffsetDays: 7 };
+    const base = {
+      userId: idOf(OWNER),
+      eventType: "date.key_date_approaching" as const,
+      entityId: "same-id",
+      payload: {},
+      emailOwed: false,
+      ...shared,
+    };
+    await harness.db
+      .insert(notifications)
+      .values([
+        { ...base, entityType: "contract" as const },
+        { ...base, entityType: "matter" as const },
+      ])
+      .onConflictDoNothing({
+        target: [
+          notifications.userId,
+          notifications.eventType,
+          notifications.entityType,
+          notifications.entityId,
+          notifications.reminderDate,
+          notifications.reminderOffsetDays,
+        ],
+        where: sql`reminder_date is not null`,
+      });
+    const rows = await harness.db
+      .select()
+      .from(notifications)
+      .where(and(eq(notifications.userId, idOf(OWNER)), eq(notifications.entityId, "same-id")));
+    expect(rows).toHaveLength(2);
+    expect(rows.map((r) => r.entityType).sort()).toEqual(["contract", "matter"]);
+  });
+});
+
 describe("the timezone gate", () => {
   const TODAY = "2026-06-10";
   let contract: ContractRow;
