@@ -62,6 +62,18 @@ Disposition of the former technical queue, per **INT-001**'s form-first revision
 - **Alternatives considered** — Independent per-type form builder: re-keying at conversion. One generic form: collects nothing structured.
 - **Consequences** — `request_types`, `request_type_fields`, `request_attachments` + `requests` core columns in SCHEMA.md. Settings surface added. Conditional form logic (Q6) would layer on `request_type_fields` if ever adopted.
 
+### Addendum (2026-08-20, [#354](https://github.com/juggernog20/OpenLaw/issues/354)) — the target has three states, and the basics are fixed
+
+The decision above knew two target states: a specific matter or contract type, or nothing. The editor built in M19/4 needed a third, and it earns its place — so the target is written down here as what it is.
+
+**The target is a module, and optionally a type inside it.** `target_module` is NULL, `matter`, or `contract`. Under `matter` or `contract` a type id may name one specific type, and under NULL nothing may. So "NDA request" targets the NDA contract type, **"Contract review" targets the Contract module and leaves the type to the reviewer at conversion**, and "Legal question" targets nothing at all. The middle state is the new one: a request type can promise a contract without pre-deciding which kind, which is what an intake form for "review this counterparty paper" honestly knows at submission. It costs conversion nothing — INT-006's rule is that triage confirms rather than classifies, and a module-only target still hands the triager the module, the collected values, and one choice instead of two.
+
+**One check constraint holds all three columns together**, so the invariant is the table's rather than the route's: with no module, both type ids are NULL; under `matter`, `target_contract_type_id` is NULL and `target_matter_type_id` may be set or NULL; under `contract`, the mirror. The module-only state is the one where the module's own type id is NULL. On the wire it is two values — the module and the optional type id — because which of the two id columns holds it is the module's to say.
+
+**Deleting a targeted type demotes; it never strands.** Both type FKs are `on delete set null` while `target_module` stays, so hard-deleting the NDA contract type turns "Contract · NDA" into "Contract" — a state the model already has. Archiving a targeted type is left alone: the target picker offers live types only, the editor flags a target whose type is archived, and conversion (M21) reads an archived target type as no type.
+
+**The basics are fixed and are not columns.** Every portal form collects Summary, Description, Attachments, and Urgency. Summary, Description, and Urgency are required; Attachments are optional. The editor draws the four as locked rows so an Administrator can read the contract without being invited to change it, and nothing in the schema records them — a fixed set is a fact about the form, not a configuration of it. Urgency carries the DES-018 severity ramp (`low`, `medium`, `high`, `critical`), as this decision already recorded.
+
 ## INT-003 — Requester updates: email notifications only; no status-poke button
 
 - **Status** — Accepted
@@ -126,12 +138,12 @@ Disposition of the former technical queue, per **INT-001**'s form-first revision
 
 ## Index of decisions
 
-| #       | Decision                                                                     | Status                                 |
-| ------- | ---------------------------------------------------------------------------- | -------------------------------------- |
-| INT-001 | Intake model: JSM-style structured forms + portal; email notifications only  | Accepted; lifecycle revised by INT-007 |
-| INT-002 | Request types mapped to target types; forms reuse the fields catalog         | Accepted                               |
-| INT-003 | Requester updates: email notifications only; no status-poke button           | Accepted                               |
-| INT-004 | Deflection links panel in v1; conditional form logic stays deferred          | Accepted                               |
-| INT-005 | No auto-classification: the form is the classification                       | Accepted                               |
-| INT-006 | Triage: one Inbox, pickup assignment, four actions, lossless re-convert      | Accepted; revised by INT-007           |
-| INT-007 | Disposition-at-pickup: triage decides the outcome; no parked in-review state | Accepted                               |
+| #       | Decision                                                                     | Status                                               |
+| ------- | ---------------------------------------------------------------------------- | ---------------------------------------------------- |
+| INT-001 | Intake model: JSM-style structured forms + portal; email notifications only  | Accepted; lifecycle revised by INT-007               |
+| INT-002 | Request types mapped to target types; forms reuse the fields catalog         | Accepted; three-state target added by M19/4 addendum |
+| INT-003 | Requester updates: email notifications only; no status-poke button           | Accepted                                             |
+| INT-004 | Deflection links panel in v1; conditional form logic stays deferred          | Accepted                                             |
+| INT-005 | No auto-classification: the form is the classification                       | Accepted                                             |
+| INT-006 | Triage: one Inbox, pickup assignment, four actions, lossless re-convert      | Accepted; revised by INT-007                         |
+| INT-007 | Disposition-at-pickup: triage decides the outcome; no parked in-review state | Accepted                                             |

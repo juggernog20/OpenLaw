@@ -141,12 +141,16 @@ export function SettingsContractTypeEditorPage() {
   return (
     <TypeEditorScreen
       initialType={contractType}
-      initialAttached={attachedFields}
-      catalog={catalog}
       tabs={<ContractsSettingsTabs />}
       backPath="/settings/contracts/types"
       api={EDITOR_API}
       messages={MESSAGES}
+      attachments={{
+        initialAttached: attachedFields,
+        catalog,
+        api: EDITOR_API,
+        messages: MESSAGES,
+      }}
     />
   );
 }

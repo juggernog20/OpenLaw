@@ -65,6 +65,10 @@ import {
   settingsIntakeIndexLoader,
   settingsRequestTypesLoader,
 } from "./routes/settings-request-types";
+import {
+  SettingsRequestTypeEditorPage,
+  settingsRequestTypeEditorLoader,
+} from "./routes/settings-request-type-editor";
 import { SettingsGeneralPage, settingsGeneralLoader } from "./routes/settings-general";
 import { SettingsUsersPage, settingsUsersLoader } from "./routes/settings-users";
 import {
@@ -226,6 +230,12 @@ export const routes: RouteObject[] = [
         path: "intake/request-types",
         loader: settingsRequestTypesLoader,
         element: <SettingsRequestTypesPage />,
+      },
+      {
+        // #354: each request type opens its own editor screen (ST14).
+        path: "intake/request-types/:typeId",
+        loader: settingsRequestTypeEditorLoader,
+        element: <SettingsRequestTypeEditorPage />,
       },
       { path: "entities", loader: settingsEntitiesIndexLoader, element: <></> },
       {

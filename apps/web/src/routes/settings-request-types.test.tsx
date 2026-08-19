@@ -13,6 +13,12 @@
  * Two absences are asserted rather than assumed: no row is
  * system-protected here, and no in-use caption is drawn, because
  * `requests` land in M20.
+ *
+ * The **Target** column and the two-line row are this mount's own
+ * (#354): the three states read as ST12 draws them, and the per-row
+ * Edit affordance opens the editor screen. The target type's name comes
+ * from the taxonomy it points at, so the loader reads those two lists
+ * beside the request types.
  */
 
 import { describe, expect, it } from "vitest";
@@ -30,12 +36,38 @@ const ADMIN = {
 
 const MEMBER = { ...ADMIN, id: "u2", email: "casey@example.com", role: "legal_team_member" };
 
-/** The three INT-002 seeds ST12 draws, in seeded order. */
+/** The three INT-002 seeds ST12 draws, in seeded order, with the three
+ * target states between them. */
 const SEEDS = [
-  ["r1", "nda_request", "NDA request", "Mutual or one-way NDA with a counterparty."],
-  ["r2", "contract_review", "Contract review", "Review of a counterparty contract or redline."],
-  ["r3", "legal_question", "Legal question", "One-off question — no record is created up front."],
+  [
+    "r1",
+    "nda_request",
+    "NDA request",
+    "Mutual or one-way NDA with a counterparty.",
+    "contract",
+    "ct-nda",
+  ],
+  [
+    "r2",
+    "contract_review",
+    "Contract review",
+    "Review of a counterparty contract or redline.",
+    "contract",
+    null,
+  ],
+  [
+    "r3",
+    "legal_question",
+    "Legal question",
+    "One-off question — no record is created up front.",
+    null,
+    null,
+  ],
 ] as const;
+
+/** The two taxonomies a target may name, as their own routes answer. */
+const MATTER_TYPES = [{ id: "mt-lit", displayName: "Litigation", archivedAt: null }];
+const CONTRACT_TYPES = [{ id: "ct-nda", displayName: "NDA", archivedAt: null }];
 
 /** One row as the request-types routes answer it. */
 interface StubRow {
@@ -47,10 +79,12 @@ interface StubRow {
   isSystemDefault: boolean;
   archivedAt: string | null;
   inUseCount: number;
+  targetModule: "matter" | "contract" | null;
+  targetTypeId: string | null;
 }
 
 function seededTypes(): StubRow[] {
-  return SEEDS.map(([id, slug, displayName, description], index) => ({
+  return SEEDS.map(([id, slug, displayName, description, targetModule, targetTypeId], index) => ({
     id,
     slug,
     displayName,
@@ -59,6 +93,8 @@ function seededTypes(): StubRow[] {
     isSystemDefault: true,
     archivedAt: null,
     inUseCount: 0,
+    targetModule,
+    targetTypeId,
   }));
 }
 
@@ -82,6 +118,14 @@ function typesApi(calls: TypesCalls, rows: StubRow[] = seededTypes()) {
     if (path === "/api/v1/request-types" && call.method === "GET") {
       return json(200, { requestTypes: rows });
     }
+    // The Target column names the type the row points at, and the name
+    // lives in that type's own taxonomy.
+    if (path === "/api/v1/matter-types" && call.method === "GET") {
+      return json(200, { matterTypes: MATTER_TYPES });
+    }
+    if (path === "/api/v1/contract-types" && call.method === "GET") {
+      return json(200, { contractTypes: CONTRACT_TYPES });
+    }
     if (path === "/api/v1/request-types" && call.method === "POST") {
       calls.creates.push(call.body);
       const body = call.body as { displayName: string };
@@ -95,6 +139,8 @@ function typesApi(calls: TypesCalls, rows: StubRow[] = seededTypes()) {
           isSystemDefault: false,
           archivedAt: null,
           inUseCount: 0,
+          targetModule: null,
+          targetTypeId: null,
         },
       });
     }
@@ -106,6 +152,10 @@ function typesApi(calls: TypesCalls, rows: StubRow[] = seededTypes()) {
       });
     }
     const rename = /^\/api\/v1\/request-types\/([^/]+)$/.exec(path);
+    // The editor's own read, for the row the Edit affordance opens.
+    if (rename && call.method === "GET") {
+      return json(200, { requestType: byId(rename[1]!) });
+    }
     if (rename && call.method === "PATCH") {
       calls.renames.push({ id: rename[1]!, body: call.body });
       const body = call.body as { displayName: string };
@@ -194,6 +244,8 @@ describe("the seeded list (INT-002)", () => {
         isSystemDefault: false,
         archivedAt: null,
         inUseCount: 0,
+        targetModule: null,
+        targetTypeId: null,
       },
     ];
     const calls = newCalls();
@@ -213,11 +265,64 @@ describe("the seeded list (INT-002)", () => {
     await waitFor(() => expect(calls.archives).toEqual([{ id: "r4", body: {} }]));
   });
 
-  it("offers no per-row editor yet — the editor screen arrives with #354", async () => {
+  it("draws each row's description under its name (ST12's two-line row)", async () => {
     stubApi({ signedIn: ADMIN, extra: typesApi(newCalls()) });
     renderAt("/settings/intake/request-types");
     await screen.findByText("NDA request");
-    expect(screen.queryByRole("button", { name: /^Edit/ })).not.toBeInTheDocument();
+    const [first] = within(typeList()).getAllByRole("listitem");
+    expect(
+      within(first!).getByText("Mutual or one-way NDA with a counterparty."),
+    ).toBeInTheDocument();
+  });
+});
+
+describe("the Target column (INT-002)", () => {
+  it("reads the three states as ST12 draws them", async () => {
+    stubApi({ signedIn: ADMIN, extra: typesApi(newCalls()) });
+    renderAt("/settings/intake/request-types");
+    await screen.findByText("NDA request");
+    const [nda, review, question] = within(typeList()).getAllByRole("listitem");
+    expect(within(nda!).getByText("Contract · NDA")).toBeInTheDocument();
+    expect(within(review!).getByText("Contract")).toBeInTheDocument();
+    expect(within(question!).getByText("No target")).toBeInTheDocument();
+    expect(screen.getByText("Target")).toBeInTheDocument();
+  });
+
+  it("names a matter type the same way", async () => {
+    const rows = seededTypes();
+    rows[2] = { ...rows[2]!, targetModule: "matter", targetTypeId: "mt-lit" };
+    stubApi({ signedIn: ADMIN, extra: typesApi(newCalls(), rows) });
+    renderAt("/settings/intake/request-types");
+    await screen.findByText("Legal question");
+    expect(screen.getByText("Matter · Litigation")).toBeInTheDocument();
+  });
+
+  it("reads a demoted row as the module alone", async () => {
+    // The targeted contract type was hard-deleted: `on delete set null`
+    // left the module standing, so the row says "Contract".
+    const rows = seededTypes();
+    rows[0] = { ...rows[0]!, targetTypeId: null };
+    stubApi({ signedIn: ADMIN, extra: typesApi(newCalls(), rows) });
+    renderAt("/settings/intake/request-types");
+    await screen.findByText("NDA request");
+    const [nda] = within(typeList()).getAllByRole("listitem");
+    expect(within(nda!).getByText("Contract")).toBeInTheDocument();
+    expect(within(nda!).queryByText("Contract · NDA")).not.toBeInTheDocument();
+  });
+});
+
+describe("the per-row editor affordance", () => {
+  it("opens the request type's own editor screen", async () => {
+    stubApi({ signedIn: ADMIN, extra: typesApi(newCalls()) });
+    const { router } = renderAt("/settings/intake/request-types");
+    const user = userEvent.setup();
+    await screen.findByText("NDA request");
+    await user.click(screen.getByRole("button", { name: "Edit NDA request" }));
+    // The row's own URL, and the editor's own identity card on it.
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe("/settings/intake/request-types/r1"),
+    );
+    expect(await screen.findByLabelText("Display name")).toHaveValue("NDA request");
   });
 });
 

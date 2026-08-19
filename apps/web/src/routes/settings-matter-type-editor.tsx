@@ -146,12 +146,16 @@ export function SettingsMatterTypeEditorPage() {
   return (
     <TypeEditorScreen
       initialType={matterType}
-      initialAttached={attachedFields}
-      catalog={catalog}
       tabs={<MattersSettingsTabs />}
       backPath="/settings/matters/types"
       api={EDITOR_API}
       messages={MESSAGES}
+      attachments={{
+        initialAttached: attachedFields,
+        catalog,
+        api: EDITOR_API,
+        messages: MESSAGES,
+      }}
     />
   );
 }
